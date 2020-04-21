@@ -4601,28 +4601,29 @@ def setup_modules_apply(instance_id, modules):
                      "when": "not default.found",
                      })
             deps = dependencies.get(module)
-            for d in deps:
-                m = d.get("module")
-                if has_module(m):
-                    # No changes required
-                    # This is only the case for Local Server
-                    continue
-                tappend({"name": "Handle Dependency: If we disabled the module, then remove the disabling",
-                         "become": "yes",
-                         "lineinfile": {"dest": dest,
-                                        "regexp": '^del settings.modules\["%s"\]' % m,
-                                        "state": "absent",
-                                        },
-                         "register": "default",
-                         })
-                tappend({"name": "Handle Dependency: Enable the Module",
-                         "become": "yes",
-                         "lineinfile": {"dest": dest,
-                                        "regexp": '^settings.modules\["%s"\]' % module,
-                                        "line": 'settings.modules["%s"] = {"name_nice": T("%s"), "module_type": 10}' % (m, d.get("label")),
-                                        },
-                         "when": "not default.found",
-                         })
+            if deps is not None:
+                for d in deps:
+                    m = d.get("module")
+                    if has_module(m):
+                        # No changes required
+                        # This is only the case for Local Server
+                        continue
+                    tappend({"name": "Handle Dependency: If we disabled the module, then remove the disabling",
+                            "become": "yes",
+                            "lineinfile": {"dest": dest,
+                                            "regexp": '^del settings.modules\["%s"\]' % m,
+                                            "state": "absent",
+                                            },
+                            "register": "default",
+                            })
+                    tappend({"name": "Handle Dependency: Enable the Module",
+                            "become": "yes",
+                            "lineinfile": {"dest": dest,
+                                            "regexp": '^settings.modules\["%s"\]' % module,
+                                            "line": 'settings.modules["%s"] = {"name_nice": T("%s"), "module_type": 10}' % (m, d.get("label")),
+                                            },
+                            "when": "not default.found",
+                            })
         else:
             if not has_module(module):
                 # No changes required
