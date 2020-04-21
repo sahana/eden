@@ -991,16 +991,16 @@ def vol_service_record(r, **attr):
                 )
             logo = s3db.org_organisation_logo(root_org)
 
-        innerTable = TABLE(TR(TH(vol_name)),
-                           TR(TD(org_name)))
+        inner_table = TABLE(TR(TH(vol_name)),
+                            TR(TD(org_name)))
         if current.response.s3.rtl:
             # Right-to-Left
-            person_details = TABLE(TR(TD(innerTable),
+            person_details = TABLE(TR(TD(inner_table),
                                       TD(logo),
                                       ))
         else:
             person_details = TABLE(TR(TD(logo),
-                                      TD(innerTable),
+                                      TD(inner_table),
                                       ))
 
         pe_id = person.pe_id
@@ -1112,30 +1112,37 @@ def vol_service_record(r, **attr):
         rows = db(query).select(ctable.name,
                                 ttable.date,
                                 ttable.hours,
-                                orderby = ~ttable.date)
+                                )
         date_represent = ttable.date.represent
+
+        # Compute total hours
+        total = 0.0
+        trainings = []
         for row in rows:
-            _row = row["hrm_training"]
-            _date = _row.date
-            hours[_date.date()] = {"course": row["hrm_course"].name,
-                                   "date": date_represent(_date),
-                                   "hours": _row.hours or "",
-                                   }
+            training = row.hrm_training
+            hours = training.hours
+            if hours:
+                total += hours
+            trainings.append((training.date, row.hrm_course.name, hours))
+
+        # Sort trainings: most recent first, undated last
+        trainings = sorted(trainings, key=lambda t: t[0] or datetime.datetime.min)
+        trainings.reverse()
+
+        # Add table with training courses
         courses = TABLE(TR(TH(T("Date")),
                            TH(T("Training")),
-                           TH(T("Hours"))))
-        _hours = {}
-        for key in sorted(hours.keys()):
-            _hours[key] = hours[key]
-        total = 0
-        for hour in hours:
-            _hour = hours[hour]
-            __hours = _hour["hours"] or 0
-            courses.append(TR(_hour["date"],
-                              _hour["course"],
-                              str(__hours)
+                           TH(T("Hours")),
+                           ))
+        for training in trainings:
+            date = training[0]
+            date = date_represent(date) if date else "-"
+            hours = training[2]
+            hours = ("%d" % hours) if hours else "-"
+            courses.append(TR(TD(date),
+                              TD(s3_str(training[1])),
+                              TD(hours),
                               ))
-            total += __hours
         if total > 0:
             courses.append(TR(TD(""), TD("Total"), TD("%d" % total)))
 
@@ -1188,14 +1195,14 @@ def vol_service_record(r, **attr):
             total = 0
             for a in activity_types:
                 _a = activity_types[a]
-                for r in _a:
-                    role = _a[r]
+                for role_name in _a:
+                    role = _a[role_name]
                     hours = role["hours"]
                     total += hours
                     programme.append(TR(date_represent(role["start_date"]),
                                         date_represent(role["end_date"]),
                                         a,
-                                        r,
+                                        role_name,
                                         str(hours)
                                         ))
 
@@ -1252,14 +1259,14 @@ def vol_service_record(r, **attr):
             total = 0
             for p in programmes:
                 _p = programmes[p]
-                for r in _p:
-                    role = _p[r]
+                for role_name in _p:
+                    role = _p[role_name]
                     hours = role["hours"]
                     total += hours
                     programme.append(TR(date_represent(role["start_date"]),
                                         date_represent(role["end_date"]),
                                         p,
-                                        r,
+                                        role_name,
                                         str(hours)
                                         ))
 
