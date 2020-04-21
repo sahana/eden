@@ -1305,6 +1305,12 @@ class DataCollectionModel(S3Model):
                                                            ).first()
         layout = template.layout
 
+        if layout is None:
+            current.session.error = T("Template has no Layout")
+            redirect(URL(c="dc", f="template",
+                         args = [template_id],
+                         ))
+
         # Add the Questions
         # Prep for Auto-Totals
         # Prep for Grids
