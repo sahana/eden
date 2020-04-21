@@ -4016,7 +4016,7 @@ def setup_write_playbook(playbook_name,
         error = "PyYAML module needed for Setup"
         current.log.error(error)
         current.response.error = error
-        return
+        return {}
 
     # https://stackoverflow.com/questions/8640959/how-can-i-control-what-scalar-form-pyyaml-uses-for-my-data#answer-8641732
     def double_quoted_presenter(dumper, data):

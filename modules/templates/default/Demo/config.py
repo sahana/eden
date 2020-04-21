@@ -65,6 +65,7 @@ def config(settings):
         #("ms", "Malaysian"),
         ("my", "Burmese"), # Myanmar
         ("ne", "Nepali"),
+        ("pl", "Polish"),
         ("prs", "Dari"), # Afghan Persian
         ("ps", "Pashto"), # Afghanistan, Pakistan
         ("pt", "Portuguese"),
