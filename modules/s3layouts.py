@@ -264,12 +264,10 @@ class S3OptionsMenuDefaultLayout(S3NavigationItem):
         """ Layout Method (Item Renderer) """
 
         # Manage flags: hide any disabled/unauthorized items
-        if not item.authorized:
-            enabled = False
-            visible = False
-        elif item.enabled is None or item.enabled:
-            enabled = True
-            visible = True
+        if item.authorized and (item.enabled is None or item.enabled):
+            enabled = visible = True
+        else:
+            enabled = visible = False
 
         if enabled and visible:
             if item.parent is not None:

@@ -851,11 +851,19 @@ def comments():
         raise HTTP(400)
 
     table = s3db.cms_comment
-
-    # Form to add a new Comment
     table.post_id.default = post_id
     table.post_id.writable = table.post_id.readable = False
-    form = crud.create(table)
+
+    # Create S3Request for S3SQLForm
+    r = s3_request(prefix="cms",
+                   name="comment",
+                   args=[],
+                   vars=None,
+                   extension="html")
+    # Customise resource
+    r.customise_resource()
+    # Form to add a new Comment
+    form = s3base.S3SQLCustomForm("parent", "post_id", "body")(r)
 
     # List of existing Comments
     comments = db(table.post_id == post_id).select(table.id,
