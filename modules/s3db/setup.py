@@ -4600,7 +4600,7 @@ def setup_modules_apply(instance_id, modules):
                                     },
                      "when": "not default.found",
                      })
-            deps = dependencies.get(module)
+            deps = dependencies.get(module, {})
             for d in deps:
                 m = d.get("module")
                 if has_module(m):
