@@ -1682,6 +1682,11 @@ class dc_TargetReport(S3Method):
         questions = []
         qappend = questions.append
         layout = template["dc_template.layout"]
+        if layout is None:
+            current.session.error = current.T("Template has no layout!")
+            redirect(URL(c="dc", f="template",
+                         args = [template_id],
+                         ))
         for posn in layout:
             item = layout[posn]
             if item["type"] != "question":
@@ -2382,7 +2387,7 @@ def dc_rheader(r, tabs=None):
                 RESPONSES = T("Responses")
 
             tabs = ((T("Basic Details"), None),
-                    (T("Report"), "results/"),
+                    (T("Report"), "results"),
                     (RESPONSES, "response"),
                     )
 
