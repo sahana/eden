@@ -1900,7 +1900,7 @@ class S3RolesExport(object):
         # Optional columns
         self.col_hidden = False
         self.col_protected = False
-        self.col_entity = True
+        self.col_entity = False
 
         # Look up the roles
         gtable = auth.settings.table_group
