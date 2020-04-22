@@ -3248,7 +3248,7 @@ class PRForumModel(S3Model):
         Forums - similar to Groups, they are collections of People, however
                  these are restricted to those with User Accounts
         - used to share Information within Realms
-        - currently used just by WACOP
+        - currently used by CCC & WACOP
     """
 
     names = ("pr_forum",
@@ -3279,6 +3279,10 @@ class PRForumModel(S3Model):
         define_table(tablename,
                      # Instances
                      self.super_link("pe_id", "pr_pentity"),
+                     self.org_organisation_id(default = None,
+                                              ondelete = "CASCADE",
+                                              requires = self.org_organisation_requires(updateable = True),
+                                              ),
                      Field("name",
                            label = T("Name"),
                            requires = IS_NOT_EMPTY(),

@@ -39,7 +39,7 @@ def config(settings):
     settings.auth.registration_link_user_to_default = ["staff"]
     settings.auth.realm_entity_types = ("org_organisation",
                                         #"org_office",
-                                        "pr_forum", # Reserves
+                                        "pr_forum", # Realms
                                         "pr_group", # Volunteer Groups
                                         "pr_person", # Donors
                                         )
@@ -311,8 +311,9 @@ def config(settings):
                         FORUM = "Donors"
                     elif role == "RESERVE":
                         FORUM = "Reserves"
-                else:
-                    # HR record => Use their Organisation
+
+                if role == "RESERVE" or not role:
+                    # HR record => Use their Organisation or Organisation's Reserves
                     hrtable = s3db.hrm_human_resource
                     query = (hrtable.person_id == person_id) & \
                             (hrtable.deleted == False)
@@ -321,40 +322,54 @@ def config(settings):
                                           ).first()
 
                     if hr:
-                        otable = s3db.org_organisation
-                        org = db(otable.id == hr.organisation_id).select(otable.pe_id,
-                                                                         limitby = (0, 1)
-                                                                         ).first()
-                        try:
-                            return org.pe_id
-                        except AttributeError:
-                            # Use default rules
-                            current.log.error("Cannot set Realm Entity for Person %s: Org not found" % person_id)
-                            return 0
+                        if role:
+                            # Use Org's Forum
+                            ftable = s3db.pr_forum
+                            forum = db(ftable.organisation_id == hr.organisation_id).select(ftable.pe_id,
+                                                                                            limitby = (0, 1)
+                                                                                            ).first()
+                            try:
+                                return forum.pe_id
+                            except AttributeError:
+                                current.log.error("Cannot find Org Forum '%s' when trying to set Realm Entity for Person %s" % \
+                                    (hr.organisation_id, person_id))
+                                pass
+                        else:
+                            # Use Org
+                            otable = s3db.org_organisation
+                            org = db(otable.id == hr.organisation_id).select(otable.pe_id,
+                                                                             limitby = (0, 1)
+                                                                             ).first()
+                            try:
+                                return org.pe_id
+                            except AttributeError:
+                                # Use default rules
+                                current.log.error("Cannot set Realm Entity for Person %s: Org not found" % person_id)
+                                return 0
+                    else:
+                        # Group Membership record => Use their Group
+                        mtable = s3db.pr_group_membership
+                        query = (mtable.person_id == person_id) & \
+                                (mtable.deleted == False)
+                        member = db(query).select(mtable.group_id,
+                                                  limitby = (0, 1)
+                                                  ).first()
 
-                    # Group Membership record => Use their Group
-                    mtable = s3db.pr_group_membership
-                    query = (mtable.person_id == person_id) & \
-                            (mtable.deleted == False)
-                    member = db(query).select(mtable.group_id,
-                                              limitby = (0, 1)
-                                              ).first()
+                        if member:
+                            gtable = s3db.pr_group
+                            group = db(gtable.id == member.group_id).select(gtable.pe_id,
+                                                                            limitby = (0, 1)
+                                                                            ).first()
+                            try:
+                                return group.pe_id
+                            except AttributeError:
+                                # Use default rules
+                                current.log.error("Cannot set Realm Entity for Person %s: Group not found" % person_id)
+                                return 0
 
-                    if member:
-                        gtable = s3db.pr_group
-                        group = db(gtable.id == member.group_id).select(gtable.pe_id,
-                                                                        limitby = (0, 1)
-                                                                        ).first()
-                        try:
-                            return group.pe_id
-                        except AttributeError:
-                            # Use default rules
-                            current.log.error("Cannot set Realm Entity for Person %s: Group not found" % person_id)
-                            return 0
-
-                    current.log.error("Cannot set Realm Entity for Person %s: No match found" % person_id)
-                    # Use default rules
-                    return 0
+                        current.log.error("Cannot set Realm Entity for Person %s: No match found" % person_id)
+                        # Use default rules
+                        return 0
 
             ftable = s3db.pr_forum
             forum = db(ftable.name == FORUM).select(ftable.pe_id,
@@ -569,7 +584,7 @@ $('.copy-link').click(function(e){
                     tabs.append((T("Additional Information"), "additional"))
                     # Better on main form using S3SQLInlineLink
                     #tabs.append((T("Volunteer Offers"), "competency"))
-                    if has_role("ORG_ADMIN"):
+                    if has_role("RESERVE"):
                         tabs.insert(1, (T("Affiliation"), "human_resource"))
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -2093,9 +2108,10 @@ $('.copy-link').click(function(e){
 
         from gluon import IS_EMAIL, IS_EMPTY_OR, IS_IN_SET, IS_URL
 
-        from s3 import S3OptionsFilter, S3Represent, S3SQLCustomForm, \
-                       S3SQLInlineComponent, S3SQLInlineLink, S3TextFilter#, \
-                       #S3LocationSelector, S3HierarchyWidget
+        from s3 import S3LocationFilter, S3OptionsFilter, S3Represent, \
+                       S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink, \
+                       S3TextFilter#, \
+                       #S3HierarchyWidget
 
         s3db = current.s3db
 
@@ -2164,7 +2180,54 @@ $('.copy-link').click(function(e){
         #                             filter = (gtable.L2 == "Cumbria")
         #                             )
 
-        s3db.configure("org_organisation",
+        def org_organisation_create_onaccept(form):
+            """
+                Create a Reserves Forum for this Organisation with dual hierarchy to main Reserves Forum & this Organisation
+            """
+
+            db = current.db
+            ftable = s3db.pr_forum
+
+            # Lookup the Reserves Forum
+            forum = db(ftable.name == "Reserves").select(ftable.pe_id,
+                                                         limitby = (0, 1)
+                                                         ).first()
+            try:
+                reserves_pe_id = forum.pe_id
+            except AttributeError:
+                # Hopefully just the Agency Group being created initially
+                current.log.error("Unable to link Org Forum to Reserves Forum: Forum not Found")
+                return
+
+            form_vars_get = form.vars.get
+            organisation_id = form_vars_get("id")
+
+            # Lookup the Organisation
+            otable = s3db.org_organisation
+            org = db(otable.id == organisation_id).select(otable.pe_id,
+                                                          limitby = (0, 1)
+                                                          ).first()
+            org_pe_id = org.pe_id
+
+            # Create Forum
+            record = {"organisation_id": organisation_id,
+                      "name": "%s Reserves" % form_vars_get("name"),
+                      }
+            forum_id = ftable.insert(**record)
+            record["id"] = forum_id
+            s3db.update_super(ftable, record)
+            forum_pe_id = record["pe_id"]
+
+            # Add the Hierarchy links
+            s3db.pr_add_affiliation(org_pe_id, forum_pe_id, role="Realm Hierarchy")
+            s3db.pr_add_affiliation(reserves_pe_id, forum_pe_id, role="Realm Hierarchy")
+
+        s3db.add_custom_callback(tablename,
+                                 "create_onaccept",
+                                 org_organisation_create_onaccept,
+                                 )
+
+        s3db.configure(tablename,
                        crud_form = S3SQLCustomForm((T("Name of Organization"), "name"),
                                                    S3SQLInlineLink("organisation_type",
                                                                    field = "organisation_type_id",
@@ -2228,7 +2291,8 @@ $('.copy-link').click(function(e){
                                                    ),
                        list_fields = ["name",
                                       (T("Type"), "organisation_organisation_type.organisation_type_id"),
-                                      (T("District Served"), "organisation_location.location_id$L3"),
+                                      (T("District"), "organisation_location.location_id$L3"),
+                                      (T("Parish"), "organisation_location.location_id$L4"),
                                       "phone",
                                       (T("Email"), "email.value"),
                                       ],
@@ -2242,9 +2306,10 @@ $('.copy-link').click(function(e){
                                          S3OptionsFilter("organisation_organisation_type.organisation_type_id",
                                                          label = T("Type"),
                                                          ),
-                                         S3OptionsFilter("organisation_location.location_id$L3",
-                                                         label = T("District Served"),
-                                                         ),
+                                         S3LocationFilter("organisation_location.location_id",
+                                                          label = T("Location Served"),
+                                                          levels = ("L3", "L4"),
+                                                          ),
                                         ],
                        )
 
@@ -2325,23 +2390,23 @@ $('.copy-link').click(function(e){
                 output = standard_postp(r, output)
 
             if r.interactive and not r.component:
+                if current.auth.s3_has_permission("create", "project_task"):
+                    from gluon import URL
+                    from s3 import s3_str, S3CRUD
 
-                from gluon import URL
-                from s3 import s3_str, S3CRUD
+                    # Normal Action Buttons
+                    S3CRUD.action_buttons(r)
 
-                # Normal Action Buttons
-                S3CRUD.action_buttons(r)
-
-                # Custom Action Buttons
-                s3.actions += [{"label": s3_str(T("Message")),
-                                "url": URL(c = "project",
-                                           f = "task",
-                                           args = "create",
-                                           vars = {"organisation_id": "[id]"}
-                                           ),
-                                "_class": "action-btn",
-                                },
-                               ]
+                    # Custom Action Buttons
+                    s3.actions += [{"label": s3_str(T("Message")),
+                                    "url": URL(c = "project",
+                                               f = "task",
+                                               args = "create",
+                                               vars = {"organisation_id": "[id]"}
+                                               ),
+                                    "_class": "action-btn",
+                                    },
+                                   ]
 
             return output
         s3.postp = postp

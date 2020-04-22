@@ -131,7 +131,7 @@ class S3Config(Storage):
     # fontset format -> [normal-version, bold-version]
     # defaults to ["Helvetica", "Helvetica-Bold"] if not-specified here
     # Requires installation of appropriate font - e.g. using import_font in tasks.cfg
-    # Unifont can be downloaded from http://unifoundry.com/pub/unifont-7.0.06/font-builds/unifont-7.0.06.ttf
+    # Unifont can be downloaded from http://unifoundry.com/unifont/index.html
     fonts = {"ar": ["unifont", "unifont"],
              #"dv": ["unifont", "unifont"],
              #"dz": ["unifont", "unifont"],
@@ -140,10 +140,12 @@ class S3Config(Storage):
              "mn": ["unifont", "unifont"],
              "my": ["unifont", "unifont"],
              "ne": ["unifont", "unifont"],
+             "pl": ["unifont", "unifont"],
              "prs": ["unifont", "unifont"],
              "ps": ["unifont", "unifont"],
              #"th": ["unifont", "unifont"],
              "tr": ["unifont", "unifont"],
+             "ur": ["unifont", "unifont"],
              "vi": ["unifont", "unifont"],
              "zh-cn": ["unifont", "unifont"],
              "zh-tw": ["unifont", "unifont"],

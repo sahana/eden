@@ -268,9 +268,9 @@ class S3OrganisationModel(S3Model):
                                                       region_represent,
                                                       # Limited to just 1 level of parent
                                                       # IFRC requirement
-                                                      filterby="parent",
-                                                      filter_opts=(None,),
-                                                      orderby="org_region.name"))
+                                                      filterby = "parent",
+                                                      filter_opts = (None,),
+                                                      orderby = "org_region.name"))
                 # IFRC: Only show the Regions, not the Zones
                 opts_filter = ("parent", (None,))
             else:
@@ -297,9 +297,9 @@ class S3OrganisationModel(S3Model):
                 requires = IS_EMPTY_OR(
                             IS_ONE_OF(db, "org_region.id",
                                       region_represent,
-                                      sort=True,
-                                      not_filterby=opts_filter[0],
-                                      not_filter_opts=opts_filter[1],
+                                      sort = True,
+                                      not_filterby = opts_filter[0],
+                                      not_filter_opts = opts_filter[1],
                                       )),
                 sortby = "name",
                 comment = S3PopupLink(c = "org",
@@ -367,7 +367,9 @@ class S3OrganisationModel(S3Model):
                            requires = IS_LENGTH(16),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Acronym"),
-                                                           T("Acronym of the organization's name, eg. IFRC.")))
+                                                           T("Acronym of the organization's name, eg. IFRC.")
+                                                           )
+                                         )
                            ),
                      #Field("registration", label = T("Registration")),    # Registration Number
                      region_id(),
@@ -375,7 +377,7 @@ class S3OrganisationModel(S3Model):
                            label = T("Home Country"),
                            represent = self.gis_country_code_represent,
                            requires = IS_EMPTY_OR(IS_IN_SET_LAZY(
-                                        lambda: gis.get_countries(key_type="code"),
+                                        lambda: gis.get_countries(key_type = "code"),
                                         zero = messages.SELECT_LOCATION
                                         )),
                            readable = use_country,
@@ -407,10 +409,13 @@ class S3OrganisationModel(S3Model):
                            label = T("Year"),
                            represent = lambda v: v or NONE,
                            requires = IS_EMPTY_OR(
-                                        IS_INT_IN_RANGE(1850, 2100)),
+                                        IS_INT_IN_RANGE(1850, 2100)
+                                        ),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Year"),
-                                                           T("Year that the organization was founded"))),
+                                                           T("Year that the organization was founded")
+                                                           )
+                                         ),
                            ),
                      Field("logo", "upload",
                            label = T("Logo"),
@@ -519,10 +524,10 @@ class S3OrganisationModel(S3Model):
                       hierarchy = "parent__link.organisation_id",
                       hierarchy_link = "parent",
                       )
-            org_widgets["hierarchy"] = S3HierarchyWidget(lookup="org_organisation",
-                                                         represent=org_organisation_represent,
-                                                         multiple=False,
-                                                         leafonly=False,
+            org_widgets["hierarchy"] = S3HierarchyWidget(lookup = "org_organisation",
+                                                         represent = org_organisation_represent,
+                                                         multiple = False,
+                                                         leafonly = False,
                                                          )
         else:
             text_comment = T("You can search by name, acronym or comments")
@@ -2669,12 +2674,11 @@ class S3OrganisationServiceModel(S3Model):
                      super_link("doc_id", "doc_entity"),
                      organisation_id(
                         default = current.auth.root_org(),
-                        requires = self.org_organisation_requires(
-                                    required = True,
-                                    # Only allowed to add Projects for Orgs
-                                    # that the user has write access to
-                                    updateable = True,
-                                    ),
+                        requires = org_organisation_requires(required = True,
+                                                             # Only allowed to add Projects for Orgs
+                                                             # that the user has write access to
+                                                             updateable = True,
+                                                             ),
                         ),
                      # The site where the organisation provides services:
                      # (component not instance)
@@ -4015,7 +4019,7 @@ class S3FacilityModel(S3Model):
                            requires = code_requires,
                            ),
                      self.org_organisation_id(
-                        requires = self.org_organisation_requires(updateable=True),
+                        requires = org_organisation_requires(updateable = True),
                         ),
                      self.gis_location_id(),
                      Field("opening_times",
@@ -4740,8 +4744,9 @@ class S3OfficeModel(S3Model):
                            requires = code_requires,
                            ),
                      organisation_id(
-                         requires = org_organisation_requires(required=True,
-                                                              updateable=True),
+                         requires = org_organisation_requires(required = True,
+                                                              updateable = True,
+                                                              ),
                          ),
                      office_type_id(
                                     #readable = False,

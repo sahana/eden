@@ -60,6 +60,7 @@ class S3MainMenu(default.S3MainMenu):
                     MM("Volunteers", c="hrm", f="human_resource")(
                        MM("Reserves", c="pr", f="person", vars={"reserves": 1}),
                        MM("Reserve Groups", c="pr", f="group"),
+                       MM("Inactives", c="pr", f="person", vars={"inactive": 1}),
                        ),
                     MM("Events", c="hrm", f="training_event"),
                     MM("Opportunities", c="req", f="need"),
