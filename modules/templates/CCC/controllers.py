@@ -1398,6 +1398,7 @@ class verify_email(S3CustomController):
         s3db = current.s3db
         auth = current.auth
         auth_settings = auth.settings
+        s3 = current.response.s3
 
         key = current.request.args[-1]
         utable = auth_settings.table_user
@@ -1472,18 +1473,19 @@ class verify_email(S3CustomController):
             approvers = db(query).select(utable.email)
 
         if not approvers:
-            # Agencies are approved by ADMIN(s)
-            #Others approved by ADMIN if no ORG_ADMIN(s) exist
+            # Agencies are approved by ADMIN(s) with a CVS email
+            # Others approved by ADMIN if no ORG_ADMIN(s) exist
             query = (gtable.uuid == "ADMIN") & \
                     (gtable.id == mtable.group_id) & \
                     (mtable.user_id == utable.id)
+            if not s3.debug:
+                query &= (utable.email.like("%@cumbriacvs.org.uk"))
             approvers = db(query).select(utable.email)
 
         # Mail the Approver(s)
         first_name = user.first_name
         last_name = user.last_name
         email = user.email
-        base_url = current.response.s3.base_url
         system_name = settings.get_system_name()
         # NB This is a cut-down version of the original which doesn't support multi-lingual
         subject = "%(system_name)s - New User Registration Approval Pending" % \
@@ -1494,7 +1496,7 @@ class verify_email(S3CustomController):
                      "last_name": last_name,
                      "email": email,
                      "url": "%(base_url)s/admin/user/%(id)s" % \
-                            {"base_url": base_url,
+                            {"base_url": s3.base_url,
                              "id": user_id,
                              },
                      })

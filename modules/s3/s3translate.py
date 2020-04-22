@@ -849,7 +849,7 @@ class TranslateReadFiles(object):
                     tappend(baseFile)
         else:
             # Just use current template
-            template = current.deployment_settings.get_base_template()
+            template = current.deployment_settings.get_template()
             if isinstance(template, STRING_TYPES):
                 template_list = [template]
             else:

@@ -1084,11 +1084,11 @@ $('.copy-link').click(function(e){
 
         # Filtered components
         s3db.add_components(tablename,
-                            hrm_human_resource_tag = ({"name": "job_title",
-                                                       "joinby": "human_resource_id",
-                                                       "filterby": {"tag": "job_title"},
-                                                       "multiple": False,
-                                                       },
+                            hrm_human_resource_tag = (#{"name": "job_title",
+                                                      # "joinby": "human_resource_id",
+                                                      # "filterby": {"tag": "job_title"},
+                                                      # "multiple": False,
+                                                      # },
                                                       {"name": "reserve",
                                                        "joinby": "human_resource_id",
                                                        "filterby": {"tag": "reserve"},
@@ -1122,7 +1122,7 @@ $('.copy-link').click(function(e){
 
         if r.controller == "default":
             # Personal Profile
-            list_fields = ["job_title.value",
+            list_fields = [#"job_title.value",
                            ]
             current.response.s3.crud_strings[tablename] = Storage(
                 label_create = T("New Affiliation"),
@@ -1136,10 +1136,10 @@ $('.copy-link').click(function(e){
                 msg_record_modified = T("Affiliation updated"),
                 msg_record_deleted = T("Affiliation deleted"),
                 msg_list_empty = T("No Affiliations currently registered")
-            )
+                )
         else:
             list_fields = ["person_id",
-                           (T("Role"), "job_title.value"),
+                           #(T("Role"), "job_title.value"),
                            (T("Volunteer Offers"), "person_id$competency.skill_id"),
                            (T("Email"), "email.value"),
                            (T("Mobile Phone"), "phone.value"),
@@ -1156,12 +1156,12 @@ $('.copy-link').click(function(e){
                 msg_record_modified = T("Volunteer updated"),
                 msg_record_deleted = T("Volunteer deleted"),
                 msg_list_empty = T("No Volunteers currently registered")
-            )
+                )
 
         filter_fields = ["person_id$first_name",
                          "person_id$middle_name",
                          "person_id$last_name",
-                         "job_title.value",
+                         #"job_title.value",
                          "comments",
                          "person_id$competency.skill_id$name",
                          ]
@@ -1170,7 +1170,7 @@ $('.copy-link').click(function(e){
         districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
                                                                                          gtable.name,
                                                                                          cache = s3db.cache)
-        districts = {d.id:d.name for d in districts}
+        districts = {d.id: d.name for d in districts}
 
         filter_widgets = [S3TextFilter(filter_fields,
                                        #formstyle = text_filter_formstyle,
@@ -1196,7 +1196,7 @@ $('.copy-link').click(function(e){
 
         s3db.configure("hrm_human_resource",
                        crud_form = S3SQLCustomForm("organisation_id",
-                                                   (T("Role"), "job_title.value"),
+                                                   #(T("Role"), "job_title.value"),
                                                    (T("Visible on the Reserves list?"), "reserve.value"),
                                                    "person_id",
                                                    "comments",
