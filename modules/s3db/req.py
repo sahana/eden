@@ -4557,11 +4557,10 @@ def req_update_commit_quantities_and_status(req):
         rstable = s3db.req_req_skill
         query = (rstable.req_id == req_id) & \
                 (rstable.deleted == False)
-        status = set()
 
         if not any(row.quantity for row in cskills):
             # Nothing has been committed for this request so far
-            status.add(REQ_STATUS_NONE)
+            commit_status = REQ_STATUS_NONE
             db(query).update(quantity_commit=0)
         else:
             # Get all requested skill(set)s for this request
