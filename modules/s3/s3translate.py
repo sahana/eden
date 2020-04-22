@@ -827,20 +827,23 @@ class TranslateReadFiles(object):
 
         from .s3import import S3BulkImporter
 
+
+
         # List of database strings
         database_strings = []
         dappend = database_strings.append
         template_list = []
         base_dir = current.request.folder
         path = os.path
+        join = path.join
         # If all templates flag is set we look in all templates' tasks.cfg file
         if all_template_flag:
-            template_dir = path.join(base_dir, "modules", "templates")
+            template_dir = join(base_dir, "modules", "templates")
             files = os.listdir(template_dir)
             # template_list will have the list of all templates
             tappend = template_list.append
             for f in files:
-                curFile = path.join(template_dir, f)
+                curFile = join(template_dir, f)
                 baseFile = path.basename(curFile)
                 if path.isdir(curFile):
                     tappend(baseFile)
@@ -868,8 +871,8 @@ class TranslateReadFiles(object):
             if "." in template:
                 template = template.split(".")
                 template = join(*template)
-            pth = path.join(base_dir, "modules", "templates", template)
-            if path.exists(path.join(pth, "tasks.cfg")) is False:
+            pth = join(base_dir, "modules", "templates", template)
+            if path.exists(join(pth, "tasks.cfg")) is False:
                 continue
             bi.load_descriptor(pth)
 
