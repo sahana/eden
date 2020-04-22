@@ -35,7 +35,7 @@ from gluon import current
 from gluon.languages import read_dict, write_dict
 from gluon.storage import Storage
 
-from s3compat import PY2, BytesIO, pickle
+from s3compat import PY2, BytesIO, STRING_TYPES, pickle
 from .s3fields import S3ReusableField
 
 """
@@ -832,15 +832,15 @@ class TranslateReadFiles(object):
         # List of database strings
         database_strings = []
         dappend = database_strings.append
-        template_list = []
         base_dir = current.request.folder
         path = os.path
         join = path.join
-        # If all templates flag is set we look in all templates' tasks.cfg file
         if all_template_flag:
+            # If all templates flag is set we look in all templates' tasks.cfg file
             template_dir = join(base_dir, "modules", "templates")
             files = os.listdir(template_dir)
             # template_list will have the list of all templates
+            template_list = []
             tappend = template_list.append
             for f in files:
                 curFile = join(template_dir, f)
@@ -848,8 +848,12 @@ class TranslateReadFiles(object):
                 if path.isdir(curFile):
                     tappend(baseFile)
         else:
-            # Set current template.
-            template_list.append(current.deployment_settings.base.template)
+            # Just use current template
+            template = current.deployment_settings.get_base_template()
+            if isinstance(template, STRING_TYPES):
+                template_list = [template]
+            else:
+                template_list = template
 
         # List of fields which don't have an S3ReusableField defined but we
         # know we wish to translate
