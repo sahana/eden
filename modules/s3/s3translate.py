@@ -1046,6 +1046,9 @@ class Strings(object):
                 templates = (templates,)
             group_files = A.grp.group_files
             for template in templates:
+                if "." in template:
+                    template = template.split(".")
+                    template = join(*template)
                 template_folder = join(folder, "modules", "templates", template)
                 group_files(template_folder)
 
