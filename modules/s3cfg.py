@@ -143,7 +143,7 @@ class S3Config(Storage):
              "pl": ["unifont", "unifont"],
              "prs": ["unifont", "unifont"],
              "ps": ["unifont", "unifont"],
-             #"th": ["unifont", "unifont"],
+             "th": ["unifont", "unifont"],
              "tr": ["unifont", "unifont"],
              "ur": ["unifont", "unifont"],
              "vi": ["unifont", "unifont"],
