@@ -865,6 +865,9 @@ class TranslateReadFiles(object):
         S = Strings()
         read_csv = S.read_csv
         for template in template_list:
+            if "." in template:
+                template = template.split(".")
+                template = join(*template)
             pth = path.join(base_dir, "modules", "templates", template)
             if path.exists(path.join(pth, "tasks.cfg")) is False:
                 continue
