@@ -1900,7 +1900,7 @@ class S3RolesExport(object):
         # Optional columns
         self.col_hidden = False
         self.col_protected = False
-        self.col_entity = False
+        self.col_entity = True
 
         # Look up the roles
         gtable = auth.settings.table_group
@@ -1946,6 +1946,7 @@ class S3RolesExport(object):
                                  rtable.uacl,
                                  rtable.oacl,
                                  rtable.entity,
+                                 rtable.unrestricted,
                                  )
         self.rules = rules
 
@@ -1953,7 +1954,9 @@ class S3RolesExport(object):
         entities = set()
         for rule in rules:
             entity = rule.entity
-            if entity is not None:
+            if rule.unrestricted:
+                self.col_entity = True
+            elif entity is not None:
                 self.col_entity = True
                 entities.add(entity)
 
@@ -1990,7 +1993,7 @@ class S3RolesExport(object):
         # Rule fields
         fieldnames.extend(["controller", "function", "table", "uacl", "oacl"])
         if col_entity:
-            fieldnames.extend("entity")
+            fieldnames.append("entity")
 
         # Helper to get the role UID for a rule
         role_dicts = self.roles
@@ -2025,15 +2028,14 @@ class S3RolesExport(object):
             # The entity column (optional)
             if col_entity:
                 entity = rule.entity
-                if entity is not None:
-                    if entity == 0:
-                        rule_dict["entity"] = "any"
+                if rule.unrestricted:
+                    rule_dict["entity"] = "any"
+                elif entity is not None:
+                    org = orgs.get(entity)
+                    if org:
+                        rule_dict["entity"] = org
                     else:
-                        org = orgs.get(entity)
-                        if org:
-                            rule_dict["entity"] = org
-                        else:
-                            continue
+                        continue
 
             # The target columns (controller, function, table)
             if rule.tablename:

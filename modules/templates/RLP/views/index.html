@@ -1,0 +1,22 @@
+{{extend "layout.html"}}
+<div class='row home-top' style='margin-top:20px'>
+ <div class='large-4 large-offset-1 columns'>
+  <div class="row hide-for-small">
+   <div id='site-title' class='small-12 columns'>
+     <img src='{{=URL(c="static", f="themes", args=["RLP", "img", "logo_small.png"])}}' alt='DEUTSCHES ROTES KREUZ' />
+     <h2>{{=settings.get_system_name()}}</h3>
+   </div>
+  </div>
+ </div>
+ <div class='large-5 columns end'>
+  {{AUTHENTICATED = auth.get_system_roles().AUTHENTICATED}}
+  {{if AUTHENTICATED not in session.s3.roles:}}
+  <div id='login_box' class='panel'>
+   <div id='login_form'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
+   </div>
+  </div>
+  {{pass}}
+ </div>
+</div>

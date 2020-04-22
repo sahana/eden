@@ -28,10 +28,10 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3VolunteerModel",
-           "S3VolunteerActivityModel",
-           "S3VolunteerAwardModel",
-           "S3VolunteerClusterModel",
+__all__ = ("VolunteerModel",
+           "VolunteerActivityModel",
+           "VolunteerAwardModel",
+           "VolunteerClusterModel",
            "vol_service_record",
            "vol_person_controller",
            "vol_volunteer_controller",
@@ -51,7 +51,7 @@ from s3layouts import S3PopupLink
 SEPARATORS = (",", ":")
 
 # =============================================================================
-class S3VolunteerModel(S3Model):
+class VolunteerModel(S3Model):
 
     names = ("vol_details",)
 
@@ -102,7 +102,7 @@ class S3VolunteerModel(S3Model):
         return output
 
 # =============================================================================
-class S3VolunteerActivityModel(S3Model):
+class VolunteerActivityModel(S3Model):
     """
         Currently used by CRMADA
     """
@@ -586,7 +586,7 @@ def vol_activity_hours_onaccept(form):
                           active = active)
 
 # =============================================================================
-class S3VolunteerAwardModel(S3Model):
+class VolunteerAwardModel(S3Model):
 
     names = ("vol_award",
              "vol_volunteer_award",
@@ -738,7 +738,7 @@ class S3VolunteerAwardModel(S3Model):
             return current.messages["NONE"]
 
 # =============================================================================
-class S3VolunteerClusterModel(S3Model):
+class VolunteerClusterModel(S3Model):
     """
         Fucntionality to support the Philippines Red Cross
     """

@@ -1,0 +1,5 @@
+First Name,Last Name,Email,Password,Role,Organisation,Language
+MSAGD,Admin,msagd_admin@example.com,eden,ORG_GROUP_ADMIN,"Ministerium für Soziales, Arbeit, Gesundheit und Demographie",de
+MSAGD,Coordinator,msagd_coordinator@example.com,eden,COORDINATOR/0,"Ministerium für Soziales, Arbeit, Gesundheit und Demographie",de
+BIR,HR Manager,bir_hrmanager@example.com,eden,HRMANAGER,Gesundheitsamt Birkenfeld,de
+BIR,Admin,bir_admin@example.com,eden,ORG_ADMIN,Gesundheitsamt Birkenfeld,de
