@@ -140,16 +140,25 @@ def config(settings):
     settings.org.projects_tab = False
 
     # -------------------------------------------------------------------------
+    # Custom group types for volunteer pools
+    #
+    pool_types = {21: T("Open Pool"),
+                  22: T("Managed Pool"),
+                  }
+    pool_type_ids = list(pool_types.keys())
+
+    # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
 
         s3db = current.s3db
 
+        # TODO is this needed?
         s3db.add_components("org_organisation",
                             pr_group = {"name": "pool",
                                         "link": "org_organisation_team",
                                         "joinby": "organisation_id",
                                         "key": "group_id",
-                                        "filterby": {"group_type": (21, 22),
+                                        "filterby": {"group_type": pool_type_ids,
                                                      },
                                         "actuate": "replace",
                                         },
@@ -169,7 +178,7 @@ def config(settings):
                                         "link": "org_organisation_team",
                                         "joinby": "organisation_id",
                                         "key": "group_id",
-                                        "filterby": {"group_type": (21, 22),
+                                        "filterby": {"group_type": pool_type_ids,
                                                      },
                                         "actuate": "replace",
                                         },
@@ -206,15 +215,9 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_pr_group_resource(r, tablename):
 
-        s3db = current.s3db
-
         if r.tablename == "org_organisation":
 
             table = r.component.table
-
-            pool_types = {21: T("Open Pool"),
-                          22: T("Managed Pool"),
-                          }
 
             from gluon import IS_IN_SET
             from s3 import S3Represent
@@ -250,7 +253,7 @@ def config(settings):
             from s3 import IS_ONE_OF
             gtable = current.s3db.pr_group
             mtable = current.s3db.pr_group_membership
-            query = (gtable.group_type.belongs((21, 22))) & (mtable.id == None)
+            query = (gtable.group_type.belongs(pool_type_ids)) & (mtable.id == None)
             left = mtable.on((mtable.group_id == gtable.id) & \
                              (mtable.person_id == r.id) & \
                              (mtable.deleted == False))
@@ -292,22 +295,39 @@ def config(settings):
     #
     #settings.customise_pr_person_resource = customise_pr_person_resource
     # -------------------------------------------------------------------------
-    def customise_pr_person_controller(**attr):
+    def get_pools():
 
         db = current.db
         s3db = current.s3db
 
-        # Add memberships in volunteer pools as custom component
         gtable = s3db.pr_group
-        query = (gtable.group_type.belongs((21, 22))) & \
+        query = (gtable.group_type.belongs(pool_type_ids)) & \
                 (gtable.deleted == False)
-        pools = db(query).select(gtable.id, cache=s3db.cache)
-        pool_ids = [pool.id for pool in pools]
+        rows = db(query).select(gtable.id,
+                                gtable.name,
+                                cache = s3db.cache,
+                                )
+
+        return {row.id: row.name for row in rows}
+
+    # -------------------------------------------------------------------------
+    def use_person_custom_components():
+        """
+            Define custom components of pr_person
+            - membership in volunteer pool (group_membership)
+            - recruitment request (req_need)
+        """
+
+        s3db = current.s3db
+
+        pools = get_pools()
+        pool_ids = list(pools.keys())
 
         s3db.add_components("pr_person",
                             pr_group_membership = {"name": "pool_membership",
                                                    "joinby": "person_id",
                                                    "filterby": {"group_id": pool_ids},
+                                                   "multiple": False,
                                                    },
                             req_need = {"link": "req_need_person",
                                         "joinby": "person_id",
@@ -316,10 +336,15 @@ def config(settings):
                                         },
                             )
 
+    # -------------------------------------------------------------------------
+    def customise_pr_person_controller(**attr):
+
         s3 = current.response.s3
 
         # Enable bigtable features
         settings.base.bigtable = True
+
+        use_person_custom_components()
 
         standard_prep = s3.prep
         def custom_prep(r):
@@ -334,8 +359,6 @@ def config(settings):
 
                 cname = r.component_name
                 if cname == "need":
-
-                    component = r.component
 
                     # Adjust list fields
                     list_fields = ["need_id$need_organisation.organisation_id",
@@ -363,8 +386,9 @@ def config(settings):
     def customise_hrm_human_resource_controller(**attr):
 
         s3db = current.s3db
-
         s3 = current.response.s3
+
+        use_person_custom_components()
 
         # Enable bigtable features
         settings.base.bigtable = True
@@ -380,18 +404,48 @@ def config(settings):
 
             if r.controller == "vol":
 
-                # TODO filter to volunteers listed in an org_team
-                # TODO filter to active volunteers
+                # TODO filter to volunteers listed in an org_team unless COORDINATOR
+                # TODO filter to active volunteers unless COORDINATOR
                 # TODO show placeholder identity unless COORDINATOR
 
                 list_fields = ["person_id",
+                               (T("Age"), "person_id$age"),
                                "person_id$gender",
-                               # TODO year of birth
-                               # TODO profession
-                               "organisation_id",
+                               "person_id$person_details.occupation",
+                               #"organisation_id",
+                               (T("Pool"), "person_id$pool_membership.group_id"),
                                ]
+
+                from s3 import S3AgeFilter, S3OptionsFilter, S3TextFilter
+
+                filter_widgets = [
+                    # TODO Hide text filter unless COORDINATOR
+                    S3TextFilter(["person_id$first_name",
+                                  "person_id$middle_name",
+                                  "person_id$last_name",
+                                  ],
+                                 label = T("Search"),
+                                 ),
+                    S3AgeFilter("person_id$date_of_birth",
+                                label = T("Age"),
+                                minimum = 12,
+                                maximum = 90,
+                                ),
+                    S3OptionsFilter("person_id$pool_membership.group_id",
+                                    label = T("Pool"),
+                                    options = get_pools,
+                                    ),
+                    # TODO filter by home address
+                    # TODO filter by profession
+                    # TODO filter by competency
+                    ]
+
                 s3db.configure("hrm_human_resource",
                                list_fields = list_fields,
+                               filter_widgets = filter_widgets,
+                               # Extra fields for computation of virtual fields
+                               extra_fields = ["person_id$date_of_birth",
+                                               ],
                                )
 
             return result
@@ -733,6 +787,9 @@ def rlp_vol_rheader(r, tabs=None):
 
         if tablename == "pr_person":
 
+            # TODO extract pool membership and pool type
+            # TODO show human_resource only if COORDINATOR (irrelevant for others)
+
             if not tabs:
                 tabs = [(T("Personal Data"), None),
                         (T("Providing Organisation"), "human_resource"),
@@ -741,9 +798,9 @@ def rlp_vol_rheader(r, tabs=None):
                 if auth.s3_has_role("COORDINATOR"):
                     tabs.extend([(T("Addresses"), "address"),
                                  (T("Contact Information"), "contacts"),
-                                 (T("Pools"), "pool_membership"),
+                                 (T("Pool"), "pool_membership"),
                                  ])
-                tabs.extend([(T("Competency"), "competency"),
+                tabs.extend([(T("Competencies"), "competency"),
                              (T("Recruitment"), "need"),
                              ])
 
