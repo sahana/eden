@@ -460,9 +460,9 @@ def config(settings):
 
                 if r.component_name == "delegation":
 
-                    # TODO use organizer only when COORDINATOR,
-                    #      otherwise use list? or allow switching between the two
-                    if r.interactive and r.method is None and not r.component_id:
+                    # HRMANAGERs and ADMINs see the list
+                    if not current.auth.s3_has_role("HRMANAGER") and \
+                       r.interactive and r.method is None and not r.component_id:
                         r.method = "organize"
 
                 # TODO adapt CRUD-strings (=>volunteers)
