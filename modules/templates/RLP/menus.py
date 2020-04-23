@@ -180,18 +180,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         settings = current.deployment_settings
 
-        teams = settings.get_hrm_teams()
-        use_teams = lambda i: teams
-
         return M(c="hrm")(
-                    M(settings.get_hrm_staff_label(), f="staff")(
-                        M("Create", m="create"),
-                        ),
-                    M(teams, f="group", check=use_teams)(
-                        M("Create", m="create"),
-                        ),
-                    M("Job Titles", f="job_title")(
-                        M("Create", m="create"),
+                    M("Delegations", f="delegation")(
+                        M("Pending Requests", vars = {"~.status": "REQ"}),
+                        M("Approved", vars = {"~.status": "APPR"}),
+                        M("Declined", vars = {"~.status": "DECL"}),
+                        M("Organizer", m="organize"),
                         ),
                     )
 

@@ -475,6 +475,51 @@ def config(settings):
         return attr
 
     settings.customise_pr_person_controller = customise_pr_person_controller
+    # -------------------------------------------------------------------------
+    def customise_hrm_delegation_resource(r, tablename):
+
+        s3db = current.s3db
+
+        organize = {"start": "date",
+                    "end": "end_date",
+                    "color": "status",
+                    "colors": {"REQ":  "#d554a2",
+                               "APPR": "#408d40",
+                               "DECL": "#303030",
+                               "CANC": "#d0d0d0",
+                               "IMPL": "#40879c",
+                               },
+                    }
+
+        if r.method == "organize":
+            table = s3db.hrm_delegation
+            field = table.date
+            field.writable = False
+            field = table.end_date
+            field.writable = False
+            s3db.configure("hrm_delegation",
+                           insertable = False,
+                           )
+
+        if r.tablename == "pr_person" and r.component:
+            organize["title"] = "organisation_id"
+            organize["description"] = ["date",
+                                       "end_date",
+                                       "status",
+                                       ]
+        else: #if r.tablename == "hrm_delegation":
+            organize["title"] = "person_id"
+            organize["description"] = ["organisation_id",
+                                       "date",
+                                       "end_date",
+                                       "status",
+                                       ]
+
+        s3db.configure("hrm_delegation",
+                       organize = organize,
+                       )
+
+    settings.customise_hrm_delegation_resource = customise_hrm_delegation_resource
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -673,7 +718,6 @@ def rlp_vol_rheader(r, tabs=None):
         if tablename == "pr_person":
 
             # TODO extract pool membership and pool type
-            # TODO show human_resource only if COORDINATOR (irrelevant for others)
 
             if not tabs:
                 tabs = [(T("Personal Data"), None),
