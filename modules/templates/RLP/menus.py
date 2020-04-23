@@ -39,10 +39,7 @@ class S3MainMenu(default.S3MainMenu):
         auth = current.auth
 
         return [MM("Volunteers", c="vol", f="person"),
-                MM("Recruitment", c="hrm", f="delegation"),
-                MM("More", link=None)(
-                    MM("Organizations", c="org", f="organisation"),
-                    )
+                MM("Organizations", c="org", f="organisation"),
                 ]
 
     # -------------------------------------------------------------------------
@@ -172,31 +169,26 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     )
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def hrm():
+    @classmethod
+    def hrm(cls):
         """ HRM / Human Resources Management """
 
-        # TODO remove
-
-        settings = current.deployment_settings
-
-        return M(c="hrm")(
-                    M("Delegations", f="delegation")(
-                        M("Pending Requests", vars = {"~.status": "REQ"}),
-                        M("Approved", vars = {"~.status": "APPR"}),
-                        M("Declined", vars = {"~.status": "DECL"}),
-                        M("Organizer", m="organize"),
-                        ),
-                    )
+        return cls.vol()
 
     # -------------------------------------------------------------------------
     @staticmethod
     def vol():
         """ VOL / Volunteer Management """
 
-        return M(c="vol")(
-                    M("Volunteers", f="person")(
+        return M(c=("vol", "hrm"))(
+                    M("Volunteers", c="vol", f="person")(
                         M("Create", m="create"),
+                        ),
+                    M("Delegations", c="hrm", f="delegation")(
+                        M("Upcoming", vars = {"active": "f"}),
+                        M("Current", vars = {"active": "1"}),
+                        M("Past", vars = {"active": "0"}),
+                        M("Organizer", m="organize"),
                         ),
                     M("Administration", link=False)(
                         M("Occupation Types", c="pr", f="occupation_type"),

@@ -458,6 +458,12 @@ def config(settings):
                                                    ],
                                    )
 
+                if r.component_name == "delegation":
+
+                    # HRMANAGERs and ADMINs see the list
+                    if not current.auth.s3_has_role("HRMANAGER") and \
+                       r.interactive and r.method is None and not r.component_id:
+                        r.method = "organize"
 
                 # TODO adapt CRUD-strings (=>volunteers)
 
@@ -476,10 +482,57 @@ def config(settings):
 
     settings.customise_pr_person_controller = customise_pr_person_controller
     # -------------------------------------------------------------------------
+    def delegation_workflow(table, record):
+        """
+            Enforce workflow in delegation records
+
+            @param table: the Table used in the request (can be aliased)
+            @param record: the delegation record
+        """
+
+        workflow = {"REQ": ("REQ", "APPR", "DECL", "CANC"),
+                    "APPR": ("APPR", "CANC", "IMPL"),
+                    "IMPL": ("IMPL", "CANC",),
+                    }
+
+        status = record.status
+        next_status = workflow.get(status)
+
+        field = table.status
+        if not next_status:
+            # Final status => can't be changed
+            field.writable = False
+        else:
+            requires = field.requires
+            theset = []
+            labels = []
+            for index, option in enumerate(requires.theset):
+                if option in next_status:
+                    theset.append(option)
+                    labels.append(requires.labels[index])
+            requires.theset = theset
+            requires.labels = labels
+            field.writable = True
+
+        # Can only change dates while not processed yet
+        if status != "REQ":
+            field = table.date
+            field.writable = False
+            field = table.end_date
+            field.writable = False
+
+        # Can never change person or organisation
+        field = table.person_id
+        field.writable = False
+        field = table.organisation_id
+        field.writable = False
+
+    # -------------------------------------------------------------------------
     def customise_hrm_delegation_resource(r, tablename):
 
         s3db = current.s3db
 
+        # Basic organizer configuration
         organize = {"start": "date",
                     "end": "end_date",
                     "color": "status",
@@ -493,21 +546,44 @@ def config(settings):
 
         if r.method == "organize":
             table = s3db.hrm_delegation
+
+            # Cannot change dates with the organizer
+            # - but may be possible in the popup
             field = table.date
             field.writable = False
             field = table.end_date
             field.writable = False
-            s3db.configure("hrm_delegation",
-                           insertable = False,
-                           )
+
+            # Cannot create delegations in the organizer
+            s3db.configure("hrm_delegation", insertable = False)
 
         if r.tablename == "pr_person" and r.component:
+            # On tab of volunteer file
+
+            if r.component_id:
+                r.component.load()
+                record = r.component._rows[0]
+                delegation_workflow(r.component.table, record)
+                # TODO cannot change organisation
+                # TODO can only change dates while status is REQ/INVT/APPL
+                pass
+
             organize["title"] = "organisation_id"
             organize["description"] = ["date",
                                        "end_date",
                                        "status",
                                        ]
-        else: #if r.tablename == "hrm_delegation":
+        else:
+            # Delegation controller or popup
+            record = r.record
+            if record:
+                delegation_workflow(r.resource.table, record)
+
+            # Cannot insert here
+            s3db.configure("hrm_delegation",
+                           insertable = False,
+                           )
+
             organize["title"] = "person_id"
             organize["description"] = ["organisation_id",
                                        "date",
@@ -515,12 +591,36 @@ def config(settings):
                                        "status",
                                        ]
 
+        # Reconfigure
         s3db.configure("hrm_delegation",
                        organize = organize,
+                       deletable = False,
                        )
 
     settings.customise_hrm_delegation_resource = customise_hrm_delegation_resource
 
+    # -------------------------------------------------------------------------
+    def customise_hrm_delegation_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Must not create or delete delegations from here
+        current.s3db.configure("hrm_delegation",
+                               insertable = False,
+                               )
+
+        #standard_prep = s3.prep
+        #def custom_prep(r):
+        #
+        #    # Call standard prep
+        #    result = standard_prep(r) if callable(standard_prep) else True
+        #
+        #    return result
+        #s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_hrm_delegation_controller = customise_hrm_delegation_controller
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
