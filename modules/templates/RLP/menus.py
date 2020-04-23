@@ -182,9 +182,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         return M(c="hrm")(
                     M("Delegations", f="delegation")(
-                        M("Pending Requests", vars = {"~.status": "REQ"}),
-                        M("Approved", vars = {"~.status": "APPR"}),
-                        M("Declined", vars = {"~.status": "DECL"}),
+                        M("Upcoming", vars = {"active": "f"}),
+                        M("Current", vars = {"active": "1"}),
+                        M("Past", vars = {"active": "0"}),
                         M("Organizer", m="organize"),
                         ),
                     )

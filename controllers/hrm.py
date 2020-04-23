@@ -825,6 +825,26 @@ def shift_template():
 def delegation():
     """ Delegations: RESTful CRUD controller """
 
+    def prep(r):
+
+        # Subsets to support workflow
+        active = r.get_vars.get("active")
+        if active:
+            today = current.request.utcnow
+            if active == "f":
+                # Future delegations
+                query = (FS("date") > today) & (FS("status") != "CANC")
+            elif active == "0":
+                # Past and cancelled delegations
+                query = (FS("end_date") < today)
+            else:
+                # Ongoing delegations
+                query = (FS("date") <= today) & (FS("status") != "CANC")
+            r.resource.add_filter(query)
+        return True
+
+    s3.prep = prep
+
     return s3_rest_controller()
 
 # =============================================================================
