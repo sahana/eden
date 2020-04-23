@@ -3207,7 +3207,7 @@ Thank you"""
                                 # Add Region to list_fields
                                 list_fields.insert(-1, "region_id")
                                 # Region is required
-                                table.region_id.requires = table.region_id.requires[0].other
+                                table.region_id.requires = table.region_id.requires.other
 
                             else:
                                 table.region_id.readable = table.region_id.writable = False

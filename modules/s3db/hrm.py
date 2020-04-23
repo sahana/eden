@@ -8356,7 +8356,8 @@ def hrm_person_controller(**attr):
     get_vars["xsltmode"] = "staff"
     if hr_id:
         hr = db(table.id == hr_id).select(table.type,
-                                          limitby=(0, 1)).first()
+                                          limitby = (0, 1)
+                                          ).first()
         if hr:
             group = "volunteer" if hr.type == 2 else "staff"
             # Also inform the back-end of this finding
@@ -8480,6 +8481,10 @@ def hrm_person_controller(**attr):
 
     # CRUD pre-process
     def prep(r):
+
+        # Filter to just those people with an active HR record
+        r.resource.add_filter(FS("human_resource.id") != None)
+
         # Plug-in role matrix for Admins/OrgAdmins
         S3PersonRoleManager.set_method(r, entity="pr_person")
 
@@ -8538,7 +8543,7 @@ def hrm_person_controller(**attr):
                         # Lookup Code
                         mtable = s3db.deploy_mission
                         mission = db(mtable.id == mission_id).select(mtable.code,
-                                                                     limitby=(0, 1)
+                                                                     limitby = (0, 1)
                                                                      ).first()
                         if mission:
                             hatable.code.default = mission.code
@@ -8549,7 +8554,7 @@ def hrm_person_controller(**attr):
                                 (atable.human_resource_id == htable.id) & \
                                 (htable.person_id == r.id)
                         assignment = db(query).select(atable.job_title_id,
-                                                      limitby=(0, 1)
+                                                      limitby = (0, 1)
                                                       ).first()
                         if assignment:
                             hatable.job_title_id.default = assignment.job_title_id
@@ -8645,9 +8650,10 @@ def hrm_person_controller(**attr):
                 # Provide a link to assign a new Asset
                 # @ToDo: Proper Widget to do this inline
                 output["add_btn"] = A(T("Assign Asset"),
-                                      _href=URL(c="asset", f="asset"),
-                                      _id="add-btn",
-                                      _class="action-btn")
+                                      _href = URL(c="asset", f="asset"),
+                                      _id = "add-btn",
+                                      _class = "action-btn",
+                                      )
         return output
     s3.postp = postp
 

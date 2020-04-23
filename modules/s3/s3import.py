@@ -4636,7 +4636,8 @@ class S3BulkImporter(object):
                      filename,
                      tablename,
                      idfield,
-                     imagefield):
+                     imagefield
+                     ):
         """
             Import images, such as a logo or person image
 
@@ -4917,7 +4918,11 @@ class S3BulkImporter(object):
         restricted(code, environment, layer=filename)
 
     # -------------------------------------------------------------------------
-    def import_task(self, task_name, args_json=None, vars_json=None):
+    def import_task(self,
+                    task_name,
+                    args_json = None,
+                    vars_json = None
+                    ):
         """
             Import a Scheduled Task
         """
@@ -4976,7 +4981,7 @@ class S3BulkImporter(object):
                    prefix,
                    resourcename,
                    dataformat,
-                   source_type=None,
+                   source_type = None,
                    ):
         """
             Import XML data using an XSLT: static/formats/<dataformat>/import.xsl

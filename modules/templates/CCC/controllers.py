@@ -233,7 +233,27 @@ class personAdditional(S3Method):
            r.representation in ("html", "aadata"):
 
             T = current.T
+            auth = current.auth
             s3db = current.s3db
+
+            # Check if this User is allowed access to this data for this Person
+            if auth.s3_has_role("RESERVE_ADMIN"):
+                # OK
+                pass
+            else:
+                htable = s3db.hrm_human_resource
+                query = (htable.person_id == r.record.id) & \
+                        (htable.deleted == False)
+                hr = current.db(query).select(htable.organisation_id,
+                                              limitby = (0, 1)
+                                              ).first()
+                if hr and hr.organisation_id == auth.user.organisation_id:
+                    # OK
+                    pass
+                else:
+                    # Not OK
+                    current.session.error = T("Not permitted to access Additional Information for this Volunteer")
+                    redirect(URL(c=r.controller, f="person", args=[r.id]))
 
             tablename = "pr_person"
 
@@ -1700,7 +1720,7 @@ def auth_user_register_onaccept(user_id):
                                )
             elif forum.name == "Reserves":
                 add_membership(user_id = user_id,
-                               role = "Reserves Admin",
+                               role = "Reserves Reader",
                                entity = forum.pe_id,
                                )
         person.update_record(realm_entity = realm_entity)
