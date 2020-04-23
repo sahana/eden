@@ -132,7 +132,7 @@ class S3Config(Storage):
     # defaults to ["Helvetica", "Helvetica-Bold"] if not-specified here
     # Requires installation of appropriate font - e.g. using import_font in tasks.cfg
     # Unifont can be downloaded from http://unifoundry.com/unifont/index.html
-    fonts = {"ar": ["unifont", "unifont"],
+    fonts = {"ar": ["unifont", "unifont"], # Note that this isn't an ideal font for Arabic as it doesn't support reshaping. We use arabic_reshaper to improve this.
              #"dv": ["unifont", "unifont"],
              #"dz": ["unifont", "unifont"],
              "km": ["unifont", "unifont"],
