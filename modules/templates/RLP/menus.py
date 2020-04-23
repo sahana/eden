@@ -38,7 +38,7 @@ class S3MainMenu(default.S3MainMenu):
 
         auth = current.auth
 
-        return [MM("Volunteers", c="vol", f="volunteer"),
+        return [MM("Volunteers", c="vol", f="person"),
                 MM("Recruitment", c="hrm", f="delegation"),
                 MM("More", link=None)(
                     MM("Organizations", c="org", f="organisation"),
