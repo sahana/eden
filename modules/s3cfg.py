@@ -4564,6 +4564,14 @@ class S3Config(Storage):
         return self.__lazy("hrm", "vol_service_record_manager",
                            default=current.T("Branch Coordinator"))
 
+    def get_hrm_delegation_workflow(self):
+        """
+            The type of workflow used for delegations:
+            - "Application": the person applies for the delegation
+            - "Request"    : the receiving org requests the delegation
+        """
+        return self.hrm.get("delegation_workflow", "Request")
+
     # -------------------------------------------------------------------------
     # Inventory Management Settings
     #

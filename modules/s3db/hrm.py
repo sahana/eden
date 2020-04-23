@@ -27,24 +27,25 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3HRModel",
-           "S3HRSiteModel",
-           "S3HRSalaryModel",
-           "S3HRInsuranceModel",
-           #"S3HRJobModel",
-           "S3HRContractModel",
-           "S3HRSkillModel",
-           "S3HRTagModel",
-           "S3HREventStrategyModel",
-           "S3HREventProgrammeModel",
-           "S3HREventProjectModel",
-           "S3HREventAssessmentModel",
-           "S3HRAppraisalModel",
-           "S3HRExperienceModel",
-           "S3HRAwardModel",
-           "S3HRDisciplinaryActionModel",
-           "S3HRProgrammeModel",
-           "S3HRShiftModel",
+__all__ = ("HRModel",
+           "HRSiteModel",
+           "HRSalaryModel",
+           "HRInsuranceModel",
+           #"HRJobModel",
+           "HRContractModel",
+           "HRSkillModel",
+           "HRTagModel",
+           "HREventStrategyModel",
+           "HREventProgrammeModel",
+           "HREventProjectModel",
+           "HREventAssessmentModel",
+           "HRAppraisalModel",
+           "HRExperienceModel",
+           "HRAwardModel",
+           "HRDisciplinaryActionModel",
+           "HRProgrammeModel",
+           "HRShiftModel",
+           "HRDelegationModel",
            "hrm_AssignMethod",
            "hrm_HumanResourceRepresent",
            "hrm_TrainingEventRepresent",
@@ -87,7 +88,7 @@ from s3layouts import S3PopupLink
 SEPARATORS = (",", ":")
 
 # =============================================================================
-class S3HRModel(S3Model):
+class HRModel(S3Model):
 
     names = ("hrm_department",
              "hrm_department_id",
@@ -1039,13 +1040,11 @@ class S3HRModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
+        dummy = S3ReusableField.dummy
 
-        return {"hrm_department_id": lambda **attr: dummy("department_id"),
-                "hrm_job_title_id": lambda **attr: dummy("job_title_id"),
-                "hrm_human_resource_id": lambda **attr: dummy("human_resource_id"),
+        return {"hrm_department_id": dummy("department_id"),
+                "hrm_job_title_id": dummy("job_title_id"),
+                "hrm_human_resource_id": dummy("human_resource_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -1372,7 +1371,7 @@ class S3HRModel(S3Model):
             current.s3db.pr_update_affiliations(htable, row)
 
 # =============================================================================
-class S3HRSiteModel(S3Model):
+class HRSiteModel(S3Model):
 
     names = ("hrm_human_resource_site",)
 
@@ -1493,7 +1492,7 @@ class S3HRSiteModel(S3Model):
                                       )
 
 # =============================================================================
-class S3HRSalaryModel(S3Model):
+class HRSalaryModel(S3Model):
     """ Data Model to track salaries of staff """
 
     names = ("hrm_staff_level",
@@ -1725,7 +1724,7 @@ class hrm_OrgSpecificTypeRepresent(S3Represent):
             return name
 
 # =============================================================================
-class S3HRInsuranceModel(S3Model):
+class HRInsuranceModel(S3Model):
     """ Data Model to track insurance information of staff members """
 
     names = ("hrm_insurance",
@@ -1782,7 +1781,7 @@ class S3HRInsuranceModel(S3Model):
         return {}
 
 # =============================================================================
-class S3HRContractModel(S3Model):
+class HRContractModel(S3Model):
     """ Data model to track employment contract details of staff members """
 
     names = ("hrm_contract",
@@ -1835,7 +1834,7 @@ class S3HRContractModel(S3Model):
         return {}
 
 # =============================================================================
-class S3HRJobModel(S3Model):
+class HRJobModel(S3Model):
     """
         Unused
     """
@@ -2005,7 +2004,7 @@ class S3HRJobModel(S3Model):
                 }
 
 # =============================================================================
-class S3HRSkillModel(S3Model):
+class HRSkillModel(S3Model):
 
     names = ("hrm_skill_type",
              "hrm_skill",
@@ -3626,18 +3625,12 @@ class S3HRSkillModel(S3Model):
             Return safe defaults in case the model has been deactivated.
         """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
+        dummy = S3ReusableField.dummy
 
-        dummy_listref = S3ReusableField("dummy_id", "list:reference",
-                                        readable = False,
-                                        writable = False)
-
-        return {#"hrm_competency_id": lambda **attr: dummy("competency_id"),
-                "hrm_course_id": lambda **attr: dummy("course_id"),
-                "hrm_skill_id": lambda **attr: dummy("skill_id"),
-                "hrm_multi_skill_id": lambda **attr: dummy_listref("skill_id"),
+        return {#"hrm_competency_id": dummy("competency_id"),
+                "hrm_course_id": dummy("course_id"),
+                "hrm_skill_id": dummy("skill_id"),
+                "hrm_multi_skill_id": dummy("skill_id", "list:reference"),
                 }
 
     # -------------------------------------------------------------------------
@@ -4159,7 +4152,7 @@ def hrm_training_onaccept(form):
                 hrm_certification_onaccept(form)
 
 # =============================================================================
-class S3HREventStrategyModel(S3Model):
+class HREventStrategyModel(S3Model):
     """
         (Training) Events <> Strategies Link Table
     """
@@ -4188,7 +4181,7 @@ class S3HREventStrategyModel(S3Model):
         return {}
 
 # =============================================================================
-class S3HREventProgrammeModel(S3Model):
+class HREventProgrammeModel(S3Model):
     """
         (Training) Events <> Programmes Link Table
     """
@@ -4217,7 +4210,7 @@ class S3HREventProgrammeModel(S3Model):
         return {}
 
 # =============================================================================
-class S3HREventProjectModel(S3Model):
+class HREventProjectModel(S3Model):
     """
         (Training) Events <> Projects Link Table
     """
@@ -4246,7 +4239,7 @@ class S3HREventProjectModel(S3Model):
         return {}
 
 # =============================================================================
-class S3HREventAssessmentModel(S3Model):
+class HREventAssessmentModel(S3Model):
     """
         (Training) Events <> Data Collection Assessments Link Table
          Can be used for:
@@ -4293,7 +4286,7 @@ class S3HREventAssessmentModel(S3Model):
         return {}
 
 # =============================================================================
-class S3HRAppraisalModel(S3Model):
+class HRAppraisalModel(S3Model):
     """
         Appraisal for an HR
         - can be for a specific Mission or routine annual appraisal
@@ -4478,7 +4471,7 @@ class S3HRAppraisalModel(S3Model):
             db(db.doc_document.id == document_id).update(doc_id = doc_id)
 
 # =============================================================================
-class S3HRExperienceModel(S3Model):
+class HRExperienceModel(S3Model):
     """
         Record a person's work experience
     """
@@ -4658,7 +4651,7 @@ class S3HRExperienceModel(S3Model):
         return {}
 
 # =============================================================================
-class S3HRAwardModel(S3Model):
+class HRAwardModel(S3Model):
     """ Data model for staff awards """
 
     names = ("hrm_award_type",
@@ -4735,7 +4728,7 @@ class S3HRAwardModel(S3Model):
         return {}
 
 # =============================================================================
-class S3HRDisciplinaryActionModel(S3Model):
+class HRDisciplinaryActionModel(S3Model):
     """ Data model for staff disciplinary record """
 
     names = ("hrm_disciplinary_type",
@@ -4798,7 +4791,7 @@ class S3HRDisciplinaryActionModel(S3Model):
         return {}
 
 # =============================================================================
-class S3HRTagModel(S3Model):
+class HRTagModel(S3Model):
     """ Arbitrary Key:Value Tags for Human Resources """
 
     names = ("hrm_human_resource_tag",
@@ -4839,7 +4832,7 @@ class S3HRTagModel(S3Model):
         return {}
 
 # =============================================================================
-class S3HRProgrammeModel(S3Model):
+class HRProgrammeModel(S3Model):
     """
         Programmes
             - record Volunteer Hours
@@ -5086,7 +5079,7 @@ class S3HRProgrammeModel(S3Model):
                 }
 
 # =============================================================================
-class S3HRShiftModel(S3Model):
+class HRShiftModel(S3Model):
     """
         Shifts
     """
@@ -5338,12 +5331,136 @@ class S3HRShiftModel(S3Model):
             Return safe defaults in case the model has been deactivated.
         """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
-
-        return {"hrm_shift_id": lambda **attr: dummy("shift_id"),
+        return {"hrm_shift_id": S3ReusableField.dummy("shift_id"),
                 }
+
+# =============================================================================
+class HRDelegationModel(S3Model):
+    """
+        Model to manage delegations of staff/volunteers to other
+        organisations.
+    """
+
+    names = ("hrm_delegation",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        db = current.db
+        s3 = current.response.s3
+
+        define_table = self.define_table
+        crud_strings = s3.crud_strings
+
+        # ---------------------------------------------------------------------
+        # Delegation Statuses
+        #
+        workflow = current.deployment_settings.get_hrm_delegation_workflow()
+        if isinstance(workflow, (tuple, list)) and len(workflow):
+            # Custom workflow
+            delegation_status = workflow
+        else:
+            if workflow == "Invitation":
+                # Invitation workflow:
+                # Other organisation invites the delegate, who then accepts
+                delegation_status = (("INVT", T("Invited")),
+                                     ("ACPT", T("Accepted")),
+                                     ("RJCT", T("Rejected")),
+                                     )
+            elif workflow == "Application":
+                # Application workflow:
+                # Person applies for the delegation, which is then accepted
+                delegation_status = (("APPL", T("Applied")),
+                                     ("ACPT", T("Accepted")),
+                                     ("RJCT", T("Rejected")),
+                                     )
+            else:
+                # Request workflow:
+                # Other organisation requests the delegate, which is then
+                # approved by the managing organisation
+                delegation_status = (("REQ", T("Requested")),
+                                     ("APPR", T("Approved")),
+                                     ("DECL", T("Declined")),
+                                     )
+            # Final statuses
+            delegation_status += (("CANC", T("Cancelled")),
+                                  ("IMPL", T("Implemented")),
+                                  )
+
+        # ---------------------------------------------------------------------
+        # Delegation
+        # TODO make person component
+        #
+        tablename = "hrm_delegation"
+        define_table(tablename,
+                     self.org_organisation_id(
+                         empty = False,
+                         comment = DIV(_class="tooltip",
+                                       # TODO tooltip depends on workflow
+                                       _title="%s|%s" % (T("Requesting Organisation"),
+                                                         T("The organisation requesting the delegation"),
+                                                         ),
+                                       ),
+                         ),
+                     self.pr_person_id(
+                         empty = False,
+                         comment = DIV(_class="tooltip",
+                                       _title="%s|%s" % (T("Person"),
+                                                         T("The person to be delegated"),
+                                                         ),
+                                       ),
+                         ),
+                     s3_date(label = T("Start Date"),
+                             ),
+                     s3_date("end_date",
+                             label = T("End Date"),
+                             ),
+                     Field("status",
+                           default = delegation_status[0],
+                           requires = IS_IN_SET(delegation_status,
+                                                zero = None,
+                                                sort = False,
+                                                ),
+                           represent = S3Represent(options=dict(delegation_status)),
+                           ),
+                     # Enable in template if/as required:
+                     Field("hours_per_week", "integer",
+                           label = T("Hours per week"),
+                           readable = False,
+                           writable = False,
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Delegation"),
+            title_display = T("Delegation Details"),
+            title_list = T("Delegations"),
+            title_update = T("Edit Delegation"),
+            label_list_button = T("List Delegations"),
+            label_delete_button = T("Delete Delegation"),
+            msg_record_created = T("Delegation created"),
+            msg_record_modified = T("Delegation updated"),
+            msg_record_deleted = T("Delegation deleted"),
+            msg_list_empty = T("No Delegations currently registered"),
+        )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        #dummy = S3ReusableField.dummy
+
+        return {}
 
 # =============================================================================
 def hrm_programme_hours_month(row):

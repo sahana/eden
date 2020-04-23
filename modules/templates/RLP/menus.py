@@ -39,7 +39,7 @@ class S3MainMenu(default.S3MainMenu):
         auth = current.auth
 
         return [MM("Volunteers", c="vol", f="volunteer"),
-                MM("Recruitment", c="req", f="need"),
+                MM("Recruitment", c="hrm", f="delegation"),
                 MM("More", link=None)(
                     MM("Organizations", c="org", f="organisation"),
                     )
@@ -201,9 +201,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ VOL / Volunteer Management """
 
         return M(c="vol")(
-                    M("Volunteers", f="volunteer")(
+                    M("Volunteers", f="person")(
                         M("Create", m="create"),
                         ),
+                    M("Administration", link=False)(
+                        M("Occupation Types", c="pr", f="occupation_type"),
+                        M("Skill Types", c="hrm", f="skill"),
+                        M("Competency Levels", c="hrm", f="competency_rating"),
+                        )
                     )
 
     # -------------------------------------------------------------------------

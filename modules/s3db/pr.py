@@ -1125,6 +1125,8 @@ class PRPersonModel(S3Model):
                        hrm_disciplinary_action = "person_id",
                        # Salary Information
                        hrm_salary = "person_id",
+                       # Delegations
+                       hrm_delegation = "person_id",
                        # Organisation Memberships
                        member_membership = "person_id",
                        # Organisation Group Association
