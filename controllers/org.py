@@ -63,9 +63,9 @@ def capacity_assessment():
                                                "rating",
                                                "ranking",
                                                ),
-                                     filterby = dict(field = "indicator_id",
-                                                     options = row.id
-                                                     ),
+                                     filterby = {"field": "indicator_id",
+                                                 "options": row.id
+                                                 },
                                      multiple = False,
                                      ),
                 )

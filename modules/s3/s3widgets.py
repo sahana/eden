@@ -164,19 +164,23 @@ class S3ACLWidget(CheckboxesWidget):
         opts = []
         cols = attributes.get("cols", 1)
         totals = len(options)
-        mods = totals%cols
-        rows = totals/cols
+        mods = totals % cols
+        rows = totals / cols
         if mods:
             rows += 1
 
         for r_index in range(rows):
             tds = []
             for k, v in options[r_index*cols:(r_index+1)*cols]:
-                tds.append(TD(INPUT(_type="checkbox",
-                                    _name=attr.get("_name", field.name),
-                                    requires=attr.get("requires", None),
-                                    hideerror=True, _value=k,
-                                    value=(k in value)), v))
+                tds.append(TD(INPUT(_type = "checkbox",
+                                    _name = attr.get("_name", field.name),
+                                    requires = attr.get("requires", None),
+                                    hideerror = True,
+                                    _value = k,
+                                    value = (k in value)
+                                    ),
+                              v
+                              ))
             opts.append(TR(tds))
 
         if opts:
@@ -218,7 +222,7 @@ class S3AddObjectWidget(FormWidget):
                  dummy_field_selector,
                  on_show,
                  on_hide
-                ):
+                 ):
 
         self.form_url = form_url
         self.table_name = table_name
@@ -4495,6 +4499,7 @@ class S3LocationSelector(S3Selector):
         * Doesn't support manual entry of LatLons
         * Doesn't allow selection of existing specific Locations
         * Doesn't support variable Levels by Country
+        * Doesn't handle renamed fields (like Merge form)
         * Use in an InlineComponent with multiple=False needs completing:
             - Validation errors cause issues
             - Needs more testing
@@ -4807,7 +4812,7 @@ class S3LocationSelector(S3Selector):
 
         # Load initial Hierarchy Labels (for Lx dropdowns)
         labels, labels_compact = self._labels(levels,
-                                              country=values.get("L0"),
+                                              country = values.get("L0"),
                                               )
 
         # Load initial Hierarchy Locations (to populate Lx dropdowns)
@@ -4877,8 +4882,8 @@ class S3LocationSelector(S3Selector):
                                      fieldname,
                                      levels,
                                      labels,
-                                     multiselect=multiselect,
-                                     required=required,
+                                     multiselect = multiselect,
+                                     required = required,
                                      )
         components.update(lx_rows)
 
@@ -4894,8 +4899,8 @@ class S3LocationSelector(S3Selector):
             toggle_id = fieldname + "_latlon_toggle"
             components["latlon_toggle"] = ("",
                                            A(latlon_label,
-                                             _id=toggle_id,
-                                             _class="action-lnk",
+                                             _id = toggle_id,
+                                             _class = "action-lnk",
                                              ),
                                            toggle_id,
                                            False,
@@ -5006,11 +5011,11 @@ class S3LocationSelector(S3Selector):
 
         # The overall layout of the components
         visible_components = self._layout(components,
-                                          map_icon=map_icon,
-                                          inline=is_inline,
+                                          map_icon = map_icon,
+                                          inline = is_inline,
                                           )
 
-        return TAG[""](DIV(_class="throbber"),
+        return TAG[""](DIV(_class = "throbber"),
                        real_input,
                        visible_components,
                        )
@@ -5247,8 +5252,9 @@ class S3LocationSelector(S3Selector):
                                                 gtable.lon_min,
                                                 gtable.lat_max,
                                                 gtable.lon_max,
-                                                cache=s3db.cache,
-                                                limitby=(0, 1)).first()
+                                                cache = s3db.cache,
+                                                limitby = (0, 1)
+                                                ).first()
             try:
                 bounds = [record.lon_min,
                           record.lat_min,
@@ -5275,8 +5281,9 @@ class S3LocationSelector(S3Selector):
                                           gtable.lon_min,
                                           gtable.lat_max,
                                           gtable.lon_max,
-                                          cache=s3db.cache,
-                                          limitby=(0, 1)).first()
+                                          cache = s3db.cache,
+                                          limitby = (0, 1)
+                                          ).first()
                 if record and record.level:
                     bounds = [record.lon_min,
                               record.lat_min,
@@ -5336,7 +5343,10 @@ class S3LocationSelector(S3Selector):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _layout(components, map_icon=None, formstyle=None, inline=False):
+    def _layout(components,
+                map_icon = None,
+                formstyle = None,
+                inline = False):
         """
             Overall layout for visible components
 
@@ -5370,7 +5380,7 @@ class S3LocationSelector(S3Selector):
                                     label,
                                     widget,
                                     "",
-                                    hidden=hidden,
+                                    hidden = hidden,
                                     )
                 if tuple_rows:
                     selectors.append(formrow[0])
@@ -5386,7 +5396,7 @@ class S3LocationSelector(S3Selector):
                                     label,
                                     widget,
                                     "",
-                                    hidden=hidden,
+                                    hidden = hidden,
                                     )
                 if tuple_rows:
                     inputs.append(formrow[0])
@@ -5405,8 +5415,8 @@ class S3LocationSelector(S3Selector):
                       fieldname,
                       levels,
                       labels,
-                      multiselect=False,
-                      required=False):
+                      multiselect = False,
+                      required = False):
         """
             Render the Lx-dropdowns
 
@@ -5469,12 +5479,14 @@ class S3LocationSelector(S3Selector):
                     required = False
 
             # Throbber
-            throbber = DIV(_id="%s__throbber" % _id,
-                           _class="throbber hide",
+            throbber = DIV(_id = "%s__throbber" % _id,
+                           _class = "throbber hide",
                            )
 
             if self.labels:
-                label = LABEL(label, _for=_id)
+                label = LABEL(label,
+                              _for = _id,
+                              )
             else:
                 label = ""
             selectors[level] = (label, TAG[""](widget, throbber), _id, hidden)
@@ -5491,8 +5503,8 @@ class S3LocationSelector(S3Selector):
                name,
                value,
                label,
-               hidden=False,
-               _class="string"):
+               hidden = False,
+               _class = "string"):
         """
             Render a text input (e.g. address or postcode field)
 
@@ -5508,7 +5520,9 @@ class S3LocationSelector(S3Selector):
         input_id = "%s_%s" % (fieldname, name)
 
         if label and self.labels:
-            _label = LABEL("%s:" % label, _for=input_id)
+            _label = LABEL("%s:" % label,
+                           _for = input_id,
+                           )
         else:
             _label = ""
         if label and self.placeholders:
@@ -5754,11 +5768,11 @@ i18n.map_feature_required="%s"''' % (show_map_add,
             # Need to add custom classes to core HTML markup
             map_icon = DIV(DIV(BUTTON(ICON("globe"),
                                       SPAN(label),
-                                      _type="button", # defaults to 'submit' otherwise!
-                                      _id=icon_id,
-                                      _class="btn tiny button gis_loc_select_btn",
+                                      _type = "button", # defaults to 'submit' otherwise!
+                                      _id = icon_id,
+                                      _class = "btn tiny button gis_loc_select_btn",
                                       ),
-                               _class="small-12 columns",
+                               _class = "small-12 columns",
                                ),
                            _id = row_id,
                            _class = "form-row row hide",
@@ -5767,11 +5781,11 @@ i18n.map_feature_required="%s"''' % (show_map_add,
             # Need to add custom classes to core HTML markup
             map_icon = DIV(DIV(BUTTON(ICON("icon-map"),
                                       SPAN(label),
-                                      _type="button", # defaults to 'submit' otherwise!
-                                      _id=icon_id,
-                                      _class="btn gis_loc_select_btn",
+                                      _type = "button", # defaults to 'submit' otherwise!
+                                      _id = icon_id,
+                                      _class = "btn gis_loc_select_btn",
                                       ),
-                               _class="controls",
+                               _class = "controls",
                                ),
                            _id = row_id,
                            _class = "control-group hide",
@@ -5780,11 +5794,11 @@ i18n.map_feature_required="%s"''' % (show_map_add,
             # Old default
             map_icon = DIV(DIV(BUTTON(ICON("globe"),
                                       SPAN(label),
-                                      _type="button", # defaults to 'submit' otherwise!
-                                      _id=icon_id,
-                                      _class="btn gis_loc_select_btn",
+                                      _type = "button", # defaults to 'submit' otherwise!
+                                      _id = icon_id,
+                                      _class = "btn gis_loc_select_btn",
                                       ),
-                               _class="w2p_fl",
+                               _class = "w2p_fl",
                                ),
                            _id = row_id,
                            _class = "hide",
@@ -5803,15 +5817,15 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                    T("Address NOT Found"),
                                    ))
 
-            map_icon.append(DIV(DIV(_class="throbber hide"),
-                                DIV(_class="geocode_success hide"),
-                                DIV(_class="geocode_fail hide"),
+            map_icon.append(DIV(DIV(_class = "throbber hide"),
+                                DIV(_class = "geocode_success hide"),
+                                DIV(_class = "geocode_fail hide"),
                                 BUTTON(T("Geocode"),
-                                       _type="button", # defaults to 'submit' otherwise!
-                                       _class="hide",
+                                       _type = "button", # defaults to 'submit' otherwise!
+                                       _class = "hide",
                                        ),
-                                _id="%s_geocode" % fieldname,
-                                _class="controls geocode",
+                                _id = "%s_geocode" % fieldname,
+                                _class = "controls geocode",
                                 ))
 
         # Inject map directly behind map icon
@@ -5865,7 +5879,8 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                                   table.radius,
                                                   table.addr_street,
                                                   table.addr_postcode,
-                                                  limitby=(0, 1)).first()
+                                                  limitby = (0, 1)
+                                                  ).first()
         if not record:
             raise ValueError
 
@@ -5976,32 +5991,36 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             @return: string representation for the values dict
         """
 
-        if not value or not any(value.get(key) for key in self.keys):
+        if not value:
+            # No data
+            return current.messages["NONE"]
+        value_get = value.get
+        if not any(value_get(key) for key in self.keys):
             # No data
             return current.messages["NONE"]
 
-        lat = value.get("lat")
-        lon = value.get("lon")
-        wkt = value.get("wkt")
-        #radius = value.get("radius")
-        address = value.get("address")
-        postcode = value.get("postcode")
+        lat = value_get("lat")
+        lon = value_get("lon")
+        wkt = value_get("wkt")
+        #radius = value_get("radius")
+        address = value_get("address")
+        postcode = value_get("postcode")
 
-        record = Storage(name = value.get("name"),
+        record = Storage(name = value_get("name"),
                          lat = lat,
                          lon = lon,
                          addr_street = address,
                          addr_postcode = postcode,
-                         parent = value.get("parent"),
+                         parent = value_get("parent"),
                          )
 
         # Is this a specific location?
-        specific = value.get("specific")
+        specific = value_get("specific")
         if specific:
             record_id = specific
         elif address or postcode or lat or lon or wkt:
             specific = True
-            record_id = value.get("id")
+            record_id = value_get("id")
         else:
             record_id = None
         if not record_id:
@@ -6015,7 +6034,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         level = None
         append = None
         for l in xrange(5, -1, -1):
-            lx = value.get("L%s" % l)
+            lx = value_get("L%s" % l)
             if lx:
                 if not level and not specific and l < 5:
                     level = l
@@ -6044,7 +6063,8 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             limitby = (0, len(lx_ids))
             lx_names = current.db(query).select(ltable.id,
                                                 ltable.name,
-                                                limitby=limitby).as_dict()
+                                                limitby = limitby
+                                                ).as_dict()
             for l in xrange(0, 6):
                 if l in lx_ids:
                     lx_name = lx_names.get(lx_ids[l])["name"]
@@ -6083,7 +6103,13 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
 
         values = self.parse(value)
 
-        if not values or not any(values.get(key) for key in self.keys):
+        if not values:
+            # No data
+            if requires and not isinstance(requires, IS_EMPTY_OR):
+                return values, current.T("Location data required")
+            return values, None
+        values_get = values.get
+        if not any(values_get(key) for key in self.keys):
             # No data
             if requires and not isinstance(requires, IS_EMPTY_OR):
                 return values, current.T("Location data required")
@@ -6097,7 +6123,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         msg = self.error_message
 
         # Check for valid Lat/Lon/WKT/Radius (if any)
-        lat = values.get("lat")
+        lat = values_get("lat")
         if lat:
             try:
                 lat = float(lat)
@@ -6106,7 +6132,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         elif lat == "":
             lat = None
 
-        lon = values.get("lon")
+        lon = values_get("lon")
         if lon:
             try:
                 lon = float(lon)
@@ -6115,7 +6141,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         elif lon == "":
             lon = None
 
-        wkt = values.get("wkt")
+        wkt = values_get("wkt")
         if wkt:
             try:
                 from shapely.wkt import loads as wkt_loads
@@ -6125,7 +6151,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         elif wkt == "":
             wkt = None
 
-        radius = values.get("radius")
+        radius = values_get("radius")
         if radius:
             try:
                 radius = float(radius)
@@ -6138,8 +6164,8 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             error = "\n".join(s3_str(errors[fn]) for fn in errors)
             return (values, error)
 
-        specific = values.get("specific")
-        location_id = values.get("id")
+        specific = values_get("specific")
+        location_id = values_get("id")
 
         if specific and location_id and location_id != specific:
             # Reset from a specific location to an Lx
@@ -6149,9 +6175,9 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             lat = lon = wkt = radius = None
         else:
             # Read other details
-            parent = values.get("parent")
-            address = values.get("address")
-            postcode = values.get("postcode")
+            parent = values_get("parent")
+            address = values_get("address")
+            postcode = values_get("postcode")
 
         if parent or address or postcode or \
            wkt is not None or \
@@ -6173,7 +6199,8 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                                     table.addr_street,
                                                     table.addr_postcode,
                                                     table.parent,
-                                                    limitby=(0, 1)).first()
+                                                    limitby = (0, 1)
+                                                    ).first()
                 if not location:
                     return (values, msg or current.T("Invalid Location!"))
 
@@ -6223,7 +6250,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
 
                     # Permission to update?
                     if not current.auth.s3_has_permission("update", table,
-                                                          record_id=specific):
+                                                          record_id = specific):
                         return (values, current.auth.messages.access_denied)
 
                     # Schedule for onvalidation
@@ -6257,7 +6284,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                             (table.parent == parent) & \
                             (table.deleted != True)
                     duplicate = current.db(query).select(table.id,
-                                                         limitby=(0, 1)
+                                                         limitby = (0, 1)
                                                          ).first()
                     if duplicate:
                         return (values, current.T("Duplicate Address"))
@@ -6282,7 +6309,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
 
             # Permission to update?
             if not current.auth.s3_has_permission("update", table,
-                                                  record_id=specific):
+                                                  record_id = specific):
                 return (values, current.auth.messages.access_denied)
 
             # Make sure parent/address are properly removed
@@ -6305,7 +6332,8 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                 query = (table.id == location_id) & \
                         (table.deleted == False)
                 location = current.db(query).select(table.level,
-                                                    limitby=(0, 1)).first()
+                                                    limitby = (0, 1)
+                                                    ).first()
                 if not location:
                     return (values, msg or current.T("Invalid Location!"))
 
@@ -6314,7 +6342,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                     # Accept all levels above and including the lowest selectable level
                     for i in xrange(5,-1,-1):
                         if "L%s" % i in levels:
-                            accepted_levels = set("L%s" % l for l in xrange(i,-1,-1))
+                            accepted_levels = set("L%s" % l for l in xrange(i, -1, -1))
                             break
                     if level not in accepted_levels:
                         return (values, msg or \
@@ -6364,6 +6392,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         # Convert and validate
         values, error = self.validate(value)
         if values:
+            values_get = values.get
             location_id = values.get("id")
         else:
             location_id = None
@@ -6384,19 +6413,19 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         table = current.s3db.gis_location
 
         # Read the values
-        lat = values.get("lat")
-        lon = values.get("lon")
-        lat_min = values.get("lat_min") # Values brought in by onvalidation
-        lon_min = values.get("lon_min")
-        lat_max = values.get("lat_max")
-        lon_max = values.get("lon_max")
-        wkt = values.get("wkt")
-        radius = values.get("radius")
-        the_geom = values.get("the_geom")
-        address = values.get("address")
-        postcode = values.get("postcode")
-        parent = values.get("parent")
-        gis_feature_type = values.get("gis_feature_type")
+        lat = values_get("lat")
+        lon = values_get("lon")
+        lat_min = values_get("lat_min") # Values brought in by onvalidation
+        lon_min = values_get("lon_min")
+        lat_max = values_get("lat_max")
+        lon_max = values_get("lon_max")
+        wkt = values_get("wkt")
+        radius = values_get("radius")
+        the_geom = values_get("the_geom")
+        address = values_get("address")
+        postcode = values_get("postcode")
+        parent = values_get("parent")
+        gis_feature_type = values_get("gis_feature_type")
 
         if location_id == 0:
             # Create new location
@@ -6430,14 +6459,14 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             current.gis.update_location_tree(feature)
 
         else:
-            specific = values.get("specific")
+            specific = values_get("specific")
             # specific is 0 to skip update (unchanged)
             # specific is None for Lx locations
             if specific and specific == location_id:
                 # Update specific location
-                feature = Storage(addr_street=address,
-                                  addr_postcode=postcode,
-                                  parent=parent,
+                feature = Storage(addr_street = address,
+                                  addr_postcode = postcode,
+                                  parent = parent,
                                   )
                 if any(detail is not None for detail in (lat, lon, wkt, radius)):
                     feature.lat = lat

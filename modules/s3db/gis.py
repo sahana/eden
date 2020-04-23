@@ -290,9 +290,9 @@ class S3LocationModel(S3Model):
                                                          gis_location_represent,
                                                          # @ToDo: If level is known, filter on higher than that?
                                                          # If strict, filter on next higher level?
-                                                         filterby="level",
-                                                         filter_opts=hierarchy_level_keys,
-                                                         orderby="gis_location.name"))),
+                                                         filterby = "level",
+                                                         filter_opts = hierarchy_level_keys,
+                                                         orderby = "gis_location.name"))),
                  ]
             )
 
@@ -329,7 +329,7 @@ class S3LocationModel(S3Model):
                                                  represent,
                                                  filterby = "level",
                                                  filter_opts = ["L0"],
-                                                 sort=True))
+                                                 sort = True))
         country_id = S3ReusableField("location_id", "reference %s" % tablename,
                                      label = messages.COUNTRY,
                                      ondelete = "RESTRICT",

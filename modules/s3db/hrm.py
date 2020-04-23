@@ -8334,13 +8334,14 @@ def hrm_human_resource_controller(extra_filter = None):
                 # Don't redirect
                 pass
 
-            elif method == "deduplicate":
-                # Don't use AddPersonWidget here
-                from gluon.sqlhtml import OptionsWidget
-                field = r.table.person_id
-                field.requires = IS_ONE_OF(db, "pr_person.id",
-                                           label = field.represent)
-                field.widget = OptionsWidget.widget
+            # Now done in s3merge
+            #elif method == "deduplicate":
+            #    # Don't use AddPersonWidget here
+            #    from gluon.sqlhtml import OptionsWidget
+            #    field = r.table.person_id
+            #    field.requires = IS_ONE_OF(db, "pr_person.id",
+            #                               label = field.represent)
+            #    field.widget = OptionsWidget.widget
 
             elif r.id:
                 # Redirect to person controller

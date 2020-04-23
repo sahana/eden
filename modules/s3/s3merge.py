@@ -39,6 +39,8 @@ from .s3data import S3DataTable
 from .s3query import FS
 from .s3rest import S3Method
 from .s3utils import s3_get_foreign_key, s3_represent_value, s3_str
+from .s3validators import IS_ONE_OF
+from .s3widgets import S3AddPersonWidget, S3LocationSelector, S3LocationAutocompleteWidget
 
 # =============================================================================
 class S3Merge(S3Method):
@@ -205,21 +207,21 @@ class S3Merge(S3Method):
 
         T = current.T
         link = DIV(A(T("Mark as duplicate"),
-                     _class=mark,
+                     _class = mark,
                      ),
                    A(T("Unmark as duplicate"),
-                     _class=unmark,
+                     _class = unmark,
                      ),
                    A("",
-                     _href=r.url(method="deduplicate", vars={}),
-                     _id="markDuplicateURL",
-                     _class="hide",
+                     _href = r.url(method="deduplicate", vars={}),
+                     _id = "markDuplicateURL",
+                     _class = "hide",
                      ),
                    A(T("De-duplicate"),
-                     _href=r.url(method="deduplicate", target=0, vars={}),
-                     _class=deduplicate,
+                     _href = r.url(method="deduplicate", target=0, vars={}),
+                     _class = deduplicate,
                      ),
-                   _id="markDuplicate",
+                   _id = "markDuplicate",
                    )
 
         return link
@@ -306,12 +308,12 @@ class S3Merge(S3Method):
 
         # Get the records
         data = resource.select(list_fields,
-                               start=start,
-                               limit=limit,
-                               orderby=orderby,
-                               left=left,
-                               count=True,
-                               represent=True)
+                               start = start,
+                               limit = limit,
+                               orderby = orderby,
+                               left = left,
+                               count = True,
+                               represent = True)
 
 
         displayrows = data["numrows"]
@@ -344,10 +346,10 @@ class S3Merge(S3Method):
             items =  dt.html(totalrows,
                              displayrows,
                              datatable_id,
-                             dt_ajax_url=url,
+                             dt_ajax_url = url,
                              dt_bulk_actions = [(T("Merge"),
                                                  "merge", "pair-action")],
-                             dt_pageLength=display_length,
+                             dt_pageLength = display_length,
                              )
 
             output["items"] = items
@@ -361,9 +363,11 @@ class S3Merge(S3Method):
                 output["add_btn"] = DIV(
                     SPAN(T("You need to have at least 2 records in this list in order to merge them."),
                          # @ToDo: Move to CSS
-                         _style="float:left;padding-right:10px;"),
+                         _style = "float:left;padding-right:10px;"
+                         ),
                     A(T("Find more"),
-                      _href=r.url(method="", id=0, component_id=0, vars={}))
+                      _href = r.url(method="", id=0, component_id=0, vars={})
+                      )
                 )
             else:
                 output["add_btn"] = DIV(
@@ -469,13 +473,14 @@ class S3Merge(S3Method):
 
             # Swap button
             if not any((keep_o, keep_d)):
-                swap = INPUT(_value="<-->",
-                             _class="swap-button",
-                             _id=sid,
-                             _type="button",
-                             _tabindex = index+num_fields)
+                swap = INPUT(_value = "<-->",
+                             _class = "swap-button",
+                             _id = sid,
+                             _type = "button",
+                             _tabindex = index+num_fields,
+                             )
             else:
-                swap = DIV(_class="swap-button")
+                swap = DIV(_class = "swap-button")
 
             if owidget is None or dwidget is None:
                 continue
@@ -517,14 +522,20 @@ class S3Merge(S3Method):
 
         # Submit buttons
         if keep_o or not any((keep_o, keep_d)):
-            submit_original = INPUT(_value=T("Keep Original"),
-                                    _type="submit", _name=KEEP.o, _id=KEEP.o)
+            submit_original = INPUT(_value = T("Keep Original"),
+                                    _type = "submit",
+                                    _name = KEEP.o,
+                                    _id = KEEP.o,
+                                    )
         else:
             submit_original = ""
 
         if keep_d or not any((keep_o, keep_d)):
-            submit_duplicate = INPUT(_value=T("Keep Duplicate"),
-                                     _type="submit", _name=KEEP.d, _id=KEEP.d)
+            submit_duplicate = INPUT(_value = T("Keep Duplicate"),
+                                     _type = "submit",
+                                     _name = KEEP.d,
+                                     _id = KEEP.d,
+                                     )
         else:
             submit_duplicate = ""
 
@@ -538,7 +549,7 @@ class S3Merge(S3Method):
                             TR(TD(original_created),
                                TD(),
                                TD(duplicate_created),
-                               _class="authorinfo",
+                               _class = "authorinfo",
                             ),
                         ),
                         TBODY(trs),
@@ -559,9 +570,11 @@ class S3Merge(S3Method):
         output["form"] = form
 
         # Add RESET and CANCEL options
-        output["reset"] = FORM(INPUT(_value=T("Reset"),
-                                     _type="submit",
-                                     _name="reset", _id="form-reset"),
+        output["reset"] = FORM(INPUT(_value = T("Reset"),
+                                     _type = "submit",
+                                     _name = "reset",
+                                     _id = "form-reset",
+                                     ),
                                A(T("Cancel"), _href=r.url(id=0, vars={}), _class="action-lnk"),
                                hidden = {"mode": mode,
                                          "selected": ",".join(ids),
@@ -573,10 +586,10 @@ class S3Merge(S3Method):
                                        original[table._id],
                                        duplicate[table._id])
         if form.accepts(post_vars, session,
-                        formname=formname,
-                        onvalidation=lambda form: self.onvalidation(tablename, form),
-                        keepvalues=False,
-                        hideerror=False):
+                        formname = formname,
+                        onvalidation = lambda form: self.onvalidation(tablename, form),
+                        keepvalues = False,
+                        hideerror = False):
 
             s3db = current.s3db
 
@@ -597,7 +610,7 @@ class S3Merge(S3Method):
             try:
                 resource.merge(original[table._id],
                                duplicate[table._id],
-                               update=data)
+                               update = data)
             except current.auth.permission.error:
                 r.unauthorized()
             except KeyError:
@@ -734,7 +747,15 @@ class S3Merge(S3Method):
             #    inp = widgets.upload.widget(field, value,
             #                                download_url=download_url, **attr)
         elif field.widget:
-            inp = field.widget(field, value, **attr)
+            field_widget = field.widget
+            if isinstance(field_widget, S3LocationSelector):
+                inp = S3LocationAutocompleteWidget()(field, value, **attr)
+            elif isinstance(field_widget, S3AddPersonWidget):
+                inp = widgets.options.widget(field, value, **attr)
+                field.requires = IS_ONE_OF(current.db, "pr_person.id",
+                                           label = field.represent)
+            else:
+                inp = field_widget(field, value, **attr)
         elif ftype == "boolean":
             inp = widgets.boolean.widget(field, value, **attr)
         elif widgets.options.has_options(field):
@@ -865,9 +886,9 @@ class S3RecordMerger(object):
     def merge(self,
               original_id,
               duplicate_id,
-              replace=None,
-              update=None,
-              main=True):
+              replace = None,
+              update = None,
+              main = True):
         """
             Merge a duplicate record into its original and remove the
             duplicate, updating all references in the database.
