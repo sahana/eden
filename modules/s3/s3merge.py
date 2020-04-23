@@ -926,7 +926,7 @@ class S3RecordMerger(object):
             s3db.load_all_models()
         if db._lazy_tables:
             # Must roll out all lazy tables to detect dependencies
-            for tn in db._LAZY_TABLES.keys():
+            for tn in list(db._LAZY_TABLES.keys()):
                 db[tn]
 
         # Get the records
@@ -1092,7 +1092,7 @@ class S3RecordMerger(object):
                     keys = [k for k in row[fn] if k != duplicate[key]]
                     if original[key] not in keys:
                         keys.append(original[key])
-                    data = {fn:keys}
+                    data = {fn: keys}
                 update_record(rtable, row[rtable._id], row, data)
 
         # Merge super-entity records
