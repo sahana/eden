@@ -462,7 +462,8 @@ def config(settings):
 
         # Only one person per recruitment
         s3db.add_components("req_need",
-                            req_need_person = {"joinby": "need_id",
+                            req_need_person = {"name": "requested_person",
+                                               "joinby": "need_id",
                                                "multiple": False,
                                                },
                             req_need_organisation = {"joinby": "need_id",
@@ -487,42 +488,48 @@ def config(settings):
         field = nptable.person_id
         field.widget = None
 
-        from s3 import S3SQLCustomForm
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLVerticalSubFormLayout
 
         # TODO person_id needs to be read-only in main controller
         #      => and hidden on person tab
 
-        crud_fields = [#"need_person.person_id",
-                       "need_organisation.organisation_id",
+        crud_fields = ["need_organisation.organisation_id",
                        (T("Start Date"), "date"),
                        "end_date",
-                       "need_person.status",
-                       "need_person.comments",
                        ]
-        list_fields = [#"need_person.person_id",
+        list_fields = [#"requested_person.person_id",
                        "req_need_organisation.organisation_id",
                        (T("Start Date"), "date"),
                        "end_date",
-                       "need_person.status",
-                       "need_person.comments",
+                       "requested_person.status",
+                       "requested_person.comments",
                        ]
 
         if r.tablename == "pr_person" and \
            r.component and r.component.alias == "need":
+
+            # Cannot add organisations from here
+            notable = s3db.req_need_organisation
+            field = notable.organisation_id
+            field.comment = None
 
             # Default person_id to r.id
             nptable = s3db.req_need_person
             field = nptable.person_id
             field.default = r.id
 
-            # Requesting organisation cannot be empty
-
+            # Inline recruitment status
+            crud_fields.append(S3SQLInlineComponent("requested_person",
+                                                    fields = ["status", "comments"],
+                                                    label = T("Request Status"),
+                                                    multiple = False,
+                                                    layout = S3SQLVerticalSubFormLayout,
+                                                    ))
             # TODO
             # Show hint for recruitment in form (use custom form)
             # open pool => contact directly
             # managed pool => show contact information for pool
 
-            # TODO
             # Start/end dates cannot be updated
             if r.component_id:
                 ctable = r.component.table
@@ -541,7 +548,7 @@ def config(settings):
             field.comment = None
             field.writable = False
 
-            component = r.resource.components.get("need_person")
+            component = r.resource.components.get("requested_person")
 
             # TODO status can only be changed if COORDINATOR or requested person belongs to open pool
             # TODO status can only be changed to ACCEPTED or DECLINED
@@ -562,8 +569,19 @@ def config(settings):
             # TODO if not COORDINATOR or open pool:
             #      represent person_id by providing org + record ID
 
-            crud_fields.insert(0, "need_person.person_id")
-            list_fields.insert(0, "need_person.person_id")
+            # Inline recruitment details
+            crud_fields.append(S3SQLInlineComponent("requested_person",
+                                                    label = T("Requested Person"),
+                                                    fields=["person_id",
+                                                            "status",
+                                                            "comments",
+                                                            ],
+                                                    multiple = False,
+                                                    #layout = S3SQLVerticalSubFormLayout,
+                                                    ))
+
+            #crud_fields.insert(0, "requested_person.person_id")
+            list_fields.insert(0, "requested_person.person_id")
 
         # TODO configure organizer
 
