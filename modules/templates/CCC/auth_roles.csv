@@ -1,11 +1,10 @@
 uid,role,description,controller,function,table,uacl,oacl,entity,Notes
-ANONYMOUS,Anonymous,,org,organisation,,READ|CREATE,,,Required for self-registration
-ANONYMOUS,Anonymous,,,,org_organisation,READ|CREATE,,,Required for self-registration
+ANONYMOUS,Anonymous,,,,org_organisation,READ,,,Required for 'existing' self-registration
 AUTHENTICATED,Authenticated,,gis,,,,READ,,
 AUTHENTICATED,Authenticated,,hrm,person,,,READ|UPDATE,,
-AUTHENTICATED,Authenticated,,hrm,human_resource,,,READ|UPDATE,,
+AUTHENTICATED,Authenticated,,hrm,human_resource,,,READ|UPDATE|DELETE,,
 AUTHENTICATED,Authenticated,,,,hrm_competency,CREATE,READ|UPDATE|DELETE,,
-AUTHENTICATED,Authenticated,,,,hrm_human_resource,,READ|UPDATE,,
+AUTHENTICATED,Authenticated,,,,hrm_human_resource,,READ|UPDATE|DELETE,,
 AUTHENTICATED,Authenticated,,,,hrm_job_title,READ,,,
 AUTHENTICATED,Authenticated,,org,organisation,,READ,,,
 AUTHENTICATED,Authenticated,,,,org_facility,READ,,,

@@ -124,7 +124,7 @@ class S3MainMenu(default.S3MainMenu):
                     MM("General Information", c="default", f="index", m="donor"),
                     MM("Messages", c="project", f="task"),
                     ]
-        else:
+        elif has_role("RESERVE"):
             # Reserve Volunteer
             menu = [#MM("Volunteer Your Time", c="default", f="index", args="volunteer"),
                     #MM("Donate Items", c="default", f="index", args="donate"),
@@ -132,6 +132,15 @@ class S3MainMenu(default.S3MainMenu):
                     MM("Organisations", c="org", f="organisation", m="summary"),
                     MM("Events", c="hrm", f="training_event"), # They can only see ones they're invited to
                     MM("Opportunities", c="req", f="need"),    # They can only see ones they're invited to
+                    ]
+        else:
+            # Inactive Volunteer
+            menu = [#MM("Volunteer Your Time", c="default", f="index", args="volunteer"),
+                    #MM("Donate Items", c="default", f="index", args="donate"),
+                    #MM("General Information and Advice", c="cms", f="post", m="datalist"),
+                    MM("Organisations", c="org", f="organisation", m="summary"),
+                    #MM("Events", c="hrm", f="training_event"), # They can only see ones they're invited to
+                    #MM("Opportunities", c="req", f="need"),    # They can only see ones they're invited to
                     ]
 
         return menu

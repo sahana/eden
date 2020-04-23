@@ -722,37 +722,39 @@
         <xsl:param name="SubSubService"/>
 
         <!-- @todo: migrate to Taxonomy-pattern, see vulnerability/data.xsl -->
-        <resource name="org_service">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="concat($ServicePrefix, $Service)"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$Service"/></data>
-        </resource>
-        <xsl:if test="$SubService!=''">
+        <xsl:if test="$Service!=''">
             <resource name="org_service">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat($ServicePrefix, $Service, '/', $SubService)"/>
+                    <xsl:value-of select="concat($ServicePrefix, $Service)"/>
                 </xsl:attribute>
-                <data field="name"><xsl:value-of select="$SubService"/></data>
-                <reference field="parent" resource="org_service">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat($ServicePrefix, $Service)"/>
-                    </xsl:attribute>
-                </reference>
+                <data field="name"><xsl:value-of select="$Service"/></data>
             </resource>
-        </xsl:if>
-        <xsl:if test="$SubSubService!=''">
-            <resource name="org_service">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat($ServicePrefix, $Service, '/', $SubService, '/', $SubSubService)"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$SubSubService"/></data>
-                <reference field="parent" resource="org_service">
+            <xsl:if test="$SubService!=''">
+                <resource name="org_service">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat($ServicePrefix, $Service, '/', $SubService)"/>
                     </xsl:attribute>
-                </reference>
-            </resource>
+                    <data field="name"><xsl:value-of select="$SubService"/></data>
+                    <reference field="parent" resource="org_service">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($ServicePrefix, $Service)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+            <xsl:if test="$SubSubService!=''">
+                <resource name="org_service">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($ServicePrefix, $Service, '/', $SubService, '/', $SubSubService)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$SubSubService"/></data>
+                    <reference field="parent" resource="org_service">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($ServicePrefix, $Service, '/', $SubService)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
         </xsl:if>
 
     </xsl:template>

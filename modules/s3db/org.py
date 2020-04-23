@@ -2986,7 +2986,7 @@ class S3OrganisationTagModel(S3Model):
         #
         tablename = "org_organisation_tag"
         self.define_table(tablename,
-                          self.org_organisation_id(),
+                          self.org_organisation_id(empty = False),
                           # key is a reserved word in MySQL
                           Field("tag",
                                 label = T("Key"),
