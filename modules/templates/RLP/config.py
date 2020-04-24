@@ -338,6 +338,8 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
+        s3db = current.s3db
+
         s3 = current.response.s3
 
         # Enable bigtable features
@@ -352,14 +354,16 @@ def config(settings):
 
             if r.controller == "vol":
 
+                coordinator = current.auth.s3_has_role("COORDINATOR")
+
                 resource = r.resource
-                from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
                 # Filter to volunteers only
                 resource.add_filter(FS("volunteer_record.id") != None)
 
-                # TODO If not COORDINATOR:
-                # - filter to pool-listed volunteers
+                # Only COORDINATOR (and ADMIN) can see volunteers outside of pools
+                if not coordinator:
+                    resource.add_filter(FS("pool_membership.id") > 0)
 
                 # HR type defaults to volunteer (already done in controller)
                 #hrtable = s3db.hrm_human_resource
@@ -367,10 +371,59 @@ def config(settings):
 
                 if not r.component:
 
-                    tablename = resource.tablename
+                    from gluon import IS_NOT_EMPTY
+                    from s3 import (IS_PERSON_GENDER,
+                                    S3AgeFilter,
+                                    S3LocationFilter,
+                                    S3LocationSelector,
+                                    S3OptionsFilter,
+                                    S3SQLCustomForm,
+                                    S3SQLInlineComponent,
+                                    S3SQLInlineLink,
+                                    S3TextFilter,
+                                    StringTemplateParser,
+                                    s3_get_filter_opts,
+                                    )
+
+                    # Hide map selector in address
+                    atable = s3db.pr_address
+                    field = atable.location_id
+                    field.widget = S3LocationSelector(show_address = True,
+                                                      show_map = False,
+                                                      )
+
+                    # Hide add-link for organisation
+                    hrcomponent = resource.components.get("volunteer_record")
+                    hrtable = hrcomponent.table
+                    field = hrtable.organisation_id
+                    field.represent = s3db.org_OrganisationRepresent(show_link=False)
+                    field.comment = None
+
+                    # Hide comment for comments-field (field re-purposed)
+                    field = hrtable.comments
+                    field.comment = None
+
+                    # Make last name mandatory
+                    table = resource.table
+                    field = table.last_name
+                    field.requires = IS_NOT_EMPTY()
+
+                    # Hide comment for first name
+                    field = table.first_name
+                    field.comment = None
+
+                    # Don't sort genders alphabetically
+                    genders = sorted(list(s3db.pr_gender_opts.items()),
+                                     key = lambda item: item[0],
+                                     )
+                    field = table.gender
+                    field.requires = IS_PERSON_GENDER(genders,
+                                                      sort = False,
+                                                      zero = None,
+                                                      )
 
                     # Adapt CRUD-strings => Volunteers
-                    s3.crud_strings[tablename] = Storage(
+                    s3.crud_strings[resource.tablename] = Storage(
                         label_create = T("Create Volunteer"),
                         title_display = T("Volunteer Details"),
                         title_list = T("Volunteers"),
@@ -385,7 +438,7 @@ def config(settings):
                         )
 
                     # Custom Form
-                    crud_fields = ["volunteer_record.organisation_id",
+                    crud_fields = [#"volunteer_record.organisation_id",
                                    S3SQLInlineLink("pool",
                                                    field = "group_id",
                                                    multiple = False,
@@ -393,7 +446,8 @@ def config(settings):
                                                    search = False,
                                                    ),
                                    # name-fields
-                                   "date_of_birth",
+                                   #"date_of_birth",
+                                   # TODO hide address/contacts if managed and not COORDINATOR
                                    S3SQLInlineComponent(
                                             "address",
                                             label = T("Current Address"),
@@ -425,52 +479,68 @@ def config(settings):
                                             name = "phone",
                                             ),
                                    S3SQLInlineLink("occupation_type",
+                                                   label = T("Occupation Type"),
                                                    field = "occupation_type_id",
                                                    ),
+                                   "volunteer_record.comments",
                                    ]
-
                     # Custom list_fields
                     list_fields = [(T("Pool"), "pool_membership.group_id"),
                                    (T("ID"), "pe_label"),
                                    # name-fields
                                    (T("Age"), "age"),
                                    "occupation_type_person.occupation_type_id",
-                                   "current_address.location_id$postcode",
+                                   "current_address.location_id$addr_postcode",
                                    (T("Place of Residence"), "current_address.location_id$L3"),
                                    ]
 
                     # Insert name fields in name-format order
                     NAMES = ("first_name", "middle_name", "last_name")
-                    from s3 import StringTemplateParser
                     keys = StringTemplateParser.keys(settings.get_pr_name_format())
                     name_fields = [fn for fn in keys if fn in NAMES]
-                    crud_fields[2:2] = name_fields
+                    crud_fields[1:1] = name_fields
                     list_fields[2:2] = name_fields
 
+                    if coordinator:
+                        len_names = len(name_fields)
+                        crud_fields.insert(0, "volunteer_record.organisation_id")
+                        crud_fields.insert(2 + len_names, "date_of_birth")
+                        crud_fields.insert(3 + len_names, "gender")
+
                     # Filters
-                    from s3 import S3AgeFilter, S3OptionsFilter, S3TextFilter
                     filter_widgets = [
-                        # TODO Hide text filter unless COORDINATOR
-                        S3TextFilter(["first_name",
-                                      "middle_name",
-                                      "last_name",
-                                      ],
-                                     label = T("Search"),
-                                     ),
+                        S3OptionsFilter("pool_membership.group_id",
+                                        label = T("Pool"),
+                                        options = get_pools,
+                                        ),
                         S3AgeFilter("date_of_birth",
                                     label = T("Age"),
                                     minimum = 12,
                                     maximum = 90,
+                                    hidden = True,
                                     ),
-                        S3OptionsFilter("pool_membership.group_id",
-                                        label = T("Pool"),
-                                        options = get_pools,
-                                        hidden = True,
+                        S3OptionsFilter("occupation_type_person.occupation_type_id",
+                                        options = lambda: s3_get_filter_opts("pr_occupation_type"),
                                         ),
-                        # TODO filter by home address
-                        # TODO filter by profession
-                        # TODO filter by competency
+                        S3LocationFilter("current_address.location_id",
+                                         label = T("Place of Residence"),
+                                         levels = ("L2", "L3"),
+                                         ),
                         ]
+                    if coordinator:
+                        filter_widgets.insert(0, S3TextFilter(["first_name",
+                                                               "middle_name",
+                                                               "last_name",
+                                                               "pe_label",
+                                                               ],
+                                                              label = T("Search"),
+                                                              ))
+                    else:
+                        filter_widgets.insert(0, S3TextFilter(["pe_label",
+                                                               ],
+                                                              label = T("Search"),
+                                                              ))
+
 
                     resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
                                        filter_widgets = filter_widgets,
@@ -634,21 +704,47 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_hrm_delegation_controller(**attr):
 
-        #s3 = current.response.s3
+        s3 = current.response.s3
+
+        # Enable bigtable features
+        settings.base.bigtable = True
 
         # Must not create or delete delegations from here
         current.s3db.configure("hrm_delegation",
                                insertable = False,
                                )
 
-        #standard_prep = s3.prep
-        #def custom_prep(r):
-        #
-        #    # Call standard prep
-        #    result = standard_prep(r) if callable(standard_prep) else True
-        #
-        #    return result
-        #s3.prep = custom_prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            if r.interactive:
+
+                field = r.table.status
+                status_filter_opts = [opt for opt in field.requires.options() if opt[0]]
+
+                # TODO add organisation filter if COORDINATOR or managing multiple orgs
+                # TODO otherwise hide organisation_id from list
+                from s3 import S3DateFilter, S3OptionsFilter
+                filter_widgets = [S3OptionsFilter("status",
+                                                  options = OrderedDict(status_filter_opts),
+                                                  sort = False,
+                                                  cols = 3,
+                                                  ),
+                                  S3DateFilter("date",
+                                               hidden = True,
+                                               ),
+                                  S3DateFilter("end_date",
+                                               hidden = True,
+                                               ),
+                                  ]
+                r.resource.configure(filter_widgets = filter_widgets,
+                                    )
+
+            return result
+        s3.prep = custom_prep
 
         return attr
 
@@ -731,12 +827,12 @@ def config(settings):
            restricted = True,
            module_type = 2,
         )),
-        #("cms", Storage(
-        #  name_nice = T("Content Management"),
-        #  #description = "Content Management System",
-        #  restricted = True,
-        #  module_type = 10,
-        #)),
+        ("cms", Storage(
+         name_nice = T("Content Management"),
+         #description = "Content Management System",
+         restricted = True,
+         module_type = 10,
+        )),
         ("doc", Storage(
             name_nice = T("Documents"),
             #description = "A library of digital resources, such as photos, documents and reports",
@@ -833,7 +929,6 @@ def rlp_vol_rheader(r, tabs=None):
         return None
 
     from s3 import s3_fullname, s3_rheader_resource, S3ResourceHeader
-    auth = current.auth
 
     tablename, record = s3_rheader_resource(r)
     if tablename != r.tablename:
@@ -853,17 +948,12 @@ def rlp_vol_rheader(r, tabs=None):
 
             if not tabs:
                 tabs = [(T("Personal Data"), None),
+                        (T("Competencies"), "competency"),
+                        (T("Recruitment"), "delegation"),
                         ]
-                # TODO show address and contacts tab if allows by any team
-                if auth.s3_has_role("COORDINATOR"):
-                    tabs.extend([(T("Addresses"), "address"),
-                                 (T("Contact Information"), "contacts"),
-                                 ])
-                tabs.extend([(T("Competencies"), "competency"),
-                             (T("Recruitment"), "delegation"),
-                             ])
 
             rheader_fields = [[(T("Name"), s3_fullname),
+                               # TODO age
                                ],
                               ]
 

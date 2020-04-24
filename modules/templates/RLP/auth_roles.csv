@@ -26,6 +26,10 @@ HRMANAGER,Human Resources Manager,,,vol,volunteer,,CREATE|READ|UPDATE|DELETE,,an
 HRMANAGER,Human Resources Manager,,,,,hrm_delegation,CREATE|READ|UPDATE|DELETE,,
 HRMANAGER,Human Resources Manager,,,,,hrm_human_resource,READ,,any
 HRMANAGER,Human Resources Manager,,,,,org_organisation,CREATE|READ|UPDATE|DELETE|REVIEW|APPROVE,,
+HRMANAGER,Human Resources Manager,,,,,pr_group,READ,,any
+HRMANAGER,Human Resources Manager,,,,,pr_group_membership,READ,,any
+HRMANAGER,Human Resources Manager,,,,,pr_occupation_type,READ,,
+HRMANAGER,Human Resources Manager,,,,,pr_occupation_type_person,READ,,
 HRMANAGER,Human Resources Manager,,,,,pr_person,READ|UPDATE,,any
 HRMANAGER,Human Resources Manager,,,,,req_need,CREATE|READ|UPDATE|DELETE,,
 HRMANAGER,Human Resources Manager,,,,,req_need_organisation,CREATE|READ,,

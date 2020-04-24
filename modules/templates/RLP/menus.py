@@ -36,8 +36,6 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Modules Menu """
 
-        auth = current.auth
-
         return [MM("Volunteers", c="vol", f="person"),
                 MM("Organizations", c="org", f="organisation"),
                 ]
@@ -137,8 +135,8 @@ class S3MainMenu(default.S3MainMenu):
 
         menu_about = MA(c="default")(
             MA("Help", f="help"),
-            #MA("Contact", f="contact"),
-            MA("Version", f="about", restrict = ADMIN),
+            MA("Contact", f="contact"),
+            MA("Version", f="about", restrict = (ADMIN, "COORDINATOR")),
         )
         return menu_about
 
@@ -184,7 +182,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Volunteers", c="vol", f="person")(
                         M("Create", m="create"),
                         ),
-                    M("Delegations", c="hrm", f="delegation")(
+                    M("Deployments", c="hrm", f="delegation")(
                         M("Upcoming", vars = {"active": "f"}),
                         M("Current", vars = {"active": "1"}),
                         M("Past", vars = {"active": "0"}),
