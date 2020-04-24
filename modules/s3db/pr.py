@@ -9248,9 +9248,9 @@ def pr_get_role_paths(pe_id, roles=None, role_types=None):
 
 # =============================================================================
 def pr_get_role_branches(pe_id,
-                         roles=None,
-                         role_types=None,
-                         entity_type=None):
+                         roles = None,
+                         role_types = None,
+                         entity_type = None):
     """
         Get all descendants of the immediate ancestors of the entity
         within these roles/role types

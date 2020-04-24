@@ -65,6 +65,7 @@
          Institute......................optional.....person education institute
          Photo..........................optional.....pr_image.image (URL to remote server to download)
          Group Name.....................optional.....pr_group.name
+         KV:XX..........................optional.....pr_person_tag Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
 
          Column headers looked up in labels.xml:
 
@@ -289,6 +290,11 @@
                 </resource>
             </xsl:if>
 
+            <!-- Arbitrary Tags -->
+            <xsl:for-each select="col[starts-with(@field, 'KV')]">
+                <xsl:call-template name="KeyValue"/>
+            </xsl:for-each>
+
         </resource>
 
         <!-- Locations -->
@@ -374,6 +380,24 @@
                     <xsl:value-of select="$GroupName"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$GroupName"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="KeyValue">
+        <xsl:variable name="Key" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="Value" select="text()"/>
+
+        <xsl:if test="$Value!=''">
+            <!-- @ToDo
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list" select="$Value"/>
+                <xsl:with-param name="arg">tag</xsl:with-param>
+            </xsl:call-template> -->
+            <resource name="pr_person_tag">
+                <data field="tag"><xsl:value-of select="$Key"/></data>
+                <data field="value"><xsl:value-of select="$Value"/></data>
             </resource>
         </xsl:if>
     </xsl:template>

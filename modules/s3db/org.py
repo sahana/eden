@@ -678,6 +678,7 @@ class S3OrganisationModel(S3Model):
                        # Warehouses
                        inv_warehouse = "organisation_id",
                        # Staff/Volunteers
+                       hrm_delegation = "organisation_id",
                        hrm_human_resource = "organisation_id",
                        pr_person = {"link": "hrm_human_resource",
                                     "joinby": "organisation_id",

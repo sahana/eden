@@ -320,11 +320,12 @@ class organisationApply(S3Method):
                                           ).first()
                 person_id = person.id
 
-                # Store the reserve value
-                s3db.pr_person_tag.insert(person_id = person_id,
-                                          tag = "reserve_apply",
-                                          value = form.vars.reserve,
-                                          )
+                # Store the Application
+                delegation_id = s3db.hrm_delegation.insert(organisation_id = organisation_id,
+                                                           person_id = person_id,
+                                                           status = "APPL",
+                                                           comments = form.vars.reserve,
+                                                           )
 
                 # Message OrgAdmins
                 # Lookup Emails
@@ -347,9 +348,9 @@ class organisationApply(S3Method):
                              fullname,
                              )
                 url = "%s%s" % (settings.get_base_public_url(),
-                                URL(c="pr", f="person",
-                                    args = [person_id, "application"],
-                                    vars = {"organisation_id": organisation_id},
+                                URL(c="org", f="organisation",
+                                    args = [organisation_id, "application"],
+                                    vars = {"delegation_id": delegation_id},
                                     ),
                                 )
                 message = "%s has applied to join your Organisation on %s. Please visit %s to respond." % \
@@ -384,7 +385,7 @@ class organisationApply(S3Method):
             r.error(405, current.ERROR.BAD_METHOD)
 
 # =============================================================================
-class personApplication(S3Method):
+class OrganisationApplication(S3Method):
     """
         Handle Application to be affiliated with an Org
     """
@@ -398,17 +399,17 @@ class personApplication(S3Method):
             @param attr: controller arguments
         """
 
-        if r.name == "person" and \
+        if r.name == "organisation" and \
            r.id and \
            not r.component and \
            r.representation in ("html", "aadata"):
 
-            person_id = r.id
+            organisation_id = r.id
 
-            organisation_id = r.get_vars.get("organisation_id")
-            if organisation_id is None:
-                current.session.error = "Can't Approve Application if Organisation not supplied"
-                redirect(URL(args = [person_id]))
+            delegation_id = r.get_vars.get("delegation_id")
+            if delegation_id is None:
+                current.session.error = "Can't Approve Application if Delegation not supplied"
+                redirect(URL(args = [organisation_id]))
 
             T = current.T
             db = current.db
@@ -420,35 +421,64 @@ class personApplication(S3Method):
             if has_role("ADMIN"):
                 # OK
                 pass
-            elif has_role("ORG_ADMIN") and (auth.user.organisation_id == int(organisation_id)):
+            elif has_role("ORG_ADMIN") and (auth.user.organisation_id == organisation_id): # @ToDo: Ideally (post-CCC) make this realm to allow OG_ADMIN role to be assigned to 1 User for multiple Orgs
                 # OK
                 pass
             else:
                 current.session.error = "You are not permitted to Approve Applications for this Organisation"
-                redirect(URL(args = [person_id]))
+                redirect(URL(args = [organisation_id]))
 
-            # Read the reserve_apply tag
-            ttable = s3db.pr_person_tag
+            # Read the delegation
+            dtable = s3db.hrm_delegation
             query = (ttable.person_id == person_id) & \
                     (ttable.tag == "reserve_apply")
-            tag = db(query).select(ttable.id,
-                                   ttable.value,
-                                   limitby = (0, 1)
-                                   ).first()
-            if not tag:
+            delegation = db(dtable.id == delegation_id).select(dtable.id, # For update_record
+                                                               dtable.organisation_id,
+                                                               dtable.person_id,
+                                                               dtable.status,
+                                                               dtable.comments,
+                                                               limitby = (0, 1)
+                                                               ).first()
+            if not delegation:
+                current.session.error = "Application not found!"
+                redirect(URL(args = [organisation_id]))
+
+            if delegation.organisation_id != organisation_id:
+                current.session.error = "Application not for this Organisation!"
+                redirect(URL(args = [organisation_id]))
+
+            if delegation.status != "APPL":
+                current.session.error = "Application has incorrect status!"
+                redirect(URL(args = [organisation_id]))
+
+            # Lookup Person
+            ptable = s3db.pr_person
+            person = db(ptable.id == person_id).select(ptable.first_name,
+                                                       ptable.middle_name,
+                                                       ptable.last_name,
+                                                       ptable.pe_id,
+                                                       limitby = (0, 1)
+                                                       ).first()
+            pe_id = person.pe_id
+
+            # Lookup User Account
+            ltable = s3db.pr_person_user
+            utable = db.auth_user
+            query = (ltable.pe_id == pe_id) & \
+                    (ltable.user_id == utable.id)
+            user = db(query).select(utable.id,
+                                    utable.organisation_id,
+                                    limitby = (0, 1),
+                                    ).first()
+            if user.organsiation_id:
                 current.session.error = "Volunteer has already been accepted to join another Organisation"
-                redirect(URL(args = [person_id]))
+                redirect(URL(args = [organisation_id]))
+
+            user_id = user.id
 
             record = r.record
-            pe_id = record.pe_id
-
-            # Lookup Org
-            otable = s3db.org_organisation
-            org = db(otable.id == organisation_id).select(otable.name,
-                                                          otable.pe_id,
-                                                          limitby = (0, 1)
-                                                          ).first()
-            org_name = org.name
+            org_name = record.name
+            realm_entity = record.pe_id
 
             requires = IS_IN_SET({"0": T("No"),
                                   "1": T("Yes"),
@@ -520,16 +550,23 @@ class personApplication(S3Method):
                 system_name = current.deployment_settings.get_system_name_short()
                 if form.vars.approve == "0":
                     subject = "%s: Application to %s has been Rejected" % (system_name, org_name)
+
+                    # Update Delegation
+                    delegation.update_record(status = "RJCT")
                 else:
                     subject = "%s: Application to %s has been Approved" % (system_name, org_name)
 
-                    # Remove reserve_apply tag
-                    db(ttable.id == tag.id).delete()
+                    # Update Delegation
+                    delegation.update_record(status = "ACPT")
+
+                    # Update User Account
+                    user.update_record(organisation_id = organisation_id)
 
                     # Add Human Resource Record
                     htable = s3db.hrm_human_resource
                     hr = {"organisation_id": organisation_id,
                           "person_id": person_id,
+                          "realm_entity": realm_entity,
                           }
                     human_resource_id = htable.insert(**hr)
                     hr["id"] = human_resource_id
@@ -540,25 +577,16 @@ class personApplication(S3Method):
                         hform = Storage(vars = hr)
                         onaccept(hform)
 
-                    # Lookup User Account
-                    ltable = s3db.pr_person_user
-                    utable = db.auth_user
-                    query = (ltable.pe_id == pe_id) & \
-                            (ltable.user_id == utable.id)
-                    user = db(query).select(utable.id,
-                                            limitby = (0, 1),
-                                            ).first()
-                    user_id = user.id
-
-                    # Update User Account
-                    user.update_record(organisation_id = organisation_id)
-
                     # Add VOLUNTEER role
-                    auth.s3_assign_role(user_id, "VOLUNTEER", for_pe=org.pe_id)
+                    auth.s3_assign_role(user_id, "VOLUNTEER", for_pe=realm_entity)
 
-                    ptable = s3db.pr_person
-                    if tag.value == "1":
-                        # Set Realm Entity
+                    # Remove RESERVE role
+                    auth.s3_withdraw_role(user_id, "RESERVE", for_pe=[])
+
+                    # Set Realm Entity
+                    ttable = s3db.hrm_human_resource_tag
+                    reserve = delegation.comments
+                    if reserve == "1":
                         ftable = s3db.pr_forum
                         forum = db(ftable.organisation_id == organisation_id).select(ftable.pe_id,
                                                                                      limitby = (0, 1)
@@ -566,11 +594,14 @@ class personApplication(S3Method):
 
                         auth.set_realm_entity("pr_person", person_id, entity=forum.pe_id, force_update=True)
                     else:
-                        # Remove RESERVE role
-                        auth.s3_withdraw_role(user_id, "RESERVE", for_pe=[])
+                        auth.set_realm_entity("pr_person", person_id, entity=realm_entity, force_update=True)
 
-                        # Set Realm Entity
-                        auth.set_realm_entity("pr_person", person_id, entity=org.pe_id, force_update=True)
+                    # Set Reserves Tag
+                    ttable = s3db.hrm_human_resource_tag
+                    ttable.insert(human_resource_id = human_resource_id,
+                                  tag = "reserve",
+                                  value = reserve,
+                                  )
 
                 message = subject
 
@@ -583,7 +614,7 @@ class personApplication(S3Method):
                                )
                 # Redirect
                 current.session.confirmation = T("Application has been processed")
-                redirect(URL(args = [person_id]))
+                redirect(URL(args = [organisation_id]))
 
             # Show Form
             ctable = s3db.hrm_competency
@@ -1040,21 +1071,21 @@ class personAffiliation(S3Method):
            reserve != record.sub_reserve_value:
 
             # Find User Account
-            ptable = s3db.pr_person
-            putable = s3db.pr_person_user
-            query = (ptable.id == person_id) & \
-                    (ptable.pe_id == putable.pe_id)
-            link = db(query).select(putable.user_id,
-                                    limitby = (0, 1)
-                                    ).first()
-            user_id = link.user_id
+            #ptable = s3db.pr_person
+            #putable = s3db.pr_person_user
+            #query = (ptable.id == person_id) & \
+            #        (ptable.pe_id == putable.pe_id)
+            #link = db(query).select(putable.user_id,
+            #                        limitby = (0, 1)
+            #                        ).first()
+            #user_id = link.user_id
 
             # Update Realm Entity
             ftable = s3db.pr_forum
             if reserve == "0":
                 FORUM = "Inactives"
                 # Withdraw Old Role
-                auth.s3_withdraw_role(user_id, "RESERVE", for_pe=[])
+                #auth.s3_withdraw_role(user_id, "RESERVE", for_pe=[])
             elif reserve == "1":
                 FORUM = "Reserves"
             forum = db(ftable.name == FORUM).select(ftable.pe_id,
@@ -1063,9 +1094,9 @@ class personAffiliation(S3Method):
             realm_entity = forum.pe_id
             auth.set_realm_entity("pr_person", person_id, entity=realm_entity, force_update=True)
             
-            if reserve == "1":
-                # Add New Role
-                auth.s3_assign_role(user_id, "RESERVE", for_pe=realm_entity)
+            #if reserve == "1":
+            #    # Add New Role
+            #    auth.s3_assign_role(user_id, "RESERVE", for_pe=realm_entity)
 
 # =============================================================================
 class register(S3CustomController):
@@ -1195,7 +1226,7 @@ class register(S3CustomController):
                                 widget = S3MultiSelectWidget(header="",
                                                              selectedList=3),
                                 ),
-                          Field("travel", "boolean",
+                          Field("travel", "integer",
                                 label = T("Willing to Travel?"),
                                 requires = IS_IN_SET({0: T("No"),
                                                       1: T("Yes"),
@@ -2125,7 +2156,7 @@ class verify_email(S3CustomController):
 
         if not approvers:
             # Agencies are approved by ADMIN(s) with a CVS email
-            # Others approved by ADMIN if no ORG_ADMIN(s) exist
+            # Others approved by these same ADMINs if no ORG_ADMIN(s) exist
             query = (gtable.uuid == "ADMIN") & \
                     (gtable.id == mtable.group_id) & \
                     (mtable.user_id == utable.id)
@@ -2253,7 +2284,7 @@ def auth_user_register_onaccept(user_id):
 
     # Apply custom fields & Assign correct Roles
     if registration_type == "agency":
-        # Agency
+        # New Organisation (& Org Admin)
 
         pe_id = auth.s3_user_pe_id(user_id)
 
@@ -2602,7 +2633,7 @@ def auth_user_register_onaccept(user_id):
         realm_entity = group["pe_id"]
         db(gtable.id == group_id).update(realm_entity = realm_entity)
 
-        # Affiliate with Groups Forum to allow management by AGENCY & ORGADMINs
+        # Affiliate with Groups Forum to allow management by AGENCY & ORG_ADMINs
         ftable = s3db.pr_forum
         forum = db(ftable.name == "Groups").select(ftable.pe_id,
                                                    limitby = (0, 1)
@@ -2834,6 +2865,17 @@ def auth_user_register_onaccept(user_id):
     else:
         # Individual / Existing
 
+        ttable = s3db.pr_person_tag
+
+        pe_id = auth.s3_user_pe_id(user_id)
+
+        # Lookup Person
+        ptable = s3db.pr_person
+        person = db(ptable.pe_id == pe_id).select(ptable.id,
+                                                  limitby = (0, 1),
+                                                  ).first()
+        person_id = person.id
+
         # Assign correct Role
         utable = db.auth_user
         user = db(utable.id == user_id).select(utable.organisation_id,
@@ -2887,6 +2929,19 @@ def auth_user_register_onaccept(user_id):
                                     # Leave to Default Realm to make easier to switch affiliations
                                     #entity = realm_entity,
                                     )
+
+            # Not on Reserves by Default
+            htable = s3db.hrm_human_resource
+            hr = db(htable.person_id == person_id).select(htable.id,
+                                                          limitby = (0, 1),
+                                                          ).first()
+            human_resource_id = hr.id
+            httable = s3db.hrm_human_resource_tag
+            record = {"human_resource_id": human_resource_id,
+                      "tag": "reserve",
+                      "value": "0",
+                      }
+            httable.insert(**record)
         else:
             # Reserve
             ftable = s3db.pr_forum
@@ -2898,6 +2953,16 @@ def auth_user_register_onaccept(user_id):
                                 role = "Reserve Volunteer",
                                 entity = realm_entity,
                                 )
+
+            # Visible by Default
+            record = {"person_id": person_id,
+                      "tag": "reserve",
+                      "value": "1",
+                      }
+            ttable.insert(**record)
+
+        # Set Realm Entity
+        person.update_record(realm_entity = realm_entity)
 
         # Create Home Address
         gtable = s3db.gis_location
@@ -2913,7 +2978,6 @@ def auth_user_register_onaccept(user_id):
             gform = Storage(vars = record)
             onaccept(gform)
 
-        pe_id = auth.s3_user_pe_id(user_id)
         atable = s3db.pr_address
         record = {"pe_id": pe_id,
                   "location_id": location_id,
@@ -2928,16 +2992,6 @@ def auth_user_register_onaccept(user_id):
             aform = Storage(vars = record)
             onaccept(aform)
 
-        # Lookup Person
-        ptable = s3db.pr_person
-        person = db(ptable.pe_id == pe_id).select(ptable.id,
-                                                  limitby = (0, 1),
-                                                  ).first()
-        person_id = person.id
-
-        # Set Realm Entity
-        person.update_record(realm_entity = realm_entity)
-
         # Create Skills
         ctable = s3db.hrm_competency
         for skill_id in custom["skill_id"]:
@@ -2948,7 +3002,6 @@ def auth_user_register_onaccept(user_id):
                       }
             ctable.insert(**record)
 
-        ttable = s3db.pr_person_tag
         record = {"person_id": person_id,
                   "tag": "skills_details",
                   "value": custom["skills_details"],
