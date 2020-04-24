@@ -1108,6 +1108,7 @@ $('.copy-link').click(function(e){
         db = current.db
         s3db = current.s3db
 
+        human_resource_id = row.id
         person_id = row.person_id
 
         # Find User Account
@@ -1126,17 +1127,24 @@ $('.copy-link').click(function(e){
         # Update Roles
         auth.s3_withdraw_role(user_id, "VOLUNTEER", for_pe=[])
 
-        # Check if they have a pr_person_tag which shows whether they should be a Reserve or an Inactive
+        # Check if they have a Tag which shows whether they should be a Reserve or an Inactive
+        httable = s3db.hrm_human_resource_tag
+        query = (httable.human_resource_id == human_resource_id) & \
+                (httable.tag == "reserve")
+        reserve = db(query).select(httable.value,
+                                   limitby = (0, 1)
+                                   ).first()
         ttable = s3db.pr_person_tag
         query = (ttable.person_id == person_id) & \
                 (ttable.tag == "reserve")
-        reserve = db(query).select(ttable.value,
-                                   limitby = (0, 1)
-                                   ).first()
         if reserve and reserve.value == "0":
             FORUM = "Inactives"
+            ttable.update_or_insert(query,
+                                    value = "0")
         else:
             FORUM = "Reserves"
+            ttable.update_or_insert(query,
+                                    value = "1")
 
         ftable = s3db.pr_forum
         forum = db(ftable.name == FORUM).select(ftable.pe_id,
@@ -2264,47 +2272,7 @@ $('.copy-link').click(function(e){
         #                             filter = (gtable.L2 == "Cumbria")
         #                             )
 
-        def org_organisation_create_onaccept(form):
-            """
-                Create a Reserves Forum for this Organisation with dual hierarchy to main Reserves Forum & this Organisation
-            """
-
-            db = current.db
-            ftable = s3db.pr_forum
-
-            # Lookup the Reserves Forum
-            forum = db(ftable.name == "Reserves").select(ftable.pe_id,
-                                                         limitby = (0, 1)
-                                                         ).first()
-            try:
-                reserves_pe_id = forum.pe_id
-            except AttributeError:
-                current.log.error("Unable to link Org Forum to Reserves Forum: Forum not Found")
-                return
-
-            form_vars_get = form.vars.get
-            organisation_id = form_vars_get("id")
-
-            # Lookup the Organisation
-            otable = s3db.org_organisation
-            org = db(otable.id == organisation_id).select(otable.pe_id,
-                                                          limitby = (0, 1)
-                                                          ).first()
-            org_pe_id = org.pe_id
-
-            # Create Forum
-            record = {"organisation_id": organisation_id,
-                      "name": "%s Reserves" % form_vars_get("name"),
-                      }
-            forum_id = ftable.insert(**record)
-            record["id"] = forum_id
-            s3db.update_super(ftable, record)
-            forum_pe_id = record["pe_id"]
-
-            # Add the Hierarchy links
-            s3db.pr_add_affiliation(org_pe_id, forum_pe_id, role="Realm Hierarchy")
-            s3db.pr_add_affiliation(reserves_pe_id, forum_pe_id, role="Realm Hierarchy")
-
+        from templates.CCC.controllers import org_organisation_create_onaccept
         s3db.add_custom_callback(tablename,
                                  "create_onaccept",
                                  org_organisation_create_onaccept,
@@ -2412,12 +2380,12 @@ $('.copy-link').click(function(e){
         auth = current.auth
         s3 = current.response.s3
 
-        if auth.s3_has_roles("AGENCY", "ORG_ADMIN"):
+        if auth.s3_has_roles(("AGENCY", "ORG_ADMIN")):
             ADMIN = True
             from templates.CCC.controllers import organisationApplication
-            set_method("org", "organisation",
-                       method = "application",
-                       action = organisationApplication)
+            s3db.set_method("org", "organisation",
+                            method = "application",
+                            action = organisationApplication)
         else:
             ADMIN = None
             if auth.s3_has_role("RESERVE"):
@@ -3358,7 +3326,9 @@ $('.copy-link').click(function(e){
                             forum = db(ftable.name == "Reserves").select(ftable.pe_id,
                                                                          limitby = (0, 1)
                                                                          ).first()
-                            realms = s3db.pr_get_role_branches(forum.pe_id, entity_type="pr_forum")
+                            reserves = forum.pe_id
+                            realms = s3db.pr_get_descendants({reserves}, entity_types={"pr_forum"})
+                            realms.append(reserves)
                             from s3 import FS
                             rfilter = FS("~.realm_entity").belongs(realms)
 

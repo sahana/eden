@@ -255,7 +255,7 @@ class organisationApply(S3Method):
             requires = IS_IN_SET({"0": T("No"),
                                   "1": T("Yes"),
                                   })
-            form = FORM(DIV(DIV(LABEL("Remain visible on the Reserves list?",
+            form = FORM(DIV(DIV(LABEL("Remain visible on the Reserves list as well?",
                                       SPAN(" *",
                                            _class = "req",
                                            ),
@@ -385,7 +385,7 @@ class organisationApply(S3Method):
             r.error(405, current.ERROR.BAD_METHOD)
 
 # =============================================================================
-class OrganisationApplication(S3Method):
+class organisationApplication(S3Method):
     """
         Handle Application to be affiliated with an Org
     """
@@ -430,8 +430,6 @@ class OrganisationApplication(S3Method):
 
             # Read the delegation
             dtable = s3db.hrm_delegation
-            query = (ttable.person_id == person_id) & \
-                    (ttable.tag == "reserve_apply")
             delegation = db(dtable.id == delegation_id).select(dtable.id, # For update_record
                                                                dtable.organisation_id,
                                                                dtable.person_id,
@@ -452,6 +450,7 @@ class OrganisationApplication(S3Method):
                 redirect(URL(args = [organisation_id]))
 
             # Lookup Person
+            person_id = delegation.person_id
             ptable = s3db.pr_person
             person = db(ptable.id == person_id).select(ptable.first_name,
                                                        ptable.middle_name,
@@ -470,8 +469,8 @@ class OrganisationApplication(S3Method):
                                     utable.organisation_id,
                                     limitby = (0, 1),
                                     ).first()
-            if user.organsiation_id:
-                current.session.error = "Volunteer has already been accepted to join another Organisation"
+            if user.organisation_id:
+                current.session.error = "Volunteer has already been accepted to join an Organisation"
                 redirect(URL(args = [organisation_id]))
 
             user_id = user.id
@@ -483,7 +482,7 @@ class OrganisationApplication(S3Method):
             requires = IS_IN_SET({"0": T("No"),
                                   "1": T("Yes"),
                                   })
-            form = FORM(DIV(DIV(LABEL("Should this volunteer become affiliated to your Organisation?",
+            form = FORM(DIV(DIV(LABEL("Should this volunteer become affiliated to this Organisation?",
                                       SPAN(" *",
                                            _class = "req",
                                            ),
@@ -625,6 +624,7 @@ class OrganisationApplication(S3Method):
             offers = db(query).select(stable.name)
             offers = ", ".join([o.name for o in offers])
 
+            ttable = s3db.pr_person_tag
             query = (ttable.person_id == person_id) & \
                     (ttable.tag == "skill_details")
             tag = db(query).select(ttable.id,
@@ -662,15 +662,26 @@ class OrganisationApplication(S3Method):
                                         limitby = (0, 1)
                                         ).first()
             if location:
+                location = location.addr_street or ""
+                if location.L4:
+                    if location:
+                        location = "%s, %s" % (location, location.L4)
+                    else:
+                        location = location.L4
+                if location.L3:
+                    if location:
+                        location = "%s, %s" % (location, location.L3)
+                    else:
+                        location = location.L3
                 address = TR(TD("Address:"),
-                             TD("%s %s %s" % (location.addr_street, location.L4, location.L3)),
+                             TD(location)
                              )
             else:
                 address = TR(TD(_colspan = 2))
 
             header = DIV(P("This volunteer has applied to join this Organisation:"),
                          TABLE(TR(TD("Name:"),
-                                  TD(s3_fullname(record))
+                                  TD(s3_fullname(person))
                                   ),
                                TR(TD("Volunteer Offer:"),
                                   TD(offers),
@@ -1365,7 +1376,7 @@ class register(S3CustomController):
             formfields, required_fields = individual_formfields()
 
         elif get_vars_get("agency"):
-            # Organisation or Agency
+            # Organisation
             agency = True
             title = T("Register as an Organization or Agency")
             header = P()
@@ -2259,6 +2270,49 @@ class volunteer(S3CustomController):
         return output
 
 # =============================================================================
+def org_organisation_create_onaccept(form):
+    """
+        Create a Reserves Forum for this Organisation with dual hierarchy to main Reserves Forum & this Organisation
+    """
+
+    db = current.db
+    s3db = current.s3db
+    ftable = s3db.pr_forum
+
+    # Lookup the Reserves Forum
+    forum = db(ftable.name == "Reserves").select(ftable.pe_id,
+                                                 limitby = (0, 1)
+                                                 ).first()
+    try:
+        reserves_pe_id = forum.pe_id
+    except AttributeError:
+        current.log.error("Unable to link Org Forum to Reserves Forum: Forum not Found")
+        return
+
+    form_vars_get = form.vars.get
+    organisation_id = form_vars_get("id")
+
+    # Lookup the Organisation
+    otable = s3db.org_organisation
+    org = db(otable.id == organisation_id).select(otable.pe_id,
+                                                  limitby = (0, 1)
+                                                  ).first()
+    org_pe_id = org.pe_id
+
+    # Create Forum
+    record = {"organisation_id": organisation_id,
+              "name": "%s Reserves" % form_vars_get("name"),
+              }
+    forum_id = ftable.insert(**record)
+    record["id"] = forum_id
+    s3db.update_super(ftable, record)
+    forum_pe_id = record["pe_id"]
+
+    # Add the Hierarchy links
+    s3db.pr_add_affiliation(org_pe_id, forum_pe_id, role="Realm Hierarchy")
+    s3db.pr_add_affiliation(reserves_pe_id, forum_pe_id, role="Realm Hierarchy")
+
+# =============================================================================
 def auth_user_register_onaccept(user_id):
     """
         Process Custom Fields
@@ -2325,9 +2379,10 @@ def auth_user_register_onaccept(user_id):
         db(otable.id == organisation_id).update(realm_entity = organisation["pe_id"])
         onaccept = get_config("org_organisation", "create_onaccept") or \
                    get_config("org_organisation", "onaccept")
+        oform = Storage(vars = organisation)
         if callable(onaccept):
-            oform = Storage(vars = organisation)
             onaccept(oform)
+        org_organisation_create_onaccept(oform)
 
         ltable = s3db.org_organisation_organisation_type
         ltable.insert(organisation_id = organisation_id,
