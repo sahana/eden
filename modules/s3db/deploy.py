@@ -39,6 +39,7 @@ __all__ = ("S3DeploymentOrganisationModel",
            )
 
 from gluon import *
+from gluon.html import *
 from gluon.tools import callback
 
 from ..s3 import *
