@@ -271,7 +271,7 @@ class S3OrgMenuLayout(S3NavigationItem):
     @staticmethod
     def layout(item):
 
-        name = "Ministerium für Soziales, Arbeit, Gesundheit und Demografie"
+        name = "Rheinland-Pfalz"
 
         current_user = current.auth.user
         if current_user:

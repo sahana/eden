@@ -8,14 +8,15 @@ COORDINATOR,Pool Coordinator,,,hrm,delegation,,READ|UPDATE,,
 COORDINATOR,Pool Coordinator,,,org,organisation,,READ,,
 COORDINATOR,Pool Coordinator,,,req,,,CREATE|READ|UPDATE|DELETE|REVIEW|APPROVE,,
 COORDINATOR,Pool Coordinator,,,vol,,,CREATE|READ|UPDATE|DELETE|REVIEW|APPROVE,,
-COORDINATOR,Pool Coordinator,,,vol,person,,CREATE|READ|UPDATE,,any
-COORDINATOR,Pool Coordinator,,,vol,volunteer,,CREATE|READ|UPDATE,,any
+COORDINATOR,Pool Coordinator,,,vol,person,,CREATE|READ|UPDATE|DELETE,,
 COORDINATOR,Pool Coordinator,,,,,hrm_delegation,READ|UPDATE,,
-COORDINATOR,Pool Coordinator,,,,,hrm_human_resource,READ,,
-COORDINATOR,Pool Coordinator,,,,,hrm_human_resource,READ,,any
+COORDINATOR,Pool Coordinator,,,,,hrm_human_resource,CREATE|READ|UPDATE|DELETE,,
 COORDINATOR,Pool Coordinator,,,,,org_organisation,READ,,
-COORDINATOR,Pool Coordinator,,,,,pr_person,READ,,
-COORDINATOR,Pool Coordinator,,,,,pr_person,READ,,any
+COORDINATOR,Pool Coordinator,,,,,pr_group,READ,,
+COORDINATOR,Pool Coordinator,,,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,
+COORDINATOR,Pool Coordinator,,,,,pr_occupation_type,READ,,
+COORDINATOR,Pool Coordinator,,,,,pr_occupation_type_person,CREATE|READ|UPDATE|DELETE,,
+COORDINATOR,Pool Coordinator,,,,,pr_person,CREATE|READ|UPDATE|DELETE,,
 HRMANAGER,Human Resources Manager,,,hrm,delegation,,CREATE|READ|UPDATE|DELETE,,
 HRMANAGER,Human Resources Manager,,,org,organisation,,CREATE|READ|UPDATE|DELETE|REVIEW|APPROVE,,
 HRMANAGER,Human Resources Manager,,,req,,,CREATE|READ|UPDATE|DELETE|REVIEW|APPROVE,,

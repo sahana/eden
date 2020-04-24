@@ -104,7 +104,8 @@ $('#login-btn').click(function(e){
             auth.messages.submit_button = T("Login")
             login_form = auth.login(inline=True)
             login_div = DIV(H3(T("Login")),
-                            P(XML(T("Registered users can <b>login</b> to access the system"))))
+                            #P(XML(T("Registered users can <b>login</b> to access the system"))),
+                            )
         else:
             login_buttons = ""
 

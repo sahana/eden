@@ -39,10 +39,12 @@ def config(settings):
     #settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
     #settings.auth.registration_requires_approval = True
-    #settings.auth.registration_requests_organisation = True
+    settings.auth.registration_requests_organisation = True
     # Required for access to default realm permissions
-    #settings.auth.registration_link_user_to = ["staff"]
-    #settings.auth.registration_link_user_to_default = ["staff"]
+    settings.auth.registration_link_user_to = ["staff"]
+    settings.auth.registration_link_user_to_default = ["staff"]
+    # Disable password-retrieval feature
+    settings.auth.password_retrieval = False
 
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
@@ -51,7 +53,7 @@ def config(settings):
     # NB This can also be over-ridden for specific contexts later
     # e.g. Activities filtered to those of parent Project
     settings.gis.countries = ("DE",)
-    gis_levels = ("L1", "L2", "L3")
+    #gis_levels = ("L1", "L2", "L3")
     # Uncomment to display the Map Legend as a floating DIV, so that it is visible on Summary Map
     settings.gis.legend = "float"
     # Uncomment to Disable the Postcode selector in the LocationSelector
@@ -363,109 +365,127 @@ def config(settings):
                 #hrtable = s3db.hrm_human_resource
                 #hrtable.type.default = 2
 
-                # Custom Form
-                crud_fields = ["volunteer_record.organisation_id",
-                               S3SQLInlineLink("pool",
-                                               field = "group_id",
-                                               multiple = False,
-                                               header = False,
-                                               search = False,
-                                               ),
-                               # name-fields
-                               "date_of_birth",
-                               S3SQLInlineComponent(
-                                        "address",
-                                        label = T("Current Address"),
-                                        fields = [("", "location_id")],
-                                        filterby = {"field": "type",
-                                                    "options": "1",
-                                                    },
-                                        link = False,
-                                        multiple = False,
-                                        ),
-                               S3SQLInlineComponent(
-                                        "contact",
-                                        fields = [("", "value")],
-                                        filterby = {"field": "contact_method",
-                                                    "options": "EMAIL",
-                                                    },
-                                        label = T("Email"),
-                                        multiple = False,
-                                        name = "email",
-                                        ),
-                               S3SQLInlineComponent(
-                                        "contact",
-                                        fields = [("", "value")],
-                                        filterby = {"field": "contact_method",
-                                                    "options": "SMS",
-                                                    },
-                                        label = T("Mobile Phone"),
-                                        multiple = False,
-                                        name = "phone",
-                                        ),
-                               S3SQLInlineLink("occupation_type",
-                                               field = "occupation_type_id",
-                                               ),
-                               ]
+                if not r.component:
 
-                list_fields = [# name-fields
-                               (T("Age"), "age"),
-                               "gender",
-                               "occupation_type_person.occupation_type_id",
-                               (T("Place of Residence"), "current_address.location_id$L3"),
-                               (T("Pool"), "pool_membership.group_id"),
-                               ]
+                    tablename = resource.tablename
 
-                # Insert name fields in name-format order
-                NAMES = ("first_name", "middle_name", "last_name")
-                from s3 import StringTemplateParser
-                keys = StringTemplateParser.keys(settings.get_pr_name_format())
-                name_fields = [fn for fn in keys if fn in NAMES]
-                crud_fields[2:2] = name_fields
-                list_fields[0:0] = name_fields
+                    # Adapt CRUD-strings => Volunteers
+                    s3.crud_strings[tablename] = Storage(
+                        label_create = T("Create Volunteer"),
+                        title_display = T("Volunteer Details"),
+                        title_list = T("Volunteers"),
+                        title_update = T("Edit Volunteer Details"),
+                        title_upload = T("Import Volunteers"),
+                        label_list_button = T("List Volunteers"),
+                        label_delete_button = T("Delete Volunteer"),
+                        msg_record_created = T("Volunteer added"),
+                        msg_record_modified = T("Volunteer details updated"),
+                        msg_record_deleted = T("Volunteer deleted"),
+                        msg_list_empty = T("No Volunteers found"),
+                        )
 
-                # Filters
-                from s3 import S3AgeFilter, S3OptionsFilter, S3TextFilter
+                    # Custom Form
+                    crud_fields = ["volunteer_record.organisation_id",
+                                   S3SQLInlineLink("pool",
+                                                   field = "group_id",
+                                                   multiple = False,
+                                                   header = False,
+                                                   search = False,
+                                                   ),
+                                   # name-fields
+                                   "date_of_birth",
+                                   S3SQLInlineComponent(
+                                            "address",
+                                            label = T("Current Address"),
+                                            fields = [("", "location_id")],
+                                            filterby = {"field": "type",
+                                                        "options": "1",
+                                                        },
+                                            link = False,
+                                            multiple = False,
+                                            ),
+                                   S3SQLInlineComponent(
+                                            "contact",
+                                            fields = [("", "value")],
+                                            filterby = {"field": "contact_method",
+                                                        "options": "EMAIL",
+                                                        },
+                                            label = T("Email"),
+                                            multiple = False,
+                                            name = "email",
+                                            ),
+                                   S3SQLInlineComponent(
+                                            "contact",
+                                            fields = [("", "value")],
+                                            filterby = {"field": "contact_method",
+                                                        "options": "SMS",
+                                                        },
+                                            label = T("Mobile Phone"),
+                                            multiple = False,
+                                            name = "phone",
+                                            ),
+                                   S3SQLInlineLink("occupation_type",
+                                                   field = "occupation_type_id",
+                                                   ),
+                                   ]
 
-                filter_widgets = [
-                    # TODO Hide text filter unless COORDINATOR
-                    S3TextFilter(["first_name",
-                                  "middle_name",
-                                  "last_name",
-                                  ],
-                                 label = T("Search"),
-                                 ),
-                    S3AgeFilter("date_of_birth",
-                                label = T("Age"),
-                                minimum = 12,
-                                maximum = 90,
-                                ),
-                    S3OptionsFilter("pool_membership.group_id",
-                                    label = T("Pool"),
-                                    options = get_pools,
-                                    hidden = True,
+                    # Custom list_fields
+                    list_fields = [(T("Pool"), "pool_membership.group_id"),
+                                   (T("ID"), "pe_label"),
+                                   # name-fields
+                                   (T("Age"), "age"),
+                                   "occupation_type_person.occupation_type_id",
+                                   "current_address.location_id$postcode",
+                                   (T("Place of Residence"), "current_address.location_id$L3"),
+                                   ]
+
+                    # Insert name fields in name-format order
+                    NAMES = ("first_name", "middle_name", "last_name")
+                    from s3 import StringTemplateParser
+                    keys = StringTemplateParser.keys(settings.get_pr_name_format())
+                    name_fields = [fn for fn in keys if fn in NAMES]
+                    crud_fields[2:2] = name_fields
+                    list_fields[2:2] = name_fields
+
+                    # Filters
+                    from s3 import S3AgeFilter, S3OptionsFilter, S3TextFilter
+                    filter_widgets = [
+                        # TODO Hide text filter unless COORDINATOR
+                        S3TextFilter(["first_name",
+                                      "middle_name",
+                                      "last_name",
+                                      ],
+                                     label = T("Search"),
+                                     ),
+                        S3AgeFilter("date_of_birth",
+                                    label = T("Age"),
+                                    minimum = 12,
+                                    maximum = 90,
                                     ),
-                    # TODO filter by home address
-                    # TODO filter by profession
-                    # TODO filter by competency
-                    ]
+                        S3OptionsFilter("pool_membership.group_id",
+                                        label = T("Pool"),
+                                        options = get_pools,
+                                        hidden = True,
+                                        ),
+                        # TODO filter by home address
+                        # TODO filter by profession
+                        # TODO filter by competency
+                        ]
 
-                resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
-                                   filter_widgets = filter_widgets,
-                                   list_fields = list_fields,
-                                   # Extra fields for computation of virtual fields
-                                   extra_fields = ["date_of_birth",
-                                                   ],
-                                   )
+                    resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
+                                       filter_widgets = filter_widgets,
+                                       list_fields = list_fields,
+                                       # Extra fields for computation of virtual fields
+                                       extra_fields = ["date_of_birth",
+                                                       ],
+                                       )
 
-                if r.component_name == "delegation":
+                elif r.component_name == "delegation":
 
                     # HRMANAGERs and ADMINs see the list
                     if not current.auth.s3_has_role("HRMANAGER") and \
                        r.interactive and r.method is None and not r.component_id:
                         r.method = "organize"
-
-                # TODO adapt CRUD-strings (=>volunteers)
 
             elif callable(standard_prep):
                 result = standard_prep(r)
@@ -531,6 +551,21 @@ def config(settings):
     def customise_hrm_delegation_resource(r, tablename):
 
         s3db = current.s3db
+        s3 = current.response.s3
+
+        # Adapt terminology to use-case
+        s3.crud_strings["hrm_delegation"] = Storage(
+            label_create = T("Create Deployment"),
+            title_display = T("Deployment Details"),
+            title_list = T("Deployments"),
+            title_update = T("Edit Deployment"),
+            label_list_button = T("List Deployments"),
+            label_delete_button = T("Delete Deployment"),
+            msg_record_created = T("Deployment added"),
+            msg_record_modified = T("Deployment updated"),
+            msg_record_deleted = T("Deployment deleted"),
+            msg_list_empty = T("No Deployments currently registered"),
+            )
 
         # Basic organizer configuration
         organize = {"start": "date",
@@ -564,9 +599,6 @@ def config(settings):
                 r.component.load()
                 record = r.component._rows[0]
                 delegation_workflow(r.component.table, record)
-                # TODO cannot change organisation
-                # TODO can only change dates while status is REQ/INVT/APPL
-                pass
 
             organize["title"] = "organisation_id"
             organize["description"] = ["date",
@@ -602,7 +634,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_hrm_delegation_controller(**attr):
 
-        s3 = current.response.s3
+        #s3 = current.response.s3
 
         # Must not create or delete delegations from here
         current.s3db.configure("hrm_delegation",
@@ -826,7 +858,6 @@ def rlp_vol_rheader(r, tabs=None):
                 if auth.s3_has_role("COORDINATOR"):
                     tabs.extend([(T("Addresses"), "address"),
                                  (T("Contact Information"), "contacts"),
-                                 (T("Pool"), "pool_membership"),
                                  ])
                 tabs.extend([(T("Competencies"), "competency"),
                              (T("Recruitment"), "delegation"),
