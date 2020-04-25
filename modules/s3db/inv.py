@@ -3832,7 +3832,7 @@ def inv_rfooter(r, record):
             ts_btn = A(T("Track Shipment"),
                        _href = URL(c = "inv",
                                    f = "track_movement",
-                                   vars = {"viewing": "inv_item.%s" % component_id},
+                                   vars = {"viewing": "inv_inv_item.%s" % component_id},
                                    ),
                        _class = "action-btn"
                        )
