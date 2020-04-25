@@ -31,7 +31,7 @@
          Expiry Date............inv_inv_item.expiry_date
          Supplier/Donor.........inv_inv_item.supply_org_id
          Tracking Number........inv_inv_item.tracking_no
-         Owned By (Organization/Branch).inv_inv_item.organisation_id
+         Owned By (Organisation/Branch).inv_inv_item.organisation_id
          Currency...............currency
          Comments...............comments
 
@@ -79,7 +79,7 @@
              use="concat(col[@field='Item Name'],col[@field='Item Code'])"/>
     <xsl:key name="brand" match="row" use="col[@field='Brand']"/>
     <xsl:key name="owner_organisation" match="row"
-             use="col[@field='Owned By (Organization/Branch)']"/>
+             use="col[@field='Owned By (Organisation/Branch)']"/>
     <xsl:key name="supplier_organisation" match="row"
              use="col[@field='Supplier/Donor']"/>
 
@@ -110,9 +110,9 @@
                 </xsl:call-template>
             </xsl:for-each>
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('owner_organisation',
-                                                                       col[@field='Owned By (Organization/Branch)'])[1])]">
+                                                                       col[@field='Owned By (Organisation/Branch)'])[1])]">
                 <xsl:call-template name="Organisation">
-                    <xsl:with-param name="OrgName" select="col[@field='Owned By (Organization/Branch)']"/>
+                    <xsl:with-param name="OrgName" select="col[@field='Owned By (Organisation/Branch)']"/>
                 </xsl:call-template>
             </xsl:for-each>
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('supplier_organisation',
@@ -210,10 +210,10 @@
                 </xsl:attribute>
             </reference>
             <!-- Link to Organisation -->
-            <xsl:if test="col[@field='Owned By (Organization/Branch)']!=''">
+            <xsl:if test="col[@field='Owned By (Organisation/Branch)']!=''">
                 <reference field="owner_org_id" resource="org_organisation">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="col[@field='Owned By (Organization/Branch)']"/>
+                        <xsl:value-of select="col[@field='Owned By (Organisation/Branch)']"/>
                     </xsl:attribute>
                 </reference>
             </xsl:if>
