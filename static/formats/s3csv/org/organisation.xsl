@@ -44,6 +44,7 @@
         Facebook................pr_contact.value
         Twitter.................pr_contact.value
         Logo....................org_organisation.logo
+        Year....................org_organisation.year
         KV:XX...................org_organisation_tag Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
         Comments................org_organisation.comments
         Approved................org_organisation.approved_by
@@ -623,6 +624,14 @@
                                 <xsl:with-param name="sep" select="'/'"/>
                             </xsl:call-template>
                         </xsl:attribute>-->
+                    </data>
+                </xsl:if>
+
+                <!-- Year -->
+                <xsl:variable name="Year" select="col[@field='Year']/text()"/>
+                <xsl:if test="$Year!=''">
+                    <data field="year">
+                        <xsl:value-of select="$Year"/>
                     </data>
                 </xsl:if>
 
