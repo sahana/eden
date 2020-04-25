@@ -2429,7 +2429,7 @@ $('.copy-link').click(function(e){
                                                   ],
                                    )
 
-            elif r.http == "POST":
+            elif r.method != "import" and r.http == "POST":
                 post_vars = r.post_vars
                 if "selected" in post_vars:
                     # Bulk Action 'Message' has been selected
@@ -3497,7 +3497,7 @@ $('.copy-link').click(function(e){
                                                                                                        ],
                                                                                         )
 
-                elif r.http == "POST":
+                elif r.method != "import" and r.http == "POST":
                     post_vars = r.post_vars
                     if "selected" in post_vars:
                         # Bulk Action 'Message' has been selected
