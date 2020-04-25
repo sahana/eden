@@ -2349,7 +2349,7 @@ class S3GISConfigModel(S3Model):
 
         form_vars = form.vars
         image = form_vars.image
-        if image is None:
+        if not image:
             encoded_file = form_vars.get("imagecrop-data", None)
             if not encoded_file:
                 # No Image => CSV import of resources which just need a ref
