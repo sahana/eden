@@ -1581,6 +1581,7 @@ class S3InventoryTrackingModel(S3Model):
                                                  label = T("Create Warehouse"),
                                                  title = T("Warehouse"),
                                                  tooltip = T("Type the name of an existing site OR Click 'Create Warehouse' to add a new warehouse."),
+                                                 vars = {"child": "site_id"},
                                                  ),
                            ),
                      item_id(label = T("Kit"),
