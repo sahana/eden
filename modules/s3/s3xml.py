@@ -1555,9 +1555,19 @@ class S3XML(S3Codec):
                             continue
                     if not filename:
                         filename = download_url.split("?")[0] or "upload.bin"
+                    if download_url.find("://"):
+                        # Not a full URL, try prepending protocol
+                        download_url = "http://%s" % download_url
                     try:
                         upload = urlopen(download_url)
                     except IOError:
+                        continue
+                    except ValueError:
+                        # e.g. unknown url type
+                        error = sys.exc_info()[1]
+                        child.set(ERROR, s3_unicode("%s: %s" % (f, error)))
+                        child.set(VALUE, s3_unicode(v))
+                        valid = False
                         continue
 
                 if upload:
