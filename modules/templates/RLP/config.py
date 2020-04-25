@@ -269,11 +269,6 @@ def config(settings):
     settings.customise_pr_group_membership_resource = customise_pr_group_membership_resource
 
     # -------------------------------------------------------------------------
-    #def customise_pr_person_resource(r, tablename):
-    #    pass
-    #
-    #settings.customise_pr_person_resource = customise_pr_person_resource
-    # -------------------------------------------------------------------------
     def get_pools():
 
         db = current.db
@@ -336,8 +331,48 @@ def config(settings):
                             )
 
     # -------------------------------------------------------------------------
+    def vol_person_onaccept(form):
+        """
+            Auto-generate an ID label for volunteers, onaccept
+
+            @param form: the FORM
+        """
+
+        s3db = current.s3db
+
+        record_id = form.vars.get("id")
+        if not record_id:
+            return
+
+        table = s3db.pr_person
+        query = (table.id == record_id) & (table.deleted == False)
+
+        row = current.db(query).select(table.id,
+                                       table.pe_label,
+                                       limitby = (0, 1),
+                                       ).first()
+        if row and not row.pe_label:
+            pe_label = "R-%07d" % row.id
+            row.update_record(pe_label = pe_label)
+            s3db.update_super(table, row)
+
+    # -------------------------------------------------------------------------
+    def customise_pr_person_resource(r, tablename):
+
+        s3db = current.s3db
+
+        if r.controller == "vol":
+            # Establish custom onaccept-callback to set ID label
+            s3db.add_custom_callback("pr_person",
+                                     "onaccept",
+                                     vol_person_onaccept,
+                                     )
+
+    settings.customise_pr_person_resource = customise_pr_person_resource
+    # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
+        db = current.db
         s3db = current.s3db
 
         s3 = current.response.s3
@@ -372,7 +407,8 @@ def config(settings):
                 if not r.component:
 
                     from gluon import IS_NOT_EMPTY
-                    from s3 import (IS_PERSON_GENDER,
+                    from s3 import (IS_ONE_OF,
+                                    IS_PERSON_GENDER,
                                     S3AgeFilter,
                                     S3LocationFilter,
                                     S3LocationSelector,
@@ -396,8 +432,25 @@ def config(settings):
                     hrcomponent = resource.components.get("volunteer_record")
                     hrtable = hrcomponent.table
                     field = hrtable.organisation_id
-                    field.represent = s3db.org_OrganisationRepresent(show_link=False)
                     field.comment = None
+
+                    # Don't show organisation as link
+                    field.represent = s3db.org_OrganisationRepresent(show_link=False)
+
+                    # Limit volunteer organisations to those with volunteer pools
+                    gtable = s3db.pr_group
+                    otable = s3db.org_organisation
+                    ltable = s3db.org_organisation_team
+                    left = [ltable.on((ltable.organisation_id == otable.id) & \
+                                      (ltable.deleted == False)),
+                            gtable.on((gtable.id == ltable.group_id) & \
+                                      (gtable.group_type.belongs(pool_type_ids))),
+                            ]
+                    dbset = db(gtable.id != None)
+                    field.requires = IS_ONE_OF(dbset, "org_organisation.id",
+                                               field.represent,
+                                               left = left,
+                                               )
 
                     # Hide comment for comments-field (field re-purposed)
                     field = hrtable.comments
@@ -952,7 +1005,9 @@ def rlp_vol_rheader(r, tabs=None):
                         (T("Recruitment"), "delegation"),
                         ]
 
-            rheader_fields = [[(T("Name"), s3_fullname),
+            rheader_fields = [[(T("ID"), "pe_label"),
+                               ],
+                              [(T("Name"), s3_fullname),
                                # TODO age
                                ],
                               ]
