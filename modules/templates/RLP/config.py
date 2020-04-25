@@ -2,10 +2,11 @@
 
 from collections import OrderedDict
 
-from gluon import current
+from gluon import current, URL, A
 from gluon.storage import Storage
 
-from s3 import FS
+from s3 import FS, S3Represent, s3_fullname
+
 
 def config(settings):
     """
@@ -194,27 +195,33 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_pr_group_resource(r, tablename):
 
+        s3db = current.s3db
+
         if r.tablename == "org_organisation":
-
             table = r.component.table
+        else:
+            table = s3db.pr_group
 
-            from gluon import IS_IN_SET
-            from s3 import S3Represent
+        from gluon import IS_IN_SET
+        if not current.auth.user or current.response.s3.bulk:
+            valid_types = s3db.pr_group_types
+            valid_types.update(pool_types)
+        else:
+            valid_types = pool_types
 
-            #table = s3db.pr_group
-            field = table.group_type
-            field.label = T("Pool Type")
-            field.default = 22
-            field.requires = IS_IN_SET(pool_types, zero=None)
-            field.represent = S3Represent(options = pool_types)
+        field = table.group_type
+        field.label = T("Pool Type")
+        field.default = 22
+        field.requires = IS_IN_SET(valid_types, zero=None)
+        field.represent = S3Represent(options = pool_types)
 
-            field = table.name
-            field.label = T("Pool Title")
+        field = table.name
+        field.label = T("Pool Title")
 
-            field = table.description
-            field.readable = field.writable = False
+        field = table.description
+        field.readable = field.writable = False
 
-            # TODO embed contact information for pool
+        # TODO embed contact information for pool
 
     settings.customise_pr_group_resource = customise_pr_group_resource
 
@@ -245,17 +252,15 @@ def config(settings):
         gtable = s3db.pr_group
         mtable = s3db.pr_group_membership
 
-        left = gtable.on((gtable.id == mtable.group_id) & \
-                         (gtable.group_type == 21))
+        left = gtable.on(gtable.id == mtable.group_id)
         query = (mtable.person_id == person_id) & \
                 (mtable.deleted == False) & \
-                (gtable.id != None)
+                (gtable.group_type == 21)
         membership = db(query).select(mtable.id,
                                       left = left,
                                       limitby=(0, 1),
                                       ).first()
         if membership:
-            from s3 import s3_fullname
             alias = s3_fullname(person)
         else:
             alias = "***"
@@ -421,7 +426,9 @@ def config(settings):
     # -------------------------------------------------------------------------
     def vol_person_onaccept(form):
         """
-            Auto-generate an ID label for volunteers, onaccept
+            Custom-onaccept for person records:
+                - auto-generate an ID label
+                - update alias (in case name changed)
 
             @param form: the FORM
         """
@@ -439,22 +446,41 @@ def config(settings):
                                        table.pe_label,
                                        limitby = (0, 1),
                                        ).first()
-        if row and not row.pe_label:
-            pe_label = "R-%07d" % row.id
-            row.update_record(pe_label = pe_label)
-            s3db.update_super(table, row)
+        if row:
+            if not row.pe_label:
+                pe_label = "R-%07d" % row.id
+                row.update_record(pe_label = pe_label)
+                s3db.update_super(table, row)
+            vol_update_alias(row.id)
 
     # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
 
         s3db = current.s3db
 
-        if r.controller == "vol":
-            # Establish custom onaccept-callback to set ID label
-            s3db.add_custom_callback("pr_person",
-                                     "onaccept",
-                                     vol_person_onaccept,
-                                     )
+        # Do not update group type in pre-imported pools (for import)
+        from s3 import S3Duplicate
+        s3db.configure("pr_group",
+                       deduplicate = S3Duplicate(ignore_deleted = True,
+                                                 noupdate = True,
+                                                 ),
+                       )
+
+        # Custom callbacks for group membership (for import)
+        s3db.add_custom_callback("pr_group_membership",
+                                 "onaccept",
+                                 pool_membership_onaccept,
+                                 )
+        s3db.add_custom_callback("pr_group_membership",
+                                 "ondelete",
+                                 pool_membership_ondelete,
+                                 )
+
+        # Custom onaccept-callback to set ID label and update alias
+        s3db.add_custom_callback("pr_person",
+                                 "onaccept",
+                                 vol_person_onaccept,
+                                 )
 
     settings.customise_pr_person_resource = customise_pr_person_resource
     # -------------------------------------------------------------------------
@@ -578,17 +604,39 @@ def config(settings):
                         msg_list_empty = T("No Volunteers found"),
                         )
 
+                    # Custom list_fields
+                    list_fields = [(T("Pool"), "pool_membership.group_id"),
+                                   (T("ID"), "pe_label"),
+                                   # name-fields
+                                   (T("Age"), "age"),
+                                   "occupation_type_person.occupation_type_id",
+                                   "current_address.location_id$addr_postcode",
+                                   (T("Place of Residence"), "current_address.location_id$L3"),
+                                   ]
+
                     # Custom Form
-                    crud_fields = [#"volunteer_record.organisation_id",
-                                   S3SQLInlineLink("pool",
+                    crud_fields = [S3SQLInlineLink("pool",
                                                    field = "group_id",
                                                    multiple = False,
                                                    header = False,
                                                    search = False,
                                                    ),
-                                   # name-fields
-                                   #"date_of_birth",
-                                   # TODO hide address/contacts if managed and not COORDINATOR
+                                   ]
+                    if coordinator:
+                        crud_fields.insert(0, "volunteer_record.organisation_id")
+
+                        # Name fields in name-format order
+                        NAMES = ("first_name", "middle_name", "last_name")
+                        keys = StringTemplateParser.keys(settings.get_pr_name_format())
+                        name_fields = [fn for fn in keys if fn in NAMES]
+
+                        text_search_fields = name_fields + ["pe_label"]
+                        list_fields[2:2] = name_fields
+
+                        crud_fields.extend(name_fields)
+                        crud_fields.extend([
+                                   "date_of_birth",
+                                   "gender",
                                    S3SQLInlineComponent(
                                             "address",
                                             label = T("Current Address"),
@@ -619,42 +667,18 @@ def config(settings):
                                             multiple = False,
                                             name = "phone",
                                             ),
+                                   ])
+                    else:
+                        text_search_fields = ["person_details.alias", "pe_label"]
+                        list_fields.insert(2, (T("Name"), "person_details.alias"))
+
+                    crud_fields.extend([
                                    S3SQLInlineLink("occupation_type",
                                                    label = T("Occupation Type"),
                                                    field = "occupation_type_id",
                                                    ),
                                    "volunteer_record.comments",
-                                   ]
-                    # Custom list_fields
-                    list_fields = [(T("Pool"), "pool_membership.group_id"),
-                                   (T("ID"), "pe_label"),
-                                   # name-fields
-                                   (T("Age"), "age"),
-                                   "occupation_type_person.occupation_type_id",
-                                   "current_address.location_id$addr_postcode",
-                                   (T("Place of Residence"), "current_address.location_id$L3"),
-                                   ]
-
-                    if coordinator:
-                        # Insert name fields in name-format order
-                        NAMES = ("first_name", "middle_name", "last_name")
-                        keys = StringTemplateParser.keys(settings.get_pr_name_format())
-                        name_fields = [fn for fn in keys if fn in NAMES]
-                        crud_fields[1:1] = name_fields
-                        list_fields[2:2] = name_fields
-                        text_search_fields = name_fields + ["pe_label"]
-                    else:
-                        # Hide name fields, show alias instead
-                        name_fields = []
-                        list_fields.insert(2, (T("Name"), "person_details.alias"))
-                        text_search_fields = ["person_details.alias", "pe_label"]
-
-                    if coordinator:
-                        # Coordinator can see and edit more details
-                        len_names = len(name_fields)
-                        crud_fields.insert(0, "volunteer_record.organisation_id")
-                        crud_fields.insert(2 + len_names, "date_of_birth")
-                        crud_fields.insert(3 + len_names, "gender")
+                                   ])
 
                     # Filters
                     filter_widgets = [
@@ -787,9 +811,11 @@ def config(settings):
                                },
                     }
 
-        if r.method == "organize":
-            table = s3db.hrm_delegation
+        table = s3db.hrm_delegation
+        field = table.person_id
+        field.represent = rlp_DelegatedPersonRepresent()
 
+        if r.method == "organize":
             # Cannot change dates with the organizer
             # - but may be possible in the popup
             field = table.date
@@ -800,9 +826,44 @@ def config(settings):
             # Cannot create delegations in the organizer
             s3db.configure("hrm_delegation", insertable = False)
 
-        if r.tablename == "pr_person" and r.component:
-            # On tab of volunteer file
+        if r.tablename == "hrm_delegation":
+            # Primary controller
+            volunteer_id = None
+            get_vars = r.get_vars
+            if "viewing" in get_vars:
+                try:
+                    vtablename, record_id = get_vars["viewing"].split(".")
+                except ValueError:
+                    pass
+                else:
+                    if r.controller == "vol" and vtablename == "pr_person":
+                        volunteer_id = record_id
 
+            if volunteer_id:
+                # On tab, viewing volunteer
+                organize["title"] = "organisation_id"
+                organize["description"] = ["date",
+                                           "end_date",
+                                           "status",
+                                           ]
+            else:
+                # Main delegations list
+                organize["title"] = "person_id"
+                organize["description"] = ["organisation_id",
+                                           "date",
+                                           "end_date",
+                                           "status",
+                                           ]
+
+                # - must not insert here
+                s3db.configure("hrm_delegation", insertable = False)
+
+            record = r.record
+            if record:
+                delegation_workflow(r.resource.table, record)
+
+        elif r.component.tablename == "hrm_delegation":
+            # On tab of volunteer file
             if r.component_id:
                 r.component.load()
                 record = r.component._rows[0]
@@ -810,23 +871,6 @@ def config(settings):
 
             organize["title"] = "organisation_id"
             organize["description"] = ["date",
-                                       "end_date",
-                                       "status",
-                                       ]
-        else:
-            # Delegation controller or popup
-            record = r.record
-            if record:
-                delegation_workflow(r.resource.table, record)
-
-            # Cannot insert here
-            s3db.configure("hrm_delegation",
-                           insertable = False,
-                           )
-
-            organize["title"] = "person_id"
-            organize["description"] = ["organisation_id",
-                                       "date",
                                        "end_date",
                                        "status",
                                        ]
@@ -842,15 +886,28 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_hrm_delegation_controller(**attr):
 
+        request = current.request
         s3 = current.response.s3
 
         # Enable bigtable features
         settings.base.bigtable = True
 
-        # Must not create or delete delegations from here
-        current.s3db.configure("hrm_delegation",
-                               insertable = False,
-                               )
+        # Check if on volunteer tab
+        volunteer_id = None
+        get_vars = request.get_vars
+        if "viewing" in get_vars:
+            try:
+                vtablename, record_id = get_vars["viewing"].split(".")
+            except ValueError:
+                return False
+            if request.controller == "vol" and vtablename == "pr_person":
+                volunteer_id = record_id
+
+        # Must not create or delete delegations from delegation list
+        if not volunteer_id:
+            current.s3db.configure("hrm_delegation",
+                                   insertable = False,
+                                   )
 
         standard_prep = s3.prep
         def custom_prep(r):
@@ -860,29 +917,34 @@ def config(settings):
 
             if r.interactive:
 
-                field = r.table.status
-                status_filter_opts = [opt for opt in field.requires.options() if opt[0]]
+                if not volunteer_id:
+                    field = r.table.status
+                    status_filter_opts = [opt for opt in field.requires.options() if opt[0]]
 
-                # TODO add organisation filter if COORDINATOR or managing multiple orgs
-                # TODO otherwise hide organisation_id from list
-                from s3 import S3DateFilter, S3OptionsFilter
-                filter_widgets = [S3OptionsFilter("status",
-                                                  options = OrderedDict(status_filter_opts),
-                                                  sort = False,
-                                                  cols = 3,
-                                                  ),
-                                  S3DateFilter("date",
-                                               hidden = True,
-                                               ),
-                                  S3DateFilter("end_date",
-                                               hidden = True,
-                                               ),
-                                  ]
-                r.resource.configure(filter_widgets = filter_widgets,
-                                    )
+                    # TODO add organisation filter if COORDINATOR or managing multiple orgs
+                    # TODO otherwise hide organisation_id from list
+                    from s3 import S3DateFilter, S3OptionsFilter
+                    filter_widgets = [S3OptionsFilter("status",
+                                                      options = OrderedDict(status_filter_opts),
+                                                      sort = False,
+                                                      cols = 3,
+                                                      ),
+                                      S3DateFilter("date",
+                                                   hidden = True,
+                                                   ),
+                                      S3DateFilter("end_date",
+                                                   hidden = True,
+                                                   ),
+                                      ]
+                    r.resource.configure(filter_widgets = filter_widgets,
+                                        )
 
             return result
         s3.prep = custom_prep
+
+        if volunteer_id:
+            attr = dict(attr)
+            attr["rheader"] = rlp_vol_rheader
 
         return attr
 
@@ -1066,7 +1128,7 @@ def rlp_vol_rheader(r, tabs=None):
         # Resource headers only used in interactive views
         return None
 
-    from s3 import s3_fullname, s3_rheader_resource, S3ResourceHeader
+    from s3 import s3_rheader_resource, S3ResourceHeader
 
     tablename, record = s3_rheader_resource(r)
     if tablename != r.tablename:
@@ -1086,10 +1148,15 @@ def rlp_vol_rheader(r, tabs=None):
 
         if tablename == "pr_person":
 
+            if is_coordinator:
+                delegation_tab = (T("Recruitment"), "delegation")
+            else:
+                delegation_tab = (T("Recruitment"), "delegation/")
+
             if not tabs:
                 tabs = [(T("Personal Data"), None),
                         (T("Competencies"), "competency"),
-                        (T("Recruitment"), "delegation"),
+                        delegation_tab,
                         ]
 
             volunteer = resource.select(["person_details.alias",
@@ -1208,6 +1275,99 @@ def rlp_req_rheader(r, tabs=None):
                                                          record=record,
                                                          )
     return rheader
+# =============================================================================
+class rlp_DelegatedPersonRepresent(S3Represent):
 
+    def __init__(self, show_link=True, linkto=None):
+        """
+            Constructor
+
+            @param show_link: show representation as clickable link
+            @param linkto: URL for the link, using "[id]" as placeholder
+                           for the record ID
+        """
+
+        super(rlp_DelegatedPersonRepresent, self).__init__(
+                                                lookup = "pr_person",
+                                                show_link = show_link,
+                                                linkto = linkto,
+                                                )
+
+        self.coordinator = current.auth.s3_has_role("COORDINATOR")
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        table = self.table
+
+        count = len(values)
+        if count == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+
+        # Get the person names
+        rows = db(query).select(table.id,
+                                table.pe_label,
+                                table.first_name,
+                                table.middle_name,
+                                table.last_name,
+                                limitby = (0, count),
+                                )
+        self.queries += 1
+        person_ids = {row.id for row in rows}
+
+        # For all persons found, get the alias
+        dtable = s3db.pr_person_details
+        query = (dtable.id.belongs(person_ids)) & \
+                (dtable.deleted == False)
+        details = db(query).select(dtable.person_id, dtable.alias)
+        aliases = {item.person_id: item.alias for item in details}
+        self.queries += 1
+
+        for row in rows:
+            alias = aliases.get(row.id, "***")
+            row.alias = alias if alias else "-"
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        if self.coordinator:
+            repr_str = "[%s] %s" % (row.pe_label, s3_fullname(row))
+        else:
+            repr_str = "[%s] %s" % (row.pe_label, row.alias)
+
+        return repr_str
+
+    # -------------------------------------------------------------------------
+    def link(self, k, v, row=None):
+        """
+            Represent a (key, value) as hypertext link
+
+            @param k: the key (br_case_activity.id)
+            @param v: the representation of the key
+            @param row: the row with this key
+        """
+
+        url = URL(c = "vol", f = "person", args = [row.id], extension = "")
+
+        return A(v, _href = url)
 
 # END =========================================================================

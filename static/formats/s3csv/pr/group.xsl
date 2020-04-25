@@ -7,6 +7,7 @@
 
          CSV fields:
          uuid....................pr_group.uuid (Optional to match contact lists with event types)
+         Organisation............org_organisation_team.organisation_id (for teams)
          Name....................pr_group.name
          Type....................pr_group.group_type
          Description.............pr_group.description
@@ -14,12 +15,22 @@
          KV:XX...................Key,Value (Key = XX in column name, value = cell in row)
 
     *********************************************************************** -->
+    <xsl:import href="../orgh.xsl"/>
+
     <xsl:output method="xml"/>
 
     <!-- ****************************************************************** -->
 
     <xsl:template match="/">
         <s3xml>
+            <!-- Import the organisation hierarchy -->
+            <xsl:for-each select="table/row[1]">
+                <xsl:call-template name="OrganisationHierarchy">
+                    <xsl:with-param name="level">Organisation</xsl:with-param>
+                    <xsl:with-param name="rows" select="//table/row"/>
+                </xsl:call-template>
+            </xsl:for-each>
+
             <xsl:apply-templates select="table/row"/>
         </s3xml>
     </xsl:template>
@@ -44,6 +55,19 @@
             <xsl:for-each select="col[starts-with(@field, 'KV')]">
                 <xsl:call-template name="KeyValue"/>
             </xsl:for-each>
+
+            <xsl:variable name="Organisation" select="col[@field='Organisation']/text()"/>
+            <xsl:if test="$Organisation!=''">
+                <!-- Link as team to organisation -->
+                <resource name="org_organisation_team">
+                    <reference field="organisation_id" resource="org_organisation">
+                        <xsl:attribute name="tuid">
+                            <xsl:call-template name="OrganisationID"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+
         </resource>
 
     </xsl:template>

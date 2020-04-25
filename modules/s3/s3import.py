@@ -3998,7 +3998,9 @@ class S3Duplicate(object):
                  primary=None,
                  secondary=None,
                  ignore_case=True,
-                 ignore_deleted=False):
+                 ignore_deleted=False,
+                 noupdate=False,
+                 ):
         """
             Constructor
 
@@ -4010,6 +4012,7 @@ class S3Duplicate(object):
                               present in the import item
             @param ignore_case: ignore case for string/text fields
             @param ignore_deleted: do not match deleted records
+            @param noupdate: match, but do not update
 
             @ToDo: Fuzzy option to do a LIKE search
         """
@@ -4025,6 +4028,7 @@ class S3Duplicate(object):
 
         self.ignore_case = ignore_case
         self.ignore_deleted = ignore_deleted
+        self.noupdate = noupdate
 
     # -------------------------------------------------------------------------
     def __call__(self, item):
@@ -4083,6 +4087,8 @@ class S3Duplicate(object):
             item.id = duplicate[table._id]
             if not data.deleted:
                 item.method = item.METHOD.UPDATE
+            if self.noupdate:
+                item.skip = True
 
         # For uses outside of imports:
         return duplicate

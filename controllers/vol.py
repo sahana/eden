@@ -515,6 +515,35 @@ def task():
     return s3db.project_task_controller()
 
 # =============================================================================
+def delegation():
+
+    def prep(r):
+
+        resource = r.resource
+        table = resource.table
+
+        get_vars = r.get_vars
+        if "viewing" in get_vars:
+            try:
+                vtablename, record_id = get_vars["viewing"].split(".")
+            except ValueError:
+                return False
+            if vtablename == "pr_person":
+                resource.add_filter(FS("person_id") == record_id)
+                field = table.person_id
+                field.default = record_id
+                field.readable = field.writable = False
+            elif vtablename == "org_organisation":
+                resource.add_filter(FS("organisation_id") == record_id)
+                field = table.organisation_id
+                field.default = record_id
+                field.readable = field.writable = False
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller("hrm", "delegation")
+
+# =============================================================================
 # Messaging
 # =============================================================================
 def compose():

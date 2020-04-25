@@ -2812,6 +2812,7 @@ class PRGroupModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {"pr_group_id": group_id,
+                "pr_group_types": pr_group_types,
                 "pr_mailing_list_crud_strings": mailing_list_crud_strings,
                 }
 
