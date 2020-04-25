@@ -1,9 +1,9 @@
 uid,role,description,hidden,controller,function,table,uacl,oacl,entity
 ANONYMOUS,Anonymous,Unauthenticated users,,org,sites_for_org,,READ,,
 ANONYMOUS,Anonymous,Unauthenticated users,,,,org_organisation,READ,,
-AUTHENTICATED,Authenticated,,,gis,ldata,,CREATE|READ|UPDATE|DELETE|REVIEW|APPROVE,,
+AUTHENTICATED,Authenticated,,,gis,ldata,,CREATE|READ|UPDATE|DELETE,,
 AUTHENTICATED,Authenticated,,,gis,location,,CREATE|READ,UPDATE|DELETE,
-AUTHENTICATED,Authenticated,,,,,pr_person,NONE,CREATE|READ|UPDATE|DELETE|REVIEW|APPROVE,
+AUTHENTICATED,Authenticated,,,,,pr_person,NONE,READ|UPDATE|DELETE,
 COORDINATOR,Pool Coordinator,,,hrm,delegation,,READ|UPDATE,,
 COORDINATOR,Pool Coordinator,,,org,organisation,,READ,,
 COORDINATOR,Pool Coordinator,,,req,,,CREATE|READ|UPDATE|DELETE|REVIEW|APPROVE,,
@@ -21,8 +21,7 @@ HRMANAGER,Human Resources Manager,,,hrm,delegation,,CREATE|READ|UPDATE|DELETE,,
 HRMANAGER,Human Resources Manager,,,org,organisation,,CREATE|READ|UPDATE|DELETE|REVIEW|APPROVE,,
 HRMANAGER,Human Resources Manager,,,req,,,CREATE|READ|UPDATE|DELETE|REVIEW|APPROVE,,
 HRMANAGER,Human Resources Manager,,,vol,,,CREATE|READ|UPDATE|DELETE|REVIEW|APPROVE,,
-HRMANAGER,Human Resources Manager,,,vol,person,,CREATE|READ|UPDATE|DELETE,,any
-HRMANAGER,Human Resources Manager,,,vol,volunteer,,CREATE|READ|UPDATE|DELETE,,any
+HRMANAGER,Human Resources Manager,,,vol,person,,READ,CREATE,any
 HRMANAGER,Human Resources Manager,,,,,hrm_delegation,CREATE|READ|UPDATE|DELETE,,
 HRMANAGER,Human Resources Manager,,,,,hrm_human_resource,READ,,any
 HRMANAGER,Human Resources Manager,,,,,org_organisation,CREATE|READ|UPDATE|DELETE|REVIEW|APPROVE,,
@@ -30,7 +29,7 @@ HRMANAGER,Human Resources Manager,,,,,pr_group,READ,,any
 HRMANAGER,Human Resources Manager,,,,,pr_group_membership,READ,,any
 HRMANAGER,Human Resources Manager,,,,,pr_occupation_type,READ,,
 HRMANAGER,Human Resources Manager,,,,,pr_occupation_type_person,READ,,
-HRMANAGER,Human Resources Manager,,,,,pr_person,READ|UPDATE,,any
+HRMANAGER,Human Resources Manager,,,,,pr_person,READ,,any
 HRMANAGER,Human Resources Manager,,,,,req_need,CREATE|READ|UPDATE|DELETE,,
 HRMANAGER,Human Resources Manager,,,,,req_need_organisation,CREATE|READ,,
 HRMANAGER,Human Resources Manager,,,,,req_need_person,CREATE|READ,,

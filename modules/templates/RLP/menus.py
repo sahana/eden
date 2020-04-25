@@ -180,7 +180,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         return M(c=("vol", "hrm"))(
                     M("Volunteers", c="vol", f="person")(
-                        M("Create", m="create"),
+                        M("Create", m="create", t="pr_person"),
                         ),
                     M("Deployments", c="hrm", f="delegation")(
                         M("Upcoming", vars = {"active": "f"}),

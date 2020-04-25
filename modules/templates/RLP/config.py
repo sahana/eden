@@ -219,7 +219,95 @@ def config(settings):
     settings.customise_pr_group_resource = customise_pr_group_resource
 
     # -------------------------------------------------------------------------
+    def vol_update_alias(person_id):
+        """
+            Update the alias of a person:
+            => full name if member of an open volunteer pool
+            => placeholder otherwise
+
+            - used to hide the name of managed volunteers, yet make
+              the volunteer list searchable by name
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        ptable = s3db.pr_person
+        person = db(ptable.id == person_id).select(ptable.id,
+                                                   ptable.first_name,
+                                                   ptable.middle_name,
+                                                   ptable.last_name,
+                                                   limitby = (0, 1),
+                                                   ).first()
+        if not person:
+            return
+
+        gtable = s3db.pr_group
+        mtable = s3db.pr_group_membership
+
+        left = gtable.on((gtable.id == mtable.group_id) & \
+                         (gtable.group_type == 21))
+        query = (mtable.person_id == person_id) & \
+                (mtable.deleted == False) & \
+                (gtable.id != None)
+        membership = db(query).select(mtable.id,
+                                      left = left,
+                                      limitby=(0, 1),
+                                      ).first()
+        if membership:
+            from s3 import s3_fullname
+            alias = s3_fullname(person)
+        else:
+            alias = "***"
+
+        dtable = s3db.pr_person_details
+        query = (dtable.person_id == person.id) & \
+                (dtable.deleted == False)
+        details = db(query).select(dtable.id, limitby=(0, 1)).first()
+        if details:
+            details.update_record(alias=alias)
+        else:
+            data = {"person_id": person.id,
+                    "alias": alias,
+                    }
+            details_id = data["id"] = dtable.insert(**data)
+            auth = current.auth
+            auth.s3_set_record_owner(dtable, details_id)
+            auth.s3_make_session_owner(dtable, details_id)
+            s3db.onaccept(dtable, data)
+
+    # -------------------------------------------------------------------------
+    def pool_membership_onaccept(form):
+        """ Trigger alias update when adding a person to a group """
+
+        db = current.db
+        s3db = current.s3db
+
+        record_id = form.vars.id
+        mtable = s3db.pr_group_membership
+        row = db(mtable.id == record_id).select(mtable.person_id,
+                                                limitby = (0, 1),
+                                                ).first()
+        if row:
+            vol_update_alias(row.person_id)
+
+    def pool_membership_ondelete(row):
+        """ Trigger alias update when removing a person from a group """
+
+        vol_update_alias(row.person_id)
+
+    # -------------------------------------------------------------------------
     def customise_pr_group_membership_resource(r, tablename):
+
+        s3db = current.s3db
+        s3db.add_custom_callback("pr_group_membership",
+                                 "onaccept",
+                                 pool_membership_onaccept,
+                                 )
+        s3db.add_custom_callback("pr_group_membership",
+                                 "ondelete",
+                                 pool_membership_ondelete,
+                                 )
 
         component = r.component
 
@@ -230,8 +318,8 @@ def config(settings):
             # Limit group selector to pools the person is not a member of yet
             field = table.group_id
             from s3 import IS_ONE_OF
-            gtable = current.s3db.pr_group
-            mtable = current.s3db.pr_group_membership
+            gtable = s3db.pr_group
+            mtable = s3db.pr_group_membership
             query = (gtable.group_type.belongs(pool_type_ids)) & (mtable.id == None)
             left = mtable.on((mtable.group_id == gtable.id) & \
                              (mtable.person_id == r.id) & \
@@ -547,14 +635,22 @@ def config(settings):
                                    (T("Place of Residence"), "current_address.location_id$L3"),
                                    ]
 
-                    # Insert name fields in name-format order
-                    NAMES = ("first_name", "middle_name", "last_name")
-                    keys = StringTemplateParser.keys(settings.get_pr_name_format())
-                    name_fields = [fn for fn in keys if fn in NAMES]
-                    crud_fields[1:1] = name_fields
-                    list_fields[2:2] = name_fields
+                    if coordinator:
+                        # Insert name fields in name-format order
+                        NAMES = ("first_name", "middle_name", "last_name")
+                        keys = StringTemplateParser.keys(settings.get_pr_name_format())
+                        name_fields = [fn for fn in keys if fn in NAMES]
+                        crud_fields[1:1] = name_fields
+                        list_fields[2:2] = name_fields
+                        text_search_fields = name_fields + ["pe_label"]
+                    else:
+                        # Hide name fields, show alias instead
+                        name_fields = []
+                        list_fields.insert(2, (T("Name"), "person_details.alias"))
+                        text_search_fields = ["person_details.alias", "pe_label"]
 
                     if coordinator:
+                        # Coordinator can see and edit more details
                         len_names = len(name_fields)
                         crud_fields.insert(0, "volunteer_record.organisation_id")
                         crud_fields.insert(2 + len_names, "date_of_birth")
@@ -562,6 +658,9 @@ def config(settings):
 
                     # Filters
                     filter_widgets = [
+                        S3TextFilter(text_search_fields,
+                                     label = T("Search"),
+                                     ),
                         S3OptionsFilter("pool_membership.group_id",
                                         label = T("Pool"),
                                         options = get_pools,
@@ -580,20 +679,6 @@ def config(settings):
                                          levels = ("L2", "L3"),
                                          ),
                         ]
-                    if coordinator:
-                        filter_widgets.insert(0, S3TextFilter(["first_name",
-                                                               "middle_name",
-                                                               "last_name",
-                                                               "pe_label",
-                                                               ],
-                                                              label = T("Search"),
-                                                              ))
-                    else:
-                        filter_widgets.insert(0, S3TextFilter(["pe_label",
-                                                               ],
-                                                              label = T("Search"),
-                                                              ))
-
 
                     resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
                                        filter_widgets = filter_widgets,
@@ -993,11 +1078,13 @@ def rlp_vol_rheader(r, tabs=None):
     rheader_fields = []
 
     if record:
+
         T = current.T
+        auth = current.auth
+
+        is_coordinator = auth.s3_has_role("COORDINATOR")
 
         if tablename == "pr_person":
-
-            # TODO extract pool membership and pool type
 
             if not tabs:
                 tabs = [(T("Personal Data"), None),
@@ -1005,11 +1092,34 @@ def rlp_vol_rheader(r, tabs=None):
                         (T("Recruitment"), "delegation"),
                         ]
 
+            volunteer = resource.select(["person_details.alias",
+                                         "pool_membership.group_id",
+                                         "date_of_birth",
+                                         "age",
+                                         ],
+                                        represent = True,
+                                        raw_data = True,
+                                        ).rows
+            if volunteer:
+                # Extract volunteer details
+                volunteer = volunteer[0]
+                if is_coordinator:
+                    name = s3_fullname
+                else:
+                    name = lambda row: volunteer["pr_person_details.alias"]
+                pool = lambda row: volunteer["pr_pool_membership_group_membership.group_id"]
+                age = lambda row: volunteer["pr_person.age"]
+            else:
+                # Target record exists, but doesn't match filters
+                return None
+
             rheader_fields = [[(T("ID"), "pe_label"),
+                               (T("Pool"), pool),
                                ],
-                              [(T("Name"), s3_fullname),
-                               # TODO age
+                              [(T("Name"), name),
                                ],
+                              [(T("Age"), age),
+                               ]
                               ]
 
         rheader = S3ResourceHeader(rheader_fields, tabs)(r,
