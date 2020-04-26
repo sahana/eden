@@ -3516,6 +3516,7 @@
 'Obstetrics/Gynecology': 'Geburtshilfe/Gynäkologie',
 'Occasion': 'Anlass',
 'Occupation Type': 'Berufsgruppe',
+'Occupation / Speciality': 'Tätigkeit / Fachrichtung',
 'Office Address': 'Büroadresse',
 'Office Details': 'Bürodetails',
 'Office Phone': 'Telefon im Büro',

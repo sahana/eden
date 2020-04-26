@@ -816,6 +816,8 @@ def config(settings):
                                                    search = False,
                                                    ),
                                    ]
+
+                    # Only COORDINATOR can see personal details
                     if coordinator:
                         crud_fields.insert(0, "volunteer_record.organisation_id")
 
@@ -871,15 +873,17 @@ def config(settings):
                                             ),
                                    ])
 
+                    # Common fields for all cases
                     crud_fields.extend([
                                    S3SQLInlineLink("occupation_type",
                                                    label = T("Occupation Type"),
                                                    field = "occupation_type_id",
                                                    ),
-                                   "person_details.occupation",
+                                   (T("Occupation / Speciality"), "person_details.occupation"),
                                    "availability.hours_per_week",
                                    "volunteer_record.comments",
                                    ])
+                    text_search_fields.append("person_details.occupation")
 
                     # Filters
                     filter_widgets = [
@@ -1477,7 +1481,7 @@ def config(settings):
 
 # =============================================================================
 def rlp_vol_rheader(r, tabs=None):
-    # TODO custom rheader for vol/person
+    """ Custom rheader for vol/person """
 
     if r.representation != "html":
         # Resource headers only used in interactive views
