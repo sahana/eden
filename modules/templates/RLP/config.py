@@ -1497,7 +1497,7 @@ class rlp_DelegatedPersonRepresent(S3Represent):
 
         # For all persons found, get the alias
         dtable = s3db.pr_person_details
-        query = (dtable.id.belongs(person_ids)) & \
+        query = (dtable.person_id.belongs(person_ids)) & \
                 (dtable.deleted == False)
         details = db(query).select(dtable.person_id, dtable.alias)
         aliases = {item.person_id: item.alias for item in details}
