@@ -370,6 +370,27 @@ def config(settings):
     settings.customise_pr_group_resource = customise_pr_group_resource
 
     # -------------------------------------------------------------------------
+    def open_pool_member(person_id):
+
+        db = current.db
+        s3db = current.s3db
+
+        gtable = s3db.pr_group
+        mtable = s3db.pr_group_membership
+
+        left = gtable.on(gtable.id == mtable.group_id)
+        query = (mtable.person_id == person_id) & \
+                (mtable.deleted == False) & \
+                (gtable.group_type == 21)
+        membership = db(query).select(mtable.id,
+                                      cache = s3db.cache,
+                                      left = left,
+                                      limitby=(0, 1),
+                                      ).first()
+
+        return bool(membership)
+
+    # -------------------------------------------------------------------------
     def vol_update_alias(person_id):
         """
             Update the alias of a person:
@@ -393,18 +414,7 @@ def config(settings):
         if not person:
             return
 
-        gtable = s3db.pr_group
-        mtable = s3db.pr_group_membership
-
-        left = gtable.on(gtable.id == mtable.group_id)
-        query = (mtable.person_id == person_id) & \
-                (mtable.deleted == False) & \
-                (gtable.group_type == 21)
-        membership = db(query).select(mtable.id,
-                                      left = left,
-                                      limitby=(0, 1),
-                                      ).first()
-        if membership:
+        if open_pool_member(person.id):
             alias = s3_fullname(person)
         else:
             alias = "***"
@@ -813,6 +823,14 @@ def config(settings):
                                             link = False,
                                             multiple = False,
                                             ),
+                                   ])
+                    else:
+                        text_search_fields = ["person_details.alias", "pe_label"]
+                        list_fields.insert(2, (T("Name"), "person_details.alias"))
+
+                    # Show contact details for coordinator, or if open pool member
+                    if coordinator or r.record and open_pool_member(r.record.id):
+                        crud_fields.extend([
                                    S3SQLInlineComponent(
                                             "contact",
                                             fields = [("", "value")],
@@ -834,9 +852,6 @@ def config(settings):
                                             name = "phone",
                                             ),
                                    ])
-                    else:
-                        text_search_fields = ["person_details.alias", "pe_label"]
-                        list_fields.insert(2, (T("Name"), "person_details.alias"))
 
                     crud_fields.extend([
                                    S3SQLInlineLink("occupation_type",
