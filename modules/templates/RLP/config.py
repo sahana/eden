@@ -702,6 +702,7 @@ def config(settings):
                                     S3LocationFilter,
                                     S3LocationSelector,
                                     S3OptionsFilter,
+                                    S3RangeFilter,
                                     S3SQLCustomForm,
                                     S3SQLInlineComponent,
                                     S3SQLInlineLink,
@@ -716,6 +717,11 @@ def config(settings):
                     field.widget = S3LocationSelector(show_address = True,
                                                       show_map = False,
                                                       )
+
+                    # Enable weekly hours
+                    avtable = s3db.pr_person_availability
+                    field = avtable.hours_per_week
+                    field.readable = field.writable = True
 
                     # Hide add-link for organisation
                     hrcomponent = resource.components.get("volunteer_record")
@@ -785,6 +791,7 @@ def config(settings):
                                    # name-fields
                                    (T("Age"), "age"),
                                    "occupation_type_person.occupation_type_id",
+                                   "availability.hours_per_week",
                                    "current_address.location_id$addr_postcode",
                                    (T("Place of Residence"), "current_address.location_id$L3"),
                                    ]
@@ -857,6 +864,7 @@ def config(settings):
                                                    label = T("Occupation Type"),
                                                    field = "occupation_type_id",
                                                    ),
+                                   "availability.hours_per_week",
                                    "volunteer_record.comments",
                                    ])
 
@@ -869,19 +877,29 @@ def config(settings):
                                         label = T("Pool"),
                                         options = get_pools,
                                         ),
-                        S3AgeFilter("date_of_birth",
-                                    label = T("Age"),
-                                    minimum = 12,
-                                    maximum = 90,
-                                    hidden = True,
-                                    ),
                         S3OptionsFilter("occupation_type_person.occupation_type_id",
                                         options = lambda: s3_get_filter_opts("pr_occupation_type"),
                                         ),
                         S3LocationFilter("current_address.location_id",
                                          label = T("Place of Residence"),
                                          levels = ("L2", "L3"),
+                                         hidden = True,
                                          ),
+                        S3RangeFilter("availability.hours_per_week",
+                                      hidden = True,
+                                      ),
+                        S3OptionsFilter("competency.skill_id",
+                                        label = T("Skills / Resources"),
+                                        options = lambda: s3_get_filter_opts("hrm_skill"),
+                                        hidden = True,
+                                        cols = 2,
+                                        ),
+                        S3AgeFilter("date_of_birth",
+                                    label = T("Age"),
+                                    minimum = 12,
+                                    maximum = 90,
+                                    hidden = True,
+                                    ),
                         ]
 
                     resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
@@ -1132,6 +1150,29 @@ def config(settings):
 
     settings.customise_hrm_delegation_controller = customise_hrm_delegation_controller
     # -------------------------------------------------------------------------
+    def customise_hrm_competency_resource(r, tablename):
+
+        s3db = current.s3db
+
+        table = s3db.hrm_competency
+        field = table.skill_id
+        field.label = T("Skill / Resource")
+
+        field = table.organisation_id
+        field.readable = field.writable = False
+
+        field = table.competency_id
+        field.readable = field.writable = False
+
+        s3db.configure("hrm_competency",
+                       list_fields = ["person_id",
+                                      "skill_id",
+                                      "comments",
+                                      ],
+                       )
+
+    settings.customise_hrm_competency_resource = customise_hrm_competency_resource
+    # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
     settings.modules = OrderedDict([
@@ -1337,7 +1378,7 @@ def rlp_vol_rheader(r, tabs=None):
 
             if not tabs:
                 tabs = [(T("Personal Data"), None),
-                        (T("Competencies"), "competency"),
+                        (T("Skills / Resources"), "competency"),
                         delegation_tab,
                         ]
 
