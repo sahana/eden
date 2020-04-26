@@ -383,7 +383,6 @@ def config(settings):
                 (mtable.deleted == False) & \
                 (gtable.group_type == 21)
         membership = db(query).select(mtable.id,
-                                      cache = s3db.cache,
                                       left = left,
                                       limitby=(0, 1),
                                       ).first()
