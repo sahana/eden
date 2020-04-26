@@ -876,6 +876,7 @@ def config(settings):
                                                    label = T("Occupation Type"),
                                                    field = "occupation_type_id",
                                                    ),
+                                   "person_details.occupation",
                                    "availability.hours_per_week",
                                    "volunteer_record.comments",
                                    ])
@@ -1498,11 +1499,11 @@ def rlp_vol_rheader(r, tabs=None):
         T = current.T
         auth = current.auth
 
-        is_coordinator = auth.s3_has_role("COORDINATOR")
+        coordinator = auth.s3_has_role("COORDINATOR")
 
         if tablename == "pr_person":
 
-            if is_coordinator:
+            if coordinator:
                 delegation_tab = (T("Recruitment"), "delegation")
             else:
                 delegation_tab = (T("Recruitment"), "delegation/")
@@ -1515,8 +1516,10 @@ def rlp_vol_rheader(r, tabs=None):
 
             volunteer = resource.select(["person_details.alias",
                                          "pool_membership.group_id",
+                                         "pool_membership.group_id$group_type",
                                          "date_of_birth",
                                          "age",
+                                         "occupation_type_person.occupation_type_id",
                                          ],
                                         represent = True,
                                         raw_data = True,
@@ -1524,12 +1527,13 @@ def rlp_vol_rheader(r, tabs=None):
             if volunteer:
                 # Extract volunteer details
                 volunteer = volunteer[0]
-                if is_coordinator:
+                if coordinator:
                     name = s3_fullname
                 else:
                     name = lambda row: volunteer["pr_person_details.alias"]
                 pool = lambda row: volunteer["pr_pool_membership_group_membership.group_id"]
                 age = lambda row: volunteer["pr_person.age"]
+                occupation_type = lambda row: volunteer["pr_occupation_type_person.occupation_type_id"]
             else:
                 # Target record exists, but doesn't match filters
                 return None
@@ -1538,14 +1542,24 @@ def rlp_vol_rheader(r, tabs=None):
                                (T("Pool"), pool),
                                ],
                               [(T("Name"), name),
+                               (T("Occupation Type"), occupation_type),
                                ],
                               [(T("Age"), age),
                                ]
                               ]
 
-        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
-                                                         table=resource.table,
-                                                         record=record,
+            open_pool_member = (volunteer["_row"]["pr_group.group_type"] == 21)
+            if not coordinator and open_pool_member:
+                # Recruitment hint
+                from gluon import SPAN
+                hint = lambda row: SPAN(T("Please contact the volunteer directly for deployment"),
+                                        _class="direct-contact-hint"
+                                        )
+                rheader_fields.append([(None, hint, 5)])
+
+        rheader = S3ResourceHeader(rheader_fields, tabs, title=name)(r,
+                                                         table = resource.table,
+                                                         record = record,
                                                          )
     return rheader
 

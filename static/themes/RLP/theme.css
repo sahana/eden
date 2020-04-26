@@ -1916,92 +1916,104 @@ body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   text-transform: uppercase;
 }
 
+/* line 25, ../scss/theme/_misc.scss */
+.direct-contact-hint {
+  border: 1px solid #4488AA;
+  color: #4488AA;
+  font-size: 0.9rem;
+  font-weight: bold;
+  line-height: 1.9rem;
+  margin-bottom: 0.25rem;
+  padding: 0.1rem 0.2rem;
+  text-transform: uppercase;
+}
+
 /* Check-in/check-out UI */
-/* line 27, ../scss/theme/_misc.scss */
+/* line 37, ../scss/theme/_misc.scss */
 .checkpoint-advise {
   background: #fff0f0 none repeat scroll 0 0;
   border: 2px solid red;
   margin-bottom: 1rem;
   padding: 0.6rem;
 }
-/* line 32, ../scss/theme/_misc.scss */
+/* line 42, ../scss/theme/_misc.scss */
 .checkpoint-advise p {
   white-space: pre-wrap;
 }
 
-/* line 36, ../scss/theme/_misc.scss */
+/* line 46, ../scss/theme/_misc.scss */
 .checkpoint-person {
   font-weight: bold;
   margin-bottom: 0.5rem;
 }
 
-/* line 40, ../scss/theme/_misc.scss */
+/* line 50, ../scss/theme/_misc.scss */
 .check-in-warning {
   color: red;
   font-weight: bold;
   margin-left: 0.5rem;
 }
-/* line 44, ../scss/theme/_misc.scss */
+/* line 54, ../scss/theme/_misc.scss */
 .check-in-warning i {
   margin-right: 0.3rem;
 }
 
-/* line 48, ../scss/theme/_misc.scss */
+/* line 58, ../scss/theme/_misc.scss */
 #site_check_in_info__row .controls {
   width: 100%;
 }
 
-/* line 51, ../scss/theme/_misc.scss */
+/* line 61, ../scss/theme/_misc.scss */
 #site_check_in_status__row .controls {
   padding-top: 0.3rem;
   width: 100%;
 }
 
-/* line 56, ../scss/theme/_misc.scss */
+/* line 66, ../scss/theme/_misc.scss */
 #check-in-form .status-label {
   font-size: 0.9rem;
 }
-/* line 59, ../scss/theme/_misc.scss */
+/* line 69, ../scss/theme/_misc.scss */
 #check-in-form .status-message {
   font-size: 0.9rem;
   font-weight: bold;
 }
-/* line 63, ../scss/theme/_misc.scss */
+/* line 73, ../scss/theme/_misc.scss */
 #check-in-form .person-details {
   font-size: 1rem;
 }
 
-/* line 67, ../scss/theme/_misc.scss */
+/* line 77, ../scss/theme/_misc.scss */
 .clear-btn {
   cursor: pointer;
 }
-/* line 69, ../scss/theme/_misc.scss */
+/* line 79, ../scss/theme/_misc.scss */
 .clear-btn .fa {
   color: #b0b0b0;
 }
 
 /* Event Registration UI */
-/* line 75, ../scss/theme/_misc.scss */
+/* line 85, ../scss/theme/_misc.scss */
 .event-bottom .username {
   padding: 0;
 }
 
-/* line 78, ../scss/theme/_misc.scss */
+/* line 88, ../scss/theme/_misc.scss */
 .event-top {
   margin-top: 0.3rem !important;
 }
 
-/* line 81, ../scss/theme/_misc.scss */
+/* line 91, ../scss/theme/_misc.scss */
 .event-type-header {
   text-align: right;
 }
 
-/* line 85, ../scss/theme/_misc.scss */
+/* line 95, ../scss/theme/_misc.scss */
 body.rtl .event-type-header {
   text-align: left;
 }
 
-/* line 89, ../scss/theme/_misc.scss */
+/* line 99, ../scss/theme/_misc.scss */
 .event-type-setting {
   color: #afafaf;
   font-size: 0.9rem;
@@ -2009,12 +2021,12 @@ body.rtl .event-type-header {
   vertical-align: text-top;
 }
 
-/* line 95, ../scss/theme/_misc.scss */
+/* line 105, ../scss/theme/_misc.scss */
 .event-type-toggle {
   cursor: pointer;
 }
 
-/* line 98, ../scss/theme/_misc.scss */
+/* line 108, ../scss/theme/_misc.scss */
 .event-registration-blocked {
   background-color: #ffaaaa;
   color: black;
@@ -2022,137 +2034,137 @@ body.rtl .event-type-header {
   margin: 0.2rem 0.6rem;
 }
 
-/* line 104, ../scss/theme/_misc.scss */
+/* line 114, ../scss/theme/_misc.scss */
 .event-type-name {
   font-size: 1.1rem;
   padding: 0.3rem;
 }
 
-/* line 108, ../scss/theme/_misc.scss */
+/* line 118, ../scss/theme/_misc.scss */
 .event-type-name.placeholder {
   font-size: 0.8rem;
   background-color: #fff0f0;
   border: 2px solid red;
 }
 
-/* line 113, ../scss/theme/_misc.scss */
+/* line 123, ../scss/theme/_misc.scss */
 .profile-picture {
   margin: 1rem 0;
 }
 
-/* line 116, ../scss/theme/_misc.scss */
+/* line 126, ../scss/theme/_misc.scss */
 .controls.has-flaginfo,
 .controls.has-details {
   width: 100%;
 }
-/* line 119, ../scss/theme/_misc.scss */
+/* line 129, ../scss/theme/_misc.scss */
 .controls.has-flaginfo table,
 .controls.has-details table {
   width: 100%;
   border: none;
 }
 
-/* line 126, ../scss/theme/_misc.scss */
+/* line 136, ../scss/theme/_misc.scss */
 .payment-amount {
   color: darkgreen;
   font-size: 1.2rem;
   font-weight: bold;
 }
 
-/* line 132, ../scss/theme/_misc.scss */
+/* line 142, ../scss/theme/_misc.scss */
 #payment-form #allowance_date__row,
 #payment-form #allowance_comments__row {
   display: none;
 }
 
-/* line 139, ../scss/theme/_misc.scss */
+/* line 149, ../scss/theme/_misc.scss */
 #case_event_family__row .controls {
   width: 100%;
 }
 
-/* line 142, ../scss/theme/_misc.scss */
+/* line 152, ../scss/theme/_misc.scss */
 #family-members {
   width: 100%;
   border-collapse: collapse;
 }
-/* line 145, ../scss/theme/_misc.scss */
+/* line 155, ../scss/theme/_misc.scss */
 #family-members div.member-show-picture {
   height: 2.7rem;
 }
-/* line 148, ../scss/theme/_misc.scss */
+/* line 158, ../scss/theme/_misc.scss */
 #family-members .member-id {
   color: #808080;
   font-size: 0.8rem;
   margin-bottom: 0.1rem;
 }
-/* line 153, ../scss/theme/_misc.scss */
+/* line 163, ../scss/theme/_misc.scss */
 #family-members .member-message {
   margin: 0;
   color: #e0767a;
   font-size: 0.8rem;
   font-style: normal;
 }
-/* line 158, ../scss/theme/_misc.scss */
+/* line 168, ../scss/theme/_misc.scss */
 #family-members .member-message .columns {
   padding: 0;
 }
-/* line 163, ../scss/theme/_misc.scss */
+/* line 173, ../scss/theme/_misc.scss */
 #family-members .family-member td {
   border-bottom: 1px solid #e0e0e0;
   background-color: white;
 }
-/* line 167, ../scss/theme/_misc.scss */
+/* line 177, ../scss/theme/_misc.scss */
 #family-members .family-member.member-blocked td {
   background-color: #f6f6f6;
 }
-/* line 169, ../scss/theme/_misc.scss */
+/* line 179, ../scss/theme/_misc.scss */
 #family-members .family-member.member-blocked td .member-id, #family-members .family-member.member-blocked td .member-name {
   color: #b0b0b0;
 }
-/* line 175, ../scss/theme/_misc.scss */
+/* line 185, ../scss/theme/_misc.scss */
 #family-members .family-all td {
   background-color: #f0f8f6;
   color: #505050;
   font-style: italic;
   height: 2.7rem;
 }
-/* line 182, ../scss/theme/_misc.scss */
+/* line 192, ../scss/theme/_misc.scss */
 #family-members button.member-show-picture.showing {
   border: 1px solid black;
 }
 
-/* line 186, ../scss/theme/_misc.scss */
+/* line 196, ../scss/theme/_misc.scss */
 .member-caption {
   padding: 0.2rem 0;
   font-size: 1rem;
 }
 
 /* Dashboard */
-/* line 192, ../scss/theme/_misc.scss */
+/* line 202, ../scss/theme/_misc.scss */
 .dashboard-action {
   margin-bottom: 1.0rem;
 }
 
-/* line 196, ../scss/theme/_misc.scss */
+/* line 206, ../scss/theme/_misc.scss */
 .dbstats td {
   text-align: right;
   padding-right: 2rem;
 }
-/* line 200, ../scss/theme/_misc.scss */
+/* line 210, ../scss/theme/_misc.scss */
 .dbstats tr > td:first-child {
   text-align: left;
   padding-left: 2rem;
 }
-/* line 206, ../scss/theme/_misc.scss */
+/* line 216, ../scss/theme/_misc.scss */
 .dbstats .dbstats-total td:first-child,
 .dbstats .dbstats-extra td:first-child {
   padding-left: 0.7rem;
 }
-/* line 210, ../scss/theme/_misc.scss */
+/* line 220, ../scss/theme/_misc.scss */
 .dbstats .dbstats-total {
   font-weight: bold;
 }
-/* line 213, ../scss/theme/_misc.scss */
+/* line 223, ../scss/theme/_misc.scss */
 .dbstats .dbstats-extra td,
 .dbstats .dbstats-sub td {
   font-style: italic;
@@ -2162,35 +2174,35 @@ body.rtl .event-type-header {
 }
 
 /* Response Theme Selector */
-/* line 225, ../scss/theme/_misc.scss */
+/* line 235, ../scss/theme/_misc.scss */
 #dvr_response_action_response_theme_ids__row .ui-multiselect.ui-widget,
 #sub-defaultresponse_action .ui-multiselect.ui-widget {
   width: 28rem !important;
   max-width: 100%;
 }
 
-/* line 230, ../scss/theme/_misc.scss */
+/* line 240, ../scss/theme/_misc.scss */
 .ui-widget-content {
   max-width: 100%;
 }
 
-/* line 234, ../scss/theme/_misc.scss */
+/* line 244, ../scss/theme/_misc.scss */
 .dvr-response-action-theme {
   font-size: 0.8rem;
 }
-/* line 236, ../scss/theme/_misc.scss */
+/* line 246, ../scss/theme/_misc.scss */
 .dvr-response-action-theme h6 {
   font-size: 0.9rem;
   font-weight: bold;
   color: black;
   margin: 0;
 }
-/* line 242, ../scss/theme/_misc.scss */
+/* line 252, ../scss/theme/_misc.scss */
 .dvr-response-action-theme .text-body {
   margin: 0.125rem 0.25rem 0.5rem 0.25rem;
 }
 
-/* line 246, ../scss/theme/_misc.scss */
+/* line 256, ../scss/theme/_misc.scss */
 .main-title .system-title .org-name {
   font-size: 0.8rem;
   text-transform: uppercase;
