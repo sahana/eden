@@ -36,7 +36,10 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Modules Menu """
 
-        return [MM("Volunteers", c="vol", f="person"),
+        return [MM("Volunteers", c=("vol", "hrm"), f="person")(
+                    MM("List", c="vol", f="person"),
+                    MM("Deployments", c="hrm", f="delegation"),
+                    ),
                 MM("Organizations", c="org", f="organisation"),
                 ]
 
@@ -178,15 +181,31 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def vol():
         """ VOL / Volunteer Management """
 
+        pending_label = current.T("Pending Requests")
+        if current.auth.s3_has_role("COORDINATOR"):
+            from s3 import FS
+            query = (FS("date") >= current.request.utcnow) & \
+                    (FS("status") == "REQ")
+            resource = current.s3db.resource("hrm_delegation",
+                                             filter = query,
+                                             )
+            num_pending_requests = resource.count()
+            if num_pending_requests:
+                pending_label = "%s (%s)" % (pending_label, num_pending_requests)
+
         return M(c=("vol", "hrm"))(
                     M("Volunteers", c="vol", f="person")(
                         M("Create", m="create", t="pr_person"),
                         ),
                     M("Deployments", c="hrm", f="delegation")(
-                        M("Upcoming", vars = {"active": "f"}),
-                        M("Current", vars = {"active": "1"}),
-                        M("Past", vars = {"active": "0"}),
-                        M("Organizer", m="organize"),
+                        M(pending_label,
+                          vars = {"workflow": "p"},
+                          translate = False,
+                          ),
+                        M("Processed Requests", vars={"workflow": "d"},
+                          ),
+                        M("Finalized", vars = {"workflow": "o"}),
+                        M("Organizer", m="organize", restrict="COORDINATOR"),
                         ),
                     M("Administration", link=False)(
                         M("Occupation Types", c="pr", f="occupation_type"),

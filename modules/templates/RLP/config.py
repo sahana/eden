@@ -931,6 +931,7 @@ def config(settings):
         return attr
 
     settings.customise_pr_person_controller = customise_pr_person_controller
+
     # -------------------------------------------------------------------------
     def delegation_workflow(table, record):
         """
@@ -976,6 +977,23 @@ def config(settings):
         field.writable = False
         field = table.organisation_id
         field.writable = False
+
+    # -------------------------------------------------------------------------
+    def delegation_read_multiple_orgs():
+
+        realms = current.auth.permission.permitted_realms("hrm_delegation", "read")
+        if realms is None:
+            multiple_orgs = True
+            org_ids = []
+        else:
+            otable = current.s3db.org_organisation
+            query = (otable.pe_id.belongs(realms)) & \
+                    (otable.deleted == False)
+            rows = current.db(query).select(otable.id)
+            multiple_orgs = len(rows) > 1
+            org_ids = [row.id for row in rows]
+
+        return multiple_orgs, org_ids
 
     # -------------------------------------------------------------------------
     def customise_hrm_delegation_resource(r, tablename):
@@ -1085,6 +1103,7 @@ def config(settings):
     def customise_hrm_delegation_controller(**attr):
 
         request = current.request
+
         s3 = current.response.s3
 
         # Enable bigtable features
@@ -1115,30 +1134,99 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
+            # Subsets to support workflow
+            status_opts = None
+            workflow = r.get_vars.get("workflow")
+            if workflow:
+                # TODO Adjust page title when workflow option chosen
+                today = current.request.utcnow
+
+                PENDING = ("REQ", "INVT", "APPL")
+                DECIDED = ("APPR", "ACPT", "DECL", "RJCT")
+
+                if workflow == "p":
+                    # Pending (undecided and relevant)
+                    status_opts = PENDING
+                    query = (FS("date") >= today)
+                elif workflow == "d":
+                    # Decided and relevant
+                    status_opts = DECIDED
+                    query = (FS("end_date") >= today)
+                elif workflow == "r":
+                    # Relevant
+                    status_opts = PENDING + DECIDED
+                    query = (FS("date") >= today)
+                elif workflow == "o":
+                    # Obsolete (past, cancelled or implemented)
+                    query = (FS("end_date") < today) | \
+                            (FS("status").belongs(("DECL", "RJCT", "CANC", "IMPL")))
+                else:
+                    # Current delegations (accepted|approved and started)
+                    status_opts = (("ACPT", "APPR"))
+                    query = (FS("date") <= today)
+                if status_opts:
+                    query &= FS("status").belongs(status_opts)
+                r.resource.add_filter(query)
+
+            coordinator = current.auth.s3_has_role("COORDINATOR")
+            multiple_orgs = delegation_read_multiple_orgs()[0]
+
             if r.interactive:
 
                 if not volunteer_id:
-                    field = r.table.status
-                    status_filter_opts = [opt for opt in field.requires.options() if opt[0]]
+                    from s3 import S3DateFilter, S3OptionsFilter, s3_get_filter_opts
+                    filter_widgets = [
+                        S3OptionsFilter("person_id$pool_membership.group_id",
+                                        label = T("Pool"),
+                                        options = get_pools(),
+                                        ),
+                        S3DateFilter("date",
+                                     hidden = True,
+                                     ),
+                                     S3DateFilter("end_date",
+                                                  hidden = True,
+                                                  ),
+                                     ]
 
-                    # TODO add organisation filter if COORDINATOR or managing multiple orgs
-                    # TODO otherwise hide organisation_id from list
-                    from s3 import S3DateFilter, S3OptionsFilter
-                    filter_widgets = [S3OptionsFilter("status",
-                                                      options = OrderedDict(status_filter_opts),
-                                                      sort = False,
-                                                      cols = 3,
-                                                      ),
-                                      S3DateFilter("date",
-                                                   hidden = True,
-                                                   ),
-                                      S3DateFilter("end_date",
-                                                   hidden = True,
-                                                   ),
-                                      ]
+                    # Status-Filter
+                    field = r.table.status
+                    if not status_opts:
+                        status_filter_opts = [opt for opt in field.requires.options()
+                                              if opt[0]
+                                              ]
+                    else:
+                        status_filter_opts = [opt for opt in field.requires.options()
+                                              if opt[0] in status_opts
+                                              ]
+                    if len(status_filter_opts) > 1:
+                        filter_widgets.insert(0,
+                            S3OptionsFilter("status",
+                                            options = OrderedDict(status_filter_opts),
+                                            sort = False,
+                                            cols = 3,
+                                            ))
+
+                    # Organisation Filter
+                    if coordinator or multiple_orgs:
+                        filter_widgets.insert(0,
+                            S3OptionsFilter("organisation_id",
+                                            options = lambda: s3_get_filter_opts("org_organisation"),
+                                            ))
+
                     r.resource.configure(filter_widgets = filter_widgets,
                                         )
-
+            list_fields = [(T("Pool"), "person_id$pool_membership.group_id"),
+                           "person_id",
+                           "date",
+                           "end_date",
+                           "status",
+                           "comments",
+                           ]
+            if multiple_orgs:
+                list_fields.insert(0, "organisation_id")
+            r.resource.configure(list_fields = list_fields,
+                                 orderby = "hrm_delegation.date",
+                                 )
             return result
         s3.prep = custom_prep
 
