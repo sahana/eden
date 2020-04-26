@@ -633,6 +633,16 @@ def config(settings):
                                                  ),
                        )
 
+        if r.method == "import" or not current.auth.user:
+            # Skip uniqueness validator in imports
+            # - deduplicate takes care of name matches
+            from gluon import IS_NOT_EMPTY, IS_LENGTH
+            ottable = s3db.pr_occupation_type
+            field = ottable.name
+            field.requires = [IS_NOT_EMPTY(),
+                              IS_LENGTH(128),
+                              ]
+
         # Custom callbacks for group membership (for import)
         s3db.add_custom_callback("pr_group_membership",
                                  "onaccept",

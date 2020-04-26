@@ -37,6 +37,7 @@
          Initials.......................optional.....person initials
          DOB............................optional.....person date of birth
          Nationality....................optional.....person_details nationality
+         Occupation Type................optional.....pr_occupation_type (catalog-based occupation)
          Occupation.....................optional.....person_details occupation
          Company........................optional.....person_details company
          Affiliations............ ......optional.....person_details affiliation
@@ -577,13 +578,14 @@
         </xsl:variable>
 
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-        <xsl:variable name="BloodType" select="col[@field='Blood Type']"/>
-        <xsl:variable name="Ethnicity" select="col[@field='Ethnicity']"/>
-        <xsl:variable name="Teams" select="col[@field='Teams']"/>
-        <xsl:variable name="Trainings" select="col[@field='Trainings']"/>
-        <xsl:variable name="TrainingsExternal" select="col[@field='External Trainings']"/>
-        <xsl:variable name="Certificates" select="col[@field='Certificates']"/>
-        <xsl:variable name="DeployableRoles" select="col[@field='Deployable Roles']"/>
+        <xsl:variable name="BloodType" select="col[@field='Blood Type']/text()"/>
+        <xsl:variable name="Ethnicity" select="col[@field='Ethnicity']/text()"/>
+        <xsl:variable name="Teams" select="col[@field='Teams']/text()"/>
+        <xsl:variable name="OccupationTypes" select="col[@field='Occupation Type']/text()"/>
+        <xsl:variable name="Trainings" select="col[@field='Trainings']/text()"/>
+        <xsl:variable name="TrainingsExternal" select="col[@field='External Trainings']/text()"/>
+        <xsl:variable name="Certificates" select="col[@field='Certificates']/text()"/>
+        <xsl:variable name="DeployableRoles" select="col[@field='Deployable Roles']/text()"/>
 
         <xsl:variable name="gender">
             <xsl:call-template name="GetColumnValue">
@@ -861,6 +863,12 @@
             <xsl:call-template name="splitList">
                 <xsl:with-param name="list" select="$Teams"/>
                 <xsl:with-param name="arg">team</xsl:with-param>
+            </xsl:call-template>
+
+            <!-- Occupation Types -->
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list" select="$OccupationTypes"/>
+                <xsl:with-param name="arg">occupation_types</xsl:with-param>
             </xsl:call-template>
 
             <!-- Trainings -->
@@ -1763,6 +1771,17 @@
                             <data field="name"><xsl:value-of select="$item"/></data>
                             <!-- Relief Team -->
                             <data field="group_type">3</data>
+                        </resource>
+                    </reference>
+                </resource>
+            </xsl:when>
+
+            <!-- Occupation Types -->
+            <xsl:when test="$arg='occupation_types'">
+                <resource name="pr_occupation_type_person">
+                    <reference field="occupation_type_id" resource="pr_occupation_type">
+                        <resource name="pr_occupation_type">
+                            <data field="name"><xsl:value-of select="$item"/></data>
                         </resource>
                     </reference>
                 </resource>
