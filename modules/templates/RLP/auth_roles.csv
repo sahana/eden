@@ -17,14 +17,15 @@ COORDINATOR,Pool Coordinator,,,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,
 COORDINATOR,Pool Coordinator,,,,,pr_occupation_type,READ,,
 COORDINATOR,Pool Coordinator,,,,,pr_occupation_type_person,CREATE|READ|UPDATE|DELETE,,
 COORDINATOR,Pool Coordinator,,,,,pr_person,CREATE|READ|UPDATE|DELETE,,
-HRMANAGER,Human Resources Manager,,,hrm,delegation,,CREATE|READ|UPDATE|DELETE,,
+HRMANAGER,Human Resources Manager,,,hrm,delegation,,CREATE|READ|UPDATE|DELETE,,any
 HRMANAGER,Human Resources Manager,,,org,organisation,,CREATE|READ|UPDATE|DELETE,,
 HRMANAGER,Human Resources Manager,,,req,,,CREATE|READ|UPDATE|DELETE,,
 HRMANAGER,Human Resources Manager,,,vol,,,CREATE|READ|UPDATE|DELETE,,
+HRMANAGER,Human Resources Manager,,,vol,delegation,,CREATE|READ|UPDATE|DELETE,,any
 HRMANAGER,Human Resources Manager,,,vol,person,,READ,CREATE,any
 HRMANAGER,Human Resources Manager,,,,,hrm_delegation,CREATE|READ|UPDATE|DELETE,,
 HRMANAGER,Human Resources Manager,,,,,hrm_human_resource,READ,,any
-HRMANAGER,Human Resources Manager,,,,,org_organisation,CREATE|READ|UPDATE|DELETE,,
+HRMANAGER,Human Resources Manager,,,,,org_organisation,CREATE|READ|UPDATE,,
 HRMANAGER,Human Resources Manager,,,,,pr_group,READ,,any
 HRMANAGER,Human Resources Manager,,,,,pr_group_membership,READ,,any
 HRMANAGER,Human Resources Manager,,,,,pr_occupation_type,READ,,

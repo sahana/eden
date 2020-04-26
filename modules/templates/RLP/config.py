@@ -892,6 +892,8 @@ def config(settings):
         # Enable bigtable features
         settings.base.bigtable = True
 
+        use_person_custom_components()
+
         # Check if on volunteer tab
         volunteer_id = None
         get_vars = request.get_vars

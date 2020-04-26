@@ -138,6 +138,7 @@ class S3OrganisationModel(S3Model):
                            label = T("Name"),
                            requires = [IS_NOT_EMPTY(),
                                        IS_LENGTH(128),
+                                       IS_NOT_IN_DB(db, "org_organisation_type.name"),
                                        ],
                            ),
                      Field("parent", "reference org_organisation_type", # This form of hierarchy may not work on all Databases
