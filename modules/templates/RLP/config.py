@@ -6,7 +6,7 @@ from gluon import current, URL, A
 from gluon.storage import Storage
 
 from s3 import FS, S3Represent, s3_fullname
-
+from s3dal import original_tablename
 
 def config(settings):
     """
@@ -46,6 +46,8 @@ def config(settings):
     settings.auth.registration_link_user_to_default = ["staff"]
     # Disable password-retrieval feature
     settings.auth.password_retrieval = False
+
+    settings.auth.realm_entity_types = ("org_organisation", "pr_forum", "pr_group")
 
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
@@ -128,6 +130,103 @@ def config(settings):
     pool_type_ids = list(pool_types.keys())
 
     # -------------------------------------------------------------------------
+    # Realm Rules
+    #
+    def rlp_realm_entity(table, row):
+        """
+            Assign a Realm Entity to records
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        tablename = original_tablename(table)
+
+        realm_entity = 0
+
+        if tablename == "pr_person":
+
+            # Pool volunteers belong to the pool's realm
+            mtable = s3db.pr_group_membership
+            gtable = s3db.pr_group
+
+            left = gtable.on(gtable.id == mtable.group_id)
+            query = (mtable.person_id == row.id) & \
+                    (mtable.deleted == False) & \
+                    (gtable.group_type.belongs(pool_type_ids))
+            pool = db(query).select(gtable.pe_id,
+                                    left = left,
+                                    limitby = (0, 1),
+                                    ).first()
+            if pool:
+                realm_entity = pool.pe_id
+            else:
+                # Other human resources belong to their org's realm
+                htable = s3db.hrm_human_resource
+                otable = s3db.org_organisation
+
+                left = otable.on(otable.id == htable.organisation_id)
+                query = (htable.person_id == row.id) & \
+                        (htable.deleted == False)
+                org = db(query).select(otable.pe_id,
+                                       left = left,
+                                       limitby = (0, 1),
+                                       ).first()
+                if org:
+                    realm_entity = org.pe_id
+
+        elif tablename in ("pr_person_details",
+                           "hrm_human_resource",
+                           "hrm_competency",
+                           ):
+
+            # Inherit from person via person_id
+            table = s3db.table(tablename)
+            ptable = s3db.pr_person
+            query = (table._id == row.id) & \
+                    (ptable.id == table.person_id)
+            person = db(query).select(ptable.realm_entity,
+                                      limitby = (0, 1),
+                                      ).first()
+            if person:
+                realm_entity = person.realm_entity
+
+        elif tablename in ("pr_address",
+                           "pr_contact",
+                           "pr_contact_emergency",
+                           ):
+
+            # Inherit from person via PE
+            table = s3db.table(tablename)
+            ptable = s3db.pr_person
+            query = (table._id == row.id) & \
+                    (ptable.pe_id == table.pe_id)
+            person = db(query).select(ptable.realm_entity,
+                                      limitby = (0, 1),
+                                      ).first()
+            if person:
+                realm_entity = person.realm_entity
+
+        elif tablename == "hrm_delegation":
+
+            # Delegations are owned by the requesting org => default
+            pass
+
+        elif tablename == "pr_group":
+
+            # Pools own themselves => default
+            pass
+
+        elif tablename == "pr_group_membership":
+
+            # Pool membership is owned by the pool => default
+            pass
+
+        return realm_entity
+
+    settings.auth.realm_entity = rlp_realm_entity
+
+    # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
 
         s3db = current.s3db
@@ -193,9 +292,54 @@ def config(settings):
     settings.customise_org_organisation_controller = customise_org_organisation_controller
 
     # -------------------------------------------------------------------------
+    def pr_group_onaccept(form):
+
+        record_id = form.vars.id
+        if not record_id:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.pr_group
+        query = (table.id == record_id)
+        row = db(query).select(table.id,
+                               table.pe_id,
+                               table.group_type,
+                               limitby = (0, 1),
+                               ).first()
+        if row:
+            ftable = s3db.pr_forum
+            query = (ftable.uuid == "POOLS")
+            all_pools = db(ftable.uuid == "POOLS").select(ftable.id,
+                                                          ftable.pe_id,
+                                                          limitby = (0, 1),
+                                                          ).first()
+            if all_pools:
+                if row.group_type in pool_type_ids:
+                    s3db.pr_add_affiliation(all_pools.pe_id,
+                                            row.pe_id,
+                                            role = "pools",
+                                            )
+                else:
+                    s3db.pr_remove_affiliation(all_pools.pe_id,
+                                               row.pe_id,
+                                               role = "pools",
+                                               )
+            else:
+                # Incomplete prepop
+                current.log.warning("All-pools forum not found! (Prepop incomplete?)")
+
+
+    # -------------------------------------------------------------------------
     def customise_pr_group_resource(r, tablename):
 
         s3db = current.s3db
+
+        s3db.add_custom_callback("pr_group",
+                                 "onaccept",
+                                 pr_group_onaccept,
+                                 )
 
         if r.tablename == "org_organisation":
             table = r.component.table
@@ -296,10 +440,24 @@ def config(settings):
         if row:
             vol_update_alias(row.person_id)
 
+        # Also update realm entity of the person
+        ptable = s3db.pr_person
+        current.auth.set_realm_entity(ptable,
+                                      ptable.id == row.person_id,
+                                      force_update = True,
+                                      )
+
     def pool_membership_ondelete(row):
         """ Trigger alias update when removing a person from a group """
 
         vol_update_alias(row.person_id)
+
+        # Also update realm entity of the person
+        ptable = current.s3db.pr_person
+        current.auth.set_realm_entity(ptable,
+                                      ptable.id == row.person_id,
+                                      force_update = True,
+                                      )
 
     # -------------------------------------------------------------------------
     def customise_pr_group_membership_resource(r, tablename):
@@ -481,6 +639,14 @@ def config(settings):
                                  "onaccept",
                                  vol_person_onaccept,
                                  )
+
+        # Configure components to inherit realm_entity from person
+        s3db.configure("pr_person",
+                       realm_components = ("hrm_human_resource",
+                                           "hrm_competency",
+                                           "pr_person_details",
+                                           ),
+                       )
 
     settings.customise_pr_person_resource = customise_pr_person_resource
     # -------------------------------------------------------------------------
