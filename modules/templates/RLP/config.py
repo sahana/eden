@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import datetime
+
 from collections import OrderedDict
 
 from gluon import current, URL, A
@@ -1052,6 +1054,8 @@ def config(settings):
             # Cannot create delegations in the organizer
             s3db.configure("hrm_delegation", insertable = False)
 
+        tomorrow = current.request.utcnow.date() + datetime.timedelta(days=1)
+        min_date = None
         if r.tablename == "hrm_delegation":
             # Primary controller
             volunteer_id = None
@@ -1084,9 +1088,13 @@ def config(settings):
                 # - must not insert here
                 s3db.configure("hrm_delegation", insertable = False)
 
+            # Apply delegation workflow rules, determine earliest start date
             record = r.record
             if record:
                 delegation_workflow(r.resource.table, record)
+                min_date = min(record.date, tomorrow) if record.date else tomorrow
+            else:
+                min_date = tomorrow
 
         elif r.component.tablename == "hrm_delegation":
             # On tab of volunteer file
@@ -1094,12 +1102,37 @@ def config(settings):
                 r.component.load()
                 record = r.component._rows[0]
                 delegation_workflow(r.component.table, record)
+            else:
+                record = None
+
+            # Determine earliest start date
+            if record:
+                min_date = min(record.date, tomorrow) if record.date else tomorrow
+            else:
+                min_date = tomorrow
 
             organize["title"] = "organisation_id"
             organize["description"] = ["date",
                                        "end_date",
                                        "status",
                                        ]
+
+        # Start and end date are mandatory
+        from gluon import IS_EMPTY_OR
+        for fname in ("date", "end_date"):
+            field = table[fname]
+            requires = field.requires
+            if isinstance(requires, IS_EMPTY_OR):
+                field.requires = requires.other
+
+        # Cannot backdate delegation start
+        if min_date:
+            from s3 import IS_UTC_DATE, S3CalendarWidget
+            field = table.date
+            field.requires = IS_UTC_DATE(minimum=min_date)
+            field.widget = S3CalendarWidget(minimum = min_date,
+                                            set_min = "#hrm_delegation_end_date",
+                                            )
 
         # Reconfigure
         s3db.configure("hrm_delegation",
