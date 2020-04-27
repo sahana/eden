@@ -940,9 +940,11 @@ def config(settings):
                        r.interactive and r.method is None and not r.component_id:
                         r.method = "organize"
                     if coordinator:
-                        s3db.configure("hrm_delegation",
-                                       update_onaccept = hrm_delegation_update_onaccept,
-                                       )
+                        s3db.add_custom_callback("hrm_delegation",
+                                                 "onaccept",
+                                                 hrm_delegation_update_onaccept,
+                                                 method = "update",
+                                                 )
 
             elif callable(standard_prep):
                 result = standard_prep(r)
@@ -1351,7 +1353,11 @@ def config(settings):
             multiple_orgs = delegation_read_multiple_orgs()[0]
 
             if coordinator:
-                r.resource.configure(update_onaccept = hrm_delegation_update_onaccept)
+                s3db.add_custom_callback("hrm_delegation",
+                                         "onaccept",
+                                         hrm_delegation_update_onaccept,
+                                         method = "update",
+                                         )
 
             if r.interactive:
 
