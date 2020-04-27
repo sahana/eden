@@ -698,16 +698,16 @@ def config(settings):
                     resource.add_filter(FS("pool_membership.id") > 0)
 
                 # Availability Filter
-                get_vars = r.get_vars
-                #start_date = get_vars.get("delegation.date__ge")
-                start_date = get_vars.get("fake_start_date__ge")
-                dfilter = get_vars.get("$filter")
+                req_vars = r.vars
+                #start_date = req_vars.get("delegation.date__ge")
+                start_date = req_vars.get("~.fake_start_date__ge")
+                dfilter = req_vars.get("$filter")
                 if start_date or dfilter:
-                    if start_date:
-                        #del get_vars["delegation.date__ge"]
-                        del get_vars["fake_start_date__ge"]
+                    #if start_date:
+                    #    #del get_vars["delegation.date__ge"]
+                    #    del get_vars["~.fake_start_date__ge"]
                     if dfilter:
-                        del get_vars["$filter"]
+                        #del get_vars["$filter"]
                         # Parse out the date from the $filter
                         end_date = dfilter.split('le "')[1].split('")')[0]
                     else:
@@ -754,6 +754,7 @@ def config(settings):
                     busy_persons = db(query).select(dtable.person_id,
                                                     distinct = True)
                     busy_persons = [d.person_id for d in busy_persons]
+                    current.log.debug(busy_persons)
                     query = ~(FS("id").belongs(busy_persons))
                     resource.add_filter(query)
 
