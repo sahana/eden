@@ -428,6 +428,8 @@ def do_js(minimize,
          "sahana.js.chat.cfg", "s3.chat.min.js", "--strict_mode_input=false"),
         ("Guided Tour",
          "sahana.js.guidedTour.cfg", "s3.guidedtour.min.js", None),
+        ("Timeline",
+         "sahana.js.timeline.cfg", "s3.timeline.min.js", None),
         )
 
     for name, cfg_name, out_filename, extra_params in s3_script_sets:
@@ -458,7 +460,7 @@ def do_js(minimize,
                      "register_validation",
                      "shelter_inspection",
                      "sync",
-                     "timeline",
+                     #"timeline",
                      "ui.addperson",
                      "ui.anonymize",
                      "ui.cascadeselect",

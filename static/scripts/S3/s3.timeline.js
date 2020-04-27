@@ -4,6 +4,14 @@
  * Dynamic constants (e.g. Internationalised strings) are set in server-generated script
  */
 
+// Replace timeline-api.js
+Timeline = new Object();
+Timeline.DateTime = window.SimileAjax.DateTime; // for backward compatibility
+// @ToDo: restore locales
+Timeline.serverLocale = 'en';
+Timeline.clientLocale = 'en';
+Timeline.urlPrefix = Timeline_urlPrefix;
+
 // Module pattern to hide internal vars
 (function () {
 

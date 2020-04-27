@@ -2431,13 +2431,14 @@ class S3TwitterSearchModel(S3ChannelModel):
             s3 = response.s3
 
             # Add core Simile Code
-            s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % appname)
+            #s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % appname)
 
-            # Add our control script
-            if s3.debug:
-                s3.scripts.append("/%s/static/scripts/S3/s3.timeline.js" % appname)
-            else:
-                s3.scripts.append("/%s/static/scripts/S3/s3.timeline.min.js" % appname)
+            # Add our controlled script
+            #if s3.debug:
+            #    s3.scripts.append("/%s/static/scripts/S3/s3.timeline.js" % appname)
+            #else:
+            #    s3.scripts.append("/%s/static/scripts/S3/s3.timeline.min.js" % appname)
+            s3_include_simile()
 
             # Add our data
             # @ToDo: Make this the initial data & then collect extra via REST with a stylesheet
