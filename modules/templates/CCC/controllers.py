@@ -662,17 +662,17 @@ class organisationApplication(S3Method):
                                         limitby = (0, 1)
                                         ).first()
             if location:
-                location = location.addr_street or ""
+                address = location.addr_street or ""
                 if location.L4:
-                    if location:
-                        location = "%s, %s" % (location, location.L4)
+                    if address:
+                        address = "%s, %s" % (address, location.L4)
                     else:
-                        location = location.L4
+                        address = location.L4
                 if location.L3:
-                    if location:
-                        location = "%s, %s" % (location, location.L3)
+                    if address:
+                        address = "%s, %s" % (address, location.L3)
                     else:
-                        location = location.L3
+                        address = location.L3
                 address = TR(TD("Address:"),
                              TD(location)
                              )

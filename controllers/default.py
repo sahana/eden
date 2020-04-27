@@ -1342,7 +1342,7 @@ def user():
     # Check for template-specific customisations
     customise = settings.customise_auth_user_controller
     if customise:
-        customise(arg=arg)
+        customise(arg = arg)
 
     self_registration = settings.get_security_self_registration()
     login_form = register_form = None
