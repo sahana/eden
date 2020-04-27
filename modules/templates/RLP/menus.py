@@ -177,6 +177,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return cls.vol()
 
     # -------------------------------------------------------------------------
+    @classmethod
+    def pr(cls):
+        """ Person Management """
+
+        return cls.vol()
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def vol():
         """ VOL / Volunteer Management """

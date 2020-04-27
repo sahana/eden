@@ -2791,9 +2791,9 @@ class PRGroupModel(S3Model):
         configure(tablename,
                   context = {"person": "person_id",
                              },
-                  deduplicate = S3Duplicate(primary=("person_id",
-                                                     "group_id",
-                                                     ),
+                  deduplicate = S3Duplicate(primary = ("person_id",
+                                                       "group_id",
+                                                       ),
                                             ),
                   filter_widgets = filter_widgets,
                   list_fields = ["id",
@@ -3314,7 +3314,7 @@ class PRForumModel(S3Model):
 
         # Resource configuration
         configure(tablename,
-                  deduplicate = S3Duplicate(ignore_deleted=True),
+                  deduplicate = S3Duplicate(ignore_deleted = True),
                   super_entity = ("pr_pentity"),
                   )
 
@@ -3429,9 +3429,9 @@ class PRForumModel(S3Model):
 
         # Table configuration
         configure(tablename,
-                  deduplicate = S3Duplicate(primary=("person_id",
-                                                     "forum_id",
-                                                     ),
+                  deduplicate = S3Duplicate(primary = ("person_id",
+                                                       "forum_id",
+                                                       ),
                                             ),
                   )
 
@@ -4898,7 +4898,7 @@ class PRAvailabilityModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
-                  deduplicate = S3Duplicate(primary=("person_id", "slot_id")),
+                  deduplicate = S3Duplicate(primary = ("person_id", "slot_id")),
                   )
 
         # ---------------------------------------------------------------------
@@ -5931,9 +5931,9 @@ class PROccupationModel(S3Model):
         #
         tablename = "pr_occupation_type_person"
         define_table(tablename,
-                     occupation_type_id(ondelete="RESTRICT",
+                     occupation_type_id(ondelete = "RESTRICT",
                                         ),
-                     self.pr_person_id(ondelete="CASCADE",
+                     self.pr_person_id(ondelete = "CASCADE",
                                        ),
                      *s3_meta_fields())
 

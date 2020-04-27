@@ -12,12 +12,7 @@ from s3dal import original_tablename
 
 def config(settings):
     """
-        Template settings: 'Skeleton' designed to be copied to quickly create
-                           custom templates
-
-        All settings which are to configure a specific template are located
-        here. Deployers should ideally not need to edit any other files outside
-        of their template folder.
+        Settings for Rhineland-Palatinate State's Deployment of Volunteers for the COVID-19 response
     """
 
     T = current.T
@@ -1026,6 +1021,102 @@ def config(settings):
         return multiple_orgs, org_ids
 
     # -------------------------------------------------------------------------
+    def hrm_delegation_update_onaccept(form):
+        """
+            Coordinator has updated a Request
+            - if this is an approval then send a notification
+
+            @ToDo: Limit to Managed Pool Members, ignore for open recruitment.
+        """
+
+        form_vars_get = form.vars.get
+
+        # Check new Status
+        if form_vars_get("status") != "APPR":
+            # Take no action
+            return
+
+        # Check old Status
+        if form.record.status != "REQ":
+            # Take no action
+            return
+
+        # Send Email to the Org & the Volunteer
+
+        # Lookup Details
+        from s3 import s3_fullname
+
+        db = current.db
+        s3db = current.s3db
+
+        organisation_id = form_vars_get("organisation_id")
+        person_id = form_vars_get("person_id")
+        if organisation_id is None or person_id is None:
+            # Load the record
+            dtable = s3db.hrm_delegation
+            record = db(dtable.id == form_vars_get("id")).select(dtable.organisation_id,
+                                                                 dtable.person_id,
+                                                                 limitby = (0, 1)
+                                                                 ).first()
+            organisation_id = record.organisation_id
+            person_id = record.person_id
+
+        otable = s3db.org_organisation
+        org = db(otable.id == organisation_id).select(otable.name,
+                                                      limitby = (0, 1)
+                                                      ).first()
+        org_name = org.name
+
+        ptable = s3db.pr_person
+        person = db(ptable.id == person_id).select(ptable.first_name,
+                                                   ptable.middle_name,
+                                                   ptable.last_name,
+                                                   limitby = (0, 1)
+                                                   ).first()
+        fullname = s3_fullname(person)
+        
+        # Compose Mail
+        # @ToDo: i18n
+        subject = "%s: Volunteer Deployment of %s to %s has been Approved" % \
+                    (settings.get_system_name_short(),
+                     fullname,
+                     org_name,
+                     )
+        # @ToDo: Read Message Template from CMS or templates/RLP/views/msg/*.txt
+        message = ""
+
+        # Lookup Email Addresses to send to
+        ctable = s3db.pr_contact
+        query = (ptable.id == person_id) & \
+                (ptable.pe_id == ctable.pe_id) & \
+                (ctable.contact_method == "EMAIL") & \
+                (ctable.deleted == False)
+        emails = db(query).select(ctable.value)
+        emails = [e.value for e in emails]
+
+        stable = s3db.org_office
+        query = (stable.organisation_id == organisation_id)
+        office = db(query).select(stable.email,
+                                  limitby = (0, 1),
+                                  orderby = stable.created_on
+                                  ).first()
+        try:
+            org_email = office.email
+        except AttributeError:
+            org_email = None
+        if org_email is not None:
+            emails.append(org_email)
+
+        send_email = current.msg.send_email
+        for email in emails:
+            send_email(to = office.email,
+                       subject = subject,
+                       message = message,
+                       )
+
+        current.session.confirmation = T("Deployment approved and notifications sent!")
+
+    # -------------------------------------------------------------------------
     def customise_hrm_delegation_resource(r, tablename):
 
         s3db = current.s3db
@@ -1154,8 +1245,8 @@ def config(settings):
 
         # Reconfigure
         s3db.configure("hrm_delegation",
-                       organize = organize,
                        deletable = False,
+                       organize = organize,
                        )
 
     settings.customise_hrm_delegation_resource = customise_hrm_delegation_resource
@@ -1232,6 +1323,9 @@ def config(settings):
             coordinator = current.auth.s3_has_role("COORDINATOR")
             multiple_orgs = delegation_read_multiple_orgs()[0]
 
+            if coordinator:
+                r.resource.configure(update_onaccept = hrm_delegation_update_onaccept)
+
             if r.interactive:
 
                 if not volunteer_id:
@@ -1275,7 +1369,7 @@ def config(settings):
                                             ))
 
                     r.resource.configure(filter_widgets = filter_widgets,
-                                        )
+                                         )
             list_fields = [(T("Pool"), "person_id$pool_membership.group_id"),
                            "person_id",
                            "date",
