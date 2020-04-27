@@ -968,18 +968,19 @@ def config(settings):
                 field.default = "REQ"
                 field.writable = False
         else:
-            workflow = {"REQ": ("REQ", "APPR", "DECL", "CANC"),
+            workflow = {#"REQ": ("REQ", "APPR", "DECL", "CANC"),
                         "APPR": ("APPR", "CANC", "IMPL"),
                         "IMPL": ("IMPL", "CANC",),
                         }
+            if current.auth.s3_has_role("COORDINATOR"):
+                workflow["REQ"] = ("REQ", "APPR", "DECL")
+            else:
+                workflow["REQ"] = ("REQ", "CANC")
             status = record.status
             next_status = workflow.get(status)
 
-        if not next_status or \
-           next_status == ("REQ") or \
-           status == "REQ" and not current.auth.s3_has_role("COORDINATOR"):
-            # - final status can't be changed
-            # - REQ status can only be changed by COORDINATOR
+        if not next_status or len(next_status) == 1:
+            # Status can't be changed
             field.writable = False
         else:
             requires = field.requires
