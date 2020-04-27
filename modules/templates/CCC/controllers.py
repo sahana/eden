@@ -674,7 +674,7 @@ class organisationApplication(S3Method):
                     else:
                         address = location.L3
                 address = TR(TD("Address:"),
-                             TD(location)
+                             TD(address)
                              )
             else:
                 address = TR(TD(_colspan = 2))
