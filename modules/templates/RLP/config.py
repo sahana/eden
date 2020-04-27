@@ -703,13 +703,16 @@ def config(settings):
                 start_date = req_vars.get("~.fake_start_date__ge")
                 dfilter = req_vars.get("$filter")
                 if start_date or dfilter:
-                    #if start_date:
-                    #    #del get_vars["delegation.date__ge"]
-                    #    del get_vars["~.fake_start_date__ge"]
+                    if start_date:
+                        # No point removing as already parsed
+                        #del get_vars["delegation.date__ge"]
+                        start_date = start_date.split("T")[0]
                     if dfilter:
+                        # No point removing as already parsed
                         #del get_vars["$filter"]
                         # Parse out the date from the $filter
                         end_date = dfilter.split('le "')[1].split('")')[0]
+                        end_date = end_date.split("T")[0]
                     else:
                         end_date = None
                     # Include people with no delegations yet
@@ -754,7 +757,7 @@ def config(settings):
                     busy_persons = db(query).select(dtable.person_id,
                                                     distinct = True)
                     busy_persons = [d.person_id for d in busy_persons]
-                    current.log.debug(busy_persons)
+                    #current.log.debug(busy_persons)
                     query = ~(FS("id").belongs(busy_persons))
                     resource.add_filter(query)
 
