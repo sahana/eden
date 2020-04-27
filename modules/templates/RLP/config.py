@@ -698,18 +698,18 @@ def config(settings):
                     resource.add_filter(FS("pool_membership.id") > 0)
 
                 # Availability Filter
-                req_vars = r.vars
+                req_vars = r.vars # Can be GET or POST
                 #start_date = req_vars.get("delegation.date__ge")
                 start_date = req_vars.get("~.fake_start_date__ge")
                 dfilter = req_vars.get("$filter")
                 if start_date or dfilter:
                     if start_date:
                         # No point removing as already parsed
-                        #del get_vars["delegation.date__ge"]
+                        #del req_vars["delegation.date__ge"]
                         start_date = start_date.split("T")[0]
                     if dfilter:
                         # No point removing as already parsed
-                        #del get_vars["$filter"]
+                        #del req_vars["$filter"]
                         # Parse out the date from the $filter
                         end_date = dfilter.split('le "')[1].split('")')[0]
                         end_date = end_date.split("T")[0]
@@ -737,7 +737,6 @@ def config(settings):
                     #    query |= ~((FS("delegation.date") <= end_date) & \
                     #               (FS("delegation.status").belongs(("APPR", "IMPL")))
                     #               )
-                    #resource.add_filter(query)
                     dtable = s3db.hrm_delegation
                     if start_date and end_date:
                         query = (dtable.date <= end_date) & \
@@ -758,7 +757,13 @@ def config(settings):
                                                     distinct = True)
                     busy_persons = [d.person_id for d in busy_persons]
                     #current.log.debug(busy_persons)
-                    query = ~(FS("id").belongs(busy_persons))
+                    query = (~(FS("id").belongs(busy_persons)))
+                    # No better results, but extra cost:
+                    #ptable = s3db.pr_person
+                    #available_persons = db(~(ptable.id.belongs(busy_persons))).select(ptable.id)
+                    #available_persons = [p.id for p in available_persons]
+                    #current.log.debug(available_persons)
+                    #query = (FS("id").belongs(available_persons))
                     resource.add_filter(query)
 
                 # HR type defaults to volunteer (already done in controller)
