@@ -4440,6 +4440,7 @@
 'Search by owner ID, name or comments': 'Nach Eigentümer-ID, -Name oder Kommentaren suchen',
 'Search by service contact reference number': 'Suche nach Leistungsträger-Referenznummer',
 'Search by skills': 'Suche nach Fähigkeiten',
+'Search by ID or name (Note that records with hidden names can only be found by ID). Can use * or ? as wildcards.': 'Suche nach ID oder Name (Datensätze mit versteckten Namen können nur über die ID gefunden werden). Suchbegriff kann * und ? als Platzhalter enthalten.',
 'Search for Persons': 'Suche nach Personen',
 'Search for Staff or Volunteers': 'Suche nach Mitarbeitern oder Freiwilligen',
 'Search for a Location by name, including local names.': 'Suchen nach Standortnamen, einschließlich lokaler Namen.',
