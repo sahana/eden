@@ -697,6 +697,66 @@ def config(settings):
                 if not coordinator:
                     resource.add_filter(FS("pool_membership.id") > 0)
 
+                # Availability Filter
+                get_vars = r.get_vars
+                #start_date = get_vars.get("delegation.date__ge")
+                start_date = get_vars.get("fake_start_date__ge")
+                dfilter = get_vars.get("$filter")
+                if start_date or dfilter:
+                    if start_date:
+                        #del get_vars["delegation.date__ge"]
+                        del get_vars["fake_start_date__ge"]
+                    if dfilter:
+                        del get_vars["$filter"]
+                        # Parse out the date from the $filter
+                        end_date = dfilter.split('le "')[1].split('")')[0]
+                    else:
+                        end_date = None
+                    # Include people with no delegations yet
+                    #query = (FS("delegation.id") == None)
+                    #if start_date and end_date:
+                    #    # Both Start Date & End Date specified
+                    #    query |= ~((FS("delegation.date") <= end_date) & \
+                    #               ((FS("delegation.end_date") >= start_date) | \
+                    #                (FS("delegation.end_date") == None)) & \
+                    #               (FS("delegation.status").belongs(("APPR", "IMPL")))
+                    #               )
+                    #elif start_date:
+                    #    # Just Start Date specified
+                    #    # Exclude people with delegations still open at the start date
+                    #    query |= ~(((FS("delegation.end_date") >= start_date) | \
+                    #                (FS("delegation.end_date") == None)) & \
+                    #               (FS("delegation.status").belongs(("APPR", "IMPL")))
+                    #               )
+                    #else:
+                    #    # Just End Date specified
+                    #    # Exclude people with delegations that start before the end date
+                    #    query |= ~((FS("delegation.date") <= end_date) & \
+                    #               (FS("delegation.status").belongs(("APPR", "IMPL")))
+                    #               )
+                    #resource.add_filter(query)
+                    dtable = s3db.hrm_delegation
+                    if start_date and end_date:
+                        query = (dtable.date <= end_date) & \
+                                ((dtable.end_date >= start_date) | \
+                                 (dtable.end_date == None)) & \
+                                (dtable.status.belongs(("APPR", "IMPL"))) & \
+                                (dtable.deleted == False)
+                    elif start_date:
+                        query = ((dtable.end_date >= start_date) | \
+                                 (dtable.end_date == None)) & \
+                                (dtable.status.belongs(("APPR", "IMPL"))) & \
+                                (dtable.deleted == False)
+                    elif end_date:
+                        query = (dtable.date <= end_date) & \
+                                (dtable.status.belongs(("APPR", "IMPL"))) & \
+                                (dtable.deleted == False)
+                    busy_persons = db(query).select(dtable.person_id,
+                                                    distinct = True)
+                    busy_persons = [d.person_id for d in busy_persons]
+                    query = ~(FS("id").belongs(busy_persons))
+                    resource.add_filter(query)
+
                 # HR type defaults to volunteer (already done in controller)
                 #hrtable = s3db.hrm_human_resource
                 #hrtable.type.default = 2
@@ -895,13 +955,17 @@ def config(settings):
                         S3OptionsFilter("occupation_type_person.occupation_type_id",
                                         options = lambda: s3_get_filter_opts("pr_occupation_type"),
                                         ),
-                        S3DateFilter(["delegation.end_date",
-                                      "delegation.date",
+                        S3DateFilter([#"delegation.end_date",
+                                      #"delegation.date",
+                                      "fake_start_date",
+                                      "fake_end_date",
                                       ],
                                      label = T("Available"),
-                                     negative = "delegation.id",
-                                     filterby = "delegation.status",
-                                     filter_opts = ["APPR", "IMPL"],
+                                     hide_time = True,
+                                     # Using Custom filter in prep for now
+                                     #negative = "delegation.id",
+                                     #filterby = "delegation.status",
+                                     #filter_opts = ["APPR", "IMPL"],
                                      ),
                         S3LocationFilter("current_address.location_id",
                                          label = T("Place of Residence"),
@@ -1283,9 +1347,9 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_hrm_delegation_controller(**attr):
 
-        request = current.request
-
+        s3db = current.s3db
         s3 = current.response.s3
+        request = current.request
 
         # Enable bigtable features
         settings.base.bigtable = True
@@ -1305,9 +1369,9 @@ def config(settings):
 
         # Must not create or delete delegations from delegation list
         if not volunteer_id:
-            current.s3db.configure("hrm_delegation",
-                                   insertable = False,
-                                   )
+            s3db.configure("hrm_delegation",
+                           insertable = False,
+                           )
 
         standard_prep = s3.prep
         def custom_prep(r):

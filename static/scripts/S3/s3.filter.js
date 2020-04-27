@@ -574,7 +574,8 @@ S3.search = {};
                     if (addQuery) {
                         var negative = $('#' + baseId + '-negative').val();
                         // @ToDo: filterURL should AND multiple $filter into 1 (will be required when we have multiple $filter in a single page)
-                        var query = '(' + negative + ' eq None)';
+                        var query = '(' + negative + ' eq NONE)';
+                       // @ToDo: Nest not chain
                         if (startValue) {
                             query += ' or (' + startSelector + ' lt "' + startDate + '")';
                         }
@@ -585,7 +586,7 @@ S3.search = {};
                         if (filterby.length) {
                             filterby = filterby.val();
                             var filterOpts = $('#' + baseId + '-filter_opts').val();
-                            query += ' or (' + filterby + ' eq "' + filterOpts + '")';
+                            query += ' or (' + filterby + ' belongs "' + filterOpts + '")';
                         }
                         queries.push(['$filter', query]);
                     }

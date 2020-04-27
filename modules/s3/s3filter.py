@@ -735,6 +735,8 @@ class S3DateFilter(S3RangeFilter):
         @keyword fieldtype: explicit field type "date" or "datetime" to
                             use for context or virtual fields
         @keyword hide_time: don't show time selector
+
+        WIP: Incomplete:
         @keyword filterby: field to filter records included by
         @keyword filter_opts: options to filter records included by
         @keyword negative: To Exclude matching records rather than Including them, provide the selector for the "selector=None"
@@ -1058,6 +1060,7 @@ class S3DateFilter(S3RangeFilter):
                              ))
                 append(INPUT(_id = "%s-filter_opts" % _id,
                              _type = "hidden",
+                             # @ToDo: Each option needs to be wrapped in ""
                              _value = ",".join(filter_opts),
                              ))
                 
