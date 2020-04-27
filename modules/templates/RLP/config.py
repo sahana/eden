@@ -1002,10 +1002,11 @@ def config(settings):
             field.writable = False
 
         # Can never change person or organisation
-        field = table.person_id
-        field.writable = False
-        field = table.organisation_id
-        field.writable = False
+        if record:
+            field = table.person_id
+            field.writable = False
+            field = table.organisation_id
+            field.writable = False
 
     # -------------------------------------------------------------------------
     def delegation_read_multiple_orgs():
