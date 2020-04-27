@@ -5391,25 +5391,24 @@ class HRDelegationModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Delegation
-        # TODO make person component
         #
         tablename = "hrm_delegation"
         define_table(tablename,
                      self.org_organisation_id(
                          empty = False,
-                         comment = DIV(_class="tooltip",
+                         comment = DIV(_class = "tooltip",
                                        # TODO tooltip depends on workflow
-                                       _title="%s|%s" % (T("Requesting Organisation"),
-                                                         T("The organisation requesting the delegation"),
-                                                         ),
+                                       _title = "%s|%s" % (T("Requesting Organisation"),
+                                                           T("The organisation requesting the delegation"),
+                                                           ),
                                        ),
                          ),
                      self.pr_person_id(
                          empty = False,
-                         comment = DIV(_class="tooltip",
-                                       _title="%s|%s" % (T("Person"),
-                                                         T("The person to be delegated"),
-                                                         ),
+                         comment = DIV(_class = "tooltip",
+                                       _title = "%s|%s" % (T("Person"),
+                                                           T("The person to be delegated"),
+                                                           ),
                                        ),
                          ),
                      s3_date(label = T("Start Date"),
@@ -5425,7 +5424,7 @@ class HRDelegationModel(S3Model):
                                                 zero = None,
                                                 sort = False,
                                                 ),
-                           represent = S3Represent(options=dict(delegation_status)),
+                           represent = S3Represent(options = dict(delegation_status)),
                            ),
                      # Enable in template if/as required:
                      Field("hours_per_week", "integer",

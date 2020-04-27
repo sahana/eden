@@ -685,7 +685,8 @@ def config(settings):
 
             if r.controller == "vol":
 
-                coordinator = current.auth.s3_has_role("COORDINATOR")
+                has_role = current.auth.s3_has_role
+                coordinator = has_role("COORDINATOR")
 
                 resource = r.resource
 
@@ -706,6 +707,7 @@ def config(settings):
                     from s3 import (IS_ONE_OF,
                                     IS_PERSON_GENDER,
                                     S3AgeFilter,
+                                    S3DateFilter,
                                     S3LocationFilter,
                                     S3LocationSelector,
                                     S3OptionsFilter,
@@ -893,6 +895,14 @@ def config(settings):
                         S3OptionsFilter("occupation_type_person.occupation_type_id",
                                         options = lambda: s3_get_filter_opts("pr_occupation_type"),
                                         ),
+                        S3DateFilter(["delegation.end_date",
+                                      "delegation.date",
+                                      ],
+                                     label = T("Available"),
+                                     negative = "delegation.id",
+                                     filterby = "delegation.status",
+                                     filter_opts = ["APPR", "IMPL"],
+                                     ),
                         S3LocationFilter("current_address.location_id",
                                          label = T("Place of Residence"),
                                          levels = ("L2", "L3"),
@@ -926,9 +936,13 @@ def config(settings):
                 elif r.component_name == "delegation":
 
                     # HRMANAGERs and ADMINs see the list
-                    if not current.auth.s3_has_role("HRMANAGER") and \
+                    if not has_role("HRMANAGER") and \
                        r.interactive and r.method is None and not r.component_id:
                         r.method = "organize"
+                    if coordinator:
+                        s3db.configure("hrm_delegation",
+                                       update_onaccept = hrm_delegation_update_onaccept,
+                                       )
 
             elif callable(standard_prep):
                 result = standard_prep(r)
@@ -1045,22 +1059,29 @@ def config(settings):
         # Send Email to the Org & the Volunteer
 
         # Lookup Details
-        from s3 import s3_fullname
-
         db = current.db
         s3db = current.s3db
 
         organisation_id = form_vars_get("organisation_id")
         person_id = form_vars_get("person_id")
+        start_date = form_vars_get("start_date")
+        end_date = form_vars_get("end_date")
+        comments = form_vars_get("comments")
         if organisation_id is None or person_id is None:
             # Load the record
             dtable = s3db.hrm_delegation
             record = db(dtable.id == form_vars_get("id")).select(dtable.organisation_id,
                                                                  dtable.person_id,
+                                                                 #dtable.date,
+                                                                 #dtable.end_date,
+                                                                 #dtable.comments,
                                                                  limitby = (0, 1)
                                                                  ).first()
             organisation_id = record.organisation_id
             person_id = record.person_id
+            start_date = record.start_date
+            end_date = record.end_date
+            comments = record.comments
 
         otable = s3db.org_organisation
         org = db(otable.id == organisation_id).select(otable.name,
@@ -1069,22 +1090,27 @@ def config(settings):
         org_name = org.name
 
         ptable = s3db.pr_person
-        person = db(ptable.id == person_id).select(ptable.first_name,
-                                                   ptable.middle_name,
-                                                   ptable.last_name,
+        person = db(ptable.id == person_id).select(ptable.pe_label,
                                                    limitby = (0, 1)
                                                    ).first()
-        fullname = s3_fullname(person)
+        pe_label = person.pe_label
         
         # Compose Mail
         # @ToDo: i18n
         subject = "%s: Volunteer Deployment of %s to %s has been Approved" % \
                     (settings.get_system_name_short(),
-                     fullname,
+                     pe_label,
                      org_name,
                      )
         # @ToDo: Read Message Template from CMS or templates/RLP/views/msg/*.txt
-        message = ""
+        message = "Volunteer %s has been Approved for a Depkloyment to %s from %s to %s." \
+                    (pe_label,
+                     org_name,
+                     start_date,
+                     end_date,
+                     )
+        if comments is not None:
+            message = "%s\n%s" % (message, comments)
 
         # Lookup Email Addresses to send to
         ctable = s3db.pr_contact
@@ -1110,12 +1136,12 @@ def config(settings):
 
         send_email = current.msg.send_email
         for email in emails:
-            send_email(to = office.email,
+            send_email(to = email,
                        subject = subject,
                        message = message,
                        )
 
-        current.session.confirmation = T("Deployment approved and notifications sent!")
+        current.session.information = T("Notifications sent")
 
     # -------------------------------------------------------------------------
     def customise_hrm_delegation_resource(r, tablename):

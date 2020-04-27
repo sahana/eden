@@ -735,6 +735,9 @@ class S3DateFilter(S3RangeFilter):
         @keyword fieldtype: explicit field type "date" or "datetime" to
                             use for context or virtual fields
         @keyword hide_time: don't show time selector
+        @keyword filterby: field to filter records included by
+        @keyword filter_opts: options to filter records included by
+        @keyword negative: To Exclude matching records rather than Including them, provide the selector for the "selector=None"
     """
 
     _class = "date-filter"
@@ -878,12 +881,25 @@ class S3DateFilter(S3RangeFilter):
 
             @param resource: the S3Resource
             @param as_str: return date as ISO-formatted string not raw DateTime
+
+            @ToDo: Update for negative
         """
 
         # Find only values linked to records the user is
         # permitted to read, and apply any resource filters
         # (= use the resource query)
         query = resource.get_query()
+
+        filterby = self.opts.get("filterby")
+        if filterby:
+            filter_opts = self.opts.get("filter_opts")
+            if filter_opts:
+                if not isinstance(filter_opts, (list, tuple)):
+                    query &= (FS(filterby) == filter_opts)
+                elif len(filter_opts) == 1:
+                    query &= (FS(filterby) == filter_opts[0])
+                else:
+                    query &= (FS(filterby).belongs(filter_opts))
 
         # Must include rfilter joins when using the resource
         # query (both inner and left):
@@ -905,6 +921,7 @@ class S3DateFilter(S3RangeFilter):
             # http://stackoverflow.com/questions/21286215/how-can-i-include-null-values-in-a-min-or-max
             # http://www.web2py.com/books/default/chapter/29/06/the-database-abstraction-layer#Default-values-with-coalesce-and-coalesce_zero
             # or can simply do a 2nd query to check for NULLs
+            # client-side JS does an OR end_field is None
             start_field = S3ResourceField(resource, fields[0]).field
             end_field = S3ResourceField(resource, fields[1]).field
             row = current.db(query).select(start_field.min(),
@@ -983,6 +1000,7 @@ class S3DateFilter(S3RangeFilter):
         """
 
         attr = self.attr
+        opts_get = self.opts.get
 
         # CSS class and element ID
         _class = self._class
@@ -992,13 +1010,7 @@ class S3DateFilter(S3RangeFilter):
             _class = _class
         _id = attr["_id"]
 
-        # Classes and labels for the individual date/time inputs
-        T = current.T
-        input_class = self._input_class
-        input_labels = self.input_labels
-
         # Picker options
-        opts_get = self.opts.get
         clear_text = opts_get("clear_text", None)
         hide_time = opts_get("hide_time", False)
 
@@ -1019,8 +1031,36 @@ class S3DateFilter(S3RangeFilter):
             minimum = maximum = None
 
         # Generate the input elements
-        filter_widget = DIV(_id=_id, _class=_class)
+        filter_widget = DIV(_id = _id,
+                            _class = _class,
+                            )
         append = filter_widget.append
+
+        # Classes and labels for the individual date/time inputs
+        T = current.T
+        input_class = self._input_class
+        negative = opts_get("negative", None)
+        if negative is not None:
+            input_class = "%s %s" % (input_class, "negative")
+            append(INPUT(_id = "%s-negative" % _id,
+                         _type = "hidden",
+                         _value = negative,
+                         ))
+        input_labels = self.input_labels
+
+        filterby = opts_get("filterby", None)
+        if filterby is not None:
+            filter_opts = opts_get("filter_opts", None)
+            if filter_opts is not None:
+                append(INPUT(_id = "%s-filterby" % _id,
+                             _type = "hidden",
+                             _value = filterby,
+                             ))
+                append(INPUT(_id = "%s-filter_opts" % _id,
+                             _type = "hidden",
+                             _value = ",".join(filter_opts),
+                             ))
+                
 
         if slider:
             # Load Moment & D3/NVD3 into Browser
@@ -1068,7 +1108,8 @@ class S3DateFilter(S3RangeFilter):
                 range_picker["_data-fmt"] = "MMM D YYYY HH:mm"
                 #range_picker["_data-fmt"] = "LLL" # Locale-aware version
             append(DIV(range_picker,
-                       _class="range-picker-wrapper"))
+                       _class = "range-picker-wrapper",
+                       ))
 
         get_variable = self._variable
 
@@ -1190,9 +1231,9 @@ class S3DateFilter(S3RangeFilter):
 
                 if operator in input_labels:
                     label = DIV(LABEL("%s:" % T(input_labels[operator]),
-                                      _for=input_id,
+                                      _for = input_id,
                                       ),
-                                _class="range-filter-label",
+                                _class = "range-filter-label",
                                 )
                 else:
                     label = ""
@@ -1200,9 +1241,9 @@ class S3DateFilter(S3RangeFilter):
                 # Append label and widget
                 append(DIV(label,
                            DIV(picker,
-                               _class="range-filter-widget",
+                               _class = "range-filter-widget",
                                ),
-                           _class="range-filter-field",
+                           _class = "range-filter-field",
                            ))
 
         return filter_widget

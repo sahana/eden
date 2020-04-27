@@ -541,25 +541,72 @@ S3.search = {};
                 };
             }
 
-            if (value) {
-                var end = false;
-                if (operator == 'le') {
-                    end = true;
-                }
-                var jsDate = $this.calendarWidget('getJSDate', end),
-                    urlValue = isoFormat(jsDate);
-                if (end && $this.hasClass('end_date')) {
-                    // end_date
-                    var selector = urlVar.replace(FILTEROP, '');
-                    // @ToDo: filterURL should AND multiple $filter into 1 (will be required when we have multiple $filter in a single page)
-                    queries.push(['$filter', '(' + selector + ' ' + operator + ' "' + urlValue + '") or (' + selector + ' eq None)']);
-                } else {
-                    // Single field or start_date
-                    queries.push([urlVar, urlValue]);
-                }
+            var end = false;
+            if (operator == 'le') {
+                end = true;
+            }
+            if ($this.hasClass('negative')) {
+                // Need to check both fields in order to craft the $filter
+                if (end) {
+                    var addQuery = false,
+                        baseId = id.slice(0, -3),
+                        endDate,
+                        endSelector,
+                        jsDate,
+                        startDate,
+                        startField = $('#' + baseId + '-ge'),
+                        startValue = startField.val(),
+                        startVar,
+                        startSelector;
+                    if (startValue) {
+                        addQuery = true;
+                        jsDate = startField.calendarWidget('getJSDate', false);
+                        startDate = isoFormat(jsDate);
+                        startVar = $('#' + baseId + '-ge-data').val();
+                        startSelector = startVar.replace(FILTEROP, '');
+                    }
+                    if (value) {
+                        addQuery = true;
+                        jsDate = $this.calendarWidget('getJSDate', true);
+                        endDate = isoFormat(jsDate);
+                        endSelector = urlVar.replace(FILTEROP, '');
+                    }
+                    if (addQuery) {
+                        var negative = $('#' + baseId + '-negative').val();
+                        // @ToDo: filterURL should AND multiple $filter into 1 (will be required when we have multiple $filter in a single page)
+                        var query = '(' + negative + ' eq None)';
+                        if (startValue) {
+                            query += ' or (' + startSelector + ' lt "' + startDate + '")';
+                        }
+                        if (value) {
+                            query += ' or (' + endSelector + ' gt "' + endDate + '")';
+                        }
+                        var filterby = $('#' + baseId + '-filterby');
+                        if (filterby.length) {
+                            filterby = filterby.val();
+                            var filterOpts = $('#' + baseId + '-filter_opts').val();
+                            query += ' or (' + filterby + ' eq "' + filterOpts + '")';
+                        }
+                        queries.push(['$filter', query]);
+                    }
+                } // else ignore
             } else {
-                // Remove the filter (explicit null)
-                queries.push([urlVar, null]);
+                if (value) {
+                    var jsDate = $this.calendarWidget('getJSDate', end),
+                        urlValue = isoFormat(jsDate);
+                    if (end && $this.hasClass('end_date')) {
+                        // end_date
+                        var selector = urlVar.replace(FILTEROP, '');
+                        // @ToDo: filterURL should AND multiple $filter into 1 (will be required when we have multiple $filter in a single page)
+                        queries.push(['$filter', '(' + selector + ' ' + operator + ' "' + urlValue + '") or (' + selector + ' eq None)']);
+                    } else {
+                        // Single field or start_date
+                        queries.push([urlVar, urlValue]);
+                    }
+                } else {
+                    // Remove the filter (explicit null)
+                    queries.push([urlVar, null]);
+                }
             }
         });
 
