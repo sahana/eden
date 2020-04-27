@@ -2425,9 +2425,10 @@ class S3TwitterSearchModel(S3ChannelModel):
         """
 
         if r.representation == "html" and r.name == "twitter_result":
+
+            appname = r.application
             response = current.response
             s3 = response.s3
-            appname = r.application
 
             # Add core Simile Code
             s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % appname)
@@ -2489,7 +2490,9 @@ S3.timeline.now="''', now.isoformat(), '''"
             s3.js_global.append(code)
 
             # Create the DIV
-            item = DIV(_id="s3timeline", _class="s3-timeline")
+            item = DIV(_id = "s3timeline",
+                       _class = "s3-timeline",
+                       )
 
             output = {"item": item}
 

@@ -3480,18 +3480,18 @@ $.filterOptionsS3({
                                              r.name == "send"):
 
             T = current.T
-            request = current.request
+            appname = r.application
             response = current.response
             s3 = response.s3
 
             # Add core Simile Code
-            s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % request.application)
+            s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % appname)
 
             # Add our controlled script
             if s3.debug:
-                s3.scripts.append("/%s/static/scripts/S3/s3.timeline.js" % request.application)
+                s3.scripts.append("/%s/static/scripts/S3/s3.timeline.js" % appname)
             else:
-                s3.scripts.append("/%s/static/scripts/S3/s3.timeline.min.js" % request.application)
+                s3.scripts.append("/%s/static/scripts/S3/s3.timeline.min.js" % appname)
             # Add our data
             # @ToDo: Make this the initial data & then collect extra via REST with a stylesheet
             # add in JS using S3.timeline.eventSource.addMany(events) where events is a []
@@ -3515,7 +3515,7 @@ $.filterOptionsS3({
             data = {"dateTimeFormat": "iso8601",
                     }
 
-            now = request.utcnow
+            now = r.utcnow
             tl_start = tl_end = now
             events = []
             if r.name == "send":
@@ -3562,9 +3562,11 @@ S3.timeline.now="''', now.isoformat(), '''"
             s3.js_global.append(code)
 
             # Create the DIV
-            item = DIV(_id="s3timeline", _class="s3-timeline")
+            item = DIV(_id = "s3timeline",
+                       _class = "s3-timeline",
+                       )
 
-            output = dict(item = item)
+            output = {"item": item}
 
             # Maintain RHeader for consistency
             if "rheader" in attr:
@@ -3572,7 +3574,7 @@ S3.timeline.now="''', now.isoformat(), '''"
                 if rheader:
                     output["rheader"] = rheader
 
-            output["title"] = T("Incident Timeline")
+            output["title"] = T("Shipments Timeline")
             response.view = "timeline.html"
             return output
 

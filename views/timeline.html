@@ -25,5 +25,5 @@
 <script>
  var Timeline_ajax_url = '/{{=appname}}/static/scripts/simile/ajax/simile-ajax-api.js';
  var Timeline_urlPrefix = '/{{=appname}}/static/scripts/simile/timeline/';
- var Timeline_parameters = 'bundle=true';
+ var Timeline_parameters = 'bundle={{if s3.debug:}}false{{else:}}true{{pass}}';
 </script>

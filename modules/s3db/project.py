@@ -1066,11 +1066,11 @@ class S3ProjectModel(S3Model):
                 s3.scripts.append("/%s/static/scripts/S3/s3.timeline.min.js" % appname)
 
             # Create the DIV
-            item = DIV(_id="s3timeline",
-                       _class="s3-timeline",
+            item = DIV(_id = "s3timeline",
+                       _class = "s3-timeline",
                        )
 
-            output = dict(item=item)
+            output = {"item": item}
 
             output["title"] = current.T("Project Calendar")
 

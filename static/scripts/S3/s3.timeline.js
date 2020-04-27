@@ -163,7 +163,7 @@
 }());
  
 $(document).ready(function() {
-    $(window).load(function() {
+    $(window).on('load', function() {
         if (S3.timeline.calendar) {
             SimileAjax.History.enabled = false;
             // Google Calendar
