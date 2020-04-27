@@ -884,6 +884,7 @@ def config(settings):
                     filter_widgets = [
                         S3TextFilter(text_search_fields,
                                      label = T("Search"),
+                                     comment = T("Search by ID or name (Note that records with hidden names can only be found by ID). Can use * or ? as wildcards."),
                                      ),
                         S3OptionsFilter("pool_membership.group_id",
                                         label = T("Pool"),
