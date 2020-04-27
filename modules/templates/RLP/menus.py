@@ -205,7 +205,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Processed Requests", vars={"workflow": "d"},
                           ),
                         M("Finalized", vars = {"workflow": "o"}),
-                        M("Organizer", m="organize", restrict="COORDINATOR"),
+                        M("Organizer", m="organize", restrict="HRMANAGER"),
                         ),
                     M("Administration", link=False)(
                         M("Occupation Types", c="pr", f="occupation_type"),
