@@ -1509,7 +1509,6 @@ def config(settings):
                         ]
 
                     # Status-Filter
-                    field = r.table.status
                     if not status_opts:
                         status_filter_opts = [opt for opt in s3db.hrm_delegation_status_opts]
                     else:
