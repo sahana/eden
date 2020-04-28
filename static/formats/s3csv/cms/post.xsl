@@ -275,7 +275,7 @@
             </xsl:if>
             <data field="body"><xsl:value-of select="col[@field='Body']"/></data>
             <xsl:if test="$Comments!=''">
-                
+                <data field="comments"><xsl:value-of select="$Comments"/></data>
             </xsl:if>
             <xsl:if test="$Date!=''">
                 <data field="date"><xsl:value-of select="$Date"/></data>

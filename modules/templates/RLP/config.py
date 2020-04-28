@@ -224,6 +224,30 @@ def config(settings):
     settings.auth.realm_entity = rlp_realm_entity
 
     # -------------------------------------------------------------------------
+    def customise_cms_post_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm
+
+        s3db = current.s3db
+
+        current.s3db.configure("cms_post",
+                               crud_form = S3SQLCustomForm("name",
+                                                           #"title",
+                                                           "body",
+                                                           "date",
+                                                           "comments",
+                                                           ),
+                               list_fields = ["post_module.module",
+                                              "post_module.resource",
+                                              "name",
+                                              "date",
+                                              "comments",
+                                              ],
+                               )
+
+    settings.customise_cms_post_resource = customise_cms_post_resource
+
+    # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
 
         s3db = current.s3db
@@ -1143,7 +1167,7 @@ def config(settings):
 
         organisation_id = form_vars_get("organisation_id")
         person_id = form_vars_get("person_id")
-        start_date = form_vars_get("start_date")
+        start_date = form_vars_get("date")
         end_date = form_vars_get("end_date")
         comments = form_vars_get("comments")
         if organisation_id is None or person_id is None:
@@ -1158,9 +1182,9 @@ def config(settings):
                                                                  ).first()
             organisation_id = record.organisation_id
             person_id = record.person_id
-            start_date = record.start_date
-            end_date = record.end_date
-            comments = record.comments
+            #start_date = record.date
+            #end_date = record.end_date
+            #comments = record.comments
 
         otable = s3db.org_organisation
         org = db(otable.id == organisation_id).select(otable.name,
@@ -1175,19 +1199,48 @@ def config(settings):
         pe_label = person.pe_label
 
         # Compose Mail
-        # @ToDo: i18n
-        subject = "%(system_name)s: Volunteer Deployment of %(person)s to %(org)s has been Approved" % \
+        # Subject & Message read from CMS
+        ctable = s3db.cms_post
+        ltable = s3db.cms_post_module
+        query = (ltable.module == "hrm") & \
+                (ltable.resource == "delegation") & \
+                (ltable.post_id == ctable.id) & \
+                (ctable.name == "Subject") & \
+                (ctable.deleted == False)
+        subject = db(query).select(ctable.body,
+                                   limitby = (0, 1)
+                                   ).first()
+        if not subject:
+            # Disabled
+            return
+
+        try:
+            subject = subject.body % \
                     {"system_name": settings.get_system_name_short(),
                      "person": pe_label,
                      "org": org_name,
                      }
-        # @ToDo: Read Message Template from CMS or templates/RLP/views/msg/*.txt
-        message = "Volunteer %(person)s has been Approved for a Deployment to %(org)s from %(start_date)s to %(end_date)s." % \
-                    {"person": pe_label,
-                     "org": org_name,
-                     "start_date": start_date,
-                     "end_date": end_date,
-                     }
+        except:
+            current.session.warning = T("Notifications not sent - invalid Subject")
+            return
+
+        query = (ltable.module == "hrm") & \
+                (ltable.resource == "delegation") & \
+                (ltable.post_id == ctable.id) & \
+                (ctable.name == "Message") & \
+                (ctable.deleted == False)
+        message = db(query).select(ctable.body,
+                                   limitby = (0, 1)
+                                   ).first()
+        if message and message.body:
+            message = message.body % \
+                        {"person": pe_label,
+                         "org": org_name,
+                         "start_date": start_date,
+                         "end_date": end_date,
+                         }
+        else:
+            message = ""
         if comments is not None:
             message = "%s\n%s" % (message, comments)
 
@@ -1212,6 +1265,10 @@ def config(settings):
             org_email = None
         if org_email is not None:
             emails.append(org_email)
+
+        user = current.auth.user
+        if user and user.email:
+            emails.append(user.email)
 
         send_email = current.msg.send_email
         for email in emails:
