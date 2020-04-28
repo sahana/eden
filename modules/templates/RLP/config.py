@@ -4,7 +4,7 @@ import datetime
 
 from collections import OrderedDict
 
-from gluon import current, URL, A
+from gluon import current, URL, A, DIV, TABLE, TR
 from gluon.storage import Storage
 
 from s3 import FS, S3DateFilter, S3Represent, s3_fullname
@@ -12,7 +12,8 @@ from s3dal import original_tablename
 
 def config(settings):
     """
-        Settings for Rhineland-Palatinate State's Deployment of Volunteers for the COVID-19 response
+        Settings for Rhineland-Palatinate (RLP) Crisis Management Tool
+        - used to manage Volunteer Pools for COVID-19 response
     """
 
     T = current.T
@@ -952,7 +953,7 @@ def config(settings):
                                         ),
                         RLPAvailabilityFilter("delegation.date",
                                               label = T("Available"),
-                                              hide_time = True,
+                                              #hide_time = True,
                                               ),
                         S3LocationFilter("current_address.location_id",
                                          label = T("Place of Residence"),
@@ -1274,6 +1275,27 @@ def config(settings):
         table = s3db.hrm_delegation
         field = table.person_id
         field.represent = rlp_DelegatedPersonRepresent()
+
+        if r.interactive:
+            # Add tooltip for status-field to explain statuses
+            field = table.status
+            represent = field.represent
+            status_help = TABLE(
+                            TR(represent("REQ"), T("Requested")),
+                            TR(represent("APPR"), T("Accepted by coordinator/volunteer")),
+                            TR(represent("DECL"), T("Declined by coordinator/volunteer")),
+                            TR(represent("CANC"), T("Cancelled by requesting organisation or volunteer")),
+                            TR(represent("IMPL"), T("Deployment carried out")),
+                            )
+
+            field.comment = DIV(DIV(status_help,
+                                    _class = "htmltip-content",
+                                    _id = "example",
+                                    ),
+                                _class = "htmltip",
+                                _show = "#example",
+                                _title = T("Status"),
+                                )
 
         if r.method == "organize":
             # Cannot change dates with the organizer

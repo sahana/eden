@@ -154,6 +154,13 @@ S3.addTooltips = function() {
     	closeText: tipCloseText,
     	width: 380
     });
+    $('.htmltip').cluetip({
+        activation: 'hover',
+        sticky: false,
+        local: true,
+        attribute: 'show',
+        width: 380
+    });
 };
 
 // jQueryUI Modal Popups
@@ -1860,14 +1867,14 @@ S3.range_slider = function(selector, min_id, max_id, min_value, max_value, step,
     });
     // Update Slider if INPUTs change
     min_input.on('change.slider', function() {
-        var value = min_input.val()
+        var value = min_input.val();
         if (value == '') {
             value = min_value;
         }
         slider_div.slider('values', 0, value);
     });
     max_input.on('change.slider', function() {
-        var value = max_input.val()
+        var value = max_input.val();
         if (value == '') {
             value = max_value;
         }

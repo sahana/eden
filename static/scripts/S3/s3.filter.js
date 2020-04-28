@@ -541,7 +541,8 @@ S3.search = {};
                 };
             }
 
-            var end = false;
+            var jsDate,
+                end = false;
             if (operator == 'le') {
                 end = true;
             }
@@ -552,7 +553,6 @@ S3.search = {};
                         baseId = id.slice(0, -3),
                         endDate,
                         endSelector,
-                        jsDate,
                         startDate,
                         startField = $('#' + baseId + '-ge'),
                         startValue = startField.val(),
@@ -573,7 +573,6 @@ S3.search = {};
                     }
                     if (addQuery) {
                         var negative = $('#' + baseId + '-negative').val();
-                        // @ToDo: filterURL should AND multiple $filter into 1 (will be required when we have multiple $filter in a single page)
                         var query = '(' + negative + ' eq NONE)';
                        // @ToDo: Nest not chain
                         if (startValue) {
@@ -593,12 +592,11 @@ S3.search = {};
                 } // else ignore
             } else {
                 if (value) {
-                    var jsDate = $this.calendarWidget('getJSDate', end),
-                        urlValue = isoFormat(jsDate);
+                    jsDate = $this.calendarWidget('getJSDate', end);
+                    var urlValue = isoFormat(jsDate);
                     if (end && $this.hasClass('end_date')) {
                         // end_date
                         var selector = urlVar.replace(FILTEROP, '');
-                        // @ToDo: filterURL should AND multiple $filter into 1 (will be required when we have multiple $filter in a single page)
                         queries.push(['$filter', '(' + selector + ' ' + operator + ' "' + urlValue + '") or (' + selector + ' eq None)']);
                     } else {
                         // Single field or start_date
@@ -1072,6 +1070,22 @@ S3.search = {};
             update = {},
             reset = {},
             i, len, q, k, v;
+
+        // Combine multiple $filter expressions (AND)
+        var $filters = [];
+        queries = queries.filter(function(q) {
+            if (q[0] == '$filter') {
+                $filters.push(q);
+                return false;
+            } else {
+                return true;
+            }
+        });
+        if ($filters.length) {
+            queries.push($filters.reduce(function(a, b) {
+                return ['$filter', '(' + a[1] + ') and (' + b[1] + ')'];
+            }));
+        }
 
         for (i=0, len=queries.length; i < len; i++) {
             q = queries[i];
