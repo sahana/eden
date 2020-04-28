@@ -8,7 +8,7 @@ from gluon import current, redirect
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3 import FS, S3CustomController
+from s3 import FS, S3CustomController, S3DateFilter
 
 THEME = "RLP"
 
@@ -121,5 +121,18 @@ $('#login-btn').click(function(e){
         self._view(settings.get_theme_layouts(), "index.html")
 
         return output
+
+# =============================================================================
+class RLPAvailabilityFilter(S3DateFilter):
+    """
+        Date-Range filter with custom variable
+        - without this bigtable settings causes filter to fail (hard limit of 50)
+        - even without bigtable a simple fake field causes inefficiencies as it is parsed as a VirtualField
+    """
+
+    @classmethod
+    def _variable(cls, selector, operator):
+
+        return super()._variable("available", operator)
 
 # END =========================================================================

@@ -698,23 +698,34 @@ def config(settings):
                     resource.add_filter(FS("pool_membership.id") > 0)
 
                 # Availability Filter
-                req_vars = r.vars # Can be GET or POST
-                #start_date = req_vars.get("delegation.date__ge")
-                start_date = req_vars.get("~.fake_start_date__ge")
-                dfilter = req_vars.get("$filter")
-                if start_date or dfilter:
-                    if start_date:
-                        # No point removing as already parsed
-                        #del req_vars["delegation.date__ge"]
-                        start_date = start_date.split("T")[0]
-                    if dfilter:
-                        # No point removing as already parsed
-                        #del req_vars["$filter"]
-                        # Parse out the date from the $filter
-                        end_date = dfilter.split('le "')[1].split('")')[0]
-                        end_date = end_date.split("T")[0]
-                    else:
-                        end_date = None
+                get_vars = r.get_vars
+                #dfilter = get_vars.get("$filter")
+                #start_date = get_vars.get("available__ge")
+                #end_date = get_vars.get("available__le")
+                parse_dt = current.calendar.parse_datetime
+                start_date = parse_dt(get_vars.get("available__ge"))
+                end_date = parse_dt(get_vars.get("available__le"))
+                start_date = start_date.date() if start_date else None
+                end_date = end_date.date() if end_date else None
+                if start_date or end_date:
+                    #if start_date:
+                    #    # No point removing as already parsed
+                    #    #del get_vars["delegation.date__ge"]
+                    #    start_date = start_date.split("T")[0]
+                    #if dfilter:
+                    #    # No point removing as already parsed
+                    #    #del get_vars["$filter"]
+                    #    # Parse out the date from the $filter
+                    #    end_date = dfilter.split('le "')[1].split('")')[0]
+                    #    end_date = end_date.split("T")[0]
+                    #else:
+                    #    end_date = None
+                    #if end_date:
+                    #    # No point removing as already parsed
+                    #    #del get_vars["$filter"]
+                    #    # Parse out the date from the $filter
+                    #    #end_date = dfilter.split('le "')[1].split('")')[0]
+                    #    end_date = end_date.split("T")[0]
                     # Include people with no delegations yet
                     #query = (FS("delegation.id") == None)
                     #if start_date and end_date:
@@ -753,17 +764,10 @@ def config(settings):
                         query = (dtable.date <= end_date) & \
                                 (dtable.status.belongs(("APPR", "IMPL"))) & \
                                 (dtable.deleted == False)
-                    busy_persons = db(query).select(dtable.person_id,
-                                                    distinct = True)
-                    busy_persons = [d.person_id for d in busy_persons]
-                    #current.log.debug(busy_persons)
+                    busy_persons = db(query).select(dtable.person_id,	
+                                                    distinct = True)	
+                    busy_persons = [d.person_id for d in busy_persons]	
                     query = (~(FS("id").belongs(busy_persons)))
-                    # No better results, but extra cost:
-                    #ptable = s3db.pr_person
-                    #available_persons = db(~(ptable.id.belongs(busy_persons))).select(ptable.id)
-                    #available_persons = [p.id for p in available_persons]
-                    #current.log.debug(available_persons)
-                    #query = (FS("id").belongs(available_persons))
                     resource.add_filter(query)
 
                 # HR type defaults to volunteer (already done in controller)
@@ -776,7 +780,7 @@ def config(settings):
                     from s3 import (IS_ONE_OF,
                                     IS_PERSON_GENDER,
                                     S3AgeFilter,
-                                    S3DateFilter,
+                                    #S3DateFilter,
                                     S3LocationFilter,
                                     S3LocationSelector,
                                     S3OptionsFilter,
@@ -788,6 +792,7 @@ def config(settings):
                                     StringTemplateParser,
                                     s3_get_filter_opts,
                                     )
+                    from templates.RLP.controllers import RLPAvailabilityFilter
 
                     # Hide map selector in address
                     atable = s3db.pr_address
@@ -964,18 +969,17 @@ def config(settings):
                         S3OptionsFilter("occupation_type_person.occupation_type_id",
                                         options = lambda: s3_get_filter_opts("pr_occupation_type"),
                                         ),
-                        S3DateFilter([#"delegation.end_date",
-                                      #"delegation.date",
-                                      "fake_start_date",
-                                      "fake_end_date",
-                                      ],
-                                     label = T("Available"),
-                                     hide_time = True,
-                                     # Using Custom filter in prep for now
-                                     #negative = "delegation.id",
-                                     #filterby = "delegation.status",
-                                     #filter_opts = ["APPR", "IMPL"],
-                                     ),
+                        RLPAvailabilityFilter(#["delegation.end_date",
+                                              # "delegation.date",
+                                              # ],
+                                              "fake_date",
+                                              label = T("Available"),
+                                              hide_time = True,
+                                              # Using Custom filter in prep for now
+                                              #negative = "delegation.id",
+                                              #filterby = "delegation.status",
+                                              #filter_opts = ["APPR", "IMPL"],
+                                              ),
                         S3LocationFilter("current_address.location_id",
                                          label = T("Place of Residence"),
                                          levels = ("L2", "L3"),

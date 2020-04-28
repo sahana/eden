@@ -93,22 +93,22 @@ class S3Resource(object):
     """
 
     def __init__(self, tablename,
-                 id=None,
-                 prefix=None,
-                 uid=None,
-                 filter=None,
-                 vars=None,
-                 parent=None,
-                 linked=None,
-                 linktable=None,
-                 alias=None,
-                 components=None,
-                 filter_component=None,
-                 include_deleted=False,
-                 approved=True,
-                 unapproved=False,
-                 context=False,
-                 extra_filters=None):
+                 id = None,
+                 prefix = None,
+                 uid = None,
+                 filter = None,
+                 vars = None,
+                 parent = None,
+                 linked = None,
+                 linktable = None,
+                 alias = None,
+                 components = None,
+                 filter_component = None,
+                 include_deleted = False,
+                 approved = True,
+                 unapproved = False,
+                 context = False,
+                 extra_filters = None):
         """
             Constructor
 
@@ -318,12 +318,12 @@ class S3Resource(object):
     # Query handling
     # -------------------------------------------------------------------------
     def build_query(self,
-                    id=None,
-                    uid=None,
-                    filter=None,
-                    vars=None,
-                    extra_filters=None,
-                    filter_component=None):
+                    id = None,
+                    uid = None,
+                    filter = None,
+                    vars = None,
+                    extra_filters = None,
+                    filter_component = None):
         """
             Query builder
 
@@ -475,26 +475,26 @@ class S3Resource(object):
         if self.rfilter is None:
             self.build_query()
         if self._length is None:
-            self._length = self.rfilter.count(left=left,
-                                              distinct=distinct)
+            self._length = self.rfilter.count(left = left,
+                                              distinct = distinct)
         return self._length
 
     # -------------------------------------------------------------------------
     def select(self,
                fields,
-               start=0,
-               limit=None,
-               left=None,
-               orderby=None,
-               groupby=None,
-               distinct=False,
-               virtual=True,
-               count=False,
-               getids=False,
-               as_rows=False,
-               represent=False,
-               show_links=True,
-               raw_data=False):
+               start = 0,
+               limit = None,
+               left = None,
+               orderby = None,
+               groupby = None,
+               distinct = False,
+               virtual = True,
+               count = False,
+               getids = False,
+               as_rows = False,
+               represent = False,
+               show_links = True,
+               raw_data = False):
         """
             Extract data from this resource
 
@@ -515,19 +515,19 @@ class S3Resource(object):
 
         data = S3ResourceData(self,
                               fields,
-                              start=start,
-                              limit=limit,
-                              left=left,
-                              orderby=orderby,
-                              groupby=groupby,
-                              distinct=distinct,
-                              virtual=virtual,
-                              count=count,
-                              getids=getids,
-                              as_rows=as_rows,
-                              represent=represent,
-                              show_links=show_links,
-                              raw_data=raw_data)
+                              start = start,
+                              limit = limit,
+                              left = left,
+                              orderby = orderby,
+                              groupby = groupby,
+                              distinct = distinct,
+                              virtual = virtual,
+                              count = count,
+                              getids = getids,
+                              as_rows = as_rows,
+                              represent = represent,
+                              show_links = show_links,
+                              raw_data = raw_data)
         if as_rows:
             return data.rows
         else:
@@ -587,10 +587,10 @@ class S3Resource(object):
 
     # -------------------------------------------------------------------------
     def delete(self,
-               format=None,
-               cascade=False,
-               replaced_by=None,
-               log_errors=False,
+               format = None,
+               cascade = False,
+               replaced_by = None,
+               log_errors = False,
                ):
         """
             Delete all records in this resource
@@ -865,28 +865,28 @@ class S3Resource(object):
     def merge(self,
               original_id,
               duplicate_id,
-              replace=None,
-              update=None,
-              main=True):
+              replace = None,
+              update = None,
+              main = True):
         """ Merge two records, see also S3RecordMerger.merge """
 
         from .s3merge import S3RecordMerger
         return S3RecordMerger(self).merge(original_id,
                                           duplicate_id,
-                                          replace=replace,
-                                          update=update,
-                                          main=main)
+                                          replace = replace,
+                                          update = update,
+                                          main = main)
 
     # -------------------------------------------------------------------------
     # Exports
     # -------------------------------------------------------------------------
     def datatable(self,
-                  fields=None,
-                  start=0,
-                  limit=None,
-                  left=None,
-                  orderby=None,
-                  distinct=False,
+                  fields = None,
+                  start = 0,
+                  limit = None,
+                  left = None,
+                  orderby = None,
+                  distinct = False,
                   ):
         """
             Generate a data table of this resource
@@ -957,14 +957,14 @@ class S3Resource(object):
 
     # -------------------------------------------------------------------------
     def datalist(self,
-                 fields=None,
-                 start=0,
-                 limit=None,
-                 left=None,
-                 orderby=None,
-                 distinct=False,
-                 list_id=None,
-                 layout=None):
+                 fields = None,
+                 start = 0,
+                 limit = None,
+                 left = None,
+                 orderby = None,
+                 distinct = False,
+                 list_id = None,
+                 layout = None):
         """
             Generate a data list of this resource
 
@@ -2187,15 +2187,15 @@ class S3Resource(object):
     # -------------------------------------------------------------------------
     def _export_record(self,
                        record,
-                       rfields=None,
-                       dfields=None,
-                       parent=None,
-                       export_map=None,
-                       lazy=None,
-                       url=None,
-                       master=True,
-                       llrepr=None,
-                       location_data=None):
+                       rfields = None,
+                       dfields = None,
+                       parent = None,
+                       export_map = None,
+                       lazy = None,
+                       url = None,
+                       master = True,
+                       llrepr = None,
+                       location_data = None):
         """
             Exports a single record to the element tree.
 
@@ -4543,12 +4543,12 @@ class S3ResourceFilter(object):
 
     def __init__(self,
                  resource,
-                 id=None,
-                 uid=None,
-                 filter=None,
-                 vars=None,
-                 extra_filters=None,
-                 filter_component=None):
+                 id = None,
+                 uid = None,
+                 filter = None,
+                 vars = None,
+                 extra_filters = None,
+                 filter_component = None):
         """
             Constructor
 
@@ -4951,8 +4951,10 @@ class S3ResourceFilter(object):
                 if i >= first:
                     append(row)
                 i += 1
-        return Rows(rows.db, result,
-                    colnames=rows.colnames, compact=False)
+        return Rows(rows.db,
+                    result,
+                    colnames = rows.colnames,
+                    compact = False)
 
     # -------------------------------------------------------------------------
     def apply_extra_filters(self, ids, start=None, limit=None):

@@ -659,8 +659,8 @@ class S3Request(object):
         if not self.custom_action:
             action = current.s3db.get_method(self.prefix,
                                              self.name,
-                                             component_name=self.component_name,
-                                             method=self.method)
+                                             component_name = self.component_name,
+                                             method = self.method)
             if isinstance(action, CLASS_TYPES):
                 self.custom_action = action()
             else:
@@ -710,7 +710,7 @@ class S3Request(object):
                 if form:
                     if not hasattr(form, "errors"):
                         # Form embedded in a DIV together with other components
-                        form = form.elements('form', first_only=True)
+                        form = form.elements("form", first_only=True)
                         form = form[0] if form else None
                     if form and form.errors:
                         return output
