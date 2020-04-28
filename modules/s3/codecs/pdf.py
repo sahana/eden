@@ -43,6 +43,9 @@ from gluon.languages import lazyT
 from s3compat import PY2, BytesIO, basestring, xrange
 from ..s3codec import S3Codec
 from ..s3utils import s3_strip_markup, s3_unicode, s3_str
+        
+if not PY2:
+    import unicodedata
 
 try:
     from reportlab.graphics.shapes import Drawing, Line
