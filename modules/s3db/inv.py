@@ -1257,11 +1257,11 @@ class S3InventoryTrackingModel(S3Model):
         # Custom methods
         # Generate Consignment Note
         set_method("inv", "send",
-                   method="form",
-                   action=self.inv_send_form)
+                   method = "form",
+                   action = self.inv_send_form)
 
         set_method("inv", "send",
-                   method= "timeline",
+                   method = "timeline",
                    action = self.inv_timeline)
 
         # Redirect to the Items tabs after creation
@@ -1269,8 +1269,11 @@ class S3InventoryTrackingModel(S3Model):
             c = "req"
         else:
             c = "inv"
-        send_item_url = URL(c=c, f="send", args=["[id]",
-                                                 "track_item"])
+        send_item_url = URL(c=c, f="send",
+                            args = ["[id]",
+                                    "track_item",
+                                    ],
+                            )
 
         list_fields = ["id",
                        "send_ref",
@@ -2620,7 +2623,8 @@ $.filterOptionsS3({
         table.date.readable = True
 
         record = db(table.id == r.id).select(table.send_ref,
-                                             limitby=(0, 1)).first()
+                                             limitby = (0, 1)
+                                             ).first()
         send_ref = record.send_ref
         # hide the inv_item field
         tracktable.send_inv_item_id.readable = False

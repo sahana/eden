@@ -248,6 +248,9 @@ class S3RL_PDF(S3Codec):
         elif len(filename) < 5 or filename[-4:] != ".pdf":
             # Add extension
             filename = "%s.pdf" % filename
+        if not isinstance(filename, str):
+            # Must be str not unicode (otherwise high chars fail to pass through uwsgi)
+            filename = filename.encode("utf-8")
         self.filename = filename
 
         # Get the Doc Template
