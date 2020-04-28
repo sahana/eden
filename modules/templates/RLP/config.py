@@ -10,6 +10,8 @@ from gluon.storage import Storage
 from s3 import FS, S3DateFilter, S3Represent, s3_fullname
 from s3dal import original_tablename
 
+ALLOWED_FORMATS = ("html", "iframe", "popup", "aadata", "json", "xls", "pdf")
+
 def config(settings):
     """
         Settings for Rhineland-Palatinate (RLP) Crisis Management Tool
@@ -710,6 +712,11 @@ def config(settings):
 
                 has_role = current.auth.s3_has_role
                 coordinator = has_role("COORDINATOR")
+
+                if not coordinator:
+                    settings.ui.export_formats = ("pdf", "xls")
+                    if r.representation not in ALLOWED_FORMATS:
+                        r.error(403, current.ERROR.NOT_PERMITTED)
 
                 resource = r.resource
 
@@ -1431,6 +1438,13 @@ def config(settings):
         standard_prep = s3.prep
         def custom_prep(r):
 
+            coordinator = current.auth.s3_has_role("COORDINATOR")
+
+            if not coordinator:
+                settings.ui.export_formats = ("pdf", "xls")
+                if r.representation not in ALLOWED_FORMATS:
+                    r.error(403, current.ERROR.NOT_PERMITTED)
+
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
@@ -1468,7 +1482,6 @@ def config(settings):
                     query &= FS("status").belongs(status_opts)
                 r.resource.add_filter(query)
 
-            coordinator = current.auth.s3_has_role("COORDINATOR")
             multiple_orgs = delegation_read_multiple_orgs()[0]
 
             if coordinator:
