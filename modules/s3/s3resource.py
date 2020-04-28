@@ -5489,7 +5489,7 @@ class S3ResourceData(object):
         ids = page = totalrows = None
         if fq:
             # Execute the filter query
-            if bigtable:
+            if bigtable and not vfilter:
                 limitby = resource.limitby(start=start, limit=limit)
             else:
                 limitby = None

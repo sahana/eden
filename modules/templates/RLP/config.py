@@ -969,6 +969,7 @@ def config(settings):
                         S3OptionsFilter("occupation_type_person.occupation_type_id",
                                         options = lambda: s3_get_filter_opts("pr_occupation_type"),
                                         ),
+<<<<<<< HEAD
                         RLPAvailabilityFilter(#["delegation.end_date",
                                               # "delegation.date",
                                               # ],
@@ -980,6 +981,13 @@ def config(settings):
                                               #filterby = "delegation.status",
                                               #filter_opts = ["APPR", "IMPL"],
                                               ),
+=======
+                        RLPAvailabilityFilter(
+                                     "delegation.start_date",
+                                     label = T("Available"),
+                                     hide_time = True,
+                                     ),
+>>>>>>> cc16184919ae7ee200cb419e2126cb2a922c9497
                         S3LocationFilter("current_address.location_id",
                                          label = T("Place of Residence"),
                                          levels = ("L2", "L3"),
@@ -1173,7 +1181,7 @@ def config(settings):
                                                    limitby = (0, 1)
                                                    ).first()
         pe_label = person.pe_label
-        
+
         # Compose Mail
         # @ToDo: i18n
         subject = "%s: Volunteer Deployment of %s to %s has been Approved" % \
@@ -1864,6 +1872,7 @@ def rlp_req_rheader(r, tabs=None):
                                                          record=record,
                                                          )
     return rheader
+
 # =============================================================================
 class rlp_DelegatedPersonRepresent(S3Represent):
 
