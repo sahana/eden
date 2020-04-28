@@ -8,7 +8,7 @@ from gluon import current, redirect
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3 import FS, S3CustomController, S3DateFilter
+from s3 import FS, S3CustomController
 
 THEME = "RLP"
 
@@ -121,18 +121,5 @@ $('#login-btn').click(function(e){
         self._view(settings.get_theme_layouts(), "index.html")
 
         return output
-
-# =============================================================================
-class RLPAvailabilityFilter(S3DateFilter):
-    """
-        Date-Range filter with custom variable
-        - without this then we parse as a vfilter which clutters error console
-          & is inefficient (including preventing a bigtable optimisation)
-    """
-
-    @classmethod
-    def _variable(cls, selector, operator):
-
-        return super()._variable("available", operator)
 
 # END =========================================================================

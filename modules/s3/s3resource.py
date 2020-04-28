@@ -4251,48 +4251,53 @@ class S3Components(object):
                 component.filter = None
 
             else:
-                # Filter by multiple criteria
-                query = None
-                for k, v in filterby.items():
-                    if isinstance(v, FS):
-                        # Match a field in the master table
-                        # => identify the field
-                        try:
-                            rfield = v.resolve(master)
-                        except (AttributeError, SyntaxError):
-                            if current.response.s3.debug:
-                                raise
-                            else:
-                                current.log.error(sys.exc_info()[1])
+                if callable(filterby):
+                    # Callable to construct complex join filter
+                    # => pass the (potentially aliased) component table
+                    query = filterby(table)
+                elif isinstance(filterby, dict):
+                    # Filter by multiple criteria
+                    query = None
+                    for k, v in filterby.items():
+                        if isinstance(v, FS):
+                            # Match a field in the master table
+                            # => identify the field
+                            try:
+                                rfield = v.resolve(master)
+                            except (AttributeError, SyntaxError):
+                                if current.response.s3.debug:
+                                    raise
+                                else:
+                                    current.log.error(sys.exc_info()[1])
+                                    continue
+                            # => must be a real field in the master table
+                            field = rfield.field
+                            if not field or field.table != master.table:
+                                current.log.error("Component filter for %s<=%s: "
+                                                  "invalid lookup field '%s'" %
+                                                  (master.tablename, alias, v.name))
                                 continue
-                        # => must be a real field in the master table
-                        field = rfield.field
-                        if not field or field.table != master.table:
-                            current.log.error("Component filter for %s<=%s: "
-                                              "invalid lookup field '%s'" %
-                                              (master.tablename, alias, v.name))
-                            continue
-                        subquery = (table[k] == field)
-                    else:
-                        is_list = isinstance(v, (tuple, list))
-                        if is_list and len(v) == 1:
-                            filterfor = v[0]
-                            is_list = False
+                            subquery = (table[k] == field)
                         else:
-                            filterfor = v
-                        if not is_list:
-                            subquery = (table[k] == filterfor)
-                        elif filterfor:
-                            subquery = (table[k].belongs(set(filterfor)))
-                        else:
-                            continue
-                    if subquery:
-                        if query is None:
-                            query = subquery
-                        else:
-                            query &= subquery
-
-                component.filter = query
+                            is_list = isinstance(v, (tuple, list))
+                            if is_list and len(v) == 1:
+                                filterfor = v[0]
+                                is_list = False
+                            else:
+                                filterfor = v
+                            if not is_list:
+                                subquery = (table[k] == filterfor)
+                            elif filterfor:
+                                subquery = (table[k].belongs(set(filterfor)))
+                            else:
+                                continue
+                        if subquery:
+                            if query is None:
+                                query = subquery
+                            else:
+                                query &= subquery
+                if query:
+                    component.filter = query
 
             # Copy component properties to the link resource
             link = component.link

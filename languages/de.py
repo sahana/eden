@@ -3455,6 +3455,7 @@
 'Note': 'Notiz',
 'Notes': 'Notizen',
 'Notice to Airmen': 'Hinweis für Flieger',
+'Notifications sent': 'Benachrichtigungen verschickt',
 'Notify': 'Benachrichtigen',
 'Number of Actions': 'Anzahl Maßnahmen',
 'Number of Activities per': 'Zahl der Aktivitäten pro',
