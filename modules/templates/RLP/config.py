@@ -969,7 +969,6 @@ def config(settings):
                         S3OptionsFilter("occupation_type_person.occupation_type_id",
                                         options = lambda: s3_get_filter_opts("pr_occupation_type"),
                                         ),
-<<<<<<< HEAD
                         RLPAvailabilityFilter(#["delegation.end_date",
                                               # "delegation.date",
                                               # ],
@@ -981,13 +980,6 @@ def config(settings):
                                               #filterby = "delegation.status",
                                               #filter_opts = ["APPR", "IMPL"],
                                               ),
-=======
-                        RLPAvailabilityFilter(
-                                     "delegation.start_date",
-                                     label = T("Available"),
-                                     hide_time = True,
-                                     ),
->>>>>>> cc16184919ae7ee200cb419e2126cb2a922c9497
                         S3LocationFilter("current_address.location_id",
                                          label = T("Place of Residence"),
                                          levels = ("L2", "L3"),
@@ -1143,7 +1135,7 @@ def config(settings):
             # Take no action
             return
 
-        # Send Email to the Org & the Volunteer
+        # Send Email to the Org, the Coordinator and the Volunteer
 
         # Lookup Details
         db = current.db
@@ -1184,18 +1176,18 @@ def config(settings):
 
         # Compose Mail
         # @ToDo: i18n
-        subject = "%s: Volunteer Deployment of %s to %s has been Approved" % \
-                    (settings.get_system_name_short(),
-                     pe_label,
-                     org_name,
-                     )
+        subject = "%(system_name)s: Volunteer Deployment of %(person)s to %(org)s has been Approved" % \
+                    {"system_name": settings.get_system_name_short(),
+                     "person": pe_label,
+                     "org": org_name,
+                     }
         # @ToDo: Read Message Template from CMS or templates/RLP/views/msg/*.txt
-        message = "Volunteer %s has been Approved for a Depkloyment to %s from %s to %s." \
-                    (pe_label,
-                     org_name,
-                     start_date,
-                     end_date,
-                     )
+        message = "Volunteer %(person)s has been Approved for a Deployment to %(org)s from %(start_date)s to %(end_date)s." % \
+                    {"person": pe_label,
+                     "org": org_name,
+                     "start_date": start_date,
+                     "end_date": end_date,
+                     }
         if comments is not None:
             message = "%s\n%s" % (message, comments)
 
