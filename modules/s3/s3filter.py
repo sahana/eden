@@ -1063,7 +1063,6 @@ class S3DateFilter(S3RangeFilter):
                              # @ToDo: Each option needs to be wrapped in ""
                              _value = ",".join(filter_opts),
                              ))
-                
 
         if slider:
             # Load Moment & D3/NVD3 into Browser
