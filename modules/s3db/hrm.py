@@ -5342,6 +5342,7 @@ class HRDelegationModel(S3Model):
     """
 
     names = ("hrm_delegation",
+             "hrm_delegation_status_opts",
              )
 
     def model(self):
@@ -5457,7 +5458,8 @@ class HRDelegationModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return {"hrm_delegation_status_opts": delegation_status,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5466,7 +5468,7 @@ class HRDelegationModel(S3Model):
 
         #dummy = S3ReusableField.dummy
 
-        return {}
+        return {"hrm_delegation_status_opts": {}}
 
 # =============================================================================
 def hrm_programme_hours_month(row):

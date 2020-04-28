@@ -1503,19 +1503,17 @@ def config(settings):
                         S3DateFilter("date",
                                      hidden = True,
                                      ),
-                                     S3DateFilter("end_date",
-                                                  hidden = True,
-                                                  ),
-                                     ]
+                        S3DateFilter("end_date",
+                                     hidden = True,
+                                     ),
+                        ]
 
                     # Status-Filter
                     field = r.table.status
                     if not status_opts:
-                        status_filter_opts = [opt for opt in field.requires.options()
-                                              if opt[0]
-                                              ]
+                        status_filter_opts = [opt for opt in s3db.hrm_delegation_status_opts]
                     else:
-                        status_filter_opts = [opt for opt in field.requires.options()
+                        status_filter_opts = [opt for opt in s3db.hrm_delegation_status_opts
                                               if opt[0] in status_opts
                                               ]
                     if len(status_filter_opts) > 1:
