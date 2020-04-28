@@ -40,9 +40,12 @@ from gluon.storage import Storage
 from gluon.contenttype import contenttype
 from gluon.languages import lazyT
 
-from s3compat import BytesIO, basestring, xrange
+from s3compat import PY2, BytesIO, basestring, xrange
 from ..s3codec import S3Codec
 from ..s3utils import s3_strip_markup, s3_unicode, s3_str
+        
+if not PY2:
+    import unicodedata
 
 try:
     from reportlab.graphics.shapes import Drawing, Line
@@ -248,7 +251,7 @@ class S3RL_PDF(S3Codec):
         elif len(filename) < 5 or filename[-4:] != ".pdf":
             # Add extension
             filename = "%s.pdf" % filename
-        self.filename = filename
+        #self.filename = filename
 
         # Get the Doc Template
         size = attr_get("pdf_size")
@@ -339,12 +342,17 @@ class S3RL_PDF(S3Codec):
         if response:
             if "uwsgi_scheme" in current.request.env:
                 # Running uwsgi then we can't have unicode filenames
-                filename = self.filename
-                if isinstance(filename, str):
-                    filename = filename.encode("utf-8")
-                disposition = b"attachment; filename=\"%s\"" % filename
-            else:
-                disposition = "attachment; filename=\"%s\"" % self.filename
+                #if isinstance(filename, str):
+                #    filename = filename.encode("utf-8")
+                # Accent Folding
+                if PY2:
+                    def string_escape(s):
+                        return s.decode("string-escape").decode("utf-8")
+                else:
+                    def string_escape(s):
+                        return unicodedata.normalize("NFD", s).encode("ascii", "ignore").decode("utf-8")
+                filename = string_escape(filename)
+            disposition = 'attachment; filename="%s"' % filename
             response.headers["Content-Type"] = contenttype(".pdf")
             response.headers["Content-disposition"] = disposition
 
