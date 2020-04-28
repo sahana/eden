@@ -126,8 +126,8 @@ $('#login-btn').click(function(e){
 class RLPAvailabilityFilter(S3DateFilter):
     """
         Date-Range filter with custom variable
-        - without this bigtable settings causes filter to fail (hard limit of 50)
-        - even without bigtable a simple fake field causes inefficiencies as it is parsed as a VirtualField
+        - without this then we parse as a vfilter which clutters error console
+          & is inefficient (including preventing a bigtable optimisation)
     """
 
     @classmethod
