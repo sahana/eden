@@ -5418,6 +5418,11 @@ class HRDelegationModel(S3Model):
                              label = T("End Date"),
                              set_max = "#hrm_delegation_date",
                              ),
+                     s3_datetime("requested_on",
+                                 label = T("Requested on"),
+                                 default = "now",
+                                 writable = False,
+                                 ),
                      Field("status",
                            default = delegation_status[0],
                            requires = IS_IN_SET(delegation_status,
@@ -5447,7 +5452,7 @@ class HRDelegationModel(S3Model):
             msg_record_modified = T("Delegation updated"),
             msg_record_deleted = T("Delegation deleted"),
             msg_list_empty = T("No Delegations currently registered"),
-        )
+            )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

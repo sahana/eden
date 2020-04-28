@@ -1306,6 +1306,7 @@ def config(settings):
                 organize["title"] = "organisation_id"
                 organize["description"] = ["date",
                                            "end_date",
+                                           "requested_on",
                                            "status",
                                            ]
             else:
@@ -1314,6 +1315,7 @@ def config(settings):
                 organize["description"] = ["organisation_id",
                                            "date",
                                            "end_date",
+                                           "requested_on",
                                            "status",
                                            ]
 
@@ -1346,6 +1348,7 @@ def config(settings):
             organize["title"] = "organisation_id"
             organize["description"] = ["date",
                                        "end_date",
+                                       "requested_on",
                                        "status",
                                        ]
 
@@ -1501,6 +1504,7 @@ def config(settings):
                            "person_id",
                            "date",
                            "end_date",
+                           "requested_on",
                            "status",
                            "comments",
                            ]
