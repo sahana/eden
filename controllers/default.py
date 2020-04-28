@@ -418,7 +418,7 @@ def about():
     import string
     import subprocess
 
-    sahana_version = open(os.path.join(request.folder, "VERSION"), "r").read()
+    eden_version = open(os.path.join(request.folder, "VERSION"), "r").read()
     web2py_version = open(_apath("../VERSION"), "r").read()[8:]
     python_version = platform.python_version()
     os_version = platform.platform()
@@ -434,6 +434,7 @@ def about():
                       TD(sqlite_version))
 
     elif db_string.find("mysql") != -1:
+        database_name = settings.database.get("database", "sahana")
         try:
             # @ToDo: Support using pymysql & Warn
             import MySQLdb
@@ -443,11 +444,11 @@ def about():
             mysql_version = T("Unknown")
         else:
             #mysql_version = (subprocess.Popen(["mysql", "--version"], stdout=subprocess.PIPE).communicate()[0]).rstrip()[10:]
-            con = MySQLdb.connect(host=settings.database.get("host", "localhost"),
-                                  port=settings.database.get("port", None) or 3306,
-                                  db=settings.database.get("database", "sahana"),
-                                  user=settings.database.get("username", "sahana"),
-                                  passwd=settings.database.get("password", "password")
+            con = MySQLdb.connect(host = settings.database.get("host", "localhost"),
+                                  port = settings.database.get("port", None) or 3306,
+                                  db = database_name,
+                                  user = settings.database.get("username", "sahana"),
+                                  passwd = settings.database.get("password", "password")
                                   )
             cur = con.cursor()
             cur.execute("SELECT VERSION()")
@@ -457,10 +458,13 @@ def about():
                               TD(mysql_version)),
                            TR(TD("MySQLdb python driver"),
                               TD(mysqldb_version)),
+                           TR(TD("Database"),
+                              TD(database_name)),
                            )
 
     else:
         # Postgres
+        database_name = settings.database.get("database", "sahana")
         try:
             # @ToDo: Support using pg8000 & Warn
             import psycopg2
@@ -473,7 +477,7 @@ def about():
             #pgsql_version = string.split(pgsql_reply)[2]
             con = psycopg2.connect(host = settings.database.get("host", "localhost"),
                                    port = settings.database.get("port", None) or 5432,
-                                   database = settings.database.get("database", "sahana"),
+                                   database = database_name,
                                    user = settings.database.get("username", "sahana"),
                                    password = settings.database.get("password", "password")
                                    )
@@ -485,6 +489,8 @@ def about():
                               TD(pgsql_version)),
                               TR(TD("psycopg2 python driver"),
                                  TD(psycopg_version)),
+                              TR(TD("Database"),
+                                 TD(database_name)),
                               )
 
     # Libraries
@@ -527,7 +533,7 @@ def about():
                                  _class = "odd",
                                  ),
                               TR(TD(settings.get_system_name_short()),
-                                 TD(sahana_version),
+                                 TD(eden_version),
                                  ),
                               TR(TD(T("Web Server")),
                                  TD(request.env.server_software),
@@ -569,8 +575,8 @@ def about():
                               TR(TD("xlwt"),
                                  TD(xlwt_version),
                                  ),
-                        _class="dataTable display"),
-                  _class="table-container")
+                        _class = "dataTable display"),
+                  _class = "table-container")
                   )
 
     return {"item": item,

@@ -243,7 +243,7 @@ class S3RL_PDF(S3Codec):
         if filename is None:
             if not isinstance(title, str):
                 # Must be str not unicode
-                title = title.encode("utf-8")
+                title = title.decode("utf-8")
             filename = "%s_%s.pdf" % (title, now)
         elif len(filename) < 5 or filename[-4:] != ".pdf":
             # Add extension
@@ -337,10 +337,14 @@ class S3RL_PDF(S3Codec):
         # Return the generated PDF
         response = current.response
         if response:
-            disposition = "attachment; filename=\"%s\"" % self.filename
-            if not isinstance(disposition, str):
-                # Must be str not unicode (otherwise high chars fail to pass through uwsgi)
-                disposition = disposition.encode("utf-8")
+            if "uwsgi_scheme" in current.request.env:
+                # Running uwsgi then we can't have unicode filenames
+                filename = self.filename
+                if isinstance(filename, str):
+                    filename = filename.encode("utf-8")
+                disposition = b"attachment; filename=\"%s\"" % filename
+            else:
+                disposition = "attachment; filename=\"%s\"" % self.filename
             response.headers["Content-Type"] = contenttype(".pdf")
             response.headers["Content-disposition"] = disposition
 
