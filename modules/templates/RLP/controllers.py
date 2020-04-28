@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-import json
+#import json
 
-from os import path
+#from os import path
 
-from gluon import current, redirect
+from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3 import FS, S3CustomController
+from s3 import S3CustomController
 
 THEME = "RLP"
 

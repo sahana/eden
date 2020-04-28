@@ -4695,7 +4695,8 @@ class S3ResourceFilter(object):
             for alias in aliases:
                 for filter_set in (pf.cqueries, pf.cfilters):
                     if alias in filter_set:
-                        [add_filter(q) for q in filter_set[alias]]
+                        for q in filter_set[alias]:
+                            add_filter(q)
 
         # Additional filters
         if filter is not None:

@@ -228,8 +228,6 @@ def config(settings):
 
         from s3 import S3SQLCustomForm
 
-        s3db = current.s3db
-
         current.s3db.configure("cms_post",
                                crud_form = S3SQLCustomForm("name",
                                                            #"title",
@@ -1127,14 +1125,10 @@ def config(settings):
                                                table.comments,
                                                limitby = (0, 1),
                                                ).first()
-        # Limit to Managed Pool Members
-        person_id = row.person_id
-        if open_pool_member(person_id):
-            return
-
         status = row.status
-        if status != "APPR":
-            # Not approved => no action
+        person_id = row.person_id
+        if status != "APPR" or open_pool_member(person_id):
+            # Not approved, or open pool member => no action
             return
 
         # Details for email
@@ -1462,7 +1456,7 @@ def config(settings):
             if r.interactive:
 
                 if not volunteer_id:
-                    from s3 import S3DateFilter, S3OptionsFilter, s3_get_filter_opts
+                    from s3 import S3OptionsFilter, s3_get_filter_opts
                     filter_widgets = [
                         S3OptionsFilter("person_id$pool_membership.group_id",
                                         label = T("Pool"),
