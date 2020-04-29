@@ -6856,19 +6856,31 @@ def org_organisation_controller():
     def postp(r, output):
         if r.interactive and r.component:
             if r.component_name == "human_resource":
-                # Modify action button to open staff instead of human_resource
+                # Modify action button to open correct page for context
                 # (Delete not overridden to keep errors within Tab)
-                read_url = URL(c="hrm", f="staff", args=["[id]"])
-                update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
-                S3CRUD.action_buttons(r, read_url=read_url,
-                                         update_url=update_url)
+                controller = "hrm"
+                function = "staff"
+                if settings.has_module("vol"):
+                    if settings.get_hrm_show_staff():
+                        function = "human_resource"
+                    else:
+                        controller = "vol"
+                        function = "volunteer"
+                read_url = URL(c=controller, f=function,
+                               args = ["[id]"],
+                               )
+                update_url = URL(c=controller, f=function,
+                                 args = ["[id]", "update"],
+                                 )
+                S3CRUD.action_buttons(r, read_url = read_url,
+                                         update_url = update_url)
 
             elif r.component_name == "branch" and r.record and \
                  isinstance(output, dict) and \
                  "showadd_btn" in output:
                 treeview_link = A(current.T("Show Branch Hierarchy"),
-                                  _href=r.url(method="hierarchy", component=""),
-                                  _class="action-btn",
+                                  _class = "action-btn",
+                                  _href = r.url(method="hierarchy", component=""),
                                   )
                 output["showadd_btn"] = TAG[""](output["showadd_btn"],
                                                 treeview_link,

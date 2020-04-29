@@ -1099,9 +1099,13 @@ $('.copy-link').click(function(e){
                 auth.s3_assign_role(user_id, "VOLUNTEER")
 
     # -------------------------------------------------------------------------
-    def affiliation_ondelete(row):
+    def hrm_human_resource_ondelete(row):
         """
-            If a Volunteer is unaffiliated from an Organisation, update their user/roles accordingly
+            If a Volunteer is unaffiliated from an Organisation:
+            * update their user/roles accordingly
+            * send a message:
+                - to the OrgAdmins if Volunteer deletes themselves
+                - to the Volunteer of OrgAdmin deletes them
         """
 
         auth = current.auth
@@ -1109,6 +1113,7 @@ $('.copy-link').click(function(e){
         s3db = current.s3db
 
         human_resource_id = row.id
+        organisation_id = row.organisation_id
         person_id = row.person_id
 
         # Find User Account
@@ -1122,7 +1127,8 @@ $('.copy-link').click(function(e){
         user_id = link.user_id
 
         # Update User Account
-        db(db.auth_user.id == user_id).update(organisation_id = None)
+        utable = db.auth_user
+        db(utable.id == user_id).update(organisation_id = None)
 
         # Update Roles
         auth.s3_withdraw_role(user_id, "VOLUNTEER", for_pe=[])
@@ -1157,6 +1163,54 @@ $('.copy-link').click(function(e){
 
         # Update Realm Entity
         auth.set_realm_entity("pr_person", person_id, entity=realm_entity, force_update=True)
+
+        # Send Message
+        otable = s3db.org_organisation
+        org = db(otable.id == organisation_id).select(otable.name,
+                                                      limitby = (0, 1)
+                                                      ).first()
+        if auth.s3_has_role("ORG_ADMIN"):
+            # OrgAdmin deleted them, so message Volunteer
+            email = db(utable.id == user_id).select(utable.email,
+                                                    limitby = (0, 1)
+                                                    ).first().email
+            subject = "%s: You have been unaffiliated from %s" % \
+                (current.deployment_settings.get_system_name_short(),
+                 org.name,
+                 )
+            message = ""
+            current.msg.send_email(to = email,
+                                   subject = subject,
+                                   message = message,
+                                   )
+        else:
+            # Volunteer deleted themselves, so message OrgAdmin
+            gtable = db.auth_group
+            mtable = db.auth_membership
+            query = (gtable.uuid == "ORG_ADMIN") & \
+                    (gtable.id == mtable.group_id) & \
+                    (mtable.user_id == utable.id) & \
+                    (utable.organisation_id == organisation_id)
+            org_admins = db(query).select(utable.email)
+
+            from s3 import s3_fullname
+            person = db(ptable.id == person_id).select(ptable.first_name,
+                                                       ptable.middle_name,
+                                                       ptable.last_name,
+                                                       limitby = (0, 1)
+                                                       ).first()
+            subject = "%s: %s has left %s" % \
+                (current.deployment_settings.get_system_name_short(),
+                 s3_fullname(person),
+                 org.name,
+                 )
+            message = ""
+            send_email = current.msg.send_email
+            for admin in org_admins:
+                send_email(to = admin.email,
+                           subject = subject,
+                           message = message,
+                           )
 
     # -------------------------------------------------------------------------
     def customise_hrm_human_resource_resource(r, tablename):
@@ -1280,6 +1334,11 @@ $('.copy-link').click(function(e){
             f.writable = False
             f.comment = None # No Create
 
+        s3db.add_custom_callback(tablename,
+                                 "delete",
+                                 hrm_human_resource_ondelete,
+                                 )
+
         s3db.configure("hrm_human_resource",
                        crud_form = S3SQLCustomForm("organisation_id",
                                                    #(T("Role"), "job_title.value"),
@@ -1293,7 +1352,6 @@ $('.copy-link').click(function(e){
                        insertable = False,
                        list_fields = list_fields,
                        filter_widgets = filter_widgets,
-                       ondelete = affiliation_ondelete,
                        )
 
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource

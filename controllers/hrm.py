@@ -5,7 +5,7 @@
 """
 
 module = request.controller
-resourcename = request.function
+#resourcename = request.function
 
 if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
@@ -108,20 +108,26 @@ def staff():
             if r.id:
                 if r.method not in ("profile", "delete"):
                     # Redirect to person controller
-                    vars = {"human_resource.id": r.id,
-                            "group": "staff"
-                            }
-                    args = [r.method]
+                    url_vars = {"human_resource.id": r.id,
+                                "group": "staff"
+                                }
+                    if r.method is not None:
+                        args = [r.method]
+                    else:
+                        args = []
                     if r.representation == "iframe":
-                        vars["format"] = "iframe"
-                        #args = [r.method]
-                    redirect(URL(f="person", vars=vars, args=args))
+                        url_vars["format"] = "iframe"
+                    redirect(URL(f="person",
+                                 args = args,
+                                 vars = url_vars,
+                                 ))
             else:
                 if r.method == "import":
                     # Redirect to person controller
                     redirect(URL(f="person",
-                                 args="import",
-                                 vars={"group": "staff"}))
+                                 args = "import",
+                                 vars = {"group": "staff"},
+                                 ))
                 elif not r.component and r.method != "delete":
                     # Configure site_id
                     field = table.site_id
@@ -129,11 +135,11 @@ def staff():
                     if site_id:
                         field.default = site_id
                         field.writable = False
-                    field.comment = DIV(DIV(_class="tooltip",
-                                            _title="%s|%s" % (
-                                                    settings.get_org_site_label(),
-                                                    T("The facility where this position is based."),
-                                                    #messages.AUTOCOMPLETE_HELP,
+                    field.comment = DIV(DIV(_class = "tooltip",
+                                            _title = "%s|%s" % (
+                                                     settings.get_org_site_label(),
+                                                     T("The facility where this position is based."),
+                                                     #messages.AUTOCOMPLETE_HELP,
                                             )))
                     #field.comment = S3PopupLink(c="org", f="facility",
                     #                            vars = dict(child="site_id",
@@ -163,11 +169,12 @@ def staff():
                    auth.permission.has_permission("update", c="hrm", f="compose"):
                     # @ToDo: Remove this now that we have it in Events?
                     s3.actions.append(
-                        {"url": URL(f="compose",
-                                    vars = {"human_resource.id": "[id]"}),
+                        {"label": s3_str(T("Send Message")),
+                         "url": URL(f="compose",
+                                    vars = {"human_resource.id": "[id]"},
+                                    ),
                          "_class": "action-btn send",
-                         "label": str(T("Send Message"))
-                        })
+                         })
                 #s3.scripts.append("/%s/static/scripts/jquery.doubleScroll.js" % appname)
                 #s3.jquery_ready.append('''$('.dataTable_table').doubleScroll()''')
                 #s3.jquery_ready.append('''$('.dataTables_wrapper').doubleScroll()''')
@@ -217,7 +224,7 @@ def profile():
     request.args = [str(auth.s3_logged_in_person())]
 
     # Custom Method for Contacts
-    s3db.set_method("pr", resourcename,
+    s3db.set_method("pr", "profile",
                     method = "contacts",
                     action = s3db.pr_Contacts)
 
