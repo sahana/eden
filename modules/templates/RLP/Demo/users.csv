@@ -1,5 +1,5 @@
 First Name,Last Name,Email,Password,Role,Organisation,Language
-MSAGD,Coordinator,msagd_coordinator@example.com,eden,COORDINATOR/0,"Ministerium für Soziales, Arbeit, Gesundheit und Demographie",de
+MSAGD,Coordinator,msagd_coordinator@example.com,eden,COORDINATOR/0,"Ministerium für Soziales, Arbeit, Gesundheit und Demografie",de
 BIR,HR Manager,bir_hrmanager@example.com,eden,"HRMANAGER,POOLREADER/pr_forum.name=All Pools",Gesundheitsamt Birkenfeld,de
 AW,HR Manager,aw_hrmanager@example.com,eden,"HRMANAGER,POOLREADER/pr_forum.name=All Pools",Gesundheitsamt Ahrweiler,de
 KL,HR Manager,kl_hrmanager@example.com,eden,"HRMANAGER,POOLREADER/pr_forum.name=All Pools",Gesundheitsamt Kaiserslautern,de
