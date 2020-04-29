@@ -371,7 +371,10 @@ class organisationApply(S3Method):
                 redirect(URL(args = [organisation_id]))
 
             # Show Form
-            header = P("Your application to join this Organisation will be reviewed by it's Administrator(s) and you will receive an email with the outcome.")
+            header = DIV(P("By clicking 'yes' to 'remain visible on the reserve list' you will still be emailed opportunities to volunteer for other third party organisations, clicking 'no' disables you from this process and means, if your application is successful, you will only be affiliated to, and receive opportunities from, the organisation you apply to."),
+                         P("If you have selected 'no' and later feel you would like to receive opportunities you may visit your profile and select the 'yes' on the affiliation tab at any time."),
+                         P("Please note, if you have contacted the organisation (by email or phone) prior to the application process your application may be processed quicker.."),
+                         )
 
             output = {"form": form,
                       "header": header,
