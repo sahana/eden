@@ -452,7 +452,8 @@ class S3Importer(S3Method):
                                                table.summary_added,
                                                table.summary_error,
                                                table.summary_ignored,
-                                               limitby=(0, 1)).first()
+                                               limitby = (0, 1)
+                                               ).first()
         status = row.status
         # completed display details
         if status == 3: # Completed
@@ -464,7 +465,7 @@ class S3Importer(S3Method):
             result = (row.summary_added,
                       row.summary_error,
                       row.summary_ignored,
-                     )
+                      )
             self._display_completed_job(result, row.modified_on)
             redirect(URL(r=request, f=self.function, args=["import"]))
 
@@ -487,9 +488,13 @@ class S3Importer(S3Method):
 
         rowcount = len(self._get_all_items(upload_id))
         rheader = DIV(TABLE(TR(TH("%s: " % self.messages.job_total_records),
-                               TD(rowcount, _id="totalAvailable"),
+                               TD(rowcount,
+                                  _id = "totalAvailable",
+                                  ),
                                TH("%s: " % self.messages.job_records_selected),
-                               TD(0, _id="totalSelected"),
+                               TD(0,
+                                  _id = "totalSelected",
+                                  ),
                                TH(error_tip)
                                ),
                             ))
@@ -688,12 +693,12 @@ class S3Importer(S3Method):
         if required:
             s3.has_required = True
 
-        form = SQLFORM.factory(table_name=self.UPLOAD_TABLE_NAME,
-                               labels=labels,
-                               formstyle=formstyle,
+        form = SQLFORM.factory(table_name = self.UPLOAD_TABLE_NAME,
+                               labels = labels,
+                               formstyle = formstyle,
                                upload = os.path.join(request.folder, "uploads", "imports"),
                                separator = "",
-                               message=self.messages.file_uploaded,
+                               message = self.messages.file_uploaded,
                                *fields)
 
         args = ["s3csv"]
@@ -723,8 +728,11 @@ class S3Importer(S3Method):
                 # only add the download link if the template can be opened
                 open("%s/../%s" % (r.folder, url))
                 form[0][0].insert(0, TR(TD(A(self.messages.download_template,
-                                             _href=url)),
-                                        _id="template__row"))
+                                             _href = url,
+                                             )
+                                           ),
+                                        _id = "template__row",
+                                        ))
             except IOError:
                 pass
 
@@ -819,34 +827,36 @@ class S3Importer(S3Method):
         rows = db(query).select(table.id)
         restrictView = [str(row.id) for row in rows]
 
-        s3.actions = [{"label": str(self.messages.open_btn),
-                       "_class": "action-btn",
+        s3.actions = [{"label": s3_str(self.messages.open_btn),
+                       "restrict": restrictOpen,
                        "url": URL(r=request,
                                   c=controller,
                                   f=function,
-                                  args=["import"],
-                                  vars={"job":"[id]"}),
-                       "restrict": restrictOpen
-                       },
-                      {"label": str(self.messages.view_btn),
+                                  args = ["import"],
+                                  vars = {"job":"[id]"},
+                                  ),
                        "_class": "action-btn",
+                       },
+                      {"label": s3_str(self.messages.view_btn),
+                       "restrict": restrictView,
                        "url": URL(r=request,
                                   c=controller,
                                   f=function,
-                                  args=["import"],
-                                  vars={"job":"[id]"}),
-                       "restrict": restrictView
+                                  args = ["import"],
+                                  vars = {"job":"[id]"},
+                                  ),
+                       "_class": "action-btn",
                        },
-                      {"label": str(self.messages.delete_btn),
+                      {"label": s3_str(self.messages.delete_btn),
+                       "url": URL(r=request,
+                                  c=controller,
+                                  f=function,
+                                  args = ["import"],
+                                  vars = {"job":"[id]",
+                                          "delete":"True"
+                                         }
+                                  ),
                        "_class": "delete-btn",
-                       "url": URL(r=request,
-                                  c=controller,
-                                  f=function,
-                                  args=["import"],
-                                  vars={"job":"[id]",
-                                        "delete":"True"
-                                       }
-                                  )
                        },
                       ]
         # Display an Error if no job is attached with this record
@@ -895,7 +905,7 @@ class S3Importer(S3Method):
             return (upload_id, select_list, rows)
 
         # Toggle-button for item details
-        s3.actions = [{"label": str(self.messages.item_show_details),
+        s3.actions = [{"label": s3_str(self.messages.item_show_details),
                        "_class": "action-btn toggle-item",
                        },
                       ]
@@ -904,8 +914,8 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
 
         output = self._dataTable(["id", "element", "error"],
                                  #sort_by = [[1, "asc"]],
-                                 represent=represent,
-                                 ajax_item_id=upload_id,
+                                 represent = represent,
+                                 ajax_item_id = upload_id,
                                  dt_bulk_select = select_list)
 
         self._use_controller_table()
@@ -917,8 +927,11 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
         s3.dataTableStyleWarning = error_list
 
         form = output["items"]
-        job = INPUT(_type="hidden", _id="importUploadID", _name="job",
-                    _value="%s" % upload_id)
+        job = INPUT(_type = "hidden",
+                    _id = "importUploadID",
+                    _name = "job",
+                    _value = "%s" % upload_id,
+                    )
         form.append(job)
         return output
 
@@ -927,8 +940,8 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
                              upload_id,
                              infile,
                              file_format,
-                             stylesheet=None,
-                             commit_job=False):
+                             stylesheet = None,
+                             commit_job = False):
         """
             This will take a s3_import_upload record and
             generate the importJob
@@ -998,13 +1011,13 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
         args = Storage()
         mode = request.get_vars.get("xsltmode", None)
         if mode is not None:
-            args.update(mode=mode)
+            args.update(mode = mode)
 
         # Generate the import job
         resource.import_xml(src,
-                            format=fmt,
-                            extra_data=self.csv_extra_data,
-                            stylesheet=stylesheet,
+                            format = fmt,
+                            extra_data = self.csv_extra_data,
+                            stylesheet = stylesheet,
                             ignore_errors = True,
                             commit_job = commit_job,
                             **args)
@@ -1027,7 +1040,7 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
             if errors:
                 current.response.s3.error_report = errors
             query = (self.upload_table.id == upload_id)
-            result = db(query).update(job_id=job_id)
+            result = db(query).update(job_id = job_id)
             # @todo: add check that result == 1, if not we are in error
             # Now commit the changes
             db.commit()
@@ -1092,7 +1105,8 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
         table = self.upload_table
         row = db(table.id == upload_id).select(table.job_id,
                                                table.replace_option,
-                                               limitby=(0, 1)).first()
+                                               limitby = (0, 1)
+                                               ).first()
         if row is None:
             return False
         else:
@@ -1183,10 +1197,11 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
             totalRecords = 0
 
         query = (self.upload_table.id == upload_id)
-        db(query).update(summary_added=totalRecords,
-                         summary_error=totalErrors,
+        db(query).update(summary_added = totalRecords,
+                         summary_error = totalErrors,
                          summary_ignored = totalIgnored,
-                         status = 3)
+                         status = 3,
+                         )
 
         # Commit the changes
         db.commit()
@@ -1223,9 +1238,9 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
     def _dataTable(self,
                    list_fields,
                    #sort_by = [[1, "asc"]],
-                   represent=None,
-                   ajax_item_id=None,
-                   dt_bulk_select=None,
+                   represent = None,
+                   ajax_item_id = None,
+                   dt_bulk_select = None,
                    ):
         """
             Method to get the data for the dataTable
@@ -1297,11 +1312,11 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
             orderby = ~resource.table.error
 
         data = resource.select(list_fields,
-                               start=start,
-                               limit=limit,
-                               count=True,
-                               orderby=orderby,
-                               left=left)
+                               start = start,
+                               limit = limit,
+                               count = True,
+                               orderby = orderby,
+                               left = left)
         rows = data["rows"]
 
         displayrows = data["numrows"]
@@ -1337,7 +1352,7 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
             items =  dt.html(totalrows,
                              displayrows,
                              datatable_id,
-                             dt_ajax_url=url,
+                             dt_ajax_url = url,
                              dt_bulk_actions = [current.T("Import")],
                              dt_bulk_selected = dt_bulk_select)
             output = {"items":items}
@@ -3102,11 +3117,11 @@ class S3ImportJob():
 
     # -------------------------------------------------------------------------
     def add_item(self,
-                 element=None,
-                 original=None,
-                 components=None,
-                 parent=None,
-                 joinby=None):
+                 element = None,
+                 original = None,
+                 components = None,
+                 parent = None,
+                 joinby = None):
         """
             Parse and validate an XML element and add it as new item
             to the job.
@@ -3140,8 +3155,8 @@ class S3ImportJob():
             self.elements[element] = item_id
 
         if not item.parse(element,
-                          original=original,
-                          files=self.files):
+                          original = original,
+                          files = self.files):
             self.error = item.error
             item.accepted = False
             if parent is None:
@@ -3209,6 +3224,7 @@ class S3ImportJob():
                         calias = aliases[0]
                     else:
                         calias = ctablename.split("_", 1)[1]
+
                 if (ctablename, calias) not in cinfos:
                     continue
                 else:
@@ -3241,19 +3257,21 @@ class S3ImportJob():
                             # Load only the UUID now, parse will load any
                             # required data later
                             row = db(query).select(ctable[UID],
-                                                   limitby=(0, 1)).first()
+                                                   limitby = (0, 1)
+                                                   ).first()
                             if row:
                                 original = row[UID]
                         else:
                             # Not nice, but a rare edge-case
                             original = db(query).select(ctable.ALL,
-                                                        limitby=(0, 1)).first()
+                                                        limitby = (0, 1)
+                                                        ).first()
 
                 # Recurse
-                item_id = add_item(element=celement,
-                                   original=original,
-                                   parent=item,
-                                   joinby=(pkey, fkey))
+                item_id = add_item(element = celement,
+                                   original = original,
+                                   parent = item,
+                                   joinby = (pkey, fkey))
                 if item_id is None:
                     item.error = self.error
                     self.error_tree.append(deepcopy(item.element))
@@ -3358,11 +3376,11 @@ class S3ImportJob():
     # -------------------------------------------------------------------------
     def lookahead(self,
                   element,
-                  table=None,
-                  fields=None,
-                  tree=None,
-                  directory=None,
-                  lookup=None):
+                  table = None,
+                  fields = None,
+                  tree = None,
+                  directory = None,
+                  lookup = None):
         """
             Find referenced elements in the tree
 
@@ -4369,9 +4387,9 @@ class S3BulkImporter(object):
             try:
                 # @todo: add extra_data and file attachments
                 resource.import_xml(csv,
-                                    format="csv",
-                                    stylesheet=task[4],
-                                    extra_data=extra_data,
+                                    format = "csv",
+                                    stylesheet = task[4],
+                                    extra_data = extra_data,
                                     )
             except SyntaxError as e:
                 self.errorList.append("WARNING: import error - %s (file: %s, stylesheet: %s)" %

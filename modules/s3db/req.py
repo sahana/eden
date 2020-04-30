@@ -699,6 +699,10 @@ class RequestModel(S3Model):
 
         # Components
         add_components(tablename,
+                       # Tags
+                       req_req_tag = {"alias": "tag",
+                                      "joinby": "req_id",
+                                      },
                        # Requested Items
                        req_req_item = {"joinby": "req_id",
                                        "multiple": multiple_req_items,

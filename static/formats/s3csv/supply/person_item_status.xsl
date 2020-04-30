@@ -12,7 +12,6 @@
 
          @ToDo if-required:
          Organisation.........string..........Organisation Name
-         KV:XX................................Key,Value (Key = XX in column name, value = cell in row)
 
     *********************************************************************** -->
     <xsl:import href="../commons.xsl"/>
@@ -55,26 +54,7 @@
                 </reference>
             </xsl:if> -->
 
-            <!-- Arbitrary Tags
-            <xsl:for-each select="col[starts-with(@field, 'KV')]">
-                <xsl:call-template name="KeyValue"/>
-            </xsl:for-each> -->
-
         </resource>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-
-    <xsl:template name="KeyValue">
-        <xsl:variable name="Key" select="normalize-space(substring-after(@field, ':'))"/>
-        <xsl:variable name="Value" select="text()"/>
-
-        <xsl:if test="$Value!=''">
-            <resource name="supply_person_item_status_tag">
-                <data field="tag"><xsl:value-of select="$Key"/></data>
-                <data field="value"><xsl:value-of select="$Value"/></data>
-            </resource>
-        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->

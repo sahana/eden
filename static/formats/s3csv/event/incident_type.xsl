@@ -46,7 +46,7 @@
         <xsl:variable name="Value" select="text()"/>
 
         <xsl:if test="$Value!=''">
-            <resource name="event_incident_type_tag">
+            <resource name="event_incident_type_tag" alias="tag">
                 <data field="tag"><xsl:value-of select="$Key"/></data>
                 <data field="value"><xsl:value-of select="$Value"/></data>
             </resource>

@@ -35,7 +35,7 @@
          Website.................hms_hospital
          Fax.....................hms_hospital
          Comments................hms_hospital
-         KV:XXX..................hms_hospital_tag Key/Value (Key = XX in column name, value = cell in row. Multiple allowed)
+         KV:XXX..................org_site_tag Key/Value (Key = XX in column name, value = cell in row. Multiple allowed)
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -285,7 +285,7 @@
         <xsl:variable name="Value" select="text()"/>
 
         <xsl:if test="$Value!=''">
-            <resource name="hms_hospital_tag">
+            <resource name="org_site_tag" alias="tag">
                 <data field="tag"><xsl:value-of select="$Key"/></data>
                 <data field="value"><xsl:value-of select="$Value"/></data>
             </resource>

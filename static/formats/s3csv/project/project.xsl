@@ -588,7 +588,7 @@
                 <xsl:with-param name="list" select="$Value"/>
                 <xsl:with-param name="arg">tag</xsl:with-param>
             </xsl:call-template> -->
-            <resource name="project_project_tag">
+            <resource name="project_project_tag" alias="tag">
                 <data field="tag"><xsl:value-of select="$Key"/></data>
                 <data field="value"><xsl:value-of select="$Value"/></data>
             </resource>

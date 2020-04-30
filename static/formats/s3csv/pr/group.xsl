@@ -78,7 +78,7 @@
         <xsl:variable name="Value" select="text()"/>
 
         <xsl:if test="$Value!=''">
-            <resource name="pr_group_tag">
+            <resource name="pr_group_tag" alias="tag">
                 <data field="tag"><xsl:value-of select="$Key"/></data>
                 <data field="value"><xsl:value-of select="$Value"/></data>
             </resource>

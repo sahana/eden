@@ -44,7 +44,6 @@ from s3layouts import S3PopupLink
 class HospitalDataModel(S3Model):
 
     names = ("hms_hospital",
-             "hms_hospital_tag",
              "hms_contact",
              "hms_bed_capacity",
              "hms_services",
@@ -135,7 +134,7 @@ class HospitalDataModel(S3Model):
                      super_link("site_id", "org_site"),
                      # UID assigned by Local Government
                      # required for EDXL-HAVE
-                     # @ToDo: Move to a KV in hms_hospital_tag table?
+                     # @ToDo: Move to a KV in org_site_tag table?
                      Field("gov_uuid", unique=True, length=128,
                            label = T("Government UID"),
                            requires = IS_EMPTY_OR([
@@ -414,40 +413,6 @@ class HospitalDataModel(S3Model):
         self.set_method("hms", "hospital",
                         method = "assign",
                         action = self.hrm_AssignMethod(component="human_resource_site"))
-
-        # ---------------------------------------------------------------------
-        # Hosptial Tags
-        # - Key-Value extensions
-        # - can be used to identify a Source (GPS, Imagery, Wikipedia, etc)
-        # - can link Hospitals to other Systems, such as:
-        #   * Government IDs
-        #   * PAHO
-        #   * OpenStreetMap (although their IDs can change over time)
-        #   * WHO
-        #   * Wikipedia URL
-        # - can be a Triple Store for Semantic Web support
-        #
-        tablename = "hms_hospital_tag"
-        self.define_table(tablename,
-                          hospital_id(empty = False,
-                                      ondelete = "CASCADE",
-                                      ),
-                          # key is a reserved word in MySQL
-                          Field("tag",
-                                label = T("Key"),
-                                ),
-                          Field("value",
-                                label = T("Value"),
-                                ),
-                          s3_comments(),
-                          *s3_meta_fields())
-
-        configure(tablename,
-                  deduplicate = S3Duplicate(primary = ("hospital_id",
-                                                       "tag",
-                                                       ),
-                                            ),
-                  )
 
         # ---------------------------------------------------------------------
         # Hospital status

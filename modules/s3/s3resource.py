@@ -2464,6 +2464,9 @@ class S3Resource(object):
                     t = xml.transform(t, stylesheet, **args)
                     if not t:
                         raise SyntaxError(xml.error)
+                    # Use this to debug the source tree if needed:
+                    #if s.name[-16:] == "organisation.csv":
+                    #sys.stderr.write(xml.tostring(t, pretty_print=True).decode("utf-8"))
 
                 if not tree:
                     tree = t.getroot()
@@ -2570,10 +2573,7 @@ class S3Resource(object):
         from .s3import import S3ImportJob
 
         db = current.db
-        xml = current.xml
-        auth = current.auth
         tablename = self.tablename
-        table = self.table
 
         if job_id is not None:
 
@@ -2581,7 +2581,7 @@ class S3Resource(object):
             self.error = None
             self.error_tree = None
             try:
-                import_job = S3ImportJob(table,
+                import_job = S3ImportJob(self.table,
                                          job_id = job_id,
                                          strategy = strategy,
                                          update_policy = update_policy,
@@ -2609,8 +2609,7 @@ class S3Resource(object):
                     self.error_tree = import_job.error_tree
             import_job.restore_references()
 
-            # this is only relevant for commit_job=True
-            if commit_job:
+            if commit_job is True:
                 if self.error and not ignore_errors:
                     return False
             else:
@@ -2629,16 +2628,19 @@ class S3Resource(object):
                          tablename=tablename)
                 # Skip import?
                 if self.skip_import:
-                    current.log.debug("Skipping import to %s" % self.tablename)
+                    current.log.debug("Skipping import to %s" % tablename)
                     self.skip_import = False
                     return True
 
         else:
             # Create a new job from an element tree
             # Do not import into tables without "id" field
+            table = self.table
             if "id" not in table.fields:
                 self.error = current.ERROR.BAD_RESOURCE
                 return False
+
+            xml = current.xml
 
             # Reset error and error tree
             self.error = None
@@ -2658,7 +2660,7 @@ class S3Resource(object):
                          tablename=tablename)
                 # Skip import?
                 if self.skip_import:
-                    current.log.debug("Skipping import to %s" % self.tablename)
+                    current.log.debug("Skipping import to %s" % tablename)
                     self.skip_import = False
                     return True
 
@@ -2719,6 +2721,7 @@ class S3Resource(object):
                 return False
 
         # Commit the import job
+        auth = current.auth
         auth.rollback = not commit_job
         success = import_job.commit(ignore_errors=ignore_errors,
                                     log_items = self.get_config("oncommit_import_item"))

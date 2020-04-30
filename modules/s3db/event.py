@@ -698,7 +698,7 @@ class S3EventModel(S3Model):
     @staticmethod
     def event_add_tag(r, **attr):
         """
-            Add a Tag to an Event
+            Add a CMS Tag to an Event
 
             S3Method for interactive requests
             - designed to be called as an afterTagAdded callback to tag-it.js
@@ -758,7 +758,7 @@ class S3EventModel(S3Model):
     @staticmethod
     def event_remove_tag(r, **attr):
         """
-            Remove a Tag from an Event
+            Remove a CMS Tag from an Event
 
             S3Method for interactive requests
             - designed to be called as an afterTagRemoved callback to tag-it.js
@@ -1880,7 +1880,7 @@ class S3IncidentModel(S3Model):
     @staticmethod
     def incident_add_tag(r, **attr):
         """
-            Add a Tag to an Incident
+            Add a CMS Tag to an Incident
 
             S3Method for interactive requests
             - designed to be called as an afterTagAdded callback to tag-it.js
@@ -1939,7 +1939,7 @@ class S3IncidentModel(S3Model):
     @staticmethod
     def incident_remove_tag(r, **attr):
         """
-            Remove a Tag from an Incident
+            Remove a CMS Tag from an Incident
 
             S3Method for interactive requests
             - designed to be called as an afterTagRemoved callback to tag-it.js
@@ -2768,6 +2768,12 @@ class S3IncidentTypeModel(S3Model):
                        deduplicate = S3Duplicate(),
                        hierarchy = hierarchy,
                        )
+
+        self.add_components(tablename,
+                            event_incident_type_tag = {"alias": "tag",
+                                                       "joinby": "incident_type_id",
+                                                       },
+                            )
 
         # Pass names back to global scope (s3.*)
         return {"event_incident_type_id": incident_type_id,

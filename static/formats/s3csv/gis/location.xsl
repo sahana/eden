@@ -212,7 +212,7 @@
         <xsl:variable name="Value" select="text()"/>
 
         <xsl:if test="$Value!=''">
-            <resource name="gis_location_tag">
+            <resource name="gis_location_tag" alias="tag">
                 <data field="tag"><xsl:value-of select="$Key"/></data>
                 <data field="value"><xsl:value-of select="$Value"/></data>
             </resource>
@@ -292,12 +292,12 @@
                             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
                         </xsl:if>
                         <!-- Named Tags -->
-                        <resource name="gis_location_tag">
+                        <resource name="gis_location_tag" alias="tag">
                             <data field="tag">ISO2</data>
                             <data field="value"><xsl:value-of select="$code"/></data>
                         </resource>
                         <xsl:if test="col[@field='Population']!=''">
-                            <resource name="gis_location_tag">
+                            <resource name="gis_location_tag" alias="tag">
                                 <data field="tag">population</data>
                                 <data field="value"><xsl:value-of select="col[@field='Population']"/></data>
                             </resource>
@@ -442,7 +442,7 @@
                             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
                         </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
-                            <resource name="gis_location_tag">
+                            <resource name="gis_location_tag" alias="tag">
                                 <data field="tag">population</data>
                                 <data field="value"><xsl:value-of select="col[@field='Population']"/></data>
                             </resource>
@@ -574,7 +574,7 @@
                             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
                         </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
-                            <resource name="gis_location_tag">
+                            <resource name="gis_location_tag" alias="tag">
                                 <data field="tag">population</data>
                                 <data field="value"><xsl:value-of select="col[@field='Population']"/></data>
                             </resource>
@@ -699,7 +699,7 @@
                             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
                         </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
-                            <resource name="gis_location_tag">
+                            <resource name="gis_location_tag" alias="tag">
                                 <data field="tag">population</data>
                                 <data field="value"><xsl:value-of select="col[@field='Population']"/></data>
                             </resource>
@@ -833,7 +833,7 @@
                             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
                         </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
-                            <resource name="gis_location_tag">
+                            <resource name="gis_location_tag" alias="tag">
                                 <data field="tag">population</data>
                                 <data field="value"><xsl:value-of select="col[@field='Population']"/></data>
                             </resource>
@@ -976,7 +976,7 @@
                             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
                         </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
-                            <resource name="gis_location_tag">
+                            <resource name="gis_location_tag" alias="tag">
                                 <data field="tag">population</data>
                                 <data field="value"><xsl:value-of select="col[@field='Population']"/></data>
                             </resource>
@@ -1056,7 +1056,7 @@
                     <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
                 </xsl:if>
                 <xsl:if test="col[@field='Population']!=''">
-                    <resource name="gis_location_tag">
+                    <resource name="gis_location_tag" alias="tag">
                         <data field="tag">population</data>
                         <data field="value"><xsl:value-of select="col[@field='Population']"/></data>
                     </resource>
