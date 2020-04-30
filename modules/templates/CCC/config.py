@@ -1182,7 +1182,7 @@ $('.copy-link').click(function(e){
                 (settings.get_system_name_short(),
                  org.name,
                  )
-            url = "%s/%s/default/person/%s/affiliation" % 
+            url = "%s/%s/default/person/%s/affiliation" % \
                 (settings.get_base_public_url(),
                  current.request.application,
                  person_id,
