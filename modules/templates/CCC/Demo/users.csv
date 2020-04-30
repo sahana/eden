@@ -8,4 +8,4 @@ Reserve,Volunteer,reserve@example.com,eden,"RESERVE/pr_forum.name=Reserves",,
 Inactive,Volunteer,inactive@example.com,eden,"RESERVE/pr_forum.name=Inactives",,
 Corporate,Donor,donor@example.com,eden,"DONOR/pr_person.details=Corporate+Donor+donor@example.com",,
 Group,Leader,group@example.com,eden,"GROUP_ADMIN/pr_group.name=Helpers",,
-Police,Liaison,police@example.com,eden,"AGENCY,CASE_ADMIN/pr_forum.name=Cases,DONOR_ADMIN/pr_forum.name=Donors,GROUPS_ADMIN/pr_forum.name=Groups,RESERVE_ADMIN/pr_forum.name=Reserves",Agency Group,staff
+Police,Liaison,police@example.com,eden,"AGENCY,CASE_ADMIN/pr_forum.name=Cases,DONOR_ADMIN/pr_forum.name=Donors,GROUPS_ADMIN/pr_forum.name=Groups,RESERVE_READER/pr_forum.name=Reserves",Agency Group,staff

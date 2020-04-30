@@ -2978,7 +2978,7 @@ def auth_user_register_onaccept(user_id):
                                        )
                     elif forum.name == "Reserves":
                         add_membership(user_id = user_id,
-                                       role = "Reserves Admin",
+                                       role = "Reserves Reader",
                                        entity = forum.pe_id,
                                        )
             else:
