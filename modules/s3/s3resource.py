@@ -2465,7 +2465,6 @@ class S3Resource(object):
                     if not t:
                         raise SyntaxError(xml.error)
                     # Use this to debug the source tree if needed:
-                    #if s.name[-16:] == "organisation.csv":
                     #sys.stderr.write(xml.tostring(t, pretty_print=True).decode("utf-8"))
 
                 if not tree:
@@ -2609,7 +2608,7 @@ class S3Resource(object):
                     self.error_tree = import_job.error_tree
             import_job.restore_references()
 
-            if commit_job is True:
+            if commit_job: # is True:
                 if self.error and not ignore_errors:
                     return False
             else:

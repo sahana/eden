@@ -2721,7 +2721,6 @@ class S3XML(S3Codec):
             read_from_csv(source)
 
         # Use this to debug the source tree if needed:
-        #if source.name[-16:] == "organisation.csv":
         #sys.stderr.write(cls.tostring(root, pretty_print=True).decode("utf-8"))
 
         return  etree.ElementTree(root)
