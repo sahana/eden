@@ -1144,10 +1144,12 @@ $('.copy-link').click(function(e){
         query = (ttable.person_id == person_id) & \
                 (ttable.tag == "reserve")
         if reserve and reserve.value == "0":
+            visible = "not visible"
             FORUM = "Inactives"
             ttable.update_or_insert(query,
                                     value = "0")
         else:
+            visible = "visible"
             FORUM = "Reserves"
             ttable.update_or_insert(query,
                                     value = "1")
@@ -1171,16 +1173,25 @@ $('.copy-link').click(function(e){
                                                       ).first()
         if auth.s3_has_role("ORG_ADMIN"):
             # OrgAdmin deleted them, so message Volunteer
+            settings = current.deployment_settings
             org_name = org.name
             email = db(utable.id == user_id).select(utable.email,
                                                     limitby = (0, 1)
                                                     ).first().email
             subject = "%s: You have been unaffiliated from %s" % \
-                (current.deployment_settings.get_system_name_short(),
+                (settings.get_system_name_short(),
                  org.name,
                  )
-            message = "You are receiving this email as %s has disaffiliated you from their organisation. If you wish further clarification you will need to contact the organisation direct. Please check your profile on Support Cumbria to ensure your availability on the reserve list is correct, you can do this by opening the 'affiliation' tab and choosing either yes or no for your availability before saving." % \
-                            org_name
+            url = "%s/%s/default/person/%s/affiliation" % 
+                (settings.get_base_public_url(),
+                 current.request.application,
+                 person_id,
+                 )
+            message = "You are receiving this email as %s has disaffiliated you from their organisation.\nIf you wish further clarification you will need to contact the organisation direct.\nYour profile is currently set to make you %s on the Reserve Volunteers list. If you are not visible on the Reserve Volunteers list you will no longer receive opportunities through Support Cumbria.\nYou may wish to review your availability on the 'Affiliation' tab in your profile and save your preference:\n%s" % \
+                            (org_name,
+                             visible,
+                             url
+                             )
             current.msg.send_email(to = email,
                                    subject = subject,
                                    message = message,
