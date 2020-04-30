@@ -3778,6 +3778,11 @@ class S3SiteTagModel(S3Model):
         # - Key-Value extensions
         # - can be used to provide conversions to external systems, such as:
         #   * HXL
+        #   * OpenStreetMap (although their IDs can change over time)
+        #   * Government IDs
+        #   * PAHO/WHO for Hospitals
+        #   * Wikipedia URLs
+        # - can be used to identify a Source (GPS, Imagery, Wikipedia, etc)
         # - can be a Triple Store for Semantic Web support
         #
         tablename = "org_site_tag"
