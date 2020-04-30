@@ -314,6 +314,32 @@ def config(settings):
     settings.customise_org_organisation_controller = customise_org_organisation_controller
 
     # -------------------------------------------------------------------------
+    def customise_org_office_controller(**attr):
+
+        s3 = current.response.s3
+
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            if r.representation == "json":
+                # Include site_id for filterOptionsS3 in vol/person form
+                r.resource.configure(list_fields = ["id",
+                                                    "site_id",
+                                                    "name",
+                                                    ],
+                                     )
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_org_office_controller = customise_org_office_controller
+
+    # -------------------------------------------------------------------------
     def pr_group_onaccept(form):
 
         record_id = form.vars.id
@@ -877,9 +903,22 @@ def config(settings):
                                                    ),
                                    ]
 
-                    # Only COORDINATOR can see personal details
+                    # Only COORDINATOR can see person/organisation details
                     if coordinator:
-                        crud_fields.insert(0, "volunteer_record.organisation_id")
+                        crud_fields[0:0] = ["volunteer_record.organisation_id",
+                                            (T("Office##gov"), "volunteer_record.site_id"),
+                                            ]
+                        script = '''$.filterOptionsS3({
+ 'trigger':'sub_volunteer_record_organisation_id',
+ 'target':'sub_volunteer_record_site_id',
+ 'lookupPrefix':'org',
+ 'lookupResource':'office',
+ 'lookupKey':'organisation_id',
+ 'lookupField':'site_id',
+ 'optional':true
+})'''
+                        if script not in s3.jquery_ready:
+                            s3.jquery_ready.append(script)
 
                         # Name fields in name-format order
                         NAMES = ("first_name", "middle_name", "last_name")
@@ -905,6 +944,7 @@ def config(settings):
                                             ),
                                    ])
                     else:
+                        # Other users see ID and Alias
                         text_search_fields = ["person_details.alias", "pe_label"]
                         list_fields.insert(2, (T("Name"), "person_details.alias"))
 
@@ -1771,6 +1811,8 @@ def rlp_vol_rheader(r, tabs=None):
     if record:
 
         T = current.T
+        db = current.db
+        s3db = current.s3db
         auth = current.auth
 
         coordinator = auth.s3_has_role("COORDINATOR")
@@ -1794,6 +1836,7 @@ def rlp_vol_rheader(r, tabs=None):
                                          "date_of_birth",
                                          "age",
                                          "occupation_type_person.occupation_type_id",
+                                         "volunteer_record.site_id",
                                          ],
                                         represent = True,
                                         raw_data = True,
@@ -1819,8 +1862,33 @@ def rlp_vol_rheader(r, tabs=None):
                                (T("Occupation Type"), occupation_type),
                                ],
                               [(T("Age"), age),
+                               ("", None),
                                ]
                               ]
+
+            if coordinator:
+                raw = volunteer["_row"]
+                site_id = raw["hrm_volunteer_record_human_resource.site_id"]
+                if site_id:
+                    # Get site details
+                    otable = s3db.org_office
+                    query = (otable.site_id == site_id) & \
+                            (otable.deleted == False)
+                    office = db(query).select(otable.name,
+                                              otable.phone1,
+                                              otable.email,
+                                              limitby = (0, 1),
+                                              ).first()
+                    if office:
+                        rheader_fields[0].append((T("Office##gov"),
+                                                  lambda row: office.name,
+                                                  ))
+                        rheader_fields[1].append((T("Office Phone##gov"),
+                                                  lambda row: office.phone1,
+                                                  ))
+                        rheader_fields[2].append((T("Office Email##gov"),
+                                                  lambda row: office.email,
+                                                  ))
 
             open_pool_member = (volunteer["_row"]["pr_group.group_type"] == 21)
             if not coordinator and open_pool_member:
