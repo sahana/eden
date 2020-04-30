@@ -1171,6 +1171,7 @@ $('.copy-link').click(function(e){
                                                       ).first()
         if auth.s3_has_role("ORG_ADMIN"):
             # OrgAdmin deleted them, so message Volunteer
+            org_name = org.name
             email = db(utable.id == user_id).select(utable.email,
                                                     limitby = (0, 1)
                                                     ).first().email
@@ -1178,7 +1179,8 @@ $('.copy-link').click(function(e){
                 (current.deployment_settings.get_system_name_short(),
                  org.name,
                  )
-            message = ""
+            message = "You are receiving this email as %s has disaffiliated you from their organisation. If you wish further clarification you will need to contact the organisation direct. Please check your profile on Support Cumbria to ensure your availability on the reserve list is correct, you can do this by opening the 'affiliation' tab and choosing either yes or no for your availability before saving." % \
+                            org_name
             current.msg.send_email(to = email,
                                    subject = subject,
                                    message = message,
@@ -1199,12 +1201,14 @@ $('.copy-link').click(function(e){
                                                        ptable.last_name,
                                                        limitby = (0, 1)
                                                        ).first()
+            fullname = s3_fullname(person)
             subject = "%s: %s has left %s" % \
                 (current.deployment_settings.get_system_name_short(),
-                 s3_fullname(person),
+                 fullname,
                  org.name,
                  )
-            message = ""
+            message = "You are receiving this email as %s has disaffiliated themselves from your organisation. If you wish further clarification you will need to contact the reserve volunteer direct" % \
+                            fullname
             send_email = current.msg.send_email
             for admin in org_admins:
                 send_email(to = admin.email,
