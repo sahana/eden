@@ -7108,7 +7108,9 @@ def project_status_represent(value):
     if representation in ("pdf", "xls"):
         return represent
 
-    if value >= 80:
+    if value is None:
+        colour = "ff0000" # Red
+    elif value >= 80:
         colour = "00ff00" # Green
     elif value  >= 60:
         colour = "ffff00" # Yellow
