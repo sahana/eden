@@ -1250,6 +1250,7 @@
 'Current session': 'Aktuelle Sitzung',
 'Current': 'Aktuell',
 'Currently Deployed': 'Aktuell im Einsatz',
+'Currently Deployed Volunteers': 'Aktuell eingesetzte Freiwillige',
 'Currently no Certifications registered': 'Derzeit sind keine Zertifizierungen registriert',
 'Currently no Competencies registered': 'Derzeit sind keine Kompetenzen registriert',
 'Currently no Course Certificates registered': 'Derzeit sind keine Kurszertifikate registriert',

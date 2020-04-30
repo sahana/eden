@@ -598,7 +598,6 @@ def config(settings):
         """
             Define custom components of pr_person
             - membership in volunteer pool (group_membership)
-            - recruitment request (req_need)
         """
 
         s3db = current.s3db
@@ -632,11 +631,6 @@ def config(settings):
                                                    "filterby": {"group_id": pool_ids},
                                                    "multiple": False,
                                                    },
-                            req_need = {"link": "req_need_person",
-                                        "joinby": "person_id",
-                                        "key": "need_id",
-                                        "actuate": "replace",
-                                        },
                             )
 
     # -------------------------------------------------------------------------
@@ -668,6 +662,35 @@ def config(settings):
                 row.update_record(pe_label = pe_label)
                 s3db.update_super(table, row)
             vol_update_alias(row.id)
+
+    # -------------------------------------------------------------------------
+    def active_deployments(ctable, from_date=None, to_date=None):
+        """
+            Helper to construct a component filter expression
+            for active deployments within the given interval (or now)
+
+            @param ctable: the (potentially aliased) component table
+            @param from_date: start of the interval
+            @param to_date: end of the interval
+
+            @note: with no dates, today is assumed as the interval start+end
+        """
+
+        start = ctable.date
+        end = ctable.end_date
+
+        if not from_date and not to_date:
+            from_date = to_date = current.request.utcnow
+
+        if from_date and to_date:
+            query = ((start <= to_date) | (start == None)) & \
+                    ((end >= from_date) | (end == None))
+        elif to_date:
+            query = (start <= to_date) | (start == None)
+        else:
+            query = (start >= from_date) | (end >= from_date)
+
+        return query & ctable.status.belongs(("APPR", "IMPL"))
 
     # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
@@ -754,38 +777,37 @@ def config(settings):
                 if not coordinator:
                     resource.add_filter(FS("pool_membership.id") > 0)
 
-                # Availability Filter
                 get_vars = r.get_vars
+
+                # Availability Filter
                 parse_dt = current.calendar.parse_date
-                available_fr = parse_dt(get_vars.get("available__ge"))
-                available_to = parse_dt(get_vars.get("available__le"))
-                if available_fr or available_to:
-
+                from_date = parse_dt(get_vars.get("available__ge"))
+                to_date = parse_dt(get_vars.get("available__le"))
+                if from_date or to_date:
                     # Filter to join active deployments during interval
-                    def ongoing(ctable):
-                        start = ctable.date
-                        end = ctable.end_date
-                        if available_fr and available_to:
-                            query = (start <= available_to) & \
-                                    ((end >= available_fr) | (end == None))
-                        elif available_fr:
-                            query = (start >= available_fr) | \
-                                    (end >= available_fr)
-                        else:
-                            query = (start <= available_to) | \
-                                    (start == None)
-                        return query & ctable.status.belongs(("APPR", "IMPL"))
-
-                    # Add filtered join
+                    active = lambda ctable: \
+                             active_deployments(ctable, from_date, to_date)
                     s3db.add_components("pr_person",
-                                        hrm_delegation = {"name": "ongoing",
+                                        hrm_delegation = {"name": "active_deployment",
                                                           "joinby": "person_id",
-                                                          "filterby": ongoing,
+                                                          "filterby": active,
                                                           },
                                         )
+                    resource.add_filter(FS("active_deployment.id") == None)
 
-                    # Filter for volunteers with no active delegations in interval
-                    resource.add_filter(FS("ongoing.id") == None)
+                # Currently-Deployed-Filter
+                deployed_now = get_vars.get("deployed_now") == "1"
+                if deployed_now:
+                    s3db.add_components("pr_person",
+                                        hrm_delegation = {"name": "ongoing_deployment",
+                                                          "joinby": "person_id",
+                                                          "filterby": active_deployments,
+                                                          },
+                                        )
+                    resource.add_filter(FS("ongoing_deployment.id") != None)
+                    list_title = T("Currently Deployed Volunteers")
+                else:
+                    list_title = T("Volunteers")
 
                 # HR type defaults to volunteer (already done in controller)
                 #hrtable = s3db.hrm_human_resource
@@ -873,7 +895,7 @@ def config(settings):
                     s3.crud_strings[resource.tablename] = Storage(
                         label_create = T("Create Volunteer"),
                         title_display = T("Volunteer Details"),
-                        title_list = T("Volunteers"),
+                        title_list = list_title,
                         title_update = T("Edit Volunteer Details"),
                         title_upload = T("Import Volunteers"),
                         label_list_button = T("List Volunteers"),
@@ -1741,18 +1763,18 @@ def config(settings):
         #    restricted = True,
         #    module_type = 10,
         #)),
-        ("req", Storage(
-           name_nice = T("Requests"),
-           #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
-           restricted = True,
-           module_type = 10,
-        )),
-        ("project", Storage(
-            name_nice = T("Projects"),
-            #description = "Tracking of Projects, Activities and Tasks",
-            restricted = True,
-            module_type = 2
-        )),
+        #("req", Storage(
+        #   name_nice = T("Requests"),
+        #   #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+        #   restricted = True,
+        #   module_type = 10,
+        #)),
+        #("project", Storage(
+        #    name_nice = T("Projects"),
+        #    #description = "Tracking of Projects, Activities and Tasks",
+        #    restricted = True,
+        #    module_type = 2
+        #)),
         #("cr", Storage(
         #    name_nice = T("Shelters"),
         #    #description = "Tracks the location, capacity and breakdown of victims in Shelters",
@@ -1771,12 +1793,12 @@ def config(settings):
         #   restricted = True,
         #   module_type = 10,
         #)),
-        ("event", Storage(
-            name_nice = T("Events"),
-            #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
-            restricted = True,
-            module_type = 10,
-        )),
+        #("event", Storage(
+        #    name_nice = T("Events"),
+        #    #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
+        #    restricted = True,
+        #    module_type = 10,
+        #)),
         #("transport", Storage(
         #   name_nice = T("Transport"),
         #   restricted = True,
@@ -1947,45 +1969,6 @@ def rlp_org_rheader(r, tabs=None):
                                                          )
     return rheader
 
-
-# =============================================================================
-def rlp_req_rheader(r, tabs=None):
-    """ REQ custom resource headers """
-
-    if r.representation != "html":
-        # Resource headers only used in interactive views
-        return None
-
-    from s3 import s3_rheader_resource, S3ResourceHeader
-
-    tablename, record = s3_rheader_resource(r)
-    if tablename != r.tablename:
-        resource = current.s3db.resource(tablename, id=record.id)
-    else:
-        resource = r.resource
-
-    rheader = None
-    rheader_fields = []
-
-    if record:
-        T = current.T
-
-        if tablename == "req_need":
-
-            if not tabs:
-                tabs = [(T("Request Details"), None),
-                        ]
-
-            # TODO show requesting organisation, date and status instead?
-            rheader_fields = [["name",
-                               ],
-                              ]
-
-        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
-                                                         table=resource.table,
-                                                         record=record,
-                                                         )
-    return rheader
 
 # =============================================================================
 class RLPAvailabilityFilter(S3DateFilter):
