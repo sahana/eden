@@ -48,6 +48,7 @@ def config(settings):
     settings.auth.password_retrieval = False
 
     settings.auth.realm_entity_types = ("org_organisation", "pr_forum", "pr_group")
+    settings.auth.privileged_roles = {"COORDINATOR": "COORDINATOR"}
 
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"

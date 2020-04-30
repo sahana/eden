@@ -903,6 +903,16 @@ class S3Config(Storage):
                    )
         return self.__lazy("auth", "realm_entity_types", default=default)
 
+    def get_auth_privileged_roles(self):
+        """
+            Roles a non-ADMIN user can only assign if they have
+            a certain required role themselves:
+            - a tuple|list of role UUIDs = user must have the roles
+              themselves in order to assign them
+            - a dict {assignable_role:required_role}
+        """
+        return self.__lazy("auth", "privileged_roles", default=[])
+
     def get_auth_realm_entity(self):
         """ Hook to determine the owner entity of a record """
         return self.auth.get("realm_entity")
