@@ -1339,7 +1339,7 @@ $('.copy-link').click(function(e){
             f.comment = None # No Create
 
         s3db.add_custom_callback(tablename,
-                                 "delete",
+                                 "ondelete",
                                  hrm_human_resource_ondelete,
                                  )
 
