@@ -1160,6 +1160,12 @@ class S3RoleManager(S3Method):
         ADMINS = (sr.ADMIN, sr.ORG_ADMIN, sr.ORG_GROUP_ADMIN)
         UNRESTRICTABLE = (sr.ADMIN, sr.AUTHENTICATED, sr.ANONYMOUS)
 
+        # Check whether certain roles require another role to be assignable
+        privileged_roles = current.deployment_settings.get_auth_privileged_roles()
+        if not privileged_roles:
+            privileged_roles = {}
+        elif isinstance(privileged_roles, (tuple, set, list)):
+            privileged_roles = {u:u for u in privileged_roles}
 
         table = auth.settings.table_group
         query = (table.hidden == False) & \
@@ -1174,12 +1180,15 @@ class S3RoleManager(S3Method):
         roles = {}
         for row in rows:
 
-            role = {"l": row.role or row.uuid}
-
             role_id = row.id
+            role_uuid = row.uuid
+
+            role = {"l": row.role or role_uuid}
 
             if role_id in ADMINS:
                 assignable = has_role(role_id)
+            elif role_uuid in privileged_roles:
+                assignable = has_role(privileged_roles[role_uuid])
             else:
                 assignable = role_id not in AUTO
 

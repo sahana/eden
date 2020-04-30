@@ -203,6 +203,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M(c=("vol", "hrm"))(
                     M("Volunteers", c="vol", f="person")(
                         M("Create", m="create", t="pr_person"),
+                        M("Currently Deployed",
+                          vars={"deployed_now": 1},
+                          ),
                         ),
                     M("Deployments", c="hrm", f="delegation")(
                         M(pending_label,
@@ -214,7 +217,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Finalized", vars = {"workflow": "o"}),
                         M("Organizer", m="organize", restrict="HRMANAGER"),
                         ),
-                    M("Administration", link=False)(
+                    M("Administration", link=False, restrict="ADMIN")(
                         M("Occupation Types", c="pr", f="occupation_type"),
                         M("Skill Types", c="hrm", f="skill"),
                         M("Competency Levels", c="hrm", f="competency_rating"),
