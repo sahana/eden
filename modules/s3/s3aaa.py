@@ -2456,7 +2456,7 @@ Please go to %(url)s to approve this user."""
         for language in languages:
             T.force(language)
             subjects[language] = \
-                s3_str(T("%(system_name)s: New User Registration Approval Pending") % \
+                s3_str(T("%(system_name)s - New User Registration Approval Pending") % \
                         {"system_name": system_name})
             messages[language] = s3_str(approve_user_message % \
                         {"system_name": system_name,
@@ -2570,7 +2570,6 @@ Please go to %(url)s to approve this user."""
             first_name = user.first_name
             last_name = user.last_name
             email = user.email
-            base_url = current.response.s3.base_url
             system_name = deployment_settings.get_system_name()
             for language in languages:
                 T.force(language)
