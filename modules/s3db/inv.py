@@ -3503,11 +3503,14 @@ $.filterOptionsS3({
                 # Multiple records
                 # @ToDo: Load all records & sort to closest in time
                 # http://stackoverflow.com/questions/7327689/how-to-generate-a-sequence-of-future-datetimes-in-python-and-determine-nearest-d
-                r.resource.load(fields = ["id",
-                                          "date",
-                                          "send_ref",
-                                          "comments",
-                                          ],
+                fields = ["id",
+                          "date",
+                          "send_ref",
+                          "comments",
+                          ]
+                if resource_name == "recv":
+                    fields.append("recv_ref")
+                r.resource.load(fields = fields,
                                 limit = 2000,
                                 virtual = False,
                                 )
@@ -3540,11 +3543,14 @@ $.filterOptionsS3({
                         # Can't put on Timeline
                         continue
                     send_ref = row.send_ref
-                    recv_row = recv_rows.find(lambda rrow: rrow.send_ref == send_ref).first()
-                    if recv_row is None:
-                        recv_date = send_date
+                    if send_ref is not None:
+                        recv_row = recv_rows.find(lambda rrow: rrow.send_ref == send_ref).first()
+                        if recv_row is None:
+                            recv_date = send_date
+                        else:
+                            recv_date = recv_row.date
                     else:
-                        recv_date = recv_row.date
+                        recv_date = send_date
 
                     if send_date < tl_start:
                         tl_start = send_date
@@ -3584,11 +3590,15 @@ $.filterOptionsS3({
                         # Can't put on Timeline
                         continue
                     send_ref = row.send_ref
-                    send_row = send_rows.find(lambda srow: srow.send_ref == send_ref).first()
-                    if send_row is None:
-                        send_date = recv_date
+                    if send_ref is not None:
+                        send_row = send_rows.find(lambda srow: srow.send_ref == send_ref).first()
+                        if send_row is None:
+                            send_date = recv_date
+                        else:
+                            send_date = send_row.date
                     else:
-                        send_date = send_row.date
+                        send_date = recv_date
+                        send_ref = row.recv_ref
 
                     if send_date < tl_start:
                         tl_start = send_date
