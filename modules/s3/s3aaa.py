@@ -162,11 +162,6 @@ class AuthS3(Auth):
         messages.lock_keys = False
 
         # @ToDo Move these to deployment_settings
-        messages.approve_user = \
-"""Your action is required to approve a New User for %(system_name)s:
-%(first_name)s %(last_name)s
-%(email)s
-Please go to %(url)s to approve this user."""
         messages.email_approver_failed = "Failed to send mail to Approver - see if you can notify them manually!"
         messages.email_sent = "Verification Email sent - please check your email to validate. If you do not receive this email please check your junk email or spam filters"
         messages.email_verification_failed = "Unable to send verification email - either your email is invalid or our email server is down"
@@ -2437,6 +2432,49 @@ $.filterOptionsS3({
             temptable.update_or_insert(**record)
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def s3_approve_user_message(user, languages):
+        """
+            Default construction of Messages to (Org_)Admins to approve a new user
+        """
+
+        approve_user_message = \
+"""Your action is required to approve a New User for %(system_name)s:
+%(first_name)s %(last_name)s
+%(email)s
+Please go to %(url)s to approve this user."""
+
+        T = current.T
+        subjects = {}
+        messages = {}
+        first_name = user.first_name
+        last_name = user.last_name
+        email = user.email
+        user_id = user.id
+        base_url = current.response.s3.base_url
+        system_name = current.deployment_settings.get_system_name()
+        for language in languages:
+            T.force(language)
+            subjects[language] = \
+                s3_str(T("%(system_name)s: New User Registration Approval Pending") % \
+                        {"system_name": system_name})
+            messages[language] = s3_str(approve_user_message % \
+                        {"system_name": system_name,
+                         "first_name": first_name,
+                         "last_name": last_name,
+                         "email": email,
+                         "url": "%(base_url)s/admin/user/%(id)s" % \
+                                {"base_url": base_url,
+                                 "id": user_id,
+                                 },
+                         })
+
+        # Restore language for UI
+        T.force(current.session.s3.language)
+
+        return subjects, messages
+
+    # -------------------------------------------------------------------------
     def s3_verify_user(self, user):
         """"
             Designed to be called when a user is verified through:
@@ -2458,14 +2496,12 @@ $.filterOptionsS3({
         auth_messages = self.messages
         utable = self.settings.table_user
 
-        user_id = user.id
-
         # Lookup the Approver
         approver, organisation_id = self.s3_approver(user)
 
         if deployment_settings.get_auth_registration_requires_approval() and approver:
             approved = False
-            db(utable.id == user_id).update(registration_key = "pending")
+            db(utable.id == user.id).update(registration_key = "pending")
 
             if user.registration_key:
                 # User has just been verified
@@ -2480,7 +2516,7 @@ $.filterOptionsS3({
             if organisation_id and not user.get("organisation_id", None):
                 # Use the whitelist
                 user["organisation_id"] = organisation_id
-                db(utable.id == user_id).update(organisation_id = organisation_id)
+                db(utable.id == user.id).update(organisation_id = organisation_id)
                 link_user_to = deployment_settings.get_auth_registration_link_user_to_default()
                 if link_user_to and not user.get("link_user_to", None):
                     user["link_user_to"] = link_user_to
@@ -2498,7 +2534,7 @@ $.filterOptionsS3({
         if "@" in approver:
             # Look up language of the user
             record = db(utable.email == approver).select(utable.language,
-                                                         limitby=(0, 1)
+                                                         limitby = (0, 1)
                                                          ).first()
             if record:
                 language = record.language
@@ -2518,31 +2554,26 @@ $.filterOptionsS3({
                     languages.append(language)
                 aappend(each_approver)
 
-        T = current.T
-        subjects = {}
-        messages = {}
-        first_name = user.first_name
-        last_name = user.last_name
-        email = user.email
-        base_url = current.response.s3.base_url
-        system_name = deployment_settings.get_system_name()
-        for language in languages:
-            T.force(language)
-            if message == "approve_user":
-                subjects[language] = \
-                    s3_str(T("%(system_name)s - New User Registration Approval Pending") % \
-                            {"system_name": system_name})
-                messages[language] = s3_str(auth_messages.approve_user % \
-                            {"system_name": system_name,
-                             "first_name": first_name,
-                             "last_name": last_name,
-                             "email": email,
-                             "url": "%(base_url)s/admin/user/%(id)s" % \
-                                    {"base_url": base_url,
-                                     "id": user_id,
-                                     },
-                             })
-            elif message == "new_user":
+        if message == "approve_user":
+            # Customised Message construction?
+            approve_user_message = deployment_settings.get_auth_approve_user_message()
+            if callable(approve_user_message):
+                subjects, messages = approve_user_message(user, languages)
+            else:
+                # Default Message construction
+                subjects, messages = self.s3_approve_user_message(user, languages)
+        elif message == "new_user":
+            # @ToDo: Allow custom Message construction
+            T = current.T
+            subjects = {}
+            messages = {}
+            first_name = user.first_name
+            last_name = user.last_name
+            email = user.email
+            base_url = current.response.s3.base_url
+            system_name = deployment_settings.get_system_name()
+            for language in languages:
+                T.force(language)
                 subjects[language] = \
                     s3_str(T("%(system_name)s - New User Registered") % \
                             {"system_name": system_name})
@@ -2553,19 +2584,22 @@ $.filterOptionsS3({
                                                      "email": email
                                                      })
 
-        # Restore language for UI
-        T.force(session.s3.language)
+            # Restore language for UI
+            T.force(session.s3.language)
 
         mailer = self.settings.mailer
         if mailer.settings.server:
+            send_email = mailer.send
             for approver in approvers:
                 language = approver["language"]
-                result = mailer.send(to = approver["email"],
-                                     subject = subjects[language],
-                                     message = messages[language])
+                result = send_email(to = approver["email"],
+                                    subject = subjects[language],
+                                    message = messages[language]
+                                    )
         else:
             # Email system not configured (yet)
             result = None
+
         if not result:
             # Don't prevent registration just because email not configured
             #db.rollback()

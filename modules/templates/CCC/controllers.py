@@ -2099,7 +2099,8 @@ class verify_email(S3CustomController):
         key = current.request.args[-1]
         utable = auth_settings.table_user
         query = (utable.registration_key == key)
-        user = db(query).select(limitby=(0, 1)).first()
+        user = db(query).select(limitby = (0, 1)
+                                ).first()
         if not user:
             redirect(auth_settings.verify_email_next)
 
@@ -2179,23 +2180,51 @@ class verify_email(S3CustomController):
             approvers = db(query).select(utable.email)
 
         # Mail the Approver(s)
+        # NB This is not multi-lingual
+        # For a multi-lingual process, see auth.s3_approve_user_message()
         first_name = user.first_name
         last_name = user.last_name
         email = user.email
         system_name = settings.get_system_name()
-        # NB This is a cut-down version of the original which doesn't support multi-lingual
-        subject = "%(system_name)s - New User Registration Approval Pending" % \
-                    {"system_name": system_name}
-        message = s3_str(auth_messages.approve_user % \
-                    {"system_name": system_name,
-                     "first_name": first_name,
-                     "last_name": last_name,
-                     "email": email,
-                     "url": "%(base_url)s/admin/user/%(id)s" % \
-                            {"base_url": s3.base_url,
-                             "id": user_id,
-                             },
-                     })
+
+        if agency:
+            subject = "%(system_name)s: New Organisation Registration Approval Pending" % \
+                        {"system_name": system_name}
+            message = """Your action is required to approve a New Organisation for %(system_name)s:
+%(organisation)s
+%(first_name)s %(last_name)s
+%(email)s
+Please go to %(url)s to approve this user.""" % \
+                        {"organisation": custom["organisation"],
+                         "system_name": system_name,
+                         "first_name": first_name,
+                         "last_name": last_name,
+                         "email": email,
+                         "url": "%(base_url)s/admin/user/%(id)s" % \
+                                {"base_url": s3.base_url,
+                                 "id": user_id,
+                                 },
+                         }
+        else:
+            otable = s3db.org_organisation
+            org = db(otable.id == organisation_id).select(otable.name,
+                                                          limitby = (0, 1)
+                                                          ).first()
+            subject = "%(system_name)s: New Volunteer Registration Approval Pending" % \
+                        {"system_name": system_name}
+            message = """Your action is required to approve a New Volunteer for %(organisation)s:
+%(first_name)s %(last_name)s
+%(email)s
+Please go to %(url)s to approve this user.""" % \
+                        {"organisation": org.name,
+                         "first_name": first_name,
+                         "last_name": last_name,
+                         "email": email,
+                         "url": "%(base_url)s/admin/user/%(id)s" % \
+                                {"base_url": s3.base_url,
+                                 "id": user_id,
+                                 },
+                         }
 
         mailer = auth_settings.mailer
         result = None

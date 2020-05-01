@@ -968,6 +968,9 @@ class S3Config(Storage):
             ("super", T("Super Editor"))
         ]))
 
+    def get_auth_approve_user_message(self):
+        return self.auth.get("auth_approve_user_message", None)
+
     def get_auth_set_presence_on_login(self):
         return self.auth.get("set_presence_on_login", False)
     def get_auth_ignore_levels_for_presence(self):
