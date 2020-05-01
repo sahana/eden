@@ -3542,9 +3542,9 @@ $.filterOptionsS3({
                     send_ref = row.send_ref
                     recv_row = recv_rows.find(lambda rrow: rrow.send_ref == send_ref).first()
                     if recv_row is None:
-                        # Can't put on Timeline
-                        continue
-                    recv_date = recv_row.date
+                        recv_date = send_date
+                    else:
+                        recv_date = recv_row.date
 
                     if send_date < tl_start:
                         tl_start = send_date
@@ -3553,7 +3553,7 @@ $.filterOptionsS3({
                     send_date = send_date.isoformat()
                     recv_date = recv_date.isoformat()
 
-                    # @ToDo: Build better Comments rather than just using raw Comments
+                    # @ToDo: Build better Caption rather than just using raw Comments
                     caption = description = row.comments or ""
                     link = URL(args = [row.id])
 
@@ -3586,9 +3586,9 @@ $.filterOptionsS3({
                     send_ref = row.send_ref
                     send_row = send_rows.find(lambda srow: srow.send_ref == send_ref).first()
                     if send_row is None:
-                        # Can't put on Timeline
-                        continue
-                    send_date = send_row.date
+                        send_date = recv_date
+                    else:
+                        send_date = send_row.date
 
                     if send_date < tl_start:
                         tl_start = send_date
@@ -3597,7 +3597,7 @@ $.filterOptionsS3({
                     send_date = send_date.isoformat()
                     recv_date = recv_date.isoformat()
 
-                    # @ToDo: Build better Comments rather than just using raw Comments
+                    # @ToDo: Build better Caption rather than just using raw Comments
                     caption = description = row.comments or ""
                     link = URL(args = [row.id])
 
