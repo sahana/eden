@@ -3800,9 +3800,9 @@ class S3SiteTagModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = S3Duplicate(primary=("site_id",
-                                                          "tag",
-                                                          ),
+                       deduplicate = S3Duplicate(primary = ("site_id",
+                                                            "tag",
+                                                            ),
                                                  ),
                        )
 
