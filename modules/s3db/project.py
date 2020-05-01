@@ -1047,7 +1047,7 @@ class S3ProjectModel(S3Model):
 
         if r.representation == "html" and r.name == "project":
 
-            appname = r.application
+            #appname = r.application
             response = current.response
             s3 = response.s3
 

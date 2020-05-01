@@ -775,12 +775,11 @@ class S3IRSModel(S3Model):
 
             T = current.T
             db = current.db
-            s3db = current.s3db
-            appname = r.application
+            #appname = r.application
             response = current.response
             s3 = response.s3
 
-            itable = s3db.doc_image
+            itable = current.s3db.doc_image
 
             # Add core Simile Code
             #s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % appname)
@@ -802,7 +801,15 @@ class S3IRSModel(S3Model):
                 # Multiple records
                 # @ToDo: Load all records & sort to closest in time
                 # http://stackoverflow.com/questions/7327689/how-to-generate-a-sequence-of-future-datetimes-in-python-and-determine-nearest-d
-                r.resource.load(limit = 2000)
+                r.resource.load(fields = ["id",
+                                          "datetime",
+                                          "expiry",
+                                          "name",
+                                          "message",
+                                          ],
+                                limit = 2000,
+                                virtual = False,
+                                )
                 rows = r.resource._rows
 
             data = {"dateTimeFormat": "iso8601",
@@ -811,6 +818,7 @@ class S3IRSModel(S3Model):
             now = r.utcnow
             tl_start = tl_end = now
             events = []
+            eappend = events.append
             for row in rows:
                 # Dates
                 start = row.datetime or ""
@@ -835,17 +843,17 @@ class S3IRSModel(S3Model):
                 if image:
                     image = image.url or ""
                 # URL
-                link = URL(args=[row.id])
-                events.append({"start": start,
-                               "end": end,
-                               "title": row.name,
-                               "caption": row.message or "",
-                               "description": row.message or "",
-                               "image": image or "",
-                               "link": link or "",
-                               # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
-                               #"color" : "blue',
-                               })
+                link = URL(args = [row.id])
+                eappend({"start": start,
+                         "end": end,
+                         "title": row.name,
+                         "caption": row.message or "",
+                         "description": row.message or "",
+                         "image": image or "",
+                         "link": link,
+                         # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
+                         #"color" : "blue",
+                         })
             data["events"] = events
             data = json.dumps(data, separators=SEPARATORS)
 

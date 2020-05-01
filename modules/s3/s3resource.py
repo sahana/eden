@@ -1056,13 +1056,13 @@ class S3Resource(object):
     # Data Object API
     # -------------------------------------------------------------------------
     def load(self,
-             fields=None,
-             skip=None,
-             start=None,
-             limit=None,
-             orderby=None,
-             virtual=True,
-             cacheable=False):
+             fields = None,
+             skip = None,
+             start = None,
+             limit = None,
+             orderby = None,
+             virtual = True,
+             cacheable = False):
         """
             Loads records from the resource, applying the current filters,
             and stores them in the instance.
