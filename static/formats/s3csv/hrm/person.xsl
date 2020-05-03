@@ -1079,7 +1079,7 @@
                     <xsl:otherwise>org_office</xsl:otherwise>
                 </xsl:choose>
             </xsl:variable>
-            <xsl:if test="$type=1 or $type=''">
+            <xsl:if test="$type=1 or $type=2 or $type=''">
                 <reference field="site_id">
                     <xsl:attribute name="resource">
                         <xsl:value-of select="$resourcename"/>

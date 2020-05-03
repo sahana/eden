@@ -1814,7 +1814,7 @@ class S3LocationFilter(S3FilterWidget):
 
             # Add to result rows
             if lx:
-                rows = rows & lx if rows else lx
+                rows = (rows | lx) if rows else lx
 
             # Pick subset for parent lookup
             if lx and location_ids:
