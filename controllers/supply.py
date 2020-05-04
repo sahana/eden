@@ -41,6 +41,37 @@ def catalog_item():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def distribution_rheader(r):
+    if r.representation == "html":
+        distribution = r.record
+        if distribution:
+            T = current.T
+            tabs = [(T("Edit Details"), None),
+                    (T("Beneficiaries"), "person"),
+                    ]
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            table = r.table
+
+            rheader = DIV(TABLE(TR(TH("%s: " % table.parameter_id.label),
+                                   table.parameter_id.represent(distribution.parameter_id),
+                                   ),
+                                TR(TH("%s: " % table.date.label),
+                                   table.date.represent(distribution.date),
+                                   ),
+                                #TR(TH("%s: " % table.location_id.label),
+                                #   table.location_id.represent(distribution.location_id),
+                                #   ),
+                                #TR(TH("%s: " % table.organisation_id.label),
+                                #   table.organisation_id.represent(distribution.organisation_id),
+                                #   ),
+                                ),
+                          rheader_tabs
+                          )
+            return rheader
+    return None
+
+# -----------------------------------------------------------------------------
 def distribution():
     """ RESTful CRUD controller """
 
@@ -59,7 +90,7 @@ def distribution():
     #    return True
     #s3.prep = prep
 
-    return s3_rest_controller()
+    return s3_rest_controller(rheader = distribution_rheader)
 
 # -----------------------------------------------------------------------------
 def distribution_report():

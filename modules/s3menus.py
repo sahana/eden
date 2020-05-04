@@ -1400,6 +1400,9 @@ class S3OptionsMenu(object):
                         M("Search Shipped Items", f="track_item"),
                         M("Timeline", args="timeline"),
                     ),
+                    M("Distributions", c="supply", f="distribution")(
+                        M("Create", m="create"),
+                    ),
                     M("Items", c="supply", f="item", m="summary")(
                         M("Create", m="create"),
                         M("Import", f="catalog_item", m="import", p="create"),

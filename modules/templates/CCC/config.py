@@ -5276,8 +5276,13 @@ $('.copy-link').click(function(e){
                                              ),
                             )
 
+        table = s3db.supply_person_item
+
         # No Hyperlink for Items (don't have permissions anyway)
-        s3db.supply_person_item.item_id.represent = s3db.supply_ItemRepresent()
+        table.item_id.represent = s3db.supply_ItemRepresent()
+
+        # Mandatory Status
+        table.status_id.requires = table.status_id.requires.other
 
         current.response.s3.crud_strings[tablename] = Storage(
             title_display = T("Donation Details"),

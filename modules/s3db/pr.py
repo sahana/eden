@@ -7525,7 +7525,8 @@ def pr_image_library_represent(image_name, format=None, size=None):
         query = query & (table.width == size[0]) & \
                         (table.height == size[1])
     image = current.db(query).select(table.new_name,
-                                     limitby=(0, 1)).first()
+                                     limitby = (0, 1)
+                                     ).first()
     if image:
         return image.new_name
     else:
@@ -7543,7 +7544,11 @@ def pr_url_represent(url):
     image = pr_image_library_represent(image, size=size)
     url_small = URL(c="default", f="download", args=image)
 
-    return DIV(A(IMG(_src=url_small, _height=60), _href=url))
+    return DIV(A(IMG(_src = url_small,
+                     _height = 60,
+                     ),
+                 _href = url,
+                 ))
 
 # =============================================================================
 def pr_person_comment(title=None, comment=None, caller=None, child=None):
@@ -7595,9 +7600,12 @@ def pr_rheader(r, tabs=None):
                 rheader = DIV(
                     A(s3_avatar_represent(record_id,
                                           "pr_person",
-                                          _class="rheader-avatar"),
-                      _href=URL(f="person", args=[record_id, "image"],
-                                vars = r.get_vars),
+                                          _class = "rheader-avatar",
+                                          ),
+                      _href = URL(f="person",
+                                  args = [record_id, "image"],
+                                  vars = r.get_vars,
+                                  ),
                       ),
                     TABLE(
                         TR(TH("%s: " % T("Name")),
@@ -7854,7 +7862,9 @@ class pr_AssignMethod(S3Method):
                     query = ~(FS("id").belongs(selected))
                     presource = s3db.resource("pr_person",
                                               alias = self.component,
-                                              filter=query, vars=filters)
+                                              filter = query,
+                                              vars = filters
+                                              )
                     rows = presource.select(["id"], as_rows=True)
                     selected = [str(row.id) for row in rows]
 
@@ -8212,13 +8222,13 @@ class pr_Contacts(S3Method):
                        )
         contacts = self.contacts(r,
                                  pe_id,
-                                 allow_create=allow_create,
-                                 method=r.method,
+                                 allow_create = allow_create,
+                                 method = r.method,
                                  )
         if contacts:
             contents.append(contacts)
         emergency = self.emergency(pe_id,
-                                   allow_create=allow_create,
+                                   allow_create = allow_create,
                                    )
         if emergency:
             contents.append(emergency)
@@ -8228,10 +8238,12 @@ class pr_Contacts(S3Method):
         s3 = response.s3
         if s3.debug:
             s3.scripts.append(URL(c="static", f="scripts",
-                                  args=["S3", "s3.ui.contacts.js"]))
+                                  args = ["S3", "s3.ui.contacts.js"],
+                                  ))
         else:
             s3.scripts.append(URL(c="static", f="scripts",
-                                  args=["S3", "s3.ui.contacts.min.js"]))
+                                  args = ["S3", "s3.ui.contacts.min.js"],
+                                  ))
 
         # Widget options
         T = current.T
@@ -8244,7 +8256,7 @@ class pr_Contacts(S3Method):
         widget_opts = {"controller": r.controller,
                        "personID": record.id,
                        "access": access,
-                       "cancelButtonText": str(T("Cancel")),
+                       "cancelButtonText": s3_str(T("Cancel")),
                        }
 
         # Apply widget
@@ -8257,7 +8269,9 @@ class pr_Contacts(S3Method):
 
         title = self.crud_string(r.tablename, "title_display")
 
-        return {"contents": contents, "title": title}
+        return {"contents": contents,
+                "title": title,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -8268,17 +8282,23 @@ class pr_Contacts(S3Method):
         has_permission = current.auth.s3_has_permission
 
         if has_permission("update", table, record_id=record_id):
-            edit_btn = A(T("Edit"), _class="edit-btn action-btn fright")
+            edit_btn = A(T("Edit"),
+                         _class = "edit-btn action-btn fright",
+                         )
         else:
             edit_btn = SPAN()
         if has_permission("delete", table, record_id=record_id):
-            delete_btn = A(T("Delete"), _class="delete-btn-ajax fright")
+            delete_btn = A(T("Delete"),
+                           _class = "delete-btn-ajax fright",
+                           )
         else:
             delete_btn = SPAN()
         return DIV(delete_btn,
                    edit_btn,
-                   DIV(_class="inline-throbber", _style="display:none"),
-                   _class="pr-contact-actions medium-3 columns",
+                   DIV(_class = "inline-throbber",
+                       _style = "display:none",
+                       ),
+                   _class = "pr-contact-actions medium-3 columns",
                    )
 
     # -------------------------------------------------------------------------
