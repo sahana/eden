@@ -1731,13 +1731,13 @@ def config(settings):
             restricted = True,
             module_type = 10,
         )),
-        #("msg", Storage(
-        #    name_nice = T("Messaging"),
-        #    #description = "Sends & Receives Alerts via Email & SMS",
-        #    restricted = True,
-        #    # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
-        #    module_type = None,
-        #)),
+        ("msg", Storage(
+            name_nice = T("Messaging"),
+            #description = "Sends & Receives Alerts via Email & SMS",
+            restricted = True,
+            # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
+            module_type = None,
+        )),
         #("supply", Storage(
         #    name_nice = T("Supply Chain Management"),
         #    #description = "Used within Inventory Management, Request Management and Asset Management",
