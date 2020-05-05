@@ -2,7 +2,7 @@
  * Afghan Solar Hijri Calendar
  * Based on the "Persian calendar for jQuery v2.0.0" by Keith Wood (http://keith-wood.name/calendars.html)
  *
- * @copyright 2015-2019 (c) Sahana Software Foundation
+ * @copyright 2015-2020 (c) Sahana Software Foundation
  * @license MIT
  */
 

@@ -3,7 +3,7 @@
 """
     S3Codec to produce printable data cards (e.g. ID cards)
 
-    @copyright: 2018-2019 (c) Sahana Software Foundation
+    @copyright: 2018-2020 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person

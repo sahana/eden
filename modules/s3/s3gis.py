@@ -5,7 +5,7 @@
     @requires: U{B{I{gluon}} <http://web2py.com>}
     @requires: U{B{I{shapely}} <http://trac.gispython.org/lab/wiki/Shapely>}
 
-    @copyright: (c) 2010-2019 Sahana Software Foundation
+    @copyright: (c) 2010-2020 Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
