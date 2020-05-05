@@ -43,6 +43,17 @@ def config(settings):
                                         "pr_group", # Volunteer Groups
                                         "pr_person", # Donors
                                         )
+    settings.auth.privileged_roles = {"AGENCY": "ADMIN",
+                                      "CASE_ADMIN": "ADMIN",
+                                      "DONOR": "ADMIN",
+                                      "DONOR_ADMIN": "ADMIN",
+                                      "GROUP_ADMIN": "ADMIN",
+                                      "GROUPS_ADMIN": "ADMIN",
+                                      "MAP_ADMIN": "ADMIN",
+                                      "RESERVE": "ADMIN",
+                                      "RESERVE_ADMIN": "ADMIN",
+                                      "RESERVE_READER": "ADMIN",
+                                      }
 
     # -------------------------------------------------------------------------
     # L10n (Localization) settings
