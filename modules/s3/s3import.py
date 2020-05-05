@@ -2847,6 +2847,7 @@ class S3ImportItem(object):
                          item_id = item_id,
                          tablename = self.tablename,
                          record_uid = self.uid,
+                         skip = self.skip,
                          error = self.error or "",
                          )
 
@@ -2925,6 +2926,7 @@ class S3ImportItem(object):
         tablename = row.tablename
         self.id = None
         self.uid = row.record_uid
+        self.skip = row.skip
         if row.data is not None:
             self.data = pickle.loads(row.data)
         else:
@@ -3724,6 +3726,7 @@ class S3ImportJob():
                             Field("tablename", length=128),
                             #Field("record_id", "integer"),
                             Field("record_uid"),
+                            Field("skip", "boolean"),
                             Field("error", "text"),
                             Field("data", "blob"),
                             Field("element", "text"),
