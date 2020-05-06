@@ -1,3 +1,7 @@
 Name,Module,Resource,Body,Comments
-SubjectDisabled,hrm,delegation,"%(system_name)s: Volunteer Deployment of %(person)s to %(org)s has been Approved","Rename into 'Subject' to activate notifications"
-Message,hrm,delegation,"Volunteer %(person)s has been Approved for a Deployment to %(org)s from %(start_date)s to %(end_date)s.",
+Subject OrganisationDisabled,hrm,delegation,"{system}: Volunteer Deployment of {volunteer_id} has been Approved","Rename into 'Subject Organisation' to activate notifications"
+Message Organisation,hrm,delegation,"Volunteer {volunteer_id} {volunteer_name} has been Approved for a Deployment to {organisation} from {start} to {end}.",
+Subject VolunteerDisabled,hrm,delegation,"{system}: Your Deployment to {organisation} has been Approved","Rename into 'Subject Volunteer' to activate notifications"
+Message Volunteer,hrm,delegation,"Your Deployment to {organisation} from {start} to {end} has been Approved.",
+Subject OfficeDisabled,hrm,delegation,"{system}: Volunteer Deployment of {volunteer_id} has been Approved","Rename into 'Subject Organisation' to activate notifications"
+Message Office,hrm,delegation,"Volunteer {volunteer_id} {volunteer_name} has been Approved for a Deployment to {organisation} from {start} to {end}.",
