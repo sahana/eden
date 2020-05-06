@@ -3994,53 +3994,87 @@ $('.copy-link').click(function(e){
             person_ids = session.s3.get("ccc_message_person_ids")
             if person_ids is None:
                 session.warning = current.T("No people selected to send notifications to!")
+                return
+            # Clear from session
+            del session.s3["ccc_message_person_ids"]
+
+            reply_to = None
+            sender = None
+
+            # Construct Email message
+            subject = form_vars_get("name")
+            if subject is None:
+                auth = current.auth
+                if not auth.s3_has_role("AGENCY"):
+                    # ORG_ADMIN messaging Volunteers
+                    user = auth.user
+                    otable = s3db.org_organisation
+                    org = db(otable.id == user.organisation_id).select(otable.name,
+                                                                       limitby = (0, 1)
+                                                                       ).first()
+                    org_name = org.name
+                    system_name_short = settings.get_system_name_short()
+                    subject = "[%s] Message from %s" % \
+                        (system_name_short,
+                         org_name,
+                         )
+                    reply_to = "%s %s <%s>" % (user.first_name,
+                                               user.last_name,
+                                               user.email,
+                                               )
+                    sender = settings.get_mail_sender()
+                    if sender is not None:
+                        if "<" in sender:
+                            sender = sender.split("<")[1][:-1]
+                        sender = "'%s via %s' <%s>" % (org_name,
+                                                       system_name_short,
+                                                       sender,
+                                                       )
+
+            message = form_vars_get("description")
+            if message is None:
+                message = ""
             else:
-                # Clear from session
-                del session.s3["ccc_message_person_ids"]
+                # Convert relative paths to absolute
+                from lxml import etree, html
+                #parser = etree.HTMLParser()
+                message = message.strip()
+                tree = html.fragment_fromstring(message, create_parent=True)
+                tree.make_links_absolute(settings.get_base_public_url())
+                message = etree.tostring(tree, pretty_print=False, encoding="utf-8").decode("utf-8")
+                # Need to add the HTML tags around the HTML so that Mail recognises it as HTML
+                message = "<html>%s</html>" % message
 
-                # Construct Email message
-                subject = form_vars_get("name")
-                message = form_vars_get("description")
-                if message is None:
-                    message = ""
-                else:
-                    # Convert relative paths to absolute
-                    from lxml import etree, html
-                    parser = etree.HTMLParser()
-                    message = message.strip()
-                    tree = html.fragment_fromstring(message, create_parent=True)
-                    tree.make_links_absolute(settings.get_base_public_url())
-                    message = etree.tostring(tree, pretty_print=False, encoding="utf-8").decode("utf-8")
-                    # Need to add the HTML tags around the HTML so that Mail recognises it as HTML
-                    message = "<html>%s</html>" % message
+            # Lookup Emails
+            ptable = s3db.pr_person
+            ctable = s3db.pr_contact
+            query = (ptable.id.belongs(person_ids)) & \
+                    (ptable.pe_id == ctable.pe_id) & \
+                    (ctable.contact_method == "EMAIL") & \
+                    (ctable.deleted == False)
+            emails = db(query).select(ctable.value,
+                                      distinct = True)
 
-                # Lookup Emails
-                ptable = s3db.pr_person
-                ctable = s3db.pr_contact
-                query = (ptable.id.belongs(person_ids)) & \
-                        (ptable.pe_id == ctable.pe_id) & \
-                        (ctable.contact_method == "EMAIL") & \
-                        (ctable.deleted == False)
-                emails = db(query).select(ctable.value,
-                                          distinct = True)
+            # Send Email to each Person
+            send_email = current.msg.send_email
+            for email in emails:
+                send_email(to = email.value,
+                           subject = subject,
+                           message = message,
+                           attachments = attachments,
+                           reply_to = reply_to,
+                           sender = sender,
+                           )
 
-                # Send Email to each Person
-                send_email = current.msg.send_email
-                for email in emails:
-                    send_email(to = email.value,
-                               subject = subject,
-                               message = message,
-                               attachments = attachments,
-                               )
-                # Set the Realm Entity
-                # No Realm Entity as should be visible to all ORG_ADMINs & all Agency Group
-                #organisation_id = user.organisation_id
-                #if organisation_id:
-                #    otable = s3db.org_organisation
-                #    org = db(otable.id == organisation_id).select(otable.pe_id,
-                #                                                  limitby = (0, 1)
-                #                                                  ).first()
-                #    db(ttable.id == task_id).update(realm_entity = org.pe_id)
+            # Set the Realm Entity
+            # No Realm Entity as should be visible to all ORG_ADMINs & all Agency Group
+            #organisation_id = user.organisation_id
+            #if organisation_id:
+            #    otable = s3db.org_organisation
+            #    org = db(otable.id == organisation_id).select(otable.pe_id,
+            #                                                  limitby = (0, 1)
+            #                                                  ).first()
+            #    db(ttable.id == task_id).update(realm_entity = org.pe_id)
 
             return
 
@@ -4265,7 +4299,23 @@ $('.copy-link').click(function(e){
         f.comment = None
         if r.method == "create":
             table.comments.readable = table.comments.writable = False
+            person_ids = r.get_vars.get("person_ids")
+            if person_ids is not None:
+                auth = current.auth
+                if not auth.s3_has_role("AGENCY"):
+                    # ORG_ADMIN messaging Volunteers
+                    otable = s3db.org_organisation
+                    org = current.db(otable.id == auth.user.organisation_id).select(otable.name,
+                                                                                    limitby = (0, 1)
+                                                                                    ).first()
+                    f = table.name
+                    f.default = "[%s] Message from %s" % \
+                        (settings.get_system_name_short(),
+                         org.name,
+                         )
+                    f.writable = False
         else:
+            auth = current.auth
             has_role = current.auth.s3_has_role
             if has_role("ORG_ADMIN") or \
                has_role("AGENCY") or \
