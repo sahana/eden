@@ -5,7 +5,7 @@ from gluon import current
 from s3 import s3_fullname, s3_str
 
 # =============================================================================
-class safesub(dict):
+class SafeSub(dict):
     """
         Helper class for safe string variable substitution
     """
@@ -23,7 +23,8 @@ class DeploymentNotifications(object):
         self.delegation_id = delegation_id
 
     # -------------------------------------------------------------------------
-    def compose(self, subject, message, data):
+    @staticmethod
+    def compose(subject, message, data):
         """
             Lookup a subject/message template from CMS and compose subject
             and message using data
@@ -60,7 +61,7 @@ class DeploymentNotifications(object):
         s3db = current.s3db
 
         # Sanitize data
-        data = safesub(data)
+        data = SafeSub(data)
         data["system"] = current.deployment_settings.get_system_name_short()
         for key in data:
             if data[key] is None:
@@ -100,6 +101,23 @@ class DeploymentNotifications(object):
         return subject_out, message_out
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def lookup_contact(pe_id, contact_method="EMAIL"):
+
+        db = current.db
+        s3db = current.s3db
+
+        ctable = s3db.pr_contact
+        query = (ctable.pe_id == pe_id) & \
+                (ctable.contact_method == contact_method) & \
+                (ctable.deleted == False)
+        contact = db(query).select(ctable.value,
+                                   limitby = (0, 1),
+                                   ).first()
+
+        return contact.value if contact else None
+
+    # -------------------------------------------------------------------------
     def data(self):
         """
             Lookup data to pass into template
@@ -108,70 +126,53 @@ class DeploymentNotifications(object):
         db = current.db
         s3db = current.s3db
 
-        settings = current.deployment_settings
-
         # Lookup delegation
-        table = s3db.hrm_delegation
-        query = (table.id == self.delegation_id)
-        delegation = db(query).select(table.status,
-                                      table.organisation_id,
-                                      table.person_id,
-                                      table.date,
-                                      table.end_date,
-                                      table.comments,
-                                      limitby = (0, 1),
-                                      ).first()
-        if not delegation: # or delegation.status != "APPR":
-            return None
-
-        data = {"start": table.date.represent(delegation.date),
-                "end": table.end_date.represent(delegation.end_date),
-                "comments": delegation.comments,
-                }
-
-        # Lookup volunteer person
+        dtable = s3db.hrm_delegation
         ptable = s3db.pr_person
-        query = (ptable.id == delegation.person_id)
-        person = db(query).select(ptable.pe_id,
-                                  ptable.pe_label,
-                                  ptable.first_name,
-                                  ptable.middle_name,
-                                  ptable.last_name,
-                                  limitby = (0, 1),
-                                  ).first()
-        if not person:
+        join = ptable.on(ptable.id == dtable.person_id)
+        query = (dtable.id == self.delegation_id)
+        row = db(query).select(dtable.status,
+                               dtable.organisation_id,
+                               #dtable.person_id,
+                               dtable.date,
+                               dtable.end_date,
+                               dtable.comments,
+                               ptable.id,
+                               ptable.pe_id,
+                               ptable.pe_label,
+                               ptable.first_name,
+                               ptable.middle_name,
+                               ptable.last_name,
+                               join = join,
+                               limitby = (0, 1),
+                               ).first()
+        if not row: # or row.status != "APPR":
             return None
-        data["volunteer_id"] = person.pe_label
-        data["volunteer_name"] = s3_fullname(person)
-        data["volunteer_first_name"] = person.first_name
-        data["volunteer_last_name"] = person.last_name
 
-        # Lookup volunteer email
-        ctable = s3db.pr_contact
-        query = (ctable.pe_id == person.pe_id) & \
-                (ctable.contact_method == "EMAIL") & \
-                (ctable.deleted == False)
-        contact = db(query).select(ctable.value,
-                                   limitby = (0, 1),
-                                   ).first()
-        data["volunteer_email"] = contact.value if contact else None
+        delegation = row.hrm_delegation
+        person = row.pr_person
+        if not person.id:
+            return None
 
-        # Lookup volunteer mobile phone
-        ctable = s3db.pr_contact
-        query = (ctable.pe_id == person.pe_id) & \
-                (ctable.contact_method == "SMS") & \
-                (ctable.deleted == False)
-        contact = db(query).select(ctable.value,
-                                   limitby = (0, 1),
-                                   ).first()
-        data["volunteer_phone"] = contact.value if contact else None
+        lookup_contact = self.lookup_contact
+
+        data = {"start": dtable.date.represent(delegation.date),
+                "end": dtable.end_date.represent(delegation.end_date),
+                "comments": delegation.comments,
+                "volunteer_id": person.pe_label,
+                "volunteer_name": s3_fullname(person),
+                "volunteer_first_name": person.first_name,
+                "volunteer_last_name": person.last_name,
+                "volunteer_email": lookup_contact(person.pe_id, "EMAIL"),
+                "volunteer_phone": lookup_contact(person.pe_id, "SMS"),
+                }
 
         # Lookup volunteer office
         htable = s3db.hrm_human_resource
         stable = s3db.org_office
         left = stable.on((stable.site_id == htable.site_id) & \
                          (stable.deleted == False))
-        query = (htable.person_id == delegation.person_id) & \
+        query = (htable.person_id == person.id) & \
                 (htable.type == 2) & \
                 (htable.deleted == False)
         row = db(query).select(stable.name,
@@ -182,9 +183,10 @@ class DeploymentNotifications(object):
                                orderby = ~htable.created_on,
                                ).first()
         if row and row.name:
-            data["volunteer_office"] = row.name
-            data["volunteer_office_email"] = row.email
-            data["volunteer_office_phone"] = row.phone1
+            data.update({"volunteer_office": row.name,
+                         "volunteer_office_email": row.email,
+                         "volunteer_office_phone": row.phone1,
+                         })
 
         # Lookup requesting org and office
         otable = s3db.org_organisation
@@ -199,32 +201,19 @@ class DeploymentNotifications(object):
                                orderby = stable.created_on,
                                ).first()
         if row:
-            data["organisation"] = row.org_organisation.name
-            data["organisation_email"] = row.org_office.email
-            data["organisation_phone"] = row.org_office.phone1
+            data.update({"organisation": row.org_organisation.name,
+                         "organisation_email": row.org_office.email,
+                         "organisation_phone": row.org_office.phone1,
+                         })
 
         # Lookup current user (=coordinator)
         user = current.auth.user
-        if user:
-            data["coordinator"] = s3_fullname(pe_id=user.pe_id)
-            ctable = s3db.pr_contact
-            query = (ctable.pe_id == user.pe_id) & \
-                    (ctable.contact_method == "EMAIL") & \
-                    (ctable.deleted == False)
-            contact = db(query).select(ctable.value,
-                                       limitby = (0, 1),
-                                       ).first()
-            data["coordinator_email"] = contact.value if contact else None
-
-            # Lookup volunteer mobile phone
-            ctable = s3db.pr_contact
-            query = (ctable.pe_id == user.pe_id) & \
-                    (ctable.contact_method == "SMS") & \
-                    (ctable.deleted == False)
-            contact = db(query).select(ctable.value,
-                                       limitby = (0, 1),
-                                       ).first()
-            data["coordinator_phone"] = contact.value if contact else None
+        if user and user.pe_id:
+            user_pe_id = user.pe_id
+            data.update({"coordinator": s3_fullname(pe_id=user_pe_id),
+                         "coordinator_email": lookup_contact(user_pe_id, "EMAIL"),
+                         "coordinator_phone": lookup_contact(user_pe_id, "SMS"),
+                         })
 
         return data
 
