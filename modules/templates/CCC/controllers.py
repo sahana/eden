@@ -821,6 +821,16 @@ class personAdditional(S3Method):
                                                   "filterby": {"tag": "workplace_details"},
                                                   "multiple": False,
                                                   },
+                                                 {"name": "other_vol",
+                                                  "joinby": "person_id",
+                                                  "filterby": {"tag": "other_vol"},
+                                                  "multiple": False,
+                                                  },
+                                                 {"name": "other_vol_details",
+                                                  "joinby": "person_id",
+                                                  "filterby": {"tag": "other_vol_details"},
+                                                  "multiple": False,
+                                                  },
                                                  ),
                                 )
 
@@ -890,13 +900,23 @@ class personAdditional(S3Method):
                             SQLFORM.widgets.radio.widget(f, v,
                                                          style="divs")
 
+            other_vol = components_get("other_vol")
+            f = other_vol.table.value
+            f.requires = IS_IN_SET({"0": T("No"),
+                                    "1": T("Yes"),
+                                    })
+            f.widget = lambda f, v: \
+                            SQLFORM.widgets.radio.widget(f, v,
+                                                         style="divs")
+
             form = S3SQLCustomForm((T("That require significant physical activity (including lifting and carrying) and may involve being outdoors (e.g. clean up of affected properties)"), "significant_physical.value"),
                                    (T("That require some physical activity and may involve being outdoors (e.g. door knocking)"), "some_physical.value"),
                                    (T("That require little physical activity and are based indoors (e.g. preparing refreshments)"), "little_physical.value"),
                                    (T("If you wish, you can give us some further information on any fitness, medical or mobility issues that might limit the kind of activities you are able to volunteer for; this will help us to suggest suitable opportunities for you"), "health_details.value"),
                                    (T("Are you volunteering under your workplace volunteering scheme?"), "workplace.value"),
                                    (T("If yes please name your employer"), "workplace_details.value"),
-                                   (T("Are you DBS checked?"), "dbs.value"),
+                                   (T("Are you volunteering for any organisation not registered with Support Cumbria?"), "other_vol.value"),
+                                   (T("If Yes please name organisation and outline details"), "other_vol_details.value"),
                                    (T("Are you DBS checked?"), "dbs.value"),
                                    #(T("Do you have any unspent convictions?"), "convictions.value"),
                                    (T("Please indicate Faith support you can offer"), "faith_support.value"),
