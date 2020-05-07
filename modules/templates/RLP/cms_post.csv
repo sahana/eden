@@ -3,5 +3,5 @@ Subject OrganisationDisabled,hrm,delegation,"{system}: Volunteer Deployment of {
 Message Organisation,hrm,delegation,"Volunteer {volunteer_id} {volunteer_name} has been Approved for a Deployment to {organisation} from {start} to {end}.",
 Subject VolunteerDisabled,hrm,delegation,"{system}: Your Deployment to {organisation} has been Approved","Rename into 'Subject Volunteer' to activate notifications"
 Message Volunteer,hrm,delegation,"Your Deployment to {organisation} from {start} to {end} has been Approved.",
-Subject OfficeDisabled,hrm,delegation,"{system}: Volunteer Deployment of {volunteer_id} has been Approved","Rename into 'Subject Organisation' to activate notifications"
+Subject OfficeDisabled,hrm,delegation,"{system}: Volunteer Deployment of {volunteer_id} has been Approved","Rename into 'Subject Office' to activate notifications"
 Message Office,hrm,delegation,"Volunteer {volunteer_id} {volunteer_name} has been Approved for a Deployment to {organisation} from {start} to {end}.",
