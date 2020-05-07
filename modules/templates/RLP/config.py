@@ -1496,8 +1496,29 @@ def config(settings):
                            ]
             if multiple_orgs:
                 list_fields.insert(0, "organisation_id")
+
+            axes = [(T("Pool"), "person_id$pool_membership.group_id"),
+                    (T("Deploying Organisation"), "organisation_id"),
+                    "status",
+                    ]
+            facts = [(T("Number of Deployments"), "count(id)"),
+                     (T("Number of Volunteers"), "count(person_id)"),
+                     ]
+            default_rows = "organisation_id" if multiple_orgs else "status"
+            report_options = {
+                "rows": axes,
+                "cols": axes,
+                "fact": facts,
+                "defaults": {"rows": default_rows,
+                             "cols": "person_id$pool_membership.group_id",
+                             "fact": facts[0],
+                             "totals": True,
+                             },
+                }
+
             r.resource.configure(list_fields = list_fields,
                                  orderby = "hrm_delegation.date",
+                                 report_options = report_options,
                                  )
             return result
         s3.prep = custom_prep

@@ -217,6 +217,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Finalized", vars = {"workflow": "o"}),
                         M("Organizer", m="organize", restrict="HRMANAGER"),
                         ),
+                    M("Statistics", link=False)(
+                        M("Deployments", c="hrm", f="delegation", m="report"),
+                        ),
                     M("Administration", link=False, restrict="ADMIN")(
                         M("Occupation Types", c="pr", f="occupation_type"),
                         M("Skill Types", c="hrm", f="skill"),
