@@ -70,8 +70,8 @@ def config(settings):
     # Languages used in the deployment (used for Language Toolbar, GIS Locations, etc)
     # http://www.loc.gov/standards/iso639-2/php/code_list.php
     settings.L10n.languages = OrderedDict([
-       ("en", "English"),
        ("de", "German"),
+       ("en", "English"),
     ])
     # Default language for Language Toolbar (& GIS Locations in future)
     settings.L10n.default_language = "de"
@@ -79,6 +79,9 @@ def config(settings):
     #settings.L10n.display_toolbar = False
     # Default timezone for users
     settings.L10n.timezone = "Europe/Berlin"
+    # Default date/time formats
+    settings.L10n.date_format = "%d.%m.%Y"
+    settings.L10n.time_format = "%H:%M"
     # Number formats (defaults to ISO 31-0)
     # Decimal separator for numbers (defaults to ,)
     settings.L10n.decimal_separator = "."
@@ -1185,130 +1188,18 @@ def config(settings):
         db = current.db
         s3db = current.s3db
 
-        # Load the delegation record
-        # - fields are often read-only in forms, so likely not in form.vars
+        # Check current status
         table = s3db.hrm_delegation
         row = db(table.id == record_id).select(table.status,
-                                               table.organisation_id,
                                                table.person_id,
-                                               table.date,
-                                               table.end_date,
-                                               table.comments,
                                                limitby = (0, 1),
                                                ).first()
-        status = row.status
-        person_id = row.person_id
-        if status != "APPR" or open_pool_member(person_id):
+        if not row or row.status != "APPR" or open_pool_member(row.person_id):
             # Not approved, or open pool member => no action
             return
 
-        # Details for email
-        start_date = row.date
-        end_date = row.end_date
-        comments = row.comments
-
-        # Send Email to the Org, the Coordinator and the Volunteer
-
-        # Lookup details of requesting org
-        organisation_id = row.organisation_id
-        otable = s3db.org_organisation
-        org = db(otable.id == organisation_id).select(otable.name,
-                                                      limitby = (0, 1)
-                                                      ).first()
-        org_name = org.name
-
-        # Lookup details of requested volunteer
-        ptable = s3db.pr_person
-        person = db(ptable.id == person_id).select(ptable.pe_label,
-                                                   limitby = (0, 1)
-                                                   ).first()
-        pe_label = person.pe_label
-
-        # Compose Mail
-        # Subject & Message read from CMS
-        ctable = s3db.cms_post
-        ltable = s3db.cms_post_module
-        query = (ltable.module == "hrm") & \
-                (ltable.resource == "delegation") & \
-                (ltable.post_id == ctable.id) & \
-                (ctable.name == "Subject") & \
-                (ctable.deleted == False)
-        subject = db(query).select(ctable.body,
-                                   limitby = (0, 1)
-                                   ).first()
-        if not subject:
-            # Disabled
-            return
-
-        try:
-            subject = subject.body % \
-                    {"system_name": settings.get_system_name_short(),
-                     "person": pe_label,
-                     "org": org_name,
-                     }
-        except:
-            current.session.warning = T("Notifications not sent - invalid Subject")
-            return
-
-        query = (ltable.module == "hrm") & \
-                (ltable.resource == "delegation") & \
-                (ltable.post_id == ctable.id) & \
-                (ctable.name == "Message") & \
-                (ctable.deleted == False)
-        message = db(query).select(ctable.body,
-                                   limitby = (0, 1)
-                                   ).first()
-        if message and message.body:
-            message = message.body % \
-                        {"person": pe_label,
-                         "org": org_name,
-                         "start_date": start_date,
-                         "end_date": end_date,
-                         }
-        else:
-            message = ""
-        if comments is not None:
-            message = "%s\n%s" % (message, comments)
-
-        # Lookup Email Addresses to send to
-        #ctable = s3db.pr_contact
-        #query = (ptable.id == person_id) & \
-        #        (ptable.pe_id == ctable.pe_id) & \
-        #        (ctable.contact_method == "EMAIL") & \
-        #        (ctable.deleted == False)
-        #emails = db(query).select(ctable.value)
-        #emails = [e.value for e in emails]
-        emails = []
-
-        stable = s3db.org_office
-        query = (stable.organisation_id == organisation_id)
-        office = db(query).select(stable.email,
-                                  limitby = (0, 1),
-                                  orderby = stable.created_on
-                                  ).first()
-        try:
-            org_email = office.email
-        except AttributeError:
-            org_email = None
-        if org_email is not None:
-            emails.append(org_email)
-
-        user = current.auth.user
-        if user and user.email:
-            cc = user.email
-        else:
-            cc = None
-            #emails.append(user.email)
-
-        send_email = current.msg.send_email
-        for email in emails:
-            send_email(to = email,
-                       cc = cc,
-                       subject = subject,
-                       message = message,
-                       )
-
-        current.session.information = T("Notifications sent")
+        from .notifications import DeploymentNotifications
+        DeploymentNotifications(record_id).send()
 
     # -------------------------------------------------------------------------
     def customise_hrm_delegation_resource(r, tablename):
@@ -1605,8 +1496,29 @@ def config(settings):
                            ]
             if multiple_orgs:
                 list_fields.insert(0, "organisation_id")
+
+            axes = [(T("Pool"), "person_id$pool_membership.group_id"),
+                    (T("Deploying Organisation"), "organisation_id"),
+                    "status",
+                    ]
+            facts = [(T("Number of Deployments"), "count(id)"),
+                     (T("Number of Volunteers"), "count(person_id)"),
+                     ]
+            default_rows = "organisation_id" if multiple_orgs else "status"
+            report_options = {
+                "rows": axes,
+                "cols": axes,
+                "fact": facts,
+                "defaults": {"rows": default_rows,
+                             "cols": "person_id$pool_membership.group_id",
+                             "fact": facts[0],
+                             "totals": True,
+                             },
+                }
+
             r.resource.configure(list_fields = list_fields,
                                  orderby = "hrm_delegation.date",
+                                 report_options = report_options,
                                  )
             return result
         s3.prep = custom_prep
