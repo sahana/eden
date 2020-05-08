@@ -4791,6 +4791,7 @@
 'Staff present and caring for residents': 'Mitarbeiter ist anwesend und versorgt die Anwohner.',
 'Staff with Contracts Expiring in the next Month': 'Mitarbeiter deren Veträge im Laufe des nächsten Monats ablaufen',
 'Staff': 'Mitarbeiter',
+'Staff/Volunteer Record': 'Mitarbeiter/Freiwilliger',
 'Staffing': 'Mitarbeiterausstattung',
 'Stairs': 'Treppen',
 'Start Date': 'Startdatum',

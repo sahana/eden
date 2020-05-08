@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from gluon import current
+from gluon import current, URL
 
 from s3 import s3_fullname, s3_str
 
@@ -151,7 +151,8 @@ class DeploymentNotifications(object):
 
         delegation = row.hrm_delegation
         person = row.pr_person
-        if not person.id:
+        person_id = person.id
+        if not person_id:
             return None
 
         lookup_contact = self.lookup_contact
@@ -165,6 +166,11 @@ class DeploymentNotifications(object):
                 "volunteer_last_name": person.last_name,
                 "volunteer_email": lookup_contact(person.pe_id, "EMAIL"),
                 "volunteer_phone": lookup_contact(person.pe_id, "SMS"),
+                "volunteer_uri": URL(c = "vol",
+                                     f = "person",
+                                     args = [person_id],
+                                     host = True,
+                                     )
                 }
 
         # Lookup volunteer office
@@ -172,7 +178,7 @@ class DeploymentNotifications(object):
         stable = s3db.org_office
         left = stable.on((stable.site_id == htable.site_id) & \
                          (stable.deleted == False))
-        query = (htable.person_id == person.id) & \
+        query = (htable.person_id == person_id) & \
                 (htable.type == 2) & \
                 (htable.deleted == False)
         row = db(query).select(stable.name,

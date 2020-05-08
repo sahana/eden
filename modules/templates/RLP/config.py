@@ -123,6 +123,14 @@ def config(settings):
     settings.pr.name_format= "%(last_name)s, %(first_name)s"
 
     # -------------------------------------------------------------------------
+    settings.hrm.record_tab = False
+    settings.hrm.staff_experience = False
+    settings.hrm.use_certificates = False
+    settings.hrm.use_credentials = False
+    settings.hrm.use_description = False
+    settings.hrm.use_trainings = False
+
+    # -------------------------------------------------------------------------
     settings.org.projects_tab = False
 
     # -------------------------------------------------------------------------
@@ -1069,9 +1077,19 @@ def config(settings):
         s3.prep = custom_prep
 
         # Custom rheader in vol-perspective
-        if current.request.controller == "vol":
+        controller = current.request.controller
+        if controller == "vol":
             attr = dict(attr)
             attr["rheader"] = rlp_vol_rheader
+        elif controller == "default":
+            tabs = [(T("Person Details"), None),
+                    (T("User Account"), "user_profile"),
+                    (T("Staff/Volunteer Record"), "human_resource"),
+                    (T("Address"), "address"),
+                    (settings.get_pr_contacts_tab_label(), "contacts"),
+                    (T("Skills"), "competency"),
+                    ]
+            attr["rheader"] = lambda r: s3db.pr_rheader(r, tabs=tabs)
 
         return attr
 
@@ -2035,7 +2053,7 @@ class rlp_DelegatedPersonRepresent(S3Represent):
         return rows
 
     # -------------------------------------------------------------------------
-    def represent_row(self, row):
+    def represent_row(self, row, prefix=None):
         """
             Represent a row
 
