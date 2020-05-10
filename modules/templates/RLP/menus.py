@@ -204,7 +204,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Volunteers", c="vol", f="person")(
                         M("Create", m="create", t="pr_person"),
                         M("Currently Deployed",
-                          vars={"deployed_now": 1},
+                          vars = {"deployed_now": 1},
+                          ),
+                        M("Archive",
+                          vars = {"active": "0"},
+                          restrict = "COORDINATOR",
                           ),
                         ),
                     M("Deployments", c="hrm", f="delegation")(

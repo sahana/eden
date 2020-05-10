@@ -746,14 +746,12 @@ def config(settings):
 
             if r.controller == "vol":
 
+                get_vars = r.get_vars
                 resource = r.resource
+                record = r.record
 
                 # Filter to volunteers only
                 resource.add_filter(FS("volunteer_record.id") != None)
-
-                # HR type defaults to volunteer (already done in controller)
-                #hrtable = s3db.hrm_human_resource
-                #hrtable.type.default = 2
 
                 has_role = current.auth.s3_has_role
                 coordinator = has_role("COORDINATOR")
@@ -765,10 +763,18 @@ def config(settings):
                     if r.representation not in ALLOWED_FORMATS:
                         r.error(403, current.ERROR.NOT_PERMITTED)
 
-                    # Show only volunteers in pools
-                    resource.add_filter(FS("pool_membership.id") > 0)
+                    # Show only active volunteers in pools
+                    resource.add_filter((FS("pool_membership.id") > 0) & \
+                                        (FS("volunteer_record.status") == 1))
 
-                get_vars = r.get_vars
+                elif not record:
+
+                    # Filter for active/inactive volunteers
+                    active = get_vars.get("active")
+                    if active == "0":
+                        resource.add_filter(FS("volunteer_record.status") != 1)
+                    elif active != "both":
+                        resource.add_filter(FS("volunteer_record.status") == 1)
 
                 # Availability Filter
                 parse_dt = current.calendar.parse_date
@@ -929,13 +935,15 @@ def config(settings):
 })'''
                         if script not in s3.jquery_ready:
                             s3.jquery_ready.append(script)
+                        crud_fields.append("volunteer_record.status")
+                        list_fields.append("volunteer_record.status")
 
                     # Show contact details if:
                     # - user is COORDINATOR, or
                     # - volunteer viewed is an open pool member, or
                     # - has an approved deployment the user can access
                     show_contact_details = False
-                    person_id = r.record.id if r.record else None
+                    person_id = record.id if record else None
                     if person_id:
                         show_contact_details = coordinator or \
                                                open_pool_member(person_id) or \
