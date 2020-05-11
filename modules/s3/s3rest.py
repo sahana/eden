@@ -756,7 +756,10 @@ class S3Request(object):
                     self.id = resource.get_id()
                     self.uid = resource.get_uid()
                 else:
-                    self.error(404, current.ERROR.BAD_RECORD)
+                    # Record not found => go to list
+                    self.error(404, current.ERROR.BAD_RECORD,
+                               next = self.url(id="", method=""),
+                               )
                 method = "read"
             else:
                 method = "list"

@@ -777,8 +777,9 @@ def config(settings):
                         r.error(403, current.ERROR.NOT_PERMITTED)
 
                     # Show only active volunteers in pools
-                    resource.add_filter((FS("pool_membership.id") > 0) & \
-                                        (FS("volunteer_record.status") == 1))
+                    resource.add_filter(FS("pool_membership.id") > 0)
+                    if not record:
+                        resource.add_filter(FS("volunteer_record.status") == 1)
 
                 elif not record:
 
