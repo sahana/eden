@@ -4339,7 +4339,7 @@ def drk_dvr_rheader(r, tabs=None):
                 # Extract case data
                 case = case[0]
 
-                name = s3_fullname
+                name = lambda person: s3_fullname(person, truncate=False)
                 raw = case["_row"]
 
                 case_status = lambda row: case["dvr_case.status_id"]

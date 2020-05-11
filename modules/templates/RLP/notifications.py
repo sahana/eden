@@ -518,7 +518,7 @@ class InlineNotifications(S3SQLSubForm):
         # Add field set per recipient type
         labels = {"organisation": T("Requesting Organisation"),
                   "volunteer": T("Volunteer"),
-                  "office": T("Volunteer Office"),
+                  "office": T("Office##gov"),
                   }
         formstyle = settings.get_ui_formstyle()
         for recipient in ("organisation", "volunteer", "office"):

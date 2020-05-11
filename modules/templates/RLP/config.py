@@ -4,7 +4,7 @@ import datetime
 
 from collections import OrderedDict
 
-from gluon import current, URL, A, DIV, TABLE, TR
+from gluon import current, URL, A, DIV, TABLE, TAG, TR
 from gluon.storage import Storage
 
 from s3 import FS, S3DateFilter, S3Represent, s3_fullname
@@ -756,6 +756,19 @@ def config(settings):
                 has_role = current.auth.s3_has_role
                 coordinator = has_role("COORDINATOR")
 
+                # Configure anonymize-method
+                from s3 import S3Anonymize
+                s3db.set_method("pr", "person",
+                                method = "anonymize",
+                                action = S3Anonymize,
+                                )
+
+                # Configure anonymize-rules
+                from .anonymize import rlp_volunteer_anonymize
+                s3db.configure("pr_person",
+                               anonymize = rlp_volunteer_anonymize(),
+                               )
+
                 if not coordinator:
 
                     # Restrict data formats
@@ -1083,6 +1096,35 @@ def config(settings):
 
             return result
         s3.prep = custom_prep
+
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.controller == "vol" and \
+               not r.component and r.record and \
+               r.method in (None, "update", "read") and \
+               isinstance(output, dict):
+
+                # Custom CRUD buttons
+                if "buttons" not in output:
+                    buttons = output["buttons"] = {}
+                else:
+                    buttons = output["buttons"]
+
+                # Anonymize-button
+                from s3 import S3AnonymizeWidget
+                anonymize = S3AnonymizeWidget.widget(r,
+                                         _class="action-btn anonymize-btn")
+
+                # Render in place of the delete-button
+                buttons["delete_btn"] = TAG[""](anonymize,
+                                                )
+            return output
+        s3.postp = custom_postp
 
         # Custom rheader in vol-perspective
         controller = current.request.controller
