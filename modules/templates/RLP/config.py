@@ -1071,12 +1071,12 @@ def config(settings):
                     if not has_role("HRMANAGER") and \
                        r.interactive and r.method is None and not r.component_id:
                         r.method = "organize"
-                    if coordinator:
-                        s3db.add_custom_callback("hrm_delegation",
-                                                 "onaccept",
-                                                 hrm_delegation_update_onaccept,
-                                                 method = "update",
-                                                 )
+                    #if coordinator:
+                    #    s3db.add_custom_callback("hrm_delegation",
+                    #                             "onaccept",
+                    #                             hrm_delegation_update_onaccept,
+                    #                             method = "update",
+                    #                             )
 
             elif callable(standard_prep):
                 result = standard_prep(r)
@@ -1155,12 +1155,27 @@ def config(settings):
             field = table.end_date
             field.writable = False
 
-        # Can never change person or organisation
+
         if record:
+            # Can never change person or organisation
             field = table.person_id
             field.writable = False
             field = table.organisation_id
             field.writable = False
+
+            # Only the requesting org can change dates or comments
+            org_pe_id = current.s3db.pr_get_pe_id("org_organisation",
+                                                  record.organisation_id,
+                                                  )
+            if not org_pe_id or \
+               not current.auth.s3_has_role("HRMANAGER", for_pe=org_pe_id):
+                field = table.date
+                field.writable = False
+                field = table.end_date
+                field.writable = False
+                field = table.comments
+                field.writable = False
+                field.comment = None
 
     # -------------------------------------------------------------------------
     def delegation_read_multiple_orgs():
@@ -1180,44 +1195,45 @@ def config(settings):
         return multiple_orgs, org_ids
 
     # -------------------------------------------------------------------------
-    def hrm_delegation_update_onaccept(form):
-        """
-            Coordinator has updated a Request
-            - if this is an approval then send a notification
-        """
-
-        form_vars = form.vars
-
-        record_id = form_vars.get("id")
-        if not record_id:
-            # Nothing we can do
-            return
-
-        # Check previous status
-        try:
-            if form.record.status != "REQ":
-                # This was not a pending request => do nothing
-                return
-        except AttributeError:
-            # Can't determine previous status => do nothing
-            return
-
-        db = current.db
-        s3db = current.s3db
-
-        # Check current status
-        table = s3db.hrm_delegation
-        row = db(table.id == record_id).select(table.status,
-                                               table.person_id,
-                                               limitby = (0, 1),
-                                               ).first()
-        if not row or row.status != "APPR" or open_pool_member(row.person_id):
-            # Not approved, or open pool member => no action
-            return
-
-        from .notifications import DeploymentNotifications
-        DeploymentNotifications(record_id).send()
-
+    #def hrm_delegation_update_onaccept(form):
+    #    """
+    #        Coordinator has updated a Request
+    #        - if this is an approval then send a notification
+    #        - currently unused (using inline notifications instead)
+    #    """
+    #
+    #    form_vars = form.vars
+    #
+    #    record_id = form_vars.get("id")
+    #    if not record_id:
+    #        # Nothing we can do
+    #        return
+    #
+    #    # Check previous status
+    #    try:
+    #        if form.record.status != "REQ":
+    #            # This was not a pending request => do nothing
+    #            return
+    #    except AttributeError:
+    #        # Can't determine previous status => do nothing
+    #        return
+    #
+    #    db = current.db
+    #    s3db = current.s3db
+    #
+    #    # Check current status
+    #    table = s3db.hrm_delegation
+    #    row = db(table.id == record_id).select(table.status,
+    #                                           table.person_id,
+    #                                           limitby = (0, 1),
+    #                                           ).first()
+    #    if not row or row.status != "APPR" or open_pool_member(row.person_id):
+    #        # Not approved, or open pool member => no action
+    #        return
+    #
+    #    from .notifications import DeploymentNotifications
+    #    DeploymentNotifications(record_id).send()
+    #
     # -------------------------------------------------------------------------
     def customise_hrm_delegation_resource(r, tablename):
 
@@ -1369,6 +1385,29 @@ def config(settings):
                                             set_min = "#hrm_delegation_end_date",
                                             )
 
+        if current.auth.s3_has_role("COORDINATOR"): #coordinator:
+            # Coordinators use custom form
+            from s3 import S3SQLCustomForm
+            crud_form = S3SQLCustomForm("organisation_id",
+                                        "person_id",
+                                        "date",
+                                        "end_date",
+                                        "requested_on",
+                                        "status",
+                                        "comments",
+                                        )
+            #record = r.record
+            if record and record.status == "REQ" and r.method != "read":
+                # Request that can be approved
+                # => append inline-notifications
+                from .notifications import InlineNotifications
+                crud_form.append(
+                    InlineNotifications("notifications",
+                                        label = T("Notifications"),
+                                        ))
+            s3db.configure("hrm_delegation", crud_form=crud_form)
+            #r.resource.configure(crud_form=crud_form)
+
         # Reconfigure
         s3db.configure("hrm_delegation",
                        deletable = False,
@@ -1461,12 +1500,12 @@ def config(settings):
 
             multiple_orgs = delegation_read_multiple_orgs()[0]
 
-            if coordinator:
-                s3db.add_custom_callback("hrm_delegation",
-                                         "onaccept",
-                                         hrm_delegation_update_onaccept,
-                                         method = "update",
-                                         )
+            #if coordinator:
+            #    s3db.add_custom_callback("hrm_delegation",
+            #                             "onaccept",
+            #                             hrm_delegation_update_onaccept,
+            #                             method = "update",
+            #                             )
 
             if r.interactive:
 
@@ -1509,6 +1548,27 @@ def config(settings):
 
                     r.resource.configure(filter_widgets = filter_widgets,
                                          )
+                #if coordinator:
+                    ## Coordinators use custom form
+                    #from s3 import S3SQLCustomForm
+                    #crud_form = S3SQLCustomForm("organisation_id",
+                                                #"person_id",
+                                                #"date",
+                                                #"end_date",
+                                                #"requested_on",
+                                                #"status",
+                                                #"comments",
+                                                #)
+                    #record = r.record
+                    #if record and record.status == "REQ" and r.method != "read":
+                        ## Request that can be approved
+                        ## => append inline-notifications
+                        #from .notifications import InlineNotifications
+                        #crud_form.append(
+                            #InlineNotifications("notifications",
+                                                #label = T("Notifications"),
+                                                #))
+                    #r.resource.configure(crud_form=crud_form)
 
             # Adapt list fields to perspective
             list_fields = ["date",
@@ -1548,6 +1608,13 @@ def config(settings):
                                  orderby = "hrm_delegation.date",
                                  report_options = report_options,
                                  )
+
+            # Set method for Ajax-composing notifications
+            from .notifications import InlineNotificationsCompose
+            s3db.set_method("hrm", "delegation",
+                            method = "notifications",
+                            action = InlineNotificationsCompose,
+                            )
             return result
         s3.prep = custom_prep
 

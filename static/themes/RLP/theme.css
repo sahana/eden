@@ -2207,3 +2207,8 @@ body.rtl .event-type-header {
   font-size: 0.8rem;
   text-transform: uppercase;
 }
+
+/* line 261, ../scss/theme/_misc.scss */
+#hrm_delegation_inline_notifications__row {
+  display: none;
+}
