@@ -120,8 +120,11 @@ def user():
                     ]
 
     s3db.configure("auth_user",
-                   create_next = URL(c="admin", f="user", args=["[id]", "roles"]),
-                   create_onaccept = lambda form: auth.s3_approve_user(form.vars),
+                   create_next = URL(c="admin", f="user",
+                                     args = ["[id]", "roles"],
+                                     ),
+                   create_onaccept = lambda form: \
+                                        auth.s3_approve_user(form.vars),
                    list_fields = list_fields,
                    main = "first_name",
                    #update_onaccept = lambda form: auth.s3_link_user(form.vars),

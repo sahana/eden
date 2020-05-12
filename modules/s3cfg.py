@@ -631,6 +631,22 @@ class S3Config(Storage):
         else:
             return None
 
+    def get_auth_add_role(self):
+        """
+            Custom Function to add a Role
+            - called by S3RoleManager UI
+            - useful for automatically adding subsidiary roles
+        """
+        return self.auth.get("add_role", None)
+
+    def get_auth_remove_role(self):
+        """
+            Custom Function to remove a Role
+            - called by S3RoleManager UI
+            - useful for automatically removing subsidiary roles
+        """
+        return self.auth.get("remove_role", None)
+
     def get_auth_masterkey(self):
         """
             Allow authentication with master key (= a single key instead of

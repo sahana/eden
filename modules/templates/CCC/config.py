@@ -736,6 +736,74 @@ $('.copy-link').click(function(e){
         return rheader
 
     # -------------------------------------------------------------------------
+    def auth_add_role(user_id, group_id, for_pe=None):
+        """
+            Automatically add subsidiary roles for new OrgAdmins
+        """
+
+        auth = current.auth
+        assign_role = auth.s3_assign_role
+
+        # Add the main Role
+        assign_role(user_id, group_id, for_pe)
+
+        # Is this the OrgAdmin role?
+        if group_id != auth.get_system_roles().ORG_ADMIN:
+            return
+
+        # Add the Subsidiary roles
+        # (DRY with auth_user_register_onaccept in controllers.py)
+        add_membership = auth.add_membership
+        ftable = current.s3db.pr_forum
+        forums = current.db(ftable.name.belongs(("Donors",
+                                                 "Groups",
+                                                 "Reserves"))).select(ftable.pe_id,
+                                                                      ftable.name,
+                                                                      limitby = (0, 3)
+                                                                      )
+        for forum in forums:
+            if forum.name == "Donors":
+                add_membership(user_id = user_id,
+                               role = "Donors Admin",
+                               entity = forum.pe_id,
+                               )
+            elif forum.name == "Groups":
+                add_membership(user_id = user_id,
+                               role = "Groups Admin",
+                               entity = forum.pe_id,
+                               )
+            elif forum.name == "Reserves":
+                add_membership(user_id = user_id,
+                               role = "Reserves Reader",
+                               entity = forum.pe_id,
+                               )
+
+    settings.auth.add_role = auth_add_role
+
+    # -------------------------------------------------------------------------
+    def auth_remove_role(user_id, group_id, for_pe=None):
+        """
+            Automatically remove subsidiary roles for outgoing OrgAdmins
+        """
+
+        auth = current.auth
+        withdraw_role = auth.s3_withdraw_role
+
+        # Remove the main Role
+        withdraw_role(user_id, group_id, for_pe)
+
+        # Is this the OrgAdmin role?
+        if group_id != auth.get_system_roles().ORG_ADMIN:
+            return
+
+        # Remove the Subsidiary roles
+        withdraw_role(user_id, ("DONOR_ADMIN",
+                                "GROUPS_ADMIN",
+                                "RESERVE_READER"), for_pe=[])
+
+    settings.auth.remove_role = auth_remove_role
+
+    # -------------------------------------------------------------------------
     def customise_auth_user_resource(r, tablename):
         """
             Hook in custom auth_user_register_onaccept for use when Agency/Existing Users are Approved

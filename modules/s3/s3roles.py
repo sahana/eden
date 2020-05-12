@@ -808,7 +808,9 @@ class S3RoleManager(S3Method):
             query = (utable.id == r.id) & \
                     (otable.id == utable.organisation_id) & \
                     (otable.pe_id.belongs(pe_ids))
-            row = current.db(query).select(utable.id, limitby=(0, 1)).first()
+            row = current.db(query).select(utable.id,
+                                           limitby = (0, 1)
+                                           ).first()
             if not row:
                 r.unauthorised()
 
@@ -907,11 +909,13 @@ class S3RoleManager(S3Method):
 
                 # Update role assignments
                 if added:
-                    add_role = auth.s3_assign_role
+                    add_role = current.deployment_settings.get_auth_add_role() or \
+                               auth.s3_assign_role
                     for group_id, pe_id in added:
                         add_role(user_id, group_id, for_pe=pe_id)
                 if removed:
-                    remove_role = auth.s3_withdraw_role
+                    remove_role = current.deployment_settings.get_auth_remove_role() or \
+                                  auth.s3_withdraw_role
                     for group_id, pe_id in removed:
                         remove_role(user_id, group_id, for_pe=pe_id)
 

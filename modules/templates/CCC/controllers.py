@@ -2483,6 +2483,7 @@ def auth_user_register_onaccept(user_id):
                        # Leave to Default Realm to make easier to switch affiliations
                        #entity = realm_entity,
                        )
+        # (DRY with auth_add_role in config.py)
         ftable = s3db.pr_forum
         forums = db(ftable.name.belongs(("Donors",
                                          "Groups",
