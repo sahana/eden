@@ -2214,15 +2214,30 @@ body.rtl .event-type-header {
 }
 
 /* line 265, ../scss/theme/_misc.scss */
+.notification .notify-toggle {
+  vertical-align: middle;
+  margin-top: 0 !important;
+  margin-bottom: 0.2rem !important;
+}
+/* line 270, ../scss/theme/_misc.scss */
+.notification .preview-toggles {
+  margin-top: 0.3rem;
+}
+/* line 272, ../scss/theme/_misc.scss */
+.notification .preview-toggles .preview-toggle.action-lnk {
+  margin-left: 0.2rem;
+}
+
+/* line 278, ../scss/theme/_misc.scss */
 .preview-widget .highlight-sub {
   border-bottom: dotted 0.5px #C0C0C0;
   cursor: help;
 }
-/* line 269, ../scss/theme/_misc.scss */
+/* line 282, ../scss/theme/_misc.scss */
 .preview-widget .highlight-miss {
   background-color: #F4D48A;
 }
-/* line 272, ../scss/theme/_misc.scss */
+/* line 285, ../scss/theme/_misc.scss */
 .preview-widget p.preview {
   font-size: 0.9rem;
   font-weight: normal;
@@ -2234,7 +2249,7 @@ body.rtl .event-type-header {
   padding: 0.5rem;
   background-color: #F4F4F4;
 }
-/* line 283, ../scss/theme/_misc.scss */
+/* line 296, ../scss/theme/_misc.scss */
 .preview-widget h6.preview {
   font-size: 0.9rem;
   color: #550000;

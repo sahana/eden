@@ -261,6 +261,19 @@ body.rtl {
 #hrm_delegation_inline_notifications__row {
     display: none;
 }
+.notification {
+    .notify-toggle {
+        vertical-align: middle;
+        margin-top: 0!important;
+        margin-bottom: 0.2rem!important;
+    }
+    .preview-toggles {
+        margin-top: 0.3rem;
+        .preview-toggle.action-lnk {
+            margin-left: 0.2rem;
+        }
+    }
+}
 .preview-widget {
     .highlight-sub {
         border-bottom: dotted 0.5px #C0C0C0;

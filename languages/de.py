@@ -3854,6 +3854,7 @@
 'Presence in the shelter': 'Anwesend in Unterkunft',
 'Presence required': 'Anwesenheit erforderlich',
 'Presence': 'Anwesenheit',
+'Preview': 'Vorschau',
 'Previous Total': 'Vorherige Summe',
 'Previous': 'Vorherige',
 'Primary Occupancy': 'Primäre Belegung',
