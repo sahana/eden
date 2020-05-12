@@ -2604,10 +2604,11 @@ $('.copy-link').click(function(e){
             return output
         s3.postp = postp
 
-        if len(current.request.args) == 1:
+        if ADMIN is True and len(current.request.args) == 1:
             # Add Bulk Messaging option to Summary page
             attr["dtargs"] = {"dt_bulk_actions": [(T("Message"), "message")],
-                          }
+                              }
+
         attr["rheader"] = ccc_rheader
 
         return attr
@@ -2621,9 +2622,11 @@ $('.copy-link').click(function(e){
 
         s3db = current.s3db
         gtable = s3db.gis_location
-        districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
-                                                                                         gtable.name,
-                                                                                         cache = s3db.cache)
+        query = (gtable.level == "L3") & (gtable.L2 == "Cumbria")
+        districts = current.db(query).select(gtable.id,
+                                             gtable.name,
+                                             cache = s3db.cache
+                                             )
         districts = {d.id:d.name for d in districts}
 
         f = s3db.org_organisation_location.location_id
@@ -4323,7 +4326,9 @@ $('.copy-link').click(function(e){
                 table.created_by.readable = True
                 table.created_by.label = T("From")
                 table.created_by.represent = s3db.auth_UserRepresent(show_phone = True,
-                                                                     show_link = False)
+                                                                     show_org = True,
+                                                                     show_link = False,
+                                                                     )
                 table.created_on.readable = True
                 table.created_on.label = T("Date Sent")
                 table.realm_entity.readable = True
