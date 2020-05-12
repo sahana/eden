@@ -263,12 +263,13 @@
             fieldSets.forEach(function(recipient) {
 
                 var prefix = '#sub_' + formName + '_' + recipient + '_',
-                    email = emailAdresses[recipient];
+                    email = emailAdresses[recipient],
+                    deactivate = false;
 
                 // Set the email address
                 if (!email) {
-                    $('#' + formName + '_notify_' + recipient).prop('checked', false).change();
                     $(prefix + 'email', $el).val('');
+                    deactivate = true;
                 } else {
                     $(prefix + 'email', $el).val(email);
                 }
@@ -288,8 +289,14 @@
                         input.val(value);
                     } else {
                         input.val('');
+                        deactivate = true;
                     }
                 });
+                if (deactivate) {
+                    // Email, subject template or message template missing
+                    // => deactivate sending
+                    $('#' + formName + '_notify_' + recipient).prop('checked', false).change();
+                }
             });
 
             this._renderPreviews();
