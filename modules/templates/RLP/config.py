@@ -224,6 +224,40 @@ def config(settings):
             # Delegations are owned by the requesting org => default
             pass
 
+        elif tablename == "hrm_delegation_note":
+
+            organisation_id = None
+
+            # Default to HR Organisation of current user
+            hr_id = current.auth.s3_logged_in_human_resource()
+            if hr_id:
+                htable = s3db.hrm_human_resource
+                query = (htable.id == hr_id) & \
+                        (htable.deleted == False)
+                hr = db(query).select(htable.organisation_id,
+                                      limitby = (0, 1),
+                                      orderby = htable.created_on,
+                                      ).first()
+                if hr:
+                    organisation_id = hr.organisation_id
+
+            # Fall back to requesting organisation of the delegation
+            if not organisation_id:
+                dtable = s3db.hrm_delegation
+                ntable = s3db.hrm_delegation_note
+                query = (ntable.id == row.id) & \
+                        (dtable.id == ntable.delegation_id)
+                delegation = db(query).select(dtable.organisation_id,
+                                              limitby = (0, 1),
+                                              ).first()
+                if delegation:
+                    organisation_id = delegation.organisation_id
+
+            if organisation_id:
+                realm_entity = s3db.pr_get_pe_id("org_organisation",
+                                                 organisation_id,
+                                                 )
+
         elif tablename == "pr_group":
 
             # Pools own themselves => default
@@ -1489,7 +1523,8 @@ def config(settings):
         standard_prep = s3.prep
         def custom_prep(r):
 
-            coordinator = current.auth.s3_has_role("COORDINATOR")
+            auth = current.auth
+            coordinator = auth.s3_has_role("COORDINATOR")
 
             if not coordinator:
                 settings.ui.export_formats = ("pdf", "xls")
@@ -1594,6 +1629,19 @@ def config(settings):
 
                     r.resource.configure(filter_widgets = filter_widgets,
                                          )
+
+                if r.component_name == "delegation_note":
+
+                    ctable = r.component.table
+                    field = ctable.modified_by
+                    field.label = T("Author")
+                    show_org = auth.s3_has_roles(("ADMIN", "ORG_GROUP_ADMIN"))
+                    field.represent = s3db.auth_UserRepresent(show_name = True,
+                                                              show_email = False,
+                                                              show_link = False,
+                                                              show_org = show_org,
+                                                              )
+                    field.writable = False
 
             # Adapt list fields to perspective
             list_fields = ["date",
@@ -2101,6 +2149,7 @@ def rlp_delegation_rheader(r, tabs=None):
             if not tabs:
                 tabs = [(T("Basic Details"), None),
                         (T("Notifications"), "delegation_message"),
+                        (T("Notes"), "delegation_note"),
                         ]
 
             rheader_fields = [["organisation_id",

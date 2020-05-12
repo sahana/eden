@@ -5445,6 +5445,7 @@ class HRDelegationModel(S3Model):
         # Components
         self.add_components(tablename,
                             hrm_delegation_message = "delegation_id",
+                            hrm_delegation_note = "delegation_id",
                             )
 
         # CRUD Strings
@@ -5529,7 +5530,46 @@ class HRDelegationModel(S3Model):
             )
 
         # ---------------------------------------------------------------------
-        # TODO hrm_delegation_note
+        # Simple notes journal for delegations
+        #
+        tablename = "hrm_delegation_note"
+        define_table(tablename,
+                     Field("delegation_id", "reference hrm_delegation",
+                           ondelete = "CASCADE",
+                           readable = False,
+                           writable = False,
+                           ),
+                     s3_date(default="now"),
+                     Field("note", "text",
+                           label = T("Note"),
+                           represent = s3_text_represent,
+                           ),
+                     *s3_meta_fields())
+
+        # List fields
+        list_fields = ["date",
+                       (T("Author"), "modified_by"),
+                       "note",
+                       ]
+
+        # Table configuration
+        self.configure(tablename,
+                       list_fields = list_fields,
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Note"),
+            title_display = T("Note Details"),
+            title_list = T("Notes"),
+            title_update = T("Edit Note"),
+            label_list_button = T("List Notes"),
+            label_delete_button = T("Delete Note"),
+            msg_record_created = T("Note added"),
+            msg_record_modified = T("Note updated"),
+            msg_record_deleted = T("Note deleted"),
+            msg_list_empty = T("No Notes currently registered"),
+            )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
