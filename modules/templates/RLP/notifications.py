@@ -3,10 +3,8 @@
 import json
 import sys
 
-from gluon import DIV, FIELDSET, Field, INPUT, LABEL, \
-                  LEGEND, SQLFORM, TEXTAREA, URL, current
-
-from s3compat import basestring
+from gluon import Field, SQLFORM, URL, current, \
+                  A, DIV, FIELDSET, H6, INPUT, LABEL, LEGEND, P, TEXTAREA
 
 from s3 import s3_fullname, s3_str, S3Method, JSONERRORS
 from s3.s3forms import S3SQLSubForm
@@ -26,21 +24,25 @@ class DeploymentNotifications(object):
     """
 
     def __init__(self, delegation_id):
+        """
+            Constructor
+
+            @param delegation_id: the hrm_delegation record ID
+        """
 
         self.delegation_id = delegation_id
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def compose(subject, message, data):
+    @classmethod
+    def compose(cls, templates, data):
         """
-            Lookup a subject/message template from CMS and compose subject
-            and message using data
+            Compose subject/message from templates using data
 
-            @param subject: the subject template name
-            @param message: the message template name
+            @param templates: a tuple of string templates (subject, message),
+                              or the name of the template-pair, e.g. "Volunteer"
+            @param data: a dict of data to substitute placeholders in the templates
 
-            @returns: tuple (subject_text, message_text),
-                      or None if disabled
+            @returns: tuple (subject, message), or None if disabled
 
             Placeholders that are substituted (if data are available):
                 {system}..........................System Name
@@ -64,15 +66,39 @@ class DeploymentNotifications(object):
                 {coordinator_phone}...............Coordinator phone number
         """
 
-        db = current.db
-        s3db = current.s3db
-
         # Sanitize data
-        data = SafeSub(data)
-        data["system"] = current.deployment_settings.get_system_name_short()
+        data = SafeSub(data) if isinstance(data, dict) else SafeSub()
         for key in data:
             if data[key] is None:
                 data[key] = "-"
+
+        if isinstance(templates, str):
+            templates = cls.templates(templates)
+
+        if not isinstance(templates, (tuple, list)):
+            return None
+
+        subject = templates[0].format_map(data)
+        message = templates[1].format_map(data)
+
+        return subject, message
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def templates(name):
+        """
+            Get message templates
+
+            @param name: the name of the template-pair, e.g. "Volunteer"
+
+            @returns: tuple (subject_template, message_template), or None
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        if not name:
+            return None
 
         # Define join
         ctable = s3db.cms_post
@@ -82,52 +108,41 @@ class DeploymentNotifications(object):
                          (ltable.resource == "delegation") & \
                          (ltable.deleted == False))
 
-        # Get subject template + substitute
-        query = (ctable.name == subject) & (ctable.deleted == False)
+        # Get subject template
+        subject_name = "Subject %s" % name
+        query = (ctable.name == subject_name) & \
+                (ctable.deleted == False)
         row = db(query).select(ctable.body,
                                join = join,
                                limitby = (0, 1),
                                ).first()
         if row:
-            subject_out = row.body.format_map(data)
+            subject_template = row.body
         else:
             # Disabled
             return None
 
-        # Get message template + subsitute
-        query = (ctable.name == message) & (ctable.deleted == False)
+        # Get message template
+        message_name = "Message %s" % name
+        query = (ctable.name == message_name) & \
+                (ctable.deleted == False)
         row = db(query).select(ctable.body,
                                join = join,
                                limitby = (0, 1),
                                ).first()
         if row:
-            message_out = row.body.format_map(data)
+            message_template = row.body
         else:
-            message_out = ""
+            message_template = ""
 
-        return subject_out, message_out
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def lookup_contact(pe_id, contact_method="EMAIL"):
-
-        db = current.db
-        s3db = current.s3db
-
-        ctable = s3db.pr_contact
-        query = (ctable.pe_id == pe_id) & \
-                (ctable.contact_method == contact_method) & \
-                (ctable.deleted == False)
-        contact = db(query).select(ctable.value,
-                                   limitby = (0, 1),
-                                   ).first()
-
-        return contact.value if contact else None
+        return subject_template, message_template
 
     # -------------------------------------------------------------------------
     def data(self):
         """
             Lookup data to pass into template
+
+            @returns: the data as dict
         """
 
         db = current.db
@@ -164,7 +179,8 @@ class DeploymentNotifications(object):
 
         lookup_contact = self.lookup_contact
 
-        data = {"start": dtable.date.represent(delegation.date),
+        data = {"system": current.deployment_settings.get_system_name_short(),
+                "start": dtable.date.represent(delegation.date),
                 "end": dtable.end_date.represent(delegation.end_date),
                 "comments": delegation.comments,
                 "volunteer_id": person.pe_label,
@@ -231,6 +247,31 @@ class DeploymentNotifications(object):
         return data
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def lookup_contact(pe_id, contact_method="EMAIL"):
+        """
+            Look up contact number/address for a PE
+
+            @param pe_id: the PE_ID
+            @param contact_method: the contact method
+
+            @returns: the contact/number address, or None if not found
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        ctable = s3db.pr_contact
+        query = (ctable.pe_id == pe_id) & \
+                (ctable.contact_method == contact_method) & \
+                (ctable.deleted == False)
+        contact = db(query).select(ctable.value,
+                                   limitby = (0, 1),
+                                   ).first()
+
+        return contact.value if contact else None
+
+    # -------------------------------------------------------------------------
     def send(self):
         """
             Send notification emails
@@ -248,7 +289,7 @@ class DeploymentNotifications(object):
         success = False
         email = data.get("organisation_email")
         if email:
-            message = self.compose("Subject Organisation", "Message Organisation", data)
+            message = self.compose("Organisation", data)
             if message:
                 success = send_email(to = email,
                                      cc = cc,
@@ -261,7 +302,7 @@ class DeploymentNotifications(object):
         success = False
         email = data.get("volunteer_email")
         if email:
-            message = self.compose("Subject Volunteer", "Message Volunteer", data)
+            message = self.compose("Volunteer", data)
             if message:
                 success = send_email(to = email,
                                      cc = cc,
@@ -274,7 +315,7 @@ class DeploymentNotifications(object):
         success = False
         email = data.get("volunteer_office_email")
         if email:
-            message = self.compose("Subject Office", "Message Office", data)
+            message = self.compose("Office", data)
             if message:
                 success = send_email(to = email,
                                      cc = cc,
@@ -300,39 +341,41 @@ class DeploymentNotifications(object):
 
         data = self.data()
 
-        output = {"cc": data.get("coordinator_email")}
+        for key, value in list(data.items()):
+            if value is None:
+                data[key] = "-"
+            else:
+                data[key] = s3_str(value)
 
-        email = data.get("organisation_email")
-        if email:
-            message = self.compose("Subject Organisation", "Message Organisation", data)
-            if message:
-                output["organisation"] = {"email": email,
-                                          "subject": message[0],
-                                          "message": message[1],
-                                          }
+        output = {"delegationID": self.delegation_id,
+                  "data": data,
+                  "email": {},
+                  "cc": data.get("coordinator_email"),
+                  "templates": {},
+                  }
 
-        email = data.get("volunteer_email")
-        if email:
-            message = self.compose("Subject Volunteer", "Message Volunteer", data)
-            if message:
-                output["volunteer"] = {"email": email,
-                                       "subject": message[0],
-                                       "message": message[1],
-                                       }
+        template_names = {"organisation": "Organisation",
+                          "volunteer": "Volunteer",
+                          "office": "Office",
+                          }
 
-        email = data.get("volunteer_office_email")
-        if email:
-            message = self.compose("Subject Office", "Message Office", data)
-            if message:
-                output["office"] = {"email": email,
-                                    "subject": message[0],
-                                    "message": message[1],
-                                    }
+        for recipient in ("organisation", "volunteer", "office"):
+            templates = self.templates(template_names[recipient])
+            if templates:
+                output["templates"][recipient] = {"subject": templates[0],
+                                                  "message": templates[1],
+                                                  }
+            if recipient == "office":
+                email = data.get("volunteer_office_email")
+            else:
+                email = data.get("%s_email" % recipient)
+            if email:
+                output["email"][recipient] = email
 
         return output
 
 # =============================================================================
-class InlineNotificationsCompose(S3Method):
+class InlineNotificationsData(S3Method):
     """
         Ajax-method to compose the notification messages for a delegation
     """
@@ -448,8 +491,7 @@ class InlineNotifications(S3SQLSubForm):
                       fails, otherwise None
         """
 
-        # @todo: catch uploads during validation errors
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             try:
                 value = json.loads(value)
             except JSONERRORS:
@@ -528,6 +570,7 @@ class InlineNotifications(S3SQLSubForm):
                                 ),
                           Field("%s_subject" % input_name,
                                 label = T("Subject"),
+                                widget = self.subject_widget,
                                 ),
                           Field("%s_message" % input_name, "text",
                                 label = T("Message"),
@@ -541,6 +584,16 @@ class InlineNotifications(S3SQLSubForm):
                                    table_name = "sub",
                                    *formfields)
             toggle_name = "%s_notify_%s" % (formname, recipient)
+
+            toggle_edit = DIV(A(T("Preview"),
+                                _class="preview-toggle action-lnk",
+                                _style="display:none",
+                                ),
+                              A(T("Edit"),
+                                _class="preview-toggle action-lnk",
+                                ),
+                              _class="preview-toggles",
+                              )
             subform = DIV(FIELDSET(LEGEND(LABEL(INPUT(_type="checkbox",
                                                       _class="notify-toggle",
                                                       value=True,
@@ -549,7 +602,10 @@ class InlineNotifications(S3SQLSubForm):
                                                       ),
                                                 labels.get(recipient, "?"),
                                                 ),
-                                          ), form[0]),
+                                          ),
+                                   form[0],
+                                   toggle_edit,
+                                   ),
                           _class = "notification",
                           )
             widget.append(subform)
@@ -579,10 +635,11 @@ class InlineNotifications(S3SQLSubForm):
             @param form: the form
             @param master_id: the master record ID
             @param format: the data format extension
-            @return: True on success, False on error
 
-            TODO store the messages in component of delegation record
+            @return: True on success, False on error
         """
+
+        # TODO store the messages in component of delegation record
 
         form_vars = form.vars
 
@@ -591,69 +648,90 @@ class InlineNotifications(S3SQLSubForm):
             # Do nothing
             return True
 
+        notifications = DeploymentNotifications(master_id)
+
         T = current.T
         formname = self._formname()
 
         # CC current user (=coordinator)
         user = current.auth.user
         if user and user.pe_id:
-            cc = DeploymentNotifications.lookup_contact(user.pe_id)
+            cc = notifications.lookup_contact(user.pe_id)
         else:
             cc = None
 
         warnings = []
-        send_email = current.msg.send_email
+        #send_email = current.msg.send_email
+        # TEST
+        def send_email(to=None,cc=None,subject=None,message=None):
+            print("to", to)
+            print("cc", cc)
+            print("subject", subject)
+            print("message", message)
+            return True if to else False
+
+        data = notifications.data()
 
         # Send notification to requesting organisation
-        success = False
         notify_organisation = form_vars.get("%s_notify_organisation" % formname)
         if notify_organisation:
+            success = False
             email = form_vars.get("%s_organisation_email" % formname)
             if email:
+                # Get the templates
                 subject = form_vars.get("%s_organisation_subject" % formname)
                 message = form_vars.get("%s_organisation_message" % formname)
                 if subject and message:
+                    subject, message = notifications.compose((subject, message),
+                                                             data,
+                                                             )
                     success = send_email(to = email,
                                          cc = cc,
                                          subject = subject,
                                          message = message,
                                          )
-        if not success:
-            warnings.append(T("Organisation could not be notified"))
+            if not success:
+                warnings.append(T("Organisation could not be notified"))
 
         # Send notification to volunteer
-        success = False
         notify_volunteer = form_vars.get("%s_notify_volunteer" % formname)
         if notify_volunteer:
+            success = False
             email = form_vars.get("%s_volunteer_email" % formname)
             if email:
                 subject = form_vars.get("%s_volunteer_subject" % formname)
                 message = form_vars.get("%s_volunteer_message" % formname)
                 if subject and message:
+                    subject, message = notifications.compose((subject, message),
+                                                             data,
+                                                             )
                     success = send_email(to = email,
                                          cc = cc,
                                          subject = subject,
                                          message = message,
                                          )
-        if not success:
-            warnings.append(T("Volunteer could not be notified"))
+            if not success:
+                warnings.append(T("Volunteer could not be notified"))
 
         # Send notification to managing office
-        success = False
         notify_office = form_vars.get("%s_notify_office" % formname)
         if notify_office:
+            success = False
             email = form_vars.get("%s_office_email" % formname)
             if email:
                 subject = form_vars.get("%s_office_subject" % formname)
                 message = form_vars.get("%s_office_message" % formname)
                 if subject and message:
+                    subject, message = notifications.compose((subject, message),
+                                                             data,
+                                                             )
                     success = send_email(to = email,
                                          cc = cc,
                                          subject = subject,
                                          message = message,
                                          )
-        if not success:
-            warnings.append(T("Volunteer Office could not be notified"))
+            if not success:
+                warnings.append(T("Volunteer Office could not be notified"))
 
         # Screen messages
         if warnings:
@@ -665,9 +743,9 @@ class InlineNotifications(S3SQLSubForm):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def message_widget(field, value, **attr):
+    def subject_widget(field, value, **attr):
         """
-            Smaller than usual textarea for editing message texts
+            Widget to edit and preview a notification subject line
 
             @param field: the Field
             @param value: the current field value
@@ -678,14 +756,48 @@ class InlineNotifications(S3SQLSubForm):
         if not widget_id:
             widget_id = "%s_%s" % (field._tablename, field.name)
 
-        return TEXTAREA(_name = attr.get("_name", field.name),
+        edit = INPUT(_name = attr.get("_name", field.name),
+                     _id = widget_id,
+                     _type="text",
+                     _class = "subject %s" % (field.type),
+                     _placeholder = attr.get("_placeholder"),
+                     _style = "display:none",
+                     value = value,
+                     requires = field.requires
+                     )
+
+        preview = H6("", _class="preview")
+
+        return DIV(preview, edit, _class = "preview-widget")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def message_widget(field, value, **attr):
+        """
+            Widget to edit and preview a notification message body
+
+            @param field: the Field
+            @param value: the current field value
+            @param attr: DOM attributes for the widget
+        """
+
+        widget_id = attr.get("_id")
+        if not widget_id:
+            widget_id = "%s_%s" % (field._tablename, field.name)
+
+        edit = TEXTAREA(_name = attr.get("_name", field.name),
                         _id = widget_id,
                         _class = "message %s" % (field.type),
                         _placeholder = attr.get("_placeholder"),
                         _rows = 6,
+                        _style = "display:none",
                         value = value,
                         requires = field.requires,
                         )
+
+        preview = P("", _class="preview")
+
+        return DIV(preview, edit, _class = "preview-widget")
 
     # -------------------------------------------------------------------------
     @staticmethod

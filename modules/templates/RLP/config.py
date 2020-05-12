@@ -1207,18 +1207,18 @@ def config(settings):
             field.writable = False
 
             # Only the requesting org can change dates or comments
-            org_pe_id = current.s3db.pr_get_pe_id("org_organisation",
-                                                  record.organisation_id,
-                                                  )
-            if not org_pe_id or \
-               not current.auth.s3_has_role("HRMANAGER", for_pe=org_pe_id):
-                field = table.date
-                field.writable = False
-                field = table.end_date
-                field.writable = False
-                field = table.comments
-                field.writable = False
-                field.comment = None
+            #org_pe_id = current.s3db.pr_get_pe_id("org_organisation",
+            #                                      record.organisation_id,
+            #                                      )
+            #if not org_pe_id or \
+            #   not current.auth.s3_has_role("HRMANAGER", for_pe=org_pe_id):
+            #    field = table.date
+            #    field.writable = False
+            #    field = table.end_date
+            #    field.writable = False
+            #    field = table.comments
+            #    field.writable = False
+            #    field.comment = None
 
     # -------------------------------------------------------------------------
     def delegation_read_multiple_orgs():
@@ -1428,7 +1428,7 @@ def config(settings):
                                             set_min = "#hrm_delegation_end_date",
                                             )
 
-        if current.auth.s3_has_role("COORDINATOR"): #coordinator:
+        if current.auth.s3_has_role("COORDINATOR"):
             # Coordinators use custom form
             from s3 import S3SQLCustomForm
             crud_form = S3SQLCustomForm("organisation_id",
@@ -1439,7 +1439,6 @@ def config(settings):
                                         "status",
                                         "comments",
                                         )
-            #record = r.record
             if record and record.status == "REQ" and r.method != "read":
                 # Request that can be approved
                 # => append inline-notifications
@@ -1449,7 +1448,6 @@ def config(settings):
                                         label = T("Notifications"),
                                         ))
             s3db.configure("hrm_delegation", crud_form=crud_form)
-            #r.resource.configure(crud_form=crud_form)
 
         # Reconfigure
         s3db.configure("hrm_delegation",
@@ -1591,27 +1589,6 @@ def config(settings):
 
                     r.resource.configure(filter_widgets = filter_widgets,
                                          )
-                #if coordinator:
-                    ## Coordinators use custom form
-                    #from s3 import S3SQLCustomForm
-                    #crud_form = S3SQLCustomForm("organisation_id",
-                                                #"person_id",
-                                                #"date",
-                                                #"end_date",
-                                                #"requested_on",
-                                                #"status",
-                                                #"comments",
-                                                #)
-                    #record = r.record
-                    #if record and record.status == "REQ" and r.method != "read":
-                        ## Request that can be approved
-                        ## => append inline-notifications
-                        #from .notifications import InlineNotifications
-                        #crud_form.append(
-                            #InlineNotifications("notifications",
-                                                #label = T("Notifications"),
-                                                #))
-                    #r.resource.configure(crud_form=crud_form)
 
             # Adapt list fields to perspective
             list_fields = ["date",
@@ -1652,11 +1629,11 @@ def config(settings):
                                  report_options = report_options,
                                  )
 
-            # Set method for Ajax-composing notifications
-            from .notifications import InlineNotificationsCompose
+            # Set method for Ajax-lookup of notification data
+            from .notifications import InlineNotificationsData
             s3db.set_method("hrm", "delegation",
                             method = "notifications",
-                            action = InlineNotificationsCompose,
+                            action = InlineNotificationsData,
                             )
             return result
         s3.prep = custom_prep

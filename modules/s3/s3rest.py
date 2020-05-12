@@ -1069,9 +1069,9 @@ class S3Request(object):
 
         # Transformation mode?
         if "xsltmode" in get_vars:
-            args = dict(xsltmode=get_vars["xsltmode"])
+            args = {"xsltmode": get_vars["xsltmode"]}
         else:
-            args = dict()
+            args = {}
         # These 3 options are called by gis.show_map() & read by the
         # GeoRSS Import stylesheet to populate the gis_cache table
         # Source URL: For GeoRSS/KML Feed caching
@@ -1804,7 +1804,7 @@ class S3Method(object):
             @return: output object to send to the view
         """
 
-        output = dict()
+        output = {}
         return output
 
     # -------------------------------------------------------------------------

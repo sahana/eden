@@ -2212,3 +2212,33 @@ body.rtl .event-type-header {
 #hrm_delegation_inline_notifications__row {
   display: none;
 }
+
+/* line 265, ../scss/theme/_misc.scss */
+.preview-widget .highlight-sub {
+  border-bottom: dotted 0.5px #C0C0C0;
+  cursor: help;
+}
+/* line 269, ../scss/theme/_misc.scss */
+.preview-widget .highlight-miss {
+  background-color: #F4D48A;
+}
+/* line 272, ../scss/theme/_misc.scss */
+.preview-widget p.preview {
+  font-size: 0.9rem;
+  font-weight: normal;
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+  text-rendering: optimizeLegibility;
+  white-space: pre-wrap;
+  max-width: 40rem;
+  padding: 0.5rem;
+  background-color: #F4F4F4;
+}
+/* line 283, ../scss/theme/_misc.scss */
+.preview-widget h6.preview {
+  font-size: 0.9rem;
+  color: #550000;
+  max-width: 40rem;
+  background-color: #F4F4F4;
+  padding: 0.5rem;
+}
