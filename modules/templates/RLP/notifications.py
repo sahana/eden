@@ -661,14 +661,7 @@ class InlineNotifications(S3SQLSubForm):
             cc = None
 
         warnings = []
-        #send_email = current.msg.send_email
-        # TEST
-        def send_email(to=None,cc=None,subject=None,message=None):
-            print("to", to)
-            print("cc", cc)
-            print("subject", subject)
-            print("message", message)
-            return True if to else False
+        send_email = current.msg.send_email
 
         data = notifications.data()
 
