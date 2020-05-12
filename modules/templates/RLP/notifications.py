@@ -58,12 +58,14 @@ class DeploymentNotifications(object):
                 {volunteer_office}................Volunteer managing office name
                 {volunteer_office_email}..........Volunteer managing office email
                 {volunteer_office_phone}..........Volunteer managing office phone
+                {volunteer_uri}...................URI of the volunteer record
                 {organisation}....................Deploying organisation name
                 {organisation_email}..............Deploying organisation email
                 {organisation_phone}..............Deploying organisation phone
                 {coordinator}.....................Name of approving coordinator
                 {coordinator_email}...............Coordinator email address
                 {coordinator_phone}...............Coordinator phone number
+                {deployment_uri}..................URI of the deployment
         """
 
         # Sanitize data
@@ -183,6 +185,11 @@ class DeploymentNotifications(object):
                 "start": dtable.date.represent(delegation.date),
                 "end": dtable.end_date.represent(delegation.end_date),
                 "comments": delegation.comments,
+                "deployment_uri": URL(c = "hrm",
+                                      f = "delegation",
+                                      args = [self.delegation_id],
+                                      host = True,
+                                      ),
                 "volunteer_id": person.pe_label,
                 "volunteer_name": s3_fullname(person),
                 "volunteer_first_name": person.first_name,
@@ -193,7 +200,7 @@ class DeploymentNotifications(object):
                                      f = "person",
                                      args = [person_id],
                                      host = True,
-                                     )
+                                     ),
                 }
 
         # Lookup volunteer office
