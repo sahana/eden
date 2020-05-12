@@ -1501,6 +1501,7 @@ def config(settings):
 
             # Subsets to support workflow
             status_opts = None
+            orderby = "hrm_delegation.date"
             workflow = r.get_vars.get("workflow")
             if workflow:
                 today = current.request.utcnow
@@ -1513,22 +1514,26 @@ def config(settings):
                     status_opts = PENDING
                     query = (FS("date") >= today)
                     title = T("Pending Requests")
+                    orderby = "hrm_delegation.requested_on"
                 elif workflow == "d":
                     # Decided and relevant
                     status_opts = DECIDED
                     query = (FS("end_date") >= today)
                     title = T("Processed Requests")
+                    orderby = "hrm_delegation.requested_on desc"
                 elif workflow == "r":
                     # Relevant
                     status_opts = PENDING + DECIDED
                     query = (FS("date") >= today)
                     title = T("Current Requests")
+                    orderby = "hrm_delegation.date"
                 elif workflow == "o":
                     # Obsolete (past, cancelled or implemented)
                     query = (FS("end_date") < today) | \
                             (FS("status").belongs(("DECL", "RJCT", "CANC", "IMPL"))) | \
                             ((FS("date") < today) & (FS("status") == "REQ"))
                     title = T("Archive")
+                    orderby = "hrm_delegation.end_date desc"
                 else:
                     # Current delegations (accepted|approved and started)
                     status_opts = (("ACPT", "APPR"))
@@ -1625,7 +1630,7 @@ def config(settings):
                 }
 
             r.resource.configure(list_fields = list_fields,
-                                 orderby = "hrm_delegation.date",
+                                 orderby = orderby,
                                  report_options = report_options,
                                  )
 
@@ -1638,9 +1643,11 @@ def config(settings):
             return result
         s3.prep = custom_prep
 
+        attr = dict(attr)
         if volunteer_id:
-            attr = dict(attr)
             attr["rheader"] = rlp_vol_rheader
+        else:
+            attr["rheader"] = rlp_delegation_rheader
 
         return attr
 
@@ -2067,6 +2074,49 @@ def rlp_org_rheader(r, tabs=None):
                                                          )
     return rheader
 
+# =============================================================================
+def rlp_delegation_rheader(r, tabs=None):
+    """ hrm_delegation custom resource header """
+
+    if r.representation != "html":
+        # Resource headers only used in interactive views
+        return None
+
+    from s3 import s3_rheader_resource, S3ResourceHeader
+
+    tablename, record = s3_rheader_resource(r)
+    if tablename != r.tablename:
+        resource = current.s3db.resource(tablename, id=record.id)
+    else:
+        resource = r.resource
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+        T = current.T
+
+        if tablename == "hrm_delegation":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        (T("Notifications"), "delegation_message"),
+                        ]
+
+            rheader_fields = [["organisation_id",
+                               "date",
+                               "status",
+                               ],
+                              ["person_id",
+                               "end_date",
+                               ],
+                              ]
+
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
+                                                         table=resource.table,
+                                                         record=record,
+                                                         )
+    return rheader
 
 # =============================================================================
 class RLPAvailabilityFilter(S3DateFilter):

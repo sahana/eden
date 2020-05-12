@@ -296,6 +296,9 @@ class DeploymentNotifications(object):
                                      subject = message[0],
                                      message = message[1],
                                      )
+                self.save(email, message[0], message[1],
+                          status = "SENT" if success else "FAILED",
+                          )
         if not success:
             warnings.append(T("Organisation could not be notified"))
 
@@ -309,6 +312,9 @@ class DeploymentNotifications(object):
                                      subject = message[0],
                                      message = message[1],
                                      )
+                self.save(email, message[0], message[1],
+                          status = "SENT" if success else "FAILED",
+                          )
         if not success:
             warnings.append(T("Volunteer could not be notified"))
 
@@ -322,6 +328,9 @@ class DeploymentNotifications(object):
                                      subject = message[0],
                                      message = message[1],
                                      )
+                self.save(email, message[0], message[1],
+                          status = "SENT" if success else "FAILED",
+                          )
         if not success:
             warnings.append(T("Volunteer Office could not be notified"))
 
@@ -373,6 +382,29 @@ class DeploymentNotifications(object):
                 output["email"][recipient] = email
 
         return output
+
+    # -------------------------------------------------------------------------
+    def save(self, recipient, subject, message, status=None):
+        """
+            Save a notification in the message journal of the
+            delegation.
+
+            @param recipient: the recipient name or email
+            @param subject: the message subject
+            @param message: the message text
+            @param status: the status of the message SENT|FAILED
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.hrm_delegation_message
+        table.insert(delegation_id = self.delegation_id,
+                     recipient = recipient,
+                     subject = subject,
+                     message = message,
+                     status = status or "SENT",
+                     )
 
 # =============================================================================
 class InlineNotificationsData(S3Method):
@@ -639,8 +671,6 @@ class InlineNotifications(S3SQLSubForm):
             @return: True on success, False on error
         """
 
-        # TODO store the messages in component of delegation record
-
         form_vars = form.vars
 
         status = form_vars.get("status")
@@ -683,6 +713,9 @@ class InlineNotifications(S3SQLSubForm):
                                          subject = subject,
                                          message = message,
                                          )
+                    notifications.save(email, subject, message,
+                                       status = "SENT" if success else "FAILED",
+                                       )
             if not success:
                 warnings.append(T("Organisation could not be notified"))
 
@@ -703,6 +736,9 @@ class InlineNotifications(S3SQLSubForm):
                                          subject = subject,
                                          message = message,
                                          )
+                    notifications.save(email, subject, message,
+                                       status = "SENT" if success else "FAILED",
+                                       )
             if not success:
                 warnings.append(T("Volunteer could not be notified"))
 
@@ -723,6 +759,9 @@ class InlineNotifications(S3SQLSubForm):
                                          subject = subject,
                                          message = message,
                                          )
+                    notifications.save(email, subject, message,
+                                       status = "SENT" if success else "FAILED",
+                                       )
             if not success:
                 warnings.append(T("Volunteer Office could not be notified"))
 

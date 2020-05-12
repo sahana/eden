@@ -5343,6 +5343,7 @@ class HRDelegationModel(S3Model):
 
     names = ("hrm_delegation",
              "hrm_delegation_status_opts",
+             "hrm_delegation_message",
              )
 
     def model(self):
@@ -5441,6 +5442,11 @@ class HRDelegationModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        # Components
+        self.add_components(tablename,
+                            hrm_delegation_message = "delegation_id",
+                            )
+
         # CRUD Strings
         crud_strings[tablename] = Storage(
             label_create = T("Create Delegation"),
@@ -5454,6 +5460,76 @@ class HRDelegationModel(S3Model):
             msg_record_deleted = T("Delegation deleted"),
             msg_list_empty = T("No Delegations currently registered"),
             )
+
+        # ---------------------------------------------------------------------
+        # Messages exchanged in connection with a delegation
+        #
+        message_status = {"SENT": T("Sent"),
+                          "FAILED": T("Failed"),
+                          }
+
+        tablename = "hrm_delegation_message"
+        define_table(tablename,
+                     Field("delegation_id", "reference hrm_delegation",
+                           ondelete = "CASCADE",
+                           readable = False,
+                           writable = False,
+                           ),
+                     s3_date(default="now"),
+                     Field("recipient",
+                           label = T("Recipient"),
+                           ),
+                     Field("subject",
+                           label = T("Subject"),
+                           ),
+                     Field("message", "text",
+                           label = T("Message"),
+                           represent = s3_text_represent,
+                           ),
+                     Field("status",
+                           default = "SENT",
+                           label = T("Status"),
+                           requires = IS_IN_SET(message_status,
+                                                zero = None,
+                                                ),
+                           represent = S3Represent(options=message_status),
+                           writable = False,
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # List fields
+        list_fields = ["date",
+                       "recipient",
+                       "subject",
+                       "message",
+                       "status",
+                       ]
+
+        # Table configuration
+        self.configure(tablename,
+                       list_fields = list_fields,
+                       insertable = False,
+                       deletable = False,
+                       editable = False,
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Message"),
+            title_display = T("Message Details"),
+            title_list = T("Messages"),
+            title_update = T("Edit Message"),
+            label_list_button = T("List Messages"),
+            label_delete_button = T("Delete Message"),
+            msg_record_created = T("Message created"),
+            msg_record_modified = T("Message updated"),
+            msg_record_deleted = T("Message deleted"),
+            msg_list_empty = T("No Messages currently registered"),
+            )
+
+        # ---------------------------------------------------------------------
+        # TODO hrm_delegation_note
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
