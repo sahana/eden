@@ -1332,6 +1332,14 @@ def comment_parse(comment, comments, task_id=None):
         task_id = comment.task_id
     else:
         header = author
+    
+    comment_edit = A(T("Edit"),
+                      _href=URL(c="project", f="task",
+                                args=[task_id,"comment",comment.id, "update"],
+                                extension="html",
+                                ),
+                      _class="action-btn")
+
     thread = LI(DIV(s3base.s3_avatar_represent(comment.created_by),
                     DIV(DIV(header,
                             _class="comment-header"),
@@ -1344,6 +1352,7 @@ def comment_parse(comment, comments, task_id=None):
                                   _class="action-btn"),
                                 _onclick="comment_reply(%i);" % comment.id,
                                 _class="comment-reply"),
+                            DIV(comment_edit),
                             _class="fright"),
                     _id="comment-%i" % comment.id,
                     _task_id=task_id,
