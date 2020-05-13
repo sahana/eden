@@ -86,6 +86,24 @@ def rlp_volunteer_anonymize():
     # Helper to produce an anonymous ID (pe_label)
     anonymous_id = lambda record_id, f, v: "NN%s" % uuid.uuid4().hex[-8:].upper()
 
+    # Rules for delegation messages
+    notifications = ("hrm_delegation_message", {"key": "delegation_id",
+                                                "match": "id",
+                                                "fields": {"recipient": "remove",
+                                                           "subject": "remove",
+                                                           "message": "remove",
+                                                           },
+                                                "delete": True,
+                                                })
+
+    # Rules for delegation notes
+    notes = ("hrm_delegation_note", {"key": "delegation_id",
+                                     "match": "id",
+                                     "fields": {"note": "remove",
+                                                },
+                                     "delete": True,
+                                     })
+
     rules = [# Remove identity of volunteer
              {"name": "default",
               "title": "Names, IDs, Contact Information, Addresses",
@@ -141,12 +159,15 @@ def rlp_volunteer_anonymize():
 
              # Remove all free texts from delegations
              {"name": "delegations",
-              "title": "Deployment Details",
+              "title": "Deployment Comments, Notifications and Notes",
               "cascade": [("hrm_delegation", {"key": "person_id",
                                               "match": "id",
                                               "fields": {"comments": "remove",
                                                          "status": rlp_decline_delegation,
                                                          },
+                                              "cascade": [notifications,
+                                                          notes,
+                                                          ],
                                               }),
                           ],
               },
