@@ -2558,7 +2558,10 @@ $('.copy-link').click(function(e){
             else:
                 result = True
 
-            if ADMIN is None:
+            if ADMIN and auth.s3_has_role("AGENCY"):
+                # Unfiltered
+                pass
+            else:
                 # Filtered
                 from s3 import FS
                 rfilter = (FS("visible.value") == "1") | \
