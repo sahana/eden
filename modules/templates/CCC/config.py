@@ -1450,6 +1450,67 @@ $('.copy-link').click(function(e){
 
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
+    # -----------------------------------------------------------------------------
+    def customise_hrm_human_resource_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.method != "import" and r.http == "POST":
+                post_vars = r.post_vars
+                if "selected" in post_vars:
+                    # Bulk Action 'Message' has been selected
+                    selected = post_vars.selected
+                    if selected:
+                        selected = selected.split(",")
+                    else:
+                        selected = []
+
+                    # Handle exclusion filter
+                    if post_vars.mode == "Exclusive":
+                        if "filterURL" in post_vars:
+                            from s3 import S3URLQuery
+                            filters = S3URLQuery.parse_url(post_vars.filterURL)
+                        else:
+                            filters = None
+                        from s3 import FS
+                        query = ~(FS("id").belongs(selected))
+                        resource = current.s3db.resource("hrm_human_resource",
+                                                         filter = query,
+                                                         vars = filters)
+                        # Add Manual URL Filters
+                        #if rfilter:
+                        #    resource.add_filter(rfilter)
+                        rows = resource.select(["id"], as_rows=True)
+                        selected = [str(row.id) for row in rows]
+
+                    # GET URL lengths are limited, so pass 'selected' via session
+                    current.session.s3.ccc_message_hr_ids = selected
+                    from gluon import redirect, URL
+                    redirect(URL(c="project", f="task",
+                                 args = "create",
+                                 vars = {"hr_ids": 1},
+                                 ))
+
+            return result
+        s3.prep = prep
+
+        # Add Bulk Messaging to List View
+        attr["dtargs"] = {"dt_bulk_actions": [(T("Message"), "message")],
+                          }
+
+        return attr
+
+    settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
+
     # -------------------------------------------------------------------------
     #def customise_hrm_job_title_resource(r, tablename):
 
@@ -2558,7 +2619,10 @@ $('.copy-link').click(function(e){
             else:
                 result = True
 
-            if ADMIN is None:
+            if ADMIN and auth.s3_has_role("AGENCY"):
+                # Unfiltered
+                pass
+            else:
                 # Filtered
                 from s3 import FS
                 rfilter = (FS("visible.value") == "1") | \
@@ -3227,7 +3291,9 @@ $('.copy-link').click(function(e){
         #    redirect(URL(c="pr", f="person", args=[person_id], vars={"donors": 1}))
 
         # Redirect to Normal person profile
-        redirect(URL(c="pr", f="person", args=[person_id]))
+        redirect(URL(c="pr", f="person",
+                     args = [person_id],
+                     ))
 
     # -----------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
@@ -4024,8 +4090,26 @@ $('.copy-link').click(function(e){
             # Update
             return
 
+        public_url = settings.get_base_public_url()
+
         form_vars_get = form.vars.get
         task_id = form_vars_get("id")
+
+        subject = form_vars_get("name")
+
+        message = form_vars_get("description")
+        if message is None:
+            message = ""
+        else:
+            # Convert relative paths to absolute
+            from lxml import etree, html
+            #parser = etree.HTMLParser()
+            message = message.strip()
+            tree = html.fragment_fromstring(message, create_parent=True)
+            tree.make_links_absolute(public_url)
+            message = etree.tostring(tree, pretty_print=False, encoding="utf-8").decode("utf-8")
+            # Need to add the HTML tags around the HTML so that Mail recognises it as HTML
+            message = "<html>%s</html>" % message
 
         db = current.db
         s3db = current.s3db
@@ -4073,7 +4157,6 @@ $('.copy-link').click(function(e){
             sender = None
 
             # Construct Email message
-            subject = form_vars_get("name")
             if subject is None:
                 auth = current.auth
                 if not auth.s3_has_role("AGENCY"):
@@ -4102,24 +4185,90 @@ $('.copy-link').click(function(e){
                                                        sender,
                                                        )
 
-            message = form_vars_get("description")
-            if message is None:
-                message = ""
-            else:
-                # Convert relative paths to absolute
-                from lxml import etree, html
-                #parser = etree.HTMLParser()
-                message = message.strip()
-                tree = html.fragment_fromstring(message, create_parent=True)
-                tree.make_links_absolute(settings.get_base_public_url())
-                message = etree.tostring(tree, pretty_print=False, encoding="utf-8").decode("utf-8")
-                # Need to add the HTML tags around the HTML so that Mail recognises it as HTML
-                message = "<html>%s</html>" % message
-
             # Lookup Emails
             ptable = s3db.pr_person
             ctable = s3db.pr_contact
             query = (ptable.id.belongs(person_ids)) & \
+                    (ptable.pe_id == ctable.pe_id) & \
+                    (ctable.contact_method == "EMAIL") & \
+                    (ctable.deleted == False)
+            emails = db(query).select(ctable.value,
+                                      distinct = True)
+
+            # Send Email to each Person
+            send_email = current.msg.send_email
+            for email in emails:
+                send_email(to = email.value,
+                           subject = subject,
+                           message = message,
+                           attachments = attachments,
+                           reply_to = reply_to,
+                           sender = sender,
+                           )
+
+            # Set the Realm Entity
+            # No Realm Entity as should be visible to all ORG_ADMINs & all Agency Group
+            #organisation_id = user.organisation_id
+            #if organisation_id:
+            #    otable = s3db.org_organisation
+            #    org = db(otable.id == organisation_id).select(otable.pe_id,
+            #                                                  limitby = (0, 1)
+            #                                                  ).first()
+            #    db(ttable.id == task_id).update(realm_entity = org.pe_id)
+
+            return
+
+        hr_ids = get_vars_get("hr_ids")
+        if hr_ids is not None:
+            # Sending to a list of HRs from the Bulk Action
+
+            # Retrieve list from the session
+            session = current.session
+            hr_ids = session.s3.get("ccc_message_hr_ids")
+            if hr_ids is None:
+                session.warning = current.T("No people selected to send notifications to!")
+                return
+            # Clear from session
+            del session.s3["ccc_message_hr_ids"]
+
+            reply_to = None
+            sender = None
+
+            # Construct Email message
+            if subject is None:
+                auth = current.auth
+                if not auth.s3_has_role("AGENCY"):
+                    # ORG_ADMIN messaging Volunteers
+                    user = auth.user
+                    otable = s3db.org_organisation
+                    org = db(otable.id == user.organisation_id).select(otable.name,
+                                                                       limitby = (0, 1)
+                                                                       ).first()
+                    org_name = org.name
+                    system_name_short = settings.get_system_name_short()
+                    subject = "[%s] Message from %s" % \
+                        (system_name_short,
+                         org_name,
+                         )
+                    reply_to = "%s %s <%s>" % (user.first_name,
+                                               user.last_name,
+                                               user.email,
+                                               )
+                    sender = settings.get_mail_sender()
+                    if sender is not None:
+                        if "<" in sender:
+                            sender = sender.split("<")[1][:-1]
+                        sender = "'%s via %s' <%s>" % (org_name,
+                                                       system_name_short,
+                                                       sender,
+                                                       )
+
+            # Lookup Emails
+            htable = s3db.hrm_human_resource
+            ptable = s3db.pr_person
+            ctable = s3db.pr_contact
+            query = (htable.id.belongs(hr_ids)) & \
+                    (htable.person_id == ptable.id) & \
                     (ptable.pe_id == ctable.pe_id) & \
                     (ctable.contact_method == "EMAIL") & \
                     (ctable.deleted == False)
@@ -4164,22 +4313,23 @@ $('.copy-link').click(function(e){
         fullname = s3_fullname(user)
 
         # Construct Email message
-        system_name = settings.get_system_name_short()
-        subject = "%s: Message sent from %s" % \
-                    (system_name,
-                     fullname,
-                     )
+        base_url = "%s%s" % (public_url,
+                             URL(c="project", f="task"),
+                             )
 
-        url = "%s%s" % (settings.get_base_public_url(),
-                        URL(c="project", f="task"),
-                        )
+        system_name = settings.get_system_name_short()
 
         message = "%s has sent you a Message on %s\n\nSubject: %s\nMessage: %s\n\nYou can view the message here: %s" % \
                     (fullname,
                      system_name,
-                     form_vars_get("name"),
-                     form_vars_get("description") or "",
-                     url,
+                     subject,
+                     message,
+                     base_url,
+                     )
+
+        subject = "%s: Message sent from %s" % \
+                    (system_name,
+                     fullname,
                      )
 
         organisation_ids = get_vars_get("o")
@@ -4370,8 +4520,9 @@ $('.copy-link').click(function(e){
         f.comment = None
         if r.method == "create":
             table.comments.readable = table.comments.writable = False
-            person_ids = r.get_vars.get("person_ids")
-            if person_ids is not None:
+            get_vars_get = r.get_vars.get
+            if get_vars_get("person_ids") is not None or \
+               get_vars_get("hr_ids") is not None:
                 auth = current.auth
                 if not auth.s3_has_role("AGENCY"):
                     # ORG_ADMIN messaging Volunteers
@@ -4410,7 +4561,7 @@ $('.copy-link').click(function(e){
                 table.description.comment = None
 
         s3db.configure("project_task",
-                       # Can simply replace the default one
+                       # Can simply replace the default one using the postprocess
                        #create_onaccept = project_task_create_onaccept,
                        create_onaccept = None,
                        crud_form = S3SQLCustomForm("created_by",
