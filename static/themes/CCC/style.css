@@ -19,7 +19,7 @@ div.subheading {
 #auth_user_little_physical div,
 #auth_user_workplace div,
 #hrm_human_resource_sub_reserve_value div,
-#org_organisation_sub_apply_value div,
+/*#org_organisation_sub_apply_value div,*/
 #org_organisation_sub_visible_value div,
 /*#pr_person_sub_convictions_value div,*/
 #pr_person_sub_dbs_value div,
@@ -44,7 +44,7 @@ div.subheading {
 #auth_user_little_physical div:first-child,
 #auth_user_workplace div:first-child,
 #hrm_human_resource_sub_reserve div:first-child,
-#org_organisation_sub_apply_value div:first-child,
+/*#org_organisation_sub_apply_value div:first-child,*/
 #org_organisation_sub_visible_value div:first-child,
 /*#pr_person_sub_convictions_value div:first-child,*/
 #pr_person_sub_dbs_value div:first-child,

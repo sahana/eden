@@ -2404,12 +2404,12 @@ $('.copy-link').click(function(e){
 
         # Filtered components
         s3db.add_components("org_organisation",
-                            org_organisation_tag = ({"name": "apply",
-                                                     "joinby": "organisation_id",
-                                                     "multiple": False,
-                                                     "filterby": {"tag": "apply",
-                                                                  },
-                                                     },
+                            org_organisation_tag = (#{"name": "apply",
+                                                    # "joinby": "organisation_id",
+                                                    # "multiple": False,
+                                                    # "filterby": {"tag": "apply",
+                                                    #              },
+                                                    # },
                                                     {"name": "sm_other_type",
                                                      "joinby": "organisation_id",
                                                      "multiple": False,
@@ -2441,14 +2441,14 @@ $('.copy-link').click(function(e){
         f = email.table.value
         f.requires = IS_EMPTY_OR(IS_EMAIL())
 
-        apply = components_get("apply")
-        f = apply.table.value
-        f.requires = IS_IN_SET({"0": T("No"),
-                                "1": T("Yes"),
-                                })
-        f.widget = lambda f, v: \
-                        SQLFORM.widgets.radio.widget(f, v,
-                                                     style="divs")
+        #apply = components_get("apply")
+        #f = apply.table.value
+        #f.requires = IS_IN_SET({"0": T("No"),
+        #                        "1": T("Yes"),
+        #                        })
+        #f.widget = lambda f, v: \
+        #                SQLFORM.widgets.radio.widget(f, v,
+        #                                             style="divs")
 
         visible = components_get("visible")
         f = visible.table.value
@@ -2555,7 +2555,7 @@ $('.copy-link').click(function(e){
                                                         ),
                                                    (T("Please Specify"), "sm_other_type.value"),
                                                    (T("Visible to Volunteers?"), "visible.value"),
-                                                   (T("Volunteers able to Apply?"), "apply.value"),
+                                                   #(T("Volunteers able to Apply?"), "apply.value"),
                                                    "website",
                                                    "comments",
                                                    ),
@@ -2715,16 +2715,16 @@ $('.copy-link').click(function(e){
                     S3CRUD.action_buttons(r)
 
                     # Custom Action Buttons
-                    otable = s3db.org_organisation
-                    ttable = s3db.org_organisation_tag
-                    query = (ttable.tag == "apply") & \
-                            (ttable.value == "1") & \
-                            (ttable.organisation_id == otable.id)
-                    applyable = db(query).select(otable.id)
-                    restrict_a = [str(row.id) for row in applyable]
+                    #otable = s3db.org_organisation
+                    #ttable = s3db.org_organisation_tag
+                    #query = (ttable.tag == "apply") & \
+                    #        (ttable.value == "1") & \
+                    #        (ttable.organisation_id == otable.id)
+                    #applyable = db(query).select(otable.id)
+                    #restrict_a = [str(row.id) for row in applyable]
 
                     s3.actions += [{"label": s3_str(T("Apply")),
-                                    "restrict": restrict_a,
+                                    #"restrict": restrict_a,
                                     "url": URL(c = "org",
                                                f = "organisation",
                                                args = ["[id]", "apply"],

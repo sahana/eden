@@ -244,7 +244,8 @@ class organisationApply(S3Method):
             # Check that this Org allows Applications
             ttable = s3db.org_organisation_tag
             query = (ttable.organisation_id == organisation_id) & \
-                    (ttable.tag == "apply")
+                    (ttable.tag == "visible")
+            #        (ttable.tag == "apply")
             apply = db(query).select(ttable.value,
                                      limitby = (0, 1)
                                      ).first()
