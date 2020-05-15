@@ -445,11 +445,7 @@ def s3_mark_required(fields,
         else:
             labels[fname] = "%s:" % flabel
 
-    # Callers expect an iterable
-    #if labels:
     return (labels, _required)
-    #else:
-    #    return None
 
 # =============================================================================
 def s3_addrow(form, label, widget, comment, formstyle, row_id, position=-1):

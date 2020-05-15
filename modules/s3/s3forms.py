@@ -54,6 +54,7 @@ from s3dal import Field, original_tablename
 from .s3query import FS
 from .s3utils import s3_mark_required, s3_store_last_record_id, s3_str, s3_validate
 from .s3widgets import S3Selector, S3UploadWidget
+from .s3validators import JSONERRORS
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -110,6 +111,18 @@ class S3SQLForm(object):
 
         self.attr = attr
         self.opts = opts
+
+        self.prefix = None
+        self.name = None
+        self.resource = None
+
+        self.tablename = None
+        self.table = None
+        self.record_id = None
+
+        self.subtables = None
+        self.subrows = None
+        self.components = None
 
     # -------------------------------------------------------------------------
     # Rendering/Processing
@@ -924,11 +937,8 @@ class S3SQLCustomForm(S3SQLForm):
         if not readonly:
             mark_required = self._config("mark_required", default=[])
             labels, required = s3_mark_required(self.table, mark_required)
-            if required:
-                # Show the key if there are any required fields.
-                s3.has_required = True
-            else:
-                s3.has_required = False
+            # Show the required-hint if there are any required fields.
+            s3.has_required = required
         else:
             labels = None
 
@@ -963,20 +973,18 @@ class S3SQLCustomForm(S3SQLForm):
             subrows = self.subrows
             for alias in subtables:
 
-                # Get the join for this subtable
+                # Get the component
                 component = rcomponents.get(alias)
                 if not component or component.multiple:
                     continue
-                join = component.get_join()
-                q = query & join
 
-                # Retrieve the row
-                # @todo: Should not need .ALL here
-                row = db(q).select(component.table.ALL,
-                                   limitby = (0, 1),
-                                   ).first()
+                # Get the subtable row from the DB
+                subfields = subtable_fields.get(alias)
+                if subfields:
+                    subfields = [f[0] for f in subfields]
+                row = self._subrow(query, component, fields=subfields)
 
-                # Check permission for this subrow
+                # Check permission for this subtable row
                 ctname = component.tablename
                 if not row:
                     permitted = has_permission("create", ctname)
@@ -1099,7 +1107,7 @@ class S3SQLCustomForm(S3SQLForm):
         if settings.submit_style and not settings.custom_submit:
             try:
                 form[0][-1][0][0]["_class"] = settings.submit_style
-            except:
+            except (KeyError, IndexError, TypeError):
                 # Submit button has been removed or a different formstyle,
                 # such as Bootstrap (which is already styled anyway)
                 pass
@@ -1237,7 +1245,7 @@ class S3SQLCustomForm(S3SQLForm):
                format = None,
                link = None,
                hierarchy = None,
-               undelete = False
+               undelete = False,
                ):
         """
             Create/update all records from the form.
@@ -1250,33 +1258,43 @@ class S3SQLCustomForm(S3SQLForm):
         """
 
         db = current.db
+
+        resource = self.resource
         table = self.table
 
+        accept_row = self._accept
+        input_data = self._extract
+
         # Create/update the main record
-        main_data = self._extract(form)
-        master_id, master_form_vars = self._accept(self.record_id,
-                                                   main_data,
-                                                   format = format,
-                                                   link = link,
-                                                   hierarchy = hierarchy,
-                                                   undelete = undelete,
-                                                   )
+        main_data = input_data(form)
+        master_id, master_form_vars = accept_row(self.record_id,
+                                                 main_data,
+                                                 format = format,
+                                                 link = link,
+                                                 hierarchy = hierarchy,
+                                                 undelete = undelete,
+                                                 )
         if not master_id:
             return
         else:
+            master_query = (table._id == master_id)
             main_data[table._id.name] = master_id
             # Make sure lastid is set even if master has no data
             # (otherwise *_next redirection will fail)
-            self.resource.lastid = str(master_id)
+            resource.lastid = str(master_id)
 
         # Create or update the subtables
+        get_subrow = self._subrow
         for alias in self.subtables:
 
-            subdata = self._extract(form, alias=alias)
+            # Get the data for this subtable from the form
+            subdata = input_data(form, alias=alias)
             if not subdata:
                 continue
 
-            component = self.resource.components[alias]
+            component = resource.components[alias]
+            if not component or component.multiple:
+                return
             subtable = component.table
 
             # Get the key (pkey) of the master record to link the
@@ -1284,7 +1302,8 @@ class S3SQLCustomForm(S3SQLForm):
             pkey = component.pkey
             if pkey != table._id.name and pkey not in main_data:
                 row = db(table._id == master_id).select(table[pkey],
-                                                        limitby=(0, 1)).first()
+                                                        limitby = (0, 1),
+                                                        ).first()
                 if not row:
                     return
                 main_data[pkey] = row[table[pkey]]
@@ -1297,10 +1316,10 @@ class S3SQLCustomForm(S3SQLForm):
                 subdata[component.fkey] = main_data[pkey]
 
             # Do we already have a record for this component?
-            rows = self.subrows
-            if alias in rows and rows[alias] is not None:
+            subrow = get_subrow(master_query, component, fields=[subtable._id.name])
+            if subrow:
                 # Yes => get the subrecord ID
-                subid = rows[alias][subtable._id]
+                subid = subrow[subtable._id]
             else:
                 # No => apply component defaults
                 subid = None
@@ -1308,12 +1327,12 @@ class S3SQLCustomForm(S3SQLForm):
                                                  data = subdata,
                                                  )
             # Accept the subrecord
-            self._accept(subid,
-                         subdata,
-                         alias = alias,
-                         link = link,
-                         format = format,
-                         )
+            accept_row(subid,
+                       subdata,
+                       alias = alias,
+                       link = link,
+                       format = format,
+                       )
 
         # Accept components (e.g. Inline-Forms)
         for item in self.components:
@@ -1332,6 +1351,39 @@ class S3SQLCustomForm(S3SQLForm):
             if var not in form_vars:
                 form_vars[var] = master_form_vars[var]
         return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _subrow(master_query, component, fields=None):
+        """
+            Extract the current row from a single-component
+
+            @param master_query: query for the master record
+            @param component: the single-component (S3Resource)
+            @param fields: list of field names to extract
+        """
+
+        # Get the join for this subtable
+        if not component or component.multiple:
+            return None
+        query = master_query & component.get_join()
+
+        table = component.table
+        if fields:
+            # Map field names to component table
+            try:
+                fields = [table[f] for f in fields]
+            except (KeyError, AttributeError):
+                fields = None
+            else:
+                fields.insert(0, table._id)
+        if not fields:
+            fields = [table.ALL]
+
+        # Retrieve the row
+        return current.db(query).select(*fields,
+                                        limitby = (0, 1),
+                                        ).first()
 
     # -------------------------------------------------------------------------
     # Utility functions
@@ -2715,7 +2767,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         if isinstance(value, basestring):
             try:
                 value = json.loads(value)
-            except:
+            except JSONERRORS:
                 import sys
                 error = sys.exc_info()[1]
                 if hasattr(error, "message"):
@@ -2831,14 +2883,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     deletable = False
             else:
                 record_id = None
-                if _editable:
-                    editable = True
-                else:
-                    editable = False
-                if _deletable:
-                    deletable = True
-                else:
-                    deletable = False
+                editable = bool(_editable)
+                deletable = bool(_deletable)
 
             # Render read-row accordingly
             rowname = "%s-%s" % (formname, i)
@@ -3065,19 +3111,19 @@ class S3SQLInlineComponent(S3SQLSubForm):
             try:
                 data = json.loads(form.vars[fname])
             except ValueError:
-                return
+                return False
             component_name = data.get("component", None)
             if not component_name:
-                return
+                return False
             data = data.get("data", None)
             if not data:
-                return
+                return False
 
             # Get the component
             resource = self.resource
             component = resource.components.get(component_name)
             if not component:
-                return
+                return False
 
             # Link table handling
             link = component.link
@@ -3230,7 +3276,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                                   limitby = (0, 1)
                                                   ).first()
                         if not master:
-                            return
+                            return False
                     else:
                         master = Storage({pkey: master_id})
 
@@ -3373,7 +3419,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         s3 = current.response.s3
 
-        rowtype = readonly and "read" or "edit"
+        rowtype = "read" if readonly else "edit"
         pkey = table._id.name
 
         data = {}
