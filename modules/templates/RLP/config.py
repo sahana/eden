@@ -952,10 +952,10 @@ def config(settings):
                                    (T("ID"), "pe_label"),
                                    # name-fields
                                    (T("Age"), "age"),
-                                   "occupation_type_person.occupation_type_id",
-                                   "availability.hours_per_week",
-                                   "current_address.location_id$addr_postcode",
-                                   (T("Place of Residence"), "current_address.location_id$L3"),
+                                   #"occupation_type_person.occupation_type_id",
+                                   #"availability.hours_per_week",
+                                   #"current_address.location_id$addr_postcode",
+                                   #(T("Place of Residence"), "current_address.location_id$L3"),
                                    ]
 
                     # Custom Form
@@ -984,7 +984,6 @@ def config(settings):
                         if script not in s3.jquery_ready:
                             s3.jquery_ready.append(script)
                         crud_fields.append("volunteer_record.status")
-                        list_fields.append("volunteer_record.status")
 
                     # Show names and contact details if:
                     # - user is COORDINATOR, or
@@ -1008,8 +1007,8 @@ def config(settings):
                         name_fields = []
 
                     if coordinator:
-                        # Coordinators can search names and see personal
-                        # details and address
+                        # Coordinators can search names and see names,
+                        # personal details and addresses
                         text_search_fields = name_fields + ["pe_label"]
                         list_fields[2:2] = name_fields
                         crud_fields.extend([
@@ -1026,6 +1025,12 @@ def config(settings):
                                             multiple = False,
                                             ),
                                    ])
+                        # Coordinators can export contact details in XLS/PDF
+                        if r.representation in ("xls", "pdf"):
+                            list_fields.extend([
+                                (T("Email"), "email.value"),
+                                (T("Mobile Phone"), "phone.value"),
+                                ])
                     else:
                         # Other users see ID and Alias
                         text_search_fields = ["person_details.alias", "pe_label"]
@@ -1067,15 +1072,25 @@ def config(settings):
 
                     # Common fields for all cases
                     crud_fields.extend([
-                                   S3SQLInlineLink("occupation_type",
-                                                   label = T("Occupation Type"),
-                                                   field = "occupation_type_id",
-                                                   ),
-                                   (T("Occupation / Speciality"), "person_details.occupation"),
-                                   "availability.hours_per_week",
-                                   "volunteer_record.comments",
-                                   ])
+                        S3SQLInlineLink("occupation_type",
+                                       label = T("Occupation Type"),
+                                       field = "occupation_type_id",
+                                       ),
+                        (T("Occupation / Speciality"), "person_details.occupation"),
+                        "availability.hours_per_week",
+                        "volunteer_record.comments",
+                        ])
+                    list_fields.extend([
+                        "occupation_type_person.occupation_type_id",
+                        "availability.hours_per_week",
+                        "current_address.location_id$addr_postcode",
+                        (T("Place of Residence"), "current_address.location_id$L3"),
+                        ])
                     text_search_fields.append("person_details.occupation")
+
+                    # Status as last column
+                    if coordinator:
+                        list_fields.append("volunteer_record.status")
 
                     # Filters
                     filter_widgets = [
@@ -1130,12 +1145,6 @@ def config(settings):
                     if not has_role("HRMANAGER") and \
                        r.interactive and r.method is None and not r.component_id:
                         r.method = "organize"
-                    #if coordinator:
-                    #    s3db.add_custom_callback("hrm_delegation",
-                    #                             "onaccept",
-                    #                             hrm_delegation_update_onaccept,
-                    #                             method = "update",
-                    #                             )
 
             elif callable(standard_prep):
                 result = standard_prep(r)
@@ -1282,46 +1291,6 @@ def config(settings):
 
         return multiple_orgs, org_ids
 
-    # -------------------------------------------------------------------------
-    #def hrm_delegation_update_onaccept(form):
-    #    """
-    #        Coordinator has updated a Request
-    #        - if this is an approval then send a notification
-    #        - currently unused (using inline notifications instead)
-    #    """
-    #
-    #    form_vars = form.vars
-    #
-    #    record_id = form_vars.get("id")
-    #    if not record_id:
-    #        # Nothing we can do
-    #        return
-    #
-    #    # Check previous status
-    #    try:
-    #        if form.record.status != "REQ":
-    #            # This was not a pending request => do nothing
-    #            return
-    #    except AttributeError:
-    #        # Can't determine previous status => do nothing
-    #        return
-    #
-    #    db = current.db
-    #    s3db = current.s3db
-    #
-    #    # Check current status
-    #    table = s3db.hrm_delegation
-    #    row = db(table.id == record_id).select(table.status,
-    #                                           table.person_id,
-    #                                           limitby = (0, 1),
-    #                                           ).first()
-    #    if not row or row.status != "APPR" or open_pool_member(row.person_id):
-    #        # Not approved, or open pool member => no action
-    #        return
-    #
-    #    from .notifications import DeploymentNotifications
-    #    DeploymentNotifications(record_id).send()
-    #
     # -------------------------------------------------------------------------
     def customise_hrm_delegation_resource(r, tablename):
 
@@ -1591,13 +1560,6 @@ def config(settings):
                 r.resource.add_filter(query)
 
             multiple_orgs = delegation_read_multiple_orgs()[0]
-
-            #if coordinator:
-            #    s3db.add_custom_callback("hrm_delegation",
-            #                             "onaccept",
-            #                             hrm_delegation_update_onaccept,
-            #                             method = "update",
-            #                             )
 
             if r.interactive:
 
