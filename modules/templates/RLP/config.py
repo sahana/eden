@@ -986,18 +986,19 @@ def config(settings):
                         crud_fields.append("volunteer_record.status")
                         list_fields.append("volunteer_record.status")
 
-                    # Show contact details if:
+                    # Show names and contact details if:
                     # - user is COORDINATOR, or
                     # - volunteer viewed is an open pool member, or
                     # - has an approved deployment the user can access
-                    show_contact_details = False
                     person_id = record.id if record else None
                     if person_id:
                         show_contact_details = coordinator or \
                                                open_pool_member(person_id) or \
                                                rlp_deployed_with_org(person_id)
+                    else:
+                        show_contact_details = True
 
-                    if coordinator or show_contact_details:
+                    if show_contact_details:
                         # Name fields in name-format order
                         NAMES = ("first_name", "middle_name", "last_name")
                         keys = StringTemplateParser.keys(settings.get_pr_name_format())
@@ -1007,8 +1008,8 @@ def config(settings):
                         name_fields = []
 
                     if coordinator:
-                        # Coordinators search names and see personal details
-                        # and address
+                        # Coordinators can search names and see personal
+                        # details and address
                         text_search_fields = name_fields + ["pe_label"]
                         list_fields[2:2] = name_fields
                         crud_fields.extend([
@@ -1051,6 +1052,16 @@ def config(settings):
                                             label = T("Mobile Phone"),
                                             multiple = False,
                                             name = "phone",
+                                            ),
+                                   S3SQLInlineComponent(
+                                            "contact",
+                                            fields = [("", "value")],
+                                            filterby = {"field": "contact_method",
+                                                        "options": "WORK_PHONE",
+                                                        },
+                                            label = T("Office Phone"),
+                                            multiple = False,
+                                            name = "work_phone",
                                             ),
                                    ])
 
