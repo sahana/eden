@@ -3474,9 +3474,17 @@ $('.copy-link').click(function(e){
 
             else:
                 # Not BR
-                HRM = PROFILE = RESERVES = INACTIVES = DONOR = MEMBERS = False
                 auth = current.auth
                 has_role = auth.s3_has_role
+                if not has_role("AGENCY"):
+                    # No Exports
+                    if r.interactive or r.representation == "aadata":
+                        # Hide links
+                        settings.ui.export_formats = None
+                    else:
+                        # Prevent access
+                        return False
+                HRM = PROFILE = RESERVES = INACTIVES = DONOR = MEMBERS = False
                 rfilter = None
                 if controller == "hrm":
                     HRM = True
@@ -3791,7 +3799,7 @@ $('.copy-link').click(function(e){
                                    (T("Email"), "email.value"),
                                    (T("Mobile Phone"), "phone.value"),
                                    ]
-                    if current.auth.permission.format == "xls":
+                    if r.representation == "xls":
                         # Address
                         list_fields += [(T("Address"), "address.location_id$addr_street"),
                                         (T("Parish"), "address.location_id$L4"),
