@@ -16,10 +16,10 @@ addons:
       - postgresql-client-10
       - postgresql-10-postgis-2.5
       - postgresql-10-postgis-2.5-scripts
-      - postgresql-11
-      - postgresql-client-11
-      - postgresql-11-postgis-2.5
-      - postgresql-11-postgis-2.5-scripts
+      #- postgresql-11
+      #- postgresql-client-11
+      #- postgresql-11-postgis-2.5
+      #- postgresql-11-postgis-2.5-scripts
 
 # This tests against all the versions of DB supported by Eden
 env:
@@ -29,8 +29,8 @@ env:
   #- DB=postgres-9.6+postgis
   - DB=postgres-10
   - DB=postgres-10+postgis
-  - DB=postgres-11
-  - DB=postgres-11+postgis
+  #- DB=postgres-11
+  #- DB=postgres-11+postgis
 
 services:
   - mysql
