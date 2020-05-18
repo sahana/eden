@@ -64,6 +64,7 @@ __all__ = ("S3ProjectModel",
            "S3ProjectTaskModel",
            "S3ProjectTaskForumModel",
            "S3ProjectTaskHRMModel",
+           "S3ProjectTaskTagModel",
            "S3ProjectWindowModel",
            "project_ActivityRepresent",
            "project_activity_year_options",
@@ -11395,6 +11396,10 @@ class S3ProjectTaskModel(S3Model):
                                   "autocomplete": "request_number",
                                   "autodelete": False,
                                   },
+                       # Tags
+                       project_task_tag = {"name": "tag",
+                                           "joinby": "task_id",
+                                           },
                        # Time
                        project_time = "task_id",
                        # Comments (for imports))
@@ -11843,7 +11848,9 @@ class S3ProjectTaskModel(S3Model):
             ta = db.project_activity
             query = (lta.task_id == task_id) & \
                     (lta.activity_id == ta.id)
-            row = db(query).select(ta.project_id, limitby=(0, 1)).first()
+            row = db(query).select(ta.project_id,
+                                   limitby = (0, 1)
+                                   ).first()
             if row and row.project_id:
                 ltp.insert(task_id = task_id,
                            project_id = row.project_id,
@@ -11920,7 +11927,9 @@ class S3ProjectTaskModel(S3Model):
                 #link_id = link.update_link(master, record)
                 query = (ltable.task_id == task_id) & \
                         (ltable.project_id == project)
-                record = db(query).select(ltable.id, limitby=(0, 1)).first()
+                record = db(query).select(ltable.id,
+                                          limitby = (0, 1)
+                                          ).first()
                 if record:
                     link_id = record.id
                 else:
@@ -11946,7 +11955,9 @@ class S3ProjectTaskModel(S3Model):
                 #link_id = link.update_link(master, record)
                 query = (ltable.task_id == task_id) & \
                         (ltable.activity_id == activity)
-                record = db(query).select(ltable.id, limitby=(0, 1)).first()
+                record = db(query).select(ltable.id,
+                                          limitby = (0, 1)
+                                          ).first()
                 if record:
                     link_id = record.id
                 else:
@@ -11972,7 +11983,9 @@ class S3ProjectTaskModel(S3Model):
                 #link_id = link.update_link(master, record)
                 query = (ltable.task_id == task_id) & \
                         (ltable.milestone_id == milestone)
-                record = db(query).select(ltable.id, limitby=(0, 1)).first()
+                record = db(query).select(ltable.id,
+                                          limitby = (0, 1)
+                                          ).first()
                 if record:
                     link_id = record.id
                 else:
@@ -12028,7 +12041,7 @@ class S3ProjectTaskModel(S3Model):
         query = (ltable.task_id == task_id) & \
                 (ltable.forum_id == forum_id)
         exists = db(query).select(ltable.id,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1)
                                   ).first()
         if not exists:
             ltable.insert(task_id = task_id,
@@ -12064,7 +12077,7 @@ class S3ProjectTaskModel(S3Model):
                 (ltable.forum_id == forum_id)
         exists = db(query).select(ltable.id,
                                   ltable.created_by,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1)
                                   ).first()
         if exists:
             auth = current.auth
@@ -12100,21 +12113,21 @@ class S3ProjectTaskModel(S3Model):
             # Encode the message as an OpenGeoSMS
             msg = current.msg
             message = msg.prepare_opengeosms(record.location_id,
-                                             code="ST",
-                                             map="google",
-                                             text=text)
+                                             code = "ST",
+                                             map = "google",
+                                             text = text)
 
             # URL to redirect to after message sent
             url = URL(c="project",
                       f="task",
-                      args=r.id)
+                      args = r.id)
 
             # Create the form
             if record.pe_id:
-                opts = dict(recipient=record.pe_id)
+                opts = {"recipient": record.pe_id}
             else:
-                opts = dict(recipient_type="pr_person")
-            output = msg.compose(type="SMS",
+                opts = {"recipient_type": "pr_person"}
+            output = msg.compose(type = "SMS",
                                  message = message,
                                  url = url,
                                  **opts)
@@ -12149,7 +12162,8 @@ class S3ProjectTaskModel(S3Model):
             # Component Form
             query = (titable.id == form.vars.id)
             record = db(query).select(titable.task_id,
-                                      limitby=(0, 1)).first()
+                                      limitby = (0, 1)
+                                      ).first()
             if record:
                 task_id = record.task_id
 
@@ -12170,7 +12184,8 @@ class S3ProjectTaskModel(S3Model):
         query = (tatable.deleted == False) & \
                 (tatable.task_id == task_id)
         activity = db(query).select(tatable.activity_id,
-                                    limitby=(0, 1)).first()
+                                    limitby = (0, 1)
+                                    ).first()
         if activity:
             activity_id = activity.activity_id
 
@@ -12188,7 +12203,7 @@ class S3ProjectTaskModel(S3Model):
 
             # Update the Activity
             query = (atable.id == activity_id)
-            db(query).update(time_actual=hours)
+            db(query).update(time_actual = hours)
 
 # =============================================================================
 class S3ProjectTaskForumModel(S3Model):
@@ -12277,6 +12292,48 @@ class S3ProjectTaskHRMModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
+        return {}
+
+# =============================================================================
+class S3ProjectTaskTagModel(S3Model):
+    """
+        Task Tags
+    """
+
+    names = ("project_task_tag",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Task Tags
+        # - Key-Value extensions
+        # - can be used to provide conversions to external systems
+        # - can be a Triple Store for Semantic Web support
+        # - can be used to add custom fields
+        #
+        tablename = "project_task_tag"
+        self.define_table(tablename,
+                          self.project_task_id(empty = False),
+                          # key is a reserved word in MySQL
+                          Field("tag",
+                                label = T("Key"),
+                                ),
+                          Field("value",
+                                label = T("Value"),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("task_id",
+                                                            "tag",
+                                                            ),
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
         return {}
 
 # =============================================================================
