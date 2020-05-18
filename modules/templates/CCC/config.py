@@ -605,10 +605,6 @@ $('.copy-link').click(function(e){
                         ]
             else:
                 tabs = [(T("Basic Details"), None),
-                        (T("Address"), "address"),
-                        (T("Contacts"), "contacts"),
-                        # Included in Contacts tab:
-                        #(T("Emergency Contacts"), "contact_emergency"),
                         ]
                 auth = current.auth
                 has_role = auth.s3_has_role
@@ -617,12 +613,20 @@ $('.copy-link').click(function(e){
                    has_role("DONOR", include_admin=False):
                     # Better on main form using S3SQLInlineLink
                     #tabs.append((T("Goods / Services"), "item"))
-                    pass
+                    tabs += [(T("Address"), "address"),
+                             (T("Contacts"), "contacts"),
+                             # Included in Contacts tab:
+                             #(T("Emergency Contacts"), "contact_emergency"),
+                             ]
                 elif get_vars_get("groups") or \
                      has_role("GROUP_ADMIN", include_admin=False):
                     # Better as menu item, to be able to access tab(s)
                     #tabs.append((T("Group"), "group"))
-                    pass
+                    tabs += [(T("Address"), "address"),
+                             (T("Contacts"), "contacts"),
+                             # Included in Contacts tab:
+                             #(T("Emergency Contacts"), "contact_emergency"),
+                             ]
                 else:
                     htable = current.s3db.hrm_human_resource
                     query = (htable.person_id == record.id) & \
@@ -631,11 +635,21 @@ $('.copy-link').click(function(e){
                                                   limitby = (0, 1)
                                                   ).first()
                     if controller == "default" or has_role("RESERVE_ADMIN"):
-                        tabs.append((T("Additional Information"), "additional"))
+                        tabs += [(T("Address"), "address"),
+                                 (T("Contacts"), "contacts"),
+                                 # Included in Contacts tab:
+                                 #(T("Emergency Contacts"), "contact_emergency"),
+                                 (T("Additional Information"), "additional"),
+                                 ]
                     elif has_role("RESERVE_READER"):
                         # Check if they are affiliated to this User's org
                         if hr and hr.organisation_id == auth.user.organisation_id:
-                            tabs.append((T("Additional Information"), "additional"))
+                            tabs += [(T("Address"), "address"),
+                                     (T("Contacts"), "contacts"),
+                                     # Included in Contacts tab:
+                                     #(T("Emergency Contacts"), "contact_emergency"),
+                                     (T("Additional Information"), "additional"),
+                                     ]
                     # Better on main form using S3SQLInlineLink
                     #tabs.append((T("Volunteer Offers"), "competency"))
                     if controller == "default" or has_role("RESERVE_ADMIN"):
