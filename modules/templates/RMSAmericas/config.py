@@ -1697,6 +1697,7 @@ Thank you"""
                 if type_ids:
                     from s3 import IS_ONE_OF
                     ltable = db.org_organisation_organisation_type
+                    type_ids = [t.id for t in type_ids]
                     rows = db(ltable.organisation_type_id.belongs(type_ids)).select(ltable.organisation_id)
                     not_filter_opts = [row.organisation_id for row in rows]
                     f.requires = IS_ONE_OF(db, "org_organisation.id",
