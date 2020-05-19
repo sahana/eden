@@ -15,6 +15,7 @@
          OptOut......................yes|no..........Opt-in by default, explicit opt-out
          Mandatory...................yes|no..........Consent is mandatory for overall
                                                      consent question to succeed
+         Obsolete....................yes|no..........Obsolete
          Comments....................string..........Comments
 
     *********************************************************************** -->
@@ -87,6 +88,21 @@
                 <xsl:attribute name="value">
                     <xsl:choose>
                         <xsl:when test="$mandatory='yes' or $mandatory='true'">
+                            <xsl:value-of select="'true'"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="'false'"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:attribute>
+            </data>
+
+            <!-- Mandatory -->
+            <xsl:variable name="obsolete" select="col[@field='Obsolete']/text()"/>
+            <data field="obsolete">
+                <xsl:attribute name="value">
+                    <xsl:choose>
+                        <xsl:when test="$obsolete='yes' or $obsolete='true'">
                             <xsl:value-of select="'true'"/>
                         </xsl:when>
                         <xsl:otherwise>
