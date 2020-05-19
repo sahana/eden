@@ -123,7 +123,7 @@ class S3Parser(object):
                 person_id = ptable.insert(first_name = first_name,
                                           middle_name = middle_name,
                                           last_name = last_name)
-                s3db.update_super(ptable, dict(id=person_id))
+                s3db.update_super(ptable, {"id": person_id})
         else:
             person_id = None
 
@@ -198,7 +198,7 @@ class S3Parser(object):
                                         series_id = series_id,
                                         mci = 1, # This is an imported record, not added natively
                                         )
-            record = dict(id=post_id)
+            record = {"id": post_id}
             s3db.update_super(post_table, record)
 
             # Source link
@@ -295,7 +295,7 @@ class S3Parser(object):
                 person_id = ptable.insert(first_name = first_name,
                                           middle_name = middle_name,
                                           last_name = last_name)
-                s3db.update_super(ptable, dict(id=person_id))
+                s3db.update_super(ptable, {"id": person_id})
         else:
             person_id = None
 

@@ -4141,8 +4141,6 @@ $('.copy-link').click(function(e){
             tree = html.fragment_fromstring(message, create_parent=True)
             tree.make_links_absolute(public_url)
             message = etree.tostring(tree, pretty_print=False, encoding="utf-8").decode("utf-8")
-            # Need to add the HTML tags around the HTML so that Mail recognises it as HTML
-            message = "<html>%s</html>" % message
 
         db = current.db
         s3db = current.s3db
@@ -4160,17 +4158,18 @@ $('.copy-link').click(function(e){
         # Look for attachments
         dtable = s3db.doc_document
         file_field = dtable.file
-        uploadfolder = file_field.uploadfolder
         query = (dtable.doc_id == task.doc_id)
         documents = db(query).select(file_field)
         attachments = []
         if len(documents):
             import os
             from gluon.tools import Mail
+            os_path_join = os.path.join
+            uploadfolder = file_field.uploadfolder
             for d in documents:
                 filename = d.file
                 origname = file_field.retrieve(filename)[0]
-                attachments.append(Mail.Attachment(os.path.join(uploadfolder, filename), filename=origname))
+                attachments.append(Mail.Attachment(os_path_join(uploadfolder, filename), filename=origname))
 
         # Check what kind of message this is
         get_vars_get = current.request.get_vars.get
@@ -4202,6 +4201,10 @@ $('.copy-link').click(function(e){
             sender = None
 
             # Construct Email message
+
+            # Need to add the HTML tags around the HTML so that Mail recognises it as HTML
+            message = "<html>%s</html>" % message
+
             if subject is None:
                 if not auth.s3_has_role("AGENCY"):
                     # ORG_ADMIN messaging Volunteers
@@ -4284,6 +4287,10 @@ $('.copy-link').click(function(e){
             sender = None
 
             # Construct Email message
+
+            # Need to add the HTML tags around the HTML so that Mail recognises it as HTML
+            message = "<html>%s</html>" % message
+
             if subject is None:
                 if not auth.s3_has_role("AGENCY"):
                     # ORG_ADMIN messaging Volunteers
@@ -4416,11 +4423,28 @@ $('.copy-link').click(function(e){
             description = task.description
             #created_by = task.created_by
 
+            dinsert = dtable.insert
+            update_super = s3db.update_super
             for organisation_id in organisation_ids:
                 task_id = ttable.insert(name = name,
                                         description = description,
                                         #created_by = created_by,
                                         )
+                new_task = {"id": task_id}
+                update_super(ttable, new_task)
+                new_doc_id = new_task["doc_id"]
+                for d in documents:
+                    filename = d.file
+                    origname = file_field.retrieve(filename)[0]
+                    filepath = os_path_join(uploadfolder, filename)
+                    with open(filepath, "rb") as file:
+                        newfilename = file_field.store(file,
+                                                       origname,
+                                                       uploadfolder
+                                                       )
+                    dinsert(doc_id = new_doc_id,
+                            file = newfilename,
+                            )
                 orgs[organisation_id]["task_id"] = task_id
 
             # Send email to each OrgAdmin
@@ -4439,7 +4463,8 @@ $('.copy-link').click(function(e){
                     pass
 
                 # Send Emails
-                this_message = "%s/%s" % (message, task_id)
+                # Need to add the HTML tags around the HTML so that Mail recognises it as HTML
+                this_message = "<html>%s/%s</html>" % (message, task_id)
                 org_admins = orgs[organisation_id]["emails"]
                 for email in org_admins:
                     send_email(to = email,
@@ -4487,7 +4512,8 @@ $('.copy-link').click(function(e){
                 pass
 
             # Append the task_id to the URL
-            message = "%s/%s" % (message, task_id)
+            # Need to add the HTML tags around the HTML so that Mail recognises it as HTML
+            message = "<html>%s/%s</html>" % (message, task_id)
 
             # Lookup the Donor's Email
             ctable = s3db.pr_contact
@@ -4555,6 +4581,21 @@ $('.copy-link').click(function(e){
                                              #created_by = task.created_by,
                                              realm_entity = org.pe_id,
                                              )
+                new_task = {"id": copy_task_id}
+                update_super(ttable, new_task)
+                new_doc_id = new_task["doc_id"]
+                for d in documents:
+                    filename = d.file
+                    origname = file_field.retrieve(filename)[0]
+                    filepath = os_path_join(uploadfolder, filename)
+                    with open(filepath, "rb") as file:
+                        newfilename = file_field.store(file,
+                                                       origname,
+                                                       uploadfolder
+                                                       )
+                    dinsert(doc_id = new_doc_id,
+                            file = newfilename,
+                            )
 
                 # Set the 'To' component
                 tag_table.insert(task_id = task_id,
@@ -4563,7 +4604,8 @@ $('.copy-link').click(function(e){
                                  )
 
         # Append the task_id to the URL
-        message = "%s/%s" % (message, task_id)
+        # Need to add the HTML tags around the HTML so that Mail recognises it as HTML
+        message = "<html>%s/%s</html>" % (message, task_id)
 
         # Lookup the ORG_ADMINs
         gtable = db.auth_group
