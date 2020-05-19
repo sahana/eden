@@ -3530,6 +3530,7 @@
 'Occasion': 'Anlass',
 'Occupation / Speciality': 'Tätigkeit / Fachrichtung',
 'Occupation Type': 'Berufsgruppe',
+'Occupation Types': 'Berufsgruppen',
 'Office Address': 'Büroadresse',
 'Office Details': 'Bürodetails',
 'Office Email##gov': 'Dienststelle Email',

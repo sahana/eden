@@ -38,7 +38,12 @@ class S3MainMenu(default.S3MainMenu):
 
         return [MM("Volunteers", c=("vol", "hrm"), f="person")(
                     MM("List", c="vol", f="person"),
-                    MM("Deployments", c="hrm", f="delegation"),
+                    MM("Requests", c="hrm", f="delegation",
+                       vars = {"workflow": "p"},
+                       restrict = "COORDINATOR",
+                       ),
+                    MM("Deployments", c="hrm", f="delegation",
+                       ),
                     ),
                 MM("Organizations", c="org", f="organisation"),
                 ]
@@ -191,7 +196,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         pending_label = current.T("Pending Requests")
         if current.auth.s3_has_role("COORDINATOR"):
             from s3 import FS
-            query = (FS("date") >= current.request.utcnow) & \
+            query = (FS("end_date") >= current.request.utcnow) & \
                     (FS("status") == "REQ")
             resource = current.s3db.resource("hrm_delegation",
                                              filter = query,
@@ -216,9 +221,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           vars = {"workflow": "p"},
                           translate = False,
                           ),
-                        M("Processed Requests", vars={"workflow": "d"},
+                        M("Processed Requests",
+                          vars = {"workflow": "d"},
                           ),
-                        M("Archive", vars = {"workflow": "o"}),
+                        M("Archive",
+                          vars = {"workflow": "o"},
+                          ),
                         M("Organizer", m="organize", restrict="HRMANAGER"),
                         ),
                     M("Statistics", link=False)(
@@ -226,8 +234,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                     M("Administration", link=False, restrict="ADMIN")(
                         M("Occupation Types", c="pr", f="occupation_type"),
-                        M("Skill Types", c="hrm", f="skill"),
-                        M("Competency Levels", c="hrm", f="competency_rating"),
+                        M("Skills / Resources", c="hrm", f="skill"),
+                        #M("Competency Levels", c="hrm", f="competency_rating"),
                         )
                     )
 

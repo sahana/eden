@@ -1527,7 +1527,7 @@ def config(settings):
                 if workflow == "p":
                     # Pending (undecided and relevant)
                     status_opts = PENDING
-                    query = (FS("date") >= today)
+                    query = (FS("end_date") >= today)
                     title = T("Pending Requests")
                     orderby = "hrm_delegation.requested_on"
                 elif workflow == "d":
@@ -1536,17 +1536,16 @@ def config(settings):
                     query = (FS("end_date") >= today)
                     title = T("Processed Requests")
                     orderby = "hrm_delegation.requested_on desc"
-                elif workflow == "r":
-                    # Relevant
-                    status_opts = PENDING + DECIDED
-                    query = (FS("date") >= today)
-                    title = T("Current Requests")
-                    orderby = "hrm_delegation.date"
+                #elif workflow == "r":
+                #    # Relevant
+                #    status_opts = PENDING + DECIDED
+                #    query = (FS("date") >= today)
+                #    title = T("Current Requests")
+                #    orderby = "hrm_delegation.date"
                 elif workflow == "o":
                     # Obsolete (past, cancelled or implemented)
                     query = (FS("end_date") < today) | \
-                            (FS("status").belongs(("DECL", "RJCT", "CANC", "IMPL"))) | \
-                            ((FS("date") < today) & (FS("status") == "REQ"))
+                            (FS("status").belongs(("DECL", "RJCT", "CANC", "IMPL")))
                     title = T("Archive")
                     orderby = "hrm_delegation.end_date desc"
                 else:
