@@ -649,11 +649,12 @@ class S3Model(object):
 
         onaccept = cls.get_config(tablename, "%s_onaccept" % method,
                    cls.get_config(tablename, "onaccept"))
-        if "vars" not in record:
-            record = Storage(vars=Storage(record), errors=Storage())
         if onaccept:
+            if "vars" not in record:
+                record = Storage(vars = Storage(record),
+                                 errors = Storage(),
+                                 )
             callback(onaccept, record, tablename=tablename)
-        return
 
     # -------------------------------------------------------------------------
     @classmethod

@@ -4301,6 +4301,9 @@ class S3BulkImporter(object):
             Execute each import job, in order
         """
 
+        # Disable min_length for password during prepop
+        current.auth.ignore_min_password_length()
+
         start = datetime.datetime.now()
         if task[0] == 1:
             s3db = current.s3db

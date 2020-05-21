@@ -458,16 +458,39 @@ Thank you"""
             settings.table_event = db[settings.table_event_name]
 
     # -------------------------------------------------------------------------
+    def ignore_min_password_length(self):
+        """
+            Disable min_length validation for password, e.g. during login
+        """
+
+        settings = self.settings
+
+        utable = settings.table_user
+
+        requires = utable[settings.password_field].requires
+        if requires:
+            if isinstance(requires, (list, tuple)):
+                requires = requires[-1]
+            try:
+                requires.min_length = 0
+            except:
+                pass
+
+    # -------------------------------------------------------------------------
     def login_bare(self, username, password):
         """
             Logs user in
                 - extended to understand session.s3.roles
         """
 
+        self.ignore_min_password_length()
+
         settings = self.settings
+
         utable = settings.table_user
         userfield = settings.login_userfield
         passfield = settings.password_field
+
         query = (utable[userfield] == username)
         user = current.db(query).select(limitby=(0, 1)).first()
         password = utable[passfield].validate(password)[0]
@@ -523,14 +546,16 @@ Thank you"""
         deployment_settings = current.deployment_settings
 
         utable = settings.table_user
+
+        # Username (email) is required for login, convert to lowercase
         userfield = settings.login_userfield
         old_requires = utable[userfield].requires
         utable[userfield].requires = [IS_NOT_EMPTY(), IS_LOWER()]
+
+        # Disable min_length for password during login
         passfield = settings.password_field
-        try:
-            utable[passfield].requires[-1].min_length = 0
-        except:
-            pass
+        self.ignore_min_password_length()
+
         if onvalidation is DEFAULT:
             onvalidation = settings.login_onvalidation
         if onaccept is DEFAULT:
@@ -839,15 +864,23 @@ Thank you"""
         form = SQLFORM.factory(
             Field("old_password", "password",
                   label = messages.old_password,
-                  requires = utable[passfield].requires),
+                  # No minimum length for old password
+                  #requires = utable[passfield].requires,
+                  requires = CRYPT(key = settings.hmac_key,
+                                   digest_alg = "sha512",
+                                   ),
+                  ),
             Field("new_password", "password",
                   label = messages.new_password,
-                  requires = utable[passfield].requires),
+                  requires = utable[passfield].requires,
+                  ),
             Field("new_password2", "password",
                   label = messages.verify_password,
-                  requires = [IS_EXPR(
-                    "value==%s" % repr(request.vars.new_password),
-                              messages.mismatched_password)]),
+                  requires = [IS_EXPR("value==%s" % repr(request.vars.new_password),
+                                      messages.mismatched_password,
+                                      ),
+                              ],
+                  ),
             submit_button = messages.password_change_button,
             hidden = {"_next": next},
             formstyle = current.deployment_settings.get_ui_formstyle(),

@@ -37,7 +37,7 @@ def config(settings):
     # No self-registration
     settings.security.self_registration = False
     # Do new users need to verify their email address?
-    #settings.auth.registration_requires_verification = True
+    settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
     #settings.auth.registration_requires_approval = True
     settings.auth.registration_requests_organisation = True
@@ -49,6 +49,9 @@ def config(settings):
 
     settings.auth.realm_entity_types = ("org_organisation", "pr_forum", "pr_group")
     settings.auth.privileged_roles = {"COORDINATOR": "COORDINATOR"}
+
+    settings.auth.password_min_length = 8
+    settings.auth.consent_tracking = True
 
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
@@ -132,6 +135,7 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     settings.org.projects_tab = False
+    settings.org.default_organisation = "Ministerium für Soziales, Arbeit, Gesundheit und Demografie"
 
     # -------------------------------------------------------------------------
     # Custom group types for volunteer pools
@@ -188,6 +192,7 @@ def config(settings):
                     realm_entity = org.pe_id
 
         elif tablename in ("pr_person_details",
+                           "pr_person_availability",
                            "hrm_human_resource",
                            "hrm_competency",
                            ):
@@ -271,6 +276,19 @@ def config(settings):
         return realm_entity
 
     settings.auth.realm_entity = rlp_realm_entity
+
+    # -------------------------------------------------------------------------
+    def customise_auth_user_resource(r, tablename):
+        """
+            Configure custom register-onaccept
+        """
+
+        from .controllers import register
+        current.s3db.configure("auth_user",
+                               register_onaccept = register.register_onaccept,
+                               )
+
+    settings.customise_auth_user_resource = customise_auth_user_resource
 
     # -------------------------------------------------------------------------
     def customise_cms_post_resource(r, tablename):
@@ -753,9 +771,12 @@ def config(settings):
 
         # Configure components to inherit realm_entity from person
         s3db.configure("pr_person",
-                       realm_components = ("hrm_human_resource",
-                                           "hrm_competency",
-                                           "pr_person_details",
+                       realm_components = ("human_resource",
+                                           "competency",
+                                           "person_details",
+                                           "availability",
+                                           "contact",
+                                           "address",
                                            ),
                        )
 

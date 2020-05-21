@@ -1,4 +1,10 @@
 uid,role,description,hidden,controller,function,table,uacl,oacl,entity,comments
+ANONYMOUS,Anonymous,Unauthenticated users,,gis,hdata,,READ,,,
+ANONYMOUS,Anonymous,Unauthenticated users,,gis,ldata,,READ,,,
+ANONYMOUS,Anonymous,Unauthenticated users,,org,sites_for_org,,READ,,,
+ANONYMOUS,Anonymous,Unauthenticated users,,,,gis_location,READ,,,
+ANONYMOUS,Anonymous,Unauthenticated users,,,,org_organisation,READ,,,
+ANONYMOUS,Anonymous,Unauthenticated users,,,,pr_occupation_type,READ,,,
 AUTHENTICATED,Authenticated,,,gis,ldata,,CREATE|READ|UPDATE|DELETE,,,
 AUTHENTICATED,Authenticated,,,gis,location,,CREATE|READ,UPDATE|DELETE,,
 AUTHENTICATED,Authenticated,,,pr,contact,,CREATE,READ|UPDATE|DELETE,,
