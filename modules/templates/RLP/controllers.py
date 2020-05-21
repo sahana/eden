@@ -160,8 +160,10 @@ class register(S3CustomController):
         formfields, required_fields, subheadings = self.formfields()
 
         # Generate labels (and mark required fields in the process)
-        # TODO include required-fields hint if there are required fields
-        labels = s3_mark_required(formfields, mark_required=required_fields)[0]
+        labels, has_required = s3_mark_required(formfields,
+                                                mark_required = required_fields,
+                                                )
+        response.s3.has_required = has_required
 
         # Form buttons
         REGISTER = T("Register")
