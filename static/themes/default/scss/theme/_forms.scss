@@ -270,6 +270,7 @@ body.rtl {
         }
         .ui-multiselect {
             max-width: 100%;
+            display: inline-block!important;
         }
         &:not(.filter-form):not(.auth_login):not(.auth_register):not(.rm-form) {
             input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.hours):not(.dms-input) {

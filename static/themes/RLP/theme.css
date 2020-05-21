@@ -544,13 +544,14 @@ body.rtl #markDuplicate {
 /* line 271, ../../default/scss/theme/_forms.scss */
 .form-container form .ui-multiselect {
   max-width: 100%;
+  display: inline-block !important;
 }
-/* line 275, ../../default/scss/theme/_forms.scss */
+/* line 276, ../../default/scss/theme/_forms.scss */
 .form-container form:not(.filter-form):not(.auth_login):not(.auth_register):not(.rm-form) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.hours):not(.dms-input) {
   width: 20rem !important;
 }
 
-/* line 282, ../../default/scss/theme/_forms.scss */
+/* line 283, ../../default/scss/theme/_forms.scss */
 .item-container .controls {
   background: #fafafa;
   padding: 0.35rem;
@@ -558,24 +559,24 @@ body.rtl #markDuplicate {
 }
 
 /* Filter Forms & Report Options */
-/* line 292, ../../default/scss/theme/_forms.scss */
+/* line 293, ../../default/scss/theme/_forms.scss */
 .filter-form table tr,
 .filter-form .ui-multiselect,
 .report-options table tr,
 .report-options .ui-multiselect {
   max-width: 60%;
 }
-/* line 296, ../../default/scss/theme/_forms.scss */
+/* line 297, ../../default/scss/theme/_forms.scss */
 .filter-form table.s3-groupedopts-widget,
 .report-options table.s3-groupedopts-widget {
   display: inline-block;
 }
-/* line 299, ../../default/scss/theme/_forms.scss */
+/* line 300, ../../default/scss/theme/_forms.scss */
 .filter-form .inline-tooltip,
 .report-options .inline-tooltip {
   padding-top: 0.2rem;
 }
-/* line 302, ../../default/scss/theme/_forms.scss */
+/* line 303, ../../default/scss/theme/_forms.scss */
 .filter-form label.inline,
 .report-options label.inline {
   line-height: normal;
@@ -583,7 +584,7 @@ body.rtl #markDuplicate {
 }
 
 /* Login/Registration box */
-/* line 309, ../../default/scss/theme/_forms.scss */
+/* line 310, ../../default/scss/theme/_forms.scss */
 #login_form,
 #register_form,
 #login_box {
@@ -591,13 +592,13 @@ body.rtl #markDuplicate {
 }
 
 /* Help Popup */
-/* line 316, ../../default/scss/theme/_forms.scss */
+/* line 317, ../../default/scss/theme/_forms.scss */
 .inline-tooltip {
   display: inline-block;
   vertical-align: top;
   padding-left: 0.75rem;
 }
-/* line 320, ../../default/scss/theme/_forms.scss */
+/* line 321, ../../default/scss/theme/_forms.scss */
 .inline-tooltip .tooltip,
 .inline-tooltip .tooltipbody,
 .inline-tooltip .stickytip,
@@ -606,7 +607,7 @@ body.rtl #markDuplicate {
   padding: 0;
   width: 60px;
 }
-/* line 328, ../../default/scss/theme/_forms.scss */
+/* line 329, ../../default/scss/theme/_forms.scss */
 .inline-tooltip .s3_add_resource_link {
   display: inline-block;
   margin: -3px 0 -3px 5px;
@@ -2258,12 +2259,17 @@ body.rtl .event-type-header {
   padding: 0.5rem;
 }
 
-/* line 306, ../scss/theme/_misc.scss */
+/* line 307, ../scss/theme/_misc.scss */
 .auth_register .subheading {
+  background-color: #EEE;
   font-size: 1rem;
   border-top: solid 1px #ccc;
+  border-left: solid 1px #ccc;
   margin: 0.7rem 0;
   padding: 0.5rem 0 0.3rem 0.5rem;
-  width: 50%;
-  background-color: #EEE;
+  max-width: 48rem;
+}
+/* line 316, ../scss/theme/_misc.scss */
+.auth_register .consent-widget {
+  max-width: 48rem;
 }

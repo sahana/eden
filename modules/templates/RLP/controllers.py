@@ -154,8 +154,7 @@ class register(S3CustomController):
         utable = auth_settings.table_user
 
         # Page title and intro text
-        # TODO add translation
-        title = T("Register as a Volunteer")
+        title = T("Volunteer Registration")
 
         # Form Fields
         formfields, required_fields, subheadings = self.formfields()
@@ -376,15 +375,18 @@ class register(S3CustomController):
                                                repr(request.vars.get(passfield)),
                                                error_message = auth_messages.mismatched_password,
                                                ),
+                            comment = DIV(_class = "tooltip",
+                                          _title = "%s|%s" % (auth_messages.verify_password,
+                                                              T("Enter the same password again"),
+                                                              ),
+                                          ),
                             ),
                       # --------------------------------------------
                       Field("mobile_phone",
                             label = T("Mobile Phone"),
                             requires = IS_EMPTY_OR(s3_phone_requires),
-                            # TODO tooltip
                             ),
                       Field("office_phone",
-                            # TODO tooltip
                             label = T("Office Phone"),
                             requires = IS_EMPTY_OR(s3_phone_requires),
                             ),
@@ -408,12 +410,19 @@ class register(S3CustomController):
                                           )),
                             represent = occupation_type_represent,
                             widget = S3MultiSelectWidget(),
-                            # TODO add "Other" to prepop-options
-                            # TODO tooltip
+                            comment = DIV(_class = "tooltip",
+                                          _title = "%s|%s" % (T("Occupation Type"),
+                                                              T("Select all that apply"),
+                                                              ),
+                                          ),
                             ),
                       Field("occupation",
                             label = T("Occupation / Speciality"),
-                            # TODO tooltip
+                            comment = DIV(_class = "tooltip",
+                                          _title = "%s|%s" % (T("Occupation / Speciality"),
+                                                              T("Specify your exact job designation"),
+                                                              ),
+                                          ),
                             ),
 
                       # --------------------------------------------
@@ -421,29 +430,33 @@ class register(S3CustomController):
                               label = T("Available from"),
                               default = "now",
                               past = 0,
-                              # TODO set minimum for end_date
-                              # TODO tooltip
+                              set_min = "#auth_user_start_date",
                               ),
                       s3_date("end_date",
                               label = T("Available until"),
-                              # TODO set maximum for start_date
-                              # TODO tooltip
+                              past = 0,
+                              set_max = "#auth_user_start_date",
                               ),
                       Field("hours_per_week", "integer",
                             label = T("Hours per Week"),
                             requires = IS_EMPTY_OR(IS_INT_IN_RANGE(1, 60)),
-                            # TODO tooltip
+                            comment = DIV(_class = "tooltip",
+                                          _title = "%s|%s" % (T("Hours per Week"),
+                                                              T("Specify the maximum number of weekly hours"),
+                                                              ),
+                                          ),
                             ),
                       s3db.hrm_multi_skill_id(
                             label = T("Skills / Resources"),
-                            widget = S3GroupedOptionsWidget(cols=3),
+                            widget = S3GroupedOptionsWidget(cols = 1,
+                                                            size = None,
+                                                            ),
                             ),
 
                       # --------------------------------------------
                       Field("comments", "text",
                             label = T("Comments"),
                             widget = s3_comments_widget,
-                            # TODO tooltip
                             ),
 
                       # --------------------------------------------
@@ -464,9 +477,9 @@ class register(S3CustomController):
                        (6, T("Contact Information")),
                        (8, T("Address")),
                        (9, T("Occupation")),
-                       (11, T("Skills, Resources, Availability")),
+                       (11, T("Availability and Resources")),
                        (15, T("Comments")),
-                       (16, T("Consent")),
+                       (16, T("Privacy")),
                        )
 
         return formfields, required_fields, subheadings

@@ -26,7 +26,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,CO,Department,Municipality,Corregimiento,
 ,CR,Province,Canton,District,
 ,CU,Province,Municipality,
-,DE,"Federal State","Rural District / District","Town / Municipality",Village,
+,DE,"Federal State","Rural District / District","Town / Municipality",Locality,
 ,DO,Province,Municipality,,,,
 ,EC,Province,Canton,Parish,,,
 ,FI,Regional State Administrative Agency,Region,Sub-region,Municipality,,

@@ -4,8 +4,11 @@
   {{try:}}{{=H2(title)}}{{except:}}{{pass}}
  </div>
 </div>
-<div class="row form-container">
- <div class='medium-12 columns'>
- {{=form}}
+<div class='row'>
+ <div class='small-12 columns'>
+  {{include "key.html"}}
+  <div class='form-container'>
+   {{try:}}{{=form}}{{except:}}{{pass}}
+  </div>
  </div>
 </div>

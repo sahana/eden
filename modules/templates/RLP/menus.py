@@ -46,6 +46,10 @@ class S3MainMenu(default.S3MainMenu):
                        ),
                     ),
                 MM("Organizations", c="org", f="organisation"),
+                MM("Volunteer Registration", c="default", f="index",
+                   args=["register"],
+                   check = lambda i: not current.auth.s3_logged_in(),
+                   ),
                 ]
 
     # -------------------------------------------------------------------------
