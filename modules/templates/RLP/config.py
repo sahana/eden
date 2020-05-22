@@ -906,6 +906,7 @@ def config(settings):
                     elif active != "both":
                         resource.add_filter(FS("volunteer_record.status") == 1)
 
+                list_title = T("Volunteers")
                 if not record:
                     # Availability Filter
                     parse_dt = current.calendar.parse_date
@@ -934,8 +935,6 @@ def config(settings):
                                             )
                         resource.add_filter(FS("ongoing_deployment.id") != None)
                         list_title = T("Currently Deployed Volunteers")
-                    else:
-                        list_title = T("Volunteers")
 
                 if not r.component:
 
