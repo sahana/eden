@@ -1182,7 +1182,7 @@ def config(settings):
                                                        label = T("Occupation Type"),
                                                        field = "occupation_type_id",
                                                        ),
-                                        "person_details.occupation",
+                                        (T("Occupation / Speciality"), "person_details.occupation"),
                                         "volunteer_record.start_date",
                                         "volunteer_record.end_date",
                                         "volunteer_record.status",
