@@ -324,6 +324,9 @@ class register(S3CustomController):
             # Redirect
             redirect(register_next)
 
+        elif form.errors:
+            response.error = T("There are errors in the form, please check your input")
+
         # Custom View
         self._view(THEME, "register.html")
 
