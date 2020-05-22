@@ -9,7 +9,7 @@ AUTHENTICATED,Authenticated,,,gis,ldata,,CREATE|READ|UPDATE|DELETE,
 AUTHENTICATED,Authenticated,,,gis,location,,CREATE|READ,UPDATE|DELETE
 AUTHENTICATED,Authenticated,,,pr,contact,,CREATE,READ|UPDATE|DELETE
 AUTHENTICATED,Authenticated,,,pr,contact_emergency,,CREATE,READ|UPDATE|DELETE
-AUTHENTICATED,Authenticated,,,,,hrm_competency,NONE,READ|UPDATE|DELETE
+AUTHENTICATED,Authenticated,,,,,hrm_competency,CREATE,READ|UPDATE|DELETE
 AUTHENTICATED,Authenticated,,,,,hrm_human_resource,NONE,READ|UPDATE
 AUTHENTICATED,Authenticated,,,,,pr_address,CREATE,READ|UPDATE|DELETE
 AUTHENTICATED,Authenticated,,,,,pr_contact,CREATE,READ|UPDATE|DELETE
@@ -18,10 +18,10 @@ AUTHENTICATED,Authenticated,,,,,pr_filter,CREATE,READ|UPDATE|DELETE
 AUTHENTICATED,Authenticated,,,,,pr_group,READ,
 AUTHENTICATED,Authenticated,,,,,pr_group_membership,READ,
 AUTHENTICATED,Authenticated,,,,,pr_occupation_type,READ,
-AUTHENTICATED,Authenticated,,,,,pr_occupation_type_person,READ,UPDATE|DELETE
+AUTHENTICATED,Authenticated,,,,,pr_occupation_type_person,CREATE|READ,UPDATE|DELETE
 AUTHENTICATED,Authenticated,,,,,pr_person,NONE,READ|UPDATE
-AUTHENTICATED,Authenticated,,,,,pr_person_availability,NONE,READ|UPDATE
-AUTHENTICATED,Authenticated,,,,,pr_person_details,NONE,READ|UPDATE
+AUTHENTICATED,Authenticated,,,,,pr_person_availability,CREATE,READ|UPDATE
+AUTHENTICATED,Authenticated,,,,,pr_person_details,CREATE,READ|UPDATE
 COORDINATOR,Pool Coordinator,,,hrm,delegation,,READ|UPDATE,
 COORDINATOR,Pool Coordinator,,,org,office,,READ,
 COORDINATOR,Pool Coordinator,,,org,organisation,,READ,
@@ -62,13 +62,13 @@ ORG_ADMIN,Organisation Admin,,,,,hrm_human_resource,CREATE|READ|UPDATE|DELETE,
 ORG_ADMIN,Organisation Admin,,,,,org_office,CREATE|READ|UPDATE|DELETE,
 ORG_ADMIN,Organisation Admin,,,,,org_organisation,READ|UPDATE,
 ORG_ADMIN,Organisation Admin,,,,,pr_person,CREATE|READ|UPDATE|DELETE,
-ORG_GROUP_ADMIN,Organisation Group Admin,,,admin,user,,CREATE|READ|UPDATE|DELETE,
-ORG_GROUP_ADMIN,Organisation Group Admin,,,org,,,CREATE|READ|UPDATE|DELETE,
-ORG_GROUP_ADMIN,Organisation Group Admin,,,org,organisation,,CREATE|READ|UPDATE|DELETE,
-ORG_GROUP_ADMIN,Organisation Group Admin,,,,,hrm_human_resource,CREATE|READ|UPDATE|DELETE,
-ORG_GROUP_ADMIN,Organisation Group Admin,,,,,org_office,CREATE|READ|UPDATE|DELETE,
-ORG_GROUP_ADMIN,Organisation Group Admin,,,,,org_organisation,READ|UPDATE,
-ORG_GROUP_ADMIN,Organisation Group Admin,,,,,pr_person,CREATE|READ|UPDATE|DELETE,
+ORG_GROUP_ADMIN,Organisation Group Admin,,true,admin,user,,CREATE|READ|UPDATE|DELETE,
+ORG_GROUP_ADMIN,Organisation Group Admin,,true,org,,,CREATE|READ|UPDATE|DELETE,
+ORG_GROUP_ADMIN,Organisation Group Admin,,true,org,organisation,,CREATE|READ|UPDATE|DELETE,
+ORG_GROUP_ADMIN,Organisation Group Admin,,true,,,hrm_human_resource,CREATE|READ|UPDATE|DELETE,
+ORG_GROUP_ADMIN,Organisation Group Admin,,true,,,org_office,CREATE|READ|UPDATE|DELETE,
+ORG_GROUP_ADMIN,Organisation Group Admin,,true,,,org_organisation,READ|UPDATE,
+ORG_GROUP_ADMIN,Organisation Group Admin,,true,,,pr_person,CREATE|READ|UPDATE|DELETE,
 POOLREADER,Pool Reader,,,hrm,delegation,,READ,
 POOLREADER,Pool Reader,,,vol,,,NONE,
 POOLREADER,Pool Reader,,,vol,delegation,,READ,

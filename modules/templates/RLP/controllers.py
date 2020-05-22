@@ -636,7 +636,7 @@ class register(S3CustomController):
                     "occupation_type_id": occupation_type_id,
                     }
             link["id"] = ltable.insert(**link)
-            set_record_owner(ltable, link)
+            set_record_owner(ltable, link, owned_by_user=user_id)
             s3db_onaccept(ltable, link, method="create")
 
         # Register address
@@ -698,7 +698,7 @@ class register(S3CustomController):
                                 "hours_per_week": hours_per_week,
                                 }
                 availability["id"] = atable.insert(**availability)
-                set_record_owner(atable, availability)
+                set_record_owner(atable, availability, owned_by_user=user_id)
                 s3db_onaccept(atable, availability, method="create")
 
         # Register skills
@@ -717,7 +717,7 @@ class register(S3CustomController):
                     "skill_id": skill_id,
                     }
             link["id"] = ctable.insert(**link)
-            set_record_owner(ctable, link)
+            set_record_owner(ctable, link, owned_by_user=user_id)
             s3db_onaccept(ctable, link, method="create")
 
         # Get the volunteer record
