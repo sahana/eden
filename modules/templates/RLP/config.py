@@ -798,11 +798,70 @@ def config(settings):
         def custom_prep(r):
 
             result = True
+            resource = r.resource
+            table = resource.table
+
+            from gluon import IS_NOT_EMPTY
+            from s3 import (IS_ONE_OF,
+                            IS_PERSON_GENDER,
+                            S3AgeFilter,
+                            S3LocationFilter,
+                            S3LocationSelector,
+                            S3OptionsFilter,
+                            S3RangeFilter,
+                            S3SQLCustomForm,
+                            S3SQLInlineComponent,
+                            S3SQLInlineLink,
+                            S3TextFilter,
+                            StringTemplateParser,
+                            s3_get_filter_opts,
+                            )
+
+            # Make last name mandatory
+            field = table.last_name
+            field.requires = IS_NOT_EMPTY()
+
+            # Hide comment for first name
+            field = table.first_name
+            field.comment = None
+
+            # Don't sort genders alphabetically
+            genders = sorted(list(s3db.pr_gender_opts.items()),
+                             key = lambda item: item[0],
+                             )
+            field = table.gender
+            field.requires = IS_PERSON_GENDER(genders,
+                                              sort = False,
+                                              zero = None,
+                                              )
+
+            # Enable weekly hours
+            avtable = s3db.pr_person_availability
+            field = avtable.hours_per_week
+            field.readable = field.writable = True
+
+            # Hide map selector in address
+            atable = s3db.pr_address
+            field = atable.location_id
+            field.widget = S3LocationSelector(show_address = True,
+                                              show_map = False,
+                                              )
+
+            hrcomponent = resource.components.get("volunteer_record")
+            hrtable = hrcomponent.table
+
+            # Hide comment for comments-field (field re-purposed)
+            field = hrtable.comments
+            field.comment = None
+
+            # Determine order of name fields
+            NAMES = ("first_name", "middle_name", "last_name")
+            keys = StringTemplateParser.keys(settings.get_pr_name_format())
+            name_fields = [fn for fn in keys if fn in NAMES]
 
             if r.controller == "vol":
+                # Volunteer perspective (vol/person)
 
-                get_vars = r.get_vars
-                resource = r.resource
                 record = r.record
 
                 # Filter to volunteers only
@@ -823,6 +882,8 @@ def config(settings):
                 s3db.configure("pr_person",
                                anonymize = rlp_volunteer_anonymize(),
                                )
+
+                get_vars = r.get_vars
 
                 if not coordinator:
 
@@ -845,70 +906,40 @@ def config(settings):
                     elif active != "both":
                         resource.add_filter(FS("volunteer_record.status") == 1)
 
-                # Availability Filter
-                parse_dt = current.calendar.parse_date
-                from_date = parse_dt(get_vars.get("available__ge"))
-                to_date = parse_dt(get_vars.get("available__le"))
-                if from_date or to_date:
-                    # Filter to join active deployments during interval
-                    active = lambda ctable: \
-                             rlp_active_deployments(ctable, from_date, to_date)
-                    s3db.add_components("pr_person",
-                                        hrm_delegation = {"name": "active_deployment",
-                                                          "joinby": "person_id",
-                                                          "filterby": active,
-                                                          },
-                                        )
-                    resource.add_filter(FS("active_deployment.id") == None)
+                if not record:
+                    # Availability Filter
+                    parse_dt = current.calendar.parse_date
+                    from_date = parse_dt(get_vars.get("available__ge"))
+                    to_date = parse_dt(get_vars.get("available__le"))
+                    if from_date or to_date:
+                        # Filter to join active deployments during interval
+                        active = lambda ctable: \
+                                 rlp_active_deployments(ctable, from_date, to_date)
+                        s3db.add_components("pr_person",
+                                            hrm_delegation = {"name": "active_deployment",
+                                                              "joinby": "person_id",
+                                                              "filterby": active,
+                                                              },
+                                            )
+                        resource.add_filter(FS("active_deployment.id") == None)
 
-                # Currently-Deployed-Filter
-                deployed_now = get_vars.get("deployed_now") == "1"
-                if deployed_now:
-                    s3db.add_components("pr_person",
-                                        hrm_delegation = {"name": "ongoing_deployment",
-                                                          "joinby": "person_id",
-                                                          "filterby": rlp_active_deployments,
-                                                          },
-                                        )
-                    resource.add_filter(FS("ongoing_deployment.id") != None)
-                    list_title = T("Currently Deployed Volunteers")
-                else:
-                    list_title = T("Volunteers")
+                    # Currently-Deployed-Filter
+                    deployed_now = get_vars.get("deployed_now") == "1"
+                    if deployed_now:
+                        s3db.add_components("pr_person",
+                                            hrm_delegation = {"name": "ongoing_deployment",
+                                                              "joinby": "person_id",
+                                                              "filterby": rlp_active_deployments,
+                                                              },
+                                            )
+                        resource.add_filter(FS("ongoing_deployment.id") != None)
+                        list_title = T("Currently Deployed Volunteers")
+                    else:
+                        list_title = T("Volunteers")
 
                 if not r.component:
 
-                    from gluon import IS_NOT_EMPTY
-                    from s3 import (IS_ONE_OF,
-                                    IS_PERSON_GENDER,
-                                    S3AgeFilter,
-                                    #S3DateFilter,
-                                    S3LocationFilter,
-                                    S3LocationSelector,
-                                    S3OptionsFilter,
-                                    S3RangeFilter,
-                                    S3SQLCustomForm,
-                                    S3SQLInlineComponent,
-                                    S3SQLInlineLink,
-                                    S3TextFilter,
-                                    StringTemplateParser,
-                                    s3_get_filter_opts,
-                                    )
-
-                    # Hide map selector in address
-                    atable = s3db.pr_address
-                    field = atable.location_id
-                    field.widget = S3LocationSelector(show_address = True,
-                                                      show_map = False,
-                                                      )
-
-                    # Enable weekly hours
-                    avtable = s3db.pr_person_availability
-                    field = avtable.hours_per_week
-                    field.readable = field.writable = True
-
                     # Hide add-link for organisation
-                    hrcomponent = resource.components.get("volunteer_record")
-                    hrtable = hrcomponent.table
                     field = hrtable.organisation_id
                     field.comment = None
 
@@ -929,29 +960,6 @@ def config(settings):
                                                field.represent,
                                                left = left,
                                                )
-
-                    # Hide comment for comments-field (field re-purposed)
-                    field = hrtable.comments
-                    field.comment = None
-
-                    # Make last name mandatory
-                    table = resource.table
-                    field = table.last_name
-                    field.requires = IS_NOT_EMPTY()
-
-                    # Hide comment for first name
-                    field = table.first_name
-                    field.comment = None
-
-                    # Don't sort genders alphabetically
-                    genders = sorted(list(s3db.pr_gender_opts.items()),
-                                     key = lambda item: item[0],
-                                     )
-                    field = table.gender
-                    field.requires = IS_PERSON_GENDER(genders,
-                                                      sort = False,
-                                                      zero = None,
-                                                      )
 
                     # Adapt CRUD-strings => Volunteers
                     s3.crud_strings[resource.tablename] = Storage(
@@ -1020,9 +1028,6 @@ def config(settings):
 
                     if show_contact_details:
                         # Name fields in name-format order
-                        NAMES = ("first_name", "middle_name", "last_name")
-                        keys = StringTemplateParser.keys(settings.get_pr_name_format())
-                        name_fields = [fn for fn in keys if fn in NAMES]
                         crud_fields.extend(name_fields)
                     else:
                         name_fields = []
@@ -1167,6 +1172,28 @@ def config(settings):
                        r.interactive and r.method is None and not r.component_id:
                         r.method = "organize"
 
+            elif r.controller == "default":
+                # Personal profile (default/person)
+                if not r.component:
+                    # Custom Form
+                    crud_fields = name_fields
+                    crud_fields.extend(["date_of_birth",
+                                        "gender",
+                                        S3SQLInlineLink("occupation_type",
+                                                       label = T("Occupation Type"),
+                                                       field = "occupation_type_id",
+                                                       ),
+                                        "person_details.occupation",
+                                        "volunteer_record.start_date",
+                                        "volunteer_record.end_date",
+                                        "volunteer_record.status",
+                                        "availability.hours_per_week",
+                                        "volunteer_record.comments",
+                                        ])
+
+                    resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
+                                       )
+
             elif callable(standard_prep):
                 result = standard_prep(r)
 
@@ -1208,14 +1235,14 @@ def config(settings):
             attr = dict(attr)
             attr["rheader"] = rlp_vol_rheader
         elif controller == "default":
-            tabs = [(T("Person Details"), None),
-                    (T("User Account"), "user_profile"),
-                    (T("Staff/Volunteer Record"), "human_resource"),
-                    (T("Address"), "address"),
-                    (settings.get_pr_contacts_tab_label(), "contacts"),
-                    (T("Skills"), "competency"),
-                    ]
-            attr["rheader"] = lambda r: s3db.pr_rheader(r, tabs=tabs)
+            attr = dict(attr)
+            attr["rheader"] = rlp_profile_rheader
+            #tabs = [(T("Person Details"), None),
+            #        (T("User Account"), "user_profile"),
+            #        (T("Address"), "address"),
+            #        (T("Contact Information"), "contacts"),
+            #        (T("Skills"), "competency"),
+            #        ]
 
         return attr
 
@@ -2069,6 +2096,52 @@ def rlp_vol_rheader(r, tabs=None):
                 rheader_fields.append([(None, hint, 5)])
 
         rheader = S3ResourceHeader(rheader_fields, tabs, title=name)(r,
+                                                         table = resource.table,
+                                                         record = record,
+                                                         )
+    return rheader
+
+# =============================================================================
+def rlp_profile_rheader(r, tabs=None):
+    """ Custom rheader for default/person """
+
+    if r.representation != "html":
+        # Resource headers only used in interactive views
+        return None
+
+    from s3 import s3_rheader_resource, S3ResourceHeader
+
+    tablename, record = s3_rheader_resource(r)
+    if tablename != r.tablename:
+        resource = current.s3db.resource(tablename, id=record.id)
+    else:
+        resource = r.resource
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+
+        T = current.T
+
+        if tablename == "pr_person":
+
+            tabs = [(T("Person Details"), None),
+                    (T("User Account"), "user_profile"),
+                    (T("Address"), "address"),
+                    (T("Contact Information"), "contacts"),
+                    (T("Skills"), "competency"),
+                    ]
+
+            rheader_fields = [[(T("ID"), "pe_label"),
+                               ],
+                              [(T("Name"), s3_fullname),
+                               ],
+                              ["date_of_birth",
+                               ]
+                              ]
+
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
                                                          table = resource.table,
                                                          record = record,
                                                          )

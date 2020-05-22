@@ -192,6 +192,16 @@ div.s3-groupedopts-widget {
   margin-top: 0.5rem;
   padding-bottom: 0 !important;
 }
+.pr-contacts-editable {
+    input, select {
+        min-height: 1.2rem;
+        margin: 2px 0;
+    }
+    button {
+        @include tiny_button_style();
+        margin: 2px;
+    }
+}
 .pr-contact-actions {
   margin-bottom: 0.5rem;
 }

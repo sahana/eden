@@ -28,7 +28,8 @@
             access: 1,
             controller: 'pr',
             personID: null,
-            cancelButtonText: 'Cancel'
+            cancelButtonText: 'Cancel',
+            placeholderText: 'Click to edit',
         },
 
         /**
@@ -414,7 +415,10 @@
             });
 
             var opts = {style: 'display: inline',
-                        indicator : '<div class="throbber">'
+                        cssclass: 'pr-contacts-editable',
+//                         height: 24,
+                        indicator : '<div class="throbber">',
+                        placeholder: this.options.placeholderText,
                         };
             element.find('.pr-contact-value').editable(function(value) {
                 var contact = $(this).closest('.pr-contact');
@@ -490,6 +494,7 @@
             }, opts);
             var priority_opts = {
                 style: 'display: inline-block;',
+                cssclass: 'pr-contacts-editable',
                 data: function(value) {
                     var opts = '{';
                     for (var i = 1; i < 10; i++) {

@@ -3678,6 +3678,7 @@ class PRAddressModel(S3Model):
             title_list = T("Addresses"),
             title_update = T("Edit Address"),
             label_list_button = T("List Addresses"),
+            label_delete_button = T("Delete Address"),
             msg_record_created = T("Address added"),
             msg_record_modified = T("Address updated"),
             msg_record_deleted = T("Address deleted"),
@@ -8257,6 +8258,7 @@ class pr_Contacts(S3Method):
                        "personID": record.id,
                        "access": access,
                        "cancelButtonText": s3_str(T("Cancel")),
+                       "placeholderText": s3_str(T("Click to edit")),
                        }
 
         # Apply widget
