@@ -3,15 +3,15 @@
 import json
 import uuid
 
-#from os import path
-
-from gluon import current, Field, IS_EMPTY_OR, IS_EXPR, SQLFORM, redirect, IS_INT_IN_RANGE
-from gluon.html import *
+from gluon import A, CRYPT, DIV, Field, H3, INPUT, \
+                  IS_EMPTY_OR,  IS_EXPR, IS_INT_IN_RANGE, IS_NOT_EMPTY, \
+                  P, SQLFORM, URL, XML, current, redirect
 from gluon.storage import Storage
 
-from s3 import S3CustomController, s3_mark_required, s3_phone_requires, s3_date, S3Represent, \
-               IS_ONE_OF, S3MultiSelectWidget, S3GroupedOptionsWidget, s3_comments_widget, \
-               S3LocationSelector, JSONERRORS
+from s3 import IS_ONE_OF, JSONERRORS, S3CustomController, \
+               S3GroupedOptionsWidget, S3LocationSelector, S3MultiSelectWidget, \
+               S3Represent, s3_comments_widget, s3_date, s3_mark_required, \
+               s3_phone_requires
 
 THEME = "RLP"
 
@@ -141,6 +141,7 @@ class register(S3CustomController):
 
         auth_settings = auth.settings
         auth_messages = auth.messages
+        self.customise_auth_messages()
 
         T = current.T
         db = current.db
@@ -170,12 +171,7 @@ class register(S3CustomController):
         buttons = [INPUT(_type = "submit",
                          _value = REGISTER,
                          ),
-                   #A(T("Login"),
-                   #  _href = URL(f = "user",
-                   #              args = "login"),
-                   #  _id = "login-btn",
-                   #  _class = "action-lnk",
-                   #  ),
+                   # TODO cancel-button?
                    ]
 
         # Construct the form
@@ -192,10 +188,6 @@ class register(S3CustomController):
                                buttons = buttons,
                                *formfields)
 
-        # Captcha, if configured
-        #if auth_settings.captcha != None:
-        #    form[0].insert(-1, DIV("", auth_settings.captcha, ""))
-
         # Identify form for CSS & JS Validation
         form.add_class("auth_register")
 
@@ -209,7 +201,9 @@ class register(S3CustomController):
 
         # Set default registration key, so new users are prevented
         # from logging in until approved
-        utable.registration_key.default = key = str(uuid.uuid4())
+        key = str(uuid.uuid4())
+        code = uuid.uuid4().hex[-6:].upper()
+        utable.registration_key.default = self.keyhash(key, code)
 
         if form.accepts(request.vars,
                         session,
@@ -293,6 +287,7 @@ class register(S3CustomController):
                 # System Details for Verification Email
                 system = {"system_name": settings.get_system_name(),
                           "url": "%s/default/index/verify_email/%s" % (response.s3.base_url, key),
+                          "code": code,
                           }
 
                 # Try to send the Verification Email
@@ -338,7 +333,13 @@ class register(S3CustomController):
     @staticmethod
     def formfields():
         """
-            TODO docstring
+            Generate the form fields for the registration form
+
+            @returns: a tuple (formfields, required_fields, subheadings)
+                      - formfields = list of form fields
+                      - required_fields = list of field names of required fields
+                      - subheadings = list of tuples (position, heading) to
+                                      insert into the form
         """
 
         T = current.T
@@ -360,6 +361,9 @@ class register(S3CustomController):
 
         # Instantiate Consent Tracker
         consent = s3db.auth_Consent(processing_types=["SHARE"])
+
+        # Last name is required
+        utable.last_name.requires = IS_NOT_EMPTY(error_message=T("input required"))
 
         # Form fields
         formfields = [utable.first_name,
@@ -396,7 +400,6 @@ class register(S3CustomController):
                             requires = IS_EMPTY_OR(s3_phone_requires),
                             ),
                       # --------------------------------------------
-                      # TODO Fix location hierarchy: "Village" should be called "Locality"
                       s3db.gis_location_id("location_id",
                                            widget = S3LocationSelector(
                                                        show_address = True,
@@ -492,7 +495,11 @@ class register(S3CustomController):
     # -------------------------------------------------------------------------
     @staticmethod
     def get_default_pool():
-        # TODO docstring
+        """
+            Get the record ID of the default volunteer pool
+
+            @returns: the pr_group.id of the default pool
+        """
 
         s3db = current.s3db
         auth = current.auth
@@ -770,48 +777,143 @@ class register(S3CustomController):
                     set_record_owner(mtable, data)
                     s3db_onaccept(mtable, data, method="create")
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def keyhash(key, code):
+        """
+            Generate a hash of the activation code using
+            the registration key
+
+            @param key: the registration key
+            @param code: the activation code
+
+            @returns: the hash as string
+        """
+
+        crypt = CRYPT(key=key, digest_alg="sha512", salt=None)
+        return str(crypt(code.upper())[0])
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def customise_auth_messages():
+        """
+            Customise auth messages:
+            - verification email
+            - welcome email
+        """
+
+        messages = current.auth.messages
+
+        messages.verify_email_subject = "%(system_name)s - Verify Email"
+        messages.verify_email = \
+"""Click on the link %(url)s to verify your email.
+
+Your Activation Code: %(code)s
+"""
+
+        messages.welcome_email_subject = "Welcome to the %(system_name)s Portal"
+        messages.welcome_email = \
+"""Welcome to the %(system_name)s Portal
+ - To edit your profile go to: %(url)s%(profile)s
+
+Thank you
+"""
+
 # =============================================================================
 class verify_email(S3CustomController):
     """ Custom verify_email Page """
 
     def __call__(self):
 
-        db = current.db
-        s3db = current.s3db
+        T = current.T
 
-        auth = current.auth
-        auth_settings = auth.settings
-
-        # Get registration key from URL
-        key = current.request.args[-1]
-
-        # Find the pending user account
-        utable = auth_settings.table_user
-        query = (utable.registration_key == key)
-        user = db(query).select(limitby = (0, 1),
-                                ).first()
-        if not user:
-            redirect(auth_settings.verify_email_next)
-
-        # Configure callback to process custom fields
-        s3db.configure("auth_user",
-                       register_onaccept = register.register_onaccept,
-                       )
-
-        # Approve and link user
-        auth.s3_approve_user(user)
-
-        # Log them in
-        user = Storage(utable._filter_fields(user, id=True))
-        auth.login_user(user)
-
-        auth_messages = auth.messages
-        auth.log_event(auth_messages.verify_email_log, user)
-
+        request = current.request
+        response = current.response
         session = current.session
-        session.confirmation = auth_messages.email_verified
-        session.flash = auth_messages.registration_successful
 
-        redirect(URL(c="default", f="person"))
+        settings = current.deployment_settings
+
+        # Get the registration key
+        if request.env.request_method == "POST":
+            key = request.post_vars.registration_key
+        elif len(request.args) > 1:
+            key = request.args[-1]
+        else:
+            key = None
+        if not key:
+            session.error = T("Missing registration key")
+            redirect(URL(c="default", f="index"))
+
+
+        formfields = [Field("activation_code",
+                            label = T("Please enter your Activation Code"),
+                            requires = IS_NOT_EMPTY(),
+                            ),
+                      ]
+
+        # Construct the form
+        response.form_label_separator = ""
+        form = SQLFORM.factory(table_name = "auth_user",
+                               record = None,
+                               hidden = {"_next": request.vars._next,
+                                         "registration_key": key,
+                                         },
+                               separator = ":",
+                               showid = False,
+                               submit_button = T("Submit"),
+                               formstyle = settings.get_ui_formstyle(),
+                               #buttons = buttons,
+                               *formfields)
+
+        if form.accepts(request.vars,
+                        session,
+                        formname = "register_confirm",
+                        ):
+
+            db = current.db
+            s3db = current.s3db
+
+            auth = current.auth
+            auth_settings = auth.settings
+            register.customise_auth_messages()
+
+            # Get registration key from URL
+            code = form.vars.activation_code
+
+            # Find the pending user account
+            utable = auth_settings.table_user
+            query = (utable.registration_key == register.keyhash(key, code))
+            user = db(query).select(limitby = (0, 1),
+                                    ).first()
+            if not user:
+                session.error = T("Registration not found")
+                redirect(auth_settings.verify_email_next)
+
+            # Configure callback to process custom fields
+            s3db.configure("auth_user",
+                           register_onaccept = register.register_onaccept,
+                           )
+
+            # Approve and link user
+            auth.s3_approve_user(user)
+
+            # Log them in
+            user = Storage(utable._filter_fields(user, id=True))
+            auth.login_user(user)
+
+            auth_messages = auth.messages
+            auth.log_event(auth_messages.verify_email_log, user)
+
+            session = current.session
+            session.confirmation = auth_messages.email_verified
+            session.flash = auth_messages.registration_successful
+
+            redirect(URL(c="default", f="person"))
+
+        self._view(THEME, "register.html")
+
+        return {"title": T("Confirm Registration"),
+                "form": form,
+                }
 
 # END =========================================================================
