@@ -241,6 +241,8 @@ class register(S3CustomController):
             custom = {#"date_of_birth": formvars.date_of_birth,
                       "office_phone": formvars.office_phone,
                       "location_id": formvars.location_id,
+                      "addr_street": formvars.addr_street,
+                      "addr_postcode": formvars.addr_postcode,
                       "occupation_type_ids": formvars.occupation_type_ids,
                       "occupation": formvars.occupation,
                       #"start_date": formvars.start_date,
@@ -365,6 +367,8 @@ class register(S3CustomController):
         # Last name is required
         utable.last_name.requires = IS_NOT_EMPTY(error_message=T("input required"))
 
+        ltable = s3db.gis_location
+
         # Form fields
         formfields = [utable.first_name,
                       utable.last_name,
@@ -402,10 +406,17 @@ class register(S3CustomController):
                       # --------------------------------------------
                       s3db.gis_location_id("location_id",
                                            widget = S3LocationSelector(
-                                                       show_address = True,
+                                                       show_address = False,
+                                                       show_postcode = False,
                                                        show_map = False,
                                                        ),
                                            ),
+                      Field("addr_street",
+                            label = ltable.addr_street.label,
+                            ),
+                      Field("addr_postcode",
+                            label = ltable.addr_postcode.label,
+                            ),
 
                       # --------------------------------------------
                       Field("occupation_type_ids",
@@ -484,10 +495,10 @@ class register(S3CustomController):
         subheadings = ((3, T("User Account")),
                        (6, T("Contact Information")),
                        (8, T("Address")),
-                       (9, T("Occupation")),
-                       (11, T("Availability and Resources")),
-                       (15, T("Comments")),
-                       (16, T("Privacy")),
+                       (11, T("Occupation")),
+                       (13, T("Availability and Resources")),
+                       (17, T("Comments")),
+                       (18, T("Privacy")),
                        )
 
         return formfields, required_fields, subheadings
@@ -650,7 +661,19 @@ class register(S3CustomController):
             s3db_onaccept(ltable, link, method="create")
 
         # Register address
+        addr_street = custom.get("addr_street")
+        addr_postcode = custom.get("addr_postcode")
         location_id = custom.get("location_id")
+        if addr_street or addr_postcode:
+            # Generate individual location
+            ltable = s3db.gis_location
+            location = Storage(addr_street = addr_street,
+                               addr_postcode = addr_postcode,
+                               parent = location_id,
+                               )
+            location_id = location.id = ltable.insert(**location)
+            set_record_owner(ltable, location, owned_by_user=user_id)
+            s3db_onaccept(ltable, location, method="create")
         if location_id:
             atable = s3db.pr_address
             query = (atable.pe_id == person.pe_id) & \
