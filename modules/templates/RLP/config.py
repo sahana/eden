@@ -7,7 +7,7 @@ from collections import OrderedDict
 from gluon import current, URL, A, DIV, TABLE, TAG, TR
 from gluon.storage import Storage
 
-from s3 import FS, S3DateFilter, S3Represent, s3_fullname
+from s3 import FS, S3DateFilter, S3Represent, s3_fieldmethod, s3_fullname, s3_yes_no_represent
 from s3dal import original_tablename
 
 ALLOWED_FORMATS = ("html", "iframe", "popup", "aadata", "json", "xls", "pdf")
@@ -743,6 +743,18 @@ def config(settings):
             vol_update_alias(row.id)
 
     # -------------------------------------------------------------------------
+    def has_account(row):
+        """
+            Field method to check for user ID
+        """
+
+        try:
+            user_id = row.auth_user.id
+        except AttributeError:
+            return None
+        return bool(user_id)
+
+    # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
 
         s3db = current.s3db
@@ -780,6 +792,11 @@ def config(settings):
                                  "onaccept",
                                  vol_person_onaccept,
                                  )
+
+        if r.tablename == "pr_person":
+            r.table.has_account = s3_fieldmethod("has_account", has_account,
+                                                 represent = s3_yes_no_represent,
+                                                 )
 
         # Configure components to inherit realm_entity from person
         s3db.configure("pr_person",
@@ -1128,6 +1145,7 @@ def config(settings):
                     # Status as last column
                     if coordinator:
                         list_fields.append("volunteer_record.status")
+                        list_fields.append((T("has Account"), "has_account"))
 
                     # Filters
                     filter_widgets = [
@@ -1173,6 +1191,7 @@ def config(settings):
                                        list_fields = list_fields,
                                        # Extra fields for computation of virtual fields
                                        extra_fields = ["date_of_birth",
+                                                       "user.id",
                                                        ],
                                        )
 

@@ -5623,6 +5623,7 @@
 'from Twitter': 'aus Twitter',
 'green': 'Grün',
 'grey': 'grau',
+'has Account': 'hat Benutzerkonto',
 'here': 'hier',
 'high': 'hoch',
 'hourly': 'stündlich',
