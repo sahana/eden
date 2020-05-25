@@ -471,6 +471,7 @@ class register(S3CustomController):
                             label = T("Skills / Resources"),
                             widget = S3GroupedOptionsWidget(cols = 1,
                                                             size = None,
+                                                            help_field = "comments",
                                                             ),
                             ),
 
