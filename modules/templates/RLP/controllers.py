@@ -11,7 +11,9 @@ from gluon.storage import Storage
 from s3 import IS_ONE_OF, JSONERRORS, S3CustomController, \
                S3GroupedOptionsWidget, S3LocationSelector, S3MultiSelectWidget, \
                S3Represent, s3_comments_widget, s3_date, s3_mark_required, \
-               s3_phone_requires
+               s3_phone_requires, s3_str
+
+from .notifications import SafeSub
 
 THEME = "RLP"
 
@@ -920,6 +922,9 @@ class verify_email(S3CustomController):
             # Approve and link user
             auth.s3_approve_user(user)
 
+            # Send welcome email (custom)
+            self.send_welcome_email(user)
+
             # Log them in
             user = Storage(utable._filter_fields(user, id=True))
             auth.login_user(user)
@@ -938,5 +943,85 @@ class verify_email(S3CustomController):
         return {"title": T("Confirm Registration"),
                 "form": form,
                 }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def send_welcome_email(user):
+        """
+            Send a welcome email to the new user
+
+            @param user: the auth_user Row
+        """
+
+        register.customise_auth_messages()
+        auth_messages = current.auth.messages
+
+        # Look up CMS template for welcome email
+        try:
+            recipient = user["email"]
+        except (KeyError, TypeError):
+            recipient = None
+        if not recipient:
+            current.response.error = auth_messages.unable_send_email
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        settings = current.deployment_settings
+
+        # Define join
+        ctable = s3db.cms_post
+        ltable = s3db.cms_post_module
+        join = ltable.on((ltable.post_id == ctable.id) & \
+                         (ltable.module == "auth") & \
+                         (ltable.resource == "user") & \
+                         (ltable.deleted == False))
+
+        # Get message template
+        query = (ctable.name == "WelcomeMessage") & \
+                (ctable.deleted == False)
+        row = db(query).select(ctable.doc_id,
+                               ctable.body,
+                               join = join,
+                               limitby = (0, 1),
+                               ).first()
+        if row:
+            message_template = row.body
+        else:
+            # Disabled
+            return
+
+        # Look up attachments
+        dtable = s3db.doc_document
+        query = (dtable.doc_id == row.doc_id) & \
+                (dtable.file != None) & (dtable.file != "") & \
+                (dtable.deleted == False)
+        rows = db(query).select(dtable.file)
+        attachments = []
+        for row in rows:
+            filename, stream = dtable.file.retrieve(row.file)
+            attachments.append(current.mail.Attachment(stream, filename=filename))
+
+        # Default subject from auth.messages
+        system_name = s3_str(settings.get_system_name())
+        subject = s3_str(auth_messages.welcome_email_subject % \
+                         {"system_name": system_name})
+
+        # Custom message body
+        data = SafeSub({"system_name": system_name,
+                        "url": settings.get_base_public_url(),
+                        "profile": URL("default", "person", host=True),
+                        })
+        message = message_template.format_map(data)
+
+        # Send email
+        success = current.msg.send_email(to = recipient,
+                                         subject = subject,
+                                         message = message,
+                                         attachments = attachments,
+                                         )
+        if not success:
+            current.response.error = auth_messages.unable_send_email
 
 # END =========================================================================

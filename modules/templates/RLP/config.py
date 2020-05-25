@@ -38,6 +38,8 @@ def config(settings):
     settings.security.self_registration = False
     # Do new users need to verify their email address?
     settings.auth.registration_requires_verification = True
+    # Do not send standard welcome emails (using custom function)
+    settings.auth.registration_welcome_email = False
     # Do new users need to be approved by an administrator prior to being able to login?
     #settings.auth.registration_requires_approval = True
     settings.auth.registration_requests_organisation = True
@@ -293,15 +295,25 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_cms_post_resource(r, tablename):
 
-        from s3 import S3SQLCustomForm
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent
+
+        crud_form = S3SQLCustomForm("name",
+                                    "body",
+                                    "date",
+                                    S3SQLInlineComponent("document",
+                                                         name = "file",
+                                                         label = T("Attachments"),
+                                                         fields = ["file", "comments"],
+                                                         filterby = {"field": "file",
+                                                                     "options": "",
+                                                                     "invert": True,
+                                                                     },
+                                                         ),
+                                    "comments",
+                                    )
 
         current.s3db.configure("cms_post",
-                               crud_form = S3SQLCustomForm("name",
-                                                           #"title",
-                                                           "body",
-                                                           "date",
-                                                           "comments",
-                                                           ),
+                               crud_form = crud_form,
                                list_fields = ["post_module.module",
                                               "post_module.resource",
                                               "name",
