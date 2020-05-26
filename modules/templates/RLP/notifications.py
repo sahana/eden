@@ -1,21 +1,29 @@
 # -*- coding: utf-8 -*-
 
 import json
+import re
 import sys
 
-from gluon import Field, SQLFORM, URL, current, \
+from gluon import current, Field, SQLFORM, URL, \
                   A, DIV, FIELDSET, H6, INPUT, LABEL, LEGEND, P, TEXTAREA
 
 from s3 import s3_fullname, s3_str, S3Method, JSONERRORS
 from s3.s3forms import S3SQLSubForm
 
+PLACEHOLDER = re.compile(r"\{([^{}]+)\}")
+
 # =============================================================================
-class SafeSub(dict):
+def formatmap(template, mapping):
     """
-        Helper class for safe string variable substitution
+        Helper to replace placeholders in template using mapping
+
+        @param: template, a string containing placeholders of the format {name}
+        @param: mapping, a dict mapping placeholders to values
     """
-    def __missing__(self, key):
-        return "{" + key + "}"
+    def repl(match):
+        key = match.group(1)
+        return s3_str(mapping.get(key, match.group(0)))
+    return PLACEHOLDER.sub(repl, template)
 
 # =============================================================================
 class DeploymentNotifications(object):
@@ -69,7 +77,8 @@ class DeploymentNotifications(object):
         """
 
         # Sanitize data
-        data = SafeSub(data) if isinstance(data, dict) else SafeSub()
+        if not isinstance(data, dict):
+            data = {}
         for key in data:
             if data[key] is None:
                 data[key] = "-"
@@ -80,8 +89,8 @@ class DeploymentNotifications(object):
         if not isinstance(templates, (tuple, list)):
             return None
 
-        subject = templates[0].format_map(data)
-        message = templates[1].format_map(data)
+        subject = formatmap(templates[0], data)
+        message = formatmap(templates[1], data)
 
         return subject, message
 

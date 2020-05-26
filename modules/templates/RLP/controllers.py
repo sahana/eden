@@ -13,7 +13,7 @@ from s3 import IS_ONE_OF, JSONERRORS, S3CustomController, \
                S3Represent, s3_comments_widget, s3_date, s3_mark_required, \
                s3_phone_requires, s3_str
 
-from .notifications import SafeSub
+from .notifications import formatmap
 
 THEME = "RLP"
 
@@ -1010,11 +1010,11 @@ class verify_email(S3CustomController):
                          {"system_name": system_name})
 
         # Custom message body
-        data = SafeSub({"system_name": system_name,
-                        "url": settings.get_base_public_url(),
-                        "profile": URL("default", "person", host=True),
-                        })
-        message = message_template.format_map(data)
+        data = {"system_name": system_name,
+                "url": settings.get_base_public_url(),
+                "profile": URL("default", "person", host=True),
+                }
+        message = formatmap(message_template, data)
 
         # Send email
         success = current.msg.send_email(to = recipient,
