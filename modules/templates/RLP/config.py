@@ -1283,6 +1283,7 @@ def config(settings):
             auth = current.auth
             user = auth.user
             if user:
+                utable = auth.settings.table_user
                 account = db(utable.id == user.id).select(utable.deleted,
                                                           limitby=(0, 1),
                                                           ).first()
