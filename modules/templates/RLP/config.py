@@ -4,7 +4,7 @@ import datetime
 
 from collections import OrderedDict
 
-from gluon import current, URL, A, DIV, TABLE, TAG, TR
+from gluon import current, redirect, URL, A, DIV, TABLE, TAG, TR
 from gluon.storage import Storage
 
 from s3 import FS, S3DateFilter, S3Represent, s3_fieldmethod, s3_fullname, s3_yes_no_represent
@@ -1287,7 +1287,6 @@ def config(settings):
                                                           limitby=(0, 1),
                                                           ).first()
                 if not account or account.deleted:
-                    from gluon import redirect
                     redirect(URL(c="default", f="user", args=["logout"]))
             else:
                 redirect(URL(c="default", f="index"))
