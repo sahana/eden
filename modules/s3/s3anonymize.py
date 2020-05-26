@@ -330,7 +330,9 @@ class S3Anonymize(S3Method):
 
                 elif callable(rule):
                     # Callable rule to procude a new value
-                    data[fieldname] = rule(row[pkey], field, row[field])
+                    new_value = rule(row[pkey], field, row[field])
+                    if fieldname != table._id.name:
+                        data[fieldname] = new_value
 
                 elif type(rule) is tuple:
                     method, value = rule
@@ -399,7 +401,6 @@ class S3AnonymizeWidget(object):
         # Check permissions to anonymize
         if not S3Anonymize.permitted(table, record_id):
             return default
-
 
         # Determine widget ID
         widget_id = "%s-%s-anonymize" % (table, record_id)

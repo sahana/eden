@@ -2,7 +2,7 @@
 
 import uuid
 
-from gluon import current
+from gluon import current, CRYPT
 
 def rlp_anonymous_address(record_id, field, value):
     """
@@ -64,6 +64,41 @@ def rlp_obscure_dob(record_id, field, value):
     return value
 
 # -----------------------------------------------------------------------------
+def rlp_random_password(record_id, field, value):
+    """
+        Produce a random password hash
+
+        @param record_id: the auth_user record ID
+        @param field: the password Field
+        @param value: the password hash
+
+        @return: the new random password hash
+    """
+
+    crypt = CRYPT(key = current.deployment_settings.hmac_key,
+                  digest_alg = "sha512",
+                  )
+    return str(crypt(uuid.uuid4().hex)[0])
+
+# -----------------------------------------------------------------------------
+def rlp_remove_roles(record_id, field, value):
+    """
+        Remove all roles of a user
+
+        @param record_id: the auth_user record ID
+        @param field: the id Field
+        @param value: the id
+
+        @return: the record_id
+    """
+
+    auth = current.auth
+    roles = auth.s3_get_roles(record_id)
+    if roles:
+        auth.s3_withdraw_role(record_id, roles)
+    return record_id
+
+# -----------------------------------------------------------------------------
 def rlp_decline_delegation(record_id, field, value):
     """
         Decline all requested deployments when anonymizing the volunteer
@@ -78,13 +113,14 @@ def rlp_decline_delegation(record_id, field, value):
     return "DECL" if value == "REQ" else value
 
 # -----------------------------------------------------------------------------
-def rlp_volunteer_anonymize():
+def rlp_volunteer_anonymize(remove_account=False):
     """ Rules to anonymize a volunteer """
 
     ANONYMOUS = "-"
 
     # Helper to produce an anonymous ID (pe_label)
     anonymous_id = lambda record_id, f, v: "NN%s" % uuid.uuid4().hex[-8:].upper()
+    anonymous_code = lambda record_id, f, v: uuid.uuid4().hex
 
     # Rules for delegation messages
     notifications = ("hrm_delegation_message", {"key": "delegation_id",
@@ -172,6 +208,31 @@ def rlp_volunteer_anonymize():
                           ],
               },
              ]
+
+    if remove_account:
+        # Rules for user accounts
+        account = ("auth_user", {"key": "id",
+                                 "match": "user_id",
+                                 "fields": {"id": rlp_remove_roles,
+                                            "first_name": ("set", "-"),
+                                            "last_name": "remove",
+                                            "email": anonymous_code,
+                                            "organisation_id": "remove",
+                                            "password": rlp_random_password,
+                                            "deleted": ("set", True),
+                                            },
+                                 })
+
+        rules.append({"name": "account",
+                      "title": "User Account",
+                      "cascade": [("pr_person_user", {"key": "pe_id",
+                                                      "match": "pe_id",
+                                                      "cascade": [account,
+                                                                  ],
+                                                      "delete": True,
+                                                      }),
+                                  ],
+                      })
 
     return rules
 

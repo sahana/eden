@@ -1222,7 +1222,19 @@ def config(settings):
                                         ])
 
                     resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
+                                       deletable = False,
                                        )
+
+                    if r.record and r.record.id == current.auth.s3_logged_in_person():
+                        # Configure anonymize-method
+                        from s3 import S3Anonymize
+                        s3db.set_method("pr", "person",
+                                        method = "anonymize",
+                                        action = S3Anonymize,
+                                        )
+                        from .anonymize import rlp_volunteer_anonymize
+                        resource.configure(anonymize = rlp_volunteer_anonymize(remove_account=True),
+                                           )
 
             elif callable(standard_prep):
                 result = standard_prep(r)
@@ -1237,7 +1249,7 @@ def config(settings):
             if callable(standard_postp):
                 output = standard_postp(r, output)
 
-            if r.controller == "vol" and \
+            if r.controller in ("vol", "default") and \
                not r.component and r.record and \
                r.method in (None, "update", "read") and \
                isinstance(output, dict):
@@ -1259,20 +1271,29 @@ def config(settings):
             return output
         s3.postp = custom_postp
 
-        # Custom rheader in vol-perspective
+        # Custom rheaders
         controller = current.request.controller
         if controller == "vol":
+            # Use RLP volunteer rheader
             attr = dict(attr)
             attr["rheader"] = rlp_vol_rheader
+
         elif controller == "default":
+            # Logout post-anonymize if the user has removed their account
+            auth = current.auth
+            user = auth.user
+            if user:
+                account = db(utable.id == user.id).select(utable.deleted,
+                                                          limitby=(0, 1),
+                                                          ).first()
+                if not account or account.deleted:
+                    from gluon import redirect
+                    redirect(URL(c="default", f="user", args=["logout"]))
+            else:
+                redirect(URL(c="default", f="index"))
+            # Use RLP profile rheader
             attr = dict(attr)
             attr["rheader"] = rlp_profile_rheader
-            #tabs = [(T("Person Details"), None),
-            #        (T("User Account"), "user_profile"),
-            #        (T("Address"), "address"),
-            #        (T("Contact Information"), "contacts"),
-            #        (T("Skills"), "competency"),
-            #        ]
 
         return attr
 

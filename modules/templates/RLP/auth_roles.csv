@@ -19,7 +19,7 @@ AUTHENTICATED,Authenticated,,,,,pr_group,READ,
 AUTHENTICATED,Authenticated,,,,,pr_group_membership,READ,
 AUTHENTICATED,Authenticated,,,,,pr_occupation_type,READ,
 AUTHENTICATED,Authenticated,,,,,pr_occupation_type_person,CREATE|READ,UPDATE|DELETE
-AUTHENTICATED,Authenticated,,,,,pr_person,NONE,READ|UPDATE
+AUTHENTICATED,Authenticated,,,,,pr_person,NONE,READ|UPDATE|DELETE
 AUTHENTICATED,Authenticated,,,,,pr_person_availability,CREATE,READ|UPDATE
 AUTHENTICATED,Authenticated,,,,,pr_person_details,CREATE,READ|UPDATE
 COORDINATOR,Pool Coordinator,,,hrm,delegation,,READ|UPDATE,
