@@ -113,7 +113,7 @@ def rlp_decline_delegation(record_id, field, value):
     return "DECL" if value == "REQ" else value
 
 # -----------------------------------------------------------------------------
-def rlp_volunteer_anonymize(remove_account=False):
+def rlp_volunteer_anonymize():
     """ Rules to anonymize a volunteer """
 
     ANONYMOUS = "-"
@@ -139,6 +139,19 @@ def rlp_volunteer_anonymize(remove_account=False):
                                                 },
                                      "delete": True,
                                      })
+
+    # Rules for user accounts
+    account = ("auth_user", {"key": "id",
+                             "match": "user_id",
+                             "fields": {"id": rlp_remove_roles,
+                                        "first_name": ("set", "-"),
+                                        "last_name": "remove",
+                                        "email": anonymous_code,
+                                        "organisation_id": "remove",
+                                        "password": rlp_random_password,
+                                        "deleted": ("set", True),
+                                        },
+                             })
 
     rules = [# Remove identity of volunteer
              {"name": "default",
@@ -207,32 +220,19 @@ def rlp_volunteer_anonymize(remove_account=False):
                                               }),
                           ],
               },
+
+             # Remove user account
+             {"name": "account",
+              "title": "User Account",
+              "cascade": [("pr_person_user", {"key": "pe_id",
+                                              "match": "pe_id",
+                                              "cascade": [account,
+                                                          ],
+                                              "delete": True,
+                                              }),
+                          ],
+              },
              ]
-
-    if remove_account:
-        # Rules for user accounts
-        account = ("auth_user", {"key": "id",
-                                 "match": "user_id",
-                                 "fields": {"id": rlp_remove_roles,
-                                            "first_name": ("set", "-"),
-                                            "last_name": "remove",
-                                            "email": anonymous_code,
-                                            "organisation_id": "remove",
-                                            "password": rlp_random_password,
-                                            "deleted": ("set", True),
-                                            },
-                                 })
-
-        rules.append({"name": "account",
-                      "title": "User Account",
-                      "cascade": [("pr_person_user", {"key": "pe_id",
-                                                      "match": "pe_id",
-                                                      "cascade": [account,
-                                                                  ],
-                                                      "delete": True,
-                                                      }),
-                                  ],
-                      })
 
     return rules
 

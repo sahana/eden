@@ -1225,16 +1225,15 @@ def config(settings):
                                        deletable = False,
                                        )
 
-                    if r.record and r.record.id == current.auth.s3_logged_in_person():
-                        # Configure anonymize-method
-                        from s3 import S3Anonymize
-                        s3db.set_method("pr", "person",
-                                        method = "anonymize",
-                                        action = S3Anonymize,
-                                        )
-                        from .anonymize import rlp_volunteer_anonymize
-                        resource.configure(anonymize = rlp_volunteer_anonymize(remove_account=True),
-                                           )
+                    # Configure anonymize-method
+                    from s3 import S3Anonymize
+                    s3db.set_method("pr", "person",
+                                    method = "anonymize",
+                                    action = S3Anonymize,
+                                    )
+                    from .anonymize import rlp_volunteer_anonymize
+                    resource.configure(anonymize = rlp_volunteer_anonymize(),
+                                       )
 
             elif callable(standard_prep):
                 result = standard_prep(r)
