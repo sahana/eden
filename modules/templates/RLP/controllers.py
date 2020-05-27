@@ -289,8 +289,14 @@ class register(S3CustomController):
             else:
                 # Request User Verify their Email
                 # System Details for Verification Email
+                verify_url = URL(c = "default",
+                                 f = "index",
+                                 args = ["verify_email", key],
+                                 scheme = "https" if request.is_https else "http",
+                                 )
                 system = {"system_name": settings.get_system_name(),
-                          "url": "%s/default/index/verify_email/%s" % (response.s3.base_url, key),
+                          "url": verify_url,
+                          #"url": "%s/default/index/verify_email/%s" % (response.s3.base_url, key),
                           "code": code,
                           }
 
