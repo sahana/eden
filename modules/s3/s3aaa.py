@@ -3625,10 +3625,8 @@ Please go to %(url)s to approve this user."""
             @return: the new random password hash
         """
 
-        password, crypted = self.s3_password()
+        return self.s3_password()[1]
 
-        return crypted
-    
     # -------------------------------------------------------------------------
     def s3_anonymise_roles(self, record_id, field, value):
         """
@@ -3646,7 +3644,7 @@ Please go to %(url)s to approve this user."""
         if roles:
             self.s3_withdraw_role(record_id, roles)
         return record_id
-    
+
     # -------------------------------------------------------------------------
     # S3-specific authentication methods
     # -------------------------------------------------------------------------

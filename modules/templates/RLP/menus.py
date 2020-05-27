@@ -148,6 +148,8 @@ class S3MainMenu(default.S3MainMenu):
         menu_about = MA(c="default")(
             MA("Help", f="help"),
             MA("Contact", f="contact"),
+            MA("Privacy", f="index", args=["privacy"]),
+            MA("Legal Notice", f="index", args=["legal"]),
             MA("Version", f="about", restrict = (ADMIN, "COORDINATOR")),
         )
         return menu_about

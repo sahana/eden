@@ -3,7 +3,7 @@
 import json
 from uuid import uuid4
 
-from gluon import A, CRYPT, DIV, Field, H3, INPUT, \
+from gluon import A, BR, CRYPT, DIV, Field, H3, INPUT, \
                   IS_EMPTY_OR,  IS_EXPR, IS_INT_IN_RANGE, IS_NOT_EMPTY, \
                   P, SQLFORM, URL, XML, current, redirect
 from gluon.storage import Storage
@@ -130,6 +130,122 @@ $('#login-btn').click(function(e){
         return output
 
 # =============================================================================
+class privacy(S3CustomController):
+    """ Custom Page """
+
+    def __call__(self):
+
+        output = {}
+
+        # Allow editing of page content from browser using CMS module
+        ADMIN = current.auth.s3_has_role("ADMIN")
+
+        s3db = current.s3db
+        table = s3db.cms_post
+        ltable = s3db.cms_post_module
+
+        module = "default"
+        resource = "Privacy"
+
+        query = (ltable.module == module) & \
+                (ltable.resource == resource) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        item = current.db(query).select(table.body,
+                                        table.id,
+                                        limitby=(0, 1)).first()
+        if item:
+            if ADMIN:
+                content = DIV(XML(item.body),
+                              BR(),
+                              A(current.T("Edit"),
+                                _href = URL(c="cms", f="post",
+                                            args = [item.id, "update"],
+                                            vars = {"module": module,
+                                                    "resource": resource,
+                                                    },
+                                            ),
+                                _class="action-btn",
+                                ),
+                              )
+            else:
+                content = DIV(XML(item.body))
+        elif ADMIN:
+            content = A(current.T("Edit"),
+                        _href = URL(c="cms", f="post", args="create",
+                                    vars = {"module": module,
+                                            "resource": resource,
+                                            },
+                                    ),
+                        _class="action-btn cms-edit",
+                        )
+        else:
+            content = ""
+
+        output["item"] = content
+
+        self._view(THEME, "cmspage.html")
+        return output
+
+# =============================================================================
+class legal(S3CustomController):
+    """ Custom Page """
+
+    def __call__(self):
+
+        output = {}
+
+        # Allow editing of page content from browser using CMS module
+        ADMIN = current.auth.s3_has_role("ADMIN")
+
+        s3db = current.s3db
+        table = s3db.cms_post
+        ltable = s3db.cms_post_module
+
+        module = "default"
+        resource = "Legal"
+
+        query = (ltable.module == module) & \
+                (ltable.resource == resource) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        item = current.db(query).select(table.body,
+                                        table.id,
+                                        limitby=(0, 1)).first()
+        if item:
+            if ADMIN:
+                content = DIV(XML(item.body),
+                              BR(),
+                              A(current.T("Edit"),
+                                _href = URL(c="cms", f="post",
+                                            args = [item.id, "update"],
+                                            vars = {"module": module,
+                                                    "resource": resource,
+                                                    },
+                                            ),
+                                _class="action-btn",
+                                ),
+                              )
+            else:
+                content = DIV(XML(item.body))
+        elif ADMIN:
+            content = A(current.T("Edit"),
+                        _href = URL(c="cms", f="post", args="create",
+                                    vars = {"module": module,
+                                            "resource": resource,
+                                            },
+                                    ),
+                        _class="action-btn cms-edit",
+                        )
+        else:
+            content = ""
+
+        output["item"] = content
+
+        self._view(THEME, "cmspage.html")
+        return output
+
+# =============================================================================
 class register(S3CustomController):
     """ Custom Registration Page """
 
@@ -167,6 +283,11 @@ class register(S3CustomController):
                                                 mark_required = required_fields,
                                                 )
         response.s3.has_required = has_required
+        labels["skill_id"] = DIV(labels["skill_id"],
+                                 DIV("(%s)" % T("Select all that apply"),
+                                     _class="sub-label",
+                                     ),
+                                 )
 
         # Form buttons
         REGISTER = T("Register")

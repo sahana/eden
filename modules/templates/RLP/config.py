@@ -324,6 +324,37 @@ def config(settings):
 
     settings.customise_cms_post_resource = customise_cms_post_resource
 
+    # -----------------------------------------------------------------------------
+    def customise_cms_post_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            table = r.table
+            context = r.get_vars.get("resource")
+            if context == "Privacy":
+                page = URL(c="default", f="index", args=["privacy"])
+                r.resource.configure(create_next = page,
+                                     update_next = page,
+                                     )
+                table.name.default = "Privacy Notice"
+            elif context == "Legal":
+                page = URL(c="default", f="index", args=["legal"])
+                r.resource.configure(create_next = page,
+                                     update_next = page,
+                                     )
+                table.name.default = "Legal Notice"
+            return result
+        s3.prep = prep
+
+        return attr
+
+    settings.customise_cms_post_controller = customise_cms_post_controller
     # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
 
@@ -1233,6 +1264,13 @@ def config(settings):
                                     )
                     from .anonymize import rlp_volunteer_anonymize
                     resource.configure(anonymize = rlp_volunteer_anonymize(),
+                                       # We only want to redirect to logout when
+                                       # they actually deleted their account, so
+                                       # checking on reload before prep (see further down)
+                                       #anonymize_next = URL(c = "default",
+                                       #                     f = "user",
+                                       #                     args = ["logout"],
+                                       #                     ),
                                        )
 
             elif callable(standard_prep):
