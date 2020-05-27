@@ -1980,7 +1980,7 @@ class S3CRUD(S3Method):
         """
 
         if not self._permitted("review"):
-            r.unauthorized()
+            r.unauthorised()
 
         T = current.T
 

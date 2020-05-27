@@ -1642,6 +1642,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
 
     settings.tasks.homepage_stats_update = homepage_stats_update
 
+    # -------------------------------------------------------------------------
     def req_need_line_update_stats(r, **attr):
         """
             Method to manually update the data files for the charts
@@ -1659,7 +1660,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
 
             if not current.auth.s3_has_role("ADMIN"):
                 # No, this is not open for everybody
-                r.unauthorized()
+                r.unauthorised()
             else:
                 current.s3task.run_async("settings_task",
                                          args = ["homepage_stats_update"])

@@ -478,7 +478,9 @@ def person():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller("pr", "person", rheader=s3db.br_rheader)
+    output = s3_rest_controller("pr", "person",
+                                rheader = s3db.br_rheader,
+                                )
     return output
 
 # -----------------------------------------------------------------------------

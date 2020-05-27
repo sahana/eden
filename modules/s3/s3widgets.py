@@ -89,6 +89,7 @@ import datetime
 import json
 import os
 import re
+from uuid import uuid4
 
 try:
     from dateutil.relativedelta import relativedelta
@@ -3792,8 +3793,7 @@ i18n.upload_image='%s' ''' % (T("Please select a valid image!"),
         append(display_div)
         # Prevent multiple widgets on the same page from interfering with each
         # other.
-        import uuid
-        uid = "cropwidget-%s" % uuid.uuid4().hex
+        uid = "cropwidget-%s" % uuid4().hex
         for element in elements:
             element.attributes["_data-uid"] = uid
 

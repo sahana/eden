@@ -52,6 +52,7 @@ import json
 import os
 
 from collections import OrderedDict
+from uuid import uuid4
 
 from gluon import *
 from gluon.storage import Storage
@@ -2355,11 +2356,10 @@ class S3GISConfigModel(S3Model):
                 # No Image => CSV import of resources which just need a ref
                 return
             import base64
-            import uuid
             metadata, encoded_file = encoded_file.split(",")
             filename = metadata.split(";")[0]
             f = Storage()
-            f.filename = uuid.uuid4().hex + filename
+            f.filename = uuid4().hex + filename
             f.file = BytesIO(base64.b64decode(encoded_file))
             form_vars.image = image = f
 
@@ -5073,8 +5073,8 @@ def gis_hierarchy_editable(level, location_id):
         limitby = (0, 1)
     rows = current.db(query).select(table[fieldname],
                                     table.uuid,
-                                    limitby=limitby,
-                                    cache=s3db.cache)
+                                    limitby = limitby,
+                                    cache = s3db.cache)
     if len(rows) > 1:
         # Remove the Site Default
         excluded = lambda row: row.uuid == "SITE_DEFAULT"

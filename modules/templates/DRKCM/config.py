@@ -4597,47 +4597,6 @@ def drk_org_rheader(r, tabs=None):
     return rheader
 
 # =============================================================================
-def drk_anonymous_address(record_id, field, value):
-    """
-        Helper to anonymize a pr_address location; removes street and
-        postcode details, but retains Lx ancestry for statistics
-
-        @param record_id: the pr_address record ID
-        @param field: the location_id Field
-        @param value: the location_id
-
-        @return: the location_id
-    """
-
-    s3db = current.s3db
-    db = current.db
-
-    # Get the location
-    if value:
-        ltable = s3db.gis_location
-        row = db(ltable.id == value).select(ltable.id,
-                                            ltable.level,
-                                            limitby = (0, 1),
-                                            ).first()
-        if not row.level:
-            # Specific location => remove address details
-            data = {"addr_street": None,
-                    "addr_postcode": None,
-                    "gis_feature_type": 0,
-                    "lat": None,
-                    "lon": None,
-                    "wkt": None,
-                    }
-            # Doesn't work - PyDAL doesn't detect the None value:
-            #if "the_geom" in ltable.fields:
-            #    data["the_geom"] = None
-            row.update_record(**data)
-            if "the_geom" in ltable.fields:
-                db.executesql("UPDATE gis_location SET the_geom=NULL WHERE id=%s" % row.id)
-
-    return value
-
-# -----------------------------------------------------------------------------
 def drk_obscure_dob(record_id, field, value):
     """
         Helper to obscure a date of birth; maps to the first day of
@@ -4731,7 +4690,7 @@ def drk_person_anonymize():
                                                     }),
                           ("pr_address", {"key": "pe_id",
                                           "match": "pe_id",
-                                          "fields": {"location_id": drk_anonymous_address,
+                                          "fields": {"location_id": current.s3db.pr_address_anonymise,
                                                      "comments": "remove",
                                                      },
                                           }),

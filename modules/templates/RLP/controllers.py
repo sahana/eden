@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-import uuid
+from uuid import uuid4
 
 from gluon import A, CRYPT, DIV, Field, H3, INPUT, \
                   IS_EMPTY_OR,  IS_EXPR, IS_INT_IN_RANGE, IS_NOT_EMPTY, \
@@ -203,8 +203,8 @@ class register(S3CustomController):
 
         # Set default registration key, so new users are prevented
         # from logging in until approved
-        key = str(uuid.uuid4())
-        code = uuid.uuid4().hex[-6:].upper()
+        key = str(uuid4())
+        code = uuid4().hex[-6:].upper()
         utable.registration_key.default = self.keyhash(key, code)
 
         if form.accepts(request.vars,

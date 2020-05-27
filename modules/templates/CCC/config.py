@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from collections import OrderedDict
+from uuid import uuid4
 
 from gluon import current
 from gluon.storage import Storage
@@ -86,17 +87,20 @@ def config(settings):
         """
             @ToDo: This function won't work once we update s3aaa.py login to 2-factor auth
                    since roles not yet assigned when this function is called
+                   => Do everything inside login_next controller instead of being able to optimise-away Admin
         """
         from gluon import URL
-        has_role = current.auth.s3_has_role
-        if has_role("ADMIN"):
+        #has_role = current.auth.s3_has_role
+        if current.auth.s3_has_role("ADMIN"):
             _next = current.request.vars._next or URL(c="default", f="index")
-        elif has_role("VOLUNTEER") or has_role("RESERVE"):
-            _next = URL(c="cms", f="post", args="datalist")
-        elif has_role("DONOR"):
-            _next = URL(c="default", f="index", args="donor")
+        #elif has_role("VOLUNTEER") or has_role("RESERVE"):
+        #    _next = URL(c="cms", f="post", args="datalist")
+        #elif has_role("DONOR"):
+        #    _next = URL(c="default", f="index", args="donor")
+        #else:
+        #    _next = current.request.vars._next or URL(c="default", f="index")
         else:
-            _next = current.request.vars._next or URL(c="default", f="index")
+            _next = URL(c="default", f="index", args="login_next")
         return _next
 
     settings.auth.login_next = login_next
@@ -278,6 +282,131 @@ def config(settings):
 
     # Now using req_need, so unused:
     #settings.req.req_type = ("People",)
+
+    # -----------------------------------------------------------------------------
+    def ccc_person_anonymize():
+        """ Rules to anonymise a person """
+
+        auth = current.auth
+
+        ANONYMOUS = "-"
+        anonymous_email = uuid4().hex
+
+        if current.request.controller == "br":
+            title = "Name, Contacts, Address, Case Details"
+        else:
+            title = "Name, Contacts, Address, Additional Information, User Account"
+
+        rules = [{"name": "default",
+                  "title": title,
+                  "fields": {"first_name": ("set", ANONYMOUS),
+                             "middle_name": ("set", ANONYMOUS),
+                             "last_name": ("set", ANONYMOUS),
+                             #"pe_label": anonymous_id,
+                             #"date_of_birth": current.s3db.pr_person_obscure_dob,
+                             "date_of_birth": "remove",
+                             "comments": "remove",
+                             },
+                  "cascade": [("pr_contact", {"key": "pe_id",
+                                              "match": "pe_id",
+                                              "fields": {"contact_description": "remove",
+                                                         "value": ("set", ""),
+                                                         "comments": "remove",
+                                                         },
+                                              "delete": True,
+                                              }),
+                              ("pr_contact_emergency", {"key": "pe_id",
+                                                        "match": "pe_id",
+                                                        "fields": {"name": ("set", ANONYMOUS),
+                                                                   "relationship": "remove",
+                                                                   "phone": "remove",
+                                                                   "comments": "remove",
+                                                                   },
+                                                        "delete": True,
+                                                        }),
+                              ("pr_address", {"key": "pe_id",
+                                              "match": "pe_id",
+                                              "fields": {"location_id": current.s3db.pr_address_anonymise,
+                                                         "comments": "remove",
+                                                         },
+                                              }),
+                              #("pr_person_details", {"key": "person_id",
+                              #                       "match": "id",
+                              #                       "fields": {"education": "remove",
+                              #                                  "occupation": "remove",
+                              #                                  },
+                              #                       }),
+                              ("pr_person_tag", {"key": "person_id",
+                                                 "match": "id",
+                                                 "fields": {"value": ("set", ANONYMOUS),
+                                                            },
+                                                 "delete": True,
+                                                 }),
+                              ("br_case", {"key": "person_id",
+                                           "match": "id",
+                                           "fields": {"comments": "remove",
+                                                      },
+                                           "cascade": [("br_note", {"key": "id",
+                                                                    "match": "case_id",
+                                                                    "fields": {"note": "remove",
+                                                                               },
+                                                                    "delete": True,
+                                                                    }),
+                                                       ],
+                                           }),
+                              ("hrm_human_resource", {"key": "person_id",
+                                                      "match": "id",
+                                                      "fields": {"status": ("set", 2),
+                                                                 #"site_id": "remove",
+                                                                 "comments": "remove",
+                                                                 },
+                                                      "delete": True,
+                                                      "cascade": [("hrm_human_resource_tag", {"key": "human_resource_id",
+                                                                                              "match": "id",
+                                                                                              "fields": {"value": ("set", ANONYMOUS),
+                                                                                                         },
+                                                                                              "delete": True,
+                                                                                              }),
+                                                                  ],
+                                                      }),
+                              ("hrm_competency", {"key": "person_id",
+                                                  "match": "id",
+                                                  "fields": {"comments": "remove",
+                                                             },
+                                                  "delete": True,
+                                                  }),
+                              ("hrm_training", {"key": "person_id",
+                                                "match": "id",
+                                                "fields": {"comments": "remove",
+                                                           },
+                                                }),
+                              ("req_need_person", {"key": "person_id",
+                                                   "match": "id",
+                                                   "fields": {"comments": "remove",
+                                                              },
+                                                   }),
+                              ("pr_person_user", {"key": "pe_id",
+                                                  "match": "pe_id",
+                                                  "cascade": [("auth_user", {"key": "id",
+                                                                             "match": "user_id",
+                                                                             "fields": {"id": auth.s3_anonymise_roles,
+                                                                                        "first_name": ("set", "-"),
+                                                                                        "last_name": "remove",
+                                                                                        "email": ("set", anonymous_email),
+                                                                                        "organisation_id": "remove",
+                                                                                        "password": auth.s3_anonymise_password,
+                                                                                        "deleted": ("set", True),
+                                                                                        },
+                                                                             }),
+                                                              ],
+                                                  "delete": True,
+                                                  }),
+                              ],
+                  "delete": True,
+                  },
+                 ]
+
+        return rules
 
     # -------------------------------------------------------------------------
     def ccc_realm_entity(table, row):
@@ -3151,6 +3280,13 @@ $('.copy-link').click(function(e){
     # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
 
+        s3db = current.s3db
+
+        # Configure anonymise rules
+        s3db.configure("pr_person",
+                       anonymize = ccc_person_anonymize(),
+                       )
+
         if r.controller == "br":
             # Customisation happens in Prep (to override controller prep)
             return
@@ -3158,8 +3294,6 @@ $('.copy-link').click(function(e){
         from gluon import IS_EMPTY_OR, IS_IN_SET, SQLFORM
         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink, \
                        S3TagCheckboxWidget, s3_comments_widget
-
-        s3db = current.s3db
 
         # Filtered components
         s3db.add_components("pr_person",
@@ -3337,6 +3471,7 @@ $('.copy-link').click(function(e){
                             )
 
         # Custom Methods
+        from s3 import S3Anonymize
         from templates.CCC.controllers import personAdditional
         set_method = s3db.set_method
         set_method("pr", "person",
@@ -3345,6 +3480,10 @@ $('.copy-link').click(function(e){
         set_method("pr", "person",
                    method = "redirect",
                    action = pr_person_redirect)
+        set_method("pr", "person",
+                   method = "anonymize",
+                   action = S3Anonymize,
+                   )
 
         BR = controller == "br"
 
@@ -3502,11 +3641,15 @@ $('.copy-link').click(function(e){
                         settings.ui.export_formats = None
                     elif r.method == "validate" and r.representation == "json":
                         pass
+                    elif r.method == "anonymize" and r.representation == "json":
+                        # Don't bother with further customisations
+                        return True
                     else:
                         # Prevent access
                         return False
                 HRM = PROFILE = RESERVES = INACTIVES = DONOR = MEMBERS = False
-                rfilter = None
+                from s3 import FS
+                rfilter = FS("~.first_name") != "-"
                 if controller == "hrm":
                     HRM = True
                 elif controller == "default":
@@ -3527,8 +3670,7 @@ $('.copy-link').click(function(e){
                                                                       limitby = (0, 1)
                                                                       ).first()
                         realm_entity = forum.pe_id
-                        from s3 import FS
-                        rfilter = FS("~.realm_entity") == realm_entity
+                        rfilter &= FS("~.realm_entity") == realm_entity
 
                         # Filtered Component to allow an exclusive filter
                         stable = s3db.hrm_skill
@@ -3554,8 +3696,7 @@ $('.copy-link').click(function(e){
                                 (gtable.id == mtable.group_id)
                         donors = db(query).select(mtable.user_id)
                         donors = [d.user_id for d in donors]
-                        from s3 import FS
-                        rfilter = FS("user.id").belongs(donors)
+                        rfilter &= FS("user.id").belongs(donors)
 
                     elif get_vars_get("groups") or \
                          (has_role("GROUP_ADMIN", include_admin=False) and not \
@@ -3567,8 +3708,7 @@ $('.copy-link').click(function(e){
                         members = current.db(query).select(mtable.person_id,
                                                            distinct = True)
                         members = [m.person_id for m in members]
-                        from s3 import FS
-                        rfilter = FS("id").belongs(members)
+                        rfilter &= FS("id").belongs(members)
 
                     else:
                         # Reserve Volunteers
@@ -3583,8 +3723,7 @@ $('.copy-link').click(function(e){
                             reserves = forum.pe_id
                             realms = s3db.pr_get_descendants({reserves}, entity_types={"pr_forum"})
                             realms.append(reserves)
-                            from s3 import FS
-                            rfilter = FS("~.realm_entity").belongs(realms)
+                            rfilter &= FS("~.realm_entity").belongs(realms)
 
                         if has_role("RESERVE_ADMIN"):
                             # Filtered Component to allow an exclusive filter
@@ -4027,6 +4166,26 @@ $('.copy-link').click(function(e){
                 output = standard_postp(r, output)
 
             if not r.component:
+                if r.record and isinstance(output, dict):
+                    # Custom CRUD buttons
+                    if "buttons" not in output:
+                        buttons = output["buttons"] = {}
+                    else:
+                        buttons = output["buttons"]
+
+                    # Anonymize-button
+                    from s3 import S3AnonymizeWidget
+                    if r.controller == "default":
+                        anonymise_btn = S3AnonymizeWidget.widget(r,
+                                                                 _class = "action-btn anonymize-btn",
+                                                                 label = "Delete My Account",
+                                                                 )
+                    else:
+                        anonymise_btn = S3AnonymizeWidget.widget(r, _class="action-btn anonymize-btn")
+
+                    # Render in place of the delete-button
+                    buttons["delete_btn"] = anonymise_btn
+
                 if not BR:
                     # Include get_vars on Action Buttons to configure crud_form/crud_strings appropriately
                     from gluon import URL
