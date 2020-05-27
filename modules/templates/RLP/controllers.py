@@ -362,7 +362,8 @@ class register(S3CustomController):
 
             # Store Custom fields
             custom = {#"date_of_birth": formvars.date_of_birth,
-                      "office_phone": formvars.office_phone,
+                      "home_phone": formvars.home_phone,
+                      #"office_phone": formvars.office_phone,
                       "location_id": formvars.location_id,
                       "addr_street": formvars.addr_street,
                       "addr_postcode": formvars.addr_postcode,
@@ -524,14 +525,18 @@ class register(S3CustomController):
                                           ),
                             ),
                       # --------------------------------------------
+                      Field("home_phone",
+                            label = T("Phone"),
+                            requires = IS_EMPTY_OR(s3_phone_requires),
+                            ),
                       Field("mobile_phone",
                             label = T("Mobile Phone"),
                             requires = IS_EMPTY_OR(s3_phone_requires),
                             ),
-                      Field("office_phone",
-                            label = T("Office Phone"),
-                            requires = IS_EMPTY_OR(s3_phone_requires),
-                            ),
+                      #Field("office_phone",
+                      #      label = T("Office Phone"),
+                      #      requires = IS_EMPTY_OR(s3_phone_requires),
+                      #      ),
                       # --------------------------------------------
                       s3db.gis_location_id("location_id",
                                            widget = S3LocationSelector(
@@ -545,6 +550,7 @@ class register(S3CustomController):
                             ),
                       Field("addr_postcode",
                             label = ltable.addr_postcode.label,
+                            requires = IS_NOT_EMPTY(),
                             ),
 
                       # --------------------------------------------
@@ -821,6 +827,26 @@ class register(S3CustomController):
                 address_data["id"] = atable.insert(**address_data)
                 set_record_owner(atable, address_data)
                 s3db_onaccept(atable, address_data, method="create")
+
+        # Register home phone
+        home_phone = custom.get("home_phone")
+        if home_phone:
+            ctable = s3db.pr_contact
+            query = (ctable.pe_id == person.pe_id) & \
+                    (ctable.value == home_phone) & \
+                    (ctable.contact_method == "HOME_PHONE") & \
+                    (ctable.deleted == False)
+            contact = db(query).select(ctable.id,
+                                       limitby = (0, 1),
+                                       ).first()
+            if not contact:
+                contact_data = {"pe_id": person.pe_id,
+                                "value": home_phone,
+                                "contact_method": "HOME_PHONE",
+                                }
+                contact_data["id"] = ctable.insert(**contact_data)
+                set_record_owner(ctable, contact_data)
+                s3db_onaccept(ctable, contact_data, method="create")
 
         # Register work phone
         office_phone = custom.get("office_phone")
