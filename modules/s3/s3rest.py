@@ -205,15 +205,15 @@ class S3Request(object):
             approved, unapproved = True, False
 
         self.resource = S3Resource(tablename,
-                                   id=self.id,
-                                   filter=_filter,
-                                   vars=get_vars,
-                                   components=components,
-                                   approved=approved,
-                                   unapproved=unapproved,
-                                   include_deleted=include_deleted,
-                                   context=True,
-                                   filter_component=component_name,
+                                   id = self.id,
+                                   filter = _filter,
+                                   vars = get_vars,
+                                   components = components,
+                                   approved = approved,
+                                   unapproved = unapproved,
+                                   include_deleted = include_deleted,
+                                   context = True,
+                                   filter_component = component_name,
                                    )
 
         self.tablename = self.resource.tablename

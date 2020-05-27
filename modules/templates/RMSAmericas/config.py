@@ -1426,23 +1426,6 @@ def config(settings):
     settings.customise_hrm_experience_resource = customise_hrm_experience_resource
 
     # -------------------------------------------------------------------------
-    def generate_password():
-        """
-            Generate a Random Password
-        """
-
-        import random
-        import string
-        from gluon import CRYPT
-        N = 8
-        password = "".join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(N))
-        crypted = CRYPT(key = current.auth.settings.hmac_key,
-                        min_length = settings.get_auth_password_min_length(),
-                        digest_alg = "sha512",
-                        )(password)[0]
-        return password, crypted
-
-    # -------------------------------------------------------------------------
     def hrm_human_resource_create_onaccept(form):
         """
             If the Staff/Volunteer is RC then create them a user account with a random password
@@ -1572,7 +1555,7 @@ def config(settings):
         auth = current.auth
 
         # Generate a password
-        password, crypted = generate_password()
+        password, crypted = auth.s3_password(8)
 
         # Create User
         user = Storage(organisation_id = organisation_id,
@@ -2207,9 +2190,10 @@ Thank you"""
                                                                  htable.organisation_id,
                                                                  left=left,
                                                                  )
+        auth = current.auth
         utable = db.auth_user
         create_user = utable.insert
-        approve_user = current.auth.s3_approve_user
+        approve_user = auth.s3_approve_user
         cert_table = s3db.hrm_certification
         # For each Person
         for p in persons:
@@ -2222,7 +2206,7 @@ Thank you"""
                 link_user_to = "volunteer"
 
             # Set random password
-            password, crypted = generate_password()
+            password, crypted = auth.s3_password(8)
 
             # Create a User Account
             user = Storage(first_name = person.first_name,

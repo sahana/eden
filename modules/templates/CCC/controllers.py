@@ -8,7 +8,7 @@ from collections import OrderedDict
 from gluon import *
 from gluon.storage import Storage
 from s3 import FS, ICON, IS_ONE_OF, S3CustomController, S3Method, \
-               S3MultiSelectWidget, S3Profile, S3SQLCustomForm, \
+               S3MultiSelectWidget, S3Profile, S3Request, S3SQLCustomForm, \
                s3_avatar_represent, s3_comments_widget, s3_fullname, \
                s3_mark_required, s3_phone_requires, s3_str, s3_truncate
 
@@ -224,6 +224,7 @@ class login_next(S3CustomController):
         s3db = current.s3db
         auth = current.auth
         request = current.request
+        settings = current.deployment_settings
 
         person_id = auth.s3_logged_in_person()
 
@@ -301,9 +302,10 @@ class login_next(S3CustomController):
                                showid = False,
                                submit_button = T("Accept"),
                                delete_label = auth.messages.delete_label,
-                               formstyle = current.deployment_settings.get_ui_formstyle(),
+                               formstyle = settings.get_ui_formstyle(),
                                #buttons = buttons,
-                               *formfields)
+                               *formfields
+                               )
 
         if form.accepts(request.vars,
                         current.session,
@@ -312,8 +314,23 @@ class login_next(S3CustomController):
             auth_Consent.track(person_id, form.vars.consent)
             redirect(url)
 
+        response = current.response
+        response.view = "simple.html"
+        # Anonymise button
+        tablename = "pr_person"
+        from s3 import S3AnonymizeWidget
+        r = S3Request(prefix = "pr",
+                      name = "person",
+                      c = "default",
+                      )
+        r.id = person_id
+        settings.customise_pr_person_resource(r, tablename)
+        anonymise_btn = S3AnonymizeWidget.widget(r,
+                                                 _class = "action-btn anonymize-btn",
+                                                 label = "Delete My Account"
+                                                 )
+        response.s3.rfooter = anonymise_btn
         current.menu = Storage(about = current.menu.about)
-        current.response.view = "simple.html"
         return {"item": form,
                 "title": T("Consent Required"),
                 }

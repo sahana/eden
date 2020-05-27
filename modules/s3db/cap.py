@@ -48,10 +48,11 @@ __all__ = ("CAPAlertModel",
            "cap_AlertProfileWidget",
            )
 
-import os
 import datetime
+import os
 
 from collections import OrderedDict
+from uuid import uuid4
 
 from gluon import *
 from gluon.storage import Storage
@@ -2517,10 +2518,9 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                 metadata, encoded_file = encoded_file.split(",")
                 filename, datatype = metadata.split(";")[:2]
 
-                import uuid
                 import base64
 
-                image = Storage(filename = uuid.uuid4().hex + filename)
+                image = Storage(filename = uuid4().hex + filename)
                 image.file = stream = StringIO(base64.decodestring(encoded_file))
 
                 form_vars.image = image

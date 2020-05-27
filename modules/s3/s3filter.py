@@ -3870,7 +3870,7 @@ class S3Filter(S3Method):
         else:
             pe_id = None
         if not pe_id:
-            r.unauthorized()
+            r.unauthorised()
 
         # Build query
         query = (table.deleted != True) & \

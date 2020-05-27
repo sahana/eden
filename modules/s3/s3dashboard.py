@@ -37,7 +37,7 @@ __all__ = ("S3Dashboard",
            )
 
 import json
-import uuid
+from uuid import uuid4
 
 from gluon import *
 
@@ -352,7 +352,7 @@ class S3DashboardConfig(object):
                 configs.append(widget)
 
         # Generate a new version key
-        version = uuid.uuid4().get_hex()
+        version = uuid4().get_hex()
 
         config_id = self.config_id
         if not config_id:

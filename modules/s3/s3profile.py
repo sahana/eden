@@ -30,6 +30,8 @@
 __all__ = ("S3Profile",
            )
 
+from uuid import uuid4
+
 from gluon import current, redirect
 from gluon.html import *
 from gluon.storage import Storage
@@ -1177,8 +1179,7 @@ class S3Profile(S3CRUD):
         widget_id = "profile-organizer-%s-%s" % (tablename, widget["index"])
 
         # Generate form key
-        import uuid
-        formkey = uuid.uuid4().hex
+        formkey = uuid4().hex
 
         # Determine the formname (see also S3Organizer.formname)
         master = widget_get("master")

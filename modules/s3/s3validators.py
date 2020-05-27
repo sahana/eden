@@ -65,6 +65,7 @@ __all__ = ("single_phone_number_pattern",
 import datetime
 import json
 import re
+from uuid import uuid4
 
 from gluon import current, IS_FLOAT_IN_RANGE, IS_INT_IN_RANGE, IS_IN_SET, \
                   IS_MATCH, IS_NOT_IN_DB
@@ -1261,14 +1262,13 @@ class IS_PROCESSED_IMAGE(Validator):
         # process if, that worked.
         if cropped_image:
             import base64
-            import uuid
 
             metadata, cropped_image = cropped_image.split(",")
             #filename, datatype, enctype = metadata.split(";")
             filename = metadata.split(";", 1)[0]
 
             f = Storage()
-            f.filename = uuid.uuid4().hex + filename
+            f.filename = uuid4().hex + filename
             f.file = BytesIO(base64.b64decode(cropped_image))
 
             return (f, None)

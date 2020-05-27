@@ -68,7 +68,7 @@ class S3Merge(S3Method):
         auth = current.auth
         system_roles = auth.get_system_roles()
         if not auth.s3_has_role(system_roles.ADMIN):
-            r.unauthorized()
+            r.unauthorised()
 
         if r.method == "deduplicate":
             if r.http in ("GET", "POST"):
@@ -612,7 +612,7 @@ class S3Merge(S3Method):
                                duplicate[table._id],
                                update = data)
             except current.auth.permission.error:
-                r.unauthorized()
+                r.unauthorised()
             except KeyError:
                 r.error(404, current.ERROR.BAD_RECORD)
             except Exception:

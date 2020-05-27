@@ -3620,6 +3620,7 @@ class PRAddressModel(S3Model):
     """ Addresses for Person Entities: Persons and Organisations """
 
     names = ("pr_address",
+             "pr_address_anonymise",
              "pr_address_type_opts"
              )
 
@@ -3719,7 +3720,58 @@ class PRAddressModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {"pr_address_type_opts": pr_address_type_opts,
+                "pr_address_anonymise": self.pr_address_anonymise,
                 }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_address_anonymise(record_id, field, value):
+        """
+            Helper to anonymize a pr_address location; removes street and
+            postcode details, but retains Lx ancestry for statistics
+
+            @param record_id: the pr_address record ID
+            @param field: the location_id Field
+            @param value: the location_id
+
+            @return: the location_id
+
+            Use like this in anonymise rules:
+            ("pr_address", {"key": "pe_id",
+                            "match": "pe_id",
+                            "fields": {"location_id": s3db.pr_address_anonymise,
+                                       "comments": "remove",
+                                       },
+                            }),
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get the location
+        if value:
+            ltable = s3db.gis_location
+            row = db(ltable.id == value).select(ltable.id,
+                                                ltable.level,
+                                                limitby = (0, 1),
+                                                ).first()
+            if not row.level:
+                # Specific location => remove address details
+                data = {"addr_street": None,
+                        "addr_postcode": None,
+                        "gis_feature_type": 0,
+                        "lat": None,
+                        "lon": None,
+                        "wkt": None,
+                        }
+                # Doesn't work - PyDAL doesn't detect the None value:
+                #if "the_geom" in ltable.fields:
+                #    data["the_geom"] = None
+                row.update_record(**data)
+                if "the_geom" in ltable.fields:
+                    db.executesql("UPDATE gis_location SET the_geom=NULL WHERE id=%s" % row.id)
+
+        return value
 
     # -------------------------------------------------------------------------
     @staticmethod

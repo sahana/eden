@@ -41,7 +41,7 @@ except ImportError:
     raise
 import json
 import os
-import uuid
+from uuid import uuid4
 
 from gluon import current, DIV, INPUT
 from gluon.storage import Storage
@@ -229,7 +229,7 @@ class S3Organizer(S3Method):
             resource_config["colors"] = config.get("colors")
 
         # Generate form key
-        formkey = uuid.uuid4().hex
+        formkey = uuid4().hex
 
         # Store form key in session
         session = current.session
