@@ -4806,7 +4806,7 @@ Please go to %(url)s to approve this user."""
                 pass
             else:
                 row = current.db(query).select(ptable.id,
-                                               limitby=(0, 1),
+                                               limitby = (0, 1),
                                                ).first()
 
         return row.id if row else None

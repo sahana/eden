@@ -86,17 +86,20 @@ def config(settings):
         """
             @ToDo: This function won't work once we update s3aaa.py login to 2-factor auth
                    since roles not yet assigned when this function is called
+                   => Do everything inside login_next controller instead of being able to optimise-away Admin
         """
         from gluon import URL
-        has_role = current.auth.s3_has_role
-        if has_role("ADMIN"):
+        #has_role = current.auth.s3_has_role
+        if current.auth.s3_has_role("ADMIN"):
             _next = current.request.vars._next or URL(c="default", f="index")
-        elif has_role("VOLUNTEER") or has_role("RESERVE"):
-            _next = URL(c="cms", f="post", args="datalist")
-        elif has_role("DONOR"):
-            _next = URL(c="default", f="index", args="donor")
+        #elif has_role("VOLUNTEER") or has_role("RESERVE"):
+        #    _next = URL(c="cms", f="post", args="datalist")
+        #elif has_role("DONOR"):
+        #    _next = URL(c="default", f="index", args="donor")
+        #else:
+        #    _next = current.request.vars._next or URL(c="default", f="index")
         else:
-            _next = current.request.vars._next or URL(c="default", f="index")
+            _next = URL(c="default", f="index", args="login_next")
         return _next
 
     settings.auth.login_next = login_next
