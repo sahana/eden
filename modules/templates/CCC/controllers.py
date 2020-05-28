@@ -342,11 +342,11 @@ class login_next(S3CustomController):
         r.id = person_id
         settings.customise_pr_person_resource(r, tablename)
         anonymise_btn = S3AnonymizeWidget.widget(r,
-                                                 _class = "action-btn anonymize-btn",
                                                  label = "Delete My Account",
                                                  ajaxURL = URL(c="pr", f="person",
                                                                args = [person_id, "anonymize.json"]
                                                                ),
+                                                 _class = "action-btn anonymize-btn",
                                                  )
         response.s3.rfooter = anonymise_btn
         current.menu = Storage(about = current.menu.about)

@@ -30,7 +30,7 @@
 import json
 from uuid import uuid4
 
-from gluon import current, A, BUTTON, DIV, FORM, INPUT, LABEL, P
+from gluon import current, redirect, A, BUTTON, DIV, FORM, INPUT, LABEL, P
 
 from s3dal import original_tablename
 from .s3rest import S3Method
@@ -40,11 +40,16 @@ from .s3utils import s3_str
 
 __all__ = ("S3Anonymize",
            "S3AnonymizeWidget",
+           "S3AnonymizeBulk",
+           "S3AnonymizeBulkWidget",
            )
 
 # =============================================================================
 class S3Anonymize(S3Method):
-    """ REST Method to Anonymize Person Records """
+    """
+        REST Method to Anonymize a Record
+        - usually pr_person
+    """
 
     def apply_method(self, r, **attr):
         """
@@ -148,7 +153,9 @@ class S3Anonymize(S3Method):
 
         # Apply selected rules
         if cleanup or cascade:
-            rules = {"fields": cleanup, "cascade": cascade}
+            rules = {"fields": cleanup,
+                     "cascade": cascade,
+                     }
 
             # NB will raise (+roll back) if configuration is invalid
             cls.cascade(table, (record_id,), rules)
@@ -352,7 +359,11 @@ class S3Anonymize(S3Method):
 
 # =============================================================================
 class S3AnonymizeWidget(object):
-    """ GUI widget for S3Anonymize """
+    """
+        GUI widget for S3Anonymize
+        - popup
+        - acts via AJAX
+    """
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -502,7 +513,8 @@ class S3AnonymizeWidget(object):
 
         T = current.T
 
-        selector = DIV(_class="anonymize-select")
+        selector = DIV(_class = "anonymize-select",
+                       )
 
         for rule in rules:
 
@@ -583,5 +595,241 @@ class S3AnonymizeWidget(object):
         jquery_ready = s3.jquery_ready
         if script not in jquery_ready:
             jquery_ready.append(script)
+
+# =============================================================================
+class S3AnonymizeBulk(S3Anonymize):
+    """
+        REST Method to Anonymize Records
+        - usually auth_user
+    """
+
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request instance
+            @param attr: controller parameters
+
+            @return: output data (JSON)
+        """
+
+        resource = self.resource
+        rules = resource.get_config("anonymize")
+        if not rules:
+            r.error(405, "Anonymizing not configured for resource")
+
+        record_ids = current.session.s3.get("anonymize_record_ids")
+        if not record_ids:
+            r.error(400, "No target record(s) specified")
+
+        table = resource.table
+
+        # Check permission for each record
+        has_permission = current.auth.s3_has_permission
+        for record_id in record_ids:
+            if not has_permission("update", table, record_id=record_id) or \
+               not has_permission("delete", table, record_id=record_id):
+                r.unauthorised()
+
+        if r.representation == "html":
+            if r.http == "GET":
+                # Show form
+                anonymise_btn = S3AnonymizeBulkWidget.widget(r,
+                                                             record_ids = record_ids,
+                                                             _class = "action-btn anonymize-btn",
+                                                             )
+                current.response.view = "simple.html"
+                return {"item": anonymise_btn,
+                        "title": current.T("Anonymize Records"),
+                        }
+            elif r.http == "POST":
+                # Process form
+                output = self.anonymize(r, table, record_ids)
+                del current.session.s3["anonymize_record_ids"]
+                next_url = resource.get_config("anonymize_next")
+                if next_url:
+                    redirect(next_url)
+                return output
+            else:
+                r.error(405, current.ERROR.BAD_METHOD)
+        else:
+            r.error(415, current.ERROR.BAD_FORMAT)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def anonymize(cls, r, table, record_ids):
+        """
+            Handle POST (anonymize-request), i.e. anonymize the target record
+
+            @param r: the S3Request
+            @param table: the target Table
+            @param record_ids: the target record IDs
+
+            @returns: JSON message
+        """
+
+        post_vars_get = r.post_vars.get
+
+        # Verify submitted action key against session (CSRF protection)
+        widget_id = "%s-anonymize" % table
+        session_s3 = current.session.s3
+        keys = session_s3.anonymize
+        if keys is None or \
+           widget_id not in keys or \
+           post_vars_get("action-key") != keys[widget_id]:
+            r.error(400, "Invalid action key (form reopened in another tab?)")
+
+        # Get the available rules from settings
+        rules = current.s3db.get_config(table, "anonymize")
+        if isinstance(rules, (tuple, list)):
+            names = set(rule.get("name") for rule in rules)
+            names.discard(None)
+        else:
+            # Single rule
+            rules["name"] = "default"
+            names = (rules["name"],)
+            rules = [rules]
+
+        # Get selected rules from form
+        selected = []
+        for rule in rules:
+            rule_name = rule.get("name")
+            if not rule_name:
+                continue
+            if post_vars_get(rule_name) == "on":
+                selected.append(rule)
+
+        # Merge selected rules
+        cleanup = {}
+        cascade = []
+        for rule in selected:
+            field_rules = rule.get("fields")
+            if field_rules:
+                cleanup.update(field_rules)
+            cascade_rules = rule.get("cascade")
+            if cascade_rules:
+                cascade.extend(cascade_rules)
+
+        # Apply selected rules
+        if cleanup or cascade:
+            rules = {"fields": cleanup,
+                     "cascade": cascade,
+                     }
+
+            for record_id in record_ids:
+                # NB will raise (+roll back) if configuration is invalid
+                cls.cascade(table, (record_id,), rules)
+
+                # Audit anonymize
+                prefix, name = original_tablename(table).split("_", 1)
+                current.audit("anonymize", prefix, name,
+                              record = record_id,
+                              representation = "html",
+                              )
+
+            output = current.xml.json_message(updated=record_ids)
+        else:
+            output = current.xml.json_message(msg="No applicable rules found")
+
+        return output
+
+# =============================================================================
+class S3AnonymizeBulkWidget(S3AnonymizeWidget):
+    """
+        GUI widget for S3AnonymizeBulk
+        - normal page (not popup)
+        - acts via POST (not AJAX)
+    """
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def widget(cls,
+               r,
+               record_ids = None,
+               label = "Anonymize Records",
+               _class = "action-lnk",
+               ):
+        """
+            Render an action item (link or button) to anonymize the
+            provided records
+
+            @param r: the S3Request
+            @param record_ids: The list of record_ids to act on 
+            @param label: The label for the action item
+            @param _class: HTML class for the action item
+
+            @returns: the action item (a HTML helper instance), or an empty
+                      string if no anonymize-rules are configured for the
+                      target table, no target record was specified or the
+                      user is not permitted to anonymize it
+        """
+
+        T = current.T
+
+        default = ""
+
+        # Determine target table
+        if r.component:
+            resource = r.component
+            if resource.link and not r.actuate_link():
+                resource = resource.link
+        else:
+            resource = r.resource
+        table = resource.table
+
+        # Determine target record
+        if not record_ids:
+            return default
+
+        # Check if target is configured for anonymize
+        rules = resource.get_config("anonymize")
+        if not rules:
+            return default
+        if not isinstance(rules, (tuple, list)):
+            # Single rule
+            rules["name"] = "default"
+            rules = [rules]
+
+        # Determine widget ID
+        widget_id = "%s-anonymize" % table
+
+        # Action button
+        translated_label = T(label)
+        action_button = A(translated_label, _class="anonymize-btn")
+        if _class:
+            action_button.add_class(_class)
+
+        # Dialog and Form
+        INFO = T("The following information will be deleted from all the selected records")
+        CONFIRM = T("Are you sure you want to delete the selected details?")
+        SUCCESS = T("Action successful - please wait...")
+
+        form = FORM(P("%s:" % INFO),
+                    cls.selector(rules),
+                    P(CONFIRM),
+                    DIV(INPUT(value = "anonymize_confirm",
+                              _name = "anonymize_confirm",
+                              _type = "checkbox",
+                              ),
+                    LABEL(T("Yes, delete the selected details")),
+                          _class = "anonymize-confirm",
+                          ),
+                    DIV(INPUT(_class = "small alert button anonymize-submit",
+                              _disabled = "disabled",
+                              _type = "submit",
+                              _value = T("Anonymize"),
+                              ),
+                        _class = "anonymize-buttons",
+                        ),
+                    _class = "anonymize-form",
+                    # Store action key in form
+                    hidden = {"action-key": cls.action_key(widget_id)},
+                    )
+
+        script = '''var submitButton=$('.anonymize-submit');
+$('input[name="anonymize_confirm"]').off('.anonymize').on('click.anonymize',function(){if ($(this).prop('checked')){submitButton.prop('disabled',false);}else{submitButton.prop('disabled',true);}});'''
+        current.response.s3.jquery_ready.append(script)
+
+        return form
 
 # END =========================================================================
