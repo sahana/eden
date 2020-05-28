@@ -9,6 +9,7 @@ AUTHENTICATED,Authenticated,,,gis,ldata,,CREATE|READ|UPDATE|DELETE,
 AUTHENTICATED,Authenticated,,,gis,location,,CREATE|READ,UPDATE|DELETE
 AUTHENTICATED,Authenticated,,,pr,contact,,CREATE,READ|UPDATE|DELETE
 AUTHENTICATED,Authenticated,,,pr,contact_emergency,,CREATE,READ|UPDATE|DELETE
+AUTHENTICATED,Authenticated,,,,,gis_location,CREATE|READ,UPDATE|DELETE
 AUTHENTICATED,Authenticated,,,,,hrm_competency,CREATE,READ|UPDATE|DELETE
 AUTHENTICATED,Authenticated,,,,,hrm_human_resource,NONE,READ|UPDATE
 AUTHENTICATED,Authenticated,,,,,pr_address,CREATE,READ|UPDATE|DELETE
@@ -28,6 +29,7 @@ COORDINATOR,Pool Coordinator,,,org,organisation,,READ,
 COORDINATOR,Pool Coordinator,,,vol,,,READ,
 COORDINATOR,Pool Coordinator,,,vol,delegation,,CREATE|READ|UPDATE|DELETE,
 COORDINATOR,Pool Coordinator,,,vol,person,,CREATE|READ|UPDATE|DELETE,
+COORDINATOR,Pool Coordinator,,,,,gis_location,CREATE|READ|UPDATE|DELETE,
 COORDINATOR,Pool Coordinator,,,,,hrm_competency,CREATE|READ|UPDATE|DELETE,
 COORDINATOR,Pool Coordinator,,,,,hrm_delegation,CREATE|READ|UPDATE,
 COORDINATOR,Pool Coordinator,,,,,hrm_delegation_message,READ|DELETE,
