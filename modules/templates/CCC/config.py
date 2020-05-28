@@ -3494,6 +3494,7 @@ $('.copy-link').click(function(e){
                        method = "affiliation",
                        action = personAffiliation)
             if controller == "default":
+                from gluon import URL
                 s3db.configure("pr_person",
                                anonymize_next = URL(c = "default",
                                                     f = "user",
