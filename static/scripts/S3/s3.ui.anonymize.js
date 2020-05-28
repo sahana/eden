@@ -21,10 +21,12 @@
          * Default options
          *
          * @prop {string} ajaxURL - the URL to send the anonymize-request to
+         * @prop {string} nextURL - the URL to redirect to on success
          */
         options: {
 
-            ajaxURL: null
+            ajaxURL: null,
+            nextURL: null
         },
 
         /**
@@ -76,7 +78,8 @@
          */
         _showDialog: function() {
 
-            var ns = this.eventNamespace,
+            var opts = this.options,
+                ns = this.eventNamespace,
                 container = this.container,
                 cancelButton = this.cancelButton,
                 submitButton = this.submitButton,
@@ -121,7 +124,11 @@
                                     try {
                                         S3ClearNavigateAwayConfirm();
                                     } finally {
-                                        window.location.reload(true);
+                                        if (opts.nextURL) {
+                                            window.location = opts.nextURL;
+                                        } else {
+                                            window.location.reload(true);
+                                        }
                                     }
                                 } else {
                                     dialog.dialog('close');

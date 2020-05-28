@@ -2673,6 +2673,7 @@
 'Left Voluntarily': 'Freiwillig ausgereist',
 'Legal Advice': 'Rechtberatung',
 'Legal Counsel': 'Rechtsberatung',
+'Legal Notice': 'Impressum',
 'Legally Departed': 'Legal abgereist',
 'Legend Format': 'Format der Legende',
 'Legend': 'Legende',

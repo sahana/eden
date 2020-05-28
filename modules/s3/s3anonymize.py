@@ -358,19 +358,20 @@ class S3AnonymizeWidget(object):
     @classmethod
     def widget(cls,
                r,
-               _class = "action-lnk",
-               label = "Anonymize",
                ajaxURL = None
+               label = "Anonymize",
+               _class = "action-lnk",
                ):
+    def widget(cls, r, label="Anonymize", _class="action-lnk"):
         """
             Render an action item (link or button) to anonymize the
             target record of an S3Request, which can be embedded in
             the record view
 
             @param r: the S3Request
-            @param _class: HTML class for the action item
-            @param label: The label for the action item
             @param ajaxURL: The URL for the AJAX request
+            @param label: The label for the action item
+            @param _class: HTML class for the action item
 
             @returns: the action item (a HTML helper instance), or an empty
                       string if no anonymize-rules are configured for the
@@ -419,11 +420,14 @@ class S3AnonymizeWidget(object):
                             )
         script_options = {"ajaxURL": ajaxURL,
                           }
+        next_url = resource.get_config("anonymize_next")
+        if next_url:
+            script_options["nextURL"] = next_url
         cls.inject_script(widget_id, script_options)
 
         # Action button
-        label_T = T(label)
-        action_button = A(label_T, _class="anonymize-btn")
+        translated_label = T(label)
+        action_button = A(translated_label, _class="anonymize-btn")
         if _class:
             action_button.add_class(_class)
 
@@ -453,7 +457,7 @@ class S3AnonymizeWidget(object):
                          _class = "hide anonymize-success",
                          ),
                      _class = "anonymize-dialog hide",
-                     _title = label_T,
+                     _title = translated_label,
                      )
 
         # Assemble widget

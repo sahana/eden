@@ -3,7 +3,7 @@
 import json
 from uuid import uuid4
 
-from gluon import A, CRYPT, DIV, Field, H3, INPUT, \
+from gluon import A, BR, CRYPT, DIV, Field, H3, INPUT, \
                   IS_EMPTY_OR,  IS_EXPR, IS_INT_IN_RANGE, IS_NOT_EMPTY, \
                   P, SQLFORM, URL, XML, current, redirect
 from gluon.storage import Storage
@@ -130,6 +130,122 @@ $('#login-btn').click(function(e){
         return output
 
 # =============================================================================
+class privacy(S3CustomController):
+    """ Custom Page """
+
+    def __call__(self):
+
+        output = {}
+
+        # Allow editing of page content from browser using CMS module
+        ADMIN = current.auth.s3_has_role("ADMIN")
+
+        s3db = current.s3db
+        table = s3db.cms_post
+        ltable = s3db.cms_post_module
+
+        module = "default"
+        resource = "Privacy"
+
+        query = (ltable.module == module) & \
+                (ltable.resource == resource) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        item = current.db(query).select(table.body,
+                                        table.id,
+                                        limitby=(0, 1)).first()
+        if item:
+            if ADMIN:
+                content = DIV(XML(item.body),
+                              BR(),
+                              A(current.T("Edit"),
+                                _href = URL(c="cms", f="post",
+                                            args = [item.id, "update"],
+                                            vars = {"module": module,
+                                                    "resource": resource,
+                                                    },
+                                            ),
+                                _class="action-btn",
+                                ),
+                              )
+            else:
+                content = DIV(XML(item.body))
+        elif ADMIN:
+            content = A(current.T("Edit"),
+                        _href = URL(c="cms", f="post", args="create",
+                                    vars = {"module": module,
+                                            "resource": resource,
+                                            },
+                                    ),
+                        _class="action-btn cms-edit",
+                        )
+        else:
+            content = ""
+
+        output["item"] = content
+
+        self._view(THEME, "cmspage.html")
+        return output
+
+# =============================================================================
+class legal(S3CustomController):
+    """ Custom Page """
+
+    def __call__(self):
+
+        output = {}
+
+        # Allow editing of page content from browser using CMS module
+        ADMIN = current.auth.s3_has_role("ADMIN")
+
+        s3db = current.s3db
+        table = s3db.cms_post
+        ltable = s3db.cms_post_module
+
+        module = "default"
+        resource = "Legal"
+
+        query = (ltable.module == module) & \
+                (ltable.resource == resource) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        item = current.db(query).select(table.body,
+                                        table.id,
+                                        limitby=(0, 1)).first()
+        if item:
+            if ADMIN:
+                content = DIV(XML(item.body),
+                              BR(),
+                              A(current.T("Edit"),
+                                _href = URL(c="cms", f="post",
+                                            args = [item.id, "update"],
+                                            vars = {"module": module,
+                                                    "resource": resource,
+                                                    },
+                                            ),
+                                _class="action-btn",
+                                ),
+                              )
+            else:
+                content = DIV(XML(item.body))
+        elif ADMIN:
+            content = A(current.T("Edit"),
+                        _href = URL(c="cms", f="post", args="create",
+                                    vars = {"module": module,
+                                            "resource": resource,
+                                            },
+                                    ),
+                        _class="action-btn cms-edit",
+                        )
+        else:
+            content = ""
+
+        output["item"] = content
+
+        self._view(THEME, "cmspage.html")
+        return output
+
+# =============================================================================
 class register(S3CustomController):
     """ Custom Registration Page """
 
@@ -167,6 +283,11 @@ class register(S3CustomController):
                                                 mark_required = required_fields,
                                                 )
         response.s3.has_required = has_required
+        labels["skill_id"] = DIV(labels["skill_id"],
+                                 DIV("(%s)" % T("Select all that apply"),
+                                     _class="sub-label",
+                                     ),
+                                 )
 
         # Form buttons
         REGISTER = T("Register")
@@ -241,7 +362,8 @@ class register(S3CustomController):
 
             # Store Custom fields
             custom = {#"date_of_birth": formvars.date_of_birth,
-                      "office_phone": formvars.office_phone,
+                      "home_phone": formvars.home_phone,
+                      #"office_phone": formvars.office_phone,
                       "location_id": formvars.location_id,
                       "addr_street": formvars.addr_street,
                       "addr_postcode": formvars.addr_postcode,
@@ -289,8 +411,14 @@ class register(S3CustomController):
             else:
                 # Request User Verify their Email
                 # System Details for Verification Email
+                verify_url = URL(c = "default",
+                                 f = "index",
+                                 args = ["verify_email", key],
+                                 scheme = "https" if request.is_https else "http",
+                                 )
                 system = {"system_name": settings.get_system_name(),
-                          "url": "%s/default/index/verify_email/%s" % (response.s3.base_url, key),
+                          "url": verify_url,
+                          #"url": "%s/default/index/verify_email/%s" % (response.s3.base_url, key),
                           "code": code,
                           }
 
@@ -397,14 +525,18 @@ class register(S3CustomController):
                                           ),
                             ),
                       # --------------------------------------------
+                      Field("home_phone",
+                            label = T("Phone"),
+                            requires = IS_EMPTY_OR(s3_phone_requires),
+                            ),
                       Field("mobile_phone",
                             label = T("Mobile Phone"),
                             requires = IS_EMPTY_OR(s3_phone_requires),
                             ),
-                      Field("office_phone",
-                            label = T("Office Phone"),
-                            requires = IS_EMPTY_OR(s3_phone_requires),
-                            ),
+                      #Field("office_phone",
+                      #      label = T("Office Phone"),
+                      #      requires = IS_EMPTY_OR(s3_phone_requires),
+                      #      ),
                       # --------------------------------------------
                       s3db.gis_location_id("location_id",
                                            widget = S3LocationSelector(
@@ -418,6 +550,7 @@ class register(S3CustomController):
                             ),
                       Field("addr_postcode",
                             label = ltable.addr_postcode.label,
+                            requires = IS_NOT_EMPTY(),
                             ),
 
                       # --------------------------------------------
@@ -694,6 +827,26 @@ class register(S3CustomController):
                 address_data["id"] = atable.insert(**address_data)
                 set_record_owner(atable, address_data)
                 s3db_onaccept(atable, address_data, method="create")
+
+        # Register home phone
+        home_phone = custom.get("home_phone")
+        if home_phone:
+            ctable = s3db.pr_contact
+            query = (ctable.pe_id == person.pe_id) & \
+                    (ctable.value == home_phone) & \
+                    (ctable.contact_method == "HOME_PHONE") & \
+                    (ctable.deleted == False)
+            contact = db(query).select(ctable.id,
+                                       limitby = (0, 1),
+                                       ).first()
+            if not contact:
+                contact_data = {"pe_id": person.pe_id,
+                                "value": home_phone,
+                                "contact_method": "HOME_PHONE",
+                                }
+                contact_data["id"] = ctable.insert(**contact_data)
+                set_record_owner(ctable, contact_data)
+                s3db_onaccept(ctable, contact_data, method="create")
 
         # Register work phone
         office_phone = custom.get("office_phone")
