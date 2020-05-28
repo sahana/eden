@@ -7,7 +7,7 @@ from collections import OrderedDict
 
 from gluon import *
 from gluon.storage import Storage
-from s3 import FS, ICON, IS_ONE_OF, S3CustomController, S3Method, \
+from s3 import FS, ICON, IS_ONE_OF, S3AnonymizeWidget, S3CustomController, S3Method, \
                S3MultiSelectWidget, S3Profile, S3Request, S3SQLCustomForm, \
                s3_avatar_represent, s3_comments_widget, s3_fullname, \
                s3_mark_required, s3_phone_requires, s3_str, s3_truncate
@@ -221,8 +221,18 @@ class login_next(S3CustomController):
     def __call__(self):
 
         db = current.db
-        s3db = current.s3db
         auth = current.auth
+
+        user = auth.user
+        if user:
+            utable = auth.settings.table_user
+            account = db(utable.id == user.id).select(utable.deleted,
+                                                      limitby = (0, 1),
+                                                      ).first()
+            if not account or account.deleted:
+                # Logour after succesful Account Deletion
+                redirect(URL(c="default", f="user", args=["logout"]))
+
         request = current.request
         settings = current.deployment_settings
 
@@ -255,6 +265,7 @@ class login_next(S3CustomController):
                            #"EUA",
                            )
 
+        s3db = current.s3db
         ttable = s3db.auth_processing_type
         otable = s3db.auth_consent_option
         ctable = s3db.auth_consent
@@ -318,7 +329,6 @@ class login_next(S3CustomController):
         response.view = "simple.html"
         # Anonymise button
         tablename = "pr_person"
-        from s3 import S3AnonymizeWidget
         r = S3Request(prefix = "pr",
                       name = "person",
                       c = "default",
@@ -327,7 +337,10 @@ class login_next(S3CustomController):
         settings.customise_pr_person_resource(r, tablename)
         anonymise_btn = S3AnonymizeWidget.widget(r,
                                                  _class = "action-btn anonymize-btn",
-                                                 label = "Delete My Account"
+                                                 label = "Delete My Account",
+                                                 ajaxURL = URL(c="pr", f="person",
+                                                               args = [person_id, "anonymize.json"]
+                                                               ),
                                                  )
         response.s3.rfooter = anonymise_btn
         current.menu = Storage(about = current.menu.about)

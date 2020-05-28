@@ -2134,10 +2134,10 @@ $('.copy-link').click(function(e){
         ttable = s3db.scheduler_task
         task_name = "settings_task"
         args = ["hrm_training_event_reminder_day"]
-        vars = {"record_id": training_event_id}
+        task_vars = {"record_id": training_event_id}
         query = (ttable.task_name == task_name) & \
                 (ttable.args == json.dumps(args)) & \
-                (ttable.vars == json.dumps(vars))
+                (ttable.vars == json.dumps(task_vars))
         exists = db(query).select(ttable.id,
                                   ttable.start_time,
                                   limitby = (0, 1)
@@ -3454,6 +3454,7 @@ $('.copy-link').click(function(e){
 
         db = current.db
         s3db = current.s3db
+        auth = current.auth
         request = current.request
         controller = request.controller
 
@@ -3632,7 +3633,6 @@ $('.copy-link').click(function(e){
 
             else:
                 # Not BR
-                auth = current.auth
                 has_role = auth.s3_has_role
                 if not has_role("AGENCY"):
                     # No Exports
@@ -4224,6 +4224,19 @@ $('.copy-link').click(function(e){
         if BR:
             # Link to customised download Template
             attr["csv_template"] = ("../../themes/CCC/xls", "Affected_People.xlsm")
+
+        elif controller == "default":
+            # Logout post-anonymize if the user has removed their account
+            user = auth.user
+            if user:
+                utable = auth.settings.table_user
+                account = db(utable.id == user.id).select(utable.deleted,
+                                                          limitby = (0, 1),
+                                                          ).first()
+                if not account or account.deleted:
+                    from gluon import redirect, URL
+                    redirect(URL(c="default", f="user", args=["logout"]))
+
         elif len_request_args > 0 and request.get_vars.get("groups"):
             person_id = request_args[0]
             mtable = s3db.pr_group_membership
