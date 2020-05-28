@@ -824,10 +824,11 @@ def config(settings):
                                  vol_person_onaccept,
                                  )
 
-        if r.tablename == "pr_person":
-            r.table.has_account = s3_fieldmethod("has_account", has_account,
-                                                 represent = s3_yes_no_represent,
-                                                 )
+        table = r.table
+        if r.tablename == "pr_person" and not hasattr(table, "has_account"):
+            table.has_account = s3_fieldmethod("has_account", has_account,
+                                               represent = s3_yes_no_represent,
+                                               )
 
         # Configure components to inherit realm_entity from person
         s3db.configure("pr_person",
