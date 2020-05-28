@@ -358,8 +358,8 @@ class S3AnonymizeWidget(object):
     @classmethod
     def widget(cls,
                r,
-               ajaxURL = None,
                label = "Anonymize",
+               ajaxURL = None,
                _class = "action-lnk",
                ):
         """
@@ -368,8 +368,8 @@ class S3AnonymizeWidget(object):
             the record view
 
             @param r: the S3Request
-            @param ajaxURL: The URL for the AJAX request
             @param label: The label for the action item
+            @param ajaxURL: The URL for the AJAX request
             @param _class: HTML class for the action item
 
             @returns: the action item (a HTML helper instance), or an empty
