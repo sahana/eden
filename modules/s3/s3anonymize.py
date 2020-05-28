@@ -631,6 +631,8 @@ class S3AnonymizeBulk(S3Anonymize):
                not has_permission("delete", table, record_id=record_id):
                 r.unauthorised()
 
+        output = {}
+
         if r.representation == "html":
             if r.http == "GET":
                 # Show form
@@ -639,9 +641,9 @@ class S3AnonymizeBulk(S3Anonymize):
                                                              _class = "action-btn anonymize-btn",
                                                              )
                 current.response.view = "simple.html"
-                return {"item": anonymise_btn,
-                        "title": current.T("Anonymize Records"),
-                        }
+                output = {"item": anonymise_btn,
+                          "title": current.T("Anonymize Records"),
+                          }
             elif r.http == "POST":
                 # Process form
                 output = self.anonymize(r, table, record_ids)
@@ -649,11 +651,12 @@ class S3AnonymizeBulk(S3Anonymize):
                 next_url = resource.get_config("anonymize_next")
                 if next_url:
                     redirect(next_url)
-                return output
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
         else:
             r.error(415, current.ERROR.BAD_FORMAT)
+
+        return output
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -753,7 +756,7 @@ class S3AnonymizeBulkWidget(S3AnonymizeWidget):
             provided records
 
             @param r: the S3Request
-            @param record_ids: The list of record_ids to act on 
+            @param record_ids: The list of record_ids to act on
             @param _class: HTML class for the action item
 
             @returns: the action item (a HTML helper instance), or an empty
@@ -794,7 +797,7 @@ class S3AnonymizeBulkWidget(S3AnonymizeWidget):
         # Dialog and Form
         INFO = T("The following information will be deleted from all the selected records")
         CONFIRM = T("Are you sure you want to delete the selected details?")
-        SUCCESS = T("Action successful - please wait...")
+        #SUCCESS = T("Action successful - please wait...")
 
         form = FORM(P("%s:" % INFO),
                     cls.selector(rules),
