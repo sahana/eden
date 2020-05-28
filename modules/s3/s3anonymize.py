@@ -358,11 +358,10 @@ class S3AnonymizeWidget(object):
     @classmethod
     def widget(cls,
                r,
-               ajaxURL = None
+               ajaxURL = None,
                label = "Anonymize",
                _class = "action-lnk",
                ):
-    def widget(cls, r, label="Anonymize", _class="action-lnk"):
         """
             Render an action item (link or button) to anonymize the
             target record of an S3Request, which can be embedded in

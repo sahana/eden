@@ -3493,6 +3493,13 @@ $('.copy-link').click(function(e){
             set_method("pr", "person",
                        method = "affiliation",
                        action = personAffiliation)
+            if controller == "default":
+                s3db.configure("pr_person",
+                               anonymize_next = URL(c = "default",
+                                                    f = "user",
+                                                    args = ["logout"],
+                                                    ),
+                               )
 
         s3 = current.response.s3
 
@@ -4225,17 +4232,17 @@ $('.copy-link').click(function(e){
             # Link to customised download Template
             attr["csv_template"] = ("../../themes/CCC/xls", "Affected_People.xlsm")
 
-        elif controller == "default":
-            # Logout post-anonymize if the user has removed their account
-            user = auth.user
-            if user:
-                utable = auth.settings.table_user
-                account = db(utable.id == user.id).select(utable.deleted,
-                                                          limitby = (0, 1),
-                                                          ).first()
-                if not account or account.deleted:
-                    from gluon import redirect, URL
-                    redirect(URL(c="default", f="user", args=["logout"]))
+        #elif controller == "default":
+        #    # Logout post-anonymize if the user has removed their account
+        #    user = auth.user
+        #    if user:
+        #        utable = auth.settings.table_user
+        #        account = db(utable.id == user.id).select(utable.deleted,
+        #                                                  limitby = (0, 1),
+        #                                                  ).first()
+        #        if not account or account.deleted:
+        #            from gluon import redirect, URL
+        #            redirect(URL(c="default", f="user", args=["logout"]))
 
         elif len_request_args > 0 and request.get_vars.get("groups"):
             person_id = request_args[0]

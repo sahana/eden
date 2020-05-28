@@ -223,15 +223,15 @@ class login_next(S3CustomController):
         db = current.db
         auth = current.auth
 
-        user = auth.user
-        if user:
-            utable = auth.settings.table_user
-            account = db(utable.id == user.id).select(utable.deleted,
-                                                      limitby = (0, 1),
-                                                      ).first()
-            if not account or account.deleted:
-                # Logour after succesful Account Deletion
-                redirect(URL(c="default", f="user", args=["logout"]))
+        #user = auth.user
+        #if user:
+        #    utable = auth.settings.table_user
+        #    account = db(utable.id == user.id).select(utable.deleted,
+        #                                              limitby = (0, 1),
+        #                                              ).first()
+        #    if not account or account.deleted:
+        #        # Logout after succesful Account Deletion
+        #        redirect(URL(c="default", f="user", args=["logout"]))
 
         request = current.request
         settings = current.deployment_settings
@@ -329,6 +329,12 @@ class login_next(S3CustomController):
         response.view = "simple.html"
         # Anonymise button
         tablename = "pr_person"
+        s3db.configure(tablename,
+                       anonymize_next = URL(c = "default",
+                                            f = "user",
+                                            args = ["logout"],
+                                            ),
+                       )
         r = S3Request(prefix = "pr",
                       name = "person",
                       c = "default",
