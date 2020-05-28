@@ -746,7 +746,6 @@ class S3AnonymizeBulkWidget(S3AnonymizeWidget):
     def widget(cls,
                r,
                record_ids = None,
-               label = "Anonymize Records",
                _class = "action-lnk",
                ):
         """
@@ -755,7 +754,6 @@ class S3AnonymizeBulkWidget(S3AnonymizeWidget):
 
             @param r: the S3Request
             @param record_ids: The list of record_ids to act on 
-            @param label: The label for the action item
             @param _class: HTML class for the action item
 
             @returns: the action item (a HTML helper instance), or an empty
@@ -792,12 +790,6 @@ class S3AnonymizeBulkWidget(S3AnonymizeWidget):
 
         # Determine widget ID
         widget_id = "%s-anonymize" % table
-
-        # Action button
-        translated_label = T(label)
-        action_button = A(translated_label, _class="anonymize-btn")
-        if _class:
-            action_button.add_class(_class)
 
         # Dialog and Form
         INFO = T("The following information will be deleted from all the selected records")

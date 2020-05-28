@@ -1077,25 +1077,28 @@ $('.copy-link').click(function(e){
 
         from gluon import URL
 
+        auth = current.auth
         s3db = current.s3db
         s3 = current.response.s3
 
-        # Configure anonymise rules
-        s3db.configure("auth_user",
-                       anonymize = ccc_user_anonymize(),
-                       anonymize_next = URL(c="admin", f="user"),
-                       )
+        ADMIN = auth.s3_has_role("ADMIN")
 
-        from s3 import S3AnonymizeBulk
-        s3db.set_method("auth", "user",
-                        method = "anonymize",
-                        action = S3AnonymizeBulk,
-                        )
+        if ADMIN:
+            # Configure anonymise rules
+            s3db.configure("auth_user",
+                           anonymize = ccc_user_anonymize(),
+                           anonymize_next = URL(c="admin", f="user"),
+                           )
+
+            from s3 import S3AnonymizeBulk
+            s3db.set_method("auth", "user",
+                            method = "anonymize",
+                            action = S3AnonymizeBulk,
+                            )
         
         args = current.request.args
         if not len(args):
-            auth = current.auth
-            if not auth.s3_has_role("ADMIN"):
+            if not ADMIN:
                 # ORG_ADMIN
                 # - show link to allow users to register for this Org
 
@@ -1132,7 +1135,7 @@ $('.copy-link').click(function(e){
                                  )
         elif args(0) == "register":
             # Not easy to tweak the URL in the login form's buttons
-            from gluon import redirect, URL
+            from gluon import redirect
             redirect(URL(c="default", f="index",
                          args = "register",
                          vars = current.request.get_vars),
@@ -1147,51 +1150,139 @@ $('.copy-link').click(function(e){
             else:
                 result = True
 
-                # Bulk Removal of User Accounts using S3Anonymize
-                from s3 import S3AnonymizeWidget
-                
+            if ADMIN:
+                if r.method in (None, "list"):
 
-            if r.method != "import" and r.http == "POST":
-                post_vars = r.post_vars
-                if "selected" in post_vars:
-                    # Bulk Action 'Anonymize' has been selected
-                    selected = post_vars.selected
-                    if selected:
-                        selected = selected.split(",")
-                    else:
-                        selected = []
+                    from templates.CCC.controllers import ADMIN_CONSENT_OPTIONS, \
+                                                          DONOR_CONSENT_OPTIONS, \
+                                                          VOL_CONSENT_OPTIONS
+                    all_options = set(ADMIN_CONSENT_OPTIONS + DONOR_CONSENT_OPTIONS + VOL_CONSENT_OPTIONS)
 
-                    # Handle exclusion filter
-                    if post_vars.mode == "Exclusive":
-                        if "filterURL" in post_vars:
-                            from s3 import S3URLQuery
-                            filters = S3URLQuery.parse_url(post_vars.filterURL)
+                    db = current.db
+                    utable = db.auth_user
+                    ltable = s3db.pr_person_user
+                    ptable = s3db.pr_person
+                    ttable = s3db.auth_processing_type
+                    otable = s3db.auth_consent_option
+                    ctable = s3db.auth_consent
+                    query = (ttable.code.belongs(all_options)) & \
+                            (ttable.id == otable.type_id) & \
+                            (otable.obsolete == False) & \
+                            (otable.deleted == False)
+                    all_options = db(query).select(otable.id,
+                                                   ttable.code,
+                                                   )
+                    options = {}
+                    for o in all_options:
+                        options[o["auth_consent_option.id"]] = o["auth_processing_type.code"]
+                    query = (utable.deleted == False) & \
+                            (ltable.user_id == utable.id) & \
+                            (ltable.pe_id == ptable.pe_id) & \
+                            (ptable.id == ctable.person_id) & \
+                            (ctable.option_id.belongs(options)) & \
+                            (ctable.consenting == True) & \
+                            ((ctable.expires_on == None) | \
+                             (ctable.expires_on < current.request.utcnow))
+                    all_consent = db(query).select(utable.id,
+                                                   ctable.option_id,
+                                                   )
+                    all_consents = {}
+                    for c in all_consent:
+                        user_id = c["auth_user.id"]
+                        if user_id not in all_consents:
+                            all_consents[user_id] = []
+                        all_consents[user_id].append(c["auth_consent.option_id"])
+
+                    gtable = db.auth_group
+                    mtable = db.auth_membership
+                    roles = db(gtable.uuid.belongs(("ADMIN",
+                                                    "ORG_ADMIN",
+                                                    "GROUP_ADMIN",
+                                                    "DONOR",
+                                                    ))).select(gtable.id,
+                                                               gtable.uuid,
+                                                               )
+                    role_ids = []
+                    role_lookup = {}
+                    for role in roles:
+                        role_id = role.id
+                        role_ids.append(role_id)
+                        role_lookup[role.uuid] = role_id
+                    mquery = (mtable.group_id.belongs(role_ids)) & \
+                             (mtable.deleted == False)
+
+                    def consent(row):
+                        user_id = row["auth_user.id"]
+                        if not user_id:
+                            return None
+                        consented = all_consents.get(user_id, [])
+                        roles = db(mquery & (mtable.user_id == user_id)).select(mtable.group_id)
+                        roles = [m.group_id for m in roles]
+                        if role_lookup["ADMIN"] in roles:
+                            return "-"
+                        if role_lookup["ORG_ADMIN"] in roles or \
+                           role_lookup["GROUP_ADMIN"] in roles:
+                            options = ADMIN_CONSENT_OPTIONS
+                        elif role_lookup["DONOR"] in roles:
+                            options = DONOR_CONSENT_OPTIONS
                         else:
-                            filters = None
-                        from s3 import FS
-                        query = ~(FS("id").belongs(selected))
-                        resource = s3db.resource("auth_user",
-                                                 filter = query,
-                                                 vars = filters)
-                        # Add Manual URL Filters
-                        #if rfilter:
-                        #    resource.add_filter(rfilter)
-                        rows = resource.select(["id"], as_rows=True)
-                        selected = [str(row.id) for row in rows]
+                            options = VOL_CONSENT_OPTIONS
+                        if len(consented) == len(options):
+                            return "-"
+                        else:
+                            return "Incomplete"
 
-                    # GET URL lengths are limited, so pass 'selected' via session
-                    current.session.s3.anonymize_record_ids = selected
-                    from gluon import redirect, URL
-                    redirect(URL(c="admin", f="user",
-                                 args = ["anonymize"],
-                                 ))
+                    from s3 import s3_fieldmethod
+                    utable.consent = s3_fieldmethod("consent",
+                                                    consent,
+                                                    # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                                    #represent = lambda v: v,
+                                                    )
+
+                    list_fields = r.resource.get_config("list_fields")
+                    list_fields.append((T("Consent"), "consent"))
+                if r.method != "import" and r.http == "POST":
+                    post_vars = r.post_vars
+                    if "selected" in post_vars:
+                        # Bulk Action 'Anonymize' has been selected
+                        selected = post_vars.selected
+                        if selected:
+                            selected = selected.split(",")
+                        else:
+                            selected = []
+
+                        # Handle exclusion filter
+                        if post_vars.mode == "Exclusive":
+                            if "filterURL" in post_vars:
+                                from s3 import S3URLQuery
+                                filters = S3URLQuery.parse_url(post_vars.filterURL)
+                            else:
+                                filters = None
+                            from s3 import FS
+                            query = ~(FS("id").belongs(selected))
+                            resource = s3db.resource("auth_user",
+                                                     filter = query,
+                                                     vars = filters)
+                            # Add Manual URL Filters
+                            #if rfilter:
+                            #    resource.add_filter(rfilter)
+                            rows = resource.select(["id"], as_rows=True)
+                            selected = [str(row.id) for row in rows]
+
+                        # GET URL lengths are limited, so pass 'selected' via session
+                        current.session.s3.anonymize_record_ids = selected
+                        from gluon import redirect
+                        redirect(URL(c="admin", f="user",
+                                     args = ["anonymize"],
+                                     ))
 
             return result
         s3.prep = prep
 
-        # Add Bulk Messaging to List View
-        attr["dtargs"] = {"dt_bulk_actions": [(T("Anonymize"), "anonymize")],
-                          }
+        if ADMIN:
+            # Add Bulk Messaging to List View
+            attr["dtargs"] = {"dt_bulk_actions": [(T("Anonymize"), "anonymize")],
+                              }
 
         return attr
 
