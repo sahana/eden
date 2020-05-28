@@ -15,6 +15,20 @@ from s3 import FS, ICON, IS_ONE_OF, S3AnonymizeWidget, S3CustomController, S3Met
 SEPARATORS = (",", ":")
 THEME = "CCC"
 
+ADMIN_CONSENT_OPTIONS = ("FOCV",
+                         "STOREPID",
+                         "EUA",
+                         )
+DONOR_CONSENT_OPTIONS = ("FOCD",
+                         "STOREPID",
+                         "EUA",
+                         )
+VOL_CONSENT_OPTIONS = ("18+",
+                       "FOCV",
+                       "STOREPID",
+                       "EUA",
+                       )
+
 # =============================================================================
 class index(S3CustomController):
     """ Custom Home Page """
@@ -243,10 +257,7 @@ class login_next(S3CustomController):
             # Page to redirect to
             url = URL(c="default", f="index", args="donor")
 
-            options = ("FOCD",
-                       "STOREPID",
-                       #"EUA",
-                       )
+            options = DONOR_CONSENT_OPTIONS
         else:
             # Page to redirect to
             url = URL(c="cms", f="post", args="datalist")
@@ -254,16 +265,9 @@ class login_next(S3CustomController):
             if auth.s3_has_roles(("ORG_ADMIN",
                                   "GROUP_ADMIN",
                                   )):
-                options = ("FOCV",
-                           "STOREPID",
-                           #"EUA",
-                           )
+                options = ADMIN_CONSENT_OPTIONS
             else:
-                options = ("18+",
-                           "FOCV",
-                           "STOREPID",
-                           #"EUA",
-                           )
+                options = VOL_CONSENT_OPTIONS
 
         s3db = current.s3db
         ttable = s3db.auth_processing_type
@@ -342,13 +346,16 @@ class login_next(S3CustomController):
         r.id = person_id
         settings.customise_pr_person_resource(r, tablename)
         anonymise_btn = S3AnonymizeWidget.widget(r,
-                                                 _class = "action-btn anonymize-btn",
                                                  label = "Delete My Account",
                                                  ajaxURL = URL(c="pr", f="person",
                                                                args = [person_id, "anonymize.json"]
                                                                ),
+                                                 _class = "action-btn anonymize-btn",
                                                  )
-        response.s3.rfooter = anonymise_btn
+        response.s3.rfooter = DIV(P("If you do not accept the new terms, you should delete your account:"),
+                                  anonymise_btn,
+                                  _id = "login_next",
+                                  )
         current.menu = Storage(about = current.menu.about)
         return {"item": form,
                 "title": T("Consent Required"),
@@ -1335,11 +1342,7 @@ class register(S3CustomController):
                 DRY Helper for individuals (whether with existing agency or not)
             """
             # Instantiate Consent Tracker
-            consent = s3db.auth_Consent(processing_types = ("18+",
-                                                            "STOREPID",
-                                                            "FOCV",
-                                                            "EUA",
-                                                            ))
+            consent = s3db.auth_Consent(processing_types = VOL_CONSENT_OPTIONS)
 
             formfields = [utable.first_name,
                           utable.last_name,
@@ -1554,10 +1557,7 @@ class register(S3CustomController):
             #           )
 
             # Instantiate Consent Tracker
-            consent = s3db.auth_Consent(processing_types = ("STOREPID",
-                                                            "FOCV",
-                                                            #"EUA",
-                                                            ))
+            consent = s3db.auth_Consent(processing_types = ADMIN_CONSENT_OPTIONS)
 
             # Form Fields
             formfields = [Field("organisation",
@@ -1672,10 +1672,7 @@ class register(S3CustomController):
                          )
 
             # Instantiate Consent Tracker
-            consent = s3db.auth_Consent(processing_types = ("STOREPID",
-                                                            "FOCD",
-                                                            #"EUA",
-                                                            ))
+            consent = s3db.auth_Consent(processing_types = DONOR_CONSENT_OPTIONS)
 
             # Form Fields
             formfields = [utable.first_name,
@@ -1789,10 +1786,7 @@ class register(S3CustomController):
                          )
 
             # Instantiate Consent Tracker
-            consent = s3db.auth_Consent(processing_types = ("STOREPID",
-                                                            "FOCV",
-                                                            #"EUA",
-                                                            ))
+            consent = s3db.auth_Consent(processing_types = ADMIN_CONSENT_OPTIONS)
 
             # Form Fields
             formfields = [Field("group",
