@@ -73,7 +73,7 @@ class Daily():
                 mtable.on(mtable.user_id == utable.id),
                 ]
 
-        query = (utable.created_on < now - datetime.timedelta(minutes=5)) & \
+        query = (utable.created_on < now - datetime.timedelta(hours=48)) & \
                 (utable.registration_key != None) & \
                 (~(utable.registration_key.belongs("", "disabled", "blocked", "pending"))) & \
                 (utable.deleted == False) & \
