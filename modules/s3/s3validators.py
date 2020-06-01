@@ -1892,32 +1892,6 @@ class IS_IN_SET_LAZY(Validator):
         return (value, None)
 
 # =============================================================================
-class IS_TIME_INTERVAL_WIDGET(Validator):
-    """
-        Simple validator for the S3TimeIntervalWidget, returns
-        the selected time interval in seconds
-    """
-
-    def __init__(self, field):
-        self.field = field
-
-    # -------------------------------------------------------------------------
-    def __call__(self, value):
-
-        try:
-            val = int(value)
-        except ValueError:
-            return (0, None)
-        request = current.request
-        _vars = request.post_vars
-        try:
-            mul = int(_vars[("%s_multiplier" % self.field).replace(".", "_")])
-        except ValueError:
-            return (0, None)
-        seconds = val * mul
-        return (seconds, None)
-
-# =============================================================================
 class IS_PERSON_GENDER(IS_IN_SET):
     """
         Special validator for pr_person.gender and derivates,

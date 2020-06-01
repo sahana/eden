@@ -7887,10 +7887,15 @@ class S3TimeIntervalWidget(FormWidget):
                    ("seconds", 1))
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def widget(field, value, **attributes):
+    @classmethod
+    def widget(cls, field, value, **attributes):
+        """
+            Widget builder
 
-        multipliers = S3TimeIntervalWidget.multipliers
+            @param field: the Field
+            @param value: the current value
+            @param attributes: DOM attributes for the widget
+        """
 
         if value is None:
             value = 0
@@ -7900,53 +7905,104 @@ class S3TimeIntervalWidget(FormWidget):
             except ValueError:
                 value = 0
 
-        if value == 0:
-            multiplier = 1
-        else:
-            for m in multipliers:
-                multiplier = m[1]
-                if int(value) % multiplier == 0:
-                    break
+        # Value input
+        multiplier = cls.get_multiplier(value)
+        inp = IntegerWidget.widget(field, value // multiplier[1],
+                                   requires = cls.validate(field),
+                                   )
 
+        # Multiplier selector
+        multipliers = S3TimeIntervalWidget.multipliers
         options = []
-        for i in xrange(1, len(multipliers) + 1):
+        for i in range(1, len(multipliers) + 1):
             title, opt = multipliers[-i]
-            if opt == multiplier:
+            if opt == multiplier[1]:
                 option = OPTION(title, _value=opt, _selected="selected")
             else:
                 option = OPTION(title, _value=opt)
             options.append(option)
 
-        val = value / multiplier
-        inp = DIV(INPUT(value = val,
-                        requires = field.requires,
-                        _id = ("%s" % field).replace(".", "_"),
-                        _name = field.name),
-                  SELECT(options,
-                         _name=("%s_multiplier" % field).replace(".", "_")))
-        return inp
+        # Widget
+        return DIV(inp,
+                   SELECT(options,
+                          _name = ("%s_multiplier" % field).replace(".", "_"),
+                          ),
+                   )
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def represent(value):
+    def validate(field):
+        """
+            Return an internal validator (converter) for the numeric input
 
-        multipliers = S3TimeIntervalWidget.multipliers
+            @param field: the Field
+
+            @returns: a validator function
+        """
+
+        def requires(value):
+
+            if value is None or value == "":
+                return value, None
+
+            try:
+                val = int(value)
+            except ValueError:
+                return (value, T("Enter an integer"))
+
+            post_vars = current.request.post_vars
+            try:
+                mul = int(post_vars[("%s_multiplier" % field).replace(".", "_")])
+            except ValueError:
+                return (value, T("Invalid time unit"))
+
+            return val * mul, None
+
+        return requires
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def represent(cls, value):
+        """
+            Represent the field value in a convenient unit of time
+
+            @param value: the field value (seconds)
+
+            @returns: string representation of the field value
+        """
 
         try:
             val = int(value)
-        except ValueError:
+        except (ValueError, TypeError):
             val = 0
 
-        if val == 0:
-            multiplier = multipliers[-1]
-        else:
+        multiplier = cls.get_multiplier(val)
+
+        return "%s %s" % (val // multiplier[1],
+                          current.T(multiplier[0]),
+                          )
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def get_multiplier(cls, value):
+        """
+            Get a convenient multiplier (=unit of time) for a value in seconds
+
+            @param value: the value in seconds
+
+            @returns: a tuple (multiplier, multiplier-name)
+        """
+
+        multipliers = cls.multipliers
+
+        multiplier = multipliers[-1] # Seconds
+        if value >= 60:
             for m in multipliers:
-                if val % m[1] == 0:
+                if value % m[1] == 0:
                     multiplier = m
                     break
 
-        val = val / multiplier[1]
-        return "%s %s" % (val, current.T(multiplier[0]))
+        return multiplier
 
 # =============================================================================
 class S3UploadWidget(UploadWidget):
