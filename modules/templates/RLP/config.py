@@ -47,7 +47,7 @@ def config(settings):
     settings.auth.registration_link_user_to = ["staff"]
     settings.auth.registration_link_user_to_default = ["staff"]
     # Disable password-retrieval feature
-    settings.auth.password_retrieval = False
+    settings.auth.password_retrieval = True
 
     settings.auth.realm_entity_types = ("org_organisation", "pr_forum", "pr_group")
     settings.auth.privileged_roles = {"COORDINATOR": "COORDINATOR"}

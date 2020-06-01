@@ -1415,7 +1415,7 @@ def user():
 })''')
 
     elif arg == "retrieve_password":
-        title = response.title = T("Retrieve Password")
+        title = response.title = T("Lost Password")
         form = auth()
 
     elif arg == "profile":

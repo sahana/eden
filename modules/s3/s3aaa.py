@@ -47,7 +47,7 @@ from uuid import uuid4
 
 #from gluon import *
 from gluon import current, redirect, CRYPT, DAL, HTTP, SQLFORM, URL, \
-                  A, DIV, INPUT, LABEL, OPTGROUP, OPTION, SELECT, SPAN, XML, \
+                  A, BUTTON, DIV, INPUT, LABEL, OPTGROUP, OPTION, SELECT, SPAN, XML, \
                   IS_EMAIL, IS_EMPTY_OR, IS_EXPR, IS_IN_DB, IS_IN_SET, \
                   IS_LOWER, IS_NOT_EMPTY, IS_NOT_IN_DB
 
@@ -975,13 +975,13 @@ Thank you"""
                   ),
             Field("new_password2", "password",
                   label = messages.verify_password,
-                  requires = [IS_EXPR("value==%s" % repr(request.vars.new_password),
-                              messages.mismatched_password)
-                              ],
+                  requires = IS_EXPR("value==%s" % repr(request.vars.new_password),
+                                     messages.mismatched_password,
+                                     ),
                   ),
-            submit_button = messages.password_reset_button,
+            submit_button = messages.password_change_button,
             hidden = {"_next": next},
-            formstyle = settings.formstyle,
+            formstyle = current.deployment_settings.get_ui_formstyle(),
             separator = settings.label_separator
             )
         if form.accepts(request, session,
