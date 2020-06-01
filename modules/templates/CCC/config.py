@@ -56,6 +56,9 @@ def config(settings):
                                       "RESERVE_READER": "ADMIN",
                                       }
 
+    # Consent Tracking
+    settings.auth.consent_tracking = True
+
     # -------------------------------------------------------------------------
     # L10n (Localization) settings
     settings.L10n.languages = OrderedDict([
@@ -78,9 +81,6 @@ def config(settings):
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
 
     settings.security.policy = 7 # Entity Realm + Hierarchy
-
-    # Consent Tracking
-    settings.auth.consent_tracking = True
 
     # Which page to go to after login?
     def login_next():

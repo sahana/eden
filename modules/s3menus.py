@@ -504,6 +504,7 @@ class S3OptionsMenu(object):
                         M("Tasks", f="monitor_task"),
                         M("Logs", f="monitor_run"),
                     ),
+                    M("Scheduler", c="admin", f="task"),
                     M("Synchronization", c="sync", f="index")(
                         M("Settings", f="config", args=[1], m="update"),
                         M("Repositories", f="repository"),
