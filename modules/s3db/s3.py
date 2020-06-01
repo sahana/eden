@@ -31,6 +31,7 @@ __all__ = ("S3HierarchyModel",
            "S3DashboardModel",
            "S3DynamicTablesModel",
            "s3_table_rheader",
+           "s3_scheduler_rheader",
            )
 
 import random
@@ -669,6 +670,44 @@ def s3_table_rheader(r, tabs=None):
                                                          record = record,
                                                          )
 
+    return rheader
+
+# =============================================================================
+def s3_scheduler_rheader(r, tabs=None):
+
+    if r.representation != "html":
+        # Resource headers only used in interactive views
+        return None
+
+    from s3 import s3_rheader_resource, S3ResourceHeader
+
+    tablename, record = s3_rheader_resource(r)
+    if tablename != r.tablename:
+        resource = current.s3db.resource(tablename, id=record.id)
+    else:
+        resource = r.resource
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+        T = current.T
+
+        if tablename == "scheduler_task":
+
+            if not tabs:
+                tabs = [(T("Job Details"), None),
+                        (T("Runs"), "run"),
+                        ]
+
+            rheader_fields = [["function_name",
+                               ],
+                              ["status",
+                               ],
+                              ]
+
+        header = S3ResourceHeader(rheader_fields, tabs, title="task_name")
+        rheader = header(r, table=resource.table, record=record)
     return rheader
 
 # END =========================================================================

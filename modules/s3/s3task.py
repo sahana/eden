@@ -86,6 +86,7 @@ class S3Task(object):
                                  args = None,
                                  vars = None,
                                  period = 3600, # seconds, so 1 hour
+                                 status_writable = False,
                                  ):
         """
             Configure the task table for interactive CRUD,
@@ -95,6 +96,8 @@ class S3Task(object):
             @param function: the function name (won't hide if omitted)
             @param args: the function position arguments
             @param vars: the function named arguments
+            @param period: the default period for tasks
+            @param status_writable: make status and next run time editable
         """
 
         if args is None:
@@ -108,14 +111,6 @@ class S3Task(object):
 
         tablename = self.TASK_TABLENAME
         table = current.db[tablename]
-
-        table.uuid.readable = table.uuid.writable = False
-
-        table.prevent_drift.readable = table.prevent_drift.writable = False
-
-        table.sync_output.readable = table.sync_output.writable = False
-
-        table.times_failed.readable = False
 
         # Configure start/stop time fields
         for fn in ("start_time", "stop_time"):
@@ -134,25 +129,29 @@ class S3Task(object):
                                             timepicker = True,
                                             )
 
-        if not task:
-            import uuid
-            task = str(uuid.uuid4())
+        # Task name (default use UUID)
+        if task is None:
+            from uuid import uuid4
+            task = str(uuid4())
         field = table.task_name
         field.default = task
-        field.readable = False
-        field.writable = False
+        field.readable = field.writable = False
 
+        # Function (default+hide if specified as parameter)
         if function:
             field = table.function_name
             field.default = function
-            field.readable = False
-            field.writable = False
+            field.readable = field.writable = False
 
+        # Args and vars
         field = table.args
         field.default = json.dumps(args)
-        field.readable = False
-        field.writable = False
+        field.readable = field.writable = False
+        field = table.vars
+        field.default = json.dumps(vars)
+        field.readable = field.writable = False
 
+        # Fields which are always editable
         field = table.repeats
         field.label = T("Repeat")
         field.comment = T("times (0 = unlimited)")
@@ -168,17 +167,13 @@ class S3Task(object):
         field.widget = S3TimeIntervalWidget.widget
         field.requires = IS_TIME_INTERVAL_WIDGET(table.period)
         field.represent = S3TimeIntervalWidget.represent
-        field.comment = T("seconds")
+        field.comment = None
 
         table.timeout.default = 600
         table.timeout.represent = lambda opt: \
-            opt and "%s %s" % (opt, T("seconds")) or \
-            opt == 0 and UNLIMITED or \
-            NONE
-
-        field = table.vars
-        field.default = json.dumps(vars)
-        field.readable = field.writable = False
+                                    opt and "%s %s" % (opt, T("seconds")) or \
+                                    opt == 0 and UNLIMITED or \
+                                    NONE
 
         # Always use "default" controller (web2py uses current controller),
         # otherwise the anonymous worker does not pass the controller
@@ -187,31 +182,47 @@ class S3Task(object):
         field = table.application_name
         field.default = "%s/default" % current.request.application
         field.readable = field.writable = False
-        table.group_name.readable = table.group_name.writable = False
-        table.status.readable = table.status.writable = False
-        table.next_run_time.readable = table.next_run_time.writable = False
-        table.times_run.readable = table.times_run.writable = False
-        table.assigned_worker_name.readable = \
-            table.assigned_worker_name.writable = False
+
+        # Hidden fields
+        hidden = ("uuid",
+                  "broadcast",
+                  "group_name",
+                  "times_run",
+                  "assigned_worker_name",
+                  "sync_output",
+                  "times_failed",
+                  "cronline",
+                  )
+        for fn in hidden:
+            table[fn].readable = table[fn].writable = False
+
+        # Optionally editable fields
+        fields = ("next_run_time", "status", "prevent_drift")
+        for fn in fields:
+            table[fn].readable = table[fn].writable = status_writable
+
+        list_fields = ["id",
+                       "enabled",
+                       "start_time",
+                       "repeats",
+                       "period",
+                       (T("Last run"), "last_run_time"),
+                       (T("Last status"), "status"),
+                       (T("Next run"), "next_run_time"),
+                       "stop_time"
+                       ]
+        if not function:
+            list_fields[1:1] = ["task_name", "function_name"]
 
         current.s3db.configure(tablename,
-                               list_fields = ["id",
-                                              "enabled",
-                                              "start_time",
-                                              "repeats",
-                                              "period",
-                                              (T("Last run"), "last_run_time"),
-                                              (T("Last status"), "status"),
-                                              (T("Next run"), "next_run_time"),
-                                              "stop_time"
-                                              ],
+                               list_fields = list_fields,
                                )
 
         response = current.response
         if response:
             response.s3.crud_strings[tablename] = Storage(
                 label_create = T("Create Job"),
-                title_display = T("Scheduled Jobs"),
+                title_display = T("Job Details"),
                 title_list = T("Job Schedule"),
                 title_update = T("Edit Job"),
                 label_list_button = T("List Jobs"),
@@ -220,8 +231,6 @@ class S3Task(object):
                 msg_record_deleted = T("Job deleted"),
                 msg_list_empty = T("No jobs configured yet"),
                 msg_no_match = T("No jobs configured"))
-
-        return
 
     # -------------------------------------------------------------------------
     # API Function run within the main flow of the application

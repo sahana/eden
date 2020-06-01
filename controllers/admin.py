@@ -1296,6 +1296,40 @@ def result():
     return output
 
 # =============================================================================
+@auth.s3_requires_membership(1)
+def task():
+    """
+        Scheduler tasks: RESTful CRUD controller
+    """
+
+    s3db.add_components("scheduler_task",
+                        scheduler_run = "task_id",
+                        )
+    def prep(r):
+
+        if r.component_name == "run":
+
+            component = r.component
+
+            ctable = component.table
+
+            field = ctable.traceback
+            from s3 import s3_text_represent
+            field.represent = s3_text_represent
+
+            component.configure(insertable = False,
+                                editable = False,
+                                )
+
+        s3task.configure_tasktable_crud(task="", status_writable=True)
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller("scheduler", "task",
+                              rheader = s3db.s3_scheduler_rheader,
+                              )
+
+# =============================================================================
 # Configurations
 # =============================================================================
 def dashboard():
