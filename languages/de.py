@@ -2518,6 +2518,7 @@
 'Invalid Case': 'Ungültiger Fall',
 'Invalid Cases': 'Ungültige Fälle',
 'Invalid Query': 'Ungültige Abfrage',
+'Invalid email': 'Ungültige Email-Adresse',
 'Invalid event type: %s': 'Ungültiger Ereignistyp: %s',
 'Invalid request!': 'Ungültige Anfrage!',
 'Invalid ticket': 'Ungültiges Ticket',
