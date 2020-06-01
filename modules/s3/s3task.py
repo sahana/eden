@@ -100,11 +100,6 @@ class S3Task(object):
             @param status_writable: make status and next run time editable
         """
 
-        if args is None:
-            args = []
-        if vars is None:
-            vars = {}
-
         T = current.T
         NONE = current.messages["NONE"]
         UNLIMITED = T("unlimited")
@@ -144,12 +139,18 @@ class S3Task(object):
             field.readable = field.writable = False
 
         # Args and vars
-        field = table.args
-        field.default = json.dumps(args)
-        field.readable = field.writable = False
-        field = table.vars
-        field.default = json.dumps(vars)
-        field.readable = field.writable = False
+        if isinstance(args, list):
+            field = table.args
+            field.default = json.dumps(args)
+            field.readable = field.writable = False
+        else:
+            field.default = "[]"
+        if isinstance(vars, dict):
+            field = table.vars
+            field.default = json.dumps(vars)
+            field.readable = field.writable = False
+        else:
+            field.default = {}
 
         # Fields which are always editable
         field = table.repeats
