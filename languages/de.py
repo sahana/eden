@@ -2269,6 +2269,7 @@
 'Home Address': 'Heimatsadresse',
 'Home Country': 'Land des Wohnsitzes',
 'Home Crime': 'Häusliche Kriminalität',
+'Home Phone': 'Telefon',
 'Home': 'Startseite',
 'Hospital Details': 'Details zum Krankenhaus',
 'Hospital Status Report': 'Statusbericht zum Krankenhaus',
