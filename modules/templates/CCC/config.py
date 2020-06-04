@@ -1498,8 +1498,11 @@ $('.copy-link').click(function(e){
 
             if r.method == "datalist":
                 # Filter out attachments
+                ttable = current.s3db.project_task
+                tasks = current.db(ttable.id > 0).select(ttable.doc_id)
+                tasks = [t.doc_id for t in tasks]
                 from s3 import FS
-                r.resource.add_filter(FS("attachment.id") == None)
+                r.resource.add_filter(~FS("~.doc_id").belongs(tasks))
 
             return result
         s3.prep = prep

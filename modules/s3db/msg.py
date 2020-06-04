@@ -557,6 +557,7 @@ class S3MessageAttachmentModel(S3Model):
         self.define_table(tablename,
                           # FK not instance
                           self.msg_message_id(ondelete = "CASCADE"),
+                          # document_id not doc_id
                           self.doc_document_id(),
                           *s3_meta_fields())
 
