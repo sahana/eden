@@ -471,7 +471,7 @@ def alert_create_script():
     # @ToDo: Port to _compose_form
     table = s3db.msg_sms_webapi_channel
     gateway = db(table.enabled == True).select(table.max_length,
-                                               limitby=(0, 1)
+                                               limitby = (0, 1)
                                                ).first()
     if gateway:
         max_length = gateway.max_length
@@ -593,7 +593,7 @@ def alert():
             if r.component_name == "select":
                 s3.actions = [{"label": str(READ),
                                "url": URL(f="human_resource",
-                                          args=["[id]", "profile"],
+                                          args = ["[id]", "profile"],
                                           ),
                                "_class": "action-btn read",
                                }
@@ -602,8 +602,8 @@ def alert():
             if r.component_name == "recipient":
                 # Open should open the HR profile, not the link
                 open_url = URL(f="human_resource",
-                               args=["profile"],
-                               vars={"alert_recipient.id": "[id]"},
+                               args = ["profile"],
+                               vars = {"alert_recipient.id": "[id]"},
                                )
                 # Delete should delete the link, not the HR profile
                 delete_url = URL(f="alert",
@@ -774,10 +774,10 @@ def email_inbox():
             if authorised:
                 s3.rfooter = s3base.S3CRUD.crud_button(
                                         T("Link to Mission"),
-                                        _href=URL(f="email_inbox",
-                                                  args=[r.id, "select"],
-                                                  ),
-                                        _class="action-btn link",
+                                        _href = URL(f="email_inbox",
+                                                    args = [r.id, "select"],
+                                                    ),
+                                        _class = "action-btn link",
                                         )
         return output
     s3.postp = postp
@@ -861,8 +861,8 @@ def email_channel():
         if r.interactive and isinstance(output, dict) and \
            not s3task._is_alive():
             poll_btn = A(T("Poll"),
-                         _class="action-btn",
-                         _href=URL(args=[r.id, "poll"])
+                         _class = "action-btn",
+                         _href = URL(args=[r.id, "poll"])
                          )
             output["rheader"] = poll_btn
         return output

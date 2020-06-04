@@ -262,6 +262,7 @@ class S3DocumentLibrary(S3Model):
 
         add_components(tablename,
                        doc_document_tag = document_id,
+                       msg_attachment = document_id,
                        )
 
         # ---------------------------------------------------------------------

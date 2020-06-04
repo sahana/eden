@@ -1485,7 +1485,31 @@ $('.copy-link').click(function(e){
     # -----------------------------------------------------------------------------
     def customise_doc_document_controller(**attr):
 
-        current.response.s3.dl_no_header = True
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.method == "datalist":
+                # Filter out attachments
+                ttable = current.s3db.project_task
+                tasks = current.db(ttable.id > 0).select(ttable.doc_id)
+                tasks = [t.doc_id for t in tasks]
+                from s3 import FS
+                query = (FS("~.doc_id") == None) | \
+                        ~(FS("~.doc_id").belongs(tasks))
+                r.resource.add_filter(query)
+
+            return result
+        s3.prep = prep
+
+        s3.dl_no_header = True
 
         return attr
 
