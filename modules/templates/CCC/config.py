@@ -1485,7 +1485,26 @@ $('.copy-link').click(function(e){
     # -----------------------------------------------------------------------------
     def customise_doc_document_controller(**attr):
 
-        current.response.s3.dl_no_header = True
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.method == "datalist":
+                # Filter out attachments
+                from s3 import FS
+                r.resource.add_filter(FS("attachment.id") == None)
+
+            return result
+        s3.prep = prep
+
+        s3.dl_no_header = True
 
         return attr
 
