@@ -1502,7 +1502,9 @@ $('.copy-link').click(function(e){
                 tasks = current.db(ttable.id > 0).select(ttable.doc_id)
                 tasks = [t.doc_id for t in tasks]
                 from s3 import FS
-                r.resource.add_filter(~FS("~.doc_id").belongs(tasks))
+                query = (FS("~.doc_id") == None) | \
+                        ~(FS("~.doc_id").belongs(tasks))
+                r.resource.add_filter(query)
 
             return result
         s3.prep = prep
