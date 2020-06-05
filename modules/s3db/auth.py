@@ -783,12 +783,13 @@ class auth_Consent(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def track(cls, person_id, value):
+    def track(cls, person_id, value, allow_obsolete=True):
         """
             Record response to consent question
 
             @param person_id: the person consenting
             @param value: the value returned from the widget
+            @param allow_obsolete: allow tracking of obsolete consent options
         """
 
         db = current.db
@@ -813,8 +814,9 @@ class auth_Consent(object):
 
         join = ttable.on(ttable.id == otable.type_id)
         query = (ttable.code.belongs(set(parsed.keys()))) & \
-                (otable.obsolete == False) & \
                 (otable.deleted == False)
+        if not allow_obsolete:
+            query &= (otable.obsolete == False)
         rows = db(query).select(join=join, *fields)
 
         valid_options = {}
@@ -835,10 +837,7 @@ class auth_Consent(object):
             # Verify option_id
             option = valid_options.get(option_id)
             if not option or option["code"] != code:
-                # Don't raise as this prevents approving older users after modifying consent options
-                #raise ValueError("Invalid consent option: %s#%s" % (code, option_id))
-                current.log.warning("Invalid consent option: %s#%s" % (code, option_id))
-                continue
+                raise ValueError("Invalid consent option: %s#%s" % (code, option_id))
 
             # Generate consent record
             consent = {"date": today.isoformat(),
