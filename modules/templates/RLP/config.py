@@ -1741,11 +1741,11 @@ def config(settings):
                                               if opt[0] in status_opts
                                               ]
                     if len(status_filter_opts) > 1:
-                        default = ["APPR", "IMPL"] if r.method == "report" else None
+                        #default = ["APPR", "IMPL"] if r.method == "report" else None
                         filter_widgets.insert(0,
                             S3OptionsFilter("status",
                                             options = OrderedDict(status_filter_opts),
-                                            default = default,
+                                            #default = default,
                                             sort = False,
                                             cols = 3,
                                             ))
