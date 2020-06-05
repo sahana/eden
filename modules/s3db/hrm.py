@@ -5389,6 +5389,7 @@ class HRDelegationModel(S3Model):
             # Final statuses
             delegation_status += (("CANC", T("Cancelled")),
                                   ("IMPL", T("Implemented")),
+                                  ("NVLD", T("Invalid")),
                                   )
 
         # ---------------------------------------------------------------------
