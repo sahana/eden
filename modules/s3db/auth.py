@@ -783,12 +783,13 @@ class auth_Consent(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def track(cls, person_id, value, allow_obsolete=True):
+    def track(cls, person_id, value, timestmp=None, allow_obsolete=True):
         """
             Record response to consent question
 
             @param person_id: the person consenting
             @param value: the value returned from the widget
+            @param timestmp: the date/time when the consent was given
             @param allow_obsolete: allow tracking of obsolete consent options
         """
 
@@ -796,7 +797,7 @@ class auth_Consent(object):
         s3db = current.s3db
         request = current.request
 
-        today = request.utcnow.date()
+        today = timestmp.date() if timestmp else request.utcnow.date()
         vsign = request.env.remote_addr
 
         # Consent option hash fields
@@ -895,11 +896,14 @@ class auth_Consent(object):
             ttable = s3db.auth_user_temp
             row = db(ttable.user_id == user_id).select(ttable.id,
                                                        ttable.consent,
+                                                       ttable.created_on,
                                                        limitby = (0, 1),
                                                        ).first()
             if row and row.consent:
                 # Track consent
-                cls.track(person_id, row.consent)
+                cls.track(person_id, row.consent,
+                          timestmp = row.created_on,
+                          )
 
                 # Reset consent response in temp user record
                 row.update_record(consent=None)
