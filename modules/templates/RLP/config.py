@@ -1558,7 +1558,9 @@ def config(settings):
                 r.component.load()
                 record = r.component._rows[0]
             else:
+                r.component.add_filter(FS("status") != "NVLD")
                 record = None
+
             delegation_workflow(r.component.table, record, person_id=r.id)
 
             # Determine earliest start date
@@ -1709,7 +1711,8 @@ def config(settings):
 
             elif r.method != "report":
                 status_opts = ("REQ", "APPR", "DECL", "CANC", "IMPL")
-                r.resource.add_filter(FS("status") != "NVLD")
+                if not r.id:
+                    r.resource.add_filter(FS("status") != "NVLD")
 
             multiple_orgs = delegation_read_multiple_orgs()[0]
 
