@@ -835,7 +835,10 @@ class auth_Consent(object):
             # Verify option_id
             option = valid_options.get(option_id)
             if not option or option["code"] != code:
-                raise ValueError("Invalid consent option: %s#%s" % (code, option_id))
+                # Don't raise as this prevents approving older users after modifying consent options
+                #raise ValueError("Invalid consent option: %s#%s" % (code, option_id))
+                current.log.warning("Invalid consent option: %s#%s" % (code, option_id))
+                continue
 
             # Generate consent record
             consent = {"date": today.isoformat(),
