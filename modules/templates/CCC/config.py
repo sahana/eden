@@ -880,6 +880,7 @@ $('.copy-link').click(function(e){
                                  (T("Contacts"), "contacts"),
                                  # Included in Contacts tab:
                                  #(T("Emergency Contacts"), "contact_emergency"),
+                                 (T("Where Operate"), "location"),
                                  (T("Additional Information"), "additional"),
                                  ]
                     elif has_role("RESERVE_READER"):
@@ -889,6 +890,7 @@ $('.copy-link').click(function(e){
                                      (T("Contacts"), "contacts"),
                                      # Included in Contacts tab:
                                      #(T("Emergency Contacts"), "contact_emergency"),
+                                     (T("Where Operate"), "location"),
                                      (T("Additional Information"), "additional"),
                                      ]
                     # Better on main form using S3SQLInlineLink
@@ -3191,22 +3193,22 @@ $('.copy-link').click(function(e){
     settings.customise_org_organisation_controller = customise_org_organisation_controller
 
     # -------------------------------------------------------------------------
-    def customise_org_organisation_location_resource(r, tablename):
+    #def customise_org_organisation_location_resource(r, tablename):
 
-        from gluon import IS_EMPTY_OR, IS_IN_SET
+    #    from gluon import IS_EMPTY_OR, IS_IN_SET
 
-        s3db = current.s3db
-        gtable = s3db.gis_location
-        query = (gtable.level == "L3") & (gtable.L2 == "Cumbria")
-        districts = current.db(query).select(gtable.id,
-                                             gtable.name,
-                                             cache = s3db.cache
-                                             )
-        districts = {d.id:d.name for d in districts}
+    #    s3db = current.s3db
+    #    gtable = s3db.gis_location
+    #    query = (gtable.level == "L3") & (gtable.L2 == "Cumbria")
+    #    districts = current.db(query).select(gtable.id,
+    #                                         gtable.name,
+    #                                         cache = s3db.cache
+    #                                         )
+    #    districts = {d.id:d.name for d in districts}
 
-        f = s3db.org_organisation_location.location_id
-        f.requires = IS_EMPTY_OR(IS_IN_SET(districts))
-        f.widget = None
+    #    f = s3db.org_organisation_location.location_id
+    #    f.requires = IS_EMPTY_OR(IS_IN_SET(districts))
+    #    f.widget = None
 
     #settings.customise_org_organisation_location_resource = customise_org_organisation_location_resource
 
@@ -4087,10 +4089,11 @@ $('.copy-link').click(function(e){
                                                                             ),
                                                             (T("Skills and Experience"), "experiencefree.value"),
                                                             (T("Offers of Resources"), "resources.value"),
-                                                            S3SQLInlineLink("location",
-                                                                            field = "location_id",
-                                                                            label = T("Where would you be willing to operate?"),
-                                                                            ),
+                                                            # Now on Tab
+                                                            #S3SQLInlineLink("location",
+                                                            #                field = "location_id",
+                                                            #                label = T("Where would you be willing to operate?"),
+                                                            #                ),
                                                             (T("Willing to Travel?"), "travel.value"),
                                                             S3SQLInlineLink("slot",
                                                                             field = "slot_id",
@@ -4187,6 +4190,22 @@ $('.copy-link').click(function(e){
                         #               "comments",
                         #               ]
                         #r.component.configure(list_fields = list_fields)
+
+                    
+                    elif r.component_name == "location":
+                        from s3 import S3LocationSelector
+                        s3db.pr_person_location.location_id.widget = S3LocationSelector(levels = ("L3", "L4"),
+                                                                                        required_levels = ("L3",),
+                                                                                        show_postcode = False,
+                                                                                        points = True,
+                                                                                        polygons = True,
+                                                                                        )
+                        s3db.configure("pr_person_location",
+                                       list_fields = ["location_id$L3",
+                                                      "location_id$L4",
+                                                      "comments",
+                                                      ],
+                                       )
 
                     elif r.component_name == "group_membership":
                         r.resource.components._components["group_membership"].configure(listadd = False,
