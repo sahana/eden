@@ -4274,10 +4274,11 @@ $('.copy-link').click(function(e){
                     resource.add_filter(rfilter)
 
                     gtable = s3db.gis_location
-                    districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
+                    districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(#gtable.id,
                                                                                                      gtable.name,
                                                                                                      cache = s3db.cache)
-                    districts = {d.id:d.name for d in districts}
+                    #districts = {d.id:d.name for d in districts}
+                    districts = [d.name for d in districts]
 
                     list_fields = ["first_name",
                                    "middle_name",
