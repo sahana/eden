@@ -4365,7 +4365,7 @@ $('.copy-link').click(function(e){
                                                    label = "",
                                                    _placeholder = T("Search"),
                                                    ),
-                                      S3OptionsFilter("person_location.location_id",
+                                      S3OptionsFilter("person_location.location_id$L3",
                                                       label = T("Locations Served"),
                                                       options = districts,
                                                       ),
