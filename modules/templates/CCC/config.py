@@ -4278,7 +4278,7 @@ $('.copy-link').click(function(e){
                                                                                                      gtable.name,
                                                                                                      cache = s3db.cache)
                     #districts = {d.id:d.name for d in districts}
-                    districts = [d.name for d in districts]
+                    districts = {d.name:d.name for d in districts}
 
                     list_fields = ["first_name",
                                    "middle_name",
