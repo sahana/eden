@@ -2614,6 +2614,13 @@ class S3OptionsFilter(S3FilterWidget):
                         query &= (key_field == field) & \
                                  current.auth.s3_accessible_query("read", ktable)
 
+                        # Exclude deleted keys
+                        # => there should be no references to deleted keys, so
+                        #    they are already excluded by (key_field == field),
+                        #    hence this is redundant:
+                        #if "deleted" in ktable.fields:
+                        #    query &= (ktable.deleted == False)
+
                         # If the filter field is in a joined table itself,
                         # then we also need the join for that table (this
                         # could be redundant, but checking that will likely
