@@ -993,6 +993,7 @@
                         trigger.closest('.rm-module-add').hide().after(newRow);
                     } else {
                         // Append the new row to the tbody immediately
+                        this.rules.push(rule);
                         $('tbody', ruleTable).append(newRow);
                         trigger.closest('.rm-module-add').hide();
                     }
