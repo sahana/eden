@@ -82,7 +82,7 @@ UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
                       "case_use_residence_status": False,
                       "case_use_referral": False,
                       "case_use_service_contacts": False,
-                      "case_lodging": "text",
+                      "case_lodging": "site",
                       "case_lodging_dates": False,
                       "case_nationality_mandatory": True,
                       "case_show_total_consultations": False,
@@ -281,6 +281,9 @@ def config(settings):
                                      "Falldatum": "dvr_case.date",
                                      "BAMF-Az": "bamf.value",
                                      "Benutzername": "current_user.name",
+                                     "Adresse": "dvr_case.site_id$location_id$addr_street",
+                                     "PLZ": "dvr_case.site_id$location_id$addr_postcode",
+                                     "Wohnort": "dvr_case.site_id$location_id$L3",
                                      }
 
     # -------------------------------------------------------------------------
@@ -965,12 +968,14 @@ def config(settings):
                                 "person_details.nationality",
                                 "person_details.marital_status",
                                 "dvr_case.status_id",
-                                "dvr_case.site_id",
+                                #lodging,
                                 "residence_status.status_type_id",
                                 "residence_status.permit_type_id",
                                 ]
-                        if use_address:
-                            axes.insert(-3, (T("Place of Residence"), "~.location_id$L3"))
+                        if lodging:
+                            axes.insert(-2, lodging)
+                        elif use_address:
+                            axes.insert(-2, (T("Place of Residence"), "~.location_id$L3"))
 
                         report_options = {
                             "rows": axes,
