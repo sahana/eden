@@ -297,8 +297,8 @@ class S3Task(object):
                 statement = "tasks['%s'](%s)" % (task, vars)
 
             exec(statement, globals(),
-                 # Define JSON literals as variables
-                 {"false": False, "true": True, "null": None},
+                 # Local scope for statement, define JSON literals as variables
+                 {"tasks": tasks, "false": False, "true": True, "null": None},
                  )
             return None
 
