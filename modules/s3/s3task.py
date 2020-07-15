@@ -305,7 +305,7 @@ class S3Task(object):
         try:
             # Add the current user to the vars
             vars["user_id"] = current.auth.user.id
-        except:
+        except AttributeError:
             pass
 
         # Run the task asynchronously
