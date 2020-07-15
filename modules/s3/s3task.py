@@ -276,12 +276,25 @@ class S3Task(object):
                     current.log.error(error)
                     raise HTTP(501, error)
             args = ",".join(_args)
-            _vars = ",".join(["%s=%s" % (str(var),
-                                         str(vars[var])) for var in vars])
+            _vars = []
+            for var in vars:
+                value = vars[var]
+                if isinstance(value, INTEGER_TYPES + (float,)):
+                    _vars.append("%s=%s" % (var, value))
+                else:
+                    try:
+                        value = json.dumps(value)
+                    except:
+                        error = "Unhandled var type: %s" % var
+                        current.log.error(error)
+                        raise HTTP(501, error)
+                    else:
+                        _vars.append("%s=%s" % (var, value))
+            vars = ",".join(_vars)
             if args:
-                statement = "tasks['%s'](%s,%s)" % (task, args, _vars)
+                statement = "tasks['%s'](%s,%s)" % (task, args, vars)
             else:
-                statement = "tasks['%s'](%s)" % (task, _vars)
+                statement = "tasks['%s'](%s)" % (task, vars)
             # Handle JSON
             false = False
             null = None
@@ -289,10 +302,11 @@ class S3Task(object):
             exec(statement)
             return None
 
-        auth = current.auth
-        if auth.is_logged_in():
+        try:
             # Add the current user to the vars
-            vars["user_id"] = auth.user.id
+            vars["user_id"] = current.auth.user.id
+        except:
+            pass
 
         # Run the task asynchronously
         # @ToDo: Switch to API: self.scheduler.queue_task()
@@ -463,7 +477,7 @@ class S3Task(object):
         table = db.scheduler_worker
 
         now = datetime.datetime.now()
-        offset = datetime.timedelta(minutes=1)
+        offset = datetime.timedelta(minutes = 1)
 
         query = (table.last_heartbeat > (now - offset))
         cache = current.response.s3.cache

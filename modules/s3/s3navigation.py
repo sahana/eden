@@ -1498,15 +1498,17 @@ class S3ComponentTabs(object):
 
             # Render tab
             rheader_tabs.append(SPAN(A(tab.title,
-                                       _href=_href,
-                                       _id=_id,
+                                       _href = _href,
+                                       _id = _id,
                                        ),
-                                     _class=_class,
+                                     _class = _class,
                                      ))
 
         # Render tab row
         if rheader_tabs:
-            rheader_tabs = DIV(rheader_tabs, _class="tabs")
+            rheader_tabs = DIV(rheader_tabs,
+                               _class = "tabs",
+                               )
         else:
             rheader_tabs = ""
         return rheader_tabs
