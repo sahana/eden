@@ -46,10 +46,9 @@ __all__ = ("S3Task",)
 import datetime
 import json
 
-from gluon import current, HTTP, IS_EMPTY_OR, IS_INT_IN_RANGE
+from gluon import current, IS_EMPTY_OR, IS_INT_IN_RANGE
 from gluon.storage import Storage
 
-from s3compat import INTEGER_TYPES, basestring
 from .s3datetime import S3DateTime
 from .s3validators import IS_UTC_DATETIME
 from .s3widgets import S3CalendarWidget, S3TimeIntervalWidget
@@ -255,72 +254,47 @@ class S3Task(object):
         if vars is None:
             vars = {}
 
-        # Check that task is defined
+        # Check that task is defined (and callable)
         tasks = current.response.s3.tasks
-        if not tasks:
-            return False
-        if task not in tasks:
+        if not tasks or not callable(tasks.get(task)):
             return False
 
-        # Check that worker is alive
+        # Check that args/vars are JSON-serializable
+        try:
+            json.dumps(args)
+        except (ValueError, TypeError):
+            msg = "S3Task.run_async args not JSON-serializable: %s" % args
+            current.log.error(msg)
+            raise
+        try:
+            json.dumps(vars)
+        except (ValueError, TypeError):
+            msg = "S3Task.run_async vars not JSON-serializable: %s" % vars
+            current.log.error(msg)
+            raise
+
+        # Run synchronously if scheduler not running
         if not self._is_alive():
-            # Run the task synchronously
-            _args = []
-            for arg in args:
-                if isinstance(arg, INTEGER_TYPES + (float,)):
-                    _args.append(str(arg))
-                elif isinstance(arg, basestring):
-                    _args.append("%s" % str(json.dumps(arg)))
-                else:
-                    error = "Unhandled arg type: %s" % arg
-                    current.log.error(error)
-                    raise HTTP(501, error)
-            args = ",".join(_args)
-            _vars = []
-            for var in vars:
-                value = vars[var]
-                if isinstance(value, INTEGER_TYPES + (float,)):
-                    _vars.append("%s=%s" % (var, value))
-                else:
-                    try:
-                        value = json.dumps(value)
-                    except:
-                        error = "Unhandled var type: %s" % var
-                        current.log.error(error)
-                        raise HTTP(501, error)
-                    else:
-                        _vars.append("%s=%s" % (var, value))
-            vars = ",".join(_vars)
-            if args:
-                statement = "tasks['%s'](%s,%s)" % (task, args, vars)
-            else:
-                statement = "tasks['%s'](%s)" % (task, vars)
+            tasks[task](*args, **vars)
+            return None # No task ID in this case
 
-            exec(statement, globals(),
-                 # Local scope for statement, define JSON literals as variables
-                 {"tasks": tasks, "false": False, "true": True, "null": None},
-                 )
-            return None
-
+        # Queue the task (async)
         try:
             # Add the current user to the vars
             vars["user_id"] = current.auth.user.id
         except AttributeError:
             pass
+        queued = self.scheduler.queue_task(task,
+                                           pargs = args,
+                                           pvars = vars,
+                                           application_name = "%s/default" % \
+                                                              current.request.application,
+                                           function_name = task,
+                                           timeout = timeout,
+                                           )
 
-        # Run the task asynchronously
-        # @ToDo: Switch to API: self.scheduler.queue_task()
-        task_id = current.db.scheduler_task.insert(application_name = "%s/default" % \
-                                                    current.request.application,
-                                                   task_name = task,
-                                                   function_name = task,
-                                                   args = json.dumps(args),
-                                                   vars = json.dumps(vars),
-                                                   timeout = timeout,
-                                                   )
-
-        # Return task_id so that status can be polled
-        return task_id
+        # Return task ID so that status can be polled
+        return queued.id
 
     # -------------------------------------------------------------------------
     def schedule_task(self,
