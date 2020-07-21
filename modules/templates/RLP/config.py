@@ -786,6 +786,78 @@ def config(settings):
         return bool(user_id)
 
     # -------------------------------------------------------------------------
+    def postprocess_person_select(records, rfields=None, represent=False, as_rows=False):
+        """
+            Post-process resource.select of pr_person to suppress
+            field data the user is not permitted to see
+
+            @param records: list of selected data
+            @param rfields: list of S3ResourceFields in the records
+            @param represent: records contain represented data
+            @param as_rows: records are bare Rows rather than extracted
+                            Storage
+        """
+
+        auth = current.auth
+
+        if auth.s3_has_role("COORDINATOR"):
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        person_ids = set(records.keys())
+
+        # Exclude open pool members
+        if person_ids:
+            gtable = s3db.pr_group
+            mtable = s3db.pr_group_membership
+            left = gtable.on(gtable.id == mtable.group_id)
+            query = (mtable.person_id.belongs(person_ids)) & \
+                    (mtable.deleted == False) & \
+                    (gtable.group_type == 21)
+            rows = db(query).select(mtable.person_id,
+                                    groupby = mtable.person_id,
+                                    left = left,
+                                    )
+            person_ids = person_ids - {row.person_id for row in rows}
+
+        # Exclude volunteers with active deployments that
+        # are readable for the current user
+        #if person_ids:
+        #    today = current.request.utcnow.date()
+        #    dtable = s3db.hrm_delegation
+        #    query = auth.s3_accessible_query("read", dtable) & \
+        #            dtable.person_id.belongs(person_ids) & \
+        #            rlp_active_deployments(dtable, from_date=today) & \
+        #            (dtable.deleted == False)
+        #    rows = db(query).select(dtable.person_id,
+        #                            )
+        #    person_ids = person_ids - {row.person_id for row in rows}
+
+        # For the remaining volunteers, override personal details
+        # and contact information with static values
+        HIDDEN = "***"
+        static = {"pr_person.first_name": (HIDDEN, HIDDEN),
+                  "pr_person.middle_name": (HIDDEN, HIDDEN),
+                  "pr_person.last_name": (HIDDEN, HIDDEN),
+                  #"pr_person.fullname": (HIDDEN, HIDDEN),
+                  "pr_person_details.alias": (HIDDEN, HIDDEN),
+                  "pr_phone_contact.value": (None, HIDDEN),
+                  "pr_email_contact.value": (None, HIDDEN),
+                  }
+        for person_id in person_ids:
+
+            row = records[person_id]
+
+            for colname, values in static.items():
+                if colname in row:
+                    row[colname] = values[1] if represent else values[0]
+                raw = row.get("_row")
+                if raw:
+                    raw[colname] = values[0]
+
+    # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
 
         s3db = current.s3db
@@ -824,11 +896,18 @@ def config(settings):
                                  vol_person_onaccept,
                                  )
 
-        table = r.table
-        if r.tablename == "pr_person" and not hasattr(table, "has_account"):
-            table.has_account = s3_fieldmethod("has_account", has_account,
-                                               represent = s3_yes_no_represent,
-                                               )
+        if r.tablename == "pr_person":
+            table = r.table
+            if not hasattr(table, "has_account"):
+                table.has_account = s3_fieldmethod("has_account", has_account,
+                                                   represent = s3_yes_no_represent,
+                                                   )
+            #if not hasattr(table, "fullname"):
+            #    table.fullname = s3_fieldmethod("fullname", s3_fullname)
+            if not r.record:
+                s3db.configure("pr_person",
+                               postprocess_select = postprocess_person_select,
+                               )
 
         # Configure components to inherit realm_entity from person
         s3db.configure("pr_person",
@@ -1111,16 +1190,11 @@ def config(settings):
                                             multiple = False,
                                             ),
                                    ])
-                        # Coordinators can export contact details in XLS/PDF
-                        if r.representation in ("xls", "pdf"):
-                            list_fields.extend([
-                                (T("Email"), "email.value"),
-                                (T("Mobile Phone"), "phone.value"),
-                                ])
                     else:
                         # Other users see ID and Alias
                         text_search_fields = ["person_details.alias", "pe_label"]
                         list_fields.insert(2, (T("Name"), "person_details.alias"))
+                    text_search_fields.append("person_details.occupation")
 
                     if show_contact_details:
                         crud_fields.extend([
@@ -1179,10 +1253,13 @@ def config(settings):
                     list_fields.extend([
                         "occupation_type_person.occupation_type_id",
                         "availability.hours_per_week",
+                        (T("Mobile Phone"), "phone.value"),
                         "current_address.location_id$addr_postcode",
                         (T("Place of Residence"), "current_address.location_id$L3"),
                         ])
-                    text_search_fields.append("person_details.occupation")
+                    # Include email address in XLS/PDF
+                    if r.representation in ("xls", "pdf"):
+                        list_fields.insert(-2, (T("Email"), "email.value"))
 
                     # Status as last column
                     if coordinator:
@@ -1232,7 +1309,9 @@ def config(settings):
                                        filter_widgets = filter_widgets,
                                        list_fields = list_fields,
                                        # Extra fields for computation of virtual fields
-                                       extra_fields = ["date_of_birth",
+                                       extra_fields = [#"first_name",
+                                                       #"last_name",
+                                                       "date_of_birth",
                                                        "user.id",
                                                        ],
                                        )
