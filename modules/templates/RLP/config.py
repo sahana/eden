@@ -904,7 +904,7 @@ def config(settings):
                                                    )
             #if not hasattr(table, "fullname"):
             #    table.fullname = s3_fieldmethod("fullname", s3_fullname)
-            if not r.record:
+            if not r.record or r.representation != "html":
                 s3db.configure("pr_person",
                                postprocess_select = postprocess_person_select,
                                )
