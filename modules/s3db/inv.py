@@ -2750,13 +2750,16 @@ $.filterOptionsS3({
             @ToDo: lookup the type values from s3cfg.py instead of hardcoding it
         """
 
-        form_vars = form.vars
-        shipment_type = form_vars.type and int(form_vars.type)
-        if shipment_type == 11 and not form_vars.from_site_id:
+        form_vars_get = form.vars.get
+        shipment_type = form_vars_get("type")
+        if shipment_type is None:
+            return
+        shipment_type = int(shipment_type)
+        if shipment_type == 11 and not form_vars_get("from_site_id"):
             # Internal Shipment needs from_site_id
             form.errors.from_site_id = current.T("Please enter a %(site)s") % \
                                             {"site": current.deployment_settings.get_org_site_label()}
-        if shipment_type >= 32 and not form_vars.organisation_id:
+        elif shipment_type >= 32 and not form_vars_get("organisation_id"):
             # Internal Shipment needs from_site_id
             form.errors.organisation_id = current.T("Please enter an Organization/Supplier")
 

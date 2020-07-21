@@ -1062,6 +1062,71 @@ $('.copy-link').click(function(e){
     settings.auth.remove_role = auth_remove_role
 
     # -------------------------------------------------------------------------
+    def auth_user_ondisable(user_id):
+        """
+            If a Volunteer is disabled then:
+                - remove their Organisation affiliation (if-any)
+                - move them to Inactives
+        """
+
+        db = current.db
+
+        # Are they a Volunteer?
+        gtable = db.auth_group
+        mtable = db.auth_membership
+        query = (gtable.uuid.belongs(("RESERVE", "VOLUNTEER"))) & \
+                (gtable.id == mtable.group_id) & \
+                (mtable.user_id == user_id)
+        volunteer = db(query).select(mtable.id,
+                                     limitby = (0, 1)
+                                     ).first()
+        if not volunteer:
+            # Nothing to do
+            return
+
+        auth = current.auth
+        s3db = current.s3db
+
+        # Lookup person_id
+        ltable = s3db.pr_person_user
+        ptable = s3db.pr_person
+        query = (ltable.user_id == user_id) & \
+                (ltable.pe_id == ptable.pe_id)
+        person = db(query).select(ptable.id,
+                                  limitby = (0, 1)
+                                  ).first()
+        person_id = person.id
+
+        # Remove Organisation Affiliation if-any
+        htable = s3db.hrm_human_resource
+        query = (htable.person_id == person_id) & \
+                (htable.deleted == False)
+        hr = db(query).select(htable.id,
+                              limitby = (0, 1)
+                              ).first()
+        if hr:
+            resource = s3db.resource("hrm_human_resource", id = hr.id)
+            resource.delete()
+            db(db.auth_user.id == user_id).update(organisation_id = None)
+            auth.s3_withdraw_role(user_id, "VOLUNTEER", for_pe=[])
+
+        # Move to Inactives
+
+        # Update Tag
+        ttable = s3db.pr_person_tag
+        query = (ttable.person_id == person_id) & \
+                (ttable.tag == "reserve")
+        db(query).update(value = 0)
+
+        # Set Realm to Inactives Forum
+        ftable = s3db.pr_forum
+        forum = db(ftable.name == "Inactives").select(ftable.pe_id,
+                                                      limitby = (0, 1)
+                                                      ).first()
+        realm_entity = forum.pe_id
+        auth.set_realm_entity("pr_person", person_id, entity=realm_entity, force_update=True)
+
+    # -------------------------------------------------------------------------
     def customise_auth_user_resource(r, tablename):
         """
             Hook in custom auth_user_register_onaccept for use when Agency/Existing Users are Approved
@@ -1070,6 +1135,7 @@ $('.copy-link').click(function(e){
         from templates.CCC.controllers import auth_user_register_onaccept
 
         current.s3db.configure("auth_user",
+                               ondisable = auth_user_ondisable,
                                register_onaccept = auth_user_register_onaccept,
                                )
 

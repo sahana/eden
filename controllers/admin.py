@@ -131,15 +131,21 @@ def user():
                    )
 
     def disable_user(r, **args):
-        if not r.id:
+        user_id = r.id
+        if not user_id:
             session.error = T("Can only disable 1 record at a time!")
             redirect(URL(args=[]))
 
-        if r.id == session.auth.user.id: # we're trying to disable ourself
+        if user_id == session.auth.user.id: # we're trying to disable ourself
             session.error = T("Cannot disable your own account!")
             redirect(URL(args=[]))
 
-        db(table.id == r.id).update(registration_key = "disabled")
+        # Call Custom Hook, if present
+        ondisable = s3db.get_config("auth_user", "ondisable")
+        if callable(ondisable):
+            ondisable(user_id)
+
+        db(table.id == user_id).update(registration_key = "disabled")
         session.confirmation = T("User Account has been Disabled")
         redirect(URL(args=[]))
 
@@ -267,7 +273,8 @@ def user():
                 get_vars.update({"user.id":str(r.id)})
                 r.id = None
                 s3db.configure(r.tablename,
-                               delete_next = URL(c="default", f="user/logout"))
+                               delete_next = URL(c="default", f="user/logout"),
+                               )
                 s3.crud.confirm_delete = T("You are attempting to delete your own account - are you sure you want to proceed?")
 
         if r.http == "GET" and not r.method:
