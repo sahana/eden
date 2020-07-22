@@ -955,6 +955,7 @@ def config(settings):
                             S3TextFilter,
                             StringTemplateParser,
                             s3_get_filter_opts,
+                            s3_text_represent,
                             )
 
             # Make last name mandatory
@@ -979,6 +980,18 @@ def config(settings):
             avtable = s3db.pr_person_availability
             field = avtable.hours_per_week
             field.readable = field.writable = True
+            field = avtable.schedule
+            field.readable = field.writable = True
+            field.represent = lambda v: \
+                              s3_text_represent(v,
+                                                lines = 5 if r.record else 3,
+                                                _class = "availability-times",
+                                                )
+            field.comment = DIV(_class = "tooltip",
+                                _title = "%s|%s" % (T("Availability Schedule"),
+                                                    T("Specify days/hours like: Monday 10-12; Tuesday 10-12 and 14-19; Friday 13-15"),
+                                                    ),
+                                )
 
             # Hide map selector in address
             atable = s3db.pr_address
@@ -1248,11 +1261,13 @@ def config(settings):
                                        ),
                         (T("Occupation / Speciality"), "person_details.occupation"),
                         "availability.hours_per_week",
+                        "availability.schedule",
                         "volunteer_record.comments",
                         ])
                     list_fields.extend([
                         "occupation_type_person.occupation_type_id",
                         "availability.hours_per_week",
+                        "availability.schedule",
                         (T("Mobile Phone"), "phone.value"),
                         "current_address.location_id$addr_postcode",
                         (T("Place of Residence"), "current_address.location_id$L3"),
@@ -1339,6 +1354,7 @@ def config(settings):
                                         "volunteer_record.end_date",
                                         "volunteer_record.status",
                                         "availability.hours_per_week",
+                                        "availability.schedule",
                                         "volunteer_record.comments",
                                         ])
 
@@ -2135,44 +2151,45 @@ def rlp_active_deployments(ctable, from_date=None, to_date=None):
 # =============================================================================
 def rlp_deployed_with_org(person_id):
     """
-        Check whether volunteer has an active or upcoming deployment
-        managed by the current user (i.e. where user is either HRMANAGER
-        for the deploying organisation, or COORDINATOR)
+        Check whether one or more volunteers have active or upcoming
+        deployments managed by the current user (i.e. where user is
+        either HRMANAGER for the deploying organisation, or COORDINATOR)
+
+        @param person_id: a pr_person record ID, or a set|list|tuple thereof
     """
 
     s3 = current.response.s3
+
+    if isinstance(person_id, (list, tuple)):
+        person_ids = set(person_id)
+    elif not isinstance(person_id, set):
+        person_ids = {person_id}
+    else:
+        person_ids = person_id
 
     # Cache in response.s3 (we may need to check this at several points)
     deployed_with_org = s3.rlp_deployed_with_org
     if not deployed_with_org:
         deployed_with_org = s3.rlp_deployed_with_org = set()
-    elif person_id in deployed_with_org:
+    elif all(person_id in deployed_with_org for person_id in person_ids):
         return True
 
-    s3db = current.s3db
-    now = current.request.utcnow
+    # Check all other person_ids
+    check_ids = person_ids - deployed_with_org
 
-    deployed = lambda ctable: rlp_active_deployments(ctable, now)
-    s3db.add_components("pr_person",
-                        hrm_delegation = {"name": "deployment",
-                                          "joinby": "person_id",
-                                          "filterby": deployed,
-                                          },
-                        )
+    today = current.request.utcnow.date()
+    dtable = current.s3db.hrm_delegation
+    query = current.auth.s3_accessible_query("read", dtable) & \
+            (dtable.person_id.belongs(check_ids)) & \
+            rlp_active_deployments(dtable, from_date=today) & \
+            (dtable.deleted == False)
+    deployed = current.db(query).select(dtable.person_id)
+    deployed_with_org |= {row.person_id for row in deployed}
 
-    resource = s3db.resource("pr_person",
-                             id = person_id,
-                             filter = FS("deployment.id") != None,
-                             )
-    rows = resource.select(["deployment.id"],
-                           as_rows = True,
-                           limit = 1,
-                           )
-    if not rows:
-        return False
+    # Update cache
+    s3.rlp_deployed_with_org = deployed_with_org
 
-    deployed_with_org.add(person_id)
-    return True
+    return all(person_id in deployed_with_org for person_id in person_ids)
 
 # =============================================================================
 def rlp_vol_rheader(r, tabs=None):
@@ -2488,12 +2505,15 @@ class rlp_DelegatedPersonRepresent(S3Represent):
         person_ids = {row.id for row in rows}
 
         # For all persons found, get the alias
-        dtable = s3db.pr_person_details
-        query = (dtable.person_id.belongs(person_ids)) & \
-                (dtable.deleted == False)
-        details = db(query).select(dtable.person_id, dtable.alias)
+        pdtable = s3db.pr_person_details
+        query = (pdtable.person_id.belongs(person_ids)) & \
+                (pdtable.deleted == False)
+        details = db(query).select(pdtable.person_id, pdtable.alias)
         aliases = {item.person_id: item.alias for item in details}
         self.queries += 1
+
+        # Check which persons are currently deployed with org
+        rlp_deployed_with_org(person_ids)
 
         for row in rows:
             alias = aliases.get(row.id, "***")
@@ -2509,7 +2529,8 @@ class rlp_DelegatedPersonRepresent(S3Represent):
             @param row: the Row
         """
 
-        if self.coordinator:
+        if self.coordinator or \
+           row.id in current.response.s3.rlp_deployed_with_org:
             repr_str = "[%s] %s" % (row.pe_label, s3_fullname(row))
         else:
             repr_str = "[%s] %s" % (row.pe_label, row.alias)

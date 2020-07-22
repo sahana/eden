@@ -372,6 +372,7 @@ class register(S3CustomController):
                       #"start_date": formvars.start_date,
                       #"end_date": formvars.end_date,
                       "hours_per_week": formvars.hours_per_week,
+                      "schedule": formvars.schedule,
                       "skill_id": formvars.skill_id,
                       "comments": formvars.comments,
                       }
@@ -504,7 +505,7 @@ class register(S3CustomController):
                       utable.last_name,
                       s3_date("date_of_birth",
                               label = T("Date of Birth"),
-                              future = -96,
+                              future = -156,
                               empty = False,
                               ),
                       # --------------------------------------------
@@ -600,6 +601,15 @@ class register(S3CustomController):
                                                               ),
                                           ),
                             ),
+                      Field("schedule", "text",
+                            label = T("Availability Schedule"),
+                            widget = s3_comments_widget,
+                            comment = DIV(_class = "tooltip",
+                                          _title = "%s|%s" % (T("Availability Schedule"),
+                                                              T("Specify days/hours like: Monday 10-12; Tuesday 10-12 and 14-19; Friday 13-15"),
+                                                              ),
+                                          ),
+                            ),
                       s3db.hrm_multi_skill_id(
                             label = T("Skills / Resources"),
                             widget = S3GroupedOptionsWidget(cols = 1,
@@ -633,8 +643,8 @@ class register(S3CustomController):
                        (8, T("Address")),
                        (11, T("Occupation")),
                        (13, T("Availability and Resources")),
-                       (17, T("Comments")),
-                       (18, T("Privacy")),
+                       (18, T("Comments")),
+                       (19, T("Privacy")),
                        )
 
         return formfields, required_fields, subheadings
@@ -870,21 +880,23 @@ class register(S3CustomController):
 
         # Register availability
         hours_per_week = custom.get("hours_per_week")
-        if hours_per_week:
+        schedule = custom.get("schedule")
+        if hours_per_week or schedule:
             atable = s3db.pr_person_availability
             query = (atable.person_id == person_id) & \
                     (atable.deleted == False)
             availability = db(query).select(atable.id,
-                                            atable.person_id,
-                                            atable.hours_per_week,
                                             limitby = (0, 1),
                                             ).first()
             if availability:
-                availability.update_record(hours_per_week = hours_per_week)
+                availability.update_record(hours_per_week = hours_per_week,
+                                           schedule = schedule,
+                                           )
                 s3db_onaccept(atable, availability, method="update")
             else:
                 availability = {"person_id": person_id,
                                 "hours_per_week": hours_per_week,
+                                "schedule": schedule,
                                 }
                 availability["id"] = atable.insert(**availability)
                 set_record_owner(atable, availability, owned_by_user=user_id)
