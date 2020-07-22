@@ -1976,11 +1976,17 @@
         <xsl:variable name="Options" select="col[@field='Availability']/text()"/>
         <xsl:variable name="Comments" select="col[@field='Availability Comments']/text()"/>
         <xsl:variable name="WeeklyHours" select="col[@field='Availability Weekly Hours']/text()"/>
+        <xsl:variable name="Schedule" select="col[@field='Availability Schedule']/text()"/>
 
         <resource name="pr_person_availability">
             <xsl:if test="$WeeklyHours!=''">
                 <data field="hours_per_week">
                     <xsl:value-of select="$WeeklyHours"/>
+                </data>
+            </xsl:if>
+            <xsl:if test="$Schedule!=''">
+                <data field="schedule">
+                    <xsl:value-of select="$Schedule"/>
                 </data>
             </xsl:if>
             <xsl:if test="$Options!=''">
