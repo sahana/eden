@@ -1553,9 +1553,13 @@ def config(settings):
             msg_list_empty = T("No Deployments currently registered"),
             )
 
+        auth = current.auth
+        coordinator = auth.s3_has_role("COORDINATOR")
+
         # Basic organizer configuration
         organize = {"start": "date",
                     "end": "end_date",
+                    "start_editable": coordinator,
                     "color": "status",
                     "colors": {"REQ":  "#d554a2",
                                "APPR": "#408d40",
@@ -1643,7 +1647,7 @@ def config(settings):
             record = r.record
             if record:
                 min_date = min(record.date, tomorrow) if record.date else tomorrow
-            else:
+            elif not coordinator:
                 min_date = tomorrow
             delegation_workflow(r.resource.table, record, person_id=volunteer_id)
 
@@ -1661,7 +1665,7 @@ def config(settings):
             # Determine earliest start date
             if record:
                 min_date = min(record.date, tomorrow) if record.date else tomorrow
-            else:
+            elif not coordinator:
                 min_date = tomorrow
 
             organize["title"] = "organisation_id"
