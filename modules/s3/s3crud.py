@@ -352,25 +352,28 @@ class S3CRUD(S3Method):
             if "id" in request.post_vars:
                 post_vars = request.post_vars
                 original = str(post_vars.id)
-                formkey = session.get("_formkey[%s/None]" % tablename)
-                formname = "%s/%s" % (tablename, original)
-                session["_formkey[%s]" % formname] = formkey
-                if "deleted" in table:
-                    table.deleted.writable = True
-                    post_vars["deleted"] = False
-                if "created_on" in table:
-                    table.created_on.writable = True
-                    post_vars["created_on"] = request.utcnow
-                if "created_by" in table:
-                    table.created_by.writable = True
-                    if current.auth.user:
-                        post_vars["created_by"] = current.auth.user.id
-                    else:
-                        post_vars["created_by"] = None
-                post_vars["_undelete"] = True
-                post_vars["_formname"] = formname
-                post_vars["id"] = original
-                request.vars.update(**post_vars)
+                if original:
+                    formkey = session.get("_formkey[%s/None]" % tablename)
+                    formname = "%s/%s" % (tablename, original)
+                    session["_formkey[%s]" % formname] = formkey
+                    if "deleted" in table:
+                        table.deleted.writable = True
+                        post_vars["deleted"] = False
+                    if "created_on" in table:
+                        table.created_on.writable = True
+                        post_vars["created_on"] = request.utcnow
+                    if "created_by" in table:
+                        table.created_by.writable = True
+                        if current.auth.user:
+                            post_vars["created_by"] = current.auth.user.id
+                        else:
+                            post_vars["created_by"] = None
+                    post_vars["_undelete"] = True
+                    post_vars["_formname"] = formname
+                    post_vars["id"] = original
+                    request.vars.update(**post_vars)
+                else:
+                    original = None
             else:
                 original = None
 
