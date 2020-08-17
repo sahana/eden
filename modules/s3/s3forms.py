@@ -344,13 +344,13 @@ class S3SQLForm(object):
 
     # -------------------------------------------------------------------------
     def _populate(self,
-                    from_table=None,
-                    from_record=None,
-                    map_fields=None,
-                    data=None,
-                    formfields=None,
-                    format=None,
-                    ):
+                  from_table=None,
+                  from_record=None,
+                  map_fields=None,
+                  data=None,
+                  formfields=None,
+                  format=None,
+                  ):
         """
             Pre-populate the form with values from a previous record or
             controller-submitted data
@@ -404,21 +404,18 @@ class S3SQLForm(object):
             row = current.db(query).select(limitby=(0, 1), *fields).first()
             if row:
                 if isinstance(map_fields, dict):
-                    record = Storage([(f, row[map_fields[f]])
-                                      for f in map_fields])
+                    record = {f: row[map_fields[f]] for f in map_fields}
                 else:
-                    record = Storage(row)
+                    record = row.as_dict()
 
         # Pre-populate from call?
         elif isinstance(data, dict):
-            record = Storage([(f, data[f])
-                              for f in data
-                                if f in table.fields and
-                                   table[f].writable])
+            record = {f: data[f] for f in data
+                                 if f in table.fields and table[f].writable}
 
         # Add missing fields to pre-populated record
         if record:
-            missing_fields = Storage()
+            missing_fields = {}
             if formfields:
                 for f in formfields:
                     fname = f.name
@@ -512,11 +509,9 @@ class S3SQLDefaultForm(S3SQLForm):
             # Add asterisk to labels of required fields
             mark_required = self._config("mark_required", default=[])
             labels, required = s3_mark_required(table, mark_required)
-            if required:
-                # Show the key if there are any required fields.
-                s3.has_required = True
-            else:
-                s3.has_required = False
+
+            # Show required-hint if there are any required fields.
+            s3.has_required = required
 
         # Determine form style
         if format == "plain":
@@ -952,14 +947,14 @@ class S3SQLCustomForm(S3SQLForm):
             labels = None
 
         # Choose formstyle
-        settings = s3.crud
+        crud_settings = s3.crud
         if format == "plain":
             # Simple formstyle works best when we have no formatting
             formstyle = "table3cols"
         elif readonly:
-            formstyle = settings.formstyle_read
+            formstyle = crud_settings.formstyle_read
         else:
-            formstyle = settings.formstyle
+            formstyle = crud_settings.formstyle
 
         # Retrieve the record
         record = None
@@ -1097,14 +1092,10 @@ class S3SQLCustomForm(S3SQLForm):
         # Prepopulate from another record?
         get_option = options.get
         if not record_id and request.http == "GET":
-            data = get_option("data")
-            from_table = get_option("from_table")
-            from_record = get_option("from_record")
-            map_fields = get_option("map_fields")
-            data = self._populate(from_table = from_table,
-                                  from_record = from_record,
-                                  map_fields = map_fields,
-                                  data = data,
+            data = self._populate(from_table = get_option("from_table"),
+                                  from_record = get_option("from_record"),
+                                  map_fields = get_option("map_fields"),
+                                  data = get_option("data"),
                                   format = format,
                                   formfields = formfields
                                   )
@@ -1123,14 +1114,14 @@ class S3SQLCustomForm(S3SQLForm):
                                upload = s3.download_url,
                                readonly = readonly,
                                separator = "",
-                               submit_button = settings.submit_button,
+                               submit_button = crud_settings.submit_button,
                                buttons = buttons,
                                *formfields)
 
         # Style the Submit button, if-requested
-        if settings.submit_style and not settings.custom_submit:
+        if crud_settings.submit_style and not crud_settings.custom_submit:
             try:
-                form[0][-1][0][0]["_class"] = settings.submit_style
+                form[0][-1][0][0]["_class"] = crud_settings.submit_style
             except (KeyError, IndexError, TypeError):
                 # Submit button has been removed or a different formstyle,
                 # such as Bootstrap (which is already styled anyway)
@@ -1158,12 +1149,10 @@ class S3SQLCustomForm(S3SQLForm):
             else:
                 undelete = False
 
-            link = get_option("link")
-            hierarchy = get_option("hierarchy")
             self.accept(form,
                         format = format,
-                        link = link,
-                        hierarchy = hierarchy,
+                        link = get_option("link"),
+                        hierarchy = get_option("hierarchy"),
                         undelete = undelete,
                         )
             # Post-process the form submission after all records have
@@ -2542,6 +2531,15 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
     prefix = "sub"
 
+    def __init__(self, selector, **options):
+
+        super(S3SQLInlineComponent, self).__init__(selector, **options)
+
+        self.alias = None
+        self.resource = None
+
+        self.upload = {}
+
     # -------------------------------------------------------------------------
     def resolve(self, resource):
         """
@@ -2835,8 +2833,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
             value = json.dumps(value, separators=SEPARATORS)
         if data is None:
             raise SyntaxError("No resource structure information")
-
-        self.upload = Storage()
 
         if options.multiple is False:
             multiple = False
@@ -3572,7 +3568,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         filterby = self.options["filterby"]
         if not filterby:
-            return
+            return None
         if not isinstance(filterby, (list, tuple)):
             filterby = [filterby]
 
