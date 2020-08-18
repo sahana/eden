@@ -1395,7 +1395,7 @@ class S3SQLCustomForm(S3SQLForm):
 
         # Retrieve the row
         return current.db(query).select(*fields,
-                                        limitby = (0, 1),
+                                        limitby = (0, 1)
                                         ).first()
 
     # -------------------------------------------------------------------------
