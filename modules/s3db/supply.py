@@ -420,7 +420,7 @@ $.filterOptionsS3({
                            label = T("Year of Manufacture"),
                            represent = lambda v: v or NONE,
                            requires = IS_EMPTY_OR(
-                                        IS_INT_IN_RANGE(1900, current.request.now.year)
+                                        IS_INT_IN_RANGE(1900, current.request.now.year + 1)
                                         ),
                            ),
                      Field("weight", "double",
@@ -1160,7 +1160,8 @@ $.filterOptionsS3({
         if quantity:
             query &= (table.quantity == quantity)
         duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
+                                             limitby = (0, 1)
+                                             ).first()
         if duplicate:
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
