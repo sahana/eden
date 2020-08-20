@@ -151,15 +151,10 @@ class S3GroupedItemsReport(S3Method):
         labels = report_config.get("labels")
         represent = report_config.get("groupby_represent")
 
-        if representation in ("pdf", "xls"):
-            as_dict = True
-        else:
-            as_dict = False
-
         data = gi.json(fields = display_cols,
                        labels = labels,
                        represent = represent,
-                       as_dict = as_dict,
+                       as_dict = representation in ("pdf", "xls"),
                        )
 
         group_headers = report_config.get("group_headers", False)
@@ -639,7 +634,7 @@ class S3GroupedItemsTable(object):
 
         pdf_header = self.pdf_header
         if callable(pdf_header):
-            pdf_header = lambda r, title=title: self.pdf_header(r, title=title)
+            pdf_header = lambda r, t=title: self.pdf_header(r, title=t)
 
         pdf_footer = self.pdf_footer
 
@@ -1451,9 +1446,8 @@ class S3GroupedItems(object):
         aggregates = self._aggregates
         totals = {}
         for k, a in aggregates.items():
-            method = k[0]
             # @todo: call represent for totals
-            totals[colname] = s3_str(a.result)
+            totals[k[1]] = s3_str(a.result)
         output["t"] = totals
 
         # Convert to JSON unless requested otherwise
@@ -1481,7 +1475,8 @@ class S3GroupAggregate(object):
         self.result = self.__compute(method, values)
 
     # -------------------------------------------------------------------------
-    def __compute(self, method, values):
+    @staticmethod
+    def __compute(method, values):
         """
             Compute the aggregated value
 
