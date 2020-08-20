@@ -8,7 +8,6 @@
 """
 
 module = request.controller
-resourcename = request.function
 
 if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
@@ -61,11 +60,11 @@ def index2():
             start = int(get_vars.displayStart) if get_vars.displayStart else 0
             limit = int(get_vars.pageLength) if get_vars.pageLength else s3.ROWSPERPAGE
             data = resource.select(list_fields,
-                                   start=start,
-                                   limit=limit,
-                                   orderby=orderby,
-                                   count=True,
-                                   represent=True)
+                                   start = start,
+                                   limit = limit,
+                                   orderby = orderby,
+                                   count = True,
+                                   represent = True)
             filteredrows = data["numrows"]
             if totalrows is None:
                 totalrows = filteredrows
@@ -77,13 +76,13 @@ def index2():
                 warehouses = dt.html(totalrows,
                                      filteredrows,
                                      "warehouse_list_1",
-                                     dt_ajax_url=URL(c="inv",
-                                                  f="index2",
-                                                  extension="aadata",
-                                                  vars={"id":"warehouse_list_1"},
-                                                  ),
-                                     dt_group=2,
-                                     dt_searching="true",
+                                     dt_ajax_url = URL(c = "inv",
+                                                       f = "index2",
+                                                       extension = "aadata",
+                                                       vars = {"id":"warehouse_list_1"},
+                                                       ),
+                                     dt_group = 2,
+                                     dt_searching = "true",
                                      )
             else:
                 warehouse = dt.json(totalrows,
@@ -118,9 +117,10 @@ def index2():
                         orderby = default_orderby
                 site_list = {}
                 data = resource.select(list_fields,
-                                       limit=None,
-                                       orderby=orderby,
-                                       count=True)
+                                       limit = None,
+                                       orderby = orderby,
+                                       count = True
+                                       )
                 filteredrows = data["numrows"]
                 if totalrows is None:
                     totalrows = filteredrows
@@ -140,27 +140,28 @@ def index2():
                 start = int(get_vars.displayStart) if get_vars.displayStart else 0
                 limit = int(get_vars.pageLength) if get_vars.pageLength else s3.ROWSPERPAGE
                 data = resource.select(list_fields,
-                                       orderby=orderby,
-                                       start=start,
-                                       limit=limit,
-                                       represent=True)
+                                       orderby = orderby,
+                                       start = start,
+                                       limit = limit,
+                                       represent = True)
                 rfields = data["rfields"]
                 rows = data["rows"]
                 dt = S3DataTable(rfields,
                                  rows,
-                                 orderby=orderby,
+                                 orderby = orderby,
                                  )
-                custom_actions = [dict(label=str(T("Warehouse")),
-                                  _class="action-icon",
-                                  img="/%s/static/img/markers/gis_marker.image.Agri_Commercial_Food_Distribution_Center_S1.png" % appname,
-                                  url=URL(c="inv", f="warehouse",
-                                          args=["[id]", "update"]
-                                          )
-                                  ),
-                                 ]
+                custom_actions = [{"label": s3_str(T("Warehouse")),
+                                   "_class": "action-icon",
+                                   "img": "/%s/static/img/markers/gis_marker.image.Agri_Commercial_Food_Distribution_Center_S1.png" % appname,
+                                   "url": URL(c = "inv",
+                                              f = "warehouse",
+                                              args = ["[id]", "update"]
+                                              )
+                                   },
+                                  ]
                 dt.defaultActionButtons(resource, custom_actions)
                 if representation == "html":
-                    rows = current.db(table.quantity<100.0).select(table.id, table.quantity)
+                    rows = current.db(table.quantity < 100.0).select(table.id, table.quantity)
                     errorList = []
                     warningList = []
                     alertList = []
@@ -174,16 +175,16 @@ def index2():
                     inventory = dt.html(totalrows,
                                         filteredrows,
                                         "inventory_list_1",
-                                        dt_action_col=-1,
-                                        dt_ajax_url=URL(c="inv",
-                                                     f="index2",
-                                                     extension="aadata",
-                                                     vars={"id":"inventory_list_1"},
-                                                     ),
+                                        dt_action_col = -1,
+                                        dt_ajax_url = URL(c = "inv",
+                                                          f = "index2",
+                                                          extension = "aadata",
+                                                          vars = {"id":"inventory_list_1"},
+                                                          ),
                                         dt_bulk_actions = "Adjust",
-                                        dt_group=[1,2],
-                                        dt_group_totals=[formatted_site_list],
-                                        dt_searching="true",
+                                        dt_group = [1, 2],
+                                        dt_group_totals = [formatted_site_list],
+                                        dt_searching = "true",
                                         dt_styles = {"dtdisable": errorList,
                                                      "dtwarning": warningList,
                                                      "dtalert": alertList,
@@ -201,25 +202,24 @@ def index2():
                                         filteredrows,
                                         "inventory_list_1",
                                         int(get_vars.draw),
-                                        dt_action_col=-1,
+                                        dt_action_col = -1,
                                         dt_bulk_actions = "Adjust",
-                                        dt_group_totals=[formatted_site_list],
+                                        dt_group_totals = [formatted_site_list],
                                         )
                     return inventory
                 else:
                     # Probably not the way to do it.... but
                     s3db.configure("inv_inv_item",
-                                   list_fields=list_fields,
-                                   report_groupby="site_id",
-                                   pdf_groupby="site_id",
+                                   list_fields = list_fields,
+                                   report_groupby = "site_id",
+                                   pdf_groupby = "site_id",
                                    )
                     s3.filter = filter
                     r = s3_request("inv", "inv_item",
                                    vars={"orderby" : orderby})
                     r.resource = resource
-                    output = r(
-                               pdf_groupby='site_id',
-                               dt_group=1,
+                    output = r(pdf_groupby = "site_id",
+                               dt_group = 1,
                                )
                     return output
         # Third table
@@ -236,10 +236,11 @@ def index2():
                 if orderby is None:
                     orderby = default_orderby
             data = resource.select(list_fields,
-                                   limit=None,
-                                   orderby=orderby,
-                                   count=True,
-                                   represent=True)
+                                   limit = None,
+                                   orderby = orderby,
+                                   count = True,
+                                   represent = True
+                                   )
             rows = data["rows"]
             rfields = data["rfields"]
             numrows = data["numrows"]
@@ -249,20 +250,20 @@ def index2():
                 supply_items = dt.html(numrows,
                                        numrows,
                                        "supply_list_1",
-                                       dt_action_col=1,
-                                       dt_ajax_url=URL(c="inv",
-                                                       f="index2",
-                                                       extension="aadata",
-                                                       vars={"id": "supply_list_1"},
-                                                       ),
-                                       dt_pageLength=10,
+                                       dt_action_col = 1,
+                                       dt_ajax_url = URL(c = "inv",
+                                                         f = "index2",
+                                                         extension = "aadata",
+                                                         vars = {"id": "supply_list_1"},
+                                                         ),
+                                       dt_pageLength = 10,
                                        )
             else:
                 supply_items = dt.json(numrows,
                                        numrows,
                                        "supply_list_1",
                                        int(get_vars.draw),
-                                       dt_action_col=1,
+                                       dt_action_col = 1,
                                        )
                 return supply_items
         r = s3_request(prefix = "inv", name = "inv_item")
@@ -316,7 +317,7 @@ def warehouse():
                 recvtable = s3db.inv_recv
                 if r.component_id:
                     record = db(recvtable.id == r.component_id).select(recvtable.status,
-                                                                       limitby=(0, 1)
+                                                                       limitby = (0, 1)
                                                                        ).first()
                     set_recv_attr(record.status)
                 else:
@@ -462,7 +463,6 @@ def supplier():
         msg_list_empty = T("No Suppliers currently registered")
         )
 
-
     # Open record in this controller after creation
     s3db.configure("org_organisation",
                    create_next = URL(c="inv", f="supplier",
@@ -482,7 +482,8 @@ def inv_item():
         if tn == "inv_track_item":
             table = s3db.inv_track_item
             record = db(table.id == id).select(table.item_id,
-                                               limitby=(0, 1)).first()
+                                               limitby = (0, 1)
+                                               ).first()
             redirect(URL(c = "inv",
                          f = "track_movement",
                          args = [],
@@ -494,18 +495,17 @@ def inv_item():
     table = s3db[tablename]
 
     # Limit site_id to sites the user has permissions for
-    auth.permitted_facilities(table=table,
-                              error_msg=T("You do not have permission for any site to add an inventory item."))
+    auth.permitted_facilities(table = table,
+                              error_msg = T("You do not have permission for any site to add an inventory item."))
 
     s3.crud_strings[tablename].msg_list_empty = T("No Stock currently registered")
 
     report = get_vars.get("report")
     if report == "mon":
-            s3.crud_strings[tablename].update(dict(
-                title_list = T("Monetization Report"),
-                subtitle_list = T("Monetization Details"),
-                #msg_list_empty = T("No Stock currently registered"),
-              ))
+            s3.crud_strings[tablename].update({"title_list": T("Monetization Report"),
+                                               "subtitle_list": T("Monetization Details"),
+                                               #"msg_list_empty": T("No Stock currently registered"),
+                                               })
             s3db.configure(tablename,
                            list_fields = ["id",
                                           (T("Donor"), "supply_org_id"),
@@ -585,20 +585,24 @@ def inv_item():
                         resource.delete(format="xml", cascade=True)
             resource.skip_import = True
     s3.import_prep = import_prep
-    # Upload for configuration (add replace option)
-    s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
 
-    output = s3_rest_controller(#csv_extra_fields = [dict(label="Organisation",
-                                #                         field=s3db.org_organisation_id(comment=None))
+    # Upload for configuration (add replace option)
+    s3.importerPrep = lambda: {"ReplaceOption": T("Remove existing data before import")}
+
+    output = s3_rest_controller(#csv_extra_fields = [{"label": "Organisation",
+                                #                     "field": s3db.org_organisation_id(comment = None)
+                                #                     },
                                 #                    ],
                                 pdf_orientation = "Landscape",
                                 pdf_table_autogrow = "B",
                                 pdf_groupby = "site_id, item_id",
                                 pdf_orderby = "expiry_date, supply_org_id",
-                                rheader=s3db.inv_rheader,
+                                rheader = s3db.inv_rheader,
                                 )
 
-    if "add_btn" in output and not settings.get_inv_direct_stock_edits():
+    if not settings.get_inv_direct_stock_edits() and \
+       isinstance(output, dict) and \
+       "add_btn" in output:
         del output["add_btn"]
 
     return output
@@ -654,7 +658,8 @@ def inv_item_quantity():
             (table.item_pack_id == ptable.id)
     record = db(query).select(table.quantity,
                               ptable.quantity,
-                              limitby=(0, 1)).first()
+                              limitby = (0, 1)
+                              ).first()
 
     d = {"iquantity" : record.inv_inv_item.quantity,
          "pquantity" : record.supply_item_pack.quantity,
@@ -728,7 +733,7 @@ def send_returns():
         session.error = T("You do not have permission to return this sent shipment.")
 
     send_record = db(stable.id == send_id).select(stable.status,
-                                                  limitby=(0, 1)
+                                                  limitby = (0, 1)
                                                   ).first()
     inv_ship_status = s3db.inv_ship_status
     if send_record.status == inv_ship_status["IN_PROCESS"]:
@@ -747,7 +752,8 @@ def send_returns():
                            owned_by_user = None,
                            owned_by_group = ADMIN)
     recv_row = db(tracktable.send_id == send_id).select(tracktable.recv_id,
-                                                        limitby = (0, 1)).first()
+                                                        limitby = (0, 1)
+                                                        ).first()
     if recv_row:
         recv_id = recv_row.recv_id
         rtable[recv_id] = dict(date = request.utcnow,
@@ -777,7 +783,7 @@ def return_process():
         session.error = T("You do not have permission to return this sent shipment.")
 
     send_record = db(stable.id == send_id).select(stable.status,
-                                                  limitby=(0, 1)
+                                                  limitby = (0, 1)
                                                   ).first()
     inv_ship_status = s3db.inv_ship_status
     if send_record.status != inv_ship_status["RETURNING"]:
@@ -815,7 +821,8 @@ def return_process():
                            owned_by_user = None,
                            owned_by_group = ADMIN)
     recv_row = db(tracktable.send_id == send_id).select(tracktable.recv_id,
-                                                        limitby = (0, 1)).first()
+                                                        limitby = (0, 1)
+                                                        ).first()
     if recv_row:
         recv_id = recv_row.recv_id
         rtable[recv_id] = dict(date = request.utcnow,
@@ -847,7 +854,8 @@ def send_cancel():
         session.error = T("You do not have permission to cancel this sent shipment.")
 
     send_record = db(stable.id == send_id).select(stable.status,
-                                                  limitby=(0, 1)).first()
+                                                  limitby = (0, 1)
+                                                  ).first()
 
     inv_ship_status = s3db.inv_ship_status
     if send_record.status != inv_ship_status["SENT"]:
@@ -867,7 +875,8 @@ def send_cancel():
                                     owned_by_user = None,
                                     owned_by_group = ADMIN)
     recv_row = db(tracktable.send_id == send_id).select(tracktable.recv_id,
-                                                        limitby = (0, 1)).first()
+                                                        limitby = (0, 1)
+                                                        ).first()
     if recv_row:
         recv_id = recv_row.recv_id
         db(rtable.id == recv_id).update(date = request.utcnow,
@@ -941,7 +950,8 @@ def recv():
     id = request.args(0)
     if id and isinstance(id, int):
         record = db(recvtable.id == id).select(recvtable.recipient_id,
-                                               limitby=(0, 1)).first()
+                                               limitby = (0, 1)
+                                               ).first()
         try:
             if record.recipient_id is None:
                 db(recvtable.id == id).update(recipient_id = auth.s3_logged_in_person())
@@ -1044,7 +1054,7 @@ def recv():
             # depending on status:
             if r.component_id:
                 track_record = db(tracktable.id == r.component_id).select(tracktable.status,
-                                                                          limitby=(0, 1)
+                                                                          limitby = (0, 1)
                                                                           ).first()
                 set_track_attr(track_record.status)
             else:
@@ -1063,7 +1073,7 @@ def recv():
             # depending on status
             if r.id:
                 record = db(recvtable.id == r.id).select(recvtable.status,
-                                                         limitby=(0, 1)
+                                                         limitby = (0, 1)
                                                          ).first()
                 set_recv_attr(record.status)
             else:
@@ -1077,7 +1087,7 @@ def recv():
 
     if len(request.args) > 1 and request.args[1] == "track_item":
         record = db(recvtable.id == request.args[0]).select(recvtable.status,
-                                                            limitby=(0, 1)
+                                                            limitby = (0, 1)
                                                             ).first()
         status = record.status if record else None
         if status == SHIP_STATUS_SENT:
@@ -1179,8 +1189,9 @@ def req_item_in_shipment(shipment_item,
 
     # Check for req_items
     if item_id in req_items:
-        shipment_to_req_type = dict(recv = "fulfil",
-                                    send = "transit")
+        shipment_to_req_type = {"recv": "fulfil",
+                                "send": "transit",
+                                }
         quantity_req_type = "quantity_%s" % shipment_to_req_type[shipment_type]
 
         # This item has been requested from this inv
@@ -1198,7 +1209,7 @@ def req_item_in_shipment(shipment_item,
 
         # Link the shipment_item to the req_item
         s3db[shipment_item_table][shipment_item[shipment_item_table].id] = \
-            dict(req_item_id = req_item_id)
+            {"req_item_id": req_item_id}
 
         # Flag req record to update status_fulfil
         return req_item.req_id, req_item.id
@@ -1225,7 +1236,7 @@ def recv_process():
                                                   rtable.status,
                                                   rtable.site_id,
                                                   rtable.recv_ref,
-                                                  limitby=(0, 1),
+                                                  limitby = (0, 1)
                                                   ).first()
 
     # Check status
@@ -1264,7 +1275,8 @@ def recv_process():
     stable = db.inv_send
     tracktable = db.inv_track_item
     send_row = db(tracktable.recv_id == recv_id).select(tracktable.send_id,
-                                                        limitby=(0, 1)).first()
+                                                        limitby = (0, 1)
+                                                        ).first()
     if send_row:
         send_id = send_row.send_id
         db(stable.id == send_id).update(status = inv_ship_status["RECEIVED"],
@@ -1308,7 +1320,8 @@ def recv_cancel():
         redirect(URL(c="inv", f="recv", args=[recv_id]))
 
     recv_record = db(rtable.id == recv_id).select(rtable.status,
-                                                  limitby=(0, 1)).first()
+                                                  limitby = (0, 1)
+                                                  ).first()
 
     inv_ship_status = s3db.inv_ship_status
     if recv_record.status != inv_ship_status["RECEIVED"]:
@@ -1353,20 +1366,21 @@ def recv_cancel():
             req_id = track_item.req_item_id
             req_item = db(ritable.id == req_id).select(ritable.quantity_fulfil,
                                                        ritable.item_pack_id,
-                                                       limitby=(0, 1)).first()
+                                                       limitby = (0, 1)
+                                                       ).first()
             req_quantity = req_item.quantity_fulfil
             # @ToDo: Optimise by reading these 2 in a single DB query
             req_pack_quantity = db(siptable.id == req_item.item_pack_id).select(siptable.quantity,
-                                                                                limitby=(0, 1)
+                                                                                limitby = (0, 1)
                                                                                 ).first().quantity
             track_pack_quantity = db(siptable.id == track_item.item_pack_id).select(siptable.quantity,
-                                                                                    limitby=(0, 1)
+                                                                                    limitby = (0, 1)
                                                                                     ).first().quantity
             quantity_fulfil = s3db.supply_item_add(req_quantity,
                                                    req_pack_quantity,
                                                    - track_item.recv_quantity,
                                                    track_pack_quantity
-                                                  )
+                                                   )
             db(ritable.id == req_id).update(quantity_fulfil = quantity_fulfil)
             s3db.req_update_status(req_id)
 
@@ -1375,7 +1389,8 @@ def recv_cancel():
     db(rtable.id == recv_id).update(date = request.utcnow,
                                     status = inv_ship_status["CANCEL"],
                                     owned_by_user = None,
-                                    owned_by_group = ADMIN)
+                                    owned_by_group = ADMIN
+                                    )
     if send_id != None:
         # The sent record is now set back to SENT so the source warehouse can
         # now cancel this record to get the stock back into their warehouse.
@@ -1383,9 +1398,11 @@ def recv_cancel():
         # a mechanism to circumvent the auditing of stock
         db(stable.id == send_id).update(status = inv_ship_status["SENT"],
                                         owned_by_user = None,
-                                        owned_by_group = ADMIN)
+                                        owned_by_group = ADMIN
+                                        )
     redirect(URL(c="inv", f="recv",
-                 args=[recv_id]))
+                 args=[recv_id]
+                 ))
 
 # =============================================================================
 def track_item():
@@ -1518,7 +1535,7 @@ def adj():
                         if r.record.status == 0:
                             aitable.reason.writable = True
                         record = db(aitable.id == r.component_id).select(aitable.inv_item_id,
-                                                                         limitby=(0, 1)
+                                                                         limitby = (0, 1)
                                                                          ).first()
                         if record.inv_item_id:
                             aitable.item_id.writable = False
@@ -1564,13 +1581,14 @@ def adj():
                                     bin = inv_item.bin,
                                     old_owner_org_id = inv_item.owner_org_id,
                                     new_owner_org_id = inv_item.owner_org_id,
-                                   )
+                                    )
                         redirect(URL(c = "inv",
                                      f = "adj",
                                      args = [adj_id,
                                              "adj_item",
                                              adj_item_id,
-                                             "update"]))
+                                             "update"]
+                                     ))
                     else:
                         table.comments.default = "Complete Stock Adjustment"
                         if "site" in get_vars:
@@ -1617,13 +1635,15 @@ def adj_close():
 
     adj_rec = db(atable.id == adj_id).select(atable.status,
                                              atable.site_id,
-                                             limitby=(0, 1)).first()
+                                             limitby = (0, 1)
+                                             ).first()
     if adj_rec.status != 0:
         session.error = T("This adjustment has already been closed.")
 
     if session.error:
         redirect(URL(c="inv", f="adj",
-                     args=[adj_id]))
+                     args = [adj_id])
+                     )
 
     aitable = s3db.inv_adj_item
     inv_item_table = s3db.inv_inv_item
@@ -1645,7 +1665,7 @@ def adj_close():
                                                 expiry_date = adj_item.expiry_date,
                                                 quantity = adj_item.new_quantity,
                                                 owner_org_id = adj_item.old_owner_org_id,
-                                               )
+                                                )
             # Add the inventory item id to the adjustment record
             db(aitable.id == adj_item.id).update(inv_item_id = inv_item_id)
         elif adj_item.new_quantity is not None:
@@ -1657,7 +1677,7 @@ def adj_close():
                                                                  quantity = adj_item.new_quantity,
                                                                  owner_org_id = adj_item.new_owner_org_id,
                                                                  status = adj_item.new_status,
-                                                                )
+                                                                 )
     # Change the status of the adj record to Complete
     db(atable.id == adj_id).update(status=1)
     # Go to the Inventory of the Site which has adjusted these items

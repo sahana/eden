@@ -22,7 +22,6 @@
 """
 
 module = request.controller
-resourcename = request.function
 
 if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
@@ -42,75 +41,75 @@ s3_datetime_format = settings.get_L10n_datetime_format()
 
 # Options
 building_area_inspected = {
-    1:T("Exterior and Interior"),
-    2:T("Exterior Only")
+    1: T("Exterior and Interior"),
+    2: T("Exterior Only")
 }
 
 building_construction_types = {
-    1:T("Timber frame"), # Wood frame
-    2:T("Steel frame"),
-    3:T("Tilt-up concrete"),
-    4:T("Concrete frame"),
-    5:T("Concrete shear wall"),
-    6:T("Unreinforced masonry"),
-    7:T("Reinforced masonry"),
-    8:T("RC frame with masonry infill"),
-    99:T("Other")
+    1: T("Timber frame"), # Wood frame
+    2: T("Steel frame"),
+    3: T("Tilt-up concrete"),
+    4: T("Concrete frame"),
+    5: T("Concrete shear wall"),
+    6: T("Unreinforced masonry"),
+    7: T("Reinforced masonry"),
+    8: T("RC frame with masonry infill"),
+   99: T("Other")
 }
 
 building_primary_occupancy_opts = {
-    1:T("Dwelling"),
-    2:T("Other residential"),
-    3:T("Public assembly"),
-    4:T("School"),
-    5:T("Religious"),
-    6:T("Commercial/Offices"),
-    7:T("Industrial"),
-    8:T("Government"),
-    9:T("Heritage Listed"), # Historic
-    99:T("Other")
+    1: T("Dwelling"),
+    2: T("Other residential"),
+    3: T("Public assembly"),
+    4: T("School"),
+    5: T("Religious"),
+    6: T("Commercial/Offices"),
+    7: T("Industrial"),
+    8: T("Government"),
+    9: T("Heritage Listed"), # Historic
+   99: T("Other")
 }
 
 building_evaluation_condition = {
-    1:T("Minor/None"),
-    2:T("Moderate"),
-    3:T("Severe")
+    1: T("Minor/None"),
+    2: T("Moderate"),
+    3: T("Severe")
 }
 
 building_estimated_damage = {
-    1:T("None"),
-    2:"0-1%",
-    3:"1-10%",
-    4:"10-30%",
-    5:"30-60%",
-    6:"60-100%",
-    7:"100%"
+    1: T("None"),
+    2: "0-1%",
+    3: "1-10%",
+    4: "10-30%",
+    5: "30-60%",
+    6: "60-100%",
+    7: "100%"
 }
 
 building_estimated_damage_image = {
-    1:"tic.png",
-    2:"1percent.png",
-    3:"10percent.png",
-    4:"10-30percent.png",
-    5:"30-60percent.png",
-    6:"60-100percent.png",
-    7:"cross.png",
+    1: "tic.png",
+    2: "1percent.png",
+    3: "10percent.png",
+    4: "10-30percent.png",
+    5: "30-60percent.png",
+    6: "60-100percent.png",
+    7: "cross.png",
 }
 
 building_posting_l1_opts = {
-    1:"%s (%s)" % (T("Inspected"), T("Green")),
-    2:"%s (%s)" % (T("Restricted Use"), T("Yellow")),
-    3:"%s (%s)" % (T("Unsafe"), T("Red")),
+    1: "%s (%s)" % (T("Inspected"), T("Green")),
+    2: "%s (%s)" % (T("Restricted Use"), T("Yellow")),
+    3: "%s (%s)" % (T("Unsafe"), T("Red")),
 }
 
 building_posting_l2_opts = {
-    1:"%s (%s): G1" % (T("Inspected"), T("Green")),
-    2:"%s (%s): G2" % (T("Inspected"), T("Green")),
-    3:"%s (%s): Y1" % (T("Restricted Use"), T("Yellow")),
-    4:"%s (%s): Y2" % (T("Restricted Use"), T("Yellow")),
-    5:"%s (%s): R1" % (T("Unsafe"), T("Red")),
-    6:"%s (%s): R2" % (T("Unsafe"), T("Red")),
-    7:"%s (%s): R3" % (T("Unsafe"), T("Red")),
+    1: "%s (%s): G1" % (T("Inspected"), T("Green")),
+    2: "%s (%s): G2" % (T("Inspected"), T("Green")),
+    3: "%s (%s): Y1" % (T("Restricted Use"), T("Yellow")),
+    4: "%s (%s): Y2" % (T("Restricted Use"), T("Yellow")),
+    5: "%s (%s): R1" % (T("Unsafe"), T("Red")),
+    6: "%s (%s): R2" % (T("Unsafe"), T("Red")),
+    7: "%s (%s): R3" % (T("Unsafe"), T("Red")),
 }
 
 def uuid8anum():
@@ -574,6 +573,8 @@ def nzseel1():
         @ToDo: Action Button to create a new L2 Assessment from an L1
     """
 
+    resourcename = "nzseel1"
+
     tablename = "%s_%s" % (module, resourcename)
     table = db[tablename]
 
@@ -582,14 +583,15 @@ def nzseel1():
 
     # Subheadings in forms:
     s3db.configure(tablename,
-        deletable=False,
-        create_next = URL(module, resourcename, args="[id]"),
-        subheadings = {"name": ".", # Description in ATC-20
-                       "collapse": "%s / %s" % (T("Overall Hazards"), T("Damage")),
-                       "posting": ".",
-                       "barricades": "%s:" % T("Further Action Recommended"),
-                       "estimated_damage": ".",
-                       })
+                   deletable = False,
+                   create_next = URL(module, resourcename, args="[id]"),
+                   subheadings = {"name": ".", # Description in ATC-20
+                                  "collapse": "%s / %s" % (T("Overall Hazards"), T("Damage")),
+                                  "posting": ".",
+                                  "barricades": "%s:" % T("Further Action Recommended"),
+                                  "estimated_damage": ".",
+                                  },
+                   )
 
     rheader = nzseel1_rheader
 
@@ -648,6 +650,8 @@ def nzseel2():
     """
         RESTful CRUD controller
     """
+
+    resourcename = "nzseel2"
 
     tablename = "%s_%s" % (module, resourcename)
     table = db[tablename]
@@ -754,8 +758,9 @@ def report():
     filter = (table.posting.belongs((5, 6, 7)))
     level2.red = db(query & filter).count()
 
-    return dict(level1=level1,
-                level2=level2)
+    return {"level1": level1,
+            "level2": level2,
+            }
 
 # -----------------------------------------------------------------------------
 #def getformatedData(dbresult):
@@ -839,10 +844,10 @@ def timeline():
             for i in range(8):
                 totals[i] += line[i + 1]
 
-    return dict(inspection=inspection,
-                creation=creation,
-                totals= totals
-                )
+    return {"inspection": inspection,
+            "creation": creation,
+            "totals": totals,
+            }
 
 # -----------------------------------------------------------------------------
 
@@ -858,7 +863,7 @@ def adminLevel():
     dbresult = db(query).select(ltable.path,
                                 ltable.parent,
                                 tableNZ1.estimated_damage
-                               )
+                                )
 
     result = []
     temp = {}
@@ -890,8 +895,8 @@ def adminLevel():
         else:
             name = T("Unknown")
         result.append((name, item))
-    return dict(report=result,
-                )
+    return {"report": result,
+            }
 
 # -----------------------------------------------------------------------------
 

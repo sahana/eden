@@ -676,7 +676,7 @@ def config(settings):
     # Should Requests ask whether Transportation is required?
     settings.req.ask_transport = True
     settings.req.pack_values = False
-    # Disable Request Matching as we don't wwant users making requests to see what stock is available
+    # Disable Request Matching as we don't want users making requests to see what stock is available
     settings.req.prompt_match = False
     # Uncomment to disable Recurring Request
     settings.req.recurring = False # HNRC

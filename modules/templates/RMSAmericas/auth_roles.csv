@@ -547,7 +547,7 @@ national_wh_manager,National Warehouse Manager,,inv,facility,,,READ|CREATE|UPDAT
 national_wh_manager,National Warehouse Manager,,inv,inv_item,,,READ|CREATE|UPDATE|DELETE,,,,,,
 national_wh_manager,National Warehouse Manager,,inv,req_match,,,READ|CREATE|UPDATE|DELETE,,,,,,
 national_wh_manager,National Warehouse Manager,,inv,supplier,,,READ|CREATE|UPDATE|DELETE,,,,,,
-national_wh_manager,National Warehouse Manager,,,,inv_warehouse,,READ|UPDATE,,,,,,
+national_wh_manager,National Warehouse Manager,,,,inv_warehouse,,CREATE|READ|UPDATE|DELETE,,,,,,
 national_wh_manager,National Warehouse Manager,,req,,,,READ|CREATE|UPDATE|DELETE,,,,,,
 national_wh_manager,National Warehouse Manager,,,,req_req,,READ|CREATE|UPDATE|DELETE,,,,,,
 national_wh_manager,National Warehouse Manager,,supply,,,any,READ,,,,,,

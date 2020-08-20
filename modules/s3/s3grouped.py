@@ -187,12 +187,12 @@ class S3GroupedItemsReport(S3Method):
 
                 # Instantiate form
                 filter_form = S3FilterForm(filter_widgets,
-                                           formstyle=filter_formstyle,
-                                           submit=filter_submit,
-                                           clear=filter_clear,
-                                           ajax=True,
-                                           _class="filter-form",
-                                           _id="%s-filter-form" % widget_id,
+                                           formstyle = filter_formstyle,
+                                           submit = filter_submit,
+                                           clear = filter_clear,
+                                           ajax = True,
+                                           _class = "filter-form",
+                                           _id = "%s-filter-form" % widget_id,
                                            )
 
                 # Render against unfiltered resource
@@ -500,7 +500,7 @@ class S3GroupedItemsReport(S3Method):
                                                ),
                                   },
                           ),
-                      _class="gi-export-formats",
+                      _class = "gi-export-formats",
                       )
 
         return formats
@@ -903,7 +903,7 @@ class S3GroupedItemsTable(object):
         if not totals:
             return
 
-        footer_row = TR(_class="gi-column-totals")
+        footer_row = TR(_class = "gi-column-totals")
         if columns:
             label = None
             span = 0
@@ -973,7 +973,7 @@ class S3GroupedItemsTable(object):
                     )
 
         tbody.append(TR(header,
-                        _class="gi-group-header gi-level-%s" % level,
+                        _class = "gi-group-header gi-level-%s" % level,
                         ))
 
     # -------------------------------------------------------------------------
@@ -1302,11 +1302,12 @@ class S3GroupedItems(object):
 
     # -------------------------------------------------------------------------
     def json(self,
-             fields=None,
-             labels=None,
-             represent=None,
-             as_dict=False,
-             master=True):
+             fields = None,
+             labels = None,
+             represent = None,
+             as_dict = False,
+             master = True
+             ):
         """
             Serialize this group as JSON
 
