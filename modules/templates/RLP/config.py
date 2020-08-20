@@ -1066,16 +1066,20 @@ def config(settings):
                     from_date = parse_dt(get_vars.get("available__ge"))
                     to_date = parse_dt(get_vars.get("available__le"))
                     if from_date or to_date:
-                        # Filter to join active deployments during interval
-                        active = lambda ctable: \
-                                 rlp_active_deployments(ctable, from_date, to_date)
-                        s3db.add_components("pr_person",
-                                            hrm_delegation = {"name": "active_deployment",
-                                                              "joinby": "person_id",
-                                                              "filterby": active,
-                                                              },
-                                            )
-                        resource.add_filter(FS("active_deployment.id") == None)
+                        # Filter out volunteers who have a confirmed
+                        # deployment during selected date interval
+                        # (must pre-query to bypass realm limits)
+                        dtable = s3db.hrm_delegation
+                        query = rlp_active_deployments(dtable,
+                                                       from_date,
+                                                       to_date,
+                                                       )
+                        rows = db(query).select(dtable.person_id,
+                                                cache = s3db.cache,
+                                                )
+                        if rows:
+                            unavailable = {row.person_id for row in rows}
+                            resource.add_filter(~FS("id").belongs(unavailable))
 
                     # Currently-Deployed-Filter
                     deployed_now = get_vars.get("deployed_now") == "1"
