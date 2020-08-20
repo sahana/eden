@@ -530,10 +530,10 @@ $.filterOptionsS3({
                             ),
             ]
 
-        report_options = Storage(defaults=Storage(rows="name",
-                                                  cols="item_category_id",
-                                                  fact="count(brand_id)",
-                                                  ),
+        report_options = Storage(defaults = Storage(rows = "name",
+                                                    cols = "item_category_id",
+                                                    fact = "count(brand_id)",
+                                                    ),
                                  )
 
         # Default summary
@@ -640,7 +640,7 @@ $.filterOptionsS3({
                           "item_id$name",
                           "item_id$model",
                           "item_id$comments"
-                         ],
+                          ],
                          label = T("Search"),
                          comment = T("Search for an item by its code, name, model and/or comment."),
                         ),
@@ -1175,35 +1175,34 @@ $.filterOptionsS3({
 
         db = current.db
 
-        formvars = form.vars
-        item_id = formvars.id
-        catalog_id = formvars.catalog_id
+        form_vars = form.vars
+        item_id = form_vars.id
+        catalog_id = form_vars.catalog_id
         catalog_item_id = None
 
         citable = db.supply_catalog_item
         query = (citable.item_id == item_id) & \
-                (citable.deleted == False )
-        rows = db(citable).select(citable.id)
+                (citable.deleted == False)
+        rows = db(query).select(citable.id)
         if not len(rows):
-        # Create supply_catalog_item
+            # Create supply_catalog_item
             catalog_item_id = \
                 citable.insert(catalog_id = catalog_id,
-                               item_category_id = formvars.item_category_id,
+                               item_category_id = form_vars.item_category_id,
                                item_id = item_id
                                )
-        # Update if the catalog/category has changed - if there is only supply_catalog_item
         elif len(rows) == 1:
+            # Update if the catalog/category has changed - if there is only supply_catalog_item
             catalog_item_id = rows.first().id
             catalog_item_id = \
-                db(citable.id == catalog_item_id
-                   ).update(catalog_id = catalog_id,
-                            item_category_id = formvars.item_category_id,
-                            item_id = item_id
-                            )
+                db(citable.id == catalog_item_id).update(catalog_id = catalog_id,
+                                                         item_category_id = form_vars.item_category_id,
+                                                         item_id = item_id,
+                                                         )
         #current.auth.s3_set_record_owner(citable, catalog_item_id, force_update=True)
 
         # Update UM
-        um = formvars.um or db.supply_item.um.default
+        um = form_vars.um or db.supply_item.um.default
         table = db.supply_item_pack
         # Try to update the existing record
         query = (table.item_id == item_id) & \
@@ -1213,14 +1212,15 @@ $.filterOptionsS3({
             # Create a new item packet
             table.insert(item_id = item_id,
                          name = um,
-                         quantity = 1)
+                         quantity = 1,
+                         )
 
-        if formvars.kit:
+        if form_vars.kit:
             # Go to that tab afterwards
-            url = URL(args=["[id]", "kit_item"])
+            url = URL(args = ["[id]", "kit_item"])
             current.s3db.configure("supply_item",
-                                   create_next=url,
-                                   update_next=url,
+                                   create_next = url,
+                                   update_next = url,
                                    )
 
 # =============================================================================
