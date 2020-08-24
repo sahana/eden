@@ -10,6 +10,7 @@ from gluon.html import *
 from gluon.storage import Storage
 from gluon.languages import lazyT
 
+from s3compat import BytesIO
 from s3 import FS, s3_str, s3_truncate, s3_utc
 
 def config(settings):
@@ -1522,61 +1523,66 @@ T("""%(status)s %(message_type)s for %(area_description)s with %(priority)s prio
     def _get_or_create_attachment(alert_id):
         """
             Retrieve the CAP attachment for the alert_id if present
-            else creates CAP file as attachment to be sent with the email
-            returns the document_id for the CAP file
+            else creates CAP file as attachment to be sent with the
+            email
+
+            @param alert_id: the cap_alert record ID
+
+            @returns: the doc_id of the CAP file
         """
 
         s3db = current.s3db
         rtable = s3db.cap_resource
         dtable = s3db.doc_document
+
+        # Check for existing CAP XML resource
         query = (rtable.alert_id == alert_id) & \
                 (rtable.mime_type == "cap") & \
                 (rtable.deleted != True) & \
                 (dtable.doc_id == rtable.doc_id) & \
                 (dtable.deleted != True)
-        row = current.db(query).select(dtable.id, limitby=(0, 1)).first()
-        if row and row.id:
-            return row.id
+        row = current.db(query).select(dtable.doc_id,
+                                       limitby = (0, 1),
+                                       ).first()
+        if row:
+            return row.doc_id
 
-        request = current.request
-        auth = current.auth
-        path_join = os.path.join
-
-        # Create the cap_resource table
+        # Create a CAP resource for the CAP XML file
         record = {"alert_id": alert_id,
                   "resource_desc": T("CAP XML File"),
-                  "mime_type": "cap" # Hard coded to separate from attachment from user
+                  "mime_type": "cap" # Hard-coded to separate from attachment from user
                   }
         resource_id = rtable.insert(**record)
+
+        # Post-process the CAP resource
         record["id"] = resource_id
         s3db.update_super(rtable, record)
         doc_id = record["doc_id"]
+        auth = current.auth
         auth.s3_set_record_owner(rtable, resource_id)
         auth.s3_make_session_owner(rtable, resource_id)
         s3db.onaccept("cap_resource", record, method="create")
 
-        resource = s3db.resource("cap_alert")
-        resource.add_filter(FS("id") == alert_id)
-        cap_xml = resource.export_xml(stylesheet=path_join(request.folder,
-                                                           "static",
-                                                           "formats",
-                                                           "cap",
-                                                           "export.xsl"),
-                                      pretty_print=True)
-        file_path = path_join(request.folder,
-                              "uploads",
-                              "%s_%s.xml" % ("cap_alert", str(alert_id)))
-        file = open(file_path, "w+")
-        file.write(cap_xml)
-        file.close()
+        # Generate the CAP XML
+        resource = s3db.resource("cap_alert", id=alert_id)
+        cap_xml = resource.export_xml(
+                    stylesheet = os.path.join(current.request.folder,
+                                              "static",
+                                              "formats",
+                                              "cap",
+                                              "export.xsl",
+                                              ),
+                    pretty_print = True,
+                    )
 
-        # Create doc_document record
-        dtable = s3db.doc_document
-        file = open(file_path, "a+")
-        document_id = dtable.insert(**{"file": file, "doc_id": doc_id})
+        stream = BytesIO(cap_xml)
+        filename = "%s_%s.xml" % ("cap_alert", s3_str(alert_id))
 
-        file.close()
-        os.remove(file_path)
+        # Store the CAP XML as doc_document for the CAP resource
+        document = {"file": dtable.file.store(stream, filename),
+                    "doc_id": doc_id,
+                    }
+        document_id = dtable.insert(**document)
 
         return document_id
 
