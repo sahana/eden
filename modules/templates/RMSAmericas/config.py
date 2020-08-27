@@ -117,30 +117,31 @@ def config(settings):
         PID = "person_id"
 
         # Owner Entity Foreign Key
-        realm_entity_fks = dict(pr_contact = [("org_organisation", EID),
-                                              #("po_household", EID),
-                                              ("pr_person", EID),
-                                              ],
-                                pr_contact_emergency = EID,
-                                pr_physical_description = EID,
-                                pr_address = [("org_organisation", EID),
-                                              ("pr_person", EID),
-                                              ],
-                                pr_image = EID,
-                                pr_identity = PID,
-                                pr_education = PID,
-                                pr_note = PID,
-                                hrm_human_resource = SID,
-                                hrm_training = PID,
-                                hrm_training_event = OID,
-                                inv_recv = SID,
-                                inv_send = SID,
-                                inv_track_item = "track_org_id",
-                                inv_adj_item = "adj_id",
-                                req_req_item = "req_id",
-                                #po_household = "area_id",
-                                #po_organisation_area = "area_id",
-                                )
+        realm_entity_fks = {"pr_contact": [("org_organisation", EID),
+                                          #("po_household", EID),
+                                          ("pr_person", EID),
+                                          ],
+                            "pr_contact_emergency": EID,
+                            "pr_physical_description": EID,
+                            "pr_address": [("org_organisation", EID),
+                                          ("pr_person", EID),
+                                          ],
+                            "pr_image": EID,
+                            "pr_identity": PID,
+                            "pr_education": PID,
+                            "pr_note": PID,
+                            "hrm_human_resource": SID,
+                            "hrm_training": PID,
+                            "hrm_training_event": OID,
+                            "inv_recv": SID,
+                            "inv_send": SID,
+                            "inv_inv_item": SID,
+                            "inv_track_item": "track_org_id",
+                            "inv_adj_item": "adj_id",
+                            "req_req_item": "req_id",
+                            #"po_household": "area_id",
+                            #"po_organisation_area": "area_id",
+                            }
 
         # Default Foreign Keys (ordered by priority)
         default_fks = (#"household_id",
@@ -150,11 +151,11 @@ def config(settings):
                        )
 
         # Link Tables
-        #realm_entity_link_table = dict(
-        #    project_task = Storage(tablename = "project_task_project",
-        #                           link_key = "task_id"
-        #                           )
-        #    )
+        #realm_entity_link_table = {
+        #    "project_task": Storage(tablename = "project_task_project",
+        #                            link_key = "task_id"
+        #                            )
+        #    }
         #if tablename in realm_entity_link_table:
         #    # Replace row with the record from the link table
         #    link_table = realm_entity_link_table[tablename]
@@ -190,10 +191,11 @@ def config(settings):
             else:
                 ftablename = table[fk].type[10:] # reference tablename
                 ftable = s3db[ftablename]
-                query = (table.id == row.id) & \
+                query = (table.id == row["id"]) & \
                         (table[fk] == ftable.id)
             record = db(query).select(ftable.realm_entity,
-                                        limitby=(0, 1)).first()
+                                      limitby = (0, 1)
+                                      ).first()
             if record:
                 realm_entity = record.realm_entity
                 break
@@ -207,10 +209,11 @@ def config(settings):
         if realm_entity == 0 and tablename == "org_organisation":
             ottable = s3db.org_organisation_type
             ltable = db.org_organisation_organisation_type
-            query = (ltable.organisation_id == row.id) & \
+            query = (ltable.organisation_id == row["id"]) & \
                     (ltable.organisation_type_id == ottable.id)
             otype = db(query).select(ottable.name,
-                                     limitby=(0, 1)).first()
+                                     limitby = (0, 1)
+                                     ).first()
             if not otype or otype.name != RED_CROSS:
                 use_user_organisation = True
 
@@ -221,23 +224,26 @@ def config(settings):
         elif tablename == "hrm_training":
             # Inherit realm entity from the related HR record
             htable = s3db.hrm_human_resource
-            query = (table.id == row.id) & \
+            query = (table.id == row["id"]) & \
                     (htable.person_id == table.person_id) & \
                     (htable.deleted != True)
-            rows = db(query).select(htable.realm_entity, limitby=(0, 2))
+            rows = db(query).select(htable.realm_entity,
+                                    limitby = (0, 2)
+                                    )
             if len(rows) == 1:
                 realm_entity = rows.first().realm_entity
             else:
                 # Ambiguous => try course organisation
                 ctable = s3db.hrm_course
                 otable = s3db.org_organisation
-                query = (table.id == row.id) & \
+                query = (table.id == row["id"]) & \
                         (ctable.id == table.course_id) & \
                         (otable.id == ctable.organisation_id)
-                row = db(query).select(otable.pe_id,
-                                       limitby=(0, 1)).first()
-                if row:
-                    realm_entity = row.pe_id
+                org = db(query).select(otable.pe_id,
+                                       limitby = (0, 1)
+                                       ).first()
+                if org:
+                    realm_entity = org.pe_id
                 # otherwise: inherit from the person record
 
         # Groups are owned by the user's organisation
@@ -2794,16 +2800,21 @@ Thank you"""
         from s3 import s3_redirect_default
 
         auth = current.auth
-        if auth.user and auth.user.site_id and \
-           not auth.s3_has_role(current.session.s3.system_roles.ORG_ADMIN):
-            # Redirect to this Warehouse
-            table = current.s3db.inv_warehouse
-            wh = current.db(table.site_id == auth.user.site_id).select(table.id,
-                                                                       limitby=(0, 1)
-                                                                       ).first()
-            if wh:
-                s3_redirect_default(URL(c="inv", f="warehouse",
-                                        args=[wh.id, "inv_item"]))
+        if auth.user and auth.user.site_id:
+            has_role = auth.s3_has_role
+            if has_role("national_wh_manager") or \
+               has_role(current.session.s3.system_roles.ORG_ADMIN):
+                pass
+            else:
+                # Redirect to this Warehouse
+                table = current.s3db.inv_warehouse
+                wh = current.db(table.site_id == auth.user.site_id).select(table.id,
+                                                                           limitby = (0, 1)
+                                                                           ).first()
+                if wh:
+                    s3_redirect_default(URL(c="inv", f="warehouse",
+                                            args = [wh.id, "inv_item"],
+                                            ))
 
         # Redirect to Warehouse Summary Page
         s3_redirect_default(URL(c="inv", f="warehouse", args="summary"))
@@ -4458,9 +4469,9 @@ Thank you"""
 
         # Custom Request Form
         s3db.set_method("req", "req",
-                       method = "form",
-                       action = PrintableShipmentForm,
-                       )
+                        method = "form",
+                        action = PrintableShipmentForm,
+                        )
 
     settings.customise_req_req_resource = customise_req_req_resource
 

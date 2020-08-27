@@ -469,6 +469,8 @@ def supplier():
                                      args = ["[id]", "read"]),
                    )
 
+    # NB Type gets defaulted in the Custom CRUD form
+    # - user needs create permissions for org_organisation_organisation_type
     return s3db.org_organisation_controller()
 
 # =============================================================================
@@ -1401,7 +1403,7 @@ def recv_cancel():
                                         owned_by_group = ADMIN
                                         )
     redirect(URL(c="inv", f="recv",
-                 args=[recv_id]
+                 args = [recv_id]
                  ))
 
 # =============================================================================

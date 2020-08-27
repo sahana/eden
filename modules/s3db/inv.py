@@ -1334,7 +1334,7 @@ class S3InventoryTrackingModel(S3Model):
                            label = T("Shipment Type"),
                            default = 0,
                            ),
-                     organisation_id(label = T("Organization/Supplier"),
+                     organisation_id(label = T("Organization/Supplier"), # From Organization/Supplier
                                      ),
                      # This is a reference, not a super-link, so we can override
                      Field("from_site_id", "reference org_site",
@@ -2555,7 +2555,8 @@ $.filterOptionsS3({
         # If this is linked to a request then update the quantity in transit
         req_ref = send_record.req_ref
         req_rec = db(rrtable.req_ref == req_ref).select(rrtable.id,
-                                                        limitby=(0, 1)).first()
+                                                        limitby = (0, 1)
+                                                        ).first()
         if req_rec:
             req_id = req_rec.id
             for track_item in track_items:
@@ -2578,17 +2579,21 @@ $.filterOptionsS3({
 
         # Create a Receive record
         rtable = s3db.inv_recv
-        recv_id = rtable.insert(sender_id = send_record.sender_id,
-                                send_ref = send_record.send_ref,
-                                req_ref = req_ref,
-                                from_site_id = send_record.site_id,
-                                eta = send_record.delivery_date,
-                                recipient_id = send_record.recipient_id,
-                                site_id = send_record.to_site_id,
-                                comments = send_record.comments,
-                                status = SHIP_STATUS_SENT,
-                                type = 1, # 1:"Another Inventory"
-                                )
+        recv_item = {"sender_id": send_record.sender_id,
+                     "send_ref": send_record.send_ref,
+                     "req_ref": req_ref,
+                     "from_site_id": send_record.site_id,
+                     "eta": send_record.delivery_date,
+                     "recipient_id": send_record.recipient_id,
+                     "site_id": send_record.to_site_id,
+                     "comments": send_record.comments,
+                     "status": SHIP_STATUS_SENT,
+                     "type": 1, # 1:"Another Inventory"
+                     }
+        recv_id = rtable.insert(**recv_item)
+        recv_item["id"] = recv_id
+        realm_entity = auth.get_realm_entity(rtable, recv_item)
+        db(rtable.id == recv_id).update(realm_entity = realm_entity)
 
         # Change the status for all track items in this shipment to In transit
         # and link to the receive record
@@ -2599,7 +2604,8 @@ $.filterOptionsS3({
         if req_rec:
             session.confirmation = T("Request Status updated")
         redirect(URL(f = "send",
-                     args = [send_id, "track_item"]))
+                     args = [send_id, "track_item"]
+                     ))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3217,7 +3223,8 @@ $.filterOptionsS3({
             stock_item = db(inv_item_table.id == form_vars.send_inv_item_id).select(inv_item_table.id,
                                                                                     inv_item_table.quantity,
                                                                                     inv_item_table.item_pack_id,
-                                                                                    limitby=(0, 1)).first()
+                                                                                    limitby = (0, 1)
+                                                                                    ).first()
         elif record:
             stock_item = record.send_inv_item_id
         else:
@@ -3231,14 +3238,14 @@ $.filterOptionsS3({
         if form_vars.quantity and stock_item:
             stock_quantity = stock_item.quantity
             stock_pack = db(siptable.id == stock_item.item_pack_id).select(siptable.quantity,
-                                                                           limitby=(0, 1)
+                                                                           limitby = (0, 1)
                                                                            ).first().quantity
             if record:
                 if record.send_inv_item_id != None:
                     # Items have already been removed from stock, so first put them back
                     old_track_pack_quantity = db(siptable.id == record.item_pack_id).select(
                                                     siptable.quantity,
-                                                    limitby=(0, 1),
+                                                    limitby = (0, 1),
                                                     ).first().quantity
                     stock_quantity = supply_item_add(stock_quantity,
                                                      stock_pack,
@@ -3248,7 +3255,7 @@ $.filterOptionsS3({
             try:
                 new_track_pack_quantity = db(siptable.id == form_vars.item_pack_id).select(
                                                     siptable.quantity,
-                                                    limitby=(0, 1)
+                                                    limitby = (0, 1)
                                                     ).first().quantity
             except AttributeError:
                 new_track_pack_quantity = record.item_pack_id.quantity
@@ -3260,7 +3267,7 @@ $.filterOptionsS3({
             db(inv_item_table.id == stock_item).update(quantity = newTotal)
         if form_vars.send_id and form_vars.recv_id:
             send_ref = db(stable.id == form_vars.send_id).select(stable.send_ref,
-                                                                 limitby=(0, 1)
+                                                                 limitby = (0, 1)
                                                                  ).first().send_ref
             db(rtable.id == form_vars.recv_id).update(send_ref = send_ref)
 
@@ -3276,10 +3283,10 @@ $.filterOptionsS3({
         if use_req and record and record.req_item_id:
 
             req_id = db(ritable.id == record.req_item_id).select(ritable.req_id,
-                                                                 limitby=(0, 1)
+                                                                 limitby = (0, 1)
                                                                  ).first().req_id
             req_ref = db(rrtable.id == req_id).select(rrtable.req_ref,
-                                                      limitby=(0, 1)
+                                                      limitby = (0, 1)
                                                       ).first().req_ref
             db(stable.id == form_vars.send_id).update(req_ref = req_ref)
             if form_vars.recv_id:
@@ -3293,6 +3300,7 @@ $.filterOptionsS3({
             # Look for the item in the site already
             recv_rec = db(rtable.id == record.recv_id).select(rtable.site_id,
                                                               rtable.type,
+                                                              limitby = (0, 1)
                                                               ).first()
             recv_site_id = recv_rec.site_id
             query = (inv_item_table.site_id == recv_site_id) & \
@@ -3308,7 +3316,8 @@ $.filterOptionsS3({
                     (inv_item_table.status == record.inv_item_status) & \
                     (inv_item_table.supply_org_id == record.supply_org_id)
             inv_item_row = db(query).select(inv_item_table.id,
-                                            limitby=(0, 1)).first()
+                                            limitby = (0, 1)
+                                            ).first()
             if inv_item_row:
                 # Update the existing item
                 inv_item_id = inv_item_row.id
@@ -3318,7 +3327,7 @@ $.filterOptionsS3({
                 source_type = 0
                 if form_vars.send_inv_item_id:
                     source_type = db(inv_item_table.id == form_vars.send_inv_item_id).select(inv_item_table.source_type,
-                                                                                             limitby=(0, 1)
+                                                                                             limitby = (0, 1)
                                                                                              ).first().source_type
                 else:
                     if recv_rec.type == 2:
@@ -3339,9 +3348,10 @@ $.filterOptionsS3({
                             "source_type": source_type,
                             "status": record.inv_item_status,
                             }
-                realm_entity = current.auth.get_realm_entity(inv_item_table, inv_item)
-                inv_item.update(realm_entity=realm_entity)
                 inv_item_id = inv_item_table.insert(**inv_item)
+                inv_item["id"] = inv_item_id
+                realm_entity = current.auth.get_realm_entity(inv_item_table, inv_item)
+                db(inv_item_table.id == inv_item_id).update(realm_entity = realm_entity)
 
             # If this item is linked to a request, then update the quantity fulfil
             if use_req and record.req_item_id:
@@ -3451,14 +3461,14 @@ $.filterOptionsS3({
 
         # Check that we have a link to a warehouse
         if record.send_inv_item_id:
-            trackTotal = record.quantity
+            track_total = record.quantity
             # Remove the total from this record and place it back in the warehouse
-            db(inv_item_table.id == record.send_inv_item_id).update(quantity = inv_item_table.quantity + trackTotal)
+            db(inv_item_table.id == record.send_inv_item_id).update(quantity = inv_item_table.quantity + track_total)
             db(tracktable.id == record_id).update(
                         quantity = 0,
                         comments = "%sQuantity was: %s" % (
                                         inv_item_table.comments,
-                                        trackTotal,
+                                        track_total,
                                         ),
                         )
         return True
