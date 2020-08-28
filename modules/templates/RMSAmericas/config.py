@@ -455,11 +455,12 @@ def config(settings):
     # Uncomment to auto-create certificates for courses
     settings.hrm.create_certificates_from_courses = "organisation_id"
     settings.hrm.use_code = True
-    settings.hrm.use_description = "Medical Information"
+    settings.hrm.use_description = None # Replaced by Medical Information
     # Uncomment to enable the use of HR Education
     settings.hrm.use_education = True
     # Uncomment to hide Job Titles
     settings.hrm.use_job_titles = False
+    settings.hrm.use_medical = "Medical Information"
     settings.hrm.use_national_id = True
     settings.hrm.use_skills = True
     # Custom label for Organisations in HR module
@@ -1611,6 +1612,24 @@ def config(settings):
 Thank you"""
         messages.lock_keys = True
         auth.s3_approve_user(user, password=password)
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_insurance_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm
+
+        s3db = current.s3db
+
+        s3db.hrm_insurance.type.default = "HEALTH"
+
+        s3db.configure(tablename,
+                       crud_form = S3SQLCustomForm((T("Affiliate Number"),"insurance_number"),
+                                                   (T("Emergency Number"),"phone"),
+                                                   (T("Insurance Company"),"insurer"),
+                                                   ),
+                       )
+
+    settings.customise_hrm_insurance_resource = customise_hrm_insurance_resource
 
     # -------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
@@ -3462,7 +3481,7 @@ Thank you"""
                 #               create_onaccept = hrm_human_resource_create_onaccept,
                 #               )
 
-            elif method =="record" or component_name == "human_resource":
+            elif method == "record" or component_name == "human_resource":
                 table = s3db.hrm_human_resource
                 if EXTERNAL:
                     db = current.db
@@ -3608,20 +3627,21 @@ Thank you"""
                                list_fields = list_fields,
                                )
 
-            elif component_name == "physical_description":
-                from gluon import DIV
-                dtable = r.component.table
-                dtable.medical_conditions.comment = DIV(_class="tooltip",
-                                                        _title="%s|%s" % (T("Medical Conditions"),
-                                                                          T("Chronic Illness, Disabilities, Mental/Psychological Condition etc.")))
-                dtable.allergic.writable = dtable.allergic.readable = True
-                dtable.allergies.writable = dtable.allergies.readable = True
-                dtable.ethnicity.writable = dtable.ethnicity.readable = False
-                dtable.other_details.writable = dtable.other_details.readable = False
-                import json
-                SEPARATORS = (",", ":")
-                s3.jquery_ready.append('''S3.showHidden('%s',%s,'%s')''' % \
-                    ("allergic", json.dumps(["allergies"], separators=SEPARATORS), "pr_physical_description"))
+            # Moved to MedicalTab
+            #elif component_name == "physical_description":
+            #    from gluon import DIV
+            #    dtable = r.component.table
+            #    dtable.medical_conditions.comment = DIV(_class="tooltip",
+            #                                            _title="%s|%s" % (T("Medical Conditions"),
+            #                                                              T("Chronic Illness, Disabilities, Mental/Psychological Condition etc.")))
+            #    dtable.allergic.writable = dtable.allergic.readable = True
+            #    dtable.allergies.writable = dtable.allergies.readable = True
+            #    dtable.ethnicity.writable = dtable.ethnicity.readable = False
+            #    dtable.other_details.writable = dtable.other_details.readable = False
+            #    import json
+            #    SEPARATORS = (",", ":")
+            #    s3.jquery_ready.append('''S3.showHidden('%s',%s,'%s')''' % \
+            #        ("allergic", json.dumps(["allergies"], separators=SEPARATORS), "pr_physical_description"))
 
             if not EXTERNAL and \
                auth.s3_has_roles(ID_CARD_EXPORT_ROLES):
@@ -3639,6 +3659,34 @@ Thank you"""
         return attr
 
     settings.customise_pr_person_controller = customise_pr_person_controller
+
+    # -------------------------------------------------------------------------
+    def customise_pr_physical_description_resource(r, tablename):
+
+        from gluon import DIV
+        from s3 import S3SQLCustomForm
+
+        s3db = current.s3db
+
+        #s3db.pr_physical_description.medical_conditions.comment = DIV(_class="tooltip",
+        #                                                              _title="%s|%s" % (T("Medical Conditions"),
+        #                                                                                T("Chronic Illness, Disabilities, Mental/Psychological Condition etc.")))
+
+        s3db.pr_physical_description.medical_conditions.comment = DIV(_class="tooltip",
+                                                                      _title="%s|%s" % (T("Medical Conditions"),
+                                                                                        T("It is important to include, if they exist: surgical history, medical restrictions, vaccines, etc.")))
+
+        s3db.configure(tablename,
+                       crud_form = S3SQLCustomForm("blood_type",
+                                                   "medical_conditions",
+                                                   "medication",
+                                                   "diseases",
+                                                   "allergic",
+                                                   "allergies",
+                                                   ),
+                       )
+
+    settings.customise_pr_physical_description_resource = customise_pr_physical_description_resource
 
     # -------------------------------------------------------------------------
     def customise_supply_item_category_resource(r, tablename):

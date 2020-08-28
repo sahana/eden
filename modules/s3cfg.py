@@ -4467,6 +4467,14 @@ class S3Config(Storage):
         """
         return self.hrm.get("use_job_titles", True)
 
+    def get_hrm_use_medical(self):
+        """
+            Whether Human Resources should use Medical Information tab
+            and what the name of the Tab should be.
+            Set to None to disable
+        """
+        return self.hrm.get("use_medical", None)
+
     def get_hrm_use_national_id(self):
         """
             Whether Human Resources should show National IDs in list_fields

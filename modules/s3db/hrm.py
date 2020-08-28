@@ -1765,6 +1765,12 @@ class HRInsuranceModel(S3Model):
                                 label = T("Provider"),
                                 requires = IS_LENGTH(255),
                                 ),
+                          Field("phone",
+                                label = T("Emergency Number"),
+                                requires = IS_EMPTY_OR(
+                                            s3_phone_requires,
+                                            ),
+                                ),
                           #Field("beneficiary",
                           #      label = T("Beneficiary"),
                           #      ),
@@ -7299,6 +7305,10 @@ def hrm_rheader(r, tabs=None, profile=False):
         else:
             unavailability_tab = None
 
+        medical_tab = settings.get_hrm_use_medical() or None
+        if medical_tab:
+            medical_tab = (T(medical_tab), "medical")
+
         description_tab = settings.get_hrm_use_description() or None
         if description_tab:
             description_tab = (T(description_tab), "physical_description")
@@ -7373,6 +7383,7 @@ def hrm_rheader(r, tabs=None, profile=False):
                     (T("User Account"), "user"),
                     hr_tab,
                     id_tab,
+                    medical_tab,
                     description_tab,
                     address_tab,
                     ]
@@ -7452,6 +7463,7 @@ def hrm_rheader(r, tabs=None, profile=False):
                     hr_tab,
                     duplicates_tab,
                     id_tab,
+                    medical_tab,
                     description_tab,
                     address_tab,
                     ]
@@ -8571,6 +8583,11 @@ def hrm_person_controller(**attr):
                method = "cv",
                action = hrm_CV)
 
+    # Custom Method for Medical
+    set_method("pr", "person",
+               method = "medical",
+               action = hrm_Medical)
+
     # Custom Method for HR Record
     set_method("pr", "person",
                method = "record",
@@ -9549,6 +9566,82 @@ class hrm_CV(S3Method):
             r.error(405, current.ERROR.BAD_METHOD)
 
 # =============================================================================
+class hrm_Medical(S3Method):
+    """
+        HR Medical Tab, custom profile page with multiple elements:
+            * Physical Description
+            * Insurance
+        NB It is expected to create S3SQLCustomForm for these in
+            customise_hrm_insurance_resource
+            customise_pr_physical_description_resource
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name != "person" or not r.id or r.component:
+            r.error(405, current.ERROR.BAD_METHOD)
+        representation = r.representation
+        if representation not in ("html", "aadata"):
+            r.error(405, current.ERROR.BAD_METHOD)
+
+        r.customise_resource("pr_physical_description")
+        r.customise_resource("hrm_insurance")
+
+        T = current.T
+        s3db = current.s3db
+        response = current.response
+        s3 = response.s3
+        crud_strings = s3.crud_strings
+        tablename = r.tablename
+
+        profile_widgets = [
+            {"label": "",
+             "type": "form",
+             "tablename": "pr_physical_description",
+             "context": "person",
+             },
+            {"label": T("Medical Coverage"),
+             "type": "form",
+             "tablename": "hrm_insurance",
+             "context": "person",
+             },
+            ]
+
+        if representation == "html":
+            # Maintain normal rheader for consistency
+            title = crud_strings["pr_person"].title_display
+            profile_header = TAG[""](H2(title),
+                                     DIV(hrm_rheader(r),
+                                         _id = "rheader",
+                                         ))
+            s3.jquery_ready.append('''S3.showHidden('%s',%s,'%s')''' % \
+                ("allergic", json.dumps(["allergies"], separators=SEPARATORS), "pr_physical_description"))
+
+        else:
+            profile_header = None
+
+        s3db.configure(tablename,
+                       profile_cols = 1,
+                       profile_header = profile_header,
+                       profile_widgets = profile_widgets,
+                       )
+
+        profile = S3Profile()
+        profile.tablename = tablename
+        profile.request = r
+        output = profile.profile(r, **attr)
+        if representation == "html":
+            output["title"] = response.title = title
+        return output
+
+# =============================================================================
 class hrm_Record(S3Method):
     """
         HR Record, custom profile page with multiple DataTables:
@@ -9659,14 +9752,14 @@ class hrm_Record(S3Method):
         if VOL:
             vol_experience = settings.get_hrm_vol_experience()
             if vol_experience in ("programme", "both"):
-                tablename = "hrm_programme_hours"
+                ctablename = "hrm_programme_hours"
                 # Exclude records which are just to link to Programme
                 filter_ = (FS("hours") != None)
                 list_fields = ["id",
                                "date",
                                ]
                 phtable = s3db.hrm_programme_hours
-                r.customise_resource(tablename)
+                r.customise_resource(ctablename)
                 if phtable.programme_id.readable:
                     list_fields.append("programme_id")
                     # Exclude Training Hours
@@ -9679,12 +9772,12 @@ class hrm_Record(S3Method):
                 if phtable.job_title_id.readable:
                     list_fields.append("job_title_id")
                 list_fields.append("hours")
-                crud_strings_ = crud_strings[tablename]
+                crud_strings_ = crud_strings[ctablename]
                 hours_widget = {"label": crud_strings_["title_list"],
                                 "label_create": crud_strings_["label_create"],
                                 "type": "datatable",
                                 "actions": dt_row_actions("hours"),
-                                "tablename": tablename,
+                                "tablename": ctablename,
                                 "context": "person",
                                 "filter": filter_,
                                 "list_fields": list_fields,
@@ -9859,7 +9952,8 @@ class hrm_Record(S3Method):
             title = crud_strings["pr_person"].title_display
             profile_header = TAG[""](H2(title),
                                      DIV(hrm_rheader(r),
-                                     _id="rheader"))
+                                         _id = "rheader",
+                                         ))
         else:
             profile_header = None
 

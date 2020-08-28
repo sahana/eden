@@ -5453,6 +5453,14 @@ class PRDescriptionModel(S3Model):
                            label = T("Medical Conditions"),
                            ),
 
+                     Field("medication", "text",
+                           label = T("Medication"),
+                           ),
+
+                     Field("diseases", "text",
+                           label = T("Diseases"),
+                           ),
+
                      Field("allergic", "boolean",
                            label = T("Allergic"),
                            represent = s3_yes_no_represent,
