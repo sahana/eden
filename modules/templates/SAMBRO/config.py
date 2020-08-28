@@ -350,9 +350,9 @@ def config(settings):
                                         label = T("CAP OID"),
                                         multiple = False,
                                         fields = [("", "value")],
-                                        filterby = dict(field = "tag",
-                                                        options = "cap_oid",
-                                                        ),
+                                        filterby = {"field": "tag",
+                                                    "options": "cap_oid",
+                                                    },
                                         ),
                                     "website",
                                     "comments",
@@ -1477,7 +1477,7 @@ T("""%(status)s %(message_type)s for %(area_description)s with %(priority)s prio
         ack_id = ack_table.insert(**ack_data)
         current.auth.s3_set_record_owner(ack_table, ack_id)
         # Uncomment this when there is onaccept hook
-        #s3db.onaccept(ack_table, dict(id=ack_id))
+        #s3db.onaccept(ack_table, {"id": ack_id})
 
         return ack_id
 
