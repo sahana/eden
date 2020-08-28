@@ -7254,6 +7254,7 @@
 'View SMS OutBox': 'Ver SMS Bandeja de salida',
 'View the hospitals on a map.': 'Vista de los hospitales en un mapa.',
 'View Tickets': 'Vista de boletos.',
+'View Unappoved Users': 'Ver usuarios no aprobados',
 'View/Edit Person Details': 'Ver o modificar datos de la persona',
 'View/Edit the Database directly': 'Ver/Editar directamente la Base de Datos',
 "View/Edit the Database directly (caution: doesn't respect the framework rules!)": 'Ver/ Editar la base de datos directamente (precaución: no respeta el marco normativo!) )',

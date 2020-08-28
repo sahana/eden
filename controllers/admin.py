@@ -61,6 +61,8 @@ def user():
     table = auth.settings.table_user
     s3_has_role = auth.s3_has_role
 
+    UNAPPROVED = request.get_vars.get("unapproved")
+
     # Check for ADMIN first since ADMINs have all roles
     ADMIN = False
     if s3_has_role("ADMIN"):
@@ -113,11 +115,14 @@ def user():
                                                  if v else current.messages["NONE"]
     date_represent = s3base.S3DateTime.date_represent
     table.created_on.represent = date_represent
-    table.timestmp.represent = date_represent
-    list_fields += [(T("Roles"), "membership.group_id"),
-                    (T("Registration"), "created_on"),
-                    (T("Last Login"), "timestmp"),
-                    ]
+    if UNAPPROVED:
+        lappend((T("Registration"), "created_on"))
+    else:
+        table.timestmp.represent = date_represent
+        list_fields += [(T("Roles"), "membership.group_id"),
+                        (T("Registration"), "created_on"),
+                        (T("Last Login"), "timestmp"),
+                        ]
 
     s3db.configure("auth_user",
                    create_next = URL(c="admin", f="user",
@@ -254,6 +259,14 @@ def user():
 
     # Pre-processor
     def prep(r):
+        
+        if UNAPPROVED:
+            registration_key = FS("registration_key")
+            query = (registration_key != "disabled") & \
+                    (registration_key != None) & \
+                    (registration_key != "")
+            r.resource.add_filter(query)
+
         if r.interactive:
             s3db.configure(r.tablename,
                            addbtn = True,
@@ -286,62 +299,79 @@ def user():
     def postp(r, output):
         if r.interactive and isinstance(output, dict) and \
            r.method in (None, "update", "create"):
-            # Only show the disable button if the user is not currently disabled
-            table = r.table
-            query = (table.registration_key == None) | \
-                    (table.registration_key == "")
-            rows = db(query).select(table.id)
-            restrict = [str(row.id) for row in rows]
-            s3.actions = [{"label": s3_str(UPDATE),
-                           "url": URL(c="admin", f="user",
-                                      args = ["[id]", "update"],
-                                      ),
-                           "_class": "action-btn",
-                           },
-                          {"label": s3_str(T("Roles")),
-                           "url": URL(c="admin", f="user",
-                                      args = ["[id]", "roles"],
-                                      ),
-                           "_class": "action-btn",
-                           },
-                          {"label": s3_str(T("Disable")),
-                           "restrict": restrict,
-                           "url": URL(c="admin", f="user",
-                                      args = ["[id]", "disable"],
-                                      ),
-                           "_class": "action-btn",
-                           },
-                          ]
-            if settings.get_auth_show_link():
-                s3.actions.insert(1, {"label": s3_str(T("Link")),
-                                      "restrict": restrict,
-                                      "url": URL(c="admin", f="user",
-                                                 args = ["[id]", "link"],
-                                                 ),
-                                      "_class": "action-btn",
-                                      "_title": s3_str(T("Link (or refresh link) between User, Person & HR Record")),
-                                      }
-                                  )
-            # Only show the approve button if the user is currently pending
-            query = (table.registration_key != "disabled") & \
-                    (table.registration_key != None) & \
-                    (table.registration_key != "")
-            rows = db(query).select(table.id)
-            restrict = [str(row.id) for row in rows]
-            s3.actions.append({"label": str(T("Approve")),
-                               "restrict": restrict,
-                               "url": URL(c="admin", f="user",
-                                          args = ["[id]", "approve"],
-                                          ),
-                               "_class": "action-btn",
-                               })
-            # Add some highlighting to the rows
-            query = (table.registration_key.belongs(["disabled", "pending"]))
-            rows = db(query).select(table.id,
-                                    table.registration_key,
-                                    )
-            s3.dataTableStyleDisabled = s3.dataTableStyleWarning = [str(row.id) for row in rows if row.registration_key == "disabled"]
-            s3.dataTableStyleAlert = [str(row.id) for row in rows if row.registration_key == "pending"]
+            actions = [{"label": s3_str(UPDATE),
+                        "url": URL(c="admin", f="user",
+                                   args = ["[id]", "update"],
+                                   ),
+                        "_class": "action-btn",
+                        },
+                       ]
+
+            
+            if UNAPPROVED:
+                # Always show the Approve button
+                actions.append({"label": str(T("Approve")),
+                                "url": URL(c="admin", f="user",
+                                           args = ["[id]", "approve"],
+                                           ),
+                                "_class": "action-btn",
+                                })
+
+            else:
+                # Add a button to go direct to the Roles tab
+                actions.append({"label": s3_str(T("Roles")),
+                                "url": URL(c="admin", f="user",
+                                           args = ["[id]", "roles"],
+                                           ),
+                                "_class": "action-btn",
+                                })
+
+                # Only show the disable button if the user is not currently disabled
+                table = r.table
+                query = (table.registration_key == None) | \
+                        (table.registration_key == "")
+                rows = db(query).select(table.id)
+                restrict = [str(row.id) for row in rows]
+                actions.append({"label": str(T("Disable")),
+                                "restrict": restrict,
+                                "url": URL(c="admin", f="user",
+                                           args = ["[id]", "disable"],
+                                           ),
+                                "_class": "action-btn",
+                                })
+                if settings.get_auth_show_link():
+                    actions.insert(1, {"label": s3_str(T("Link")),
+                                       "restrict": restrict,
+                                       "url": URL(c="admin", f="user",
+                                                  args = ["[id]", "link"],
+                                                  ),
+                                       "_class": "action-btn",
+                                       "_title": s3_str(T("Link (or refresh link) between User, Person & HR Record")),
+                                       }
+                                   )
+                # Only show the approve button if the user is currently pending
+                query = (table.registration_key != "disabled") & \
+                        (table.registration_key != None) & \
+                        (table.registration_key != "")
+                rows = db(query).select(table.id)
+                restrict = [str(row.id) for row in rows]
+                actions.append({"label": str(T("Approve")),
+                                "restrict": restrict,
+                                "url": URL(c="admin", f="user",
+                                           args = ["[id]", "approve"],
+                                           ),
+                                "_class": "action-btn",
+                                })
+
+                # Add some highlighting to the rows
+                query = (table.registration_key.belongs(["disabled", "pending"]))
+                rows = db(query).select(table.id,
+                                        table.registration_key,
+                                        )
+                s3.dataTableStyleDisabled = s3.dataTableStyleWarning = [str(row.id) for row in rows if row.registration_key == "disabled"]
+                s3.dataTableStyleAlert = [str(row.id) for row in rows if row.registration_key == "pending"]
+
+            s3.actions = actions
 
             # Translate the status values
             values = [{"col": 6, "key": "", "display": s3_str(T("Active"))},
@@ -355,14 +385,24 @@ def user():
             form = output.get("form", None)
             if not form:
                 crud_button = s3base.S3CRUD.crud_button
+                if UNAPPROVED:
+                    switch_view = crud_button(T("View All Users"),
+                                              _href = URL(vars = {}),
+                                              )
+                else:
+                    switch_view = crud_button(T("View Unapproved Users"),
+                                              _href = URL(vars = {"unapproved": 1}),
+                                              )
                 output["showadd_btn"] = DIV(crud_button(T("Create User"),
-                                                        _href = URL(args = ["create"])
+                                                        _href = URL(args = ["create"]),
                                                         ),
                                             crud_button(T("Import Users"),
-                                                        _href = URL(args = ["import"])
+                                                        _href = URL(args = ["import"]),
                                                         ),
+                                            switch_view,
                                             )
                 return output
+
             # Assume formstyle callable
             id = "auth_user_password_two__row"
             label = "%s:" % T("Verify password")
