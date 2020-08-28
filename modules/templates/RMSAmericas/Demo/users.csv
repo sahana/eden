@@ -11,10 +11,11 @@ Honduras,"M&E",hn_me@example.com,eden,"monitoring_evaluation,hn_user",Honduran R
 Honduras,Project Manager,hn_project_manager@example.com,eden,"project_manager,hn_user",Honduran Red Cross,,,Staff,es
 Honduras,Project Reader,hn_project_reader@example.com,eden,"project_reader,hn_user",Honduran Red Cross,,,Staff,es
 Honduras,Warehouse Manager,hn_wh_manager@example.com,eden,"national_wh_manager,hn_user",Honduran Red Cross,,,Staff,es
-Comayagua,Warehouse Manager,hn_com_bodega@example.com,eden,"wh_manager/inv_warehouse.name=Comayagua Warehouse,hn_user/org_organisation.name=Honduran Red Cross",Comayagua,Warehouse,Comayagua Warehouse,Staff,es
-Tegucigalpa,Warehouse Manager,hn_teg_bodega@example.com,eden,"wh_manager/inv_warehouse.name=Tegucigalpa Warehouse,hn_user/org_organisation.name=Honduran Red Cross",Tegucigalpa,Warehouse,Tegucigalpa Warehouse,Staff,es
+Comayagua,Warehouse Manager,hn_com_bodega@example.com,eden,"wh_manager/inv_warehouse.name=Comayagua Warehouse,wh_manager_national/org_organisation.name=Honduran Red Cross,hn_user/org_organisation.name=Honduran Red Cross",Comayagua,Warehouse,Comayagua Warehouse,Staff,es
+Tegucigalpa,Warehouse Manager,hn_teg_bodega@example.com,eden,"wh_manager/inv_warehouse.name=Tegucigalpa Warehouse,wh_manager_national/org_organisation.name=Honduran Red Cross,hn_user/org_organisation.name=Honduran Red Cross",Tegucigalpa,Warehouse,Tegucigalpa Warehouse,Staff,es
 Nicaragua,HR Manager,ni_hr_manager@example.com,eden,"hr_manager",Nicaraguan Red Cross,,,Staff,es
 Tipitapa,HR Assistant,ni_hr_assistant@example.com,eden,"hr_assistant",Tipitapa,,,Staff,es
+Nicaragua,Warehouse Manager,ni_wh_manager@example.com,eden,"national_wh_manager",Nicaraguan Red Cross,,,Staff,es
 Paraguay,Org Admin,py_admin@example.com,eden,"ORG_ADMIN",Paraguayan Red Cross,,,Staff,es
 Paraguay,HR Manager,py_hr_manager@example.com,eden,"hr_manager",Paraguayan Red Cross,,,Staff,es
 Paraguay,HR Assistant,py_hr_assistant@example.com,eden,"hr_assistant",Paraguayan Red Cross,,,Staff,es

@@ -571,19 +571,21 @@ class S3OrganisationModel(S3Model):
                           ]
         append = filter_widgets.append
 
-        # Don't add Type or Sector Filters for Supplier organizations in the asset and inv controllers
-        # or for Training Centers
-        if current.request.function not in ("supplier", "training_center"):
+        # Don't add Type Filter in controllers which are pre-filtered
+        function = current.request.function
+        if function not in ("partners", "supplier", "training_center"):
             append(type_filter)
-            if use_sector:
-                append(S3OptionsFilter("sector_organisation.sector_id",
-                                       options = lambda: \
-                                           s3_get_filter_opts("org_sector",
-                                                              location_filter=True,
-                                                              none=True,
-                                                              translate=True),
-                                       )
-                       )
+
+        # Add Sector Filter where Sectors are being used, but not in controllers where this is irrelevant
+        if use_sector and function not in ("supplier", "training_center"):
+            append(S3OptionsFilter("sector_organisation.sector_id",
+                                   options = lambda: \
+                                       s3_get_filter_opts("org_sector",
+                                                          location_filter = True,
+                                                          none = True,
+                                                          translate = True),
+                                   )
+                   )
 
         if use_country:
             append(S3OptionsFilter("country",
@@ -612,13 +614,13 @@ class S3OrganisationModel(S3Model):
                                  fact = [(T("Number of Organizations"), "count(id)"),
                                          (T("List of Organizations"), "list(name)"),
                                          ],
-                                 defaults=Storage(rows = default_row,
-                                                  cols = default_col,
-                                                  fact = "count(id)",
-                                                  totals = True,
-                                                  chart = "spectrum:cols",
-                                                  #table = "collapse",
-                                                  ),
+                                 defaults = Storage(rows = default_row,
+                                                    cols = default_col,
+                                                    fact = "count(id)",
+                                                    totals = True,
+                                                    chart = "spectrum:cols",
+                                                    #table = "collapse",
+                                                    ),
                                  )
 
         location_context = settings.get_org_organisation_location_context()
@@ -909,8 +911,8 @@ class S3OrganisationModel(S3Model):
     @staticmethod
     def org_organisation_onaccept(form):
         """
-            Set default root_organisation ID
-            If a logo was uploaded then create the extra versions
+            * Set default root_organisation ID
+            * If a logo was uploaded then create the extra versions
         """
 
         form_vars_get = form.vars.get
@@ -6662,7 +6664,8 @@ def org_organisation_controller():
                                            gtable.name,
                                            gtable.level,
                                            gtable.path,
-                                           limitby=(0, 1)).first()
+                                           limitby = (0, 1)
+                                           ).first()
                     if row and row.level:
                         if row.level != "L0":
                             code = gis.get_parent_country(row, key_type="code")
@@ -6684,14 +6687,14 @@ def org_organisation_controller():
                         # What Keys do we have?
                         kvtable = s3db.org_organisation_tag
                         keys = db(kvtable.deleted == False).select(kvtable.tag,
-                                                                   distinct=True)
+                                                                   distinct = True
+                                                                   )
                         if keys:
                             tablename = "org_organisation"
                             crud_fields = s3db.org_organisation_crud_fields
                             cappend = crud_fields.append
                             add_component = s3db.add_components
-                            list_fields = s3db.get_config(tablename,
-                                                          "list_fields")
+                            list_fields = s3db.get_config(tablename, "list_fields")
                             lappend = list_fields.append
                             for key in keys:
                                 tag = key.tag
@@ -6726,37 +6729,39 @@ def org_organisation_controller():
                     field.comment = None # Don't want to create new types here
                     if len(type_names) == 1:
                         # Strip Type from list_fields
-                        list_fields = s3db.get_config("org_organisation",
-                                                      "list_fields")
+                        list_fields = s3db.get_config("org_organisation", "list_fields")
                         try:
                             list_fields.remove("organisation_organisation_type.organisation_type_id")
                         except ValueError:
                             # Already removed
                             pass
+
                         if not method or method == "create":
                             # Default the Type
                             type_table = s3db.org_organisation_type
                             query = (type_table.name == type_filter)
                             row = db(query).select(type_table.id,
-                                                   limitby=(0, 1)).first()
+                                                   limitby = (0, 1)
+                                                   ).first()
                             type_id = row and row.id
                             if type_id:
                                 field.default = type_id
                                 field.writable = False
-                                crud_form = s3db.get_config("org_organisation",
-                                                            "crud_form")
+                                crud_form = s3db.get_config("org_organisation", "crud_form")
                                 for e in crud_form.elements:
                                     if e.selector == "organisation_type":
                                         e.options.label = ""
+
                     elif not method or method in ("create", "update"):
                         # Limit the Type
                         type_table = s3db.org_organisation_type
                         fquery = (type_table.name.lower().belongs(type_names))
                         field.requires = IS_ONE_OF(db(fquery),
                                                    "org_organisation_type.id",
-                                                   label=field.represent,
-                                                   error_message=T("Please choose a type"),
-                                                   sort=True)
+                                                   label = field.represent,
+                                                   error_message = T("Please choose a type"),
+                                                   sort = True
+                                                   )
             if component:
                 cname = r.component_name
                 if cname == "human_resource" and r.component_id:
@@ -6772,13 +6777,13 @@ def org_organisation_controller():
                     otable.country.default = record.country
                     ottable = s3db.org_organisation_organisation_type
                     row = db(ottable.organisation_id == record.id).select(ottable.organisation_type_id,
-                                                                          limitby=(0, 1),
+                                                                          limitby = (0, 1),
                                                                           ).first()
                     if row:
                         ottable.organisation_type_id.default = row.organisation_type_id
                     ostable = s3db.org_sector_organisation
                     row = db(ostable.organisation_id == record.id).select(ostable.sector_id,
-                                                                          limitby=(0, 1),
+                                                                          limitby = (0, 1),
                                                                           ).first()
                     if row:
                         ostable.sector_id.default = row.sector_id
@@ -6801,8 +6806,8 @@ def org_organisation_controller():
                     # Filter the Site field
                     field = s3db.super_link("site_id", "org_site",
                                             empty = False,
-                                            filterby="organisation_id",
-                                            filter_opts=(r.id,),
+                                            filterby = "organisation_id",
+                                            filter_opts = (r.id,),
                                             represent = s3db.org_site_represent,
                                             )
                     atable = s3db.asset_asset
