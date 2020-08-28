@@ -259,7 +259,7 @@ def user():
 
     # Pre-processor
     def prep(r):
-        
+
         if UNAPPROVED:
             registration_key = FS("registration_key")
             query = (registration_key != "disabled") & \
@@ -307,7 +307,7 @@ def user():
                         },
                        ]
 
-            
+
             if UNAPPROVED:
                 # Always show the Approve button
                 actions.append({"label": str(T("Approve")),
@@ -389,10 +389,12 @@ def user():
                     switch_view = crud_button(T("View All Users"),
                                               _href = URL(vars = {}),
                                               )
-                else:
+                elif settings.get_auth_registration_requires_approval():
                     switch_view = crud_button(T("View Unapproved Users"),
                                               _href = URL(vars = {"unapproved": 1}),
                                               )
+                else:
+                    switch_view = ""
                 output["showadd_btn"] = DIV(crud_button(T("Create User"),
                                                         _href = URL(args = ["create"]),
                                                         ),
