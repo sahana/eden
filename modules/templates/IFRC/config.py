@@ -8336,7 +8336,7 @@ def config(settings):
             # Remove Tabs
             attr["rheader"] = None
         else:
-            attr["rheader"] = lambda r, vnrc=vnrc: pr_rheader(r, vnrc)
+            attr["rheader"] = lambda r, v=vnrc: pr_rheader(r, v)
 
         if vnrc:
             # Link to customised download Template

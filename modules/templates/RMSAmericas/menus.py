@@ -330,7 +330,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         request = current.request
         if "profile" in request.get_vars:
             # No Side Menu
-            return
+            return None
 
         auth = current.auth
         has_role = auth.s3_has_role
@@ -340,7 +340,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         if (len_roles <= 2) or \
            (len_roles == 3 and has_role("RIT_MEMBER") and not has_role("ADMIN")):
             # No Side Menu
-            return
+            return None
 
         #ADMIN = s3.system_roles.ADMIN
         ORG_ADMIN = s3.system_roles.ORG_ADMIN
