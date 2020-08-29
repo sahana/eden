@@ -4790,6 +4790,7 @@
 'Organization deleted': 'Organización eliminada',
 'Organization Details': 'Detalles de Organización',
 'Organization ID': 'ID de la Organización',
+'Organization ID already in use': 'ID de la Organización ya en uso',
 'Organization Registry': 'Registro de Organizaciones',
 'Organization Type': 'Tipo de Organización',
 'Organization updated': 'Organización actualizada',

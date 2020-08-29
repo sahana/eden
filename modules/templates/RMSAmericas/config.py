@@ -1632,6 +1632,45 @@ Thank you"""
     settings.customise_hrm_insurance_resource = customise_hrm_insurance_resource
 
     # -------------------------------------------------------------------------
+    def hrm_human_resource_onvalidation(form):
+        """
+            Check that the Organization ID is unique per NS
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Read Code
+        form_vars_get = form.vars.get
+        code = form_vars_get("code")
+
+        # Lookup Root Org
+        organisation_id = form_vars_get("organisation_id")
+        otable = s3db.org_organisation
+        root_org = db(otable.id == organisation_id).select(otable.root_organisation,
+                                                           limitby = (0, 1)
+                                                           ).first()
+        root_organisation = root_org.root_organisation
+
+        # Check for another HR in the same NS with same code
+        htable = s3db.hrm_human_resource
+        query = (htable.code == code) & \
+                (htable.organisation_id == otable.id) & \
+                (otable.root_organisation == root_organisation)
+        human_resource_id = form_vars_get("id")
+        if human_resource_id:
+            # Update Form: Skip our own record
+            query &= (htable.id != human_resource_id)
+        match = db(query).select(htable.id,
+                                 limitby = (0, 1)
+                                 ).first()
+        if match:
+            # Error
+            form.errors["code"] = current.T("Organization ID already in use")
+
+        return
+
+    # -------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
 
         #controller = current.request.controller
@@ -1732,7 +1771,8 @@ Thank you"""
                         filter_widget.opts["filter"] = (~FS("id").belongs(not_filter_opts))
 
             else:
-                s3db.org_organisation.root_organisation.label = T("National Society")
+                otable = s3db.org_organisation
+                otable.root_organisation.label = T("National Society")
 
                 # Organisation needs to be an NS/Branch
                 ns_only("hrm_human_resource",
@@ -1744,7 +1784,32 @@ Thank you"""
 
                 export_formats = list(settings.get_ui_export_formats())
 
-                if not r.id:
+                # Organziation ID needs to be unique per NS
+                # Check the code onvalidation in case multiple people are registering new volunteers at the same time
+                r.resource.configure(onvalidation = hrm_human_resource_onvalidation,
+                                     )
+
+                if r.method == "create":
+                    # Provide a default Organization ID
+                    organisation_id = auth.user.organisation_id
+                    if organisation_id:
+                        org = db(otable.id == organisation_id).select(otable.root_organisation,
+                                                                      limitby = (0, 1)
+                                                                      ).first()
+                        root_organisation_id = org.root_organisation
+                        f = table.code
+                        query = (otable.root_organisation == root_organisation_id) & \
+                                (otable.id == table.organisation_id)
+                        last_code = db(query).select(f,
+                                                     limitby = (0, 1),
+                                                     orderby = ~f
+                                                     ).first()
+                        last_code = last_code.code
+                        if last_code:
+                            f.default = int(last_code) + 1
+                        else:
+                            f.default = 1
+                elif not r.id:
                     # Filter to just RC people
                     resource.add_filter(FS("organisation_id$organisation_type.name") == RED_CROSS)
                     resource.configure(create_onaccept = hrm_human_resource_create_onaccept,
@@ -1801,7 +1866,7 @@ Thank you"""
             query = (ltable.facility_type_id == ttable.id) & \
                     (ttable.name == "Venue")
             venues = db(query).select(ltable.site_id)
-            venues = [f.site_id for f in venues]
+            venues = [v.site_id for v in venues]
             stable = s3db.org_site
             dbset = db(~stable.site_id.belongs(venues))
 
