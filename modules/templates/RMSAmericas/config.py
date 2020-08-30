@@ -1671,6 +1671,16 @@ Thank you"""
         return
 
     # -------------------------------------------------------------------------
+    def customise_hrm_human_resource_resource(r, tablename):
+
+        # Organization ID needs to be unique per NS
+        current.s3db.configure(tablename,
+                               onvalidation = hrm_human_resource_onvalidation,
+                               )
+
+    settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
+
+    # -------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
 
         #controller = current.request.controller
@@ -1783,11 +1793,6 @@ Thank you"""
                         )
 
                 export_formats = list(settings.get_ui_export_formats())
-
-                # Organziation ID needs to be unique per NS
-                # Check the code onvalidation in case multiple people are registering new volunteers at the same time
-                r.resource.configure(onvalidation = hrm_human_resource_onvalidation,
-                                     )
 
                 if r.method == "create":
                     # Provide a default Organization ID
