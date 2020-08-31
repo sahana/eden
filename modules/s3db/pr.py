@@ -1123,6 +1123,10 @@ class PRPersonModel(S3Model):
                                               },
                        # Disciplinary Record
                        hrm_disciplinary_action = "person_id",
+                       # Insurance
+                       #hrm_insurance = {"joinby": "person_id",
+                       #                 "multiple": False,
+                       #                 },
                        # Salary Information
                        hrm_salary = "person_id",
                        # Delegations
@@ -5118,6 +5122,7 @@ class PRDescriptionModel(S3Model):
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
+        #configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
@@ -5476,6 +5481,12 @@ class PRDescriptionModel(S3Model):
 
                      s3_comments(),
                      *s3_meta_fields())
+
+            #self.configure(tablename,
+            #               context = {"person": "pe_id",
+            #                          },
+            #               )
+                       
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3

@@ -860,10 +860,12 @@ class S3Profile(S3CRUD):
         # Render the widget
         output = DIV(H4(icon,
                         label,
-                        _class="profile-sub-header"),
+                        _class = "profile-sub-header",
+                        ),
                      DIV(form,
-                         _class="form-container thumbnail"),
-                     _class=_class,
+                         _class = "form-container thumbnail",
+                         ),
+                     _class = _class,
                      )
 
         return output

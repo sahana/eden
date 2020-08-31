@@ -1629,7 +1629,8 @@ Thank you"""
                                                    ),
                        )
 
-    settings.customise_hrm_insurance_resource = customise_hrm_insurance_resource
+    # Currently hardcoded in hrm_Medical
+    #settings.customise_hrm_insurance_resource = customise_hrm_insurance_resource
 
     # -------------------------------------------------------------------------
     def hrm_human_resource_onvalidation(form):

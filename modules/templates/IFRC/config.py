@@ -7388,13 +7388,15 @@ def config(settings):
                                      )
                                     )
 
-        current.s3db.configure("pr_person", crud_form=crud_form)
+        current.s3db.configure("pr_person",
+                               crud_form = crud_form,
+                               )
 
-        return dict(label = T("Other Education"),
-                    type = "form",
-                    tablename = "pr_person",
-                    context = ("id", "id"),
-                    )
+        return {"label": T("Other Education"),
+                "type": "form",
+                "tablename": "pr_person",
+                "context": ("id", "id"),
+                }
 
     # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):

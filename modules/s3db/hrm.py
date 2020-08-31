@@ -63,6 +63,7 @@ __all__ = ("HRModel",
            "hrm_training_event_controller",
            "hrm_xls_list_fields",
            "hrm_CV",
+           #"hrm_Medical",
            "hrm_Record",
            "hrm_configure_pr_group_membership",
            "hrm_human_resource_onaccept",
@@ -1744,7 +1745,10 @@ class HRInsuranceModel(S3Model):
         #
         tablename = "hrm_insurance"
         self.define_table(tablename,
+                          # The original use (IFRC) used human_resource_id instead of the usual person_id in order to put it into the HR form
                           self.hrm_human_resource_id(),
+                          # RMSAmericas uses person_id in order to have on a common Medical Information tab with Physical Description fields
+                          #self.pr_person_id(),
                           Field("type",
                                 label = T("Type"),
                                 represent = insurance_type_represent,
@@ -1778,7 +1782,10 @@ class HRInsuranceModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
+                       #context = {"person": "human_resource_id$person_id",
+                       #           },
                        deduplicate = S3Duplicate(primary = ("human_resource_id",
+                                                            #"person_id",
                                                             "type",
                                                             ),
                                                  ),
@@ -1843,6 +1850,7 @@ class HRContractModel(S3Model):
 class HRJobModel(S3Model):
     """
         Unused
+        @ToDo: If bringing back into use then Availability better as Person component not HR
     """
 
     names = ("hrm_position",
@@ -8156,7 +8164,7 @@ def hrm_human_resource_controller(extra_filter = None):
                                                        ptable.middle_name,
                                                        ptable.last_name,
                                                        ptable.pe_id,
-                                                       limitby=(0, 1)
+                                                       limitby = (0, 1)
                                                        ).first()
             name = s3_fullname(person)
             pe_id = person.pe_id
@@ -9591,9 +9599,6 @@ class hrm_Medical(S3Method):
         if representation not in ("html", "aadata"):
             r.error(405, current.ERROR.BAD_METHOD)
 
-        r.customise_resource("pr_physical_description")
-        r.customise_resource("hrm_insurance")
-
         T = current.T
         s3db = current.s3db
         response = current.response
@@ -9601,16 +9606,41 @@ class hrm_Medical(S3Method):
         crud_strings = s3.crud_strings
         tablename = r.tablename
 
+        # Redefine as non-multiple
+        s3db.add_components("hrm_human_resource",
+                            hrm_insurance = {"joinby": "human_resource_id",
+                                             "multiple": False,
+                                             },
+                            )
+
+        # @ToDo: Make this customisable
+        #r.customise_resource("hrm_insurance")
+        r.customise_resource("pr_physical_description")
+
         profile_widgets = [
             {"label": "",
              "type": "form",
-             "tablename": "pr_physical_description",
-             "context": "person",
+             #"tablename": "pr_physical_description",
+             #"context": "person",
+             #"filter": FS("pe_id") == r.record.pe_id,
+             "tablename": "pr_person",
+             "context": ("id", "id"),
+             "sqlform": S3SQLCustomForm("physical_description.blood_type",
+                                        "physical_description.medical_conditions",
+                                        "physical_description.medication",
+                                        "physical_description.diseases",
+                                        "physical_description.allergic",
+                                        "physical_description.allergies",
+                                        ),
              },
             {"label": T("Medical Coverage"),
              "type": "form",
-             "tablename": "hrm_insurance",
+             "tablename": "hrm_human_resource",
              "context": "person",
+             "sqlform": S3SQLCustomForm((T("Affiliate Number"),"insurance.insurance_number"),
+                                        (T("Emergency Number"),"insurance.phone"),
+                                        (T("Insurance Company"),"insurance.insurer"),
+                                        ),
              },
             ]
 
@@ -9622,7 +9652,7 @@ class hrm_Medical(S3Method):
                                          _id = "rheader",
                                          ))
             s3.jquery_ready.append('''S3.showHidden('%s',%s,'%s')''' % \
-                ("allergic", json.dumps(["allergies"], separators=SEPARATORS), "pr_physical_description"))
+                ("allergic", json.dumps(["allergies"], separators=SEPARATORS), "pr_person_sub_physical_description"))
 
         else:
             profile_header = None
