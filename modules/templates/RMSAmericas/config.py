@@ -1713,11 +1713,11 @@ Thank you"""
                              ]
             s3_addrow(form,
                       LABEL("%s:" % T("Language"),
-                            _id="auth_user_language__label",
-                            _for="auth_user_language",
+                            _id = "auth_user_language__label",
+                            _for = "auth_user_language",
                             ),
-                      SELECT(_id="auth_user_language",
-                             _name="language",
+                      SELECT(_id = "auth_user_language",
+                             _name = "language",
                              *language_opts
                              ),
                       "",
@@ -1751,7 +1751,7 @@ Thank you"""
                 # Lookup organisation_type_id for Red Cross
                 ttable = s3db.org_organisation_type
                 type_ids = db(ttable.name.belongs((RED_CROSS, "Training Center"))).select(ttable.id,
-                                                                                          limitby=(0, 2),
+                                                                                          limitby = (0, 2),
                                                                                           cache = s3db.cache,
                                                                                           )
                 if type_ids:
@@ -1797,7 +1797,7 @@ Thank you"""
 
                 export_formats = list(settings.get_ui_export_formats())
 
-                if r.method == "create":
+                if r.method in ("create", "summary", None):
                     # Provide a default Organization ID
                     organisation_id = auth.user.organisation_id
                     if organisation_id:
@@ -1817,7 +1817,8 @@ Thank you"""
                             f.default = int(last_code) + 1
                         else:
                             f.default = 1
-                elif not r.id:
+
+                if not r.id:
                     # Filter to just RC people
                     resource.add_filter(FS("organisation_id$organisation_type.name") == RED_CROSS)
                     resource.configure(create_onaccept = hrm_human_resource_create_onaccept,
