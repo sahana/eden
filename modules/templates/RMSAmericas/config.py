@@ -1637,12 +1637,15 @@ Thank you"""
             Check that the Organization ID is unique per NS
         """
 
-        db = current.db
-        s3db = current.s3db
-
         # Read Code
         form_vars_get = form.vars.get
         code = form_vars_get("code")
+
+        if code is None:
+            return
+
+        db = current.db
+        s3db = current.s3db
 
         # Lookup Root Org
         organisation_id = form_vars_get("organisation_id")
