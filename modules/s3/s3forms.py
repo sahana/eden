@@ -2142,11 +2142,12 @@ class SKIP_POST_VALIDATION(Validator):
             if hasattr(other, "formatter"):
                 self.formatter = other.formatter
 
-    def __call__(self, value):
+    def __call__(self, value, record_id=None):
         """
             Validation
 
             @param value: the value
+            @param record_id: the record ID (unused, for API compatibility)
         """
 
         other = self.other
@@ -2774,12 +2775,13 @@ class S3SQLInlineComponent(S3SQLSubForm):
         return json.dumps(data, separators=SEPARATORS)
 
     # -------------------------------------------------------------------------
-    def parse(self, value):
+    def parse(self, value, record_id=None):
         """
             Validator method, converts the JSON returned from the input
             field into a Python object.
 
             @param value: the JSON from the input field.
+            @param record_id: the record ID (unused, for API compatibility)
             @return: tuple of (value, error), where value is the converted
                       JSON, and error the error message if the decoding
                       fails, otherwise None

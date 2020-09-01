@@ -1053,11 +1053,12 @@ class S3AddPersonWidget(FormWidget):
         current.response.s3.js_global.append("\n".join(strings))
 
     # -------------------------------------------------------------------------
-    def validate(self, value):
+    def validate(self, value, record_id=None):
         """
             Validate main input value
 
             @param value: the main input value (JSON)
+            @param record_id: the record ID (unused, for API compatibility)
 
             @return: tuple (id, error), where "id" is the record ID of the
                      selected or newly created record
@@ -4366,7 +4367,7 @@ class S3Selector(FormWidget):
         return values, None
 
     # -------------------------------------------------------------------------
-    def postprocess(self, value):
+    def postprocess(self, value, record_id=None):
         """
             Post-process to create or update records. Called during POST
             before validation of the outer form.
@@ -4374,6 +4375,7 @@ class S3Selector(FormWidget):
             To be implemented in subclass.
 
             @param value: the value from the form (as JSON)
+            @param record_id: the record ID (unused, for API compatibility)
             @return: tuple (record_id, error)
         """
 
@@ -6967,11 +6969,12 @@ class S3CascadeSelectWidget(FormWidget):
             jquery_ready.append(script)
 
     # -------------------------------------------------------------------------
-    def parse(self, value):
+    def parse(self, value, record_id=None):
         """
             Value parser for the hidden input field of the widget
 
             @param value: the value received from the client, JSON string
+            @param record_id: the record ID (unused, for API compatibility)
 
             @return: a list (if multiple=True) or the value
         """
@@ -7223,11 +7226,12 @@ class S3HierarchyWidget(FormWidget):
         return widget
 
     # -------------------------------------------------------------------------
-    def parse(self, value):
+    def parse(self, value, record_id=None):
         """
             Value parser for the hidden input field of the widget
 
             @param value: the value received from the client, JSON string
+            @param record_id: the record ID (unused, for API compatibility)
 
             @return: a list (if multiple=True) or the value
         """

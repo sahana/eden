@@ -183,7 +183,7 @@ class S3Payments(S3Method):
                       Field("cancel", "boolean",
                             label = T("Yes, cancel this subscription"),
                             default = False,
-                            requires = lambda cb: (cb, (CONFIRM if not cb else None))
+                            requires = lambda cb, record_id=None: (cb, (CONFIRM if not cb else None))
                             ),
                       ]
 
