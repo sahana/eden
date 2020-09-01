@@ -3743,7 +3743,7 @@ def config(settings):
                            )
         elif get_vars_get("rdrt_ap_deployment"):
             from gluon import IS_EMPTY_OR
-            from s3 import s3_comments_widget, IS_ONE_OF, S3Represent, S3SQLCustomForm#, S3MultiSelectWidget
+            from s3 import s3_comments_widget, IS_ONE_OF, S3SQLCustomForm#, S3MultiSelectWidget
             db = current.db
             s3db = current.s3db
 
@@ -4156,7 +4156,7 @@ def config(settings):
                 hrm_status_opts = s3db.hrm_status_opts
                 hrm_status_opts[3] = T("End Service")
                 table.status.represent = lambda opt: \
-                                         hrm_status_opts.get(opt, current.messages.UNKNOWN_OPT),
+                                         hrm_status_opts.get(opt, current.messages.UNKNOWN_OPT)
                 from gluon.validators import IS_IN_SET
                 table.status.requires = IS_IN_SET(hrm_status_opts,
                                                   zero=None)
@@ -5804,7 +5804,7 @@ def config(settings):
         if r.get_vars.get("rdrt_ap"):
             # Simplify for RDRT AP
 
-            from s3 import IS_ONE_OF, S3Represent, S3SQLCustomForm
+            from s3 import IS_ONE_OF, S3SQLCustomForm
 
             db = current.db
             s3db = current.s3db
