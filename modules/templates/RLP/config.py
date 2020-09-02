@@ -1276,14 +1276,25 @@ def config(settings):
                         "current_address.location_id$addr_postcode",
                         (T("Place of Residence"), "current_address.location_id$L3"),
                         ])
-                    # Include email address in XLS/PDF
-                    if r.representation in ("xls", "pdf"):
-                        list_fields.insert(-2, (T("Email"), "email.value"))
 
-                    # Status as last column
+                    if r.representation in ("xls", "pdf"):
+                        # Include email address in XLS/PDF
+                        list_fields.insert(-2, (T("Email"), "email.value"))
+                        if coordinator:
+                            # Also include office information
+                            office = "volunteer_record.site_id$site_id:org_office"
+                            list_fields.extend([
+                                (T("Office##gov"), "%s.name" % office),
+                                (T("Office Phone##gov"), "%s.phone1" % office),
+                                (T("Office Email##gov"), "%s.email" % office),
+                                ])
+
+                    # Status and account info as last columns
                     if coordinator:
-                        list_fields.append("volunteer_record.status")
-                        list_fields.append((T("has Account"), "has_account"))
+                        list_fields.extend([
+                            "volunteer_record.status",
+                            (T("has Account"), "has_account"),
+                            ])
 
                     # Filters
                     filter_widgets = [
