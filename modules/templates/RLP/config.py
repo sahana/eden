@@ -1335,6 +1335,25 @@ def config(settings):
                                     ),
                         ]
 
+                    # Configure reports
+                    axes = [(T("Pool"), "pool_membership.group_id"),
+                            (T("Office##gov"), "volunteer_record.site_id"),
+                            "occupation_type_person.occupation_type_id",
+                            ]
+                    facts = [(T("Number of Volunteers"), "count(id)"),
+                             (T("Hours per Week"), "sum(availability.hours_per_week)"),
+                             ]
+                    report_options = {
+                        "rows": axes,
+                        "cols": axes,
+                        "fact": facts,
+                        "defaults": {"rows": "pool_membership.group_id",
+                                     "cols": None,
+                                     "fact": facts[1],
+                                     "totals": True,
+                                     },
+                        }
+
                     resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
                                        filter_widgets = filter_widgets,
                                        list_fields = list_fields,
@@ -1344,6 +1363,7 @@ def config(settings):
                                                        "date_of_birth",
                                                        "user.id",
                                                        ],
+                                       report_options = report_options,
                                        )
 
                 elif r.component_name == "delegation":
