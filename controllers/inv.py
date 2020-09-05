@@ -1644,13 +1644,14 @@ def adj_close():
 
     if session.error:
         redirect(URL(c="inv", f="adj",
-                     args = [adj_id])
-                     )
+                     args = [adj_id]
+                     ))
 
     aitable = s3db.inv_adj_item
     inv_item_table = s3db.inv_inv_item
-
+    get_realm_entity = auth.get_realm_entity
     site_id = adj_rec.site_id
+
     # Go through all the adj_items
     query = (aitable.adj_id == adj_id) & \
             (aitable.deleted == False)
@@ -1658,18 +1659,26 @@ def adj_close():
     for adj_item in adj_items:
         if adj_item.inv_item_id is None:
             # Create a new stock item
-            inv_item_id = inv_item_table.insert(site_id = site_id,
-                                                item_id = adj_item.item_id,
-                                                item_pack_id = adj_item.item_pack_id,
-                                                currency = adj_item.currency,
-                                                bin = adj_item.bin,
-                                                pack_value = adj_item.old_pack_value,
-                                                expiry_date = adj_item.expiry_date,
-                                                quantity = adj_item.new_quantity,
-                                                owner_org_id = adj_item.old_owner_org_id,
-                                                )
+            inv_item = {"site_id": site_id,
+                        "item_id": adj_item.item_id,
+                        "item_pack_id": adj_item.item_pack_id,
+                        "currency": adj_item.currency,
+                        "bin": adj_item.bin,
+                        "pack_value": adj_item.old_pack_value,
+                        "expiry_date": adj_item.expiry_date,
+                        "quantity": adj_item.new_quantity,
+                        "owner_org_id": adj_item.old_owner_org_id,
+                        }
+            inv_item_id = inv_item_table.insert(**inv_item)
+
+            # Apply the realm entity
+            inv_item["id"] = inv_item_id
+            realm_entity = get_realm_entity(inv_item_table, inv_item)
+            db(inv_item_table.id == inv_item_id).update(realm_entity = realm_entity)
+
             # Add the inventory item id to the adjustment record
             db(aitable.id == adj_item.id).update(inv_item_id = inv_item_id)
+
         elif adj_item.new_quantity is not None:
             # Update the existing stock item
             db(inv_item_table.id == adj_item.inv_item_id).update(item_pack_id = adj_item.item_pack_id,
@@ -1681,13 +1690,15 @@ def adj_close():
                                                                  status = adj_item.new_status,
                                                                  )
     # Change the status of the adj record to Complete
-    db(atable.id == adj_id).update(status=1)
+    db(atable.id == adj_id).update(status = 1)
+
     # Go to the Inventory of the Site which has adjusted these items
     (prefix, resourcename, id) = s3db.get_instance(s3db.org_site,
                                                    site_id)
     redirect(URL(c = prefix,
                  f = resourcename,
-                 args = [id, "inv_item"]))
+                 args = [id, "inv_item"],
+                 ))
 
 # =============================================================================
 def recv_item_json():

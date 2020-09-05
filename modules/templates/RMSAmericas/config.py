@@ -133,6 +133,7 @@ def config(settings):
                             "hrm_human_resource": SID,
                             "hrm_training": PID,
                             "hrm_training_event": OID,
+                            "inv_adj": SID,
                             "inv_recv": SID,
                             "inv_send": SID,
                             "inv_inv_item": SID,
