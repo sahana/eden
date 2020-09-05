@@ -645,9 +645,9 @@ Thank you"""
             if deployment_settings.get_auth_set_presence_on_login():
                 s3_addrow(form,
                           "",
-                          INPUT(_id="auth_user_clientlocation",
-                                _name="auth_user_clientlocation",
-                                _style="display:none",
+                          INPUT(_id = "auth_user_clientlocation",
+                                _name = "auth_user_clientlocation",
+                                _style = "display:none",
                                 ),
                           "",
                           formstyle,

@@ -4492,7 +4492,8 @@ class S3InventoryAdjustModel(S3Model):
                                                 updateable = True,
                                                 sort = True,
                                                 ),
-                           represent=org_site_represent),
+                           represent = org_site_represent,
+                           ),
                      s3_date("adjustment_date",
                              default = "now",
                              writable = False
