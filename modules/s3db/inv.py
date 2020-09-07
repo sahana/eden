@@ -55,7 +55,6 @@ from gluon.sqlhtml import RadioWidget
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3compat import zip_longest
 from s3layouts import S3PopupLink
 
 SHIP_STATUS_IN_PROCESS = 0
@@ -3259,12 +3258,12 @@ $.filterOptionsS3({
                                                     ).first().quantity
             except AttributeError:
                 new_track_pack_quantity = record.item_pack_id.quantity
-            newTotal = supply_item_add(stock_quantity,
-                                       stock_pack,
-                                       - float(form_vars.quantity),
-                                       new_track_pack_quantity
-                                       )
-            db(inv_item_table.id == stock_item).update(quantity = newTotal)
+            new_total = supply_item_add(stock_quantity,
+                                        stock_pack,
+                                        - float(form_vars.quantity),
+                                        new_track_pack_quantity
+                                        )
+            db(inv_item_table.id == stock_item).update(quantity = new_total)
         if form_vars.send_id and form_vars.recv_id:
             send_ref = db(stable.id == form_vars.send_id).select(stable.send_ref,
                                                                  limitby = (0, 1)
@@ -3486,190 +3485,180 @@ $.filterOptionsS3({
         """
 
         resource_name = r.name
-        if r.representation == "html"  and  (resource_name == "recv" or \
-                                             resource_name == "send"):
 
-            T = current.T
-            db = current.db
-            #appname = r.application
-            response = current.response
-            s3 = response.s3
+        if r.representation != "html" or resource_name not in ("recv", "send"):
+            r.error(405, current.ERROR.BAD_METHOD)
 
-            # Add core Simile Code
-            #s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % appname)
+        T = current.T
+        db = current.db
 
-            # Add our controlled script
-            #if s3.debug:
-            #    s3.scripts.append("/%s/static/scripts/S3/s3.timeline.js" % appname)
-            #else:
-            #    s3.scripts.append("/%s/static/scripts/S3/s3.timeline.min.js" % appname)
-            s3_include_simile()
+        response = current.response
+        s3 = response.s3
 
-            # Add our data
-            # @ToDo: Make this the initial data & then collect extra via REST with a stylesheet
-            # add in JS using S3.timeline.eventSource.addMany(events) where events is a []
+        s3_include_simile()
 
-            if r.record:
-                # Single record
-                rows = [r.record]
-            else:
-                # Multiple records
-                # @ToDo: Load all records & sort to closest in time
-                # http://stackoverflow.com/questions/7327689/how-to-generate-a-sequence-of-future-datetimes-in-python-and-determine-nearest-d
-                fields = ["id",
-                          "date",
-                          "send_ref",
-                          "comments",
-                          ]
-                if resource_name == "recv":
-                    fields.append("recv_ref")
-                r.resource.load(fields = fields,
-                                limit = 2000,
-                                virtual = False,
-                                )
-                rows = r.resource._rows
+        # Add our data
+        # @ToDo: Make this the initial data & then collect extra via REST with a stylesheet
+        # add in JS using S3.timeline.eventSource.addMany(events) where events is a []
 
-            # We need to link these records to the other end, which can only be done by send_ref
-            send_refs = [row.send_ref for row in rows if row.send_ref is not None]
+        if r.record:
+            # Single record
+            rows = [r.record]
+        else:
+            # Multiple records
+            # @ToDo: Load all records & sort to closest in time
+            # http://stackoverflow.com/questions/7327689/how-to-generate-a-sequence-of-future-datetimes-in-python-and-determine-nearest-d
+            fields = ["id",
+                      "date",
+                      "send_ref",
+                      "comments",
+                      ]
+            if resource_name == "recv":
+                fields.append("recv_ref")
+            rows = r.resource.select(fields,
+                                     limit = 2000,
+                                     virtual = False,
+                                     as_rows = True,
+                                     )
 
-            data = {"dateTimeFormat": "iso8601",
-                    }
+        # We need to link these records to the other end, which can only be done by send_ref
+        send_refs = [row.send_ref for row in rows if row.send_ref is not None]
 
-            now = r.utcnow
-            tl_start = tl_end = now
-            events = []
-            eappend = events.append
-            if resource_name == "send":
-                table = db.inv_recv
-                query = (table.deleted == False) & \
-                        current.auth.s3_accessible_query("read", table) & \
-                        (table.send_ref.belongs(send_refs)) & \
-                        (table.date != None)
-                recv_rows = db(query).select(table.date,
-                                             table.send_ref,
-                                             #table.comments,
-                                             )
-                
-                for row in rows:
-                    send_date = row.date
-                    if send_date is None:
-                        # Can't put on Timeline
-                        continue
-                    send_ref = row.send_ref
-                    if send_ref is not None:
-                        recv_row = recv_rows.find(lambda rrow: rrow.send_ref == send_ref).first()
-                        if recv_row is None:
-                            recv_date = send_date
-                        else:
-                            recv_date = recv_row.date
-                    else:
+        data = {"dateTimeFormat": "iso8601",
+                }
+
+        now = r.utcnow
+        tl_start = tl_end = now
+        events = []
+        eappend = events.append
+        if resource_name == "send":
+            table = db.inv_recv
+            query = (table.deleted == False) & \
+                    current.auth.s3_accessible_query("read", table) & \
+                    (table.send_ref.belongs(send_refs)) & \
+                    (table.date != None)
+            recv_rows = db(query).select(table.date,
+                                         table.send_ref,
+                                         #table.comments,
+                                         )
+
+            for row in rows:
+                send_date = row.date
+                if send_date is None:
+                    # Can't put on Timeline
+                    continue
+                send_ref = row.send_ref
+                if send_ref is not None:
+                    recv_row = recv_rows.find(lambda rrow: rrow.send_ref == send_ref).first()
+                    if recv_row is None:
                         recv_date = send_date
-
-                    if send_date < tl_start:
-                        tl_start = send_date
-                    if recv_date > tl_end:
-                        tl_end = recv_date
-                    send_date = send_date.isoformat()
-                    recv_date = recv_date.isoformat()
-
-                    # @ToDo: Build better Caption rather than just using raw Comments
-                    caption = description = row.comments or ""
-                    link = URL(args = [row.id])
-
-                    # Append to events
-                    eappend({"start": send_date,
-                             "end": recv_date,
-                             "title": send_ref,
-                             "caption": caption,
-                             "description": description or "",
-                             "link": link,
-                             # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
-                             # "color" : "blue",
-                             })
-            else:
-                table = db.inv_send
-                query = (table.deleted == False) & \
-                        current.auth.s3_accessible_query("read", table) & \
-                        (table.send_ref.belongs(send_refs)) & \
-                        (table.date != None)
-                send_rows = db(query).select(table.date,
-                                             table.send_ref,
-                                             #table.comments,
-                                             )
-                
-                for row in rows:
-                    recv_date = row.date
-                    if recv_date is None:
-                        # Can't put on Timeline
-                        continue
-                    send_ref = row.send_ref
-                    if send_ref is not None:
-                        send_row = send_rows.find(lambda srow: srow.send_ref == send_ref).first()
-                        if send_row is None:
-                            send_date = recv_date
-                        else:
-                            send_date = send_row.date
                     else:
+                        recv_date = recv_row.date
+                else:
+                    recv_date = send_date
+
+                if send_date < tl_start:
+                    tl_start = send_date
+                if recv_date > tl_end:
+                    tl_end = recv_date
+                send_date = send_date.isoformat()
+                recv_date = recv_date.isoformat()
+
+                # @ToDo: Build better Caption rather than just using raw Comments
+                caption = description = row.comments or ""
+                link = URL(args = [row.id])
+
+                # Append to events
+                eappend({"start": send_date,
+                         "end": recv_date,
+                         "title": send_ref,
+                         "caption": caption,
+                         "description": description or "",
+                         "link": link,
+                         # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
+                         # "color" : "blue",
+                         })
+        else:
+            table = db.inv_send
+            query = (table.deleted == False) & \
+                    current.auth.s3_accessible_query("read", table) & \
+                    (table.send_ref.belongs(send_refs)) & \
+                    (table.date != None)
+            send_rows = db(query).select(table.date,
+                                         table.send_ref,
+                                         #table.comments,
+                                         )
+
+            for row in rows:
+                recv_date = row.date
+                if recv_date is None:
+                    # Can't put on Timeline
+                    continue
+                send_ref = row.send_ref
+                if send_ref is not None:
+                    send_row = send_rows.find(lambda srow: srow.send_ref == send_ref).first()
+                    if send_row is None:
                         send_date = recv_date
-                        send_ref = row.recv_ref
+                    else:
+                        send_date = send_row.date
+                else:
+                    send_date = recv_date
+                    send_ref = row.recv_ref
 
-                    if send_date < tl_start:
-                        tl_start = send_date
-                    if recv_date > tl_end:
-                        tl_end = recv_date
-                    send_date = send_date.isoformat()
-                    recv_date = recv_date.isoformat()
+                if send_date < tl_start:
+                    tl_start = send_date
+                if recv_date > tl_end:
+                    tl_end = recv_date
+                send_date = send_date.isoformat()
+                recv_date = recv_date.isoformat()
 
-                    # @ToDo: Build better Caption rather than just using raw Comments
-                    caption = description = row.comments or ""
-                    link = URL(args = [row.id])
+                # @ToDo: Build better Caption rather than just using raw Comments
+                caption = description = row.comments or ""
+                link = URL(args = [row.id])
 
-                    # Append to events
-                    eappend({"start": send_date,
-                             "end": recv_date,
-                             "title": send_ref,
-                             "caption": caption,
-                             "description": description or "",
-                             "link": link,
-                             # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
-                             # "color" : "blue",
-                             })
+                # Append to events
+                eappend({"start": send_date,
+                         "end": recv_date,
+                         "title": send_ref,
+                         "caption": caption,
+                         "description": description or "",
+                         "link": link,
+                         # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
+                         # "color" : "blue",
+                         })
 
-            if len(events) == 0:
-                response.warning = T("No suitable data found")
+        if len(events) == 0:
+            response.warning = T("No suitable data found")
 
-            data["events"] = events
-            data = json.dumps(data, separators=SEPARATORS)
+        data["events"] = events
+        data = json.dumps(data, separators=SEPARATORS)
 
-            code = "".join((
+        code = "".join((
 '''S3.timeline.data=''', data, '''
 S3.timeline.tl_start="''', tl_start.isoformat(), '''"
 S3.timeline.tl_end="''', tl_end.isoformat(), '''"
 S3.timeline.now="''', now.isoformat(), '''"
 '''))
 
-            # Configure our code in static/scripts/S3/s3.timeline.js
-            s3.js_global.append(code)
+        # Configure our code in static/scripts/S3/s3.timeline.js
+        s3.js_global.append(code)
 
-            # Create the DIV
-            item = DIV(_id = "s3timeline",
-                       _class = "s3-timeline",
-                       )
+        # Create the DIV
+        item = DIV(_id = "s3timeline",
+                   _class = "s3-timeline",
+                   )
 
-            output = {"item": item}
+        output = {"item": item}
 
-            # Maintain RHeader for consistency
-            if "rheader" in attr:
-                rheader = attr["rheader"](r)
-                if rheader:
-                    output["rheader"] = rheader
+        # Maintain RHeader for consistency
+        if "rheader" in attr:
+            rheader = attr["rheader"](r)
+            if rheader:
+                output["rheader"] = rheader
 
-            output["title"] = T("Shipments Timeline")
-            response.view = "timeline.html"
-            return output
-
-        else:
-            r.error(405, current.ERROR.BAD_METHOD)
+        output["title"] = T("Shipments Timeline")
+        response.view = "timeline.html"
+        return output
 
 # =============================================================================
 def inv_tabs(r):
