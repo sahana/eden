@@ -503,7 +503,7 @@ class GetFieldOptionsTests(unittest.TestCase):
                                                 "fotest_lookup_table.id",
                                                 represent,
                                                 ))
-        table.parent.requires = represent
+        table.parent.represent = represent
 
         # Configure hierarchy
         s3db.configure("fotest_lookup_table", hierarchy="parent")
@@ -613,7 +613,7 @@ class GetFieldOptionsTests(unittest.TestCase):
                                                 "fotest_lookup_table.id",
                                                 represent,
                                                 ))
-        table.parent.requires = represent
+        table.parent.represent = represent
 
         # Configure hierarchy
         s3db = current.s3db
@@ -716,7 +716,7 @@ class GetFieldOptionsTests(unittest.TestCase):
                                                 "fotest_lookup_table.id",
                                                 represent,
                                                 ))
-        table.parent.requires = represent
+        table.parent.represent = represent
 
         # Configure hierarchy
         s3db = current.s3db
@@ -813,7 +813,7 @@ class GetFieldOptionsTests(unittest.TestCase):
                                                 "fotest_lookup_table.id",
                                                 represent,
                                                 ))
-        table.parent.requires = represent
+        table.parent.represent = represent
 
         # Configure hierarchy
         s3db.configure("fotest_lookup_table", hierarchy="parent")

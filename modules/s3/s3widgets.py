@@ -1391,7 +1391,7 @@ class S3AgeWidget(FormWidget):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def date_as_age(value, row=None):
+    def date_as_age(value, record_id=None):
         """
             Convert a date value into age in years, can be used as
             representation method
@@ -7944,7 +7944,7 @@ class S3TimeIntervalWidget(FormWidget):
             @returns: a validator function
         """
 
-        def requires(value):
+        def requires(value, record_id=None):
 
             if value is None or value == "":
                 return value, None

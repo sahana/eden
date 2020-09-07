@@ -528,7 +528,7 @@ class InlineNotifications(S3SQLSubForm):
         return {"delegationID": record_id} if record_id else {}
 
     # -------------------------------------------------------------------------
-    def parse(self, value):
+    def parse(self, value, record_id=None):
         """
             Validator method, converts the JSON returned from the input
             field into a Python object.

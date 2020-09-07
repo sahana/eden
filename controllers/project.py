@@ -416,7 +416,7 @@ def project():
                 #    from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 #    field = s3db.budget_allocation.budget_entity_id
                 #    field.readable = field.writable = True
-                #    field.requires = S3Represent(lookup="budget_budget", key="budget_entity_id")
+                #    field.represent = S3Represent(lookup="budget_budget", key="budget_entity_id")
                 #    field.requires = IS_ONE_OF()
                 #
                 #    crud_form = S3SQLCustomForm("project_id",

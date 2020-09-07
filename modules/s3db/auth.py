@@ -685,7 +685,7 @@ class auth_Consent(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value, record_id=None):
         """
             Validate a consent response (for use with Field.requires)
 
