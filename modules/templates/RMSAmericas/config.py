@@ -1617,21 +1617,16 @@ Thank you"""
     # -------------------------------------------------------------------------
     def customise_hrm_insurance_resource(r, tablename):
 
-        from s3 import S3SQLCustomForm
+        table = current.s3db.hrm_insurance
 
-        s3db = current.s3db
+        table.type.default = "HEALTH"
+        table.insurance_number.label = T("Affiliate Number")
+        table.phone.label = T("Emergency Number")
+        table.insurer.label = "%s / %s" % (T("Insurance Company"),
+                                           T("Social Work or Prepaid"),
+                                           )
 
-        s3db.hrm_insurance.type.default = "HEALTH"
-
-        s3db.configure(tablename,
-                       crud_form = S3SQLCustomForm((T("Affiliate Number"),"insurance_number"),
-                                                   (T("Emergency Number"),"phone"),
-                                                   (T("Insurance Company"),"insurer"),
-                                                   ),
-                       )
-
-    # Currently hardcoded in hrm_Medical
-    #settings.customise_hrm_insurance_resource = customise_hrm_insurance_resource
+    settings.customise_hrm_insurance_resource = customise_hrm_insurance_resource
 
     # -------------------------------------------------------------------------
     def hrm_human_resource_onvalidation(form):

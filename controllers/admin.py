@@ -196,11 +196,16 @@ def user():
                method = "link",
                action = link_user)
 
+    if UNAPPROVED:
+        title_list = T("Unapproved Users")
+    else:
+        title_list = T("Users")
+
     # CRUD Strings
     s3.crud_strings["auth_user"] = Storage(
         label_create = T("Create User"),
         title_display = T("User Details"),
-        title_list = T("Users"),
+        title_list = title_list,
         title_update = T("Edit User"),
         title_upload = T("Import Users"),
         label_list_button = T("List Users"),

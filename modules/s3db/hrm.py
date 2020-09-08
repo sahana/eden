@@ -9613,8 +9613,7 @@ class hrm_Medical(S3Method):
                                              },
                             )
 
-        # @ToDo: Make this customisable
-        #r.customise_resource("hrm_insurance")
+        r.customise_resource("hrm_insurance")
         r.customise_resource("pr_physical_description")
 
         profile_widgets = [
@@ -9637,9 +9636,9 @@ class hrm_Medical(S3Method):
              "type": "form",
              "tablename": "hrm_human_resource",
              "context": "person",
-             "sqlform": S3SQLCustomForm((T("Affiliate Number"),"insurance.insurance_number"),
-                                        (T("Emergency Number"),"insurance.phone"),
-                                        (T("Insurance Company"),"insurance.insurer"),
+             "sqlform": S3SQLCustomForm("insurance.insurance_number",
+                                        "insurance.phone",
+                                        "insurance.insurer",
                                         ),
              },
             ]
