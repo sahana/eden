@@ -1081,15 +1081,17 @@ def config(settings):
                             unavailable = {row.person_id for row in rows}
                             resource.add_filter(~FS("id").belongs(unavailable))
 
+                    # Ongoing deployments as component
+                    s3db.add_components("pr_person",
+                                        hrm_delegation = {"name": "ongoing_deployment",
+                                                          "joinby": "person_id",
+                                                          "filterby": rlp_active_deployments,
+                                                          },
+                                        )
+
                     # Currently-Deployed-Filter
                     deployed_now = get_vars.get("deployed_now") == "1"
                     if deployed_now:
-                        s3db.add_components("pr_person",
-                                            hrm_delegation = {"name": "ongoing_deployment",
-                                                              "joinby": "person_id",
-                                                              "filterby": rlp_active_deployments,
-                                                              },
-                                            )
                         resource.add_filter(FS("ongoing_deployment.id") != None)
                         list_title = T("Currently Deployed Volunteers")
 
@@ -1294,6 +1296,7 @@ def config(settings):
                         list_fields.extend([
                             "volunteer_record.status",
                             (T("has Account"), "has_account"),
+                            (T("Current Deployment"), "ongoing_deployment.organisation_id"),
                             ])
 
                     # Filters
