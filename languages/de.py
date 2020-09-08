@@ -1232,6 +1232,7 @@
 'Current Address': 'Aktuelle Adresse',
 'Current Appointments': 'Aktuelle Termine',
 'Current Cases': 'Aktuelle Fälle',
+'Current Deployment': 'Aktueller Einsatz',
 'Current Entries': 'Aktuelle Einträge',
 'Current Group Members': 'Aktuelle Gruppemmitglieder',
 'Current Home Address': 'Aktuelle Heimatadresse',
