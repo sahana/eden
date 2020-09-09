@@ -355,24 +355,6 @@ def config(settings):
         return attr
 
     settings.customise_cms_post_controller = customise_cms_post_controller
-    # -------------------------------------------------------------------------
-    def customise_org_organisation_resource(r, tablename):
-
-        s3db = current.s3db
-
-        # TODO is this needed?
-        s3db.add_components("org_organisation",
-                            pr_group = {"name": "pool",
-                                        "link": "org_organisation_team",
-                                        "joinby": "organisation_id",
-                                        "key": "group_id",
-                                        "filterby": {"group_type": pool_type_ids,
-                                                     },
-                                        "actuate": "replace",
-                                        },
-                            )
-
-    settings.customise_org_organisation_resource = customise_org_organisation_resource
 
     # -------------------------------------------------------------------------
     def customise_org_organisation_controller(**attr):
@@ -921,6 +903,201 @@ def config(settings):
                        )
 
     settings.customise_pr_person_resource = customise_pr_person_resource
+
+    # -------------------------------------------------------------------------
+    def volunteer_list_fields(r, coordinator=False, name_fields=None):
+        """
+            Determine fields for volunteer list
+
+            @param r: the current S3Request
+            @param coordinator: user is COORDINATOR
+            @param name_fields: name fields in order
+
+            @returns: list of selectors (list_fields)
+        """
+
+        if name_fields is None:
+            name_fields = []
+
+        list_fields = [(T("Pool"), "pool_membership.group_id"),
+                       (T("ID"), "pe_label"),
+                       # name
+                       "occupation_type_person.occupation_type_id",
+                       "availability.hours_per_week",
+                       "availability.schedule",
+                       (T("Mobile Phone"), "phone.value"),
+                       # email
+                       "current_address.location_id$addr_postcode",
+                       (T("Place of Residence"), "current_address.location_id$L3"),
+                       # office
+                       # status
+                       # current deployment
+                       # account info
+                       ]
+
+        # Name
+        if coordinator:
+            list_fields[2:2] = name_fields
+        else:
+            list_fields.insert(2, (T("Name"), "person_details.alias"))
+
+        # Additional fields for XLS/PDF
+        if r.representation in ("xls", "pdf"):
+            # Email address
+            list_fields.insert(-2, (T("Email"), "email.value"))
+            if coordinator:
+                # Office information
+                office = "volunteer_record.site_id$site_id:org_office"
+                list_fields.extend([
+                    (T("Office##gov"), "%s.name" % office),
+                    (T("Office Phone##gov"), "%s.phone1" % office),
+                    (T("Office Email##gov"), "%s.email" % office),
+                    ])
+
+        # Status, current deployment and account info as last columns
+        if coordinator:
+            list_fields.extend([
+                "volunteer_record.status",
+                (T("Current Deployment"), "ongoing_deployment.organisation_id"),
+                (T("Deployed until"), "ongoing_deployment.end_date"),
+                (T("has Account"), "has_account"),
+                ])
+
+        return list_fields
+
+    # -------------------------------------------------------------------------
+    def volunteer_crud_form(coordinator = False,
+                            show_contact_details = False,
+                            name_fields = None
+                            ):
+        """
+            Determine fields for volunteer form
+
+            @param coordinator: user is COORDINATOR
+            @param show_contact_details: show contact information
+            @param name_fields: name fields in order
+
+            @returns: list of form fields
+        """
+
+        from s3 import (S3SQLInlineComponent,
+                        S3SQLInlineLink,
+                        )
+
+        crud_fields = [
+                S3SQLInlineLink("pool",
+                                field = "group_id",
+                                multiple = False,
+                                header = False,
+                                search = False,
+                                ),
+                ]
+
+        if coordinator:
+            crud_fields.append("volunteer_record.status")
+
+        if show_contact_details and name_fields:
+            # Name fields in name-format order
+            crud_fields.extend(name_fields)
+
+        # Additional fields for COORDINATORS
+        if coordinator:
+
+            # Organisation and Office at the top
+            crud_fields[0:0] = [
+                "volunteer_record.organisation_id",
+                (T("Office##gov"), "volunteer_record.site_id"),
+                ]
+
+            # Filter Office selector by Organisation
+            script = '''$.filterOptionsS3({
+'trigger':'sub_volunteer_record_organisation_id',
+'target':'sub_volunteer_record_site_id',
+'lookupPrefix':'org',
+'lookupResource':'office',
+'lookupKey':'organisation_id',
+'lookupField':'site_id',
+'optional':true
+})'''
+            s3 = current.response.s3
+            if script not in s3.jquery_ready:
+                s3.jquery_ready.append(script)
+
+            # Other COORDINATOR-specific fields
+            crud_fields.extend([
+                "date_of_birth",
+                "gender",
+                S3SQLInlineComponent(
+                        "address",
+                        label = T("Current Address"),
+                        fields = [("", "location_id")],
+                        filterby = {"field": "type",
+                                    "options": "1",
+                                    },
+                        link = False,
+                        multiple = False,
+                        ),
+                ])
+
+        # Contact details if permitted
+        if show_contact_details:
+            crud_fields.extend([
+                S3SQLInlineComponent(
+                        "contact",
+                        fields = [("", "value")],
+                        filterby = {"field": "contact_method",
+                                    "options": "EMAIL",
+                                    },
+                        label = T("Email"),
+                        multiple = False,
+                        name = "email",
+                        ),
+                S3SQLInlineComponent(
+                        "contact",
+                        fields = [("", "value")],
+                        filterby = {"field": "contact_method",
+                                    "options": "HOME_PHONE",
+                                    },
+                        label = T("Phone"),
+                        multiple = False,
+                        name = "home_phone",
+                        ),
+                S3SQLInlineComponent(
+                        "contact",
+                        fields = [("", "value")],
+                        filterby = {"field": "contact_method",
+                                    "options": "SMS",
+                                    },
+                        label = T("Mobile Phone"),
+                        multiple = False,
+                        name = "phone",
+                        ),
+                S3SQLInlineComponent(
+                        "contact",
+                        fields = [("", "value")],
+                        filterby = {"field": "contact_method",
+                                    "options": "WORK_PHONE",
+                                    },
+                        label = T("Office Phone"),
+                        multiple = False,
+                        name = "work_phone",
+                        ),
+                ])
+
+        # Common fields for all cases
+        crud_fields.extend([
+                S3SQLInlineLink("occupation_type",
+                               label = T("Occupation Type"),
+                               field = "occupation_type_id",
+                               ),
+                (T("Occupation / Speciality"), "person_details.occupation"),
+                "availability.hours_per_week",
+                "availability.schedule",
+                "volunteer_record.comments",
+                ])
+
+        return crud_fields
+
     # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
@@ -950,8 +1127,6 @@ def config(settings):
                             S3OptionsFilter,
                             S3RangeFilter,
                             S3SQLCustomForm,
-                            S3SQLInlineComponent,
-                            S3SQLInlineLink,
                             S3TextFilter,
                             StringTemplateParser,
                             s3_get_filter_opts,
@@ -1134,44 +1309,6 @@ def config(settings):
                         msg_list_empty = T("No Volunteers found"),
                         )
 
-                    # Custom list_fields
-                    list_fields = [(T("Pool"), "pool_membership.group_id"),
-                                   (T("ID"), "pe_label"),
-                                   # name-fields
-                                   (T("Age"), "age"),
-                                   #"occupation_type_person.occupation_type_id",
-                                   #"availability.hours_per_week",
-                                   #"current_address.location_id$addr_postcode",
-                                   #(T("Place of Residence"), "current_address.location_id$L3"),
-                                   ]
-
-                    # Custom Form
-                    crud_fields = [S3SQLInlineLink("pool",
-                                                   field = "group_id",
-                                                   multiple = False,
-                                                   header = False,
-                                                   search = False,
-                                                   ),
-                                   ]
-
-                    # Only COORDINATOR can see organisation details
-                    if coordinator:
-                        crud_fields[0:0] = ["volunteer_record.organisation_id",
-                                            (T("Office##gov"), "volunteer_record.site_id"),
-                                            ]
-                        script = '''$.filterOptionsS3({
- 'trigger':'sub_volunteer_record_organisation_id',
- 'target':'sub_volunteer_record_site_id',
- 'lookupPrefix':'org',
- 'lookupResource':'office',
- 'lookupKey':'organisation_id',
- 'lookupField':'site_id',
- 'optional':true
-})'''
-                        if script not in s3.jquery_ready:
-                            s3.jquery_ready.append(script)
-                        crud_fields.append("volunteer_record.status")
-
                     # Show names and contact details if:
                     # - user is COORDINATOR, or
                     # - volunteer viewed is an open pool member, or
@@ -1181,125 +1318,34 @@ def config(settings):
                         show_contact_details = coordinator or \
                                                open_pool_member(person_id) or \
                                                rlp_deployed_with_org(person_id)
+                        if not show_contact_details:
+                            name_fields = []
                     else:
                         show_contact_details = True
 
-                    if show_contact_details:
-                        # Name fields in name-format order
-                        crud_fields.extend(name_fields)
-                    else:
-                        name_fields = []
+                    # List fields
+                    list_fields = volunteer_list_fields(r,
+                                                        coordinator = coordinator,
+                                                        name_fields = name_fields,
+                                                        )
 
-                    if coordinator:
-                        # Coordinators can search names and see names,
-                        # personal details and addresses
-                        text_search_fields = name_fields + ["pe_label"]
-                        list_fields[2:2] = name_fields
-                        crud_fields.extend([
-                                   "date_of_birth",
-                                   "gender",
-                                   S3SQLInlineComponent(
-                                            "address",
-                                            label = T("Current Address"),
-                                            fields = [("", "location_id")],
-                                            filterby = {"field": "type",
-                                                        "options": "1",
-                                                        },
-                                            link = False,
-                                            multiple = False,
-                                            ),
-                                   ])
-                    else:
-                        # Other users see ID and Alias
-                        text_search_fields = ["person_details.alias", "pe_label"]
-                        list_fields.insert(2, (T("Name"), "person_details.alias"))
-                    text_search_fields.append("person_details.occupation")
-
-                    if show_contact_details:
-                        crud_fields.extend([
-                                   S3SQLInlineComponent(
-                                            "contact",
-                                            fields = [("", "value")],
-                                            filterby = {"field": "contact_method",
-                                                        "options": "EMAIL",
-                                                        },
-                                            label = T("Email"),
-                                            multiple = False,
-                                            name = "email",
-                                            ),
-                                   S3SQLInlineComponent(
-                                            "contact",
-                                            fields = [("", "value")],
-                                            filterby = {"field": "contact_method",
-                                                        "options": "HOME_PHONE",
-                                                        },
-                                            label = T("Phone"),
-                                            multiple = False,
-                                            name = "home_phone",
-                                            ),
-                                   S3SQLInlineComponent(
-                                            "contact",
-                                            fields = [("", "value")],
-                                            filterby = {"field": "contact_method",
-                                                        "options": "SMS",
-                                                        },
-                                            label = T("Mobile Phone"),
-                                            multiple = False,
-                                            name = "phone",
-                                            ),
-                                   S3SQLInlineComponent(
-                                            "contact",
-                                            fields = [("", "value")],
-                                            filterby = {"field": "contact_method",
-                                                        "options": "WORK_PHONE",
-                                                        },
-                                            label = T("Office Phone"),
-                                            multiple = False,
-                                            name = "work_phone",
-                                            ),
-                                   ])
-
-                    # Common fields for all cases
-                    crud_fields.extend([
-                        S3SQLInlineLink("occupation_type",
-                                       label = T("Occupation Type"),
-                                       field = "occupation_type_id",
-                                       ),
-                        (T("Occupation / Speciality"), "person_details.occupation"),
-                        "availability.hours_per_week",
-                        "availability.schedule",
-                        "volunteer_record.comments",
-                        ])
-                    list_fields.extend([
-                        "occupation_type_person.occupation_type_id",
-                        "availability.hours_per_week",
-                        "availability.schedule",
-                        (T("Mobile Phone"), "phone.value"),
-                        "current_address.location_id$addr_postcode",
-                        (T("Place of Residence"), "current_address.location_id$L3"),
-                        ])
-
-                    if r.representation in ("xls", "pdf"):
-                        # Include email address in XLS/PDF
-                        list_fields.insert(-2, (T("Email"), "email.value"))
-                        if coordinator:
-                            # Also include office information
-                            office = "volunteer_record.site_id$site_id:org_office"
-                            list_fields.extend([
-                                (T("Office##gov"), "%s.name" % office),
-                                (T("Office Phone##gov"), "%s.phone1" % office),
-                                (T("Office Email##gov"), "%s.email" % office),
-                                ])
-
-                    # Status and account info as last columns
-                    if coordinator:
-                        list_fields.extend([
-                            "volunteer_record.status",
-                            (T("has Account"), "has_account"),
-                            (T("Current Deployment"), "ongoing_deployment.organisation_id"),
-                            ])
+                    # CRUD fields
+                    crud_fields = volunteer_crud_form(coordinator = coordinator,
+                                                      show_contact_details = show_contact_details,
+                                                      name_fields = name_fields,
+                                                      )
 
                     # Filters
+                    if coordinator:
+                        # Coordinators can search by ID and names
+                        text_search_fields = name_fields + ["pe_label"]
+                    else:
+                        # Other users can search by ID and Alias
+                        text_search_fields = ["person_details.alias",
+                                              "pe_label",
+                                              ]
+                    text_search_fields.append("person_details.occupation")
+
                     filter_widgets = [
                         S3TextFilter(text_search_fields,
                                      label = T("Search"),
@@ -1338,7 +1384,7 @@ def config(settings):
                                     ),
                         ]
 
-                    # Configure reports
+                    # Reports
                     axes = [(T("Pool"), "pool_membership.group_id"),
                             (T("Office##gov"), "volunteer_record.site_id"),
                             "occupation_type_person.occupation_type_id",
@@ -1380,6 +1426,7 @@ def config(settings):
                 # Personal profile (default/person)
                 if not r.component:
                     # Custom Form
+                    from s3 import S3SQLInlineLink
                     crud_fields = name_fields
                     crud_fields.extend(["date_of_birth",
                                         "gender",
@@ -1967,6 +2014,7 @@ def config(settings):
         return attr
 
     settings.customise_hrm_delegation_controller = customise_hrm_delegation_controller
+
     # -------------------------------------------------------------------------
     def customise_hrm_competency_resource(r, tablename):
 
@@ -1990,6 +2038,7 @@ def config(settings):
                        )
 
     settings.customise_hrm_competency_resource = customise_hrm_competency_resource
+
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py

@@ -1513,6 +1513,7 @@
 'Department Catalog': 'Abteilungskatalog',
 'Departures': 'Abgänge',
 'Dependent Person': 'Abhängige Person',
+'Deployed until': 'Eingesetzt bis',
 'Deploying Organisation': 'Einsetzende Organisation',
 'Deployment Comments, Notifications and Notes': 'Kommentare, Benachrichtigungen und Notizen zu Einsätzen',
 'Deployment Details': 'Details zum Einsatz',
