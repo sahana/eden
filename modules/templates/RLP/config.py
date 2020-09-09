@@ -923,7 +923,7 @@ def config(settings):
                        (T("ID"), "pe_label"),
                        # name
                        "occupation_type_person.occupation_type_id",
-                       "availability.hours_per_week",
+                       (T("Hours/Wk"), "availability.hours_per_week"),
                        "availability.schedule",
                        (T("Mobile Phone"), "phone.value"),
                        # email

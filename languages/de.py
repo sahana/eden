@@ -2293,6 +2293,7 @@
 'Hours by': 'Stunden gem.',
 'Hours per Week': 'Stunden/Woche',
 'Hours': 'Stunden',
+'Hours/Wk': 'Std/Wo.',
 'Household kits received': 'Haushaltsbausätze (-kits) erhalten',
 'Household kits, source': 'Herkunft der Haushaltbausätze (-kits)',
 'Housing Unit Capacity': 'Maximale Belegungzahl für Unterkunftseinheit',
