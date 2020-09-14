@@ -1871,6 +1871,7 @@
 'Enter a GPS Coord': 'Geben Sie eine GPS Koordinate ein',
 'Enter a name for the spreadsheet you are uploading (mandatory).': 'Geben Sie einen Namen für die Tabelle, die Sie hochladen an (obligatorisch).',
 'Enter a new support request.': 'Geben Sie eine neue Unterstützungsanfrage ein.',
+'Enter a number between %(min)g and %(max)g': 'Geben Sie eine Zahl zwischen %(min)g and %(max)g ein',
 'Enter a unique label!': 'Geben Sie eine eindeutige Bezeichnung ein!',
 'Enter a valid date before': 'Geben Sie zuvor eine gültiges Datum ein',
 'Enter a valid email': 'Geben Sie eine gültige E-Mail-Adresse ein',

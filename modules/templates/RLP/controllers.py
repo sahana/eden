@@ -8,10 +8,10 @@ from gluon import A, BR, CRYPT, DIV, Field, H3, INPUT, \
                   P, SQLFORM, URL, XML, current, redirect
 from gluon.storage import Storage
 
-from s3 import IS_ONE_OF, JSONERRORS, S3CustomController, \
-               S3GroupedOptionsWidget, S3LocationSelector, S3MultiSelectWidget, \
-               S3Represent, s3_comments_widget, s3_date, s3_mark_required, \
-               s3_phone_requires, s3_str
+from s3 import IS_ONE_OF, IS_PHONE_NUMBER_MULTI, IS_PHONE_NUMBER_SINGLE, \
+               JSONERRORS, S3CustomController, S3GroupedOptionsWidget, \
+               S3LocationSelector, S3MultiSelectWidget, S3Represent, \
+               s3_comments_widget, s3_date, s3_mark_required, s3_str
 
 from .notifications import formatmap
 
@@ -528,15 +528,15 @@ class register(S3CustomController):
                       # --------------------------------------------
                       Field("home_phone",
                             label = T("Phone"),
-                            requires = IS_EMPTY_OR(s3_phone_requires),
+                            requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI()),
                             ),
                       Field("mobile_phone",
                             label = T("Mobile Phone"),
-                            requires = IS_EMPTY_OR(s3_phone_requires),
+                            requires = IS_EMPTY_OR(IS_PHONE_NUMBER_SINGLE()),
                             ),
                       #Field("office_phone",
                       #      label = T("Office Phone"),
-                      #      requires = IS_EMPTY_OR(s3_phone_requires),
+                      #      requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI()),
                       #      ),
                       # --------------------------------------------
                       s3db.gis_location_id("location_id",

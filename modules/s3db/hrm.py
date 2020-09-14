@@ -1772,7 +1772,7 @@ class HRInsuranceModel(S3Model):
                           Field("phone",
                                 label = T("Emergency Number"),
                                 requires = IS_EMPTY_OR(
-                                            s3_phone_requires,
+                                            IS_PHONE_NUMBER_MULTI(),
                                             ),
                                 ),
                           #Field("beneficiary",

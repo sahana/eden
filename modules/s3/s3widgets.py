@@ -1088,14 +1088,14 @@ class S3AddPersonWidget(FormWidget):
         # Validate phone numbers
         mobile = data.get("mobile_phone")
         if mobile:
-            validator = IS_PHONE_NUMBER(international=True)
+            validator = IS_PHONE_NUMBER_SINGLE(international=True)
             mobile, error = validator(mobile)
             if error:
                 return (None, error)
 
         home_phone = data.get("home_phone")
         if home_phone:
-            validator = IS_PHONE_NUMBER()
+            validator = IS_PHONE_NUMBER_MULTI()
             home_phone, error = validator(home_phone)
             if error:
                 return (None, error)

@@ -1164,7 +1164,7 @@ $('.copy-link').click(function(e){
                             method = "anonymize",
                             action = S3AnonymizeBulk,
                             )
-        
+
         args = current.request.args
         if not len(args):
             if not ADMIN:
@@ -2531,10 +2531,10 @@ $('.copy-link').click(function(e){
     def customise_hrm_training_event_resource(r, tablename):
 
         from gluon import IS_EMAIL, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, IS_URL
-        from s3 import IS_UTC_DATETIME, \
+        from s3 import IS_PHONE_NUMBER_MULTI, IS_UTC_DATETIME, \
                        S3SQLInlineLink, S3LocationSelector, \
-                       S3OptionsFilter, S3SQLCustomForm, S3TextFilter, \
-                       s3_phone_requires
+                       S3OptionsFilter, S3SQLCustomForm, S3TextFilter
+
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("New Event"),
@@ -2591,7 +2591,7 @@ $('.copy-link').click(function(e){
 
         contact_tel = components_get("contact_tel")
         f = contact_tel.table.value
-        f.requires = IS_EMPTY_OR(s3_phone_requires)
+        f.requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI())
 
         contact_email = components_get("contact_email")
         f = contact_email.table.value
@@ -3380,9 +3380,9 @@ $('.copy-link').click(function(e){
 
         from gluon import IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_NOT_EMPTY, \
                           SQLFORM
-        from s3 import IS_INT_AMOUNT, S3OptionsFilter, S3Represent, \
-                       S3SQLCustomForm, S3SQLInlineLink, S3TextFilter, \
-                       s3_phone_requires#, S3LocationSelector
+        from s3 import IS_INT_AMOUNT, IS_PHONE_NUMBER_MULTI, \
+                       S3OptionsFilter, S3Represent, S3SQLCustomForm, \
+                       S3SQLInlineLink, S3TextFilter#, S3LocationSelector
 
         s3db = current.s3db
 
@@ -3457,7 +3457,7 @@ $('.copy-link').click(function(e){
 
         contact_number = components_get("contact_number")
         f = contact_number.table.value
-        f.requires = s3_phone_requires
+        f.requires = IS_PHONE_NUMBER_MULTI()
 
         f = s3db.pr_group_location.location_id
         f.represent = S3Represent(lookup = "gis_location")
@@ -4124,7 +4124,7 @@ $('.copy-link').click(function(e){
                                     (stable.deleted == False)
                             rows = db(query).select(stable.id)
                             nhs_skill_ids = [row.id for row in rows]
-                            
+
                             s3db.add_components("pr_person",
                                                 hrm_competency = {"name": "nhs_offer",
                                                                   "joinby": "person_id",
@@ -4276,7 +4276,7 @@ $('.copy-link').click(function(e){
                         #               ]
                         #r.component.configure(list_fields = list_fields)
 
-                    
+
                     elif r.component_name == "location":
                         from s3 import S3LocationSelector
                         s3db.pr_person_location.location_id.widget = S3LocationSelector(levels = ("L3", "L4"),
@@ -4334,7 +4334,7 @@ $('.copy-link').click(function(e){
                                      args = "create",
                                      vars = {"person_ids": 1},
                                      ))
-                    
+
                 if HRM or PROFILE:
                     # Organisation Volunteers
                     # (only used for hrm/person profile)
@@ -4800,7 +4800,7 @@ $('.copy-link').click(function(e){
             if len(person_ids) < 5:
                 # Track individuals in the To: field
                 from s3 import s3_fullname
-                
+
                 # Lookup Emails & Names
                 ptable = s3db.pr_person
                 ctable = s3db.pr_contact
@@ -4826,7 +4826,7 @@ $('.copy-link').click(function(e){
             else:
                 # Bulk label
                 to_label = "Reserve(s)"
-            
+
                 # Lookup Emails
                 ptable = s3db.pr_person
                 ctable = s3db.pr_contact
@@ -4907,7 +4907,7 @@ $('.copy-link').click(function(e){
             if len(hr_ids) < 5:
                 # Track individuals in the To: field
                 from s3 import s3_fullname
-                
+
                 # Lookup Emails & Names
                 htable = s3db.hrm_human_resource
                 ptable = s3db.pr_person
@@ -4935,7 +4935,7 @@ $('.copy-link').click(function(e){
             else:
                 # Bulk label
                 to_label = "Community Volunteer(s)"
-            
+
                 # Lookup Emails
                 htable = s3db.hrm_human_resource
                 ptable = s3db.pr_person
@@ -5006,7 +5006,7 @@ $('.copy-link').click(function(e){
                     (system_name,
                      fullname,
                      )
-        
+
         if organisation_ids is not None:
             # Sending to a list of Organisations from the Bulk Action
             tag_table = s3db.project_task_tag
@@ -5163,7 +5163,7 @@ $('.copy-link').click(function(e){
                                          )
 
             return
-            
+
         # Use the Organisation we request or fallback to the User's Organisation
         if organisation_id is None:
             organisation_id = user.organisation_id
@@ -5237,7 +5237,7 @@ $('.copy-link').click(function(e){
                 (mtable.user_id == utable.id) & \
                 (utable.organisation_id == organisation_id)
         org_admins = db(query).select(utable.email)
-        
+
         # Send message to each
         send_email = current.msg.send_email
         for admin in org_admins:

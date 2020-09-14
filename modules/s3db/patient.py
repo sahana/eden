@@ -80,7 +80,7 @@ class S3PatientModel(S3Model):
                                 empty = False,
                                 label = T("Current Location Treating Hospital")
                                 ),
-                          Field("phone", requires=s3_phone_requires,
+                          Field("phone", requires=IS_PHONE_NUMBER_MULTI(),
                                 label = T("Current Location Phone Number"),
                                 ),
                           Field("injuries", "text",
@@ -209,7 +209,7 @@ class S3PatientModel(S3Model):
                               ),
                           Field("phone",
                                 label = T("Home Phone Number"),
-                                requires = IS_EMPTY_OR(s3_phone_requires),
+                                requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI()),
                                 ),
                           s3_comments(),
                           *s3_meta_fields())

@@ -317,7 +317,7 @@ class CRShelterModel(S3Model):
                      location_id(),
                      Field("phone",
                            label = T("Phone"),
-                           requires = IS_EMPTY_OR(s3_phone_requires),
+                           requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI()),
                            ),
                      Field("email", "string",
                            label = T("Email"),

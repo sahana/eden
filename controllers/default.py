@@ -1598,7 +1598,7 @@ def _register_validation(form):
     mobile = form_vars.get("mobile")
     if mobile:
         import re
-        regex = re.compile(single_phone_number_pattern)
+        regex = re.compile(SINGLE_PHONE_NUMBER_PATTERN)
         if not regex.match(mobile):
             form.errors.mobile = T("Invalid phone number")
     elif settings.get_auth_registration_mobile_phone_mandatory():
@@ -1608,7 +1608,7 @@ def _register_validation(form):
     home = form_vars.get("home")
     if home:
         import re
-        regex = re.compile(single_phone_number_pattern)
+        regex = re.compile(SINGLE_PHONE_NUMBER_PATTERN)
         if not regex.match(home):
             form.errors.home = T("Invalid phone number")
 

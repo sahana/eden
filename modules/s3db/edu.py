@@ -188,7 +188,7 @@ class S3SchoolModel(S3Model):
                      Field("phone",
                            label = T("Phone"),
                            represent = lambda v: v or NONE,
-                           requires = IS_EMPTY_OR(s3_phone_requires)
+                           requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI())
                            ),
                      Field("email",
                            label = T("Email"),

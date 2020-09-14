@@ -126,7 +126,7 @@ import os
 from gluon import current, redirect, URL, \
                   A, DIV, H2, H3, H5, IMG, LABEL, P, SPAN, TABLE, TAG, TH, TR, \
                   IS_LENGTH, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, IS_EMAIL, \
-                  IS_INT_IN_RANGE, IS_MATCH
+                  IS_INT_IN_RANGE
 from gluon.storage import Storage
 from gluon.sqlhtml import RadioWidget
 
@@ -4190,10 +4190,9 @@ class PRContactModel(S3Model):
         if contact_method == "EMAIL":
             requires = IS_EMAIL(error_message = current.T("Enter a valid email"))
         elif contact_method == "SMS":
-            requires = IS_PHONE_NUMBER(international = True)
+            requires = IS_PHONE_NUMBER_SINGLE(international = True)
         elif contact_method in ("HOME_PHONE", "WORK_PHONE"):
-            requires = IS_MATCH(multi_phone_number_pattern,
-                                error_message = current.T("Enter a valid phone number"))
+            requires = IS_PHONE_NUMBER_MULTI()
         else:
             requires = None
 
@@ -5486,7 +5485,7 @@ class PRDescriptionModel(S3Model):
             #               context = {"person": "pe_id",
             #                          },
             #               )
-                       
+
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
@@ -6377,8 +6376,8 @@ class PRReligionModel(S3Model):
         # Table Configuration
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary = ["name"],
-												 secondary = ["parent"],
-												 ),
+                                                 secondary = ["parent"],
+                                                 ),
                        hierarchy = "parent",
                        )
 

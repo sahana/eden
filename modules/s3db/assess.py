@@ -362,7 +362,7 @@ class S3AssessBuildingModel(S3Model):
                                 represent = lambda v: v or NONE,
                                 label=T("Name")),
                           Field("phone",
-                                requires=IS_EMPTY_OR(s3_phone_requires),
+                                requires=IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI()),
                                 represent = lambda v: v or NONE,
                                 label=T("Phone Number")),
                           Field("contact_other",

@@ -342,7 +342,7 @@ class ISONEOFLazyRepresentationTests(unittest.TestCase):
 
 # =============================================================================
 class IS_PHONE_NUMBER_Tests(unittest.TestCase):
-    """ Test IS_PHONE_NUMBER single phone number validator """
+    """ Test IS_PHONE_NUMBER_SINGLE validator """
 
     def setUp(self):
 
@@ -360,7 +360,7 @@ class IS_PHONE_NUMBER_Tests(unittest.TestCase):
 
         assertEqual = self.assertEqual
         assertNotEqual = self.assertNotEqual
-        validate = IS_PHONE_NUMBER(international=False)
+        validate = IS_PHONE_NUMBER_SINGLE(international=False)
 
         number = "(021) 3847589"
         value, error = validate(number)
@@ -421,7 +421,7 @@ class IS_PHONE_NUMBER_Tests(unittest.TestCase):
         assertEqual = self.assertEqual
         assertNotEqual = self.assertNotEqual
 
-        validate = IS_PHONE_NUMBER(international=True)
+        validate = IS_PHONE_NUMBER_SINGLE(international=True)
 
         # Turn on notation requirement globally
         settings.msg.require_international_phone_numbers = True

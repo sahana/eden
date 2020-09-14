@@ -610,7 +610,7 @@ class S3MessageContactModel(S3Model):
                                 ),
                           Field("phone",
                                 label = T("Phone"),
-                                requires = IS_EMPTY_OR(s3_phone_requires),
+                                requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI()),
                                 ),
                           Field("from_address",
                                 label = T("Email"),

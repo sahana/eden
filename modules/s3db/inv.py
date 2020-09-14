@@ -254,12 +254,12 @@ class S3WarehouseModel(S3Model):
                      Field("phone1",
                            label = T("Phone"),
                            represent = lambda v: v or NONE,
-                           requires = IS_EMPTY_OR(s3_phone_requires)
+                           requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI())
                            ),
                      Field("phone2",
                            label = T("Phone 2"),
                            represent = lambda v: v or NONE,
-                           requires = IS_EMPTY_OR(s3_phone_requires)
+                           requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI())
                            ),
                      Field("email",
                            label = T("Email"),
@@ -268,7 +268,7 @@ class S3WarehouseModel(S3Model):
                            ),
                      Field("fax", label = T("Fax"),
                            represent = lambda v: v or NONE,
-                           requires = IS_EMPTY_OR(s3_phone_requires)
+                           requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI())
                            ),
                      Field("obsolete", "boolean",
                            default = False,
@@ -1129,7 +1129,7 @@ class S3InventoryTrackingModel(S3Model):
                      Field("driver_phone",
                            label = T("Driver Phone Number"),
                            represent = lambda v: v or "",
-                           requires = IS_EMPTY_OR(s3_phone_requires),
+                           requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI()),
                            ),
                      Field("vehicle_plate_no",
                            label = T("Vehicle Plate Number"),
@@ -2200,9 +2200,9 @@ $.filterOptionsS3({
                                                 iitable.item_pack_id,
                                                 limitby = (0, 1),
                                                 ).first().item_pack_id
-            tracktable.quantity.requires = QUANTITY_INV_ITEM(db,
-                                                             send_inv_item_id,
-                                                             req_vars.item_pack_id)
+            tracktable.quantity.requires = IS_AVAILABLE_QUANTITY(send_inv_item_id,
+                                                                 req_vars.item_pack_id,
+                                                                 )
 
         def set_send_attr(status):
             sendtable.send_ref.writable = False
@@ -2373,9 +2373,10 @@ $.filterOptionsS3({
                         tracktable.item_pack_id.writable = False
                         stock_qnty = track_record.quantity
                         tracktable.quantity.comment = T("%(quantity)s in stock") % {"quantity": stock_qnty}
-                        tracktable.quantity.requires = QUANTITY_INV_ITEM(db,
-                                                                         track_record.send_inv_item_id,
-                                                                         track_record.item_pack_id)
+                        tracktable.quantity.requires = IS_AVAILABLE_QUANTITY(
+                                                            track_record.send_inv_item_id,
+                                                            track_record.item_pack_id,
+                                                            )
                     # Hide the item id
                     tracktable.item_id.readable = False
                 else:
