@@ -1619,6 +1619,78 @@ def config(settings):
         return multiple_orgs, org_ids
 
     # -------------------------------------------------------------------------
+    def delegation_onvalidation(form):
+
+        # Get the record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            record_id = None
+
+        db = current.db
+        table = current.s3db.hrm_delegation
+
+        delegation = {"id": record_id}
+        missing = []
+
+        # Check if person_id, status, date and end_date are in form
+        for fn in ("person_id", "date", "end_date", "status"):
+            if fn in form_vars:
+                delegation[fn] = form_vars[fn]
+            else:
+                missing.append(fn)
+
+        # Handle missing fields
+        if missing:
+            if record_id:
+                # Look up from record
+                row = db(table.id == record_id).select(*missing,
+                                                       limitby=(0, 1),
+                                                       ).first()
+                if row:
+                    for fn in missing:
+                        delegation[fn] = row[fn]
+            else:
+                # Use defaults
+                for fn in missing:
+                    default = table[fn].default
+                    if default:
+                        delegation[fn] = default
+
+        # Validate
+        person_id = delegation["person_id"]
+        if not person_id:
+            # Nothing we can check
+            return
+
+        status = delegation["status"] or "REQ"
+        if status in ("CANC", "NVLD", "DECL", "RJCT"):
+            # No check required, just accept
+            return
+
+        start = delegation.get("date")
+        end = delegation.get("end_date")
+
+        # Look up overlapping delegations
+        query = (table.person_id == person_id)
+        if start or end:
+            query &= rlp_active_deployments(table, start, end)
+        else:
+            query &= (table.status.belongs(("APPR", "IMPL")))
+        if record_id:
+            query &= (table.id != record_id)
+        query &= (table.deleted == False)
+
+        overlapping = db(query).select(table.id,
+                                       limitby = (0, 1),
+                                       ).first()
+        if overlapping:
+            form.errors.date = current.T("Volunteer already deployed in this time intervall")
+
+    # -------------------------------------------------------------------------
     def customise_hrm_delegation_resource(r, tablename):
 
         s3db = current.s3db
@@ -1799,6 +1871,10 @@ def config(settings):
             s3db.configure("hrm_delegation", crud_form=crud_form)
 
         # Reconfigure
+        s3db.add_custom_callback("hrm_delegation",
+                                 "onvalidation",
+                                 delegation_onvalidation,
+                                 )
         s3db.configure("hrm_delegation",
                        deletable = False,
                        organize = organize,

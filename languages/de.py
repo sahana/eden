@@ -5456,6 +5456,7 @@
 'Volunteer Role Catalog': 'Rollenkatalog für Freiwillige',
 'Volunteer Role': 'Rolle des Freiwilligen',
 'Volunteer added': 'Freiwilliger hinzugefügt',
+'Volunteer already deployed in this time intervall': 'Freiwilliger ist in diesem Zeitraum bereits im Einsatz',
 'Volunteer availability added': 'Freiwilligen Verfügbarkeit hinzugefügt',
 'Volunteer availability deleted': 'Freiwilligen Verfügbarkeit geöscht',
 'Volunteer availability updated': 'Freiwilligen Verfügbarkeit aktualisiert',
