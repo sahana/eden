@@ -1619,6 +1619,93 @@ def config(settings):
         return multiple_orgs, org_ids
 
     # -------------------------------------------------------------------------
+    def delegation_free_interval(target, occupied, recurse=False, original=None):
+        """
+            Determine possible alternative time intervals for
+            delegation requests
+
+            @param target: the requested interval (start, end)
+            @param occupied: the occupied intervals colliding with the target
+            @param recurse: recursive call
+            @param original: the original target (in recursive calls)
+
+            @returns: the original target if no conflicts were found, or
+                      an interval correction as tuple (start, end)
+                      - start is None if only the end date needs correction
+                      - end is None if only the start date needs correction
+                      ...or None if no alternatives were found
+        """
+
+        if not recurse:
+            # Sort occupied intervals by their start date
+            occupied = sorted(occupied, key=lambda i: i[0] or datetime.date.min)
+
+        # Calculate target and minimum duration
+        if target[0] and target[1]:
+            duration = (target[1] - target[0]).days
+            if duration < 0:
+                target = (target[1], target[0])
+            duration = abs(duration)
+            if not recurse and duration > 6:
+                min_duration = 4 * duration // 5
+            else:
+                min_duration = duration
+        else:
+            duration = None
+            min_duration = None
+
+        interval = occupied[0]
+        if interval[1] and target[0] and interval[1] < target[0]:
+            # Occupied interval lies before target => skip to next
+            if occupied[1:]:
+                return delegation_free_interval(target, occupied[1:],
+                                                recurse = recurse,
+                                                original = original,
+                                                )
+            else:
+                return target
+
+        if interval[0] and target[1] and interval[0] > target[1]:
+            # Target interval lies before occupied interval
+            return target
+
+        if not recurse and min_duration is not None and \
+           interval[0] and target[0] and interval[0] > target[0]:
+            max_duration = (interval[0] - target[0]).days
+            if max_duration >= min_duration:
+                # Minimum duration would be available before
+                # earliest occupied interval => report new end-date
+                return (None, interval[0] - datetime.timedelta(days=1))
+
+        if not interval[1]:
+            # Interval has no end => no free interval available
+            return None
+
+        # Compute earliest possible start-date
+        new_start = interval[1] + datetime.timedelta(days=1)
+        if not original:
+            original = target
+        if original[1] and new_start > original[1]:
+            # Earliest possible start-date lies after original
+            # target interval => no suitable alternatives
+            return None
+        if not occupied[1:]:
+            # No further occupied intervals => report new start date
+            return (new_start, None)
+
+        # Compute new end-date
+        if duration is not None:
+            new_end = new_start + datetime.timedelta(days=duration)
+        else:
+            new_end = None
+
+        # Recurse
+        return delegation_free_interval((new_start, new_end), occupied[1:],
+                                        recurse = True,
+                                        original = original,
+                                        )
+
+    # -------------------------------------------------------------------------
     def delegation_onvalidation(form):
 
         # Get the record ID
@@ -1688,7 +1775,45 @@ def config(settings):
                                        limitby = (0, 1),
                                        ).first()
         if overlapping:
-            form.errors.date = current.T("Volunteer already deployed in this time intervall")
+
+            if status == "REQ":
+                # Find suitable alternative
+                query = (table.person_id == person_id) & \
+                        rlp_active_deployments(table, start)
+                if record_id:
+                    query &= (table.id != record_id)
+                query &= (table.deleted == False)
+                rows = db(query).select(table.date,
+                                        table.end_date,
+                                        )
+                occupied = [(row.date, row.end_date) for row in rows]
+                alternative = delegation_free_interval((start, end), occupied)
+                field = None
+                if alternative is None:
+                    msg = T("Please select another volunteer")
+                elif not alternative[1]:
+                    msg = T("Earliest possible start date: %(start)s")
+                    field = "date"
+                elif not alternative[0]:
+                    msg = T("Latest possible end date: %(end)s")
+                    field = "end_date"
+                elif alternative[0] != start or alternative[1] != end:
+                    msg = T("Next possible interval for deployment: %(start)s - %(end)s")
+                else:
+                    msg = None
+                if msg:
+                    if alternative:
+                        dtformat = current.calendar.format_date
+                        msg = msg % {"start": dtformat(alternative[0], local=True),
+                                     "end": dtformat(alternative[1], local=True),
+                                     }
+                    if field:
+                        form.errors[field] = msg
+                    else:
+                        form.errors.date = T("Volunteer already deployed in this time intervall")
+                        current.response.information = msg
+            else:
+                form.errors.date = T("Volunteer already deployed in this time intervall")
 
     # -------------------------------------------------------------------------
     def customise_hrm_delegation_resource(r, tablename):
@@ -2311,7 +2436,8 @@ def rlp_active_deployments(ctable, from_date=None, to_date=None):
     elif to_date:
         query = (start <= to_date) | (start == None)
     else:
-        query = (start >= from_date) | (end >= from_date)
+        query = (start >= from_date) | (end >= from_date) | \
+                ((start == None) & (end == None))
 
     return query & ctable.status.belongs(("APPR", "IMPL"))
 
