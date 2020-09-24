@@ -61,6 +61,7 @@
 '%(event)s already registered today, not combinable': '%(event)s heute bereits registriert, nicht kombinierbar',
 '%(event)s on': '%(event)s am',
 '%(msg)s\nIf the request type is "%(type)s", please enter the %(type)s on the next screen.': '%(msg)s\n Wenn der Typ des Requests "%(type)s" ist, geben Sie die %(type)s bitte auf der nächsten Seite ein.',
+'%(num)s other pending request(s) for the same time interval declined': '%(num)s andere offene Anfrage(n) für den gleichen Zeitraum abgelehnt',
 '%(number)s payment(s) not found': '%(number)s Auszahlung(en) nicht gefunden',
 '%(number)s payment(s) registered': '%(number)s Auszahlung(en) registriert',
 '%(number)s transferable cases found': '%(number)s transferierbare Fälle gefunden',

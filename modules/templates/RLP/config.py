@@ -1654,59 +1654,68 @@ def config(settings):
             duration = None
             min_duration = None
 
-        interval = occupied[0]
-        if interval[1] and target[0] and interval[1] < target[0]:
-            # Occupied interval lies before target => skip to next
-            if occupied[1:]:
-                return delegation_free_interval(target, occupied[1:],
-                                                recurse = recurse,
-                                                original = original,
-                                                )
-            else:
-                return target
-
-        if interval[0] and target[1] and interval[0] > target[1]:
-            # Target interval lies before occupied interval
+        deployment, other = occupied[0], occupied[1:]
+        if deployment[0] and target[1] and deployment[0] > target[1]:
+            # Target interval ends before deployment
+            # => accept
             return target
 
+        if deployment[1] and target[0] and deployment[1] < target[0]:
+            # Deployment ends before target interval
+            # => accept if no other deployments, otherwise check against those
+            return target if not other else \
+                        delegation_free_interval(target, other,
+                                                 recurse = recurse,
+                                                 original = original,
+                                                 )
+
+        # Try a shorter interval
+        # => only if original start date can be kept, i.e. no recursion
         if not recurse and min_duration is not None and \
-           interval[0] and target[0] and interval[0] > target[0]:
-            max_duration = (interval[0] - target[0]).days
+           deployment[0] and target[0] and deployment[0] > target[0]:
+            max_duration = (deployment[0] - target[0]).days
             if max_duration >= min_duration:
                 # Minimum duration would be available before
-                # earliest occupied interval => report new end-date
-                return (None, interval[0] - datetime.timedelta(days=1))
+                # earliest deployment => propose new end-date
+                return (None, deployment[0] - datetime.timedelta(days=1))
 
-        if not interval[1]:
-            # Interval has no end => no free interval available
+        if not deployment[1]:
+            # Deployment has no end-date, so no free interval after that
             return None
 
-        # Compute earliest possible start-date
-        new_start = interval[1] + datetime.timedelta(days=1)
+        # Compute and validate new start-date
+        new_start = deployment[1] + datetime.timedelta(days=1)
         if not original:
             original = target
         if original[1] and new_start > original[1]:
             # Earliest possible start-date lies after original
-            # target interval => no suitable alternatives
-            return None
-        if not occupied[1:]:
-            # No further occupied intervals => report new start date
-            return (new_start, None)
-
-        # Compute new end-date
-        if duration is not None:
-            new_end = new_start + datetime.timedelta(days=duration)
+            # target interval, so no acceptable alternatives
+            accept = None
+        elif other:
+            # Compute new end-date & recurse
+            new_end = None if duration is None else \
+                        new_start + datetime.timedelta(days=duration)
+            accept = delegation_free_interval((new_start, new_end), other,
+                                              recurse = True,
+                                              original = original,
+                                              )
         else:
-            new_end = None
+            # No further deployments => propose new start date
+            accept = (new_start, None)
 
-        # Recurse
-        return delegation_free_interval((new_start, new_end), occupied[1:],
-                                        recurse = True,
-                                        original = original,
-                                        )
+        return accept
 
     # -------------------------------------------------------------------------
     def delegation_onvalidation(form):
+        """
+            Custom onvalidation routine for delegations:
+            - prevent new request if the volunteer already has an approved
+              delegation during the date interval
+            - if possible, suggest alternative date interval for new requests
+              if the current one would overlap already-approved delegations
+            - prevent approval of requests if they overlap another already
+              approved delegation
+        """
 
         # Get the record ID
         form_vars = form.vars
@@ -1814,6 +1823,65 @@ def config(settings):
                         current.response.information = msg
             else:
                 form.errors.date = T("Volunteer already deployed in this time intervall")
+
+    # -------------------------------------------------------------------------
+    def delegation_onaccept(form):
+        """
+            Custom onaccept routine for delegations:
+            - if a request has been newly approved, close all other pending
+              requests overlapping the same date interval
+        """
+
+        # Get the record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        else:
+            record_id = None
+
+        db = current.db
+        table = current.s3db.hrm_delegation
+
+        delegation = {"id": record_id}
+        missing = []
+
+        # Check if person_id, status, date and end_date are in form
+        for fn in ("person_id", "date", "end_date", "status"):
+            if fn in form_vars:
+                delegation[fn] = form_vars[fn]
+            else:
+                missing.append(fn)
+
+        # Handle missing fields
+        if missing and record_id:
+            # Look up from record
+            row = db(table.id == record_id).select(*missing,
+                                                   limitby=(0, 1),
+                                                   ).first()
+            if row:
+                for fn in missing:
+                    delegation[fn] = row[fn]
+
+        try:
+            record = form.record
+        except AttributeError:
+            record = None
+        person_id = delegation.get("person_id")
+        if record and record.status != "APPR" and \
+           delegation.get("status") == "APPR" and record_id and person_id:
+            query = (table.person_id == person_id) & \
+                    (table.status == "REQ")
+            start = delegation.get("date")
+            if start:
+                query &= (table.end_date >= start)
+            end = delegation.get("end_date")
+            if end:
+                query &= (table.date <= end)
+            query &= (table.id != record_id) & (table.deleted == False)
+            num = db(query).update(status = "DECL")
+            if num:
+                msg = T("%(num)s other pending request(s) for the same time interval declined")
+                current.response.warning = msg % {"num": num}
 
     # -------------------------------------------------------------------------
     def customise_hrm_delegation_resource(r, tablename):
@@ -1999,6 +2067,10 @@ def config(settings):
         s3db.add_custom_callback("hrm_delegation",
                                  "onvalidation",
                                  delegation_onvalidation,
+                                 )
+        s3db.add_custom_callback("hrm_delegation",
+                                 "onaccept",
+                                 delegation_onaccept,
                                  )
         s3db.configure("hrm_delegation",
                        deletable = False,
