@@ -8,10 +8,10 @@
     Currently handles
         Suppliers
         Planned Procurements
+        Purchase Orders (POs)
 
     @ToDo: Extend to
         Purchase Requests (PRs)
-        Purchase Orders (POs)
 """
 
 module = request.controller
@@ -27,10 +27,12 @@ def index():
     return s3db.cms_index(module)
 
 # -----------------------------------------------------------------------------
-def supplier():
+def order():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller("org", "organisation")
+    return s3_rest_controller(rheader = s3db.proc_rheader,
+                              hide_filter = True,
+                              )
 
 # -----------------------------------------------------------------------------
 def plan():
@@ -39,5 +41,11 @@ def plan():
     return s3_rest_controller(rheader = s3db.proc_rheader,
                               hide_filter = True,
                               )
+
+# -----------------------------------------------------------------------------
+def supplier():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller("org", "organisation")
 
 # END =========================================================================

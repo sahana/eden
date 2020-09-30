@@ -1775,6 +1775,9 @@ class S3OptionsMenu(object):
         """ PROC / Procurement """
 
         return M(c="proc")(
+                    M("Purchase Orders", f="order")(
+                        M("Create", m="create"),
+                    ),
                     M("Procurement Plans", f="plan")(
                         M("Create", m="create"),
                     ),

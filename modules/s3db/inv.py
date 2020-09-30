@@ -2731,7 +2731,7 @@ $.filterOptionsS3({
                     record.site_id,
                     rtable.recv_ref,
                     )
-            db(rtable.id == record_id).update(recv_ref=code)
+            db(rtable.id == record_id).update(recv_ref = code)
 
     # -------------------------------------------------------------------------
     @staticmethod
