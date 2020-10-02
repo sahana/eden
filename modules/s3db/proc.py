@@ -280,6 +280,7 @@ class S3PurchaseOrdersModel(S3Model):
 
     names = ("proc_order",
              "proc_order_item"
+             "proc_order_tag"
              )
 
     def model(self):
@@ -313,7 +314,7 @@ class S3PurchaseOrdersModel(S3Model):
                                      default = auth.user.site_id if auth.is_logged_in() else None,
                                      readable = True,
                                      writable = True,
-                                     empty = False,
+                                     #empty = False,
                                      # Comment these to use a Dropdown & not an Autocomplete
                                      #widget = S3SiteAutocompleteWidget(),
                                      #comment = DIV(_class="tooltip",
@@ -366,6 +367,9 @@ class S3PurchaseOrdersModel(S3Model):
         # Items as a component of Plans
         self.add_components(tablename,
                             proc_order_item = "order_id",
+                            proc_order_tag = {"name": "tag",
+                                              "joinby": "order_id",
+                                              },
                             )
 
         # =====================================================================
@@ -446,6 +450,32 @@ class S3PurchaseOrdersModel(S3Model):
                   filter_widgets = filter_widgets,
                   #report_groupby = db.proc_order.site_id,
                   report_hide_comments = True,
+                  )
+
+        # ---------------------------------------------------------------------
+        # Purchase Order Tags
+        # - Key-Value extensions
+        # - can be used to provide conversions to external systems
+        # - can be a Triple Store for Semantic Web support
+        #
+        tablename = "proc_order_tag"
+        define_table(tablename,
+                     order_id(),
+                     # key is a reserved word in MySQL
+                     Field("tag",
+                           label = T("Key"),
+                           ),
+                     Field("value",
+                           label = T("Value"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("order_id",
+                                                       "tag",
+                                                       ),
+                                            ),
                   )
 
         # ---------------------------------------------------------------------
