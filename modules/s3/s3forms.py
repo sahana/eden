@@ -199,10 +199,11 @@ class S3SQLForm(object):
             for name, label, _class in submit:
                 if isinstance(label, basestring):
                     label = T(label)
-                button = INPUT(_type="submit",
-                               _class="btn crud-submit-button",
-                               _name=name,
-                               _value=label)
+                button = INPUT(_type = "submit",
+                               _class = "btn crud-submit-button",
+                               _name = name,
+                               _value = label,
+                               )
                 if _class:
                     button.add_class(_class)
                 buttons.append(button)
@@ -216,8 +217,9 @@ class S3SQLForm(object):
                     submit_label = T(settings.submit_button)
                 else:
                     submit_label = T("Save")
-                submit_button = INPUT(_type="submit",
-                                      _value=submit_label)
+                submit_button = INPUT(_type = "submit",
+                                      _value = submit_label,
+                                      )
                 if settings.submit_style:
                     submit_button.add_class(settings.submit_style)
                 buttons = [submit_button]
@@ -227,7 +229,8 @@ class S3SQLForm(object):
                 cancel_button = cancel
             else:
                 cancel_button = A(T("Cancel"),
-                                  _class="cancel-form-btn action-lnk")
+                                  _class = "cancel-form-btn action-lnk",
+                                  )
                 if isinstance(cancel, dict):
                     # Script-controlled cancel button (embedded form)
                     if "script" in cancel:
@@ -241,7 +244,7 @@ class S3SQLForm(object):
                 elif s3.cancel is True:
                     cancel_button.add_class("s3-cancel")
                 else:
-                    cancel_button.update(_href=s3.cancel)
+                    cancel_button.update(_href = s3.cancel)
             buttons.append(cancel_button)
 
         return buttons
@@ -344,12 +347,12 @@ class S3SQLForm(object):
 
     # -------------------------------------------------------------------------
     def _populate(self,
-                  from_table=None,
-                  from_record=None,
-                  map_fields=None,
-                  data=None,
-                  formfields=None,
-                  format=None,
+                  from_table = None,
+                  from_record = None,
+                  map_fields = None,
+                  data = None,
+                  formfields = None,
+                  format = None,
                   ):
         """
             Pre-populate the form with values from a previous record or
@@ -438,12 +441,12 @@ class S3SQLDefaultForm(S3SQLForm):
     # Rendering/Processing
     # -------------------------------------------------------------------------
     def __call__(self,
-                 request=None,
-                 resource=None,
-                 record_id=None,
-                 readonly=False,
-                 message="Record created/updated",
-                 format=None,
+                 request = None,
+                 resource = None,
+                 record_id = None,
+                 readonly = False,
+                 message = "Record created/updated",
+                 format = None,
                  **options):
         """
             Render/process the form.

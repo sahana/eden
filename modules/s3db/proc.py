@@ -119,7 +119,7 @@ class S3ProcurementPlansModel(S3Model):
 
         # CRUD strings
         crud_strings[tablename] = Storage(
-            label_create = T("Add Procurement Plan"),
+            label_create = T("Create Procurement Plan"),
             title_display = T("Procurement Plan Details"),
             title_list = T("Procurement Plans"),
             title_update = T("Edit Procurement Plan"),
@@ -328,7 +328,7 @@ class S3PurchaseOrdersModel(S3Model):
 
         # CRUD strings
         crud_strings[tablename] = Storage(
-            label_create = T("Add Purchase Order"),
+            label_create = T("Create Purchase Order"),
             title_display = T("Purchase Order Details"),
             title_list = T("Purchase Orders"),
             title_update = T("Edit Purchase Order"),

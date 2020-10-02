@@ -1069,10 +1069,12 @@ class S3CRUD(S3Method):
             if isinstance(output, dict):
                 # Provide a confirmation form and a record list
                 form = FORM(TABLE(TR(TD(self.settings.confirm_delete,
-                                        _style="color:red"),
-                                     TD(INPUT(_type="submit",
-                                              _value=current.T("Delete"),
-                                              _style="margin-left:10px")))))
+                                        _style = "color:red",
+                                        ),
+                                     TD(INPUT(_type = "submit",
+                                              _value = current.T("Delete"),
+                                              _style = "margin-left:10px",
+                                              )))))
                 output["form"] = form
                 current.response.view = self._view(r, "delete.html")
             else:
@@ -1115,7 +1117,8 @@ class S3CRUD(S3Method):
                         # Need to lookup the hierarchy node key
                         query = (resource._id == record_id)
                         row = current.db(query).select(pkey,
-                                                       limitby=(0, 1)).first()
+                                                       limitby = (0, 1)
+                                                       ).first()
                         if row:
                             node_ids = [row[pkey]]
                     numrows = h.delete(node_ids) if node_ids else 0
