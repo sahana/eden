@@ -248,26 +248,27 @@ class S3ProcurementPlansModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def proc_plan_represent(id, row=None):
+    def proc_plan_represent(plan_id, row=None):
         """
             Represent a Procurement Plan
         """
 
         if row:
             table = current.db.proc_plan
-        elif not id:
+        elif not plan_id:
             return current.messages["NONE"]
         else:
             db = current.db
             table = db.proc_plan
-            row = db(table.id == id).select(table.site_id,
-                                            table.order_date,
-                                            limitby = (0, 1)
-                                            ).first()
+            row = db(table.id == plan_id).select(table.site_id,
+                                                 table.order_date,
+                                                 limitby = (0, 1),
+                                                 ).first()
         try:
             return "%s (%s)" % (table.site_id.represent(row.site_id),
                                 table.order_date.represent(row.order_date))
-        except:
+        except AttributeError:
+            # Plan not found
             return current.messages.UNKNOWN_OPT
 
 # =============================================================================
@@ -296,10 +297,11 @@ class S3PurchaseOrdersModel(S3Model):
         settings = current.deployment_settings
 
         SITE_LABEL = settings.get_org_site_label()
-        s3_string_represent = lambda str: str if str else NONE
+        string_represent = lambda s: s if s else current.messages["NONE"]
         purchase_ref = S3ReusableField("purchase_ref",
-                                       label = T("%(PO)s Number") % {"PO": settings.get_proc_shortname()},
-                                       represent = s3_string_represent,
+                                       label = T("%(PO)s Number") % \
+                                               {"PO": settings.get_proc_shortname()},
+                                       represent = string_represent,
                                        )
 
         # =====================================================================
