@@ -40,9 +40,6 @@ from .base import S3PaymentService
 class PayPalAdapter(S3PaymentService):
     """
         API Adapter for PayPal
-
-        Conigure the Return URL to:
-            https://server.domain/eden/fin/subscription/confirm
     """
 
     # -------------------------------------------------------------------------

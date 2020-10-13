@@ -3,7 +3,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Payment Service - CSV Import Stylesheet
+         Fin Product - CSV Import Stylesheet
          
          CSV column...........Format..........Content
 
@@ -33,7 +33,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
-        <resource name="fin_payment_size">
+        <resource name="fin_product">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
             <data field="type"><xsl:value-of select="col[@field='Type']"/></data>
