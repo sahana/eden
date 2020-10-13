@@ -45,7 +45,10 @@ from ..s3validators import JSONERRORS
 
 # =============================================================================
 class S3Payments(S3Method):
-    """ REST Methods to interact with online payment services """
+    """
+        REST Methods to interact with online payment services
+        - plugged into the fin_subscription resource
+    """
 
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):

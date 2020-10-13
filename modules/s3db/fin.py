@@ -319,6 +319,7 @@ class FinProductModel(S3Model):
         tablename = "fin_product"
         define_table(tablename,
                      # The organisation offering the product/service
+                     # Merchant Name needed by PayPal
                      self.org_organisation_id(),
                      Field("name",
                            label = T("Name"),
