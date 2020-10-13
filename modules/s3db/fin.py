@@ -350,7 +350,7 @@ class FinProductModel(S3Model):
 
         # Table configuration
         configure(tablename,
-                  deduplicate = S3Duplicate(primary = ("name")),
+                  deduplicate = S3Duplicate(primary = ("name",)),
                   )
 
         # Components
