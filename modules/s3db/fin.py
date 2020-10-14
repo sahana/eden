@@ -852,11 +852,11 @@ class FinSubscriptionModel(S3Model):
         # Verify total cycles specified for fixed-term plan
         try:
             fixed = form_vars.fixed
-            cycles = form_vars.cycles
+            total_cycles = form_vars.total_cycles
         except AttributeError:
             pass
         else:
-            if fixed and not cycles:
+            if fixed and not total_cycles:
                 form.errors.total_cycles = T("Fixed-term plan must specify number of cycles")
 
     # -------------------------------------------------------------------------
