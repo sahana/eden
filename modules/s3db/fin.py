@@ -338,6 +338,7 @@ class FinProductModel(S3Model):
                      # TODO move into link table w/service
                      # TODO template to override default
                      # TODO make lookup-table, provide mapping per service-type
+                     # https://developer.paypal.com/docs/api/catalog-products/v1/
                      Field("category",
                            label = T("Category"),
                            default = "GENERAL",
@@ -773,7 +774,7 @@ class FinSubscriptionModel(S3Model):
                                  "status",
                                  "status_date",
                                  ],
-                  insertable = False,
+                  insertable = False,   # create via adapter.register_subscription(plan_id, pe_id)
                   editable = False,
                   deletable = False,
                   )

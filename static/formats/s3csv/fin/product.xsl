@@ -11,6 +11,7 @@
          Name.................string..........Name
          Description..........string..........Description
          Type.................string..........Type
+         Category.............string..........Category
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -37,6 +38,7 @@
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
             <data field="type"><xsl:value-of select="col[@field='Type']"/></data>
+            <data field="category"><xsl:value-of select="col[@field='Category']"/></data>
 
             <!-- Link to Organisation -->
             <reference field="organisation_id" resource="org_organisation">
