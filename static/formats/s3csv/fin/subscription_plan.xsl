@@ -10,9 +10,10 @@
          Name.................string..........Name
          Description..........string..........Description
          Product..............string..........Product Name
-         Months...............string..........Interval Count
          Price................string..........Price
          Currency.............string..........Currency
+         Months...............string..........Interval Count
+         Cycles...............string..........Total Cycles
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -35,12 +36,18 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
+        <xsl:variable name="cycles" select="col[@field='Cycles']/text()"/>
+
         <resource name="fin_subscription_plan">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
-            <data field="interval_count"><xsl:value-of select="col[@field='Months']"/></data>
             <data field="price"><xsl:value-of select="col[@field='Price']"/></data>
             <data field="currency"><xsl:value-of select="col[@field='Currency']"/></data>
+            <data field="interval_count"><xsl:value-of select="col[@field='Months']"/></data>
+            <xsl:if test="$cycles!=''">
+                <data field="fixed" value="true">True</data>
+                <data field="total_cycles"><xsl:value-of select="$cycles"/></data>
+            </xsl:if>
 
             <!-- Link to Product -->
             <reference field="product_id" resource="fin_product">
