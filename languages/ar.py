@@ -4315,7 +4315,7 @@
 'You do not have permission to send this shipment.': 'ليس لديك الإذن لإرسال هذه الشحنة.',
 'You have a personal map configuration. To change your personal configuration, click ': 'لديكم تعديلات الخريطة الشخصية. للتغيير. اضغط',
 'You have found a dead body?': 'هل وجدت جثة هامدة؟',
-"You have unsaved changes. Click Cancel now, then 'Save' to save them. Click OK now to discard them.": 'لم تحفظ التغييرات. انقر فوق إلغاء الأمر الآن، ثم "حفظ" لحفظها. انقر OK الآن إلى التخلص منها.',
+"You have unsaved changes. Click Cancel now, then 'Save' to save them. Click OK now to discard them.": "لم تحفظ التغييرات. انقر فوق إلغاء الأمر الآن، ثم 'حفظ' لحفظها. انقر OK الآن إلى التخلص منها.",
 'You must enter a minimum of %d characters': 'يجب عليك %d يجب عليك إدخال ما لا يقل عن',
 'You must provide a series id to proceed.': 'يجب توفير سلسلة معرفة للمضي قدما.',
 'Your post was added successfully.': 'تمت اضافة النشر الخاص بك بنجاح.',

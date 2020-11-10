@@ -43,6 +43,7 @@ __all__ = ("S3DNSModel",
            "S3SMTPModel",
            "S3SetupDeploymentModel",
            "S3SetupMonitorModel",
+           "setup_instance_deploy",
            "setup_instance_settings_read",
            "setup_monitor_run_task",
            "setup_monitor_task_restart",
@@ -1952,800 +1953,10 @@ dropdown.change(function() {
             Custom S3Method to Deploy an Instance
         """
 
-        db = current.db
-        s3db = current.s3db
-
+        instance_id = r.component_id
         deployment_id = r.id
 
-        # Get Instance details
-        # - we read all instances for Certbot configuration
-        instance_id = r.component_id
-        itable = s3db.setup_instance
-        query = (itable.deployment_id == deployment_id) & \
-                (itable.deleted == False)
-        instances = db(query).select(itable.id,
-                                     itable.type,
-                                     itable.url,
-                                     itable.sender,
-                                     itable.start,
-                                     )
-        all_sites = []
-        all_append = all_sites.append
-        for instance in instances:
-            url = instance.url
-            if "://" in url:
-                protocol, url = url.split("://", 1)
-            all_append(url)
-            if str(instance.id) == instance_id:
-                sitename = url
-                sender = instance.sender
-                start = instance.start
-                instance_type = instance.type
-            if instance.type == 1:
-                sitename_prod = url
-
-        # Default to SSL
-        # (plain http requests will still work as automatically redirected to https)
-        protocol = "https"
-
-        # Get Deployment details
-        dtable = s3db.setup_deployment
-        deployment = db(dtable.id == deployment_id).select(dtable.repo_url,
-                                                           dtable.webserver_type,
-                                                           dtable.db_type,
-                                                           dtable.db_password,
-                                                           dtable.country,
-                                                           dtable.template,
-                                                           dtable.template_manual,
-                                                           dtable.cloud_id,
-                                                           dtable.dns_id,
-                                                           dtable.email_id,
-                                                           dtable.smtp_id,
-                                                           limitby = (0, 1)
-                                                           ).first()
-
-        # Get Server(s) details
-        stable = s3db.setup_server
-        query = (stable.deployment_id == deployment_id)
-        cloud_id = deployment.cloud_id
-        if cloud_id:
-            # Lookup the Instance Type
-            ctable = s3db.setup_cloud
-            cloud = db(ctable.cloud_id == deployment.cloud_id).select(ctable.instance_type,
-                                                                      limitby = (0, 1)
-                                                                      ).first()
-            cloud_type = cloud.instance_type
-            if cloud_type == "setup_aws_cloud":
-                # Get Cloud details
-                ctable = s3db.setup_aws_cloud
-                cloud = db(ctable.cloud_id == cloud_id).select(ctable.access_key,
-                                                               ctable.secret_key,
-                                                               limitby = (0, 1)
-                                                               ).first()
-
-                # Get Server(s) details
-                cstable = s3db.setup_aws_server
-                left = cstable.on(cstable.server_id == stable.id)
-                servers = db(query).select(stable.id,
-                                           stable.name,
-                                           stable.role,
-                                           stable.host_ip,
-                                           stable.remote_user,
-                                           stable.private_key,
-                                           cstable.region,
-                                           cstable.instance_type,
-                                           cstable.image,
-                                           cstable.reserved_instance,
-                                           cstable.security_group,
-                                           cstable.instance_id,
-                                           left = left,
-                                           )
-            elif cloud_type == "setup_openstack_cloud":
-                # Get Cloud details
-                ctable = s3db.setup_openstack_cloud
-                cloud = db(ctable.cloud_id == cloud_id).select(ctable.auth_url,
-                                                               ctable.username,
-                                                               ctable.password,
-                                                               ctable.project_name,
-                                                               ctable.domain_name,
-                                                               limitby = (0, 1)
-                                                               ).first()
-
-                # Get Server(s) details
-                cstable = s3db.setup_openstack_server
-                left = cstable.on(cstable.server_id == stable.id)
-                servers = db(query).select(stable.id,
-                                           stable.name,
-                                           stable.role,
-                                           stable.host_ip,
-                                           stable.remote_user,
-                                           stable.private_key,
-                                           cstable.instance_type,
-                                           cstable.image,
-                                           cstable.volume_size,
-                                           cstable.network,
-                                           cstable.security_group,
-                                           cstable.region,
-                                           cstable.availability_zone,
-                                           left = left,
-                                           )
-            else:
-                 raise NotImplementedError
-        else:
-            # Get Server(s) details
-            servers = db(query).select(stable.name,
-                                       stable.role,
-                                       stable.host_ip,
-                                       stable.remote_user,
-                                       stable.private_key,
-                                       )
-
-        # Build Playbook data structure
-        #roles_path = os.path.join(r.folder, "private", "eden_deploy", "roles")
-
-        appname = "eden" # @ToDo: Allow this to be configurable
-        hostname = sitename.split(".", 1)[0]
-        db_password = deployment.db_password
-        web_server = WEB_SERVERS[deployment.webserver_type]
-        db_type = DB_SERVERS[deployment.db_type]
-        instance_type = INSTANCE_TYPES[instance_type]
-        prod = instance_type == "prod"
-        parts = deployment.repo_url.split("/")
-        repo_owner = parts[3]
-        repo = parts[4]
-        repo_url = "git://github.com/%s/%s.git" % (repo_owner, repo)
-        template_manual = deployment.template_manual
-        if template_manual:
-            # Use this list
-            templates = template_manual.split(",")
-            template = []
-            for t in templates:
-                # Strip whitespace
-                template.append(t.strip())
-        else:
-            # Use the value from dropdown (& introspect the locale template(s))
-            template = deployment.template
-
-        email_id = deployment.email_id
-        if email_id:
-            # Email Group Provider
-            # - assume Google for now
-            getable = s3db.setup_google_email
-            email_service = db(getable.id == email_id).select(getable.credentials,
-                                                              getable.email,
-                                                              limitby = (0, 1)
-                                                              ).first()
-            gitable = s3db.setup_google_instance
-            google_instance = db(gitable.instance_id == instance_id).select(gitable.id,
-                                                                            gitable.name,
-                                                                            gitable.email,
-                                                                            gitable.member,
-                                                                            limitby = (0, 1)
-                                                                            ).first()
-
-            group_email = google_instance.email
-
-            from google.oauth2 import service_account
-            from googleapiclient.discovery import build
-
-            #creds_path = os.path.join("/", "tmp", "credentials-%s.json" % instance_id)
-            creds_path = os.path.join("\\", "temp", "credentials-%s.json" % instance_id)
-
-            with open(creds_path, "w") as creds_file:
-                creds_file.write(json.dumps(email_service.credentials))
-
-            credentials = service_account.Credentials.from_service_account_file(
-                    creds_path,
-                    scopes = ["https://www.googleapis.com/auth/admin.directory.group"]
-                    )
-            credentials = credentials.with_subject(email_service.email)
-            service = build("admin", "directory_v1", credentials=credentials)
-
-            # Create Group
-            results = service.groups().insert(body = {"name": google_instance.name,
-                                                      "email": group_email,
-                                                      }).execute()
-            group_id = results.get("id")
-
-            # Store group_id
-            google_instance.update_record(group_id = group_id)
-
-            # Add Member
-            results = service.members().insert(groupKey = group_id,
-                                               body = {"email": google_instance.member,
-                                                       }).execute()
-
-            # Cleanup
-            os.unlink(creds_path)
-
-            # Use newly-created group as the Sender
-            sender = group_email
-
-        smtp_id = deployment.smtp_id
-        if prod and smtp_id:
-            # SMTP Smart Host
-            stable = s3db.setup_smtp
-            smtp = db(stable.id == smtp_id).select(stable.hostname,
-                                                   stable.username,
-                                                   stable.password,
-                                                   limitby = (0, 1)
-                                                   ).first()
-            smart_host = smtp.hostname
-            smtp_username = smtp.username
-            smtp_password = smtp.password
-        else:
-            smart_host = None
-            smtp_username = None
-            smtp_password = None
-
-        delete_ssh_key = True
-        if len(servers) == 1:
-            # All-in-one deployment
-            server = servers.first()
-            playbook = []
-            if prod and cloud_id:
-                tasks = []
-                connection = "smart"
-                request = current.request
-
-                if cloud_type == "setup_aws_cloud":
-                    access_key = cloud.access_key
-                    secret_key = cloud.secret_key
-                    cloud_server = server["setup_aws_server"]
-                    
-                elif cloud_type == "setup_openstack_cloud":
-                    auth = {"auth_url": cloud.auth_url,
-                            "username": cloud.username,
-                            "password": cloud.password,
-                            "project_name": cloud.project_name,
-                            "domain_name": cloud.domain_name,
-                            }
-                    cloud_server = server["setup_openstack_server"]
-
-                server = server["setup_server"]
-                remote_user = server.remote_user
-                server_name = server.name
-                private_key = "/tmp/%s" % server_name
-                public_key = "%s.pub" % private_key
-                provided_key = server.private_key
-                if provided_key:
-                    provided_key = os.path.join(r.folder, "uploads", provided_key)
-                    # Copy the Private Key to where it will be used
-                    tasks.append({"copy": {"src": provided_key,
-                                           "dest": private_key,
-                                           "mode": "0600",
-                                           },
-                                  })
-                    # Generate the Public Key
-                    command = "openssl rsa -in %(private_key)s -pubout > %(public_key)s" % \
-                        {"private_key": private_key,
-                         "public_key": public_key,
-                         }
-                    tasks.append({"command": command,
-                                  })
-                else:
-                    # Generate an OpenSSH keypair with the default values (4096 bits, rsa)
-                    tasks.append({"openssh_keypair": {"path": private_key,
-                                                      },
-                                  })
-                if cloud_type == "setup_aws_cloud":
-                    region = cloud_server.region
-                    # Upload Public Key to Cloud
-                    tasks.append({"ec2_key": {"aws_access_key": access_key,
-                                              "aws_secret_key": secret_key,
-                                              "region": region,
-                                              "name": server_name,
-                                              "key_material": "{{ lookup('file', '%s') }}" % public_key,
-                                              },
-                                  })
-                    if cloud_server.instance_id:
-                        # Terminate old AWS instance
-                        # @ToDo: Allow deployment on existing instances?
-                        tasks.append({"ec2": {"aws_access_key": access_key,
-                                              "aws_secret_key": secret_key,
-                                              "region": region,
-                                              "instance_ids": cloud_server.instance_id,
-                                              "state": "absent",
-                                              },
-                                      })
-                    # Launch Cloud instance
-                    command = "python web2py.py -S %(appname)s -M -R %(appname)s/private/eden_deploy/tools/update_aws_server.py -A %(server_id)s %(server_name)s {{ item.public_ip }} {{ item.id }}" % \
-                                {"appname": request.application,
-                                 "server_id": server.id,
-                                 "server_name": server_name,
-                                 }
-                    tasks += [# Launch AWS Instance
-                              {"ec2": {"aws_access_key": access_key,
-                                       "aws_secret_key": secret_key,
-                                       "key_name": server_name,
-                                       "region": region,
-                                       "instance_type": cloud_server.instance_type,
-                                       "image": cloud_server.image,
-                                       "group": cloud_server.security_group,
-                                       "wait": "yes",
-                                       "count": 1,
-                                       "instance_tags": {"Name": server_name,
-                                                         },
-                                       },
-                               "register": "ec2",
-                               },
-                              # Add new instance to host group (to associate private_key)
-                              {"add_host": {"hostname": "{{ item.public_ip }}",
-                                            "groupname": "launched",
-                                            "ansible_ssh_private_key_file": "/tmp/%s" % server_name,
-                                            },
-                               "loop": "{{ ec2.instances }}",
-                               },
-                              # Update Server record
-                              {"command": {"cmd": command,
-                                           "chdir": request.env.web2py_path,
-                                           },
-                               "loop": "{{ ec2.instances }}",
-                               },
-                              ]
-                    if cloud_server.reserved_instance:
-                        try:
-                            import awscli.clidriver
-                        except ImportError:
-                            current.session.warning = current.T("Cannot purchase reserved instance as awscli not installed")
-                        else:
-                            # Configure
-                            creds_path = os.path.join("~", ".aws", "credentials")
-                            with open(creds_path, "w") as creds_file:
-                                creds_file.write("""[default]
-aws_access_key_id = %s
-aws_secret_access_key = %s""" % (access_key, secret_key))
-                            conf_path = os.path.join("~", ".aws", "config")
-                            with open(conf_path, "w") as conf_file:
-                                conf_file.write("""[default]
-region = %s
-output = json""" % region)
-                            import subprocess
-                            # Lookup Offering ID
-                            # https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-reserved-instances-offerings.html
-                            command = ["aws",
-                                       "ec2",
-                                       "describe-reserved-instances-offerings",
-                                       "--instance-type",
-                                       cloud_server.instance_type,
-                                       "--max-duration",
-                                       "31536000", # 1 Year
-                                       "--offering-type",
-                                       "All Upfront",
-                                       "--product-description",
-                                       "Linux/UNIX (Amazon VPC)",
-                                       "--filters",
-                                       "Name=scope,Values=Region",
-                                       "--instance-tenancy",
-                                       "default",
-                                       "--offering-class",
-                                       "standard",
-                                       "--no-include-marketplace",
-                                       ]
-                            result = subprocess.run(command, stdout=subprocess.PIPE)
-                            output = json.loads(result.stdout)
-                            offering_id = output["ReservedInstancesOfferings"][0]["ReservedInstancesOfferingId"]
-                            # Purchase a Reserved Instance
-                            # https://docs.aws.amazon.com/cli/latest/reference/ec2/purchase-reserved-instances-offering.html
-                            command = ["aws",
-                                       "ec2",
-                                       "purchase-reserved-instances-offering",
-                                       "--instance-count",
-                                       "1",
-                                       "--reserved-instances-offering-id",
-                                       offering_id,
-                                       #"--dry-run",
-                                       ]
-                            result = subprocess.run(command, stdout=subprocess.PIPE)
-                            #output = json.loads(result.stdout)
-                elif cloud_type == "setup_openstack_cloud":
-                    # Upload Public Key to Cloud
-                    tasks.append({"os_keypair": {"auth": auth,
-                                                 "name": server_name,
-                                                 "public_key_file": public_key,
-                                                 },
-                                  })
-                    # Launch Cloud instance
-                    command = "python web2py.py -S %(appname)s -M -R %(appname)s/private/eden_deploy/tools/update_server.py -A %(server_id)s %(server_name)s {{ openstack.openstack.public_v4 }}" % \
-                                {"appname": request.application,
-                                 "server_id": server.id,
-                                 "server_name": server_name,
-                                 }
-                    tasks += [# Launch OpenStack Instance
-                              {"os_server": {"auth": auth,
-                                             "key_name": server_name,
-                                             "name": server_name,
-                                             "flavor": cloud_server.instance_type,
-                                             "image": cloud_server.image,
-                                             "volume_size": cloud_server.volume_size,
-                                             "boot_from_volume": "yes",
-                                             "terminate_volume": "yes",
-                                             "network": cloud_server.network,
-                                             "security_groups": cloud_server.security_group,
-                                             "region_name": cloud_server.region,
-                                             "availability_zone": cloud_server.availability_zone,
-                                             "wait": "yes",
-                                             },
-                               "register": "openstack",
-                               },
-                              # Add new instance to host group (to associate private_key)
-                              {"add_host": {"hostname": "{{ openstack.openstack.public_v4 }}",
-                                            "groupname": "launched",
-                                            "ansible_ssh_private_key_file": "/tmp/%s" % server_name,
-                                            },
-                               },
-                              # Update Server record
-                              {"command": {"cmd": command,
-                                           "chdir": request.env.web2py_path,
-                                           },
-                               },
-                              ]
-                dns_id = deployment.dns_id
-                if dns_id:
-                    # Lookup the Instance Type
-                    dtable = s3db.setup_dns
-                    dns = db(dtable.dns_id == dns_id).select(dtable.instance_type,
-                                                             limitby = (0, 1)
-                                                             ).first()
-                    dns_type = dns.instance_type
-                    if dns_type == "setup_gandi_dns":
-                        gtable = s3db.setup_gandi_dns
-                        gandi = db(gtable.dns_id == dns_id).select(gtable.api_key,
-                                                                   gtable.domain,
-                                                                   gtable.zone,
-                                                                   limitby = (0, 1)
-                                                                   ).first()
-                        gandi_api_key = gandi.api_key
-                        url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
-                        dns_record = sitename.split(".%s" % gandi.domain, 1)[0]
-                        # Delete any existing record
-                        tasks.append({"uri": {"url": "%s/%s" % (url, dns_record),
-                                              "method": "DELETE",
-                                              "headers": {"X-Api-Key": gandi_api_key,
-                                                          },
-                                              "status_code": ["200", "204"],
-                                              },
-                                      # Don't worry if it didn't exist
-                                      "ignore_errors": "yes",
-                                      })
-                        # Create new record
-                        if cloud_type == "setup_aws_cloud":
-                            tasks.append({"uri": {"url": url,
-                                                  "method": "POST",
-                                                  "headers": {"X-Api-Key": gandi_api_key,
-                                                              },
-                                                  "body_format": "json", # Content-Type: application/json
-                                                  "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ item.public_ip }}"]}' % dns_record,
-                                                  "status_code": ["200", "201"],
-                                                  },
-                                          "loop": "{{ ec2.instances }}",
-                                          })
-                        elif cloud_type == "setup_openstack_cloud":
-                            tasks.append({"uri": {"url": url,
-                                                  "method": "POST",
-                                                  "headers": {"X-Api-Key": gandi_api_key,
-                                                              },
-                                                  "body_format": "json", # Content-Type: application/json
-                                                  "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ openstack.openstack.public_v4 }}"]}' % dns_record,
-                                                  "status_code": ["200", "201"],
-                                                  },
-                                          })
-                    elif dns_type == "setup_godaddy_dns":
-                        gtable = s3db.setup_godaddy_dns
-                        godaddy = db(gtable.dns_id == dns_id).select(gtable.domain,
-                                                                     gtable.api_key,
-                                                                     gtable.secret,
-                                                                     limitby = (0, 1)
-                                                                     ).first()
-                        domain = godaddy.domain
-                        dns_record = sitename.split(".%s" % domain, 1)[0]
-                        url = "https://api.godaddy.com/v1/domains/%s/records/A/%s" % (domain, dns_record)
-                        # No need to delete existing record (can't anyway!)
-                        # Create new record or replace existing
-                        if cloud_type == "setup_aws_cloud":
-                            tasks.append({"uri": {"url": url,
-                                                  "method": "PUT",
-                                                  "headers": {"Authorization": "sso-key %s:%s" % (godaddy.api_key, godaddy.secret),
-                                                              },
-                                                  "body_format": "json", # Content-Type: application/json
-                                                  "body": '[{"name": "%s", "type": "A", "ttl": 10800, "data": "{{ item.public_ip }}"}]' % dns_record,
-                                                  "status_code": ["200"],
-                                                  },
-                                          "loop": "{{ ec2.instances }}",
-                                          })
-                        elif cloud_type == "setup_openstack_cloud":
-                            tasks.append({"uri": {"url": url,
-                                                  "method": "PUT",
-                                                  "headers": {"Authorization": "sso-key %s:%s" % (godaddy.api_key, godaddy.secret),
-                                                              },
-                                                  "body_format": "json", # Content-Type: application/json
-                                                  "body": '[{"name": "%s", "type": "A", "ttl": 10800, "data": "{{ openstack.openstack.public_v4 }}"}]' % dns_record,
-                                                  "status_code": ["200"],
-                                                  },
-                                          })
-                else:
-                    current.session.warning = current.T("Deployment will not have SSL: No DNS Provider configured to link to new server IP Address")
-                    # @ToDo: Support Elastic IPs
-                    protocol = "http"
-                playbook.append({"hosts": "localhost",
-                                 "connection": "local",
-                                 "gather_facts": "no",
-                                 "tasks": tasks,
-                                 })
-                host_ip = "launched"
-                # Wait for Server to become available
-                playbook.append({"hosts": "launched",
-                                 "connection": "smart",
-                                 "remote_user": remote_user,
-                                 "gather_facts": "no",
-                                 "tasks": [{"wait_for_connection": {"timeout": 300, # seconds
-                                                                    },
-                                            },
-                                           ],
-                                 })
-            else:
-                # No Cloud or additional Instance on existing Host
-                remote_user = server.remote_user
-                host_ip = server.host_ip
-                # @ToDo Check that ip_addr is correct
-                #       - if host_ip == "127.0.0.1" then we can check the contents
-                if host_ip == "127.0.0.1":
-                    connection = "local"
-                    delete_ssh_key = False
-                else:
-                    # We will need the SSH key
-                    private_key = server.private_key
-                    if not private_key:
-                        # Abort
-                        current.session.error = current.T("Deployment failed: SSH Key needed when deploying away from localhost")
-                        redirect(URL(c="setup", f="deployment",
-                                     args = [deployment_id, "instance"],
-                                     ))
-                    tasks = []
-                    dns_id = deployment.dns_id
-                    if dns_id:
-                        # Lookup the Instance Type
-                        dtable = s3db.setup_dns
-                        dns = db(dtable.dns_id == dns_id).select(dtable.instance_type,
-                                                                 limitby = (0, 1)
-                                                                 ).first()
-                        dns_type = dns.instance_type
-                        if dns_type == "setup_gandi_dns":
-                            gtable = s3db.setup_gandi_dns
-                            gandi = db(gtable.dns_id == dns_id).select(gtable.api_key,
-                                                                       gtable.domain,
-                                                                       gtable.zone,
-                                                                       limitby = (0, 1)
-                                                                       ).first()
-                            gandi_api_key = gandi.api_key
-                            url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
-                            dns_record = sitename.split(".%s" % gandi.domain, 1)[0]
-                            # Delete any existing record
-                            task = {"uri": {"url": "%s/%s" % (url, dns_record),
-                                            "method": "DELETE",
-                                            "headers": {"X-Api-Key": gandi_api_key,
-                                                        },
-                                            "status_code": ["200", "204"],
-                                            },
-                                    # Don't worry if it didn't exist
-                                    "ignore_errors": "yes",
-                                    }
-                            if not prod:
-                                # only_tags
-                                task["tags"] = [instance_type]
-                            tasks.append(task)
-                            # Create new record
-                            task = {"uri": {"url": url,
-                                            "method": "POST",
-                                            "headers": {"X-Api-Key": gandi_api_key,
-                                                        },
-                                            "body_format": "json", # Content-Type: application/json
-                                            "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["%s"]}' % (dns_record, host_ip),
-                                            "status_code": ["200", "201"],
-                                            },
-                                    }
-                            if not prod:
-                                # only_tags
-                                task["tags"] = [instance_type]
-                            tasks.append(task)
-                        elif dns_type == "setup_godaddy_dns":
-                            gtable = s3db.setup_godaddy_dns
-                            godaddy = db(gtable.dns_id == dns_id).select(gtable.domain,
-                                                                         gtable.api_key,
-                                                                         gtable.secret,
-                                                                         limitby = (0, 1)
-                                                                         ).first()
-                            domain = godaddy.domain
-                            dns_record = sitename.split(".%s" % domain, 1)[0]
-                            url = "https://api.godaddy.com/v1/domains/%s/records/A/%s" % (domain, dns_record)
-                            # No need to delete existing record (can't anyway!)
-                            # Create new record or replace existing
-                            task = {"uri": {"url": url,
-                                            "method": "PUT",
-                                            "headers": {"Authorization": "sso-key %s:%s" % (godaddy.api_key, godaddy.secret),
-                                                        },
-                                            "body_format": "json", # Content-Type: application/json
-                                            "body": '[{"name": "%s", "type": "A", "ttl": 10800, "data": "%s"}]' % (dns_record, host_ip),
-                                            "status_code": ["200"],
-                                            },
-                                    }
-                            if not prod:
-                                # only_tags
-                                task["tags"] = [instance_type]
-                            tasks.append(task)
-                    else:
-                        # Check if DNS is already configured properly
-                        import socket
-                        try:
-                            ip_addr = socket.gethostbyname(sitename)
-                        except socket.gaierror:
-                            current.session.warning = current.T("Deployment will not have SSL: URL doesn't resolve in DNS")
-                            protocol = "http"
-                        #else:
-                        #   # We may wish to administer via a private IP, so shouldn't do this:
-                        #   if ip_addr != host_ip:
-                        #       current.session.warning = current.T("Deployment will not have SSL: URL doesn't match server IP Address")
-                        #       protocol = "http"
-                    # Copy the Private Key to where it will be used
-                    provided_key = os.path.join(r.folder, "uploads", private_key)
-                    private_key = "/tmp/%s" % server.name
-                    task = {"copy": {"src": provided_key,
-                                     "dest": private_key,
-                                     "mode": "0600",
-                                     },
-                            }
-                    if not prod:
-                        # only_tags
-                        task["tags"] = [instance_type]
-                    tasks.append(task)
-                    # Add instance to host group (to associate private_key)
-                    task = {"add_host": {"hostname": host_ip,
-                                         "groupname": "launched",
-                                         "ansible_ssh_private_key_file": private_key,
-                                         },
-                            }
-                    if not prod:
-                        # only_tags
-                        task["tags"] = [instance_type]
-                    tasks.append(task)
-                    playbook.append({"hosts": "localhost",
-                                     "connection": "local",
-                                     "gather_facts": "no",
-                                     "tasks": tasks,
-                                     })
-                    host_ip = "launched"
-                    connection = "smart"
-
-            # Deploy to Server
-            playbook.append({"hosts": host_ip,
-                             "connection": connection,
-                             "remote_user": remote_user,
-                             "become_method": "sudo",
-                             #"become_user": "root",
-                             "vars": {"appname": appname,
-                                      "all_sites": ",".join(all_sites),
-                                      "country": deployment.country,
-                                      "db_ip": "127.0.0.1",
-                                      "db_type": db_type,
-                                      "hostname": hostname,
-                                      "password": db_password,
-                                      "protocol": protocol,
-                                      "repo_url": repo_url,
-                                      "sender": sender,
-                                      "sitename": sitename,
-                                      "sitename_prod": sitename_prod,
-                                      "smart_host": smart_host,
-                                      "smtp_username": smtp_username,
-                                      "smtp_password": smtp_password,
-                                      "start": start,
-                                      "template": template,
-                                      "type": instance_type,
-                                      "web_server": web_server,
-                                      },
-                             "roles": [{"role": "common" },
-                                       {"role": "ansible" },
-                                       {"role": "exim" },
-                                       {"role": db_type },
-                                       {"role": "uwsgi" },
-                                       {"role": web_server },
-                                       {"role": "final" },
-                                       ]
-                             })
-            if delete_ssh_key:
-                # Delete SSH private key from the filesystem
-                task = {"hosts": "localhost",
-                        "connection": "local",
-                        "gather_facts": "no",
-                        "tasks": [{"file": {"path": private_key,
-                                            "state": "absent",
-                                            },
-                                   },
-                                  ],
-                        }
-                if not prod:
-                    # only_tags
-                    task["tags"] = [instance_type]
-                playbook.append(task)
-        else:
-            # Separate Database
-            # @ToDo: Needs completing
-            # Abort
-            current.session.error = current.T("Deployment failed: Currently only All-in-one deployments supported with this tool")
-            redirect(URL(c="setup", f="deployment",
-                         args = [deployment_id, "instance"],
-                         ))
-            for server in servers:
-                if server.role == 2:
-                    db_ip = server.host_ip
-                    private_key = server.private.key
-                    remote_user = server.remote_user
-                else:
-                    webserver_ip = server.host_ip
-            playbook = [{"hosts": db_ip,
-                         "remote_user": remote_user,
-                         "become_method": "sudo",
-                         #"become_user": "root",
-                         "vars": {"db_type": db_type,
-                                  "password": db_password,
-                                  "type": instance_type
-                                  },
-                         "roles": [{ "role": db_type }, # "%s/%s" % (roles_path, db_type)
-                                   ]
-                         },
-                        {"hosts": webserver_ip,
-                         #"remote_user": remote_user,
-                         "become_method": "sudo",
-                         #"become_user": "root",
-                         "vars": {"appname": appname,
-                                  "all_sites": ",".join(all_sites),
-                                  "country": deployment.country,
-                                  "db_ip": db_ip,
-                                  "db_type": db_type,
-                                  "hostname": hostname,
-                                  "password": db_password,
-                                  "protocol": protocol,
-                                  "repo_url": repo_url,
-                                  "sender": sender,
-                                  "sitename": sitename,
-                                  "sitename_prod": sitename_prod,
-                                  "start": start,
-                                  "template": template,
-                                  "type": instance_type,
-                                  "web_server": web_server,
-                                  },
-                         "roles": [{"role": "common" },
-                                   {"role": "ansible" },
-                                   {"role": "exim" },
-                                   {"role": "uwsgi" },
-                                   {"role": web_server },
-                                   {"role": "final" },
-                                   ],
-                         },
-                        ]
-
-        # Write Playbook
-        name = "deployment_%d" % int(time.time())
-        task_vars = setup_write_playbook("%s.yml" % name,
-                                         playbook,
-                                         )
-
-        # Run Playbook
-        task_vars["instance_id"] = instance_id # To Upload Logs to Instance record
-        if not prod:
-            # only_tags
-            task_vars["tags"] = [instance_type]
-
-        task_id = current.s3task.schedule_task(name,
-                                               vars = task_vars,
-                                               function_name = "setup_run_playbook",
-                                               repeats = None,
-                                               timeout = 6000,
-                                               #sync_output = 300
-                                               )
-
-        # Link scheduled task to current record
-        # = allows us to monitor deployment progress
-        db(itable.id == instance_id).update(task_id = task_id)
+        setup_instance_deploy(deployment_id, instance_id, r.folder)
 
         current.session.confirmation = current.T("Deployment initiated")
         redirect(URL(c="setup", f="deployment",
@@ -4298,6 +3509,804 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
 
     return result
 
+# =============================================================================
+def setup_instance_deploy(deployment_id, instance_id, folder):
+    """
+        Deploy an Instance
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    # Get Instance details
+    # - we read all instances for Certbot configuration
+    itable = s3db.setup_instance
+    query = (itable.deployment_id == deployment_id) & \
+            (itable.deleted == False)
+    instances = db(query).select(itable.id,
+                                 itable.type,
+                                 itable.url,
+                                 itable.sender,
+                                 itable.start,
+                                 )
+    all_sites = []
+    all_append = all_sites.append
+    for instance in instances:
+        url = instance.url
+        if "://" in url:
+            protocol, url = url.split("://", 1)
+        all_append(url)
+        if str(instance.id) == instance_id:
+            sitename = url
+            sender = instance.sender
+            start = instance.start
+            instance_type = instance.type
+        if instance.type == 1:
+            sitename_prod = url
+
+    # Default to SSL
+    # (plain http requests will still work as automatically redirected to https)
+    protocol = "https"
+
+    # Get Deployment details
+    dtable = s3db.setup_deployment
+    deployment = db(dtable.id == deployment_id).select(dtable.repo_url,
+                                                       dtable.webserver_type,
+                                                       dtable.db_type,
+                                                       dtable.db_password,
+                                                       dtable.country,
+                                                       dtable.template,
+                                                       dtable.template_manual,
+                                                       dtable.cloud_id,
+                                                       dtable.dns_id,
+                                                       dtable.email_id,
+                                                       dtable.smtp_id,
+                                                       limitby = (0, 1)
+                                                       ).first()
+
+    # Get Server(s) details
+    stable = s3db.setup_server
+    query = (stable.deployment_id == deployment_id)
+    cloud_id = deployment.cloud_id
+    if cloud_id:
+        # Lookup the Instance Type
+        ctable = s3db.setup_cloud
+        cloud = db(ctable.cloud_id == deployment.cloud_id).select(ctable.instance_type,
+                                                                  limitby = (0, 1)
+                                                                  ).first()
+        cloud_type = cloud.instance_type
+        if cloud_type == "setup_aws_cloud":
+            # Get Cloud details
+            ctable = s3db.setup_aws_cloud
+            cloud = db(ctable.cloud_id == cloud_id).select(ctable.access_key,
+                                                           ctable.secret_key,
+                                                           limitby = (0, 1)
+                                                           ).first()
+
+            # Get Server(s) details
+            cstable = s3db.setup_aws_server
+            left = cstable.on(cstable.server_id == stable.id)
+            servers = db(query).select(stable.id,
+                                       stable.name,
+                                       stable.role,
+                                       stable.host_ip,
+                                       stable.remote_user,
+                                       stable.private_key,
+                                       cstable.region,
+                                       cstable.instance_type,
+                                       cstable.image,
+                                       cstable.reserved_instance,
+                                       cstable.security_group,
+                                       cstable.instance_id,
+                                       left = left,
+                                       )
+        elif cloud_type == "setup_openstack_cloud":
+            # Get Cloud details
+            ctable = s3db.setup_openstack_cloud
+            cloud = db(ctable.cloud_id == cloud_id).select(ctable.auth_url,
+                                                           ctable.username,
+                                                           ctable.password,
+                                                           ctable.project_name,
+                                                           ctable.domain_name,
+                                                           limitby = (0, 1)
+                                                           ).first()
+
+            # Get Server(s) details
+            cstable = s3db.setup_openstack_server
+            left = cstable.on(cstable.server_id == stable.id)
+            servers = db(query).select(stable.id,
+                                       stable.name,
+                                       stable.role,
+                                       stable.host_ip,
+                                       stable.remote_user,
+                                       stable.private_key,
+                                       cstable.instance_type,
+                                       cstable.image,
+                                       cstable.volume_size,
+                                       cstable.network,
+                                       cstable.security_group,
+                                       cstable.region,
+                                       cstable.availability_zone,
+                                       left = left,
+                                       )
+        else:
+             raise NotImplementedError
+    else:
+        # Get Server(s) details
+        servers = db(query).select(stable.name,
+                                   stable.role,
+                                   stable.host_ip,
+                                   stable.remote_user,
+                                   stable.private_key,
+                                   )
+
+    # Build Playbook data structure
+    #roles_path = os.path.join(folder, "private", "eden_deploy", "roles")
+
+    appname = "eden" # @ToDo: Allow this to be configurable
+    hostname = sitename.split(".", 1)[0]
+    db_password = deployment.db_password
+    web_server = WEB_SERVERS[deployment.webserver_type]
+    db_type = DB_SERVERS[deployment.db_type]
+    instance_type = INSTANCE_TYPES[instance_type]
+    prod = instance_type == "prod"
+    parts = deployment.repo_url.split("/")
+    repo_owner = parts[3]
+    repo = parts[4]
+    repo_url = "git://github.com/%s/%s.git" % (repo_owner, repo)
+    template_manual = deployment.template_manual
+    if template_manual:
+        # Use this list
+        templates = template_manual.split(",")
+        template = []
+        for t in templates:
+            # Strip whitespace
+            template.append(t.strip())
+    else:
+        # Use the value from dropdown (& introspect the locale template(s))
+        template = deployment.template
+
+    email_id = deployment.email_id
+    if email_id:
+        # Email Group Provider
+        # - assume Google for now
+        getable = s3db.setup_google_email
+        email_service = db(getable.id == email_id).select(getable.credentials,
+                                                          getable.email,
+                                                          limitby = (0, 1)
+                                                          ).first()
+        gitable = s3db.setup_google_instance
+        google_instance = db(gitable.instance_id == instance_id).select(gitable.id,
+                                                                        gitable.name,
+                                                                        gitable.email,
+                                                                        gitable.member,
+                                                                        limitby = (0, 1)
+                                                                        ).first()
+
+        group_email = google_instance.email
+
+        from google.oauth2 import service_account
+        from googleapiclient.discovery import build
+
+        #creds_path = os.path.join("/", "tmp", "credentials-%s.json" % instance_id)
+        creds_path = os.path.join("\\", "temp", "credentials-%s.json" % instance_id)
+
+        with open(creds_path, "w") as creds_file:
+            creds_file.write(json.dumps(email_service.credentials))
+
+        credentials = service_account.Credentials.from_service_account_file(
+                creds_path,
+                scopes = ["https://www.googleapis.com/auth/admin.directory.group"]
+                )
+        credentials = credentials.with_subject(email_service.email)
+        service = build("admin", "directory_v1", credentials=credentials)
+
+        # Create Group
+        results = service.groups().insert(body = {"name": google_instance.name,
+                                                  "email": group_email,
+                                                  }).execute()
+        group_id = results.get("id")
+
+        # Store group_id
+        google_instance.update_record(group_id = group_id)
+
+        # Add Member
+        results = service.members().insert(groupKey = group_id,
+                                           body = {"email": google_instance.member,
+                                                   }).execute()
+
+        # Cleanup
+        os.unlink(creds_path)
+
+        # Use newly-created group as the Sender
+        sender = group_email
+
+    smtp_id = deployment.smtp_id
+    if prod and smtp_id:
+        # SMTP Smart Host
+        stable = s3db.setup_smtp
+        smtp = db(stable.id == smtp_id).select(stable.hostname,
+                                               stable.username,
+                                               stable.password,
+                                               limitby = (0, 1)
+                                               ).first()
+        smart_host = smtp.hostname
+        smtp_username = smtp.username
+        smtp_password = smtp.password
+    else:
+        smart_host = None
+        smtp_username = None
+        smtp_password = None
+
+    delete_ssh_key = True
+    if len(servers) == 1:
+        # All-in-one deployment
+        server = servers.first()
+        playbook = []
+        if prod and cloud_id:
+            tasks = []
+            connection = "smart"
+            request = current.request
+
+            if cloud_type == "setup_aws_cloud":
+                access_key = cloud.access_key
+                secret_key = cloud.secret_key
+                cloud_server = server["setup_aws_server"]
+                
+            elif cloud_type == "setup_openstack_cloud":
+                auth = {"auth_url": cloud.auth_url,
+                        "username": cloud.username,
+                        "password": cloud.password,
+                        "project_name": cloud.project_name,
+                        "domain_name": cloud.domain_name,
+                        }
+                cloud_server = server["setup_openstack_server"]
+
+            server = server["setup_server"]
+            remote_user = server.remote_user
+            server_name = server.name
+            private_key = "/tmp/%s" % server_name
+            public_key = "%s.pub" % private_key
+            provided_key = server.private_key
+            if provided_key:
+                provided_key = os.path.join(folder, "uploads", provided_key)
+                # Copy the Private Key to where it will be used
+                tasks.append({"copy": {"src": provided_key,
+                                       "dest": private_key,
+                                       "mode": "0600",
+                                       },
+                              })
+                # Generate the Public Key
+                command = "openssl rsa -in %(private_key)s -pubout > %(public_key)s" % \
+                    {"private_key": private_key,
+                     "public_key": public_key,
+                     }
+                tasks.append({"command": command,
+                              })
+            else:
+                # Generate an OpenSSH keypair with the default values (4096 bits, rsa)
+                tasks.append({"openssh_keypair": {"path": private_key,
+                                                  },
+                              })
+            if cloud_type == "setup_aws_cloud":
+                region = cloud_server.region
+                # Upload Public Key to Cloud
+                tasks.append({"ec2_key": {"aws_access_key": access_key,
+                                          "aws_secret_key": secret_key,
+                                          "region": region,
+                                          "name": server_name,
+                                          "key_material": "{{ lookup('file', '%s') }}" % public_key,
+                                          },
+                              })
+                if cloud_server.instance_id:
+                    # Terminate old AWS instance
+                    # @ToDo: Allow deployment on existing instances?
+                    tasks.append({"ec2": {"aws_access_key": access_key,
+                                          "aws_secret_key": secret_key,
+                                          "region": region,
+                                          "instance_ids": cloud_server.instance_id,
+                                          "state": "absent",
+                                          },
+                                  })
+                # Launch Cloud instance
+                command = "python web2py.py -S %(appname)s -M -R %(appname)s/private/eden_deploy/tools/update_aws_server.py -A %(server_id)s %(server_name)s {{ item.public_ip }} {{ item.id }}" % \
+                            {"appname": request.application,
+                             "server_id": server.id,
+                             "server_name": server_name,
+                             }
+                tasks += [# Launch AWS Instance
+                          {"ec2": {"aws_access_key": access_key,
+                                   "aws_secret_key": secret_key,
+                                   "key_name": server_name,
+                                   "region": region,
+                                   "instance_type": cloud_server.instance_type,
+                                   "image": cloud_server.image,
+                                   "group": cloud_server.security_group,
+                                   "wait": "yes",
+                                   "count": 1,
+                                   "instance_tags": {"Name": server_name,
+                                                     },
+                                   },
+                           "register": "ec2",
+                           },
+                          # Add new instance to host group (to associate private_key)
+                          {"add_host": {"hostname": "{{ item.public_ip }}",
+                                        "groupname": "launched",
+                                        "ansible_ssh_private_key_file": "/tmp/%s" % server_name,
+                                        },
+                           "loop": "{{ ec2.instances }}",
+                           },
+                          # Update Server record
+                          {"command": {"cmd": command,
+                                       "chdir": request.env.web2py_path,
+                                       },
+                           "loop": "{{ ec2.instances }}",
+                           },
+                          ]
+                if cloud_server.reserved_instance:
+                    try:
+                        import awscli.clidriver
+                    except ImportError:
+                        current.session.warning = current.T("Cannot purchase reserved instance as awscli not installed")
+                    else:
+                        # Configure
+                        creds_path = os.path.join("~", ".aws", "credentials")
+                        with open(creds_path, "w") as creds_file:
+                            creds_file.write("""[default]
+aws_access_key_id = %s
+aws_secret_access_key = %s""" % (access_key, secret_key))
+                        conf_path = os.path.join("~", ".aws", "config")
+                        with open(conf_path, "w") as conf_file:
+                            conf_file.write("""[default]
+region = %s
+output = json""" % region)
+                        import subprocess
+                        # Lookup Offering ID
+                        # https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-reserved-instances-offerings.html
+                        command = ["aws",
+                                   "ec2",
+                                   "describe-reserved-instances-offerings",
+                                   "--instance-type",
+                                   cloud_server.instance_type,
+                                   "--max-duration",
+                                   "31536000", # 1 Year
+                                   "--offering-type",
+                                   "All Upfront",
+                                   "--product-description",
+                                   "Linux/UNIX (Amazon VPC)",
+                                   "--filters",
+                                   "Name=scope,Values=Region",
+                                   "--instance-tenancy",
+                                   "default",
+                                   "--offering-class",
+                                   "standard",
+                                   "--no-include-marketplace",
+                                   ]
+                        result = subprocess.run(command, stdout=subprocess.PIPE)
+                        output = json.loads(result.stdout)
+                        offering_id = output["ReservedInstancesOfferings"][0]["ReservedInstancesOfferingId"]
+                        # Purchase a Reserved Instance
+                        # https://docs.aws.amazon.com/cli/latest/reference/ec2/purchase-reserved-instances-offering.html
+                        command = ["aws",
+                                   "ec2",
+                                   "purchase-reserved-instances-offering",
+                                   "--instance-count",
+                                   "1",
+                                   "--reserved-instances-offering-id",
+                                   offering_id,
+                                   #"--dry-run",
+                                   ]
+                        result = subprocess.run(command, stdout=subprocess.PIPE)
+                        #output = json.loads(result.stdout)
+            elif cloud_type == "setup_openstack_cloud":
+                # Upload Public Key to Cloud
+                tasks.append({"os_keypair": {"auth": auth,
+                                             "name": server_name,
+                                             "public_key_file": public_key,
+                                             },
+                              })
+                # Launch Cloud instance
+                command = "python web2py.py -S %(appname)s -M -R %(appname)s/private/eden_deploy/tools/update_server.py -A %(server_id)s %(server_name)s {{ openstack.openstack.public_v4 }}" % \
+                            {"appname": request.application,
+                             "server_id": server.id,
+                             "server_name": server_name,
+                             }
+                tasks += [# Launch OpenStack Instance
+                          {"os_server": {"auth": auth,
+                                         "key_name": server_name,
+                                         "name": server_name,
+                                         "flavor": cloud_server.instance_type,
+                                         "image": cloud_server.image,
+                                         "volume_size": cloud_server.volume_size,
+                                         "boot_from_volume": "yes",
+                                         "terminate_volume": "yes",
+                                         "network": cloud_server.network,
+                                         "security_groups": cloud_server.security_group,
+                                         "region_name": cloud_server.region,
+                                         "availability_zone": cloud_server.availability_zone,
+                                         "wait": "yes",
+                                         },
+                           "register": "openstack",
+                           },
+                          # Add new instance to host group (to associate private_key)
+                          {"add_host": {"hostname": "{{ openstack.openstack.public_v4 }}",
+                                        "groupname": "launched",
+                                        "ansible_ssh_private_key_file": "/tmp/%s" % server_name,
+                                        },
+                           },
+                          # Update Server record
+                          {"command": {"cmd": command,
+                                       "chdir": request.env.web2py_path,
+                                       },
+                           },
+                          ]
+            dns_id = deployment.dns_id
+            if dns_id:
+                # Lookup the Instance Type
+                dtable = s3db.setup_dns
+                dns = db(dtable.dns_id == dns_id).select(dtable.instance_type,
+                                                         limitby = (0, 1)
+                                                         ).first()
+                dns_type = dns.instance_type
+                if dns_type == "setup_gandi_dns":
+                    gtable = s3db.setup_gandi_dns
+                    gandi = db(gtable.dns_id == dns_id).select(gtable.api_key,
+                                                               gtable.domain,
+                                                               gtable.zone,
+                                                               limitby = (0, 1)
+                                                               ).first()
+                    gandi_api_key = gandi.api_key
+                    url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
+                    dns_record = sitename.split(".%s" % gandi.domain, 1)[0]
+                    # Delete any existing record
+                    tasks.append({"uri": {"url": "%s/%s" % (url, dns_record),
+                                          "method": "DELETE",
+                                          "headers": {"X-Api-Key": gandi_api_key,
+                                                      },
+                                          "status_code": ["200", "204"],
+                                          },
+                                  # Don't worry if it didn't exist
+                                  "ignore_errors": "yes",
+                                  })
+                    # Create new record
+                    if cloud_type == "setup_aws_cloud":
+                        tasks.append({"uri": {"url": url,
+                                              "method": "POST",
+                                              "headers": {"X-Api-Key": gandi_api_key,
+                                                          },
+                                              "body_format": "json", # Content-Type: application/json
+                                              "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ item.public_ip }}"]}' % dns_record,
+                                              "status_code": ["200", "201"],
+                                              },
+                                      "loop": "{{ ec2.instances }}",
+                                      })
+                    elif cloud_type == "setup_openstack_cloud":
+                        tasks.append({"uri": {"url": url,
+                                              "method": "POST",
+                                              "headers": {"X-Api-Key": gandi_api_key,
+                                                          },
+                                              "body_format": "json", # Content-Type: application/json
+                                              "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ openstack.openstack.public_v4 }}"]}' % dns_record,
+                                              "status_code": ["200", "201"],
+                                              },
+                                      })
+                elif dns_type == "setup_godaddy_dns":
+                    gtable = s3db.setup_godaddy_dns
+                    godaddy = db(gtable.dns_id == dns_id).select(gtable.domain,
+                                                                 gtable.api_key,
+                                                                 gtable.secret,
+                                                                 limitby = (0, 1)
+                                                                 ).first()
+                    domain = godaddy.domain
+                    dns_record = sitename.split(".%s" % domain, 1)[0]
+                    url = "https://api.godaddy.com/v1/domains/%s/records/A/%s" % (domain, dns_record)
+                    # No need to delete existing record (can't anyway!)
+                    # Create new record or replace existing
+                    if cloud_type == "setup_aws_cloud":
+                        tasks.append({"uri": {"url": url,
+                                              "method": "PUT",
+                                              "headers": {"Authorization": "sso-key %s:%s" % (godaddy.api_key, godaddy.secret),
+                                                          },
+                                              "body_format": "json", # Content-Type: application/json
+                                              "body": '[{"name": "%s", "type": "A", "ttl": 10800, "data": "{{ item.public_ip }}"}]' % dns_record,
+                                              "status_code": ["200"],
+                                              },
+                                      "loop": "{{ ec2.instances }}",
+                                      })
+                    elif cloud_type == "setup_openstack_cloud":
+                        tasks.append({"uri": {"url": url,
+                                              "method": "PUT",
+                                              "headers": {"Authorization": "sso-key %s:%s" % (godaddy.api_key, godaddy.secret),
+                                                          },
+                                              "body_format": "json", # Content-Type: application/json
+                                              "body": '[{"name": "%s", "type": "A", "ttl": 10800, "data": "{{ openstack.openstack.public_v4 }}"}]' % dns_record,
+                                              "status_code": ["200"],
+                                              },
+                                      })
+            else:
+                current.session.warning = current.T("Deployment will not have SSL: No DNS Provider configured to link to new server IP Address")
+                # @ToDo: Support Elastic IPs
+                protocol = "http"
+            playbook.append({"hosts": "localhost",
+                             "connection": "local",
+                             "gather_facts": "no",
+                             "tasks": tasks,
+                             })
+            host_ip = "launched"
+            # Wait for Server to become available
+            playbook.append({"hosts": "launched",
+                             "connection": "smart",
+                             "remote_user": remote_user,
+                             "gather_facts": "no",
+                             "tasks": [{"wait_for_connection": {"timeout": 300, # seconds
+                                                                },
+                                        },
+                                       ],
+                             })
+        else:
+            # No Cloud or additional Instance on existing Host
+            remote_user = server.remote_user
+            host_ip = server.host_ip
+            # @ToDo Check that ip_addr is correct
+            #       - if host_ip == "127.0.0.1" then we can check the contents
+            if host_ip == "127.0.0.1":
+                connection = "local"
+                delete_ssh_key = False
+            else:
+                # We will need the SSH key
+                private_key = server.private_key
+                if not private_key:
+                    # Abort
+                    current.session.error = current.T("Deployment failed: SSH Key needed when deploying away from localhost")
+                    redirect(URL(c="setup", f="deployment",
+                                 args = [deployment_id, "instance"],
+                                 ))
+                tasks = []
+                dns_id = deployment.dns_id
+                if dns_id:
+                    # Lookup the Instance Type
+                    dtable = s3db.setup_dns
+                    dns = db(dtable.dns_id == dns_id).select(dtable.instance_type,
+                                                             limitby = (0, 1)
+                                                             ).first()
+                    dns_type = dns.instance_type
+                    if dns_type == "setup_gandi_dns":
+                        gtable = s3db.setup_gandi_dns
+                        gandi = db(gtable.dns_id == dns_id).select(gtable.api_key,
+                                                                   gtable.domain,
+                                                                   gtable.zone,
+                                                                   limitby = (0, 1)
+                                                                   ).first()
+                        gandi_api_key = gandi.api_key
+                        url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
+                        dns_record = sitename.split(".%s" % gandi.domain, 1)[0]
+                        # Delete any existing record
+                        task = {"uri": {"url": "%s/%s" % (url, dns_record),
+                                        "method": "DELETE",
+                                        "headers": {"X-Api-Key": gandi_api_key,
+                                                    },
+                                        "status_code": ["200", "204"],
+                                        },
+                                # Don't worry if it didn't exist
+                                "ignore_errors": "yes",
+                                }
+                        if not prod:
+                            # only_tags
+                            task["tags"] = [instance_type]
+                        tasks.append(task)
+                        # Create new record
+                        task = {"uri": {"url": url,
+                                        "method": "POST",
+                                        "headers": {"X-Api-Key": gandi_api_key,
+                                                    },
+                                        "body_format": "json", # Content-Type: application/json
+                                        "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["%s"]}' % (dns_record, host_ip),
+                                        "status_code": ["200", "201"],
+                                        },
+                                }
+                        if not prod:
+                            # only_tags
+                            task["tags"] = [instance_type]
+                        tasks.append(task)
+                    elif dns_type == "setup_godaddy_dns":
+                        gtable = s3db.setup_godaddy_dns
+                        godaddy = db(gtable.dns_id == dns_id).select(gtable.domain,
+                                                                     gtable.api_key,
+                                                                     gtable.secret,
+                                                                     limitby = (0, 1)
+                                                                     ).first()
+                        domain = godaddy.domain
+                        dns_record = sitename.split(".%s" % domain, 1)[0]
+                        url = "https://api.godaddy.com/v1/domains/%s/records/A/%s" % (domain, dns_record)
+                        # No need to delete existing record (can't anyway!)
+                        # Create new record or replace existing
+                        task = {"uri": {"url": url,
+                                        "method": "PUT",
+                                        "headers": {"Authorization": "sso-key %s:%s" % (godaddy.api_key, godaddy.secret),
+                                                    },
+                                        "body_format": "json", # Content-Type: application/json
+                                        "body": '[{"name": "%s", "type": "A", "ttl": 10800, "data": "%s"}]' % (dns_record, host_ip),
+                                        "status_code": ["200"],
+                                        },
+                                }
+                        if not prod:
+                            # only_tags
+                            task["tags"] = [instance_type]
+                        tasks.append(task)
+                else:
+                    # Check if DNS is already configured properly
+                    import socket
+                    try:
+                        ip_addr = socket.gethostbyname(sitename)
+                    except socket.gaierror:
+                        current.session.warning = current.T("Deployment will not have SSL: URL doesn't resolve in DNS")
+                        protocol = "http"
+                    #else:
+                    #   # We may wish to administer via a private IP, so shouldn't do this:
+                    #   if ip_addr != host_ip:
+                    #       current.session.warning = current.T("Deployment will not have SSL: URL doesn't match server IP Address")
+                    #       protocol = "http"
+                # Copy the Private Key to where it will be used
+                provided_key = os.path.join(folder, "uploads", private_key)
+                private_key = "/tmp/%s" % server.name
+                task = {"copy": {"src": provided_key,
+                                 "dest": private_key,
+                                 "mode": "0600",
+                                 },
+                        }
+                if not prod:
+                    # only_tags
+                    task["tags"] = [instance_type]
+                tasks.append(task)
+                # Add instance to host group (to associate private_key)
+                task = {"add_host": {"hostname": host_ip,
+                                     "groupname": "launched",
+                                     "ansible_ssh_private_key_file": private_key,
+                                     },
+                        }
+                if not prod:
+                    # only_tags
+                    task["tags"] = [instance_type]
+                tasks.append(task)
+                playbook.append({"hosts": "localhost",
+                                 "connection": "local",
+                                 "gather_facts": "no",
+                                 "tasks": tasks,
+                                 })
+                host_ip = "launched"
+                connection = "smart"
+
+        # Deploy to Server
+        playbook.append({"hosts": host_ip,
+                         "connection": connection,
+                         "remote_user": remote_user,
+                         "become_method": "sudo",
+                         #"become_user": "root",
+                         "vars": {"appname": appname,
+                                  "all_sites": ",".join(all_sites),
+                                  "country": deployment.country,
+                                  "db_ip": "127.0.0.1",
+                                  "db_type": db_type,
+                                  "hostname": hostname,
+                                  "password": db_password,
+                                  "protocol": protocol,
+                                  "repo_url": repo_url,
+                                  "sender": sender,
+                                  "sitename": sitename,
+                                  "sitename_prod": sitename_prod,
+                                  "smart_host": smart_host,
+                                  "smtp_username": smtp_username,
+                                  "smtp_password": smtp_password,
+                                  "start": start,
+                                  "template": template,
+                                  "type": instance_type,
+                                  "web_server": web_server,
+                                  },
+                         "roles": [{"role": "common" },
+                                   {"role": "ansible" },
+                                   {"role": "exim" },
+                                   {"role": db_type },
+                                   {"role": "uwsgi" },
+                                   {"role": web_server },
+                                   {"role": "final" },
+                                   ]
+                         })
+        if delete_ssh_key:
+            # Delete SSH private key from the filesystem
+            task = {"hosts": "localhost",
+                    "connection": "local",
+                    "gather_facts": "no",
+                    "tasks": [{"file": {"path": private_key,
+                                        "state": "absent",
+                                        },
+                               },
+                              ],
+                    }
+            if not prod:
+                # only_tags
+                task["tags"] = [instance_type]
+            playbook.append(task)
+    else:
+        # Separate Database
+        # @ToDo: Needs completing
+        # Abort
+        current.session.error = current.T("Deployment failed: Currently only All-in-one deployments supported with this tool")
+        redirect(URL(c="setup", f="deployment",
+                     args = [deployment_id, "instance"],
+                     ))
+        for server in servers:
+            if server.role == 2:
+                db_ip = server.host_ip
+                private_key = server.private.key
+                remote_user = server.remote_user
+            else:
+                webserver_ip = server.host_ip
+        playbook = [{"hosts": db_ip,
+                     "remote_user": remote_user,
+                     "become_method": "sudo",
+                     #"become_user": "root",
+                     "vars": {"db_type": db_type,
+                              "password": db_password,
+                              "type": instance_type
+                              },
+                     "roles": [{ "role": db_type }, # "%s/%s" % (roles_path, db_type)
+                               ]
+                     },
+                    {"hosts": webserver_ip,
+                     #"remote_user": remote_user,
+                     "become_method": "sudo",
+                     #"become_user": "root",
+                     "vars": {"appname": appname,
+                              "all_sites": ",".join(all_sites),
+                              "country": deployment.country,
+                              "db_ip": db_ip,
+                              "db_type": db_type,
+                              "hostname": hostname,
+                              "password": db_password,
+                              "protocol": protocol,
+                              "repo_url": repo_url,
+                              "sender": sender,
+                              "sitename": sitename,
+                              "sitename_prod": sitename_prod,
+                              "start": start,
+                              "template": template,
+                              "type": instance_type,
+                              "web_server": web_server,
+                              },
+                     "roles": [{"role": "common" },
+                               {"role": "ansible" },
+                               {"role": "exim" },
+                               {"role": "uwsgi" },
+                               {"role": web_server },
+                               {"role": "final" },
+                               ],
+                     },
+                    ]
+
+    # Write Playbook
+    name = "deployment_%d" % int(time.time())
+    task_vars = setup_write_playbook("%s.yml" % name,
+                                     playbook,
+                                     )
+
+    # Run Playbook
+    task_vars["instance_id"] = instance_id # To Upload Logs to Instance record
+    if not prod:
+        # only_tags
+        task_vars["tags"] = [instance_type]
+
+    task_id = current.s3task.schedule_task(name,
+                                           vars = task_vars,
+                                           function_name = "setup_run_playbook",
+                                           repeats = None,
+                                           timeout = 6000,
+                                           #sync_output = 300
+                                           )
+
+    # Link scheduled task to current record
+    # = allows us to monitor deployment progress
+    db(itable.id == instance_id).update(task_id = task_id)
+    
 # =============================================================================
 def setup_instance_settings_read(instance_id, deployment_id):
     """

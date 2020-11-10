@@ -537,10 +537,10 @@ def inv_item():
     if len(request.args) > 1 and request.args[1] == "track_item":
         # remove CRUD generated buttons in the tabs
         s3db.configure("inv_track_item",
-                       create=False,
-                       listadd=False,
-                       editable=False,
-                       deletable=False,
+                       create = False,
+                       listadd = False,
+                       editable = False,
+                       deletable = False,
                        )
     else:
         s3.filter = (table.quantity != 0)

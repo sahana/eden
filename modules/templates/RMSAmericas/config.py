@@ -3062,11 +3062,13 @@ Thank you"""
                             },
                          }
 
+        direct_stock_edits = settings.get_inv_direct_stock_edits()
+
         current.s3db.configure("inv_inv_item",
-                               create = False,
-                               deletable = False,
-                               editable = False,
-                               listadd = False,
+                               create = direct_stock_edits,
+                               deletable = direct_stock_edits,
+                               editable = direct_stock_edits,
+                               listadd = direct_stock_edits,
                                grouped = stock_reports,
                                )
 
