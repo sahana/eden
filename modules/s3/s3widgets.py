@@ -1527,6 +1527,8 @@ class S3AutocompleteWidget(FormWidget):
         s3.js_global.append('''i18n.none_of_the_above="%s"''' % current.T("None of the above"))
 
         return TAG[""](INPUT(_id = dummy_input,
+                             # Required to retain label on error:
+                             _name = dummy_input,
                              _class = "string",
                              value = represent,
                              ),
@@ -3040,6 +3042,8 @@ def S3GenericAutocompleteTemplate(post_process,
              }
     current.response.s3.jquery_ready.append(script)
     return TAG[""](INPUT(_id = dummy_input,
+                         # Required to retain label on error:
+                         _name = dummy_input,
                          _class = "string",
                          value = represent,
                          ),
@@ -3638,6 +3642,8 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
         current.response.s3.jquery_ready.append(script)
 
         return TAG[""](INPUT(_id = dummy_input,
+                             # Required to retain label on error:
+                             _name = dummy_input,
                              _class = "string",
                              _value = represent,
                              ),
@@ -4104,6 +4110,8 @@ class S3LocationAutocompleteWidget(FormWidget):
         script = "%s)" % script
         current.response.s3.jquery_ready.append(script)
         return TAG[""](INPUT(_id = dummy_input,
+                             # Required to retain label on error:
+                             _name = dummy_input,
                              _class = "string",
                              value = represent,
                              ),
@@ -7513,6 +7521,8 @@ class S3PersonAutocompleteWidget(FormWidget):
         current.response.s3.jquery_ready.append(script)
 
         return TAG[""](INPUT(_id = dummy_input,
+                             # Required to retain label on error:
+                             _name = dummy_input,
                              _class = "string",
                              _value = represent,
                              ),
@@ -7626,6 +7636,8 @@ class S3PentityAutocompleteWidget(FormWidget):
         script = '''%s%s)''' % (script, options)
         s3.jquery_ready.append(script)
         return TAG[""](INPUT(_id = dummy_input,
+                             # Required to retain label on error:
+                             _name = dummy_input,
                              _class = "string",
                              _value = represent,
                              ),
@@ -7745,6 +7757,8 @@ class S3SiteAutocompleteWidget(FormWidget):
         s3.jquery_ready.append(script)
 
         return TAG[""](INPUT(_id = dummy_input,
+                             # Required to retain label on error:
+                             _name = dummy_input,
                              _class = "string",
                              _value = represent,
                              ),
