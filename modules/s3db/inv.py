@@ -4849,7 +4849,7 @@ def inv_item_total_weight(row):
     if weight is None:
         return current.messages["NONE"]
     else:
-        return quantity * weight
+        return round(quantity * weight, 3)
 
 # -----------------------------------------------------------------------------
 def inv_item_total_volume(row):
@@ -4885,7 +4885,7 @@ def inv_item_total_volume(row):
     if volume is None:
         return current.messages["NONE"]
     else:
-        return quantity * volume
+        return round(quantity * volume, 3)
 
 # -----------------------------------------------------------------------------
 def inv_stock_movements(resource, selectors, orderby):

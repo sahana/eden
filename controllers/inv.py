@@ -395,7 +395,7 @@ def warehouse():
                                   #delete_url = delete_url,
                                   update_url = update_url)
 
-        if "add_btn" in output:
+        if isinstance(output, dict) and "add_btn" in output:
             del output["add_btn"]
         return output
     s3.postp = postp
