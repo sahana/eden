@@ -43,13 +43,15 @@
         real_input.data('existing', existing);
         // Have the URL editable after setup
         real_input.data('url', url);
+        /*
         if (real_input.parent().hasClass('controls')) {
-            // Bootstrap
+            // Bootstrap or Foundation
             var create = real_input.next().find('.s3_add_resource_link');
         } else {
             // Other Theme
             var create = real_input.parent().next().find('.s3_add_resource_link');
         }
+        */
 
         var throbber = $('#' + dummy + '_throbber');
 
@@ -182,13 +184,15 @@
         real_input.data('existing', existing);
         // Have the URL editable after setup
         real_input.data('url', url);
+        /*
         if (real_input.parent().hasClass('controls')) {
-            // Bootstrap
+            // Bootstrap or Foundation
             var create = real_input.next().find('.s3_add_resource_link');
         } else {
             // Other Theme
             var create = real_input.parent().next().find('.s3_add_resource_link');
         }
+        */
 
         var throbber = $('#' + dummy + '_throbber');
 
@@ -408,13 +412,15 @@
         real_input.data('existing', existing);
         // Have the URL editable after setup
         real_input.data('url', url);
+        /*
         if (real_input.parent().hasClass('controls')) {
-            // Bootstrap
+            // Bootstrap or Foundation
             var create = real_input.next().find('.s3_add_resource_link');
         } else {
             // Other Theme
             var create = real_input.parent().next().find('.s3_add_resource_link');
         }
+        */
 
         var throbber = $('#' + dummy + '_throbber');
 
@@ -569,13 +575,15 @@
         real_input.data('existing', existing);
         // Have the URL editable after setup
         real_input.data('url', url);
+        /*
         if (real_input.parent().hasClass('controls')) {
-            // Bootstrap
+            // Bootstrap or Foundation
             var create = real_input.next().find('.s3_add_resource_link');
         } else {
             // Other Theme
             var create = real_input.parent().next().find('.s3_add_resource_link');
         }
+        */
 
         var throbber = $('#' + dummy + '_throbber');
 
@@ -704,13 +712,15 @@
         real_input.data('existing', existing);
         // Have the URL editable after setup
         real_input.data('url', url);
+        /*
         if (real_input.parent().hasClass('controls')) {
-            // Bootstrap
+            // Bootstrap or Foundation
             var create = real_input.next().find('.s3_add_resource_link');
         } else {
             // Other Theme
             var create = real_input.parent().next().find('.s3_add_resource_link');
         }
+        */
 
         var throbber = $('#' + dummy + '_throbber');
 
@@ -888,13 +898,15 @@
         real_input.data('existing', existing);
         // Have the URL editable after setup
         real_input.data('url', url);
+        /*
         if (real_input.parent().hasClass('controls')) {
-            // Bootstrap
+            // Bootstrap or Foundation
             var create = real_input.next().find('.s3_add_resource_link');
         } else {
             // Other Theme
             var create = real_input.parent().next().find('.s3_add_resource_link');
         }
+        */
 
         var throbber = $('#' + dummy + '_throbber');
 
@@ -1062,13 +1074,15 @@
         real_input.data('existing', existing);
         // Have the URL editable after setup (e.g. to Filter by Organisation)
         real_input.data('url', url);
+        /*
         if (real_input.parent().hasClass('controls')) {
-            // Bootstrap
+            // Bootstrap or Foundation
             var create = real_input.next().find('.s3_add_resource_link');
         } else {
             // Other Theme
             var create = real_input.parent().next().find('.s3_add_resource_link');
         }
+        */
 
         var throbber = $('#' + dummy + '_throbber');
 
@@ -1325,13 +1339,15 @@
         real_input.data('existing', existing);
         // Have the URL editable after setup (e.g. to Filter by Organisation)
         real_input.data('url', url);
+        /*
         if (real_input.parent().hasClass('controls')) {
-            // Bootstrap
+            // Bootstrap or Foundation
             var create = real_input.next().find('.s3_add_resource_link');
         } else {
             // Other Theme
             var create = real_input.parent().next().find('.s3_add_resource_link');
         }
+        */
 
         var throbber = $('#' + dummy + '_throbber');
 
