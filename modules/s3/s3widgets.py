@@ -1466,7 +1466,7 @@ class S3AutocompleteWidget(FormWidget):
         settings = current.deployment_settings
 
         default = {"_type": "text",
-                   "value": (value is not None and str(value)) or "",
+                   "value": str(value) if value is not None else "",
                    }
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -1520,19 +1520,20 @@ class S3AutocompleteWidget(FormWidget):
             text = s3_unicode(field.represent(value))
             if "<" in text:
                 text = s3_strip_markup(text)
-            represent = text
+            represent = s3_str(text)
         else:
             represent = ""
 
         s3.js_global.append('''i18n.none_of_the_above="%s"''' % current.T("None of the above"))
 
-        return TAG[""](INPUT(_id=dummy_input,
-                             _class="string",
-                             _value=represent.encode("utf-8")),
-                       DIV(_id="%s_throbber" % dummy_input,
-                           _class="throbber input_throbber hide"),
+        return TAG[""](INPUT(_id = dummy_input,
+                             _class = "string",
+                             value = represent,
+                             ),
+                       DIV(_id = "%s_throbber" % dummy_input,
+                           _class = "throbber input_throbber hide",
+                           ),
                        INPUT(**attr),
-                       requires = field.requires
                        )
 
 # =============================================================================
@@ -3014,7 +3015,7 @@ def S3GenericAutocompleteTemplate(post_process,
         text = s3_unicode(field.represent(value))
         if "<" in text:
             text = s3_strip_markup(text)
-        represent = text.encode("utf-8")
+        represent = s3_str(text)
     else:
         represent = ""
 
@@ -3038,13 +3039,13 @@ def S3GenericAutocompleteTemplate(post_process,
              "min_length": min_length,
              }
     current.response.s3.jquery_ready.append(script)
-    return TAG[""](INPUT(_id=dummy_input,
-                         _class="string",
-                         value=represent),
-                   DIV(_id="%s_throbber" % dummy_input,
-                       _class="throbber input_throbber hide"),
+    return TAG[""](INPUT(_id = dummy_input,
+                         _class = "string",
+                         value = represent,
+                         ),
+                   DIV(_id = "%s_throbber" % dummy_input,
+                       _class = "throbber input_throbber hide"),
                    INPUT(**attr),
-                   requires = field.requires
                    )
 
 #==============================================================================
@@ -3592,7 +3593,7 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
             group = "deploy"
 
         default = {"_type": "text",
-                   "value": (value is not None and str(value)) or "",
+                   "value": str(value) if value is not None else "",
                    }
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -3614,7 +3615,7 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
             text = s3_unicode(field.represent(value))
             if "<" in text:
                 text = s3_strip_markup(text)
-            represent = text
+            represent = s3_str(text)
         else:
             represent = ""
 
@@ -3636,13 +3637,14 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
 
         current.response.s3.jquery_ready.append(script)
 
-        return TAG[""](INPUT(_id=dummy_input,
-                             _class="string",
-                             _value=represent.encode("utf-8")),
-                       DIV(_id="%s_throbber" % dummy_input,
-                           _class="throbber input_throbber hide"),
+        return TAG[""](INPUT(_id = dummy_input,
+                             _class = "string",
+                             _value = represent,
+                             ),
+                       DIV(_id = "%s_throbber" % dummy_input,
+                           _class = "throbber input_throbber hide",
+                           ),
                        INPUT(**attr),
-                       requires = field.requires
                        )
 
 # =============================================================================
@@ -4056,7 +4058,7 @@ class S3LocationAutocompleteWidget(FormWidget):
                 counter += 1
 
         default = {"_type": "text",
-                   "value": (value is not None and s3_unicode(value)) or "",
+                   "value": s3_str(value) if value is not None else "",
                    }
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -4079,7 +4081,7 @@ class S3LocationAutocompleteWidget(FormWidget):
             text = s3_unicode(field.represent(value))
             if "<" in text:
                 text = s3_strip_markup(text)
-            represent = text.encode("utf-8")
+            represent = s3_str(text)
         else:
             represent = ""
 
@@ -4101,13 +4103,14 @@ class S3LocationAutocompleteWidget(FormWidget):
         # Close
         script = "%s)" % script
         current.response.s3.jquery_ready.append(script)
-        return TAG[""](INPUT(_id=dummy_input,
-                             _class="string",
-                             value=represent),
-                       DIV(_id="%s_throbber" % dummy_input,
-                           _class="throbber input_throbber hide"),
+        return TAG[""](INPUT(_id = dummy_input,
+                             _class = "string",
+                             value = represent,
+                             ),
+                       DIV(_id = "%s_throbber" % dummy_input,
+                           _class = "throbber input_throbber hide",
+                           ),
                        INPUT(**attr),
-                       requires = field.requires
                        )
 
 # =============================================================================
@@ -7448,7 +7451,7 @@ class S3PersonAutocompleteWidget(FormWidget):
     def __call__(self, field, value, **attributes):
 
         default = {"_type": "text",
-                   "value": (value is not None and str(value)) or "",
+                   "value": str(value) if value is not None else "",
                    }
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -7471,7 +7474,7 @@ class S3PersonAutocompleteWidget(FormWidget):
             text = s3_unicode(field.represent(value))
             if "<" in text:
                 text = s3_strip_markup(text)
-            represent = text.encode("utf-8")
+            represent = s3_str(text)
         else:
             represent = ""
 
@@ -7509,13 +7512,14 @@ class S3PersonAutocompleteWidget(FormWidget):
         script = '''%s%s)''' % (script, options)
         current.response.s3.jquery_ready.append(script)
 
-        return TAG[""](INPUT(_id=dummy_input,
-                             _class="string",
-                             _value=represent),
-                       DIV(_id="%s_throbber" % dummy_input,
-                           _class="throbber input_throbber hide"),
-                       INPUT(hideerror=self.hideerror, **attr),
-                       requires = field.requires
+        return TAG[""](INPUT(_id = dummy_input,
+                             _class = "string",
+                             _value = represent,
+                             ),
+                       DIV(_id = "%s_throbber" % dummy_input,
+                           _class = "throbber input_throbber hide",
+                           ),
+                       INPUT(hideerror = self.hideerror, **attr),
                        )
 
 # =============================================================================
@@ -7543,7 +7547,7 @@ class S3PentityAutocompleteWidget(FormWidget):
     def __call__(self, field, value, **attributes):
 
         default = {"_type": "text",
-                   "value": (value is not None and str(value)) or "",
+                   "value": str(value) if value is not None else "",
                    }
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -7566,7 +7570,7 @@ class S3PentityAutocompleteWidget(FormWidget):
             text = s3_unicode(field.represent(value))
             if "<" in text:
                 text = s3_strip_markup(text)
-            represent = text.encode("utf-8")
+            represent = s3_str(text)
         else:
             represent = ""
 
@@ -7621,13 +7625,14 @@ class S3PentityAutocompleteWidget(FormWidget):
 
         script = '''%s%s)''' % (script, options)
         s3.jquery_ready.append(script)
-        return TAG[""](INPUT(_id=dummy_input,
-                             _class="string",
-                             _value=represent),
-                       DIV(_id="%s_throbber" % dummy_input,
-                           _class="throbber input_throbber hide"),
-                       INPUT(hideerror=self.hideerror, **attr),
-                       requires = field.requires
+        return TAG[""](INPUT(_id = dummy_input,
+                             _class = "string",
+                             _value = represent,
+                             ),
+                       DIV(_id = "%s_throbber" % dummy_input,
+                           _class = "throbber input_throbber hide",
+                           ),
+                       INPUT(hideerror = self.hideerror, **attr),
                        )
 
 # =============================================================================
@@ -7679,7 +7684,7 @@ class S3SiteAutocompleteWidget(FormWidget):
     def __call__(self, field, value, **attributes):
 
         default = {"_type": "text",
-                   "value": (value is not None and str(value)) or "",
+                   "value": str(value) if value is not None else "",
                    }
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -7707,11 +7712,9 @@ class S3SiteAutocompleteWidget(FormWidget):
                 text = s3_unicode(represent(value))
                 if "<" in text:
                     text = s3_strip_markup(text)
-            represent = text.encode("utf-8")
+            represent = s3_str(text)
         else:
             represent = ""
-
-
 
         s3 = current.response.s3
         site_types = current.auth.org_site_types
@@ -7740,13 +7743,15 @@ class S3SiteAutocompleteWidget(FormWidget):
         script = "%s)" % script
 
         s3.jquery_ready.append(script)
-        return TAG[""](INPUT(_id=dummy_input,
-                             _class="string",
-                             _value=represent),
-                       DIV(_id="%s_throbber" % dummy_input,
-                           _class="throbber input_throbber hide"),
+
+        return TAG[""](INPUT(_id = dummy_input,
+                             _class = "string",
+                             _value = represent,
+                             ),
+                       DIV(_id = "%s_throbber" % dummy_input,
+                           _class = "throbber input_throbber hide",
+                           ),
                        INPUT(**attr),
-                       requires = field.requires
                        )
 
 # =============================================================================
