@@ -1983,7 +1983,7 @@ $.filterOptionsS3({
 
         # Return the total volume
         if quantity is not None and volume is not None:
-            return quantity * volume
+            return round(quantity * volume, 3)
         else:
             # Unknown
             return current.messages["NONE"]
@@ -2014,7 +2014,7 @@ $.filterOptionsS3({
 
         # Return the total weight
         if quantity is not None and weight is not None:
-            return quantity * weight
+            return round(quantity * weight, 3)
         else:
             # Unknown
             return current.messages["NONE"]

@@ -41,7 +41,7 @@ __all__ = ("S3SupplyModel",
            "supply_item_entity_contacts",
            "supply_item_entity_status",
            "supply_ItemRepresent",
-           #"supply_ItemCategoryRepresent",
+           "supply_ItemCategoryRepresent",
            "supply_get_shipping_code",
            "supply_item_pack_quantities",
            )

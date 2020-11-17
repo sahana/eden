@@ -395,7 +395,8 @@ def warehouse():
                                   #delete_url = delete_url,
                                   update_url = update_url)
 
-        if isinstance(output, dict) and "add_btn" in output:
+        if isinstance(output, dict) and \
+           "add_btn" in output:
             del output["add_btn"]
         return output
     s3.postp = postp
@@ -636,7 +637,8 @@ def track_movement():
     output = s3_rest_controller("inv", "track_item",
                                 rheader = s3db.inv_rheader,
                                 )
-    if "add_btn" in output:
+    if isinstance(output, dict) and \
+       "add_btn" in output:
         del output["add_btn"]
 
     return output

@@ -124,12 +124,23 @@ def item_category():
     """ RESTful CRUD controller """
 
     def prep(r):
+        table = s3db.supply_item_category
         if r.get_vars.get("assets") == "1":
             # Category must be one that supports Assets
-            f = s3db.supply_item_category.can_be_asset
+            f = table.can_be_asset
             # Default anyway
             #f.default = True
             f.readable = f.writable = False
+
+        if r.id:
+            # Should not be able to set the Parent to this record
+            # @ToDo: Also prevent setting to any of the categories of which this is an ancestor
+            the_set = db(table.id != r.id)
+            table.parent_item_category_id.requires = IS_EMPTY_OR(
+                IS_ONE_OF(the_set, "supply_item_category.id",
+                          s3db.supply_ItemCategoryRepresent(use_code=False),
+                          sort=True)
+                )
 
         return True
     s3.prep = prep
