@@ -80,29 +80,31 @@ Visit URLs And Return ToVisit
     # Just a check
     Remove Duplicates  ${URL List}
 
-    :FOR  ${Url}  IN  @{URL List}
-    \  Go To  ${Url}
-    \  Append To file  ${Log File}  ${URL}\n
-    \  ${status}=  Check For Errors  ${Url}
-    \  ${URLs Failed}=  Increment URLs Failed  ${URLs Failed}  ${status}
-    \  Run Keyword If  ${status}==0  Append To File  ${Log File}  Status: PASSED\n\n
-    \  Run Keyword If  ${status}!=0  Append To File  ${Log File}  Status: FAILED\n\n
-    \  Continue For Loop If  ${status}!=0
-    \  Append To List  ${ALREADY VISITED}  ${Url}
-    \  ${Current Urls}=  Get All URLs From Current Page
-    \  ${To Visit}=  Add Current Urls to ToVisit Urls  ${Current Urls}  ${To Visit}  ${URL List}
+    FOR  ${Url}  IN  @{URL List}
+      Go To  ${Url}
+      Append To file  ${Log File}  ${URL}\n
+      ${status}=  Check For Errors  ${Url}
+      ${URLs Failed}=  Increment URLs Failed  ${URLs Failed}  ${status}
+      Run Keyword If  ${status}==0  Append To File  ${Log File}  Status: PASSED\n\n
+      Run Keyword If  ${status}!=0  Append To File  ${Log File}  Status: FAILED\n\n
+      Continue For Loop If  ${status}!=0
+      Append To List  ${ALREADY VISITED}  ${Url}
+      ${Current Urls}=  Get All URLs From Current Page
+      ${To Visit}=  Add Current Urls to ToVisit Urls  ${Current Urls}  ${To Visit}  ${URL List}
+    END
     [Return]  ${To Visit}  ${URLs Failed}
 
 Add Current Urls to ToVisit Urls
     [Documentation]  This appends the URLs parsed from the current
     ...  page into the ToVisit URLs
     [Arguments]  ${Current Urls}  ${To Visit}  ${URL List}
-    :FOR  ${Url}  IN  @{Current Urls}
-    \  ${output}=  Check If Url Should be Skipped  ${Url}
-    \  Continue For Loop If  ${output} == 1
-    \  ${Url}=  Strip Url of Unwanted Parts  ${Url}
-    \  ${output}=  Check If Not Already Added or Visited  ${ALREADY VISITED}  ${To Visit}  ${URL List}  ${Url}
-    \  Run Keyword If  ${output} == 0  Append To List  ${To Visit}  ${Url}
+    FOR  ${Url}  IN  @{Current Urls}
+      ${output}=  Check If Url Should be Skipped  ${Url}
+      Continue For Loop If  ${output} == 1
+      ${Url}=  Strip Url of Unwanted Parts  ${Url}
+      ${output}=  Check If Not Already Added or Visited  ${ALREADY VISITED}  ${To Visit}  ${URL List}  ${Url}
+      Run Keyword If  ${output} == 0  Append To List  ${To Visit}  ${Url}
+    END
 
     Remove Duplicates  ${To Visit}
     [Return]  ${To Visit}
@@ -133,23 +135,24 @@ Every page is showing correctly
     ${URLs Failed}=  Set Variable  ${0}
     ${URLs Count}=  Set Variable  ${0}
 
-    :For  ${Depth}  IN RANGE  ${MAXDEPTH}
-    \  ${Start Time}=  Get Current Date  result_format=timestamp
-    # Just a check
-    \  Remove Duplicates  ${To Visit}
-    # Get the count of URLs to be visited
-    \  ${len}=  Get Length  ${To Visit}
-    \  ${URLs Count}=  Evaluate  ${URLs Count}+${len}
-    # Visit every URL, get other URLs in the page, report errors
-    \  ${To Visit}  ${lf}=  Visit URLs And Return ToVisit  ${To Visit}
-    # Increment URLs failed count
-    \  ${URLs Failed}=  Evaluate  ${URLs Failed} + ${lf}
-    # Get the time taken to run for this level
-    \  ${End Time}=  Get Current Date  result_format=timestamp
-    \  ${Run Time}=  Subtract Date From Date  ${End Time}  ${Start Time}
-    \  ${Run Time}=  Convert Time  ${Run Time}  verbose  exclude_milles=yes
-    # Log results of this level
-    \  Log  \n Depth ${Depth} \n Number of URLs Visited - ${len} \n Time Taken - ${Run Time} \n  console=yes
+    FOR  ${Depth}  IN RANGE  ${MAXDEPTH}
+      ${Start Time}=  Get Current Date  result_format=timestamp
+      # Just a check
+      Remove Duplicates  ${To Visit}
+      # Get the count of URLs to be visited
+      ${len}=  Get Length  ${To Visit}
+      ${URLs Count}=  Evaluate  ${URLs Count}+${len}
+      # Visit every URL, get other URLs in the page, report errors
+      ${To Visit}  ${lf}=  Visit URLs And Return ToVisit  ${To Visit}
+      # Increment URLs failed count
+      ${URLs Failed}=  Evaluate  ${URLs Failed} + ${lf}
+      # Get the time taken to run for this level
+      ${End Time}=  Get Current Date  result_format=timestamp
+      ${Run Time}=  Subtract Date From Date  ${End Time}  ${Start Time}
+      ${Run Time}=  Convert Time  ${Run Time}  verbose  exclude_milles=yes
+      # Log results of this level
+      Log  \n Depth ${Depth} \n Number of URLs Visited - ${len} \n Time Taken - ${Run Time} \n  console=yes
+    END
     # Log Results of the suite
     Log  \n Total URLs Visited - ${URLs Count} \n Total URLs Failed - ${URLs Failed}  console=yes
 

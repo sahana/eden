@@ -1971,9 +1971,15 @@ class Traceback(object):
             for key in editable.keys():
                 check_extension = f_endswith("%s/%s" % (app, key))
                 if l_ext == editable[key] and check_extension:
+                    edit_url = URL(a = "admin",
+                                   c = "default",
+                                   f = "edit",
+                                   args = [app, key, filename],
+                                   )
                     return A('"' + tryFile + '"',
-                             _href=URL("edit/%s/%s/%s" % \
-                                           (app, key, filename))).xml()
+                             _href = edit_url,
+                             _target = "_blank",
+                             ).xml()
         return ""
 
     # -------------------------------------------------------------------------
