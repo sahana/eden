@@ -39,7 +39,7 @@ from gluon.streamer import DEFAULT_CHUNK_SIZE
 
 from s3compat import StringIO
 from ..s3codec import S3Codec
-from ..s3utils import s3_unicode, s3_strip_markup
+from ..s3utils import s3_str, s3_unicode, s3_strip_markup
 
 # =============================================================================
 class S3SHP(S3Codec):
@@ -173,7 +173,7 @@ class S3SHP(S3Codec):
         os_handle_temp, temp_filepath = tempfile.mkstemp(dir=TEMP, suffix=".csv")
         with open(temp_filepath, "w") as f:
             for line in output:
-                f.write("%s\n" % line.encode("utf-8"))
+                f.write("%s\n" % s3_str(line))
 
         # Convert to Shapefile
         # @ToDo: migrate to GDAL Python bindings
