@@ -3,3 +3,6 @@ MSAGD,Coordinator,msagd_coordinator@example.com,eden,"COORDINATOR/0,NOTES_EDITOR
 BIR,HR Manager,bir_hrmanager@example.com,eden,"HRMANAGER,POOLREADER/pr_forum.name=All Pools",Gesundheitsamt Birkenfeld,de
 AW,HR Manager,aw_hrmanager@example.com,eden,"HRMANAGER,POOLREADER/pr_forum.name=All Pools",Gesundheitsamt Ahrweiler,de
 KL,HR Manager,kl_hrmanager@example.com,eden,"HRMANAGER,POOLREADER/pr_forum.name=All Pools",Gesundheitsamt Kaiserslautern,de
+BIR,VC Manager,bir_vcmanager@example.com,eden,"VCMANAGER,POOLREADER/pr_group.name=Weitere Freiwillige",Gesundheitsamt Birkenfeld,de
+AW,VC Manager,aw_vcmanager@example.com,eden,"VCMANAGER,POOLREADER/pr_group.name=Weitere Freiwillige",Gesundheitsamt Ahrweiler,de
+KL,VC Manager,kl_vcmanager@example.com,eden,"VCMANAGER,POOLREADER/pr_group.name=Weitere Freiwillige",Gesundheitsamt Kaiserslautern,de
