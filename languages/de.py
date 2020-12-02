@@ -26,6 +26,7 @@
 "Password fields don't match": 'Passwortfelder stimmen nicht überein',
 "Phone number to donate to this organization's relief efforts.": 'Telefonnummer für Spenden an diese Nothilfeorganisation.',
 "Please come back after sometime if that doesn't help.": 'Wenn das nicht hilft, kommen Sie nach einiger Zeit bitte wieder.',
+"Please fill in all relevant information for your deployment. To support the choice of suitable candidates we especially need information about your place of residence (postcode and town), your contact information (phone and email) and the weekly working time (hours per week) your are able to support.": "Bitte tragen Sie hier alle relevanten Informationen für einen Einsatz ein. Für die Suche nach geeigneten UnterstützerInnen ist vor allem die Angabe Ihres Wohnorts (PLZ und Wohnort), Ihrer Kontaktdaten (Telefon und E-Mail) und die Angabe Ihrer wöchentlichen Verfügbarkeit (Stunden/Woche) wichtig.",
 "Quantity in %s's Inventory": "Menge in %s's Bestand",
 "Select a Room from the list or click 'Create Room'": "Wählen Sie einen Raum aus der Liste oder klicken Sie auf 'Raum hinzufügen'",
 "Select a person in charge for status 'assigned'": 'Wählen Sie eine verantwortliche Person aus für den Status "zugeordnet"',

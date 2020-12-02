@@ -638,7 +638,8 @@ class register(S3CustomController):
                            ]
 
         # Subheadings
-        subheadings = ((3, T("User Account")),
+        subheadings = ((0, T("Please fill in all relevant information for your deployment. To support the choice of suitable candidates we especially need information about your place of residence (postcode and town), your contact information (phone and email) and the weekly working time (hours per week) your are able to support.")),
+                       (3, T("User Account")),
                        (6, T("Contact Information")),
                        (8, T("Address")),
                        (11, T("Occupation")),
