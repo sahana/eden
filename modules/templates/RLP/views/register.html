@@ -1,9 +1,15 @@
 {{extend "layout.html"}}
+<section class="registration-form">
 <div class='row'>
  <div class='small-12 columns'>
   {{try:}}{{=H2(title)}}{{except:}}{{pass}}
  </div>
 </div>
+{{try:}}<div class='row'>
+ <div class='small-12 columns'>
+  {{=P(intro, _class="register-intro")}}
+ </div>
+</div>{{except:}}{{pass}}
 <div class='row'>
  <div class='small-12 columns'>
   {{include "key.html"}}
@@ -12,3 +18,4 @@
   </div>
  </div>
 </div>
+</section>
