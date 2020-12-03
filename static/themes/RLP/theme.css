@@ -1875,46 +1875,119 @@ form.anonymize-form,
   background-color: silver;
 }
 
+/* Weekly Availability Widget */
 /* line 486, ../scss/theme/_widgets.scss */
+.wa-matrix thead tr {
+  border-bottom: 1px solid #ccc;
+}
+/* line 489, ../scss/theme/_widgets.scss */
+.wa-matrix thead td {
+  min-width: 1.8rem;
+  border-left: 1px solid #ccc;
+  padding-right: 0.6rem !important;
+  font-size: 0.6rem;
+  font-weight: normal;
+}
+/* line 498, ../scss/theme/_widgets.scss */
+.wa-matrix tbody tr {
+  border-bottom: 1px solid #ccc;
+}
+/* line 501, ../scss/theme/_widgets.scss */
+.wa-matrix tbody td {
+  border-left: 1px solid #ccc;
+}
+/* line 503, ../scss/theme/_widgets.scss */
+.wa-matrix tbody td.wa-hour {
+  text-align: center;
+  font-weight: normal;
+}
+/* line 506, ../scss/theme/_widgets.scss */
+.wa-matrix tbody td.wa-hour.wa-on {
+  color: darkgreen;
+}
+/* line 510, ../scss/theme/_widgets.scss */
+.wa-matrix tbody td.wa-day {
+  text-align: left;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.4rem;
+}
+
+/* line 519, ../scss/theme/_widgets.scss */
+.wa-hour {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+/* line 527, ../scss/theme/_widgets.scss */
+.wa-hour.wa-on {
+  background-color: lightgreen;
+}
+/* line 530, ../scss/theme/_widgets.scss */
+.wa-hour.wa-off {
+  background-color: transparent;
+}
+
+/* Weekly Availability Representation */
+/* line 536, ../scss/theme/_widgets.scss */
+.avschedule {
+  list-style: none;
+  white-space: pre;
+  margin: 0;
+  font-size: 0.7rem;
+}
+/* line 541, ../scss/theme/_widgets.scss */
+.avschedule .avdayname {
+  width: 1.5rem;
+  display: inline-block;
+}
+/* line 545, ../scss/theme/_widgets.scss */
+.avschedule .avdayname::after {
+  content: ":";
+}
+
+/* line 553, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header .ui-multiselect-filter {
   direction: rtl;
   float: right;
   margin-right: 3px;
   margin-left: 10px;
 }
-/* line 492, ../scss/theme/_widgets.scss */
+/* line 559, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header ul li {
   float: right;
   padding: 0 3px 0 10px;
 }
-/* line 496, ../scss/theme/_widgets.scss */
+/* line 563, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header li.ui-multiselect-close {
   float: left;
   text-align: left;
   padding-left: 0;
 }
-/* line 503, ../scss/theme/_widgets.scss */
+/* line 570, ../scss/theme/_widgets.scss */
 body.rtl .range-filter-widget input.date-filter-input {
   margin-right: 0;
   margin-left: 2px;
 }
-/* line 508, ../scss/theme/_widgets.scss */
+/* line 575, ../scss/theme/_widgets.scss */
 body.rtl #list-btn-add {
   float: left;
   margin-right: 0;
   margin-left: 0.35rem;
 }
-/* line 514, ../scss/theme/_widgets.scss */
+/* line 581, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0;
   margin-left: 0.3rem;
 }
-/* line 520, ../scss/theme/_widgets.scss */
+/* line 587, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 0;
   border-right: 1px solid red;
 }
-/* line 524, ../scss/theme/_widgets.scss */
+/* line 591, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 0;
   border-left: 1px solid red;

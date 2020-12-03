@@ -476,6 +476,73 @@ form.anonymize-form,
     background-color: silver;
 }
 
+/* Weekly Availability Widget */
+.wa-matrix {
+    thead {
+        tr {
+            border-bottom: 1px solid #ccc;
+        }
+        td {
+            min-width: 1.8rem;
+            border-left: 1px solid #ccc;
+            padding-right: 0.6rem !important;
+            font-size: 0.6rem;
+            font-weight: normal;
+        }
+    }
+    tbody {
+        tr {
+            border-bottom: 1px solid #ccc;
+        }
+        td {
+            border-left: 1px solid #ccc;
+            &.wa-hour {
+                text-align: center;
+                font-weight: normal;
+                &.wa-on {
+                    color: darkgreen;
+                }
+            }
+            &.wa-day {
+                text-align: left;
+                font-size: 0.7rem;
+                padding: 0.2rem 0.4rem;
+            }
+        }
+    }
+}
+
+.wa-hour {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    &.wa-on {
+        background-color: lightgreen;
+    }
+    &.wa-off {
+        background-color: transparent;
+    }
+}
+
+/* Weekly Availability Representation */
+.avschedule {
+    list-style: none;
+    white-space: pre;
+    margin: 0;
+    font-size: 0.7rem;
+    .avdayname {
+        width: 1.5rem;
+        display: inline-block;
+    }
+    .avdayname::after {
+        content: ":";
+    }
+}
+
 // Overrides for right-to-left orientation
 body.rtl {
     .ui-multiselect-header {

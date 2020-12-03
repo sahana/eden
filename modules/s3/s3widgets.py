@@ -74,6 +74,7 @@ __all__ = ("S3ACLWidget",
            "S3StringWidget",
            "S3TimeIntervalWidget",
            #"S3UploadWidget",
+           "S3WeeklyAvailabilityWidget",
            "S3FixedOptionsWidget",
            "S3QuestionEditorWidget",
            "CheckboxesWidgetS3",
@@ -2717,6 +2718,148 @@ class S3HoursWidget(FormWidget):
 
         precision = self.precision
         return round(hours, precision) if precision is not None else hours
+
+# =============================================================================
+class S3WeeklyAvailabilityWidget(FormWidget):
+    """
+        TODO docstring
+    """
+
+    def __init__(self):
+        """
+            TODO docstring
+        """
+
+        pass
+
+    # -------------------------------------------------------------------------
+    def __call__(self, field, value, **attributes):
+        """
+            TODO separator
+            TODO docstring
+            TODO use __call__ like other widgets
+        """
+
+        T = current.T
+
+        default = {"value": value,
+                   }
+        attr = TextWidget._attributes(field, default, **attributes)
+
+        widget_id = attr.get("_id")
+        if not widget_id:
+            widget_id = attr["_id"] = str(field).replace(".", "_")
+
+        widget = TEXTAREA(**attr)
+        widget.add_class("hide")
+
+        options = {"weekdays": {0: s3_str(T("Sun##weekday")),
+                                1: s3_str(T("Mon##weekday")),
+                                2: s3_str(T("Tue##weekday")),
+                                3: s3_str(T("Wed##weekday")),
+                                4: s3_str(T("Thu##weekday")),
+                                5: s3_str(T("Fri##weekday")),
+                                6: s3_str(T("Sat##weekday")),
+                                },
+                   "firstDoW": 1, # TODO use l10n setting
+                   }
+        self.inject_script(widget_id, options)
+
+        return widget
+
+    # -------------------------------------------------------------------------
+    def inject_script(self, selector, options):
+        """
+            TODO separator
+            TODO docstring
+        """
+
+        s3 = current.response.s3
+        appname = current.request.application
+
+        # Global script
+        # TODO Minify
+        #if s3.debug:
+        script = "/%s/static/scripts/S3/s3.ui.weeklyavailability.js" % appname
+        if script not in s3.scripts:
+            s3.scripts.append(script)
+
+        # jQuery-ready script
+        script = '''$('#%(selector)s').weeklyAvailability(%(options)s);''' % \
+                 {"selector": selector, "options": json.dumps(options)}
+        s3.jquery_ready.append(script)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def represent(rules):
+        """
+            TODO docstring
+        """
+
+        T = current.T
+
+        if isinstance(rules, basestring) and rules:
+            try:
+                rules = json.loads(rules)
+            except JSONERRORS:
+                rules = []
+
+        dow = {0: T("Sun##weekday"),
+               1: T("Mon##weekday"),
+               2: T("Tue##weekday"),
+               3: T("Wed##weekday"),
+               4: T("Thu##weekday"),
+               5: T("Fri##weekday"),
+               6: T("Sat##weekday"),
+               }
+
+        first_dow = 1
+
+        if not rules:
+            return ""
+
+        slots_by_day = {}
+        for rule in rules:
+
+            # Only include weekly rules
+            if rule.get("f") != "WEEKLY" or rule.get("i") != 1:
+                continue
+
+            days = rule.get("d")
+            if not isinstance(days, list):
+                continue
+
+            start = rule.get("s")
+            end = rule.get("e")
+            if not start or not end:
+                continue
+            slot = (start[0], end[0])
+
+            for day in days:
+                slots = slots_by_day.get(day)
+                if not slots:
+                    slots = [slot]
+                else:
+                    slots.append(slot)
+                slots_by_day[day] = slots
+
+        dayrepr = []
+        output = UL(_class="avschedule")
+        for index in range(first_dow, first_dow + 7):
+
+            day = index % 7
+            slots = slots_by_day.get(day)
+
+            if slots:
+                slots = sorted(slots, key=lambda s: s[0])
+                slotsrepr = ", ".join(["%02d-%02d" % (s[0], s[1]) for s in slots])
+            else:
+                slotsrepr = "-"
+
+            output.append(LI(SPAN(dow[day], _class="avdayname"),
+                             slotsrepr,
+                             ))
+        return output
 
 # =============================================================================
 class S3EmbeddedComponentWidget(FormWidget):

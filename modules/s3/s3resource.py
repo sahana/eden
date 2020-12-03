@@ -6304,8 +6304,10 @@ class S3ResourceData(object):
         sfields.insert(0, table._id)
 
         # Retrieve the subtable rows
+        # - can't use distinct with native JSON fields
+        distinct = not any(f.type == "json" for f in sfields)
         rows = current.db(query).select(left = sjoins,
-                                        distinct = True,
+                                        distinct = distinct,
                                         cacheable = True,
                                         *sfields)
 

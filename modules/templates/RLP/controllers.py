@@ -10,8 +10,8 @@ from gluon.storage import Storage
 
 from s3 import IS_ONE_OF, IS_PHONE_NUMBER_MULTI, IS_PHONE_NUMBER_SINGLE, \
                JSONERRORS, S3CustomController, S3GroupedOptionsWidget, \
-               S3LocationSelector, S3MultiSelectWidget, S3Represent, \
-               s3_comments_widget, s3_date, s3_mark_required, s3_str
+               S3LocationSelector, S3MultiSelectWidget, S3WeeklyAvailabilityWidget, \
+               S3Represent, s3_comments_widget, s3_date, s3_mark_required, s3_str
 
 from .notifications import formatmap
 
@@ -373,7 +373,8 @@ class register(S3CustomController):
                       #"start_date": formvars.start_date,
                       #"end_date": formvars.end_date,
                       "hours_per_week": formvars.hours_per_week,
-                      "schedule": formvars.schedule,
+                      #"schedule": formvars.schedule,
+                      "schedule_json": formvars.schedule_json,
                       "skill_id": formvars.skill_id,
                       "comments": formvars.comments,
                       }
@@ -603,14 +604,17 @@ class register(S3CustomController):
                                                               ),
                                           ),
                             ),
-                      Field("schedule", "text",
+                      #Field("schedule", "text",
+                      #      widget = s3_comments_widget,
+                      #      comment = DIV(_class = "tooltip",
+                      #                   _title = "%s|%s" % (T("Availability Schedule"),
+                      #                                       T("Specify days/hours like: Monday 10-12; Tuesday 10-12 and 14-19; Friday 13-15"),
+                      #                                       ),
+                      #                   ),
+                      #      ),
+                      Field("schedule_json", "json",
                             label = T("Availability Schedule"),
-                            widget = s3_comments_widget,
-                            comment = DIV(_class = "tooltip",
-                                          _title = "%s|%s" % (T("Availability Schedule"),
-                                                              T("Specify days/hours like: Monday 10-12; Tuesday 10-12 and 14-19; Friday 13-15"),
-                                                              ),
-                                          ),
+                            widget = S3WeeklyAvailabilityWidget(),
                             ),
                       s3db.hrm_multi_skill_id(
                             label = T("Skills / Resources"),
@@ -883,7 +887,8 @@ class register(S3CustomController):
         # Register availability
         hours_per_week = custom.get("hours_per_week")
         schedule = custom.get("schedule")
-        if hours_per_week or schedule:
+        schedule_json = custom.get("schedule_json")
+        if hours_per_week or schedule or schedule_json:
             atable = s3db.pr_person_availability
             query = (atable.person_id == person_id) & \
                     (atable.deleted == False)
@@ -893,12 +898,14 @@ class register(S3CustomController):
             if availability:
                 availability.update_record(hours_per_week = hours_per_week,
                                            schedule = schedule,
+                                           schedule_json = schedule_json,
                                            )
                 s3db_onaccept(atable, availability, method="update")
             else:
                 availability = {"person_id": person_id,
                                 "hours_per_week": hours_per_week,
                                 "schedule": schedule,
+                                "schedule_json": schedule_json,
                                 }
                 availability["id"] = atable.insert(**availability)
                 set_record_owner(atable, availability, owned_by_user=user_id)
