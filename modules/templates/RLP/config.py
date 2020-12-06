@@ -1122,6 +1122,9 @@ def config(settings):
             resource = r.resource
             table = resource.table
 
+            controller = r.controller
+            is_profile = controller == "default"
+
             from gluon import IS_NOT_EMPTY
             from s3 import (IS_ONE_OF,
                             IS_PERSON_GENDER,
@@ -1165,9 +1168,10 @@ def config(settings):
             field.label = T("Availability Comments")
             field.represent = lambda v: s3_text_represent(v,
                                             lines = 5 if r.record else 3,
-                                            _class = "availability-comments",
+                                            _class = "avcomments",
                                             )
-            if r.controller == "default":
+            if is_profile:
+                # Add tooltip for availability comments
                 field.comment = DIV(_class = "tooltip",
                                     _title = "%s|%s" % (T("Availability Comments"),
                                                         T("Use this field to indicate e.g. vacation dates or other information with regard to your availability to facilitate personnel planning"),
@@ -1178,7 +1182,9 @@ def config(settings):
 
             field = avtable.schedule_json
             field.readable = field.writable = True
-            field.widget = S3WeeklyHoursWidget(intro=T("Please mark all times when you are generally available during the week, click boxes to select/deselect hours individually or hold the left mouse button pressed and move over the boxes to select/deselect multiple."))
+            if is_profile:
+                # Add intro text for widget
+                field.widget = S3WeeklyHoursWidget(intro=T("Please mark all times when you are generally available during the week, click boxes to select/deselect hours individually or hold the left mouse button pressed and move over the boxes to select/deselect multiple."))
             field.represent = S3WeeklyHoursWidget.represent
 
             # Hide map selector in address
@@ -1380,7 +1386,7 @@ def config(settings):
                                               #hide_time = True,
                                               ),
                         S3OptionsFilter("availability.days_of_week",
-                                        label = T("Days of Week"),
+                                        label = T("On Weekdays"),
                                         options = OrderedDict((
                                                     (1, T("Mon##weekday")),
                                                     (2, T("Tue##weekday")),

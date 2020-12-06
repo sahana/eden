@@ -619,7 +619,6 @@ class register(S3CustomController):
                       Field("availability_comments", "text",
                             label = T("Availability Comments"),
                             widget = s3_comments_widget,
-                            # TODO tooltip-text and translation
                             comment = DIV(_class = "tooltip",
                                           _title = "%s|%s" % (T("Availability Comments"),
                                                               T("Use this field to indicate e.g. vacation dates or other information with regard to your availability to facilitate personnel planning"),
