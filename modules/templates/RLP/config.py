@@ -907,6 +907,48 @@ def config(settings):
     settings.customise_pr_person_resource = customise_pr_person_resource
 
     # -------------------------------------------------------------------------
+    def customise_volunteer_availability_fields(r):
+        """
+            Customise availability fields in volunteer form
+
+            @param r: the current S3Request
+        """
+
+        from s3 import S3WeeklyHoursWidget, s3_text_represent
+
+        avtable = current.s3db.pr_person_availability
+        is_profile = r.controller == "default"
+
+        # Enable hours/week
+        field = avtable.hours_per_week
+        field.readable = field.writable = True
+
+        # Configure schedule_json
+        field = avtable.schedule_json
+        field.readable = field.writable = True
+        if is_profile:
+            # Add intro text for widget
+            field.widget = S3WeeklyHoursWidget(intro=T("Please mark all times when you are generally available during the week, click boxes to select/deselect hours individually or hold the left mouse button pressed and move over the boxes to select/deselect multiple."))
+        field.represent = S3WeeklyHoursWidget.represent
+
+        # Configure availability comments
+        field = avtable.comments
+        field.label = T("Availability Comments")
+        field.represent = lambda v: s3_text_represent(v,
+                                        lines = 8 if r.record else 5,
+                                        _class = "avcomments",
+                                        )
+        if is_profile:
+            # Add tooltip for availability comments
+            field.comment = DIV(_class = "tooltip",
+                                _title = "%s|%s" % (T("Availability Comments"),
+                                                    T("Use this field to indicate e.g. vacation dates or other information with regard to your availability to facilitate personnel planning"),
+                                                    ),
+                                )
+        else:
+            field.comment = None
+
+    # -------------------------------------------------------------------------
     def volunteer_list_fields(r, coordinator=False, name_fields=None):
         """
             Determine fields for volunteer list
@@ -1123,7 +1165,6 @@ def config(settings):
             table = resource.table
 
             controller = r.controller
-            is_profile = controller == "default"
 
             from gluon import IS_NOT_EMPTY
             from s3 import (IS_ONE_OF,
@@ -1136,9 +1177,7 @@ def config(settings):
                             S3SQLCustomForm,
                             S3TextFilter,
                             StringTemplateParser,
-                            S3WeeklyHoursWidget,
                             s3_get_filter_opts,
-                            s3_text_represent,
                             )
 
             # Make last name mandatory
@@ -1160,32 +1199,7 @@ def config(settings):
                                               )
 
             # Availability
-            avtable = s3db.pr_person_availability
-            field = avtable.hours_per_week
-            field.readable = field.writable = True
-
-            field = avtable.comments
-            field.label = T("Availability Comments")
-            field.represent = lambda v: s3_text_represent(v,
-                                            lines = 5 if r.record else 3,
-                                            _class = "avcomments",
-                                            )
-            if is_profile:
-                # Add tooltip for availability comments
-                field.comment = DIV(_class = "tooltip",
-                                    _title = "%s|%s" % (T("Availability Comments"),
-                                                        T("Use this field to indicate e.g. vacation dates or other information with regard to your availability to facilitate personnel planning"),
-                                                        ),
-                                    )
-            else:
-                field.comment = None
-
-            field = avtable.schedule_json
-            field.readable = field.writable = True
-            if is_profile:
-                # Add intro text for widget
-                field.widget = S3WeeklyHoursWidget(intro=T("Please mark all times when you are generally available during the week, click boxes to select/deselect hours individually or hold the left mouse button pressed and move over the boxes to select/deselect multiple."))
-            field.represent = S3WeeklyHoursWidget.represent
+            customise_volunteer_availability_fields(r)
 
             # Hide map selector in address
             atable = s3db.pr_address
@@ -1206,7 +1220,7 @@ def config(settings):
             keys = StringTemplateParser.keys(settings.get_pr_name_format())
             name_fields = [fn for fn in keys if fn in NAMES]
 
-            if r.controller == "vol":
+            if controller == "vol":
                 # Volunteer perspective (vol/person)
 
                 record = r.record
@@ -1451,7 +1465,7 @@ def config(settings):
                        r.interactive and r.method is None and not r.component_id:
                         r.method = "organize"
 
-            elif r.controller == "default":
+            elif controller == "default":
                 # Personal profile (default/person)
                 if not r.component:
                     # Custom Form
