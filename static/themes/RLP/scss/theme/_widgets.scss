@@ -481,6 +481,11 @@ form.anonymize-form,
 }
 
 /* Weekly Availability Widget */
+.wa-intro {
+    max-width: 42rem;
+    padding: 0.5rem 0;
+    font-size: 0.8rem;
+}
 .wa-raster {
     margin-top: 0.3rem;
     tr {

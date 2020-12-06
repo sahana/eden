@@ -477,6 +477,7 @@ def do_js(minimize,
                      "ui.roles",
                      "ui.sitecheckin",
                      "ui.timeplot",
+                     "ui.weeklyhours",
                      "work",
                      ):
         info("Compressing s3.%s.js" % filename)

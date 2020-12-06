@@ -614,7 +614,7 @@ class register(S3CustomController):
                       #      ),
                       Field("schedule_json", "json",
                             label = T("Availability Schedule"),
-                            widget = S3WeeklyHoursWidget.widget,
+                            widget = S3WeeklyHoursWidget(intro=T("Please mark all times when you are generally available during the week, click boxes to select/deselect hours individually or hold the left mouse button pressed and move over the boxes to select/deselect multiple.")),
                             ),
                       Field("availability_comments", "text",
                             label = T("Availability Comments"),

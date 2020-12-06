@@ -191,7 +191,16 @@
         /**
          * Default options
          *
-         * @todo document options
+         * @prop {object} weekdays - the weekdays to include and their
+         *                           localised (short) names, see default for
+         *                           format and day numbers
+         * @prop {integer} firstDoW - the first day of the week
+         * @prop {Array} hours - the hours to show [first, last] (inclusive)
+         * @prop {integer} ticks - render tick marks every n hours (0/null to turn off)
+         *
+         * @prop {string} icons - the icon base CSS class
+         * @prop {string} iconSelected - the CSS class for selected-icon
+         * @prop {string} iconDeselected - the CSS class for deselected-icon
          */
         options: {
 
@@ -205,6 +214,13 @@
                 6: 'Saturday'
             },
             firstDoW: 1,
+
+            hours: [0, 23],
+            ticks: 3,
+
+            icons: 'fa',
+            iconSelected: 'fa-check-square-o',
+            iconDeselected: 'fa-square-o'
         },
 
         /**
@@ -310,23 +326,6 @@
         },
 
         /**
-         * TODO docstring
-         */
-        _updateRaster: function() {
-
-            var hoursMatrix = this.hoursMatrix,
-                self = this;
-
-            $('td.wa-hour', this.raster).each(function() {
-                var $this = $(this),
-                    day = $this.data('day'),
-                    hour = $this.data('hour');
-
-                self._selectHour($this, hoursMatrix.isSelected(day, hour));
-            });
-        },
-
-        /**
          * Render the widget
          */
         _renderRaster: function() {
@@ -355,16 +354,23 @@
          */
         _renderHeader: function() {
 
-            var headerRow = $('<tr>').append($('<td>'));
+            var opts = this.options,
+                hours = opts.hours,
+                s = 0, e = 23;
+            if (hours.constructor === Array && hours.length == 2) {
+                s = hours[0] - 0;
+                e = hours[1] - 0;
+            }
 
-            // TODO make first/last hour configurable
-            for (var i=0; i < 24; i++) {
+            var headerRow = $('<tr>').append($('<td>'));
+            for (var i = s; i < e + 1; i++) {
                 var hour = i.toString();
                 if (i < 10) {
                     hour = '0' + hour;
                 }
-                var cell = $('<td>').addClass('wa-hour-header').text(hour);
-                if (i > 0 && i % 6 === 0) {
+                var cell = $('<td>').addClass('wa-hour-header').text(hour),
+                    ticks = opts.ticks;
+                if (ticks && i > 0 && i % ticks === 0) {
                     cell.addClass('wa-tick');
                 }
                 headerRow.append(cell);
@@ -378,12 +384,18 @@
          */
         _renderRow: function(day) {
 
-            var weekdays = this.options.weekdays,
+            var opts = this.options,
+                weekdays = opts.weekdays,
                 dayCol = $('<td>').addClass('wa-day').text(weekdays[day]),
                 row = $('<tr>').append(dayCol);
 
-            // TODO make first/last hour configurable
-            for (var hour = 0; hour < 24; hour++) {
+            var hours = opts.hours,
+                s = 0, e = 23;
+            if (hours.constructor === Array && hours.length == 2) {
+                s = hours[0] - 0;
+                e = hours[1] - 0;
+            }
+            for (var hour = s; hour < e + 1; hour++) {
                 row.append(this._renderHour(day, hour));
             }
             return row;
@@ -391,32 +403,64 @@
 
         /**
          * Render a hour selector (=table cell)
+         *
+         * @param {integer} day - the day number (0=Sun, 1=Mon, etc.)
+         * @param {integer} hour - the hour (0..23)
+         *
+         * @returns {jQuery} - the table cell for the hour
          */
         _renderHour: function(day, hour) {
 
-            var status = this.hoursMatrix.isSelected(day, hour),
-                icon = $('<i>'),
+            var opts = this.options,
+                status = this.hoursMatrix.isSelected(day, hour),
                 cell = $('<td>').data({day: day, hour: hour, selected: status})
-                                .addClass('wa-hour')
-                                .append(icon);
+                                .addClass('wa-hour'),
+                icon;
 
-            // TODO make icon classes configurable
-            if (status) {
-                cell.addClass('wa-on');
-                icon.addClass('fa fa-check-square-o');
-            } else {
-                cell.addClass('wa-off');
-                icon.addClass('fa fa-square-o');
+            if (opts.icons) {
+                icon = $('<i>').addClass(opts.icons);
+                if (status) {
+                    icon.addClass(opts.iconSelected);
+                } else {
+                    icon.addClass(opts.iconDeselected);
+                }
+                cell.append(icon);
             }
 
-            if (hour > 0 && hour % 6 === 0) {
+            if (status) {
+                cell.addClass('wa-on');
+            } else {
+                cell.addClass('wa-off');
+            }
+            var ticks = opts.ticks;
+            if (ticks && hour > 0 && hour % ticks === 0) {
                 cell.addClass('wa-tick');
             }
             return cell;
         },
 
         /**
-         * TODO docstring
+         * Update the input raster from the 24/7 matrix
+         */
+        _updateRaster: function() {
+
+            var hoursMatrix = this.hoursMatrix,
+                self = this;
+
+            $('td.wa-hour', this.raster).each(function() {
+                var $this = $(this),
+                    day = $this.data('day'),
+                    hour = $this.data('hour');
+
+                self._selectHour($this, hoursMatrix.isSelected(day, hour));
+            });
+        },
+
+        /**
+         * Select an hour
+         *
+         * @param {jQuery} col - the jQuery node for the hour cell
+         * @param {boolean} newStatus - the new status (true=selected)
          */
         _selectHour: function(col, newStatus) {
 
@@ -430,15 +474,14 @@
             $col.data('selected', newStatus);
             this.hoursMatrix.setSelected($col.data('day'), $col.data('hour'), newStatus);
 
-            // TODO make icon classes configurable
+            var opts = this.options,
+                $icon = $('i.' + opts.icons, $col);
             if (newStatus) {
                 $col.removeClass('wa-off').addClass('wa-on');
-                $('i.fa', $col).removeClass('fa-square-o')
-                               .addClass('fa-check-square-o');
+                $icon.removeClass(opts.iconDeselected).addClass(opts.iconSelected);
             } else {
                 $col.removeClass('wa-on').addClass('wa-off');
-                $('i.fa', $col).removeClass('fa-check-square-o')
-                               .addClass('fa-square-o');
+                $icon.removeClass(opts.iconSelected).addClass(opts.iconDeselected);
             }
         },
 

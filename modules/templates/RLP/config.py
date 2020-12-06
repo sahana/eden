@@ -1178,6 +1178,7 @@ def config(settings):
 
             field = avtable.schedule_json
             field.readable = field.writable = True
+            field.widget = S3WeeklyHoursWidget(intro=T("Please mark all times when you are generally available during the week, click boxes to select/deselect hours individually or hold the left mouse button pressed and move over the boxes to select/deselect multiple."))
             field.represent = S3WeeklyHoursWidget.represent
 
             # Hide map selector in address

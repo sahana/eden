@@ -2726,8 +2726,34 @@ class S3WeeklyHoursWidget(FormWidget):
         matrix, e.g. opening hours, times of availability, etc.
     """
 
-    @classmethod
-    def widget(cls, field, value, **attributes):
+    def __init__(self, daynames=None, hours=None, ticks=6, intro=None):
+        """
+            Constructor
+
+            @param daynames: the weekdays to show and their (localized)
+                             names, as dict {daynumber: dayname}, with
+                             day number 0 meaning Sunday
+            @param hours: the hours to show (0..23) as tuple (first, last)
+            @param ticks: render tick marks every n hours (0/None=off)
+            @param intro: optional intro text to display above the
+                          matrix in order to explain the widget
+        """
+
+        if daynames:
+            self._daynames = daynames
+        else:
+            self._daynames = self.daynames()
+
+        if hours:
+            self.hours = hours
+        else:
+            self.hours = (0, 23)
+
+        self.ticks = ticks
+        self.intro = intro
+
+    # -------------------------------------------------------------------------
+    def __call__(self, field, value, **attributes):
         """
             Widget builder
 
@@ -2747,12 +2773,23 @@ class S3WeeklyHoursWidget(FormWidget):
         widget = TEXTAREA(**attr)
         widget.add_class("hide")
 
-        options = {"weekdays": {k: s3_str(v) for k, v in cls.daynames().items()},
+        options = {"weekdays": {k: s3_str(v) for k, v in self._daynames.items()},
+                   "hours": self.hours,
+                   "ticks": self.ticks,
                    "firstDoW": current.calendar.first_dow,
+                   "icons": "fa",
+                   "iconSelected": "fa-check-square-o",
+                   "iconDeselected": "fa-square-o",
                    }
-        cls.inject_script(widget_id, options)
+        self.inject_script(widget_id, options)
 
-        return widget
+        intro = self.intro
+        if intro:
+            return TAG[""](DIV(intro, _class="wa-intro"),
+                           widget,
+                           )
+        else:
+            return widget
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2768,9 +2805,10 @@ class S3WeeklyHoursWidget(FormWidget):
         appname = current.request.application
 
         # Global script
-        # TODO Minify
-        #if s3.debug:
-        script = "/%s/static/scripts/S3/s3.ui.weeklyhours.js" % appname
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.ui.weeklyhours.js" % appname
+        else:
+            script = "/%s/static/scripts/S3/s3.ui.weeklyhours.min.js" % appname
         if script not in s3.scripts:
             s3.scripts.append(script)
 
@@ -2783,8 +2821,7 @@ class S3WeeklyHoursWidget(FormWidget):
     @staticmethod
     def daynames():
         """
-            The weekday names (abbreviations) to use in the
-            widget and representation
+            Default weekday names (abbreviations)
 
             @returns: dict of {daynumber: dayname}
         """
@@ -2802,13 +2839,16 @@ class S3WeeklyHoursWidget(FormWidget):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def represent(cls, rules):
+    def represent(cls, rules, daynames=None):
         """
             Represent a set of weekly time rules, as list of rules
             per weekday (HTML)
 
             @param rules: array of rules, or a JSON string encoding
                           such an array
+            @param daynames: override for default daynames, as dict
+                             {daynumber: dayname}, with day number 0
+                             meaning Sunday
 
             @returns: UL instance
         """
@@ -2819,7 +2859,9 @@ class S3WeeklyHoursWidget(FormWidget):
             except JSONERRORS:
                 rules = []
 
-        daynames = cls.daynames()
+        dn = cls.daynames()
+        if daynames:
+            dn.update(daynames)
 
         first_dow = 1
 
@@ -2863,7 +2905,7 @@ class S3WeeklyHoursWidget(FormWidget):
             else:
                 slotsrepr = "-"
 
-            output.append(LI(SPAN(daynames[day], _class="avdayname"),
+            output.append(LI(SPAN(dn[day], _class="avdayname"),
                              slotsrepr,
                              ))
         return output

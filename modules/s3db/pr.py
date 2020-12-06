@@ -4995,7 +4995,7 @@ class PRAvailabilityModel(S3Model):
                            ),
                      Field("schedule_json", "json",
                            label = T("Availability Schedule"),
-                           widget = S3WeeklyHoursWidget.widget,
+                           widget = S3WeeklyHoursWidget(),
                            readable = False,
                            writable = False,
                            ),

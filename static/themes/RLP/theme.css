@@ -1877,44 +1877,51 @@ form.anonymize-form,
 
 /* Weekly Availability Widget */
 /* line 484, ../scss/theme/_widgets.scss */
+.wa-intro {
+  max-width: 42rem;
+  padding: 0.5rem 0;
+  font-size: 0.8rem;
+}
+
+/* line 489, ../scss/theme/_widgets.scss */
 .wa-raster {
   margin-top: 0.3rem;
 }
-/* line 486, ../scss/theme/_widgets.scss */
+/* line 491, ../scss/theme/_widgets.scss */
 .wa-raster tr {
   border-bottom: 1px solid #ccc;
 }
-/* line 489, ../scss/theme/_widgets.scss */
+/* line 494, ../scss/theme/_widgets.scss */
 .wa-raster td {
   border-left: 1px solid #ccc;
 }
-/* line 491, ../scss/theme/_widgets.scss */
+/* line 496, ../scss/theme/_widgets.scss */
 .wa-raster td.wa-tick {
   border-left-width: 2px;
 }
-/* line 496, ../scss/theme/_widgets.scss */
+/* line 501, ../scss/theme/_widgets.scss */
 .wa-raster thead td {
   min-width: 1.8rem;
   padding-right: 0.6rem !important;
   font-size: 0.6rem;
   font-weight: normal;
 }
-/* line 505, ../scss/theme/_widgets.scss */
+/* line 510, ../scss/theme/_widgets.scss */
 .wa-raster tbody td.wa-hour {
   text-align: center;
   font-weight: normal;
 }
-/* line 508, ../scss/theme/_widgets.scss */
+/* line 513, ../scss/theme/_widgets.scss */
 .wa-raster tbody td.wa-hour.wa-on {
   color: darkgreen;
 }
-/* line 512, ../scss/theme/_widgets.scss */
+/* line 517, ../scss/theme/_widgets.scss */
 .wa-raster tbody td.wa-day {
   text-align: left;
   font-size: 0.7rem;
   padding: 0.2rem 0.4rem;
 }
-/* line 519, ../scss/theme/_widgets.scss */
+/* line 524, ../scss/theme/_widgets.scss */
 .wa-raster .wa-hour {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -1923,73 +1930,73 @@ form.anonymize-form,
   -ms-user-select: none;
   user-select: none;
 }
-/* line 527, ../scss/theme/_widgets.scss */
+/* line 532, ../scss/theme/_widgets.scss */
 .wa-raster .wa-hour.wa-on {
   background-color: lightgreen;
 }
-/* line 530, ../scss/theme/_widgets.scss */
+/* line 535, ../scss/theme/_widgets.scss */
 .wa-raster .wa-hour.wa-off {
   background-color: transparent;
 }
 
 /* Weekly Availability Representation */
-/* line 537, ../scss/theme/_widgets.scss */
+/* line 542, ../scss/theme/_widgets.scss */
 .avschedule {
   list-style: none;
   white-space: pre;
   margin: 0;
   font-size: 0.7rem;
 }
-/* line 542, ../scss/theme/_widgets.scss */
+/* line 547, ../scss/theme/_widgets.scss */
 .avschedule .avdayname {
   width: 1.5rem;
   display: inline-block;
 }
-/* line 546, ../scss/theme/_widgets.scss */
+/* line 551, ../scss/theme/_widgets.scss */
 .avschedule .avdayname::after {
   content: ":";
 }
 
-/* line 554, ../scss/theme/_widgets.scss */
+/* line 559, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header .ui-multiselect-filter {
   direction: rtl;
   float: right;
   margin-right: 3px;
   margin-left: 10px;
 }
-/* line 560, ../scss/theme/_widgets.scss */
+/* line 565, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header ul li {
   float: right;
   padding: 0 3px 0 10px;
 }
-/* line 564, ../scss/theme/_widgets.scss */
+/* line 569, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header li.ui-multiselect-close {
   float: left;
   text-align: left;
   padding-left: 0;
 }
-/* line 571, ../scss/theme/_widgets.scss */
+/* line 576, ../scss/theme/_widgets.scss */
 body.rtl .range-filter-widget input.date-filter-input {
   margin-right: 0;
   margin-left: 2px;
 }
-/* line 576, ../scss/theme/_widgets.scss */
+/* line 581, ../scss/theme/_widgets.scss */
 body.rtl #list-btn-add {
   float: left;
   margin-right: 0;
   margin-left: 0.35rem;
 }
-/* line 582, ../scss/theme/_widgets.scss */
+/* line 587, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0;
   margin-left: 0.3rem;
 }
-/* line 588, ../scss/theme/_widgets.scss */
+/* line 593, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 0;
   border-right: 1px solid red;
 }
-/* line 592, ../scss/theme/_widgets.scss */
+/* line 597, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 0;
   border-left: 1px solid red;
