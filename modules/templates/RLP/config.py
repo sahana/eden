@@ -705,6 +705,13 @@ def config(settings):
                                           "filterby": {"type": 1},
                                           "multiple": False,
                                           },
+                            # All phone numbers as a single "phonenumber" component
+                            pr_contact = {"name": "phonenumber",
+                                          "joinby": "pe_id",
+                                          "filterby": {
+                                            "contact_method": ("SMS", "HOME_PHONE", "WORK_PHONE"),
+                                          },
+                                         },
                             )
 
         s3db.add_components("pr_person",
@@ -970,7 +977,8 @@ def config(settings):
                        (T("Hours/Wk"), "availability.hours_per_week"),
                        "availability.schedule_json",
                        "availability.comments",
-                       (T("Mobile Phone"), "phone.value"),
+                       #(T("Mobile Phone"), "phone.value"),
+                       (T("Phone"), "phonenumber.value"),
                        # email
                        "current_address.location_id$addr_postcode",
                        (T("Place of Residence"), "current_address.location_id$L3"),
@@ -1001,11 +1009,15 @@ def config(settings):
 
         # Status, current deployment and account info as last columns
         if coordinator:
+            from s3 import S3DateTime
+            current.s3db.auth_user.created_on.represent = S3DateTime.datetime_represent
+
             list_fields.extend([
                 "volunteer_record.status",
                 (T("Current Deployment"), "ongoing_deployment.organisation_id"),
                 (T("Deployed until"), "ongoing_deployment.end_date"),
                 (T("has Account"), "has_account"),
+                (T("Registered on"), "user.created_on"),
                 ])
 
         return list_fields
