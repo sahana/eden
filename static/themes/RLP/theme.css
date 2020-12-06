@@ -1875,54 +1875,54 @@ form.anonymize-form,
   background-color: silver;
 }
 
-/* Weekly Availability Widget */
+/* Weekly Hours Widget */
 /* line 484, ../scss/theme/_widgets.scss */
-.wa-intro {
+.wh-intro {
   max-width: 42rem;
   padding: 0.5rem 0;
   font-size: 0.8rem;
 }
 
 /* line 489, ../scss/theme/_widgets.scss */
-.wa-raster {
+.wh-raster {
   margin-top: 0.3rem;
 }
 /* line 491, ../scss/theme/_widgets.scss */
-.wa-raster tr {
+.wh-raster tr {
   border-bottom: 1px solid #ccc;
 }
 /* line 494, ../scss/theme/_widgets.scss */
-.wa-raster td {
+.wh-raster td {
   border-left: 1px solid #ccc;
 }
 /* line 496, ../scss/theme/_widgets.scss */
-.wa-raster td.wa-tick {
+.wh-raster td.wh-tick {
   border-left-width: 2px;
 }
 /* line 501, ../scss/theme/_widgets.scss */
-.wa-raster thead td {
+.wh-raster thead td {
   min-width: 1.8rem;
   padding-right: 0.6rem !important;
   font-size: 0.6rem;
   font-weight: normal;
 }
 /* line 510, ../scss/theme/_widgets.scss */
-.wa-raster tbody td.wa-hour {
+.wh-raster tbody td.wh-hour {
   text-align: center;
   font-weight: normal;
 }
 /* line 513, ../scss/theme/_widgets.scss */
-.wa-raster tbody td.wa-hour.wa-on {
+.wh-raster tbody td.wh-hour.wh-on {
   color: darkgreen;
 }
 /* line 517, ../scss/theme/_widgets.scss */
-.wa-raster tbody td.wa-day {
+.wh-raster tbody td.wh-day {
   text-align: left;
   font-size: 0.7rem;
   padding: 0.2rem 0.4rem;
 }
 /* line 524, ../scss/theme/_widgets.scss */
-.wa-raster .wa-hour {
+.wh-raster .wh-hour {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
@@ -1931,77 +1931,72 @@ form.anonymize-form,
   user-select: none;
 }
 /* line 532, ../scss/theme/_widgets.scss */
-.wa-raster .wa-hour.wa-on {
+.wh-raster .wh-hour.wh-on {
   background-color: lightgreen;
 }
 /* line 535, ../scss/theme/_widgets.scss */
-.wa-raster .wa-hour.wa-off {
+.wh-raster .wh-hour.wh-off {
   background-color: transparent;
 }
 
-/* Weekly Availability Representation */
+/* Weekly Hours Representation */
 /* line 542, ../scss/theme/_widgets.scss */
-.avschedule {
+.wh-schedule {
   list-style: none;
   white-space: pre;
   margin: 0;
   font-size: 0.7rem;
 }
 /* line 547, ../scss/theme/_widgets.scss */
-.avschedule .avdayname {
+.wh-schedule .wh-dayname {
   width: 1.5rem;
   display: inline-block;
 }
 /* line 551, ../scss/theme/_widgets.scss */
-.avschedule .avdayname::after {
+.wh-schedule .wh-dayname::after {
   content: ":";
 }
 
-/* line 556, ../scss/theme/_widgets.scss */
-.avcomments {
-  font-size: 0.7rem;
-}
-
-/* line 563, ../scss/theme/_widgets.scss */
+/* line 559, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header .ui-multiselect-filter {
   direction: rtl;
   float: right;
   margin-right: 3px;
   margin-left: 10px;
 }
-/* line 569, ../scss/theme/_widgets.scss */
+/* line 565, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header ul li {
   float: right;
   padding: 0 3px 0 10px;
 }
-/* line 573, ../scss/theme/_widgets.scss */
+/* line 569, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header li.ui-multiselect-close {
   float: left;
   text-align: left;
   padding-left: 0;
 }
-/* line 580, ../scss/theme/_widgets.scss */
+/* line 576, ../scss/theme/_widgets.scss */
 body.rtl .range-filter-widget input.date-filter-input {
   margin-right: 0;
   margin-left: 2px;
 }
-/* line 585, ../scss/theme/_widgets.scss */
+/* line 581, ../scss/theme/_widgets.scss */
 body.rtl #list-btn-add {
   float: left;
   margin-right: 0;
   margin-left: 0.35rem;
 }
-/* line 591, ../scss/theme/_widgets.scss */
+/* line 587, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0;
   margin-left: 0.3rem;
 }
-/* line 597, ../scss/theme/_widgets.scss */
+/* line 593, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 0;
   border-right: 1px solid red;
 }
-/* line 601, ../scss/theme/_widgets.scss */
+/* line 597, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 0;
   border-left: 1px solid red;
@@ -2409,4 +2404,9 @@ body.rtl .event-type-header {
   font-style: italic;
   color: #7f7f7f;
   padding-top: 0.2rem;
+}
+
+/* line 339, ../scss/theme/_misc.scss */
+.avcomments {
+  font-size: 0.7rem;
 }

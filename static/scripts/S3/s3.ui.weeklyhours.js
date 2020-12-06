@@ -334,7 +334,7 @@
                 weekdays = opts.weekdays,
                 firstDoW = opts.firstDoW;
 
-            var raster = $('<table>').addClass('wa-raster')
+            var raster = $('<table>').addClass('wh-raster')
                                      .append(this._renderHeader());
 
             for (var i = firstDoW; i < firstDoW + 7; i++) {
@@ -368,10 +368,10 @@
                 if (i < 10) {
                     hour = '0' + hour;
                 }
-                var cell = $('<td>').addClass('wa-hour-header').text(hour),
+                var cell = $('<td>').addClass('wh-hour-header').text(hour),
                     ticks = opts.ticks;
                 if (ticks && i > 0 && i % ticks === 0) {
-                    cell.addClass('wa-tick');
+                    cell.addClass('wh-tick');
                 }
                 headerRow.append(cell);
             }
@@ -386,7 +386,7 @@
 
             var opts = this.options,
                 weekdays = opts.weekdays,
-                dayCol = $('<td>').addClass('wa-day').text(weekdays[day]),
+                dayCol = $('<td>').addClass('wh-day').text(weekdays[day]),
                 row = $('<tr>').append(dayCol);
 
             var hours = opts.hours,
@@ -414,7 +414,7 @@
             var opts = this.options,
                 status = this.hoursMatrix.isSelected(day, hour),
                 cell = $('<td>').data({day: day, hour: hour, selected: status})
-                                .addClass('wa-hour'),
+                                .addClass('wh-hour'),
                 icon;
 
             if (opts.icons) {
@@ -428,13 +428,13 @@
             }
 
             if (status) {
-                cell.addClass('wa-on');
+                cell.addClass('wh-on');
             } else {
-                cell.addClass('wa-off');
+                cell.addClass('wh-off');
             }
             var ticks = opts.ticks;
             if (ticks && hour > 0 && hour % ticks === 0) {
-                cell.addClass('wa-tick');
+                cell.addClass('wh-tick');
             }
             return cell;
         },
@@ -447,7 +447,7 @@
             var hoursMatrix = this.hoursMatrix,
                 self = this;
 
-            $('td.wa-hour', this.raster).each(function() {
+            $('td.wh-hour', this.raster).each(function() {
                 var $this = $(this),
                     day = $this.data('day'),
                     hour = $this.data('hour');
@@ -477,10 +477,10 @@
             var opts = this.options,
                 $icon = $('i.' + opts.icons, $col);
             if (newStatus) {
-                $col.removeClass('wa-off').addClass('wa-on');
+                $col.removeClass('wh-off').addClass('wh-on');
                 $icon.removeClass(opts.iconDeselected).addClass(opts.iconSelected);
             } else {
-                $col.removeClass('wa-on').addClass('wa-off');
+                $col.removeClass('wh-on').addClass('wh-off');
                 $icon.removeClass(opts.iconSelected).addClass(opts.iconDeselected);
             }
         },
@@ -499,21 +499,21 @@
                 self._serialize();
             });
 
-            $raster.on('mousedown' + ns + ' touchstart' + ns, '.wa-hour', function(e) {
+            $raster.on('mousedown' + ns + ' touchstart' + ns, '.wh-hour', function(e) {
 
                 e.preventDefault();
 
                 var col = $(this).focus(),
-                    newStatus = col.hasClass('wa-off'),
-                    selector = '.wa-off';
+                    newStatus = col.hasClass('wh-off'),
+                    selector = '.wh-off';
 
                 if (!newStatus) {
-                    selector = '.wa-on';
+                    selector = '.wh-on';
                 }
 
                 self._selectHour(col, newStatus);
                 $raster.off('mouseenter' + ns)
-                     .on('mouseenter' + ns, '.wa-hour' + selector, function() {
+                     .on('mouseenter' + ns, '.wh-hour' + selector, function() {
                     self._selectHour($(this), newStatus);
                 });
             });

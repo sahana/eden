@@ -2785,7 +2785,7 @@ class S3WeeklyHoursWidget(FormWidget):
 
         intro = self.intro
         if intro:
-            return TAG[""](DIV(intro, _class="wa-intro"),
+            return TAG[""](DIV(intro, _class="wh-intro"),
                            widget,
                            )
         else:
@@ -2893,7 +2893,7 @@ class S3WeeklyHoursWidget(FormWidget):
                     slots.append(slot)
                 slots_by_day[day] = slots
 
-        output = UL(_class="avschedule")
+        output = UL(_class="wh-schedule")
         for index in range(first_dow, first_dow + 7):
 
             day = index % 7
@@ -2905,7 +2905,7 @@ class S3WeeklyHoursWidget(FormWidget):
             else:
                 slotsrepr = "-"
 
-            output.append(LI(SPAN(dn[day], _class="avdayname"),
+            output.append(LI(SPAN(dn[day], _class="wh-dayname"),
                              slotsrepr,
                              ))
         return output

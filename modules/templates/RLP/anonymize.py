@@ -10,11 +10,11 @@ def rlp_obscure_dob(record_id, field, value):
         Helper to obscure a date of birth; maps to the first day of
         the quarter, thus retaining the approximate age for statistics
 
-        @param record_id: the pr_address record ID
-        @param field: the location_id Field
-        @param value: the location_id
+        @param record_id: the record ID
+        @param field: the Field
+        @param value: the field value
 
-        @return: the new date
+        @return: the new field value
     """
 
     if value:
@@ -28,11 +28,11 @@ def rlp_decline_delegation(record_id, field, value):
     """
         Decline all requested deployments when anonymizing the volunteer
 
-        @param record_id: the pr_address record ID
-        @param field: the location_id Field
-        @param value: the location_id
+        @param record_id: the record ID
+        @param field: the Field
+        @param value: the field value
 
-        @return: the new status
+        @return: the new field value
     """
 
     return "DECL" if value == "REQ" else value
@@ -129,6 +129,22 @@ def rlp_volunteer_anonymize():
                                               "fields": {"comments": "remove",
                                                          },
                                               }),
+                          ("pr_person_availability_rule", {"key": "person_id",
+                                                           "match": "id",
+                                                           "fields": {"start_time": "remove",
+                                                                      "end_time": "remove",
+                                                                      "weekday": "remove",
+                                                                      },
+                                                           "delete": True,
+                                                           }),
+                          ("pr_person_availability", {"key": "person_id",
+                                                      "match": "id",
+                                                      "fields": {"schedule": "remove",
+                                                                 "schedule_json": "remove",
+                                                                 "days_of_week": "remove",
+                                                                 "comments": "remove",
+                                                                 },
+                                                      }),
                           ],
               },
 

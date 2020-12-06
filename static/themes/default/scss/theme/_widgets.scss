@@ -476,69 +476,75 @@ form.anonymize-form,
     background-color: silver;
 }
 
-/* Weekly Availability Widget */
-.wa-matrix {
-    thead {
-        tr {
-            border-bottom: 1px solid #ccc;
+/* Weekly Hours Widget */
+.wh-intro {
+    max-width: 42rem;
+    padding: 0.5rem 0;
+    font-size: 0.8rem;
+}
+.wh-raster {
+    margin-top: 0.3rem;
+    tr {
+        border-bottom: 1px solid #ccc;
+    }
+    td {
+        border-left: 1px solid #ccc;
+        &.wh-tick {
+            border-left-width: 2px;
         }
+    }
+    thead {
         td {
             min-width: 1.8rem;
-            border-left: 1px solid #ccc;
             padding-right: 0.6rem !important;
             font-size: 0.6rem;
             font-weight: normal;
         }
     }
     tbody {
-        tr {
-            border-bottom: 1px solid #ccc;
-        }
         td {
-            border-left: 1px solid #ccc;
-            &.wa-hour {
+            &.wh-hour {
                 text-align: center;
                 font-weight: normal;
-                &.wa-on {
+                &.wh-on {
                     color: darkgreen;
                 }
             }
-            &.wa-day {
+            &.wh-day {
                 text-align: left;
                 font-size: 0.7rem;
                 padding: 0.2rem 0.4rem;
             }
         }
     }
+    .wh-hour {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+
+        &.wh-on {
+            background-color: lightgreen;
+        }
+        &.wh-off {
+            background-color: transparent;
+        }
+    }
 }
 
-.wa-hour {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-
-    &.wa-on {
-        background-color: lightgreen;
-    }
-    &.wa-off {
-        background-color: transparent;
-    }
-}
-
-/* Weekly Availability Representation */
-.avschedule {
+/* Weekly Hours Representation */
+.wh-schedule {
     list-style: none;
     white-space: pre;
     margin: 0;
     font-size: 0.7rem;
-    .avdayname {
+    .wh-dayname {
         width: 1.5rem;
         display: inline-block;
     }
-    .avdayname::after {
+    .wh-dayname::after {
         content: ":";
     }
 }

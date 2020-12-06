@@ -480,20 +480,20 @@ form.anonymize-form,
     background-color: silver;
 }
 
-/* Weekly Availability Widget */
-.wa-intro {
+/* Weekly Hours Widget */
+.wh-intro {
     max-width: 42rem;
     padding: 0.5rem 0;
     font-size: 0.8rem;
 }
-.wa-raster {
+.wh-raster {
     margin-top: 0.3rem;
     tr {
         border-bottom: 1px solid #ccc;
     }
     td {
         border-left: 1px solid #ccc;
-        &.wa-tick {
+        &.wh-tick {
             border-left-width: 2px;
         }
     }
@@ -507,21 +507,21 @@ form.anonymize-form,
     }
     tbody {
         td {
-            &.wa-hour {
+            &.wh-hour {
                 text-align: center;
                 font-weight: normal;
-                &.wa-on {
+                &.wh-on {
                     color: darkgreen;
                 }
             }
-            &.wa-day {
+            &.wh-day {
                 text-align: left;
                 font-size: 0.7rem;
                 padding: 0.2rem 0.4rem;
             }
         }
     }
-    .wa-hour {
+    .wh-hour {
         -webkit-touch-callout: none;
         -webkit-user-select: none;
         -khtml-user-select: none;
@@ -529,32 +529,28 @@ form.anonymize-form,
         -ms-user-select: none;
         user-select: none;
 
-        &.wa-on {
+        &.wh-on {
             background-color: lightgreen;
         }
-        &.wa-off {
+        &.wh-off {
             background-color: transparent;
         }
     }
 }
 
-/* Weekly Availability Representation */
-.avschedule {
+/* Weekly Hours Representation */
+.wh-schedule {
     list-style: none;
     white-space: pre;
     margin: 0;
     font-size: 0.7rem;
-    .avdayname {
+    .wh-dayname {
         width: 1.5rem;
         display: inline-block;
     }
-    .avdayname::after {
+    .wh-dayname::after {
         content: ":";
     }
-}
-
-.avcomments {
-    font-size: 0.7rem;
 }
 
 // Overrides for right-to-left orientation
