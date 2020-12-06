@@ -481,25 +481,27 @@ form.anonymize-form,
 }
 
 /* Weekly Availability Widget */
-.wa-matrix {
-    thead {
-        tr {
-            border-bottom: 1px solid #ccc;
+.wa-raster {
+    margin-top: 0.3rem;
+    tr {
+        border-bottom: 1px solid #ccc;
+    }
+    td {
+        border-left: 1px solid #ccc;
+        &.wa-tick {
+            border-left-width: 2px;
         }
+    }
+    thead {
         td {
             min-width: 1.8rem;
-            border-left: 1px solid #ccc;
             padding-right: 0.6rem !important;
             font-size: 0.6rem;
             font-weight: normal;
         }
     }
     tbody {
-        tr {
-            border-bottom: 1px solid #ccc;
-        }
         td {
-            border-left: 1px solid #ccc;
             &.wa-hour {
                 text-align: center;
                 font-weight: normal;
@@ -514,21 +516,20 @@ form.anonymize-form,
             }
         }
     }
-}
+    .wa-hour {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
 
-.wa-hour {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-
-    &.wa-on {
-        background-color: lightgreen;
-    }
-    &.wa-off {
-        background-color: transparent;
+        &.wa-on {
+            background-color: lightgreen;
+        }
+        &.wa-off {
+            background-color: transparent;
+        }
     }
 }
 

@@ -5793,4 +5793,7 @@
 'xlwt module not available within the running Python - this needs installing for XLS output!': 'xlwt Modul nicht verfügbar im Rahmen der laufenden Python Umgebung - das muss installiert werden für XLS Ausgabe!',
 'yes': 'ja',
 'Åland Islands': 'Ålandinseln',
+'Days of Week': 'Wochentage',
+'Availability Comments': 'Anmerkungen bzgl. Verfügbarkeit',
+'Use this field to indicate e.g. vacation dates or other information with regard to your availability to facilitate personnel planning' : 'Verwenden Sie dieses Feld zur Angabe von z.B. Urlaubszeiten oder sonstigen Hinweisen zu Ihrer Verfügbarkeit um die Personalplanung zu erleichtern',
 }

@@ -74,7 +74,7 @@ __all__ = ("S3ACLWidget",
            "S3StringWidget",
            "S3TimeIntervalWidget",
            #"S3UploadWidget",
-           "S3WeeklyAvailabilityWidget",
+           "S3WeeklyHoursWidget",
            "S3FixedOptionsWidget",
            "S3QuestionEditorWidget",
            "CheckboxesWidgetS3",
@@ -2720,27 +2720,21 @@ class S3HoursWidget(FormWidget):
         return round(hours, precision) if precision is not None else hours
 
 # =============================================================================
-class S3WeeklyAvailabilityWidget(FormWidget):
+class S3WeeklyHoursWidget(FormWidget):
     """
-        TODO docstring
+        Widget to enter weekly time rules (JSON) using a 24/7 hours
+        matrix, e.g. opening hours, times of availability, etc.
     """
 
-    def __init__(self):
+    @classmethod
+    def widget(cls, field, value, **attributes):
         """
-            TODO docstring
-        """
+            Widget builder
 
-        pass
-
-    # -------------------------------------------------------------------------
-    def __call__(self, field, value, **attributes):
+            @param field: the Field
+            @param value: the current field value
+            @param attributes: additional DOM attributes for the widget
         """
-            TODO separator
-            TODO docstring
-            TODO use __call__ like other widgets
-        """
-
-        T = current.T
 
         default = {"value": value,
                    }
@@ -2753,25 +2747,21 @@ class S3WeeklyAvailabilityWidget(FormWidget):
         widget = TEXTAREA(**attr)
         widget.add_class("hide")
 
-        options = {"weekdays": {0: s3_str(T("Sun##weekday")),
-                                1: s3_str(T("Mon##weekday")),
-                                2: s3_str(T("Tue##weekday")),
-                                3: s3_str(T("Wed##weekday")),
-                                4: s3_str(T("Thu##weekday")),
-                                5: s3_str(T("Fri##weekday")),
-                                6: s3_str(T("Sat##weekday")),
-                                },
-                   "firstDoW": 1, # TODO use l10n setting
+        options = {"weekdays": {k: s3_str(v) for k, v in cls.daynames().items()},
+                   "firstDoW": current.calendar.first_dow,
                    }
-        self.inject_script(widget_id, options)
+        cls.inject_script(widget_id, options)
 
         return widget
 
     # -------------------------------------------------------------------------
-    def inject_script(self, selector, options):
+    @staticmethod
+    def inject_script(selector, options):
         """
-            TODO separator
-            TODO docstring
+            Inject static JS and instantiate client-side UI widget
+
+            @param widget_id: the widget ID
+            @param options: JSON-serializable dict with UI widget options
         """
 
         s3 = current.response.s3
@@ -2780,23 +2770,48 @@ class S3WeeklyAvailabilityWidget(FormWidget):
         # Global script
         # TODO Minify
         #if s3.debug:
-        script = "/%s/static/scripts/S3/s3.ui.weeklyavailability.js" % appname
+        script = "/%s/static/scripts/S3/s3.ui.weeklyhours.js" % appname
         if script not in s3.scripts:
             s3.scripts.append(script)
 
         # jQuery-ready script
-        script = '''$('#%(selector)s').weeklyAvailability(%(options)s);''' % \
+        script = '''$('#%(selector)s').weeklyHours(%(options)s);''' % \
                  {"selector": selector, "options": json.dumps(options)}
         s3.jquery_ready.append(script)
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def represent(rules):
+    def daynames():
         """
-            TODO docstring
+            The weekday names (abbreviations) to use in the
+            widget and representation
+
+            @returns: dict of {daynumber: dayname}
         """
 
         T = current.T
+
+        return {0: T("Sun##weekday"),
+                1: T("Mon##weekday"),
+                2: T("Tue##weekday"),
+                3: T("Wed##weekday"),
+                4: T("Thu##weekday"),
+                5: T("Fri##weekday"),
+                6: T("Sat##weekday"),
+                }
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def represent(cls, rules):
+        """
+            Represent a set of weekly time rules, as list of rules
+            per weekday (HTML)
+
+            @param rules: array of rules, or a JSON string encoding
+                          such an array
+
+            @returns: UL instance
+        """
 
         if isinstance(rules, basestring) and rules:
             try:
@@ -2804,14 +2819,7 @@ class S3WeeklyAvailabilityWidget(FormWidget):
             except JSONERRORS:
                 rules = []
 
-        dow = {0: T("Sun##weekday"),
-               1: T("Mon##weekday"),
-               2: T("Tue##weekday"),
-               3: T("Wed##weekday"),
-               4: T("Thu##weekday"),
-               5: T("Fri##weekday"),
-               6: T("Sat##weekday"),
-               }
+        daynames = cls.daynames()
 
         first_dow = 1
 
@@ -2843,7 +2851,6 @@ class S3WeeklyAvailabilityWidget(FormWidget):
                     slots.append(slot)
                 slots_by_day[day] = slots
 
-        dayrepr = []
         output = UL(_class="avschedule")
         for index in range(first_dow, first_dow + 7):
 
@@ -2856,7 +2863,7 @@ class S3WeeklyAvailabilityWidget(FormWidget):
             else:
                 slotsrepr = "-"
 
-            output.append(LI(SPAN(dow[day], _class="avdayname"),
+            output.append(LI(SPAN(daynames[day], _class="avdayname"),
                              slotsrepr,
                              ))
         return output

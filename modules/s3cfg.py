@@ -5190,6 +5190,12 @@ class S3Config(Storage):
         """
         return self.__lazy("pr", "person_availability_options", default=None)
 
+    def get_pr_availability_json_rules(self):
+        """
+            Generate availability rules from schedule_json
+        """
+        return self.pr.get("availability_json_rules", False)
+
     def get_pr_hide_third_gender(self):
         """
             Whether to hide the third gender ("Other")

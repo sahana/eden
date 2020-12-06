@@ -127,6 +127,8 @@ def config(settings):
     settings.pr.separate_name_fields = 2
     settings.pr.name_format= "%(last_name)s, %(first_name)s"
 
+    settings.pr.availability_json_rules = True
+
     # -------------------------------------------------------------------------
     settings.hrm.record_tab = False
     settings.hrm.staff_experience = False
@@ -925,6 +927,7 @@ def config(settings):
                        "occupation_type_person.occupation_type_id",
                        (T("Hours/Wk"), "availability.hours_per_week"),
                        "availability.schedule_json",
+                       "availability.comments",
                        (T("Mobile Phone"), "phone.value"),
                        # email
                        "current_address.location_id$addr_postcode",
@@ -1093,6 +1096,7 @@ def config(settings):
                 (T("Occupation / Speciality"), "person_details.occupation"),
                 "availability.hours_per_week",
                 "availability.schedule_json",
+                "availability.comments",
                 "volunteer_record.comments",
                 ])
 
@@ -1129,7 +1133,7 @@ def config(settings):
                             S3SQLCustomForm,
                             S3TextFilter,
                             StringTemplateParser,
-                            S3WeeklyAvailabilityWidget,
+                            S3WeeklyHoursWidget,
                             s3_get_filter_opts,
                             s3_text_represent,
                             )
@@ -1152,25 +1156,29 @@ def config(settings):
                                               zero = None,
                                               )
 
-            # Enable weekly hours
+            # Availability
             avtable = s3db.pr_person_availability
             field = avtable.hours_per_week
             field.readable = field.writable = True
-            #field = avtable.schedule
-            #field.readable = field.writable = True
-            #field.represent = lambda v: \
-            #                  s3_text_represent(v,
-            #                                    lines = 5 if r.record else 3,
-            #                                    _class = "availability-times",
-            #                                    )
-            #field.comment = DIV(_class = "tooltip",
-            #                    _title = "%s|%s" % (T("Availability Schedule"),
-            #                                        T("Specify days/hours like: Monday 10-12; Tuesday 10-12 and 14-19; Friday 13-15"),
-            #                                        ),
-            #                    )
+
+            field = avtable.comments
+            field.label = T("Availability Comments")
+            field.represent = lambda v: s3_text_represent(v,
+                                            lines = 5 if r.record else 3,
+                                            _class = "availability-comments",
+                                            )
+            if r.controller == "default":
+                field.comment = DIV(_class = "tooltip",
+                                    _title = "%s|%s" % (T("Availability Comments"),
+                                                        T("Use this field to indicate e.g. vacation dates or other information with regard to your availability to facilitate personnel planning"),
+                                                        ),
+                                    )
+            else:
+                field.comment = None
+
             field = avtable.schedule_json
             field.readable = field.writable = True
-            field.represent = S3WeeklyAvailabilityWidget.represent
+            field.represent = S3WeeklyHoursWidget.represent
 
             # Hide map selector in address
             atable = s3db.pr_address
@@ -1370,6 +1378,20 @@ def config(settings):
                                               label = T("Available"),
                                               #hide_time = True,
                                               ),
+                        S3OptionsFilter("availability.days_of_week",
+                                        label = T("Days of Week"),
+                                        options = OrderedDict((
+                                                    (1, T("Mon##weekday")),
+                                                    (2, T("Tue##weekday")),
+                                                    (3, T("Wed##weekday")),
+                                                    (4, T("Thu##weekday")),
+                                                    (5, T("Fri##weekday")),
+                                                    (6, T("Sat##weekday")),
+                                                    (0, T("Sun##weekday")),
+                                                    )),
+                                        cols = 7,
+                                        sort = False,
+                                        ),
                         S3RangeFilter("availability.hours_per_week",
                                       ),
                         S3OptionsFilter("competency.skill_id",
@@ -1439,8 +1461,8 @@ def config(settings):
                                         "volunteer_record.end_date",
                                         "volunteer_record.status",
                                         "availability.hours_per_week",
-                                        #"availability.schedule",
                                         "availability.schedule_json",
+                                        "availability.comments",
                                         "volunteer_record.comments",
                                         ])
 

@@ -10,7 +10,7 @@ from gluon.storage import Storage
 
 from s3 import IS_ONE_OF, IS_PHONE_NUMBER_MULTI, IS_PHONE_NUMBER_SINGLE, \
                JSONERRORS, S3CustomController, S3GroupedOptionsWidget, \
-               S3LocationSelector, S3MultiSelectWidget, S3WeeklyAvailabilityWidget, \
+               S3LocationSelector, S3MultiSelectWidget, S3WeeklyHoursWidget, \
                S3Represent, s3_comments_widget, s3_date, s3_mark_required, s3_str
 
 from .notifications import formatmap
@@ -373,8 +373,8 @@ class register(S3CustomController):
                       #"start_date": formvars.start_date,
                       #"end_date": formvars.end_date,
                       "hours_per_week": formvars.hours_per_week,
-                      #"schedule": formvars.schedule,
                       "schedule_json": formvars.schedule_json,
+                      "availability_comments": formvars.availability_comments,
                       "skill_id": formvars.skill_id,
                       "comments": formvars.comments,
                       }
@@ -614,7 +614,17 @@ class register(S3CustomController):
                       #      ),
                       Field("schedule_json", "json",
                             label = T("Availability Schedule"),
-                            widget = S3WeeklyAvailabilityWidget(),
+                            widget = S3WeeklyHoursWidget.widget,
+                            ),
+                      Field("availability_comments", "text",
+                            label = T("Availability Comments"),
+                            widget = s3_comments_widget,
+                            # TODO tooltip-text and translation
+                            comment = DIV(_class = "tooltip",
+                                          _title = "%s|%s" % (T("Availability Comments"),
+                                                              T("Use this field to indicate e.g. vacation dates or other information with regard to your availability to facilitate personnel planning"),
+                                                              ),
+                                         ),
                             ),
                       s3db.hrm_multi_skill_id(
                             label = T("Skills / Resources"),
@@ -886,30 +896,30 @@ class register(S3CustomController):
 
         # Register availability
         hours_per_week = custom.get("hours_per_week")
-        schedule = custom.get("schedule")
         schedule_json = custom.get("schedule_json")
-        if hours_per_week or schedule or schedule_json:
-            atable = s3db.pr_person_availability
-            query = (atable.person_id == person_id) & \
-                    (atable.deleted == False)
-            availability = db(query).select(atable.id,
-                                            limitby = (0, 1),
-                                            ).first()
-            if availability:
-                availability.update_record(hours_per_week = hours_per_week,
-                                           schedule = schedule,
-                                           schedule_json = schedule_json,
-                                           )
-                s3db_onaccept(atable, availability, method="update")
-            else:
-                availability = {"person_id": person_id,
-                                "hours_per_week": hours_per_week,
-                                "schedule": schedule,
-                                "schedule_json": schedule_json,
-                                }
-                availability["id"] = atable.insert(**availability)
-                set_record_owner(atable, availability, owned_by_user=user_id)
-                s3db_onaccept(atable, availability, method="create")
+        availability_comments = custom.get("availability_comments")
+
+        atable = s3db.pr_person_availability
+        query = (atable.person_id == person_id) & \
+                (atable.deleted == False)
+        availability = db(query).select(atable.id,
+                                        limitby = (0, 1),
+                                        ).first()
+        if availability:
+            availability.update_record(hours_per_week = hours_per_week,
+                                       schedule_json = schedule_json,
+                                       comments = availability_comments,
+                                       )
+            s3db_onaccept(atable, availability, method="update")
+        else:
+            availability = {"person_id": person_id,
+                            "hours_per_week": hours_per_week,
+                            "schedule_json": schedule_json,
+                            "comments": availability_comments,
+                            }
+            availability["id"] = atable.insert(**availability)
+            set_record_owner(atable, availability, owned_by_user=user_id)
+            s3db_onaccept(atable, availability, method="create")
 
         # Register skills
         skills = custom.get("skill_id")
