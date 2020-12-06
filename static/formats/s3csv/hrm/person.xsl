@@ -2027,12 +2027,12 @@
             <xsl:if test="$Options!=''">
                 <!-- @ToDo: A nicer way to handle options -->
                 <data field="options">
-                    <xsl:value-of select="col[@field='Availability']"/>
+                    <xsl:value-of select="$Options"/>
                 </data>
             </xsl:if>
             <xsl:if test="$Comments!=''">
                 <data field="comments">
-                    <xsl:value-of select="col[@field='Availability Comments']"/>
+                    <xsl:value-of select="$Comments"/>
                 </data>
             </xsl:if>
             <xsl:for-each select="col[starts-with(@field, 'Slot')]">
