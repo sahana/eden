@@ -4,7 +4,7 @@ import json
 from uuid import uuid4
 
 from gluon import A, BR, CRYPT, DIV, Field, H3, INPUT, \
-                  IS_EMPTY_OR,  IS_EXPR, IS_INT_IN_RANGE, IS_NOT_EMPTY, \
+                  IS_EMPTY_OR,  IS_EXPR, IS_INT_IN_RANGE, IS_LENGTH, IS_NOT_EMPTY, \
                   P, SQLFORM, URL, XML, current, redirect
 from gluon.storage import Storage
 
@@ -578,9 +578,10 @@ class register(S3CustomController):
                             label = T("Occupation / Speciality"),
                             comment = DIV(_class = "tooltip",
                                           _title = "%s|%s" % (T("Occupation / Speciality"),
-                                                              T("Specify your exact job designation"),
+                                                              T("Specify your exact job designation (max 128 characters)"),
                                                               ),
                                           ),
+                            requires = IS_EMPTY_OR(IS_LENGTH(128)),
                             ),
 
                       # --------------------------------------------

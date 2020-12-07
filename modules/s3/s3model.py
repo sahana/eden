@@ -235,10 +235,10 @@ class S3Model(object):
 
         # Table already defined?
         if hasattr(db, tablename):
-            return ogetattr(db, tablename)
-        elif ogetattr(db, "_lazy_tables") and \
-             tablename in ogetattr(db, "_LAZY_TABLES"):
-            return ogetattr(db, tablename)
+            return getattr(db, tablename)
+        elif getattr(db, "_lazy_tables") and \
+             tablename in getattr(db, "_LAZY_TABLES"):
+            return getattr(db, tablename)
 
         found = None
 
@@ -283,10 +283,10 @@ class S3Model(object):
         if not db_only and tablename in s3:
             return s3[tablename]
         elif hasattr(db, tablename):
-            return ogetattr(db, tablename)
-        elif ogetattr(db, "_lazy_tables") and \
-             tablename in ogetattr(db, "_LAZY_TABLES"):
-            return ogetattr(db, tablename)
+            return getattr(db, tablename)
+        elif getattr(db, "_lazy_tables") and \
+             tablename in getattr(db, "_LAZY_TABLES"):
+            return getattr(db, tablename)
         elif isinstance(default, Exception):
             raise default
         else:
@@ -421,7 +421,7 @@ class S3Model(object):
 
         db = current.db
         if hasattr(db, tablename):
-            table = ogetattr(db, tablename)
+            table = getattr(db, tablename)
         else:
             table = db.define_table(tablename, *fields, **args)
         return table
@@ -443,7 +443,7 @@ class S3Model(object):
         db = current.db
 
         if hasattr(db, alias):
-            aliased = ogetattr(db, alias)
+            aliased = getattr(db, alias)
             if original_tablename(aliased) == original_tablename(table):
                 return aliased
 
