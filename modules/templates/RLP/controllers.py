@@ -274,7 +274,7 @@ class register(S3CustomController):
 
         # Page title and intro text
         title = T("Volunteer Registration")
-        intro = T("Please fill in all relevant information for your deployment. To support the choice of suitable candidates we especially need information about your place of residence (postcode and town), your contact information (phone and email) and the weekly working time (hours per week) your are able to support.")
+        intro = T("Please fill in all relevant information for your deployment. To support the choice of suitable candidates we especially need information about your place of residence (postcode and town), your contact information (phone and email) and the weekly working time (hours per week) you are able to support.")
 
         # Form Fields
         formfields, required_fields, subheadings = self.formfields()
