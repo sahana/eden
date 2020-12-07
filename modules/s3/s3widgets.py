@@ -116,7 +116,6 @@ from .s3utils import *
 from .s3validators import *
 
 DEFAULT = lambda:None
-ogetattr = object.__getattribute__
 repr_select = lambda l: len(l.name) > 48 and "%s..." % l.name[:44] or l.name
 
 # Compact JSON encoding

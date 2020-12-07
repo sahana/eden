@@ -4825,7 +4825,7 @@
 'Specify the number of sets needed per 24h': 'Geben Sie die Anzahl der erforderlichen Sätze pro 24h ein',
 'Specify the number of units (Erwachsenendosen) needed per 24h': 'Geben Sie die Anzahl der Einheiten ein (Dosis für Erwachsene) die pro 24h benötigt werden.',
 'Specify the number of units (litres) of Ringer-Lactate or equivalent solutions needed per 24h': 'Geben Sie die Anzahl der Einheiten (in Liter) von Ringer-Lactat oder gleichwertigen Lösungen ein, die man pro 24h braucht.',
-'Specify your exact job designation': 'Geben Sie ihre exakte Tätigkeitsbezeichnung an',
+'Specify your exact job designation (max 128 characters)': 'Geben Sie ihre exakte Tätigkeitsbezeichnung an (max. 128 Zeichen)',
 'Spherical Mercator?': 'Spherische Mercator?',
 'Spouse': 'Ehegatte',
 'Spreadsheet Importer': 'Import von Tabellendokumenten',
