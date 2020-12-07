@@ -43,6 +43,7 @@ try:
              migrate_enabled = migrate,
              fake_migrate_all = fake_migrate,
              lazy_tables = not migrate,
+             ignore_field_case = db_type == "postgres",
              )
 except:
     db_location = db_string.split("@", 1)[1]
