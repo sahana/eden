@@ -3,12 +3,18 @@
 import datetime
 
 from collections import OrderedDict
+from functools import partial
 
 from gluon import current, redirect, URL, A, DIV, TABLE, TAG, TR
 from gluon.storage import Storage
 
 from s3 import FS, S3DateFilter, S3Represent, s3_fieldmethod, s3_fullname, s3_yes_no_represent
+from s3compat import urlencode
 from s3dal import original_tablename
+
+from geopy.geocoders import GeoNames
+from geopy.geocoders.base import DEFAULT_SENTINEL
+from geopy.util import logger
 
 ALLOWED_FORMATS = ("html", "iframe", "popup", "aadata", "json", "xls", "pdf")
 
@@ -70,6 +76,7 @@ def config(settings):
     # Uncomment to show the Print control:
     # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
     #settings.gis.print_button = True
+    settings.gis.geocode_service = rlp_GeoNames
 
     # L10n settings
     # Languages used in the deployment (used for Language Toolbar, GIS Locations, etc)
@@ -1213,10 +1220,15 @@ def config(settings):
             # Availability
             customise_volunteer_availability_fields(r)
 
-            # Hide map selector in address
+            # Configure Location Selector
             atable = s3db.pr_address
             field = atable.location_id
-            field.widget = S3LocationSelector(show_address = True,
+            field.requires = field.requires.other
+            field.widget = S3LocationSelector(levels = ("L1", "L2", "L3"),
+                                              required_levels = ("L1", "L2", "L3"),
+                                              show_address = True,
+                                              show_postcode = True,
+                                              postcode_required = True,
                                               show_map = False,
                                               )
 
@@ -1534,24 +1546,35 @@ def config(settings):
                 output = standard_postp(r, output)
 
             if r.controller in ("vol", "default") and \
-               not r.component and r.record and \
-               r.method in (None, "update", "read") and \
+               not r.component and \
                isinstance(output, dict):
-
-                # Custom CRUD buttons
-                if "buttons" not in output:
-                    buttons = output["buttons"] = {}
+                # Geocoder
+                s3.scripts.append("/%s/static/themes/RLP/js/geocoder.js" % r.application)
+                if r.record:
+                    s3.jquery_ready.append('''S3.rlp_GeoCoder("sub_defaultaddress_defaultaddress_i_location_id_edit_0")''')
                 else:
-                    buttons = output["buttons"]
+                    s3.jquery_ready.append('''S3.rlp_GeoCoder("sub_defaultaddress_defaultaddress_i_location_id_edit_none")''')
+                s3.js_global.append('''i18n.location_found="%s"
+i18n.location_not_found="%s"''' % (T("Address Found"),
+                                   T("Address NOT Found"),
+                                   ))
+                if r.record and \
+                   r.method in (None, "update", "read"):
 
-                # Anonymize-button
-                from s3 import S3AnonymizeWidget
-                anonymize = S3AnonymizeWidget.widget(r,
-                                         _class="action-btn anonymize-btn")
+                    # Custom CRUD buttons
+                    if "buttons" not in output:
+                        buttons = output["buttons"] = {}
+                    else:
+                        buttons = output["buttons"]
 
-                # Render in place of the delete-button
-                buttons["delete_btn"] = TAG[""](anonymize,
-                                                )
+                    # Anonymize-button
+                    from s3 import S3AnonymizeWidget
+                    anonymize = S3AnonymizeWidget.widget(r,
+                                             _class="action-btn anonymize-btn")
+
+                    # Render in place of the delete-button
+                    buttons["delete_btn"] = TAG[""](anonymize,
+                                                    )
             return output
         s3.postp = custom_postp
 
@@ -2971,5 +2994,92 @@ class rlp_DelegatedPersonRepresent(S3Represent):
         url = URL(c = "vol", f = "person", args = [row.id], extension = "")
 
         return A(v, _href = url)
+
+# =============================================================================
+class rlp_GeoNames(GeoNames):
+
+    geocode_path = '/mapbender/geoportal/gaz_geom_mobile.php?q=fall%2010&outputFormat=json&resultTarget=web&searchEPSG=4326&forcePoint=true&forceGeonames=true'
+
+    def __init__(
+            self,
+            *,
+            timeout=DEFAULT_SENTINEL,
+            proxies=DEFAULT_SENTINEL,
+            user_agent=None,
+            ssl_context=DEFAULT_SENTINEL,
+            adapter_factory=None,
+            scheme='https'
+    ):
+        """
+            RLP's GeoNames-compatible GeoCoder service
+        """
+        super().__init__(
+            username="dummy",
+            scheme=scheme,
+            timeout=timeout,
+            proxies=proxies,
+            user_agent=user_agent,
+            ssl_context=ssl_context,
+            adapter_factory=adapter_factory,
+        )
+
+        domain = 'www.geoportal.rlp.de'
+        self.api = (
+            "%s://%s%s" % (self.scheme, domain, self.geocode_path)
+        )
+
+    def geocode(
+            self,
+            query,
+            *,
+            exactly_one=True,
+            timeout=DEFAULT_SENTINEL,
+            country=None,
+            country_bias=None
+    ):
+        """
+        Return a location point by address.
+
+        :param str query: The address or query you wish to geocode.
+
+        :param bool exactly_one: Return one result or a list of results, if
+            available.
+
+        :param int timeout: Time, in seconds, to wait for the geocoding service
+            to respond before raising a :class:`geopy.exc.GeocoderTimedOut`
+            exception. Set this only if you wish to override, on this call
+            only, the value set during the geocoder's initialization.
+
+        :param country: Limit records to the specified countries.
+            Two letter country code ISO-3166 (e.g. ``FR``). Might be
+            a single string or a list of strings.
+        :type country: str or list
+
+        :param str country_bias: Records from the country_bias are listed first.
+            Two letter country code ISO-3166.
+
+        :rtype: ``None``, :class:`geopy.location.Location` or a list of them, if
+            ``exactly_one=False``.
+        """
+        params = [
+            ('name_startsWith', query),
+        ]
+
+        #if country_bias:
+        #    params.append(('countryBias', country_bias))
+
+        #if not country:
+        #    country = []
+        #if isinstance(country, str):
+        #    country = [country]
+        #for country_item in country:
+        #    params.append(('country', country_item))
+
+        if exactly_one:
+            params.append(('maxRows', 1))
+        url = "&".join((self.api, urlencode(params)))
+        logger.debug("%s.geocode: %s", self.__class__.__name__, url)
+        callback = partial(self._parse_json, exactly_one=exactly_one)
+        return self._call_geocoder(url, callback, timeout=timeout)
 
 # END =========================================================================

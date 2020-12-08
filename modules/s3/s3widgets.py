@@ -4721,6 +4721,7 @@ class S3LocationSelector(S3Selector):
                  reverse_lx = False,
                  show_address = False,
                  show_postcode = None,
+                 postcode_required = None,
                  show_latlon = None,
                  latlon_mode = "decimal",
                  latlon_mode_toggle = True,
@@ -4756,6 +4757,7 @@ class S3LocationSelector(S3Selector):
             @param show_address: show a field for street address.
                                  If the parameter is set to a string then this is used as the label.
             @param show_postcode: show a field for postcode
+            @param postcode_required: postcode field is mandatory
             @param show_latlon: show fields for manual Lat/Lon input
             @param latlon_mode: (initial) lat/lon input mode ("decimal" or "dms")
             @param latlon_mode_toggle: allow user to toggle lat/lon input mode
@@ -4790,6 +4792,7 @@ class S3LocationSelector(S3Selector):
         self.reverse_lx = reverse_lx
         self.show_address = show_address
         self.show_postcode = show_postcode
+        self.postcode_required = postcode_required
         self.prevent_duplicate_addresses = prevent_duplicate_addresses
 
         if show_latlon is None:
@@ -5058,6 +5061,7 @@ class S3LocationSelector(S3Selector):
                                                   postcode,
                                                   settings.get_ui_label_postcode(),
                                                   hidden = not postcode,
+                                                  required = self.postcode_required,
                                                   )
 
         # Lat/Lon INPUTs
@@ -5708,6 +5712,7 @@ class S3LocationSelector(S3Selector):
                value,
                label,
                hidden = False,
+               required = False,
                _class = "string"):
         """
             Render a text input (e.g. address or postcode field)
@@ -5717,6 +5722,7 @@ class S3LocationSelector(S3Selector):
             @param value: the initial value for the input
             @param label: the label for the input
             @param hidden: render hidden
+            @param required: mark as required
 
             @return: a tuple (label, widget, id, hidden)
         """
@@ -5724,7 +5730,11 @@ class S3LocationSelector(S3Selector):
         input_id = "%s_%s" % (fieldname, name)
 
         if label and self.labels:
-            _label = LABEL("%s:" % label,
+            if required:
+                label = s3_required_label(label)
+            else:
+                label = "%s:" % label
+            _label = LABEL(label,
                            _for = input_id,
                            )
         else:
@@ -6319,12 +6329,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                 return values, current.T("Location data required")
             return values, None
 
-        table = current.s3db.gis_location
         errors = {}
-        feature = None
-        onvalidation = None
-
-        msg = self.error_message
 
         # Check for valid Lat/Lon/WKT/Radius (if any)
         lat = values_get("lat")
@@ -6364,9 +6369,26 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         elif radius == "":
             radius = None
 
+        # Lx Required?
+        required_levels = self._required_levels or []
+        for level in required_levels:
+            l = values_get(level)
+            if not l:
+                errors[level] = current.T("%(level)s is Required!") % {"level": level}
+
+        # Postcode Required?
+        postcode = values_get("postcode")
+        if not postcode and self.postcode_required:
+            errors["postcode"] = current.T("Postcode is Required!")
+
         if errors:
             error = "\n".join(s3_str(errors[fn]) for fn in errors)
             return (values, error)
+
+        table = current.s3db.gis_location
+        feature = None
+        onvalidation = None
+        msg = self.error_message
 
         specific = values_get("specific")
         location_id = values_get("id")
@@ -6381,7 +6403,6 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             # Read other details
             parent = values_get("parent")
             address = values_get("address")
-            postcode = values_get("postcode")
 
         if parent or address or postcode or \
            wkt is not None or \

@@ -176,23 +176,23 @@
                 L4 = data.L4,
                 L5 = data.L5;
             if (L0) {
-                this._lxSelect(0, L0, true);
+                this.lxSelect(0, L0, true);
             }
             // || is to support Missing levels
             if (L1 || L2) {
-                this._lxSelect(1, L1 || L2, true);
+                this.lxSelect(1, L1 || L2, true);
             }
             if (L2 || L3) {
-                this._lxSelect(2, L2 || L3, true);
+                this.lxSelect(2, L2 || L3, true);
             }
             if (L3 || L4) {
-                this._lxSelect(3, L3 || L4, true);
+                this.lxSelect(3, L3 || L4, true);
             }
             if (L4 || L5) {
-                this._lxSelect(4, L4 || L5, true);
+                this.lxSelect(4, L4 || L5, true);
             }
             if (L5) {
-                this._lxSelect(5, L5, true);
+                this.lxSelect(5, L5, true);
             }
 
             // Store original Lx path
@@ -356,7 +356,7 @@
          * @param {bool} refresh - whether this is called before user input
          *                         (in which case we want to prevent geocoding)
          */
-        _lxSelectFinal: function(refresh) {
+        lxSelectFinal: function(refresh) {
             if (!refresh) {
                 // Update the data dict
                 // - also writes data dict back to real input
@@ -379,7 +379,7 @@
          * @param {bool} refresh - whether this is called before user input
          *                         (in which case we want to prevent geocoding)
          */
-        _lxSelect: function(level, id, refresh) {
+        lxSelect: function(level, id, refresh) {
 
             var selector = '#' + this.fieldname,
                 opts = this.options,
@@ -483,7 +483,7 @@
                         this._geocodeDecision();
                     }
                     // Call DRY Helper
-                    this._lxSelectFinal(refresh);
+                    this.lxSelectFinal(refresh);
                 } else {
                     // Do we need to read hierarchy?
                     var locations,
@@ -596,20 +596,20 @@
                                 if (previous && available.indexOf('' + previous) != -1) {
                                     // Previously selected value is still available,
                                     // so select it again
-                                    that._lxSelect(next, previous, refresh);
+                                    that.lxSelect(next, previous, refresh);
                                 } else if (numLocations == 1 && locationID) {
                                     // Only one option available, so select this one
-                                    that._lxSelect(next, locationID, refresh);
+                                    that.lxSelect(next, locationID, refresh);
                                 }
                             }
                             // Call DRY Helper
-                            that._lxSelectFinal(refresh);
+                            that.lxSelectFinal(refresh);
                         }
                     );
                 }
             } else {
                 // Call DRY Helper
-                this._lxSelectFinal(refresh);
+                this.lxSelectFinal(refresh);
             }
         },
 
@@ -1073,21 +1073,21 @@
                     if (result.L0) {
                         // Prevent forward geocoding
                         self.useGeocoder = false;
-                        self._lxSelect(0, result.L0);
+                        self.lxSelect(0, result.L0);
                         if (result.L1) {
-                            self._lxSelect(1, result.L1);
+                            self.lxSelect(1, result.L1);
                         }
                         if (result.L2) {
-                            self._lxSelect(2, result.L2);
+                            self.lxSelect(2, result.L2);
                         }
                         if (result.L3) {
-                            self._lxSelect(3, result.L3);
+                            self.lxSelect(3, result.L3);
                         }
                         if (result.L4) {
-                            self._lxSelect(4, result.L4);
+                            self.lxSelect(4, result.L4);
                         }
                         if (result.L5) {
-                            self._lxSelect(5, result.L5);
+                            self.lxSelect(5, result.L5);
                         }
                         // Reset Geocoder-option
                         self.useGeocoder = true;
@@ -1663,27 +1663,27 @@
 
             $(selector + '_L0').bind('change' + ns, function() {
                 self._removeErrors(this);
-                self._lxSelect(0);
+                self.lxSelect(0);
             });
             $(selector + '_L1').bind('change' + ns, function() {
                 self._removeErrors(this);
-                self._lxSelect(1);
+                self.lxSelect(1);
             });
             $(selector + '_L2').bind('change' + ns, function() {
                 self._removeErrors(this);
-                self._lxSelect(2);
+                self.lxSelect(2);
             });
             $(selector + '_L3').bind('change' + ns, function() {
                 self._removeErrors(this);
-                self._lxSelect(3);
+                self.lxSelect(3);
             });
             $(selector + '_L4').bind('change' + ns, function() {
                 self._removeErrors(this);
-                self._lxSelect(4);
+                self.lxSelect(4);
             });
             $(selector + '_L5').bind('change' + ns, function() {
                 self._removeErrors(this);
-                self._lxSelect(5);
+                self.lxSelect(5);
             });
 
             $(selector + '_address,' +

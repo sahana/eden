@@ -544,6 +544,8 @@ class register(S3CustomController):
                       # --------------------------------------------
                       s3db.gis_location_id("location_id",
                                            widget = S3LocationSelector(
+                                                       levels = ("L1", "L2", "L3"),
+                                                       required_levels = ("L1", "L2", "L3"),
                                                        show_address = False,
                                                        show_postcode = False,
                                                        show_map = False,
@@ -654,6 +656,16 @@ class register(S3CustomController):
                        (18, T("Comments")),
                        (19, T("Privacy")),
                        )
+
+        # Geocoder
+        # @ToDo: Either move Address into LocationSelector or make a variant of geocoder.js to match these IDs
+        #s3 = current.response.s3
+        #s3.scripts.append("/%s/static/themes/RLP/js/geocoder.js" % r.application)
+        #s3.jquery_ready.append('''S3.rlp_GeoCoder("pr_address_location_id")''')
+        #s3.js_global.append('''i18n.location_found="%s"
+#i18n.location_not_found="%s"''' % (T("Address Found"),
+        #                           T("Address NOT Found"),
+        #                           ))
 
         return formfields, required_fields, subheadings
 
@@ -1200,5 +1212,28 @@ class verify_email(S3CustomController):
                                          )
         if not success:
             current.response.error = auth_messages.unable_send_email
+
+# =============================================================================
+class geocode(S3CustomController):
+    """
+        Custom Geocoder
+        - looks up Lat/Lon from Address
+        - looks up Lx from Lat/Lon
+    """
+
+    def __call__(self):
+
+        gis = current.gis
+
+        address = current.request.post_vars.get("address")
+
+        latlon = gis.geocode(address)
+        if not isinstance(latlon, dict):
+            return None
+
+        results = gis.geocode_r(latlon["lat"], latlon["lon"])
+
+        current.response.headers["Content-Type"] = "application/json"
+        return json.dumps(results)
 
 # END =========================================================================

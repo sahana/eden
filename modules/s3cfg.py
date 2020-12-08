@@ -1411,6 +1411,7 @@ class S3Config(Storage):
             Which Geocoder Service should be used?
             Supported options:
                 "nominatim" (default)
+                "geonames"
                 "google"
         """
         return self.gis.get("geocode_service", "nominatim")

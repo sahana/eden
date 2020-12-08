@@ -505,11 +505,16 @@ class GIS(object):
 
         if geocoder == "nominatim":
             g = geocoders.Nominatim(user_agent = "Sahana Eden")
-            geocode_ = lambda names, g=g, **kwargs: g.geocode(names, **kwargs)
+        elif geocoder == "geonames":
+            username = settings.get_gis_api_google()
+            if not username:
+                current.log.error("Geocoder: No Username defined for GeoNames")
+                return "No Username"
+            g = geocoders.GeoNames(username = username)
         elif geocoder == "google":
-            api_key = settings.get_gis_api_google()
+            api_key = settings.get_gis_geonames_username()
             if not api_key:
-                current.log.error("Geocoder: No API Key")
+                current.log.error("Geocoder: No API Key defined for Google")
                 return "No API Key"
             g = geocoders.GoogleV3(api_key = api_key)
             #if current.gis.google_geocode_retry:
@@ -532,10 +537,13 @@ class GIS(object):
             #            attempts += 1
             #        return result
             #else:
-            geocode_ = lambda names, g=g, **kwargs: g.geocode(names, **kwargs)
+        elif callable(geocoder):
+            # A custom class
+            g = geocoder()
         else:
-            # @ToDo
             raise NotImplementedError
+
+        geocode_ = lambda names, g=g, **kwargs: g.geocode(names, **kwargs)
 
         location = address
         if postcode:
@@ -618,27 +626,27 @@ class GIS(object):
                         wkt = None
                         if L5 and Lx[L5]["gis_feature_type"] != 1:
                             wkt = db(table.id == L5).select(table.wkt,
-                                                            limitby=(0, 1)
+                                                            limitby = (0, 1)
                                                             ).first().wkt
                             used_Lx = L5
                         elif L4 and Lx[L4]["gis_feature_type"] != 1:
                             wkt = db(table.id == L4).select(table.wkt,
-                                                            limitby=(0, 1)
+                                                            limitby = (0, 1)
                                                             ).first().wkt
                             used_Lx = L4
                         elif L3 and Lx[L3]["gis_feature_type"] != 1:
                             wkt = db(table.id == L3).select(table.wkt,
-                                                            limitby=(0, 1)
+                                                            limitby = (0, 1)
                                                             ).first().wkt
                             used_Lx = L3
                         elif L2 and Lx[L2]["gis_feature_type"] != 1:
                             wkt = db(table.id == L2).select(table.wkt,
-                                                            limitby=(0, 1)
+                                                            limitby = (0, 1)
                                                             ).first().wkt
                             used_Lx = L2
                         elif L1 and Lx[L1]["gis_feature_type"] != 1:
                             wkt = db(table.id == L1).select(table.wkt,
-                                                            limitby=(0, 1)
+                                                            limitby = (0, 1)
                                                             ).first().wkt
                             used_Lx = L1
                         elif L0:
@@ -647,7 +655,7 @@ class GIS(object):
                                                                table.lat_min,
                                                                table.lon_max,
                                                                table.lat_max,
-                                                               limitby=(0, 1)
+                                                               limitby = (0, 1)
                                                                ).first()
                             if not L0_row.wkt.startswith("POI"): # Point
                                 wkt = L0_row.wkt
@@ -674,7 +682,7 @@ class GIS(object):
                                                                    table.lat_min,
                                                                    table.lon_max,
                                                                    table.lat_max,
-                                                                   limitby=(0, 1)
+                                                                   limitby = (0, 1)
                                                                    ).first()
                             if lat < L0_row["lat_max"] and \
                                lat > L0_row["lat_min"] and \
