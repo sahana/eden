@@ -5,11 +5,11 @@
   {{try:}}{{=H2(title)}}{{except:}}{{pass}}
  </div>
 </div>
-{{try:}}<div class='row'>
+{{try:}}{{if intro:}}<div class='row'>
  <div class='small-12 columns'>
   {{=P(intro, _class="register-intro")}}
  </div>
-</div>{{except:}}{{pass}}
+</div>{{pass}}{{except:}}{{pass}}
 <div class='row'>
  <div class='small-12 columns'>
   {{include "key.html"}}

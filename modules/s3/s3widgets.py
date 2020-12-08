@@ -2736,6 +2736,9 @@ class S3WeeklyHoursWidget(FormWidget):
             @param ticks: render tick marks every n hours (0/None=off)
             @param intro: optional intro text to display above the
                           matrix in order to explain the widget
+                          - if specified as tuple (module, resourcename, postname),
+                            the intro text will be attempted to retrieve from the
+                            CMS (requires CMS module to be enabled)
         """
 
         if daynames:
@@ -2783,6 +2786,31 @@ class S3WeeklyHoursWidget(FormWidget):
         self.inject_script(widget_id, options)
 
         intro = self.intro
+        if isinstance(intro, tuple):
+            if len(intro) == 3 and current.deployment_settings.has_module("cms"):
+
+                # Get intro text from CMS
+                db = current.db
+                s3db = current.s3db
+
+                ctable = s3db.cms_post
+                ltable = s3db.cms_post_module
+                join = ltable.on((ltable.post_id == ctable.id) & \
+                                (ltable.module == intro[0]) & \
+                                (ltable.resource == intro[1]) & \
+                                (ltable.deleted == False))
+
+                query = (ctable.name == intro[2]) & \
+                        (ctable.deleted == False)
+                row = db(query).select(ctable.body,
+                                       join = join,
+                                       cache = s3db.cache,
+                                       limitby = (0, 1),
+                                       ).first()
+                intro = row.body if row else None
+            else:
+                intro = None
+
         if intro:
             return TAG[""](DIV(intro, _class="wh-intro"),
                            widget,
@@ -2838,7 +2866,7 @@ class S3WeeklyHoursWidget(FormWidget):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def represent(cls, rules, daynames=None):
+    def represent(cls, rules, daynames=None, html=True):
         """
             Represent a set of weekly time rules, as list of rules
             per weekday (HTML)
@@ -2848,6 +2876,7 @@ class S3WeeklyHoursWidget(FormWidget):
             @param daynames: override for default daynames, as dict
                              {daynumber: dayname}, with day number 0
                              meaning Sunday
+            @param html: produce HTML rather than text (overridable for e.g. XLS export)
 
             @returns: UL instance
         """
@@ -2892,7 +2921,8 @@ class S3WeeklyHoursWidget(FormWidget):
                     slots.append(slot)
                 slots_by_day[day] = slots
 
-        output = UL(_class="wh-schedule")
+        output = UL(_class="wh-schedule") if html else []
+
         for index in range(first_dow, first_dow + 7):
 
             day = index % 7
@@ -2904,10 +2934,14 @@ class S3WeeklyHoursWidget(FormWidget):
             else:
                 slotsrepr = "-"
 
-            output.append(LI(SPAN(dn[day], _class="wh-dayname"),
-                             slotsrepr,
-                             ))
-        return output
+            if html:
+                output.append(LI(SPAN(dn[day], _class="wh-dayname"),
+                                 slotsrepr,
+                                 ))
+            else:
+                output.append("%s: %s" % (dn[day], slotsrepr))
+
+        return output if html else "\n".join(output)
 
 # =============================================================================
 class S3EmbeddedComponentWidget(FormWidget):

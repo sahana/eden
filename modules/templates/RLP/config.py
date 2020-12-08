@@ -942,8 +942,11 @@ def config(settings):
         field.readable = field.writable = True
         if is_profile:
             # Add intro text for widget
-            field.widget = S3WeeklyHoursWidget(intro=T("Please mark all times when you are generally available during the week, click boxes to select/deselect hours individually or hold the left mouse button pressed and move over the boxes to select/deselect multiple."))
-        field.represent = S3WeeklyHoursWidget.represent
+            field.widget = S3WeeklyHoursWidget(intro = ("pr", "person_availability", "HoursMatrixIntro"))
+        if r.representation == "xls":
+            field.represent = lambda v: S3WeeklyHoursWidget.represent(v, html=False)
+        else:
+            field.represent = S3WeeklyHoursWidget.represent
 
         # Configure availability comments
         field = avtable.comments
@@ -1006,6 +1009,7 @@ def config(settings):
             # Email address
             list_fields.insert(-2, (T("Email"), "email.value"))
             if coordinator:
+                list_fields.append((T("Skills / Resources"), "competency.skill_id"))
                 # Office information
                 office = "volunteer_record.site_id$site_id:org_office"
                 list_fields.extend([
@@ -2319,6 +2323,7 @@ i18n.location_not_found="%s"''' % (T("Address Found"),
             if not volunteer_id:
                 list_fields[0:0] =  [(T("Pool"), "person_id$pool_membership.group_id"),
                                      "person_id",
+                                     "person_id$occupation_type_person.occupation_type_id",
                                      ]
             if multiple_orgs:
                 list_fields.insert(0, "organisation_id")
