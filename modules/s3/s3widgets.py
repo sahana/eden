@@ -2736,6 +2736,9 @@ class S3WeeklyHoursWidget(FormWidget):
             @param ticks: render tick marks every n hours (0/None=off)
             @param intro: optional intro text to display above the
                           matrix in order to explain the widget
+                          - if specified as tuple (module, resourcename, postname),
+                            the intro text will be attempted to retrieve from the
+                            CMS (requires CMS module to be enabled)
         """
 
         if daynames:
@@ -2783,6 +2786,31 @@ class S3WeeklyHoursWidget(FormWidget):
         self.inject_script(widget_id, options)
 
         intro = self.intro
+        if isinstance(intro, tuple):
+            if len(intro) == 3 and current.deployment_settings.has_module("cms"):
+
+                # Get intro text from CMS
+                db = current.db
+                s3db = current.s3db
+
+                ctable = s3db.cms_post
+                ltable = s3db.cms_post_module
+                join = ltable.on((ltable.post_id == ctable.id) & \
+                                (ltable.module == intro[0]) & \
+                                (ltable.resource == intro[1]) & \
+                                (ltable.deleted == False))
+
+                query = (ctable.name == intro[2]) & \
+                        (ctable.deleted == False)
+                row = db(query).select(ctable.body,
+                                       join = join,
+                                       cache = s3db.cache,
+                                       limitby = (0, 1),
+                                       ).first()
+                intro = row.body if row else None
+            else:
+                intro = None
+
         if intro:
             return TAG[""](DIV(intro, _class="wh-intro"),
                            widget,

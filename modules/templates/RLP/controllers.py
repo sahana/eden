@@ -274,7 +274,26 @@ class register(S3CustomController):
 
         # Page title and intro text
         title = T("Volunteer Registration")
-        intro = T("Please fill in all relevant information for your deployment. To support the choice of suitable candidates we especially need information about your place of residence (postcode and town), your contact information (phone and email) and the weekly working time (hours per week) you are able to support.")
+
+        # Get intro text from CMS
+        db = current.db
+        s3db = current.s3db
+
+        ctable = s3db.cms_post
+        ltable = s3db.cms_post_module
+        join = ltable.on((ltable.post_id == ctable.id) & \
+                        (ltable.module == "auth") & \
+                        (ltable.resource == "user") & \
+                        (ltable.deleted == False))
+
+        query = (ctable.name == "SelfRegistrationIntro") & \
+                (ctable.deleted == False)
+        row = db(query).select(ctable.body,
+                                join = join,
+                                cache = s3db.cache,
+                                limitby = (0, 1),
+                                ).first()
+        intro = row.body if row else None
 
         # Form Fields
         formfields, required_fields, subheadings = self.formfields()
@@ -607,7 +626,7 @@ class register(S3CustomController):
                             ),
                       Field("schedule_json", "json",
                             label = T("Availability Schedule"),
-                            widget = S3WeeklyHoursWidget(intro=T("Please mark all times when you are generally available during the week, click boxes to select/deselect hours individually or hold the left mouse button pressed and move over the boxes to select/deselect multiple.")),
+                            widget = S3WeeklyHoursWidget(intro = ("pr", "person_availability", "HoursMatrixIntro"))
                             ),
                       Field("availability_comments", "text",
                             label = T("Availability Comments"),
