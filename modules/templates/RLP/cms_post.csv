@@ -8,5 +8,5 @@ Message Office,hrm,delegation,Volunteer {volunteer_id} {volunteer_name} has been
 WelcomeMessageDisabled,auth,user,"Welcome to the {system_name} Portal!
 
 You can edit your user profile at {profile}",Rename into ”WelcomeMessage” to activate welcome message
-HoursMatrixIntro,pr,person_availability,"Bitte markieren Sie alle Zeiten zu denen Sie während der Woche grundsätzlich verfügbar sind. Die Spalten der untenstehenden Tabelle bilden Uhrzeiten ab. Klicken Sie auf die Kästchen um einzelne Stunden aus/abzuwählen, oder halten Sie die linke Maustaste gedrückt und fahren Sie über die Kästchen um mehrere nacheinander aus/abzuwählen",
+HoursMatrixIntro,pr,person_availability,"Bitte markieren Sie alle Zeiten zu denen Sie während der Woche grundsätzlich verfügbar sind. Die Spalten der untenstehenden Tabelle bilden Uhrzeiten ab. Klicken Sie auf die Kästchen um einzelne Stunden aus/abzuwählen, oder halten Sie die linke Maustaste gedrückt und fahren Sie über die Kästchen um mehrere nacheinander aus/abzuwählen.",
 SelfRegistrationIntro,auth,user,"Bitte tragen Sie hier alle relevanten Informationen für einen Einsatz ein. Für die Suche nach geeigneten UnterstützerInnen ist vor allem die Angabe Ihres Wohnorts (PLZ und Wohnort), Ihrer Kontaktdaten (Telefon und E-Mail) und die Angabe Ihrer wöchentlichen Verfügbarkeit (Stunden/Woche) wichtig.",
