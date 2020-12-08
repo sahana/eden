@@ -27,12 +27,12 @@
          Volume.................supply_item.volume
          Quantity...............inv_inv_item.quantity
          Unit Value.............inv_inv_item.pack_value
+         Currency...............inv_inv_item.currency
          Bin....................inv_inv_item.bin
          Expiry Date............inv_inv_item.expiry_date
          Supplier/Donor.........inv_inv_item.supply_org_id
          Tracking Number........inv_inv_item.tracking_no
          Owned By (Organisation/Branch).inv_inv_item.organisation_id
-         Currency...............currency
          Comments...............comments
 
     *********************************************************************** -->

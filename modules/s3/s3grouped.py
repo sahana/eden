@@ -1283,7 +1283,7 @@ class S3GroupedItems(object):
             for group in self.groups:
                 value = group[key]
                 if group:
-                    group_repr = group.__represent(level = level+1)
+                    group_repr = group.__represent(level = level + 1)
                 else:
                     group_repr = "[empty group]"
                 output = "%s\n%s=> %s: %s\n%s" % \
@@ -1499,30 +1499,30 @@ class S3GroupAggregate(object):
                 else:
                     values = [v for v in values
                               if isinstance(v, INTEGER_TYPES + (float,))]
-                if method == "sum":
-                    try:
-                        result = math.fsum(values)
-                    except (TypeError, ValueError):
-                        result = None
-                elif method == "min":
-                    try:
-                        result = min(values)
-                    except (TypeError, ValueError):
-                        result = None
-                elif method == "max":
-                    try:
-                        result = max(values)
-                    except (TypeError, ValueError):
-                        result = None
-                elif method == "avg":
-                    num = len(values)
-                    if num:
+                    if method == "sum":
                         try:
-                            result = sum(values) / float(num)
+                            result = round(math.fsum(values), 2)
                         except (TypeError, ValueError):
                             result = None
-                    else:
-                        result = None
+                    elif method == "min":
+                        try:
+                            result = min(values)
+                        except (TypeError, ValueError):
+                            result = None
+                    elif method == "max":
+                        try:
+                            result = max(values)
+                        except (TypeError, ValueError):
+                            result = None
+                    elif method == "avg":
+                        num = len(values)
+                        if num:
+                            try:
+                                result = sum(values) / float(num)
+                            except (TypeError, ValueError):
+                                result = None
+                        else:
+                            result = None
         return result
 
     # -------------------------------------------------------------------------

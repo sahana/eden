@@ -1973,17 +1973,16 @@ $.filterOptionsS3({
         # Lookup Volume per item
         table = current.s3db.supply_item
         try:
-            volume = current.db(table.id == row.item_id).select(
-                                                            table.volume,
-                                                            limitby = (0, 1),
-                                                            ).first().volume
+            volume = current.db(table.id == row.item_id).select(table.volume,
+                                                                limitby = (0, 1)
+                                                                ).first().volume
         except AttributeError:
             # No (such) item
             return current.messages["NONE"]
 
         # Return the total volume
         if quantity is not None and volume is not None:
-            return round(quantity * volume, 3)
+            return round(quantity * volume, 2)
         else:
             # Unknown
             return current.messages["NONE"]
@@ -2004,10 +2003,9 @@ $.filterOptionsS3({
         # Lookup Weight per item
         table = current.s3db.supply_item
         try:
-            weight = current.db(table.id == row.item_id).select(
-                                                            table.weight,
-                                                            limitby = (0, 1),
-                                                            ).first().weight
+            weight = current.db(table.id == row.item_id).select(table.weight,
+                                                                limitby = (0, 1)
+                                                                ).first().weight
         except AttributeError:
             # No (such) item
             return current.messages["NONE"]
@@ -4885,7 +4883,7 @@ def inv_item_total_volume(row):
     if volume is None:
         return current.messages["NONE"]
     else:
-        return round(quantity * volume, 3)
+        return round(quantity * volume, 2)
 
 # -----------------------------------------------------------------------------
 def inv_stock_movements(resource, selectors, orderby):
