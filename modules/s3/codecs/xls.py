@@ -259,11 +259,11 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
         row_limit = 65536
         sheetnum = len(rows) / row_limit
         # Can't have a / in the sheet_name, so replace any with a space
-        sheet_name = str(title.replace("/", " "))
-        if len(sheet_name) > 31:
+        sheet_name = s3_str(title.replace("/", " "))
+        if len(sheet_name) > 28:
             # Sheet name cannot be over 31 chars
             # (take sheet number suffix into account)
-            sheet_name = sheet_name[:31] if sheetnum == 1 else sheet_name[:28]
+            sheet_name = sheet_name[:28]
         count = 1
         while len(sheets) <= sheetnum:
             sheets.append(book.add_sheet("%s-%s" % (sheet_name, count)))

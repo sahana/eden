@@ -2838,7 +2838,7 @@ class S3WeeklyHoursWidget(FormWidget):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def represent(cls, rules, daynames=None):
+    def represent(cls, rules, daynames=None, html=True):
         """
             Represent a set of weekly time rules, as list of rules
             per weekday (HTML)
@@ -2848,6 +2848,7 @@ class S3WeeklyHoursWidget(FormWidget):
             @param daynames: override for default daynames, as dict
                              {daynumber: dayname}, with day number 0
                              meaning Sunday
+            @param html: produce HTML rather than text (overridable for e.g. XLS export)
 
             @returns: UL instance
         """
@@ -2892,7 +2893,8 @@ class S3WeeklyHoursWidget(FormWidget):
                     slots.append(slot)
                 slots_by_day[day] = slots
 
-        output = UL(_class="wh-schedule")
+        output = UL(_class="wh-schedule") if html else []
+
         for index in range(first_dow, first_dow + 7):
 
             day = index % 7
@@ -2904,10 +2906,14 @@ class S3WeeklyHoursWidget(FormWidget):
             else:
                 slotsrepr = "-"
 
-            output.append(LI(SPAN(dn[day], _class="wh-dayname"),
-                             slotsrepr,
-                             ))
-        return output
+            if html:
+                output.append(LI(SPAN(dn[day], _class="wh-dayname"),
+                                 slotsrepr,
+                                 ))
+            else:
+                output.append("%s: %s" % (dn[day], slotsrepr))
+
+        return output if html else "\n".join(output)
 
 # =============================================================================
 class S3EmbeddedComponentWidget(FormWidget):
