@@ -3750,7 +3750,16 @@ class S3Resource(object):
                 ftype = str(field.type)
 
                 represent = field.represent
-                if not hasattr(represent, "skip_dt_orderby") and \
+                if ftype == "json":
+                    # Can't sort by JSON fields
+                    # => try using corresponding id column to maintain some
+                    #    fake yet consistent sort order:
+                    tn = field.tablename
+                    try:
+                        orderby.append("%s%s" % (db[tn]._id, direction(i)))
+                    except AttributeError:
+                        continue
+                elif not hasattr(represent, "skip_dt_orderby") and \
                    hasattr(represent, "dt_orderby"):
                     # Custom orderby logic in field.represent
                     field.represent.dt_orderby(field,
