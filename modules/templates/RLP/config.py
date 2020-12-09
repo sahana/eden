@@ -1552,16 +1552,16 @@ def config(settings):
             if r.controller in ("vol", "default") and \
                not r.component and \
                isinstance(output, dict):
-                # Geocoder
-                s3.scripts.append("/%s/static/themes/RLP/js/geocoder.js" % r.application)
-                if r.record:
-                    s3.jquery_ready.append('''S3.rlp_GeoCoder("sub_defaultaddress_defaultaddress_i_location_id_edit_0")''')
-                else:
-                    s3.jquery_ready.append('''S3.rlp_GeoCoder("sub_defaultaddress_defaultaddress_i_location_id_edit_none")''')
-                s3.js_global.append('''i18n.location_found="%s"
-i18n.location_not_found="%s"''' % (T("Address Found"),
-                                   T("Address NOT Found"),
-                                   ))
+                # Geocoder (disabled for now)
+                #s3.scripts.append("/%s/static/themes/RLP/js/geocoder.js" % r.application)
+                #if r.record:
+                #    s3.jquery_ready.append('''S3.rlp_GeoCoder("sub_defaultaddress_defaultaddress_i_location_id_edit_0")''')
+                #else:
+                #    s3.jquery_ready.append('''S3.rlp_GeoCoder("sub_defaultaddress_defaultaddress_i_location_id_edit_none")''')
+                #s3.js_global.append('''i18n.location_found="%s"
+#i18n.location_not_found="%s"''' % (T("Address Found"),
+                #                   T("Address NOT Found"),
+                #                   ))
                 if r.record and \
                    r.method in (None, "update", "read"):
 

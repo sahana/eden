@@ -6408,7 +6408,8 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         for level in required_levels:
             l = values_get(level)
             if not l:
-                errors[level] = current.T("%(level)s is Required!") % {"level": level}
+                errors[level] = current.T("Location Hierarchy is Required!")
+                break
 
         # Postcode Required?
         postcode = values_get("postcode")
