@@ -10,7 +10,7 @@ from gluon.storage import Storage
 from s3 import FS, IS_LOCATION, S3DateFilter, S3Represent, s3_fieldmethod, s3_fullname, s3_yes_no_represent
 from s3dal import original_tablename
 
-from .rlpgeonames import rlp_GeoNames
+#from .rlpgeonames import rlp_GeoNames
 
 ALLOWED_FORMATS = ("html", "iframe", "popup", "aadata", "json", "xls", "pdf")
 
@@ -72,8 +72,10 @@ def config(settings):
     # Uncomment to show the Print control:
     # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
     #settings.gis.print_button = True
-    if rlp_GeoNames.enable:
-        settings.gis.geocode_service = rlp_GeoNames
+
+    # Use custom geocoder (disabled until production-ready)
+    #if rlp_GeoNames.enable:
+    #    settings.gis.geocode_service = rlp_GeoNames
 
     # L10n settings
     # Languages used in the deployment (used for Language Toolbar, GIS Locations, etc)
