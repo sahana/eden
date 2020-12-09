@@ -3,18 +3,14 @@
 import datetime
 
 from collections import OrderedDict
-from functools import partial
 
 from gluon import current, redirect, URL, A, DIV, TABLE, TAG, TR
 from gluon.storage import Storage
 
 from s3 import FS, IS_LOCATION, S3DateFilter, S3Represent, s3_fieldmethod, s3_fullname, s3_yes_no_represent
-from s3compat import urlencode
 from s3dal import original_tablename
 
-from geopy.geocoders import GeoNames
-from geopy.geocoders.base import DEFAULT_SENTINEL
-from geopy.util import logger
+from .rlpgeonames import rlp_GeoNames
 
 ALLOWED_FORMATS = ("html", "iframe", "popup", "aadata", "json", "xls", "pdf")
 
@@ -76,7 +72,8 @@ def config(settings):
     # Uncomment to show the Print control:
     # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
     #settings.gis.print_button = True
-    settings.gis.geocode_service = rlp_GeoNames
+    if rlp_GeoNames.enable:
+        settings.gis.geocode_service = rlp_GeoNames
 
     # L10n settings
     # Languages used in the deployment (used for Language Toolbar, GIS Locations, etc)
@@ -2999,92 +2996,5 @@ class rlp_DelegatedPersonRepresent(S3Represent):
         url = URL(c = "vol", f = "person", args = [row.id], extension = "")
 
         return A(v, _href = url)
-
-# =============================================================================
-class rlp_GeoNames(GeoNames):
-
-    geocode_path = '/mapbender/geoportal/gaz_geom_mobile.php?q=fall%2010&outputFormat=json&resultTarget=web&searchEPSG=4326&forcePoint=true&forceGeonames=true'
-
-    def __init__(
-            self,
-            *,
-            timeout=DEFAULT_SENTINEL,
-            proxies=DEFAULT_SENTINEL,
-            user_agent=None,
-            ssl_context=DEFAULT_SENTINEL,
-            adapter_factory=None,
-            scheme='https'
-    ):
-        """
-            RLP's GeoNames-compatible GeoCoder service
-        """
-        super().__init__(
-            username="dummy",
-            scheme=scheme,
-            timeout=timeout,
-            proxies=proxies,
-            user_agent=user_agent,
-            ssl_context=ssl_context,
-            adapter_factory=adapter_factory,
-        )
-
-        domain = 'www.geoportal.rlp.de'
-        self.api = (
-            "%s://%s%s" % (self.scheme, domain, self.geocode_path)
-        )
-
-    def geocode(
-            self,
-            query,
-            *,
-            exactly_one=True,
-            timeout=DEFAULT_SENTINEL,
-            country=None,
-            country_bias=None
-    ):
-        """
-        Return a location point by address.
-
-        :param str query: The address or query you wish to geocode.
-
-        :param bool exactly_one: Return one result or a list of results, if
-            available.
-
-        :param int timeout: Time, in seconds, to wait for the geocoding service
-            to respond before raising a :class:`geopy.exc.GeocoderTimedOut`
-            exception. Set this only if you wish to override, on this call
-            only, the value set during the geocoder's initialization.
-
-        :param country: Limit records to the specified countries.
-            Two letter country code ISO-3166 (e.g. ``FR``). Might be
-            a single string or a list of strings.
-        :type country: str or list
-
-        :param str country_bias: Records from the country_bias are listed first.
-            Two letter country code ISO-3166.
-
-        :rtype: ``None``, :class:`geopy.location.Location` or a list of them, if
-            ``exactly_one=False``.
-        """
-        params = [
-            ('name_startsWith', query),
-        ]
-
-        #if country_bias:
-        #    params.append(('countryBias', country_bias))
-
-        #if not country:
-        #    country = []
-        #if isinstance(country, str):
-        #    country = [country]
-        #for country_item in country:
-        #    params.append(('country', country_item))
-
-        if exactly_one:
-            params.append(('maxRows', 1))
-        url = "&".join((self.api, urlencode(params)))
-        logger.debug("%s.geocode: %s", self.__class__.__name__, url)
-        callback = partial(self._parse_json, exactly_one=exactly_one)
-        return self._call_geocoder(url, callback, timeout=timeout)
 
 # END =========================================================================
