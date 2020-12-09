@@ -1486,43 +1486,45 @@ class S3GroupAggregate(object):
             @return: the aggregated value
         """
 
-        result = None
+        if values is None:
+            return None
 
-        if values is not None:
-            try:
-                values = [v for v in values if v is not None]
-            except TypeError:
-                result = None
-            else:
-                if method == "count":
-                    result = len(set(values))
+        try:
+            values = [v for v in values if v is not None]
+        except TypeError:
+            return None
+
+        result = None
+        if method == "count":
+            result = len(set(values))
+        else:
+            values = [v for v in values
+                        if isinstance(v, INTEGER_TYPES + (float,))]
+            if method == "sum":
+                try:
+                    result = round(math.fsum(values), 2)
+                except (TypeError, ValueError):
+                    result = None
+            elif method == "min":
+                try:
+                    result = min(values)
+                except (TypeError, ValueError):
+                    result = None
+            elif method == "max":
+                try:
+                    result = max(values)
+                except (TypeError, ValueError):
+                    result = None
+            elif method == "avg":
+                num = len(values)
+                if num:
+                    try:
+                        result = sum(values) / float(num)
+                    except (TypeError, ValueError):
+                        result = None
                 else:
-                    values = [v for v in values
-                              if isinstance(v, INTEGER_TYPES + (float,))]
-                    if method == "sum":
-                        try:
-                            result = round(math.fsum(values), 2)
-                        except (TypeError, ValueError):
-                            result = None
-                    elif method == "min":
-                        try:
-                            result = min(values)
-                        except (TypeError, ValueError):
-                            result = None
-                    elif method == "max":
-                        try:
-                            result = max(values)
-                        except (TypeError, ValueError):
-                            result = None
-                    elif method == "avg":
-                        num = len(values)
-                        if num:
-                            try:
-                                result = sum(values) / float(num)
-                            except (TypeError, ValueError):
-                                result = None
-                        else:
-                            result = None
+                    result = None
+
         return result
 
     # -------------------------------------------------------------------------

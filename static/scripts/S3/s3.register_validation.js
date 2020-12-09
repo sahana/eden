@@ -10,27 +10,22 @@ var s3_register_validation = function() {
     });
 
     // Read options
+    var mobile_phone_mandatory = false,
+        organisation_required = false,
+        terms_of_service_required = false;
     if (S3.auth_registration_mobile_phone_mandatory) {
-        var mobile_phone_mandatory = true;
-    } else {
-        var mobile_phone_mandatory = false;
+        mobile_phone_mandatory = true;
     }
-
     if (S3.auth_registration_organisation_required) {
-        var organisation_required = true;
-    } else {
-        var organisation_required = false;
+        organisation_required = true;
+    }
+    if (S3.auth_terms_of_service) {
+        terms_of_service_required = true;
     }
 
     if (S3.auth_registration_hide_organisation) {
         // Hide the Organisation row initially
         $('#auth_user_organisation_id__row').hide();
-    }
-
-    if (S3.auth_terms_of_service) {
-        var terms_of_service_required = true;
-    } else {
-        var terms_of_service_required = false;
     }
 
     if (undefined != S3.whitelists) {
@@ -47,12 +42,12 @@ var s3_register_validation = function() {
                     $('#auth_user_organisation_id__row').show();
                 }
             }
-        })
+        });
     }
 
     var email_row = $('#auth_user_email__row');
-    var div_style = email_row.hasClass('control-group') // Bootstrap
-                     || email_row.hasClass('form-row'); // Foundation
+    // Detect formstyle using DIVs as form rows: Foundation=form-row, Bootstrap=control-group
+    var div_style = email_row.hasClass('form-row') || email_row.hasClass('control-group');
 
     // Validate signup form on keyup and submit
     $('.auth_register').validate({

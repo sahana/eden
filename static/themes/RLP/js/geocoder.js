@@ -38,14 +38,14 @@ $(document).ready(function(){
                             field.locationselector('lxSelect', 1, result.L1);
                             if (result.L2) {
                                 // @ToDo: Rewrite with callbacks for better speed/reliability
-                                function selectL2() {
+                                var selectL2 = function() {
                                     field.locationselector('lxSelect', 2, result.L2);
-                                }
+                                };
                                 setTimeout(selectL2, 500);
                                 if (result.L3) {
-                                    function selectL3() {
+                                    var selectL3 = function() {
                                         field.locationselector('lxSelect', 3, result.L3);
-                                    }
+                                    };
                                     setTimeout(selectL3, 250);
                                 }
                             }

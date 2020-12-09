@@ -1368,7 +1368,7 @@ class GIS(object):
                                                             left = left,
                                                             limitby = (0, 1)
                                                             ).first()
-                    
+
             else:
                 # The requested config must be invalid, so just use site default
                 config_id = 0
