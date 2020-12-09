@@ -682,8 +682,8 @@ class register(S3CustomController):
         #s3.scripts.append("/%s/static/themes/RLP/js/geocoder.js" % r.application)
         #s3.jquery_ready.append('''S3.rlp_GeoCoder("pr_address_location_id")''')
         #s3.js_global.append('''i18n.location_found="%s"
-#i18n.location_not_found="%s"''' % (T("Address Found"),
-        #                           T("Address NOT Found"),
+#i18n.location_not_found="%s"''' % (T("Location Found"),
+        #                           T("Location NOT Found"),
         #                           ))
 
         return formfields, required_fields, subheadings
@@ -1236,7 +1236,7 @@ class verify_email(S3CustomController):
 class geocode(S3CustomController):
     """
         Custom Geocoder
-        - looks up Lat/Lon from Address
+        - looks up Lat/Lon from Postcode &/or Address
         - looks up Lx from Lat/Lon
     """
 
@@ -1244,9 +1244,15 @@ class geocode(S3CustomController):
 
         gis = current.gis
 
-        address = current.request.post_vars.get("address")
+        post_vars_get = current.request.post_vars.get
+        postcode = post_vars_get("postcode")
+        address = post_vars_get("address")
+        if address:
+            full_address = "%s %s" %(postcode, address)
+        else:
+            full_address = postcode
 
-        latlon = gis.geocode(address)
+        latlon = gis.geocode(full_address)
         if not isinstance(latlon, dict):
             return None
 

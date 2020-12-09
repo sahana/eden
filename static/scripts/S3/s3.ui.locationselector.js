@@ -356,7 +356,7 @@
          * @param {bool} refresh - whether this is called before user input
          *                         (in which case we want to prevent geocoding)
          */
-        lxSelectFinal: function(refresh) {
+        _lxSelectFinal: function(refresh) {
             if (!refresh) {
                 // Update the data dict
                 // - also writes data dict back to real input
@@ -483,7 +483,7 @@
                         this._geocodeDecision();
                     }
                     // Call DRY Helper
-                    this.lxSelectFinal(refresh);
+                    this._lxSelectFinal(refresh);
                 } else {
                     // Do we need to read hierarchy?
                     var locations,
@@ -603,13 +603,13 @@
                                 }
                             }
                             // Call DRY Helper
-                            that.lxSelectFinal(refresh);
+                            that._lxSelectFinal(refresh);
                         }
                     );
                 }
             } else {
                 // Call DRY Helper
-                this.lxSelectFinal(refresh);
+                this._lxSelectFinal(refresh);
             }
         },
 

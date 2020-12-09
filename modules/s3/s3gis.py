@@ -279,7 +279,7 @@ class GIS(object):
 
         table = current.s3db.gis_layer_kml
         record = current.db(table.id == record_id).select(table.url,
-                                                          limitby=(0, 1)
+                                                          limitby = (0, 1)
                                                           ).first()
         url = record.url
 
@@ -300,7 +300,7 @@ class GIS(object):
                 if statinfo.st_size:
                     # Use cached version
                     #date = db(query).select(cachetable.modified_on,
-                    #                        limitby=(0, 1)).first().modified_on
+                    #                        limitby = (0, 1)).first().modified_on
                     #response.warning += "%s %s %s\n" % (url,
                     #                                    T("not accessible - using cached version from"),
                     #                                    str(date))
@@ -1020,7 +1020,7 @@ class GIS(object):
                                                     table.level,
                                                     table.path,
                                                     table.parent,
-                                                    limitby=(0, 1)).first()
+                                                    limitby = (0, 1)).first()
 
         return feature
 
@@ -1809,7 +1809,7 @@ class GIS(object):
             location = db(table.id == location).select(table.id,
                                                        table.path,
                                                        table.level,
-                                                       limitby=(0, 1),
+                                                       limitby = (0, 1),
                                                        cache=s3db.cache).first()
         except:
             # location is passed as record
@@ -1823,7 +1823,7 @@ class GIS(object):
                 query = (ttable.tag == "ISO2") & \
                         (ttable.location_id == location.id)
                 tag = db(query).select(ttable.value,
-                                       limitby=(0, 1)).first()
+                                       limitby = (0, 1)).first()
                 try:
                     return tag.value
                 except:
@@ -1841,7 +1841,7 @@ class GIS(object):
                             query = (ttable.tag == "ISO2") & \
                                     (ttable.location_id == row.id)
                             tag = db(query).select(ttable.value,
-                                                   limitby=(0, 1)).first()
+                                                   limitby = (0, 1)).first()
                             try:
                                 return tag.value
                             except:
@@ -1898,7 +1898,7 @@ class GIS(object):
                                                               locations.lon_max,
                                                               locations.lat_min,
                                                               locations.lat_max,
-                                                              limitby=(0, 1)
+                                                              limitby = (0, 1)
                                                               ).first()
             if location:
                 wkt = location.wkt
@@ -2254,7 +2254,7 @@ class GIS(object):
                                                     table.lon,
                                                     table.parent,
                                                     table.path,
-                                                    limitby=(0, 1)).first()
+                                                    limitby = (0, 1)).first()
 
         # Zero is an allowed value, hence explicit test for None.
         if "lon" in feature and "lat" in feature and \
@@ -2484,7 +2484,7 @@ class GIS(object):
                                                            ftable.individual,
                                                            ftable.points,
                                                            ftable.trackable,
-                                                           limitby=(0, 1)
+                                                           limitby = (0, 1)
                                                            ).first()
 
         else:
@@ -2623,7 +2623,7 @@ class GIS(object):
                 #    duration = "{:.2f}".format(duration.total_seconds())
                 #    if layer_id:
                 #        layer_name = db(ftable.id == layer_id).select(ftable.name,
-                #                                                      limitby=(0, 1)
+                #                                                      limitby = (0, 1)
                 #                                                      ).first().name
                 #    else:
                 #        layer_name = "Unknown"
@@ -3033,7 +3033,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             ctable = current.s3db.gis_config
             the_set = current.db(ctable.id == config_id)
             config = the_set.select(ctable.temp,
-                                    limitby=(0, 1)
+                                    limitby = (0, 1)
                                     ).first()
             try:
                 if config.temp:
@@ -3236,7 +3236,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             # WKT not included by default in feature, so retrieve this now
             table = current.s3db.gis_location
             wkt = current.db(table.id == feature.id).select(table.wkt,
-                                                            limitby=(0, 1)
+                                                            limitby = (0, 1)
                                                             ).first().wkt
 
         try:
@@ -3367,7 +3367,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                             output="geojson")
                     else:
                         name = db(table.id == id).select(table.name,
-                                                         limitby=(0, 1)).first().name
+                                                         limitby = (0, 1)).first().name
                         sys.stderr.write("No WKT: L0 %s %s\n" % (name, id))
                         continue
                 else:
@@ -3436,7 +3436,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                 output="geojson")
                         else:
                             name = db(table.id == id).select(table.name,
-                                                             limitby=(0, 1)).first().name
+                                                             limitby = (0, 1)).first().name
                             sys.stderr.write("No WKT: L1 %s %s\n" % (name, id))
                             continue
                     else:
@@ -3497,7 +3497,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                     output="geojson")
                             else:
                                 name = db(table.id == id).select(table.name,
-                                                                 limitby=(0, 1)).first().name
+                                                                 limitby = (0, 1)).first().name
                                 sys.stderr.write("No WKT: L2 %s %s\n" % (name, id))
                                 continue
                         else:
@@ -3561,7 +3561,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                         output="geojson")
                                 else:
                                     name = db(table.id == id).select(table.name,
-                                                                     limitby=(0, 1)).first().name
+                                                                     limitby = (0, 1)).first().name
                                     sys.stderr.write("No WKT: L3 %s %s\n" % (name, id))
                                     continue
                             else:
@@ -3628,7 +3628,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                             output="geojson")
                                     else:
                                         name = db(table.id == id).select(table.name,
-                                                                         limitby=(0, 1)).first().name
+                                                                         limitby = (0, 1)).first().name
                                         sys.stderr.write("No WKT: L4 %s %s\n" % (name, id))
                                         continue
                                 else:
@@ -3833,7 +3833,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     #area = feat.GetField("Shape_Area")
                     try:
                         id = db(query).select(table.id,
-                                              limitby=(0, 1)).first().id
+                                              limitby = (0, 1)).first().id
                         query = (table.id == id)
                         db(query).update(gis_feature_type=gis_feature_type,
                                          wkt=wkt)
@@ -4131,7 +4131,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     (ttable.value == parentCode)
             parent = db(query).select(table.id,
                                       ttable.value,
-                                      limitby=(0, 1),
+                                      limitby = (0, 1),
                                       cache=cache).first()
             if not parent:
                 # Skip locations for which we don't have a valid parent
@@ -4829,7 +4829,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                     table.lon,
                                                     table.wkt,
                                                     table.L0,
-                                                    limitby=(0, 1)).first()
+                                                    limitby = (0, 1)).first()
                 name = feature.name
                 path = feature.path
                 lat = feature.lat
@@ -4887,7 +4887,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                     table.wkt,
                                                     table.L0,
                                                     table.L1,
-                                                    limitby=(0, 1)).first()
+                                                    limitby = (0, 1)).first()
                 inherited = feature.inherited
                 name = feature.name
                 parent = feature.parent
@@ -4903,7 +4903,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 _L0 = db(table.id == parent).select(table.name,
                                                     table.lat,
                                                     table.lon,
-                                                    limitby=(0, 1)).first()
+                                                    limitby = (0, 1)).first()
                 L0_name = _L0.name
                 L0_lat = _L0.lat
                 L0_lon = _L0.lon
@@ -4967,7 +4967,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                     table.L0,
                                                     table.L1,
                                                     table.L2,
-                                                    limitby=(0, 1)).first()
+                                                    limitby = (0, 1)).first()
                 inherited = feature.inherited
                 name = feature.name
                 parent = feature.parent
@@ -4985,14 +4985,14 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                    table.parent,
                                                    table.lat,
                                                    table.lon,
-                                                   limitby=(0, 1)).first()
+                                                   limitby = (0, 1)).first()
                 if Lx.level == "L1":
                     L1_name = Lx.name
                     _parent = Lx.parent
                     if _parent:
                         _path = "%s/%s/%s" % (_parent, parent, id)
                         L0_name = db(table.id == _parent).select(table.name,
-                                                                 limitby=(0, 1),
+                                                                 limitby = (0, 1),
                                                                  cache=current.s3db.cache
                                                                  ).first().name
                     else:
@@ -5072,7 +5072,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                     table.L1,
                                                     table.L2,
                                                     table.L3,
-                                                    limitby=(0, 1)).first()
+                                                    limitby = (0, 1)).first()
                 inherited = feature.inherited
                 name = feature.name
                 parent = feature.parent
@@ -5095,7 +5095,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                    table.lon,
                                                    table.L0,
                                                    table.L1,
-                                                   limitby=(0, 1)).first()
+                                                   limitby = (0, 1)).first()
                 if Lx.level == "L2":
                     L0_name = Lx.L0
                     L1_name = Lx.L1
@@ -5113,7 +5113,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                            table.L1,
                                                            table.lat,
                                                            table.lon,
-                                                           limitby=(0, 1)
+                                                           limitby = (0, 1)
                                                            ).first()
                         L0_name = Lx.L0
                         L1_name = Lx.L1
@@ -5133,7 +5133,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                         Lx = db(table.id == parent).select(table.L0,
                                                            table.lat,
                                                            table.lon,
-                                                           limitby=(0, 1)
+                                                           limitby = (0, 1)
                                                            ).first()
                         L0_name = Lx.L0
                 elif Lx.level == "L0":
@@ -5213,7 +5213,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                     table.L2,
                                                     table.L3,
                                                     table.L4,
-                                                    limitby=(0, 1)).first()
+                                                    limitby = (0, 1)).first()
                 inherited = feature.inherited
                 name = feature.name
                 parent = feature.parent
@@ -5238,7 +5238,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                    table.L0,
                                                    table.L1,
                                                    table.L2,
-                                                   limitby=(0, 1)).first()
+                                                   limitby = (0, 1)).first()
                 if Lx.level == "L3":
                     L0_name = Lx.L0
                     L1_name = Lx.L1
@@ -5258,7 +5258,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                            table.L2,
                                                            table.lat,
                                                            table.lon,
-                                                           limitby=(0, 1)
+                                                           limitby = (0, 1)
                                                            ).first()
                         L0_name = Lx.L0
                         L1_name = Lx.L1
@@ -5281,7 +5281,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                            table.L1,
                                                            table.lat,
                                                            table.lon,
-                                                           limitby=(0, 1)
+                                                           limitby = (0, 1)
                                                            ).first()
                         L0_name = Lx.L0
                         L1_name = Lx.L1
@@ -5302,7 +5302,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                         Lx = db(table.id == parent).select(table.L0,
                                                            table.lat,
                                                            table.lon,
-                                                           limitby=(0, 1)
+                                                           limitby = (0, 1)
                                                            ).first()
                         L0_name = Lx.L0
                 elif Lx.level == "L0":
@@ -5385,7 +5385,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                     table.L3,
                                                     table.L4,
                                                     table.L5,
-                                                    limitby=(0, 1)).first()
+                                                    limitby = (0, 1)).first()
                 inherited = feature.inherited
                 name = feature.name
                 parent = feature.parent
@@ -5412,7 +5412,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                    table.L1,
                                                    table.L2,
                                                    table.L3,
-                                                   limitby=(0, 1)).first()
+                                                   limitby = (0, 1)).first()
                 if Lx.level == "L4":
                     L0_name = Lx.L0
                     L1_name = Lx.L1
@@ -5434,7 +5434,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                            table.L3,
                                                            table.lat,
                                                            table.lon,
-                                                           limitby=(0, 1)
+                                                           limitby = (0, 1)
                                                            ).first()
                         L0_name = Lx.L0
                         L1_name = Lx.L1
@@ -5460,7 +5460,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                            table.L2,
                                                            table.lat,
                                                            table.lon,
-                                                           limitby=(0, 1)
+                                                           limitby = (0, 1)
                                                            ).first()
                         L0_name = Lx.L0
                         L1_name = Lx.L1
@@ -5484,7 +5484,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                            table.L1,
                                                            table.lat,
                                                            table.lon,
-                                                           limitby=(0, 1)
+                                                           limitby = (0, 1)
                                                            ).first()
                         L0_name = Lx.L0
                         L1_name = Lx.L1
@@ -5506,7 +5506,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                         Lx = db(table.id == parent).select(table.L0,
                                                            table.lat,
                                                            table.lon,
-                                                           limitby=(0, 1)
+                                                           limitby = (0, 1)
                                                            ).first()
                         L0_name = Lx.L0
                 elif Lx.level == "L0":
@@ -5591,7 +5591,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                 table.L3,
                                                 table.L4,
                                                 table.L5,
-                                                limitby=(0, 1)).first()
+                                                limitby = (0, 1)
+                                                ).first()
             inherited = feature.inherited
             level = feature.level
             name = feature.name
@@ -5627,7 +5628,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                table.L2,
                                                table.L3,
                                                table.L4,
-                                               limitby=(0, 1)).first()
+                                               limitby = (0, 1)).first()
             if Lx.level == "L5":
                 L0_name = Lx.L0
                 L1_name = Lx.L1
@@ -5651,7 +5652,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                        table.L4,
                                                        table.lat,
                                                        table.lon,
-                                                       limitby=(0, 1)
+                                                       limitby = (0, 1)
                                                        ).first()
                     L0_name = Lx.L0
                     L1_name = Lx.L1
@@ -5679,7 +5680,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                        table.L3,
                                                        table.lat,
                                                        table.lon,
-                                                       limitby=(0, 1)
+                                                       limitby = (0, 1)
                                                        ).first()
                     L0_name = Lx.L0
                     L1_name = Lx.L1
@@ -5704,7 +5705,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                        table.L2,
                                                        table.lat,
                                                        table.lon,
-                                                       limitby=(0, 1)
+                                                       limitby = (0, 1)
                                                        ).first()
                     L0_name = Lx.L0
                     L1_name = Lx.L1
@@ -5726,7 +5727,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                                        table.L1,
                                                        table.lat,
                                                        table.lon,
-                                                       limitby=(0, 1)
+                                                       limitby = (0, 1)
                                                        ).first()
                     L0_name = Lx.L0
                     L1_name = Lx.L1
@@ -5745,7 +5746,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     Lx = db(table.id == parent).select(table.L0,
                                                        table.lat,
                                                        table.lon,
-                                                       limitby=(0, 1)
+                                                       limitby = (0, 1)
                                                        ).first()
                     L0_name = Lx.L0
             elif Lx.level == "L0":
@@ -6815,7 +6816,7 @@ class MAP(DIV):
                 config_id = config.id
                 _config = db(ctable.id == config_id).select(ctable.uuid,
                                                             ctable.name,
-                                                            limitby=(0, 1),
+                                                            limitby = (0, 1),
                                                             ).first()
                 if MAP_ADMIN:
                     i18n["gis_my_maps"] = T("Saved Maps")
@@ -7040,7 +7041,7 @@ class MAP(DIV):
                     (ltable.base == True) & \
                     (ltable.enabled == True)
             layers = db(query).select(*fields,
-                                      limitby=(0, 1))
+                                      limitby = (0, 1))
             if not layers:
                 # Just show EmptyLayer
                 layer_types = [LayerEmpty]
@@ -7797,7 +7798,7 @@ def addFeatureQueries(feature_queries):
                 marker = db(mtable.id == marker).select(mtable.image,
                                                         mtable.height,
                                                         mtable.width,
-                                                        limitby=(0, 1),
+                                                        limitby = (0, 1),
                                                         cache=cache
                                                         ).first()
             if marker:
@@ -7900,7 +7901,7 @@ def addFeatureResources(feature_resources):
                                    stable.cluster_threshold,
                                    stable.style,
                                    left=left,
-                                   limitby=(0, 1),
+                                   limitby = (0, 1),
                                    orderby=orderby,
                                    ).first()
             _dir = layer.get("dir", row["gis_layer_config.dir"])
@@ -8608,7 +8609,7 @@ class LayerGeoRSS(Layer):
             download = True
             query = (cachetable.source == url)
             existing_cached_copy = db(query).select(cachetable.modified_on,
-                                                    limitby=(0, 1)).first()
+                                                    limitby = (0, 1)).first()
             refresh = self.refresh or 900 # 15 minutes set if we have no data (legacy DB)
             if existing_cached_copy:
                 modified_on = existing_cached_copy.modified_on
@@ -8901,7 +8902,7 @@ class LayerKML(Layer):
                 download = True
                 query = (cachetable.name == name)
                 cached = db(query).select(cachetable.modified_on,
-                                          limitby=(0, 1)).first()
+                                          limitby = (0, 1)).first()
                 refresh = self.refresh or 900 # 15 minutes set if we have no data (legacy DB)
                 if cached:
                     modified_on = cached.modified_on
@@ -9352,7 +9353,7 @@ class Marker(object):
                 marker = db(mtable.id == marker_id).select(mtable.image,
                                                            mtable.height,
                                                            mtable.width,
-                                                           limitby=(0, 1),
+                                                           limitby = (0, 1),
                                                            cache=s3db.cache
                                                            ).first()
             elif layer_id:
@@ -9367,7 +9368,7 @@ class Marker(object):
                 marker = db(query).select(mtable.image,
                                           mtable.height,
                                           mtable.width,
-                                          limitby=(0, 1)).first()
+                                          limitby = (0, 1)).first()
 
         if not marker:
             # Check to see if we're a Polygon/LineString
@@ -9376,14 +9377,14 @@ class Marker(object):
                 table = db.gis_layer_shapefile
                 query = (table.layer_id == layer_id)
                 layer = db(query).select(table.gis_feature_type,
-                                         limitby=(0, 1)).first()
+                                         limitby = (0, 1)).first()
                 if layer and layer.gis_feature_type != 1:
                     no_default = True
             #elif tablename == "gis_layer_feature":
             #    table = db.gis_layer_feature
             #    query = (table.layer_id == layer_id)
             #    layer = db(query).select(table.polygons,
-            #                             limitby=(0, 1)).first()
+            #                             limitby = (0, 1)).first()
             #    if layer and layer.polygons:
             #       no_default = True
 
@@ -9953,7 +9954,7 @@ class S3ExportPOI(S3Method):
             # Get the feed data
             query = (ftable.tablename == tablename) & \
                     (ftable.location_id == lx)
-            feed = db(query).select(limitby=(0, 1)).first()
+            feed = db(query).select(limitby = (0, 1)).first()
             if msince == "auto":
                 if feed is None:
                     _msince = None
@@ -10103,7 +10104,7 @@ class S3ImportPOI(S3Method):
                         gtable = s3db.gis_location
                         record = current.db(gtable.id == form_vars.location_id).select(gtable.name,
                                                                                        gtable.wkt,
-                                                                                       limitby=(0, 1)
+                                                                                       limitby = (0, 1)
                                                                                        ).first()
                         if record.wkt is None:
                             form.errors["location_id"] = T("Location needs to have WKT!")

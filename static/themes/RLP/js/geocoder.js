@@ -1,17 +1,18 @@
 /*
- * Shim for the S3LocationSelector to Geocode the Lx from the Street Address
+ * Shim for the S3LocationSelector to Geocode the Lx from the Postcode
  */
 
 $(document).ready(function(){
 
     S3.rlp_GeoCoder = function(fieldname) {
 
-        var addressField = $('#' + fieldname + '_address');
+        var addressField = $('#' + fieldname + '_address'),
+            postcodeField = $('#' + fieldname + '_postcode');
 
         // Add elements not present as Geocoder not active server-side as no map!
-        $('#' + fieldname + '_address__row').after('<div id="' + fieldname + '_geocode" class="controls geocode"><div class="throbber hide"></div><div class="geocode_success hide"></div><div class="geocode_fail hide"></div></div>');
+        $('#' + fieldname + '_postcode__row').after('<div id="' + fieldname + '_geocode" class="controls geocode"><div class="throbber hide"></div><div class="geocode_success hide"></div><div class="geocode_fail hide"></div></div>');
 
-        addressField.on('blur', function() {
+        postcodeField.on('blur', function() {
 
             // Hide old messages, show throbber
             var selector = '#' + fieldname,
@@ -27,7 +28,9 @@ $(document).ready(function(){
                 //async: false,
                 url: S3.Ap.concat('/default/index/geocode'),
                 type: 'POST',
-                data: {address: addressField.val()},
+                data: {address: addressField.val(),
+                       postcode: postcodeField.val(),
+                       },
                 dataType: 'json',
                 success: function(result) {
 

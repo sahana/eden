@@ -8,7 +8,7 @@ from functools import partial
 from gluon import current, redirect, URL, A, DIV, TABLE, TAG, TR
 from gluon.storage import Storage
 
-from s3 import FS, S3DateFilter, S3Represent, s3_fieldmethod, s3_fullname, s3_yes_no_represent
+from s3 import FS, IS_LOCATION, S3DateFilter, S3Represent, s3_fieldmethod, s3_fullname, s3_yes_no_represent
 from s3compat import urlencode
 from s3dal import original_tablename
 
@@ -1227,7 +1227,7 @@ def config(settings):
             # Configure Location Selector
             atable = s3db.pr_address
             field = atable.location_id
-            field.requires = field.requires.other
+            field.requires = IS_LOCATION() # Mandatory
             field.widget = S3LocationSelector(levels = ("L1", "L2", "L3"),
                                               required_levels = ("L1", "L2", "L3"),
                                               show_address = True,
@@ -1552,15 +1552,15 @@ def config(settings):
             if r.controller in ("vol", "default") and \
                not r.component and \
                isinstance(output, dict):
-                # Geocoder (disabled for now)
+                # Geocoder
                 #s3.scripts.append("/%s/static/themes/RLP/js/geocoder.js" % r.application)
                 #if r.record:
                 #    s3.jquery_ready.append('''S3.rlp_GeoCoder("sub_defaultaddress_defaultaddress_i_location_id_edit_0")''')
                 #else:
                 #    s3.jquery_ready.append('''S3.rlp_GeoCoder("sub_defaultaddress_defaultaddress_i_location_id_edit_none")''')
                 #s3.js_global.append('''i18n.location_found="%s"
-#i18n.location_not_found="%s"''' % (T("Address Found"),
-                #                   T("Address NOT Found"),
+#i18n.location_not_found="%s"''' % (T("Location Found"),
+                #                   T("Location NOT Found"),
                 #                   ))
                 if r.record and \
                    r.method in (None, "update", "read"):

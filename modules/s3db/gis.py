@@ -321,7 +321,6 @@ class S3LocationModel(S3Model):
                                       widget = S3LocationSelector(show_address = True,
                                                                   ),
                                       # Alternate simple Autocomplete (e.g. used by pr_person_presence)
-                                      #requires = IS_EMPTY_OR(IS_LOCATION()),
                                       #widget = S3LocationAutocompleteWidget(),
                                       )
 

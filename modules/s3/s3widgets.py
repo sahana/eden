@@ -4966,6 +4966,8 @@ class S3LocationSelector(S3Selector):
         request = current.request
         s3 = current.response.s3
 
+        #self.field = field
+
         # Is the location input required?
         requires = field.requires
         if requires:
@@ -6668,6 +6670,10 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         # Skip if location_id is None
         if location_id is None:
             return location_id, None
+
+        # Skip if the field is JSON type (e.g. during Registration)
+        #if self.field.type == "json":
+        #    return location_id, None
 
         db = current.db
         table = current.s3db.gis_location
