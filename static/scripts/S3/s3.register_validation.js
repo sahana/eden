@@ -46,7 +46,7 @@ var s3_register_validation = function() {
                 } else {
                     $('#auth_user_organisation_id__row').show();
                 }
-            }    
+            }
         })
     }
 

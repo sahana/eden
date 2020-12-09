@@ -2356,6 +2356,7 @@ $.filterOptionsS3({
         js_append('''i18n.medium="%s"''' % T("Medium"))
         js_append('''i18n.strong="%s"''' % T("Strong"))
         js_append('''i18n.very_strong="%s"''' % T("Very Strong"))
+        js_append('''$.extend($.validator.messages, { required: "%s" });''' % T("This field is required."))
 
         script = '''\n'''.join(js_global)
         s3.js_global.append(script)

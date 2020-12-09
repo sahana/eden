@@ -469,11 +469,19 @@
                 self = this;
             $.when.apply(null, validations).then(
                 function() {
+                    // Validation succeeded => submit the form
                     self.submitInProgress = false;
                     form.off(ns).submit();
                 },
                 function() {
-                    // Validation failed => re-enable submit button
+                    // Validation failed
+                    // => restore any rejected promises
+                    for (var key in pendingValidations) {
+                        if (pendingValidations[key].isRejected()) {
+                            pendingValidations[key] = $.Deferred();
+                        }
+                    }
+                    // => re-enable submit button
                     self.submitInProgress = false;
                     form.find('input[type="submit"]').prop('disabled', false);
                 });
@@ -1612,12 +1620,11 @@
                 function() {
                     // This inline-component is not valid
                     if (pendingValidations[ns]) {
-                        // Reject the validation promise, and create a
-                        // new one; leave the validateInline handler in
-                        // place so this component is re-validated when
-                        // Submit is clicked again
+                        // Reject the validation promise; leave the
+                        // validateInline handler in place so this
+                        // component is re-validated when Submit is
+                        // clicked again
                         pendingValidations[ns].reject();
-                        pendingValidations[ns] = $.Deferred();
                     }
                 });
         },
