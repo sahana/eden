@@ -5147,6 +5147,7 @@
 'This appears to be a duplicate of': 'Dies scheint ein Duplikat zu sein von',
 'This appointment is mandatory before transfer': 'Dieser Termin ist zwingend erforderlich vor Transfer',
 'This appointment requires the presence of the person concerned': 'Dieser Termin erfordert die Anwesenheit der betroffenen Person',
+'This email address is already in use': 'Diese Email-Adresse wird bereits verwendet',
 'This event type requires the presence of the person concerned': 'Dieser Ereignistyp erfordert die Anwesenheit der betroffenen Person',
 'This field is required.': 'Dieses Feld ist erforderlich!',
 'This file already exists on the server as': 'Diese Datei existiert bereits auf dem Server als',
