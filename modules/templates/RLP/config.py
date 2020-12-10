@@ -2072,8 +2072,8 @@ def config(settings):
                                            "status",
                                            ]
 
-                # - must not insert here
-                s3db.configure("hrm_delegation", insertable = False)
+            # Can insert on tab
+            s3db.configure("hrm_delegation", insertable = bool(volunteer_id))
 
             # Apply delegation workflow rules, determine earliest start date
             record = r.record
@@ -2144,6 +2144,22 @@ def config(settings):
                                         label = T("Notifications"),
                                         ))
             s3db.configure("hrm_delegation", crud_form=crud_form)
+
+        #elif current.auth.s3_has_roles(("HRMANAGER", "VCMANAGER")):
+        #    # Enable site_id and filter to sites of org
+        #    field = table.site_id
+        #    field.readable = field.writable = True
+        #    field.label = T("Deployment Site")
+        #    from s3 import IS_ONE_OF
+        #    field.requires = IS_EMPTY_OR(IS_ONE_OF(current.db, "org_site.site_id",
+        #                                           s3db.org_site_represent,
+        #                                           ))
+        #    script = '''$.filterOptionsS3({
+        #'trigger':'organisation_id',
+        #'target':'site_id',
+        #'lookupURL':S3.Ap.concat('/org/sites_for_org/'),
+        #})'''
+        #    current.response.s3.jquery_ready.append(script)
 
         # Reconfigure
         s3db.add_custom_callback("hrm_delegation",
