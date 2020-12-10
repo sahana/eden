@@ -4088,6 +4088,10 @@ class S3Components(object):
             self.__load((alias,))
             return components.get(alias, default)
         else:
+            db = current.db
+            table_alias = component._alias
+            if not getattr(db, table_alias, None):
+                setattr(db._aliased_tables, table_alias, component.table)
             return component
 
     # -------------------------------------------------------------------------

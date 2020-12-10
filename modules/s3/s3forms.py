@@ -758,8 +758,7 @@ class S3SQLDefaultForm(S3SQLForm):
             if form.errors:
 
                 # Revert any records created within widgets/validators
-                # ...use _adapter.rollback to retain aliased tables
-                current.db._adapter.rollback()
+                current.db.rollback()
 
                 # IS_LIST_OF validation errors need special handling
                 errors = []
@@ -1174,8 +1173,7 @@ class S3SQLCustomForm(S3SQLForm):
 
         if form.errors:
             # Revert any records created within widgets/validators
-            # - use _adapter.rollback to retain aliased tables
-            db._adapter.rollback()
+            db.rollback()
 
             response.error = current.T("There are errors in the form, please check your input")
 
