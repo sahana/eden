@@ -11,7 +11,7 @@ from s3 import FS, IS_LOCATION, S3DateFilter, S3Represent, s3_fieldmethod, s3_fu
 from s3dal import original_tablename
 
 #from .rlpgeonames import rlp_GeoNames
-
+MSAGD = "Ministerium für Soziales, Arbeit, Gesundheit und Demografie"
 ALLOWED_FORMATS = ("html", "iframe", "popup", "aadata", "json", "xls", "pdf")
 
 def config(settings):
@@ -145,7 +145,7 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     settings.org.projects_tab = False
-    settings.org.default_organisation = "Ministerium für Soziales, Arbeit, Gesundheit und Demografie"
+    settings.org.default_organisation = MSAGD
 
     # -------------------------------------------------------------------------
     # Custom group types for volunteer pools
@@ -1684,23 +1684,6 @@ def config(settings):
             #    field.comment = None
 
     # -------------------------------------------------------------------------
-    def delegation_read_multiple_orgs():
-
-        realms = current.auth.permission.permitted_realms("hrm_delegation", "read")
-        if realms is None:
-            multiple_orgs = True
-            org_ids = []
-        else:
-            otable = current.s3db.org_organisation
-            query = (otable.pe_id.belongs(realms)) & \
-                    (otable.deleted == False)
-            rows = current.db(query).select(otable.id)
-            multiple_orgs = len(rows) > 1
-            org_ids = [row.id for row in rows]
-
-        return multiple_orgs, org_ids
-
-    # -------------------------------------------------------------------------
     def delegation_free_interval(target, occupied, recurse=False, original=None):
         """
             Determine possible alternative time intervals for
@@ -2269,7 +2252,7 @@ def config(settings):
                 if not r.id:
                     r.resource.add_filter(FS("status") != "NVLD")
 
-            multiple_orgs = delegation_read_multiple_orgs()[0]
+            multiple_orgs = rlp_delegation_read_multiple_orgs()[0]
 
             if r.interactive:
 
@@ -2581,6 +2564,104 @@ def config(settings):
         #    module_type = None,
         #)),
     ])
+
+# =============================================================================
+def rlp_delegation_read_multiple_orgs():
+    """
+        Check if user can manage delegations of multiple orgs, and if yes,
+        which.
+
+        @returns: tuple (multiple_orgs, org_ids), where:
+                        multiple (boolean) - user can manage multiple orgs
+                        org_ids (list) - list of the orgs the user can manage
+
+        @note: multiple=True and org_ids=[] means the user can manage
+               delegations for all organisations (site-wide role)
+    """
+
+    realms = current.auth.permission.permitted_realms("hrm_delegation", "read")
+    if realms is None:
+        multiple_orgs = True
+        org_ids = []
+    else:
+        otable = current.s3db.org_organisation
+        query = (otable.pe_id.belongs(realms)) & \
+                (otable.deleted == False)
+        rows = current.db(query).select(otable.id)
+        multiple_orgs = len(rows) > 1
+        org_ids = [row.id for row in rows]
+
+    return multiple_orgs, org_ids
+
+# =============================================================================
+def rlp_deployment_sites(managed_orgs=False, organisation_id=None):
+    """
+        Lookup deployment sites
+
+        @param managed_orgs: limit to sites of organisations the user
+                             can manage delegations for
+        @param organisation_id: limit to sites of this organisation
+                                (overrides managed_orgs)
+
+        @returns: a dict {site_id:site_name}
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    if organisation_id:
+        # Only sites of the specified organisation
+        orgs = [organisation_id]
+    elif managed_orgs:
+        # Only sites of managed organisations
+        multiple, orgs = rlp_delegation_read_multiple_orgs()
+        if not multiple and not orgs:
+            return {} # No managed orgs
+    else:
+        orgs = None
+
+    if not orgs:
+        # Sites of all organisations except MSAGD
+        otable = current.s3db.org_organisation
+        query = (otable.name != MSAGD) & (otable.deleted == False)
+        orgs = [row.id for row in db(query).select(otable.id)]
+
+    if not orgs:
+        return
+
+    sites = {}
+
+    # Look up all offices for orgs (filter by type?)
+    otable = s3db.org_office
+    query = (otable.organisation_id.belongs(orgs)) & \
+            (otable.obsolete == False) & \
+            (otable.deleted == False)
+    rows = db(query).select(otable.name,
+                            otable.site_id,
+                            )
+    for row in rows:
+        sites[row.site_id] = row.name
+
+    # Look up all facilities of orgs (filter by type)
+    deployment_site_types = ("Vaccination Center", "Infection Test Station")
+
+    ftable = s3db.org_facility
+    ltable = s3db.org_site_facility_type
+    ttable = s3db.org_facility_type
+    left = [ltable.on((ltable.site_id == ftable.site_id) & (ltable.deleted == False)),
+            ttable.on(ttable.id == ltable.facility_type_id),
+            ]
+    query = (ftable.organisation_id.belongs(orgs)) & \
+            (ttable.name.belongs(deployment_site_types)) & \
+            (ftable.deleted == False)
+    rows = db(query).select(ftable.name,
+                            ftable.site_id,
+                            left = left,
+                            )
+    for row in rows:
+        sites[row.site_id] = row.name
+
+    return sites
 
 # =============================================================================
 def rlp_active_deployments(ctable, from_date=None, to_date=None):
