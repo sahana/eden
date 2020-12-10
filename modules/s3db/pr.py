@@ -1114,6 +1114,9 @@ class PRPersonModel(S3Model):
                                                  # Will need tochange in future
                                                  "multiple": False,
                                                  },
+                       pr_person_availability_site = {"name": "availability_site",
+                                                      "joinby": "person_id",
+                                                      },
                        # Awards
                        hrm_award = {"name": "staff_award",
                                     "joinby": "person_id",
@@ -4810,6 +4813,8 @@ class PRAvailabilityModel(S3Model):
              "pr_person_slot",
              "pr_person_availability",
              "pr_person_availability_slot",
+             "pr_person_availability_rule",
+             "pr_person_availability_site",
              )
 
     def model(self):
@@ -5110,6 +5115,15 @@ class PRAvailabilityModel(S3Model):
                            ),
                      Field("end_time", "time",
                            ),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Availability on sites (=link person<>site)
+        #
+        tablename = "pr_person_availability_site"
+        define_table(tablename,
+                     self.pr_person_id(),
+                     self.org_site_id(),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------

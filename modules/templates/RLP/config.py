@@ -2828,6 +2828,7 @@ def rlp_org_rheader(r, tabs=None):
             if not tabs:
                 tabs = [(T("Organisation"), None),
                         (T("Administrative Offices"), "office"),
+                        (T("Facilities"), "facility"),
                         (T("Staff"), "human_resource"),
                         (T("Volunteer Pools"), "pool"),
                         ]
