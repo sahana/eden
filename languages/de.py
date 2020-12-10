@@ -1520,6 +1520,7 @@
 'Deploying Organisation': 'Einsetzende Organisation',
 'Deployment Comments, Notifications and Notes': 'Kommentare, Benachrichtigungen und Notizen zu Einsätzen',
 'Deployment Details': 'Details zum Einsatz',
+'Deployment Site': 'Einsatzstelle',
 'Deployment added': 'Einsatz hinzugefügt',
 'Deployment carried out': 'Einsatz durchgeführt',
 'Deployment deleted': 'Einsatz gelöscht',

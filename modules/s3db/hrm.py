@@ -5420,6 +5420,10 @@ class HRDelegationModel(S3Model):
                                                            ),
                                        ),
                          ),
+                     self.super_link("site_id", "org_site",
+                                     orderby = "org_site.name",
+                                     represent = self.org_site_represent,
+                                     ),
                      self.pr_person_id(
                          empty = False,
                          comment = DIV(_class = "tooltip",

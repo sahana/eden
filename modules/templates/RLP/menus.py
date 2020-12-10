@@ -265,7 +265,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Archive",
                           vars = {"workflow": "o"},
                           ),
-                        M("Organizer", m="organize", restrict="HRMANAGER"),
+                        M("Organizer", m="organize", restrict=("HRMANAGER", "VCMANAGER")),
                         ),
                     M("Statistics", link=False)(
                         M("Deployments", c="hrm", f="delegation", m="report"),
