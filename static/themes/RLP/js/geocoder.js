@@ -35,29 +35,29 @@ $(document).ready(function(){
                 success: function(result) {
 
                     if (result.L1) {
-                            field.locationselector('lxSelect', 1, result.L1);
-                            if (result.L2) {
-                                // @ToDo: Rewrite with callbacks for better speed/reliability
-                                var selectL2 = function() {
-                                    field.locationselector('lxSelect', 2, result.L2);
-                                };
-                                setTimeout(selectL2, 500);
-                                if (result.L3) {
-                                    var selectL3 = function() {
-                                        field.locationselector('lxSelect', 3, result.L3);
-                                    };
-                                    setTimeout(selectL3, 250);
+                            var selectedL1 = field.locationselector('lxSelect', 1, result.L1);
+                            selectedL1.then(
+                                function() {
+                                    if (result.L2) {
+                                        var selectedL2 = field.locationselector('lxSelect', 2, result.L2);
+                                        selectedL2.then(
+                                            function(){
+                                                if (result.L3) {
+                                                    field.locationselector('lxSelect', 3, result.L3);
+                                                }
+                                            }
+                                        );
+                                    }
                                 }
-                            }
-                            // Notify results
-                            throbber.hide();
-                            success.html(i18n.location_found).removeClass('hide').show();
+                                // Notify results
+                                success.html(i18n.location_found).removeClass('hide').show();
+                            );
                         } else {
                             // Notify results
-                            throbber.hide();
                             failure.html(i18n.location_not_found).removeClass('hide').show();
                             //s3_debug(result);
                         }
+                        throbber.hide();
                 },
                 error: function(request, status, error) {
                     var msg;

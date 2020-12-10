@@ -169,30 +169,295 @@
             }
 
             // Propagate pre-selected values
-            var L0 = data.L0,
+            var self = this,
+                L0 = data.L0,
                 L1 = data.L1,
                 L2 = data.L2,
                 L3 = data.L3,
                 L4 = data.L4,
                 L5 = data.L5;
-            if (L0) {
-                this.lxSelect(0, L0, true);
-            }
             // || is to support Missing levels
-            if (L1 || L2) {
-                this.lxSelect(1, L1 || L2, true);
-            }
-            if (L2 || L3) {
-                this.lxSelect(2, L2 || L3, true);
-            }
-            if (L3 || L4) {
-                this.lxSelect(3, L3 || L4, true);
-            }
-            if (L4 || L5) {
-                this.lxSelect(4, L4 || L5, true);
-            }
-            if (L5) {
-                this.lxSelect(5, L5, true);
+            if (L0) {
+                var selectedL0 = self.lxSelect(0, L0, true);
+                selectedL0.then(
+                    function() {
+                        if (L1 || L2) {
+                            var selectedL1 = self.lxSelect(1, L1 || L2, true);
+                            selectedL1.then(
+                                function() {
+                                    if (L2 || L3) {
+                                        var selectedL2 = self.lxSelect(2, L2 || L3, true);
+                                        selectedL2.then(
+                                            function() {
+                                                if (L3 || L4) {
+                                                    var selectedL3 = self.lxSelect(3, L3 || L4, true);
+                                                    selectedL3.then(
+                                                        function() {
+                                                           if (L4 || L5) {
+                                                                var selectedL4 = self.lxSelect(4, L4 || L5, true);
+                                                                selectedL4.then(
+                                                                    function() {
+                                                                        if (L5) {
+                                                                            self.lxSelect(5, L5, true);
+                                                                        }
+                                                                    }
+                                                                );
+                                                            } else if (L5) {
+                                                                self.lxSelect(5, L5, true);
+                                                            }
+                                                       }
+                                                    );
+                                                } else if (L4 || L5) {
+                                                    var selectedL4 = self.lxSelect(4, L4 || L5, true);
+                                                    selectedL4.then(
+                                                        function() {
+                                                            if (L5) {
+                                                                self.lxSelect(5, L5, true);
+                                                            }
+                                                        }
+                                                    );
+                                                } else if (L5) {
+                                                    self.lxSelect(5, L5, true);
+                                                }
+                                            }
+                                        );
+                                    } else if (L3 || L4) {
+                                        var selectedL3 = self.lxSelect(3, L3 || L4, true);
+                                        selectedL3.then(
+                                            function() {
+                                               if (L4 || L5) {
+                                                    var selectedL4 = self.lxSelect(4, L4 || L5, true);
+                                                    selectedL4.then(
+                                                        function() {
+                                                            if (L5) {
+                                                                self.lxSelect(5, L5, true);
+                                                            }
+                                                        }
+                                                    );
+                                                } else if (L5) {
+                                                    self.lxSelect(5, L5, true);
+                                                }
+                                            }
+                                        );
+                                    } else if (L4 || L5) {
+                                        var selectedL4 = self.lxSelect(4, L4 || L5, true);
+                                        selectedL4.then(
+                                            function() {
+                                                if (L5) {
+                                                    self.lxSelect(5, L5, true);
+                                                }
+                                            }
+                                        );
+                                    } else if (L5) {
+                                        self.lxSelect(5, L5, true);
+                                    }
+                                }
+                            );
+                        } else if (L2 || L3) {
+                            var selectedL2 = self.lxSelect(2, L2 || L3, true);
+                            selectedL2.then(
+                                function() {
+                                    if (L3 || L4) {
+                                        var selectedL3 = self.lxSelect(3, L3 || L4, true);
+                                        selectedL3.then(
+                                            function() {
+                                               if (L4 || L5) {
+                                                    var selectedL4 = self.lxSelect(4, L4 || L5, true);
+                                                    selectedL4.then(
+                                                        function() {
+                                                            if (L5) {
+                                                                self.lxSelect(5, L5, true);
+                                                            }
+                                                        }
+                                                    );
+                                                } else if (L5) {
+                                                    self.lxSelect(5, L5, true);
+                                                }
+                                           }
+                                        );
+                                    } else if (L4 || L5) {
+                                        var selectedL4 = self.lxSelect(4, L4 || L5, true);
+                                        selectedL4.then(
+                                            function() {
+                                                if (L5) {
+                                                    self.lxSelect(5, L5, true);
+                                                }
+                                            }
+                                        );
+                                    } else if (L5) {
+                                        self.lxSelect(5, L5, true);
+                                    }
+                                }
+                            );
+                        } else if (L3 || L4) {
+                            var selectedL3 = self.lxSelect(3, L3 || L4, true);
+                            selectedL3.then(
+                                function() {
+                                   if (L4 || L5) {
+                                        var selectedL4 = self.lxSelect(4, L4 || L5, true);
+                                        selectedL4.then(
+                                            function() {
+                                                if (L5) {
+                                                    self.lxSelect(5, L5, true);
+                                                }
+                                            }
+                                        );
+                                    } else if (L5) {
+                                        self.lxSelect(5, L5, true);
+                                    }
+                                }
+                            );
+                        } else if (L4 || L5) {
+                            var selectedL4 = self.lxSelect(4, L4 || L5, true);
+                            selectedL4.then(
+                                function() {
+                                    if (L5) {
+                                        self.lxSelect(5, L5, true);
+                                    }
+                                }
+                            );
+                        } else if (L5) {
+                            self.lxSelect(5, L5, true);
+                        }
+                    }
+                );
+            } else if (L1 || L2) {
+                var selectedL1 = self.lxSelect(1, L1 || L2, true);
+                selectedL1.then(
+                    function() {
+                        if (L2 || L3) {
+                            var selectedL2 = self.lxSelect(2, L2 || L3, true);
+                            selectedL2.then(
+                                function() {
+                                    if (L3 || L4) {
+                                        var selectedL3 = self.lxSelect(3, L3 || L4, true);
+                                        selectedL3.then(
+                                            function() {
+                                               if (L4 || L5) {
+                                                    var selectedL4 = self.lxSelect(4, L4 || L5, true);
+                                                    selectedL4.then(
+                                                        function() {
+                                                            if (L5) {
+                                                                self.lxSelect(5, L5, true);
+                                                            }
+                                                        }
+                                                    );
+                                                } else if (L5) {
+                                                    self.lxSelect(5, L5, true);
+                                                }
+                                           }
+                                        );
+                                    } else if (L4 || L5) {
+                                        var selectedL4 = self.lxSelect(4, L4 || L5, true);
+                                        selectedL4.then(
+                                            function() {
+                                                if (L5) {
+                                                    self.lxSelect(5, L5, true);
+                                                }
+                                            }
+                                        );
+                                    } else if (L5) {
+                                        self.lxSelect(5, L5, true);
+                                    }
+                                }
+                            );
+                        } else if (L3 || L4) {
+                            var selectedL3 = self.lxSelect(3, L3 || L4, true);
+                            selectedL3.then(
+                                function() {
+                                   if (L4 || L5) {
+                                        var selectedL4 = self.lxSelect(4, L4 || L5, true);
+                                        selectedL4.then(
+                                            function() {
+                                                if (L5) {
+                                                    self.lxSelect(5, L5, true);
+                                                }
+                                            }
+                                        );
+                                    } else if (L5) {
+                                        self.lxSelect(5, L5, true);
+                                    }
+                                }
+                            );
+                        } else if (L4 || L5) {
+                            var selectedL4 = self.lxSelect(4, L4 || L5, true);
+                            selectedL4.then(
+                                function() {
+                                    if (L5) {
+                                        self.lxSelect(5, L5, true);
+                                    }
+                                }
+                            );
+                        } else if (L5) {
+                            self.lxSelect(5, L5, true);
+                        }
+                    }
+                );
+            } else if (L2 || L3) {
+                var selectedL2 = self.lxSelect(2, L2 || L3, true);
+                selectedL2.then(
+                    function() {
+                        if (L3 || L4) {
+                            var selectedL3 = self.lxSelect(3, L3 || L4, true);
+                            selectedL3.then(
+                                function() {
+                                   if (L4 || L5) {
+                                        var selectedL4 = self.lxSelect(4, L4 || L5, true);
+                                        selectedL4.then(
+                                            function() {
+                                                if (L5) {
+                                                    self.lxSelect(5, L5, true);
+                                                }
+                                            }
+                                        );
+                                    } else if (L5) {
+                                        self.lxSelect(5, L5, true);
+                                    }
+                               }
+                            );
+                        } else if (L4 || L5) {
+                            var selectedL4 = self.lxSelect(4, L4 || L5, true);
+                            selectedL4.then(
+                                function() {
+                                    if (L5) {
+                                        self.lxSelect(5, L5, true);
+                                    }
+                                }
+                            );
+                        } else if (L5) {
+                            self.lxSelect(5, L5, true);
+                        }
+                    }
+                );
+            } else if (L3 || L4) {
+                var selectedL3 = self.lxSelect(3, L3 || L4, true);
+                selectedL3.then(
+                    function() {
+                       if (L4 || L5) {
+                            var selectedL4 = self.lxSelect(4, L4 || L5, true);
+                            selectedL4.then(
+                                function() {
+                                    if (L5) {
+                                        self.lxSelect(5, L5, true);
+                                    }
+                                }
+                            );
+                        } else if (L5) {
+                            self.lxSelect(5, L5, true);
+                        }
+                    }
+                );
+            } else if (L4 || L5) {
+                var selectedL4 = self.lxSelect(4, L4 || L5, true);
+                selectedL4.then(
+                    function() {
+                        if (L5) {
+                            self.lxSelect(5, L5, true);
+                        }
+                    }
+                );
+            } else if (L5) {
+                self.lxSelect(5, L5, true);
             }
 
             // Store original Lx path
@@ -381,8 +646,10 @@
          */
         lxSelect: function(level, id, refresh) {
 
-            var selector = '#' + this.fieldname,
-                opts = this.options,
+            var dfd = $.Deferred(),
+                self = this,
+                selector = '#' + self.fieldname,
+                opts = self.options,
                 dropdown = $(selector + '_L' + level),
                 s,
                 l;
@@ -403,7 +670,7 @@
             // Update hierarchy labels
             if (level === 0) {
 
-                var labelled = this._readLabels(id),
+                var labelled = self._readLabels(id),
                     defaultLabels = hierarchyLabels.d,
                     levels = ['1', '2', '3', '4', '5'],
                     label,
@@ -479,18 +746,18 @@
                 }
                 if (!dropdown_row.length) {
                     // No next level - we're at the bottom of the hierarchy
-                    if (this.useGeocoder && !refresh) {
-                        this._geocodeDecision();
+                    if (self.useGeocoder && !refresh) {
+                        self._geocodeDecision();
                     }
                     // Call DRY Helper
-                    this._lxSelectFinal(refresh);
+                    self._lxSelectFinal(refresh);
+                    dfd.resolve();
                 } else {
                     // Do we need to read hierarchy?
                     var locations,
                         location,
                         locationID,
-                        read = false,
-                        that = this;
+                        read = false;
                     if ($(selector + '_L' + level + ' option[value="' + id + '"]').hasClass('missing')) {
                         // An individual location with a Missing Level: we already have the data
                         location = hierarchyLocations[id];
@@ -508,7 +775,7 @@
                         }
                     }
 
-                    var reading = this._readHierarchy(read, id, next, missing);
+                    var reading = self._readHierarchy(read, id, next, missing);
 
                     reading.then(
                         function() {
@@ -591,26 +858,30 @@
                                 }
 
                                 // Automatic selection of next level location
-                                var previous = that.data['L' + next],
+                                var previous = self.data['L' + next],
                                     available = locations.map(function(l) {return l.i;});
                                 if (previous && available.indexOf('' + previous) != -1) {
                                     // Previously selected value is still available,
                                     // so select it again
-                                    that.lxSelect(next, previous, refresh);
+                                    self.lxSelect(next, previous, refresh);
                                 } else if (numLocations == 1 && locationID) {
                                     // Only one option available, so select this one
-                                    that.lxSelect(next, locationID, refresh);
+                                    self.lxSelect(next, locationID, refresh);
                                 }
                             }
                             // Call DRY Helper
-                            that._lxSelectFinal(refresh);
+                            self._lxSelectFinal(refresh);
+
+                            dfd.resolve();
                         }
                     );
                 }
             } else {
                 // Call DRY Helper
-                this._lxSelectFinal(refresh);
+                self._lxSelectFinal(refresh);
+                dfd.resolve();
             }
+            return dfd.promise();
         },
 
         /**
@@ -1073,22 +1344,43 @@
                     if (result.L0) {
                         // Prevent forward geocoding
                         self.useGeocoder = false;
-                        self.lxSelect(0, result.L0);
-                        if (result.L1) {
-                            self.lxSelect(1, result.L1);
-                        }
-                        if (result.L2) {
-                            self.lxSelect(2, result.L2);
-                        }
-                        if (result.L3) {
-                            self.lxSelect(3, result.L3);
-                        }
-                        if (result.L4) {
-                            self.lxSelect(4, result.L4);
-                        }
-                        if (result.L5) {
-                            self.lxSelect(5, result.L5);
-                        }
+                        var selectedL0 = self.lxSelect(0, result.L0);
+                        selectedL0.then(
+                            function(){
+                                // @ToDo: Handle missing levels
+                                if (result.L1) {
+                                    var selectedL1 = self.lxSelect(1, result.L1);
+                                    selectedL1.then(
+                                        function(){
+                                            if (result.L2) {
+                                                var selectedL2 = self.lxSelect(2, result.L2);
+                                                selectedL2.then(
+                                                    function(){
+                                                        if (result.L3) {
+                                                            var selectedL3 = self.lxSelect(3, result.L3);
+                                                            selectedL3.then(
+                                                                function(){
+                                                                    if (result.L4) {
+                                                                        var selectedL4 = self.lxSelect(4, result.L4);
+                                                                        selectedL4.then(
+                                                                            function(){
+                                                                                if (result.L5) {
+                                                                                    self.lxSelect(5, result.L5);
+                                                                                }
+                                                                            }
+                                                                        );
+                                                                    }
+                                                                }
+                                                            );
+                                                        }
+                                                    }
+                                                );
+                                            }
+                                        }
+                                    );
+                                }
+                            }
+                        );
                         // Reset Geocoder-option
                         self.useGeocoder = true;
                         // Notify results

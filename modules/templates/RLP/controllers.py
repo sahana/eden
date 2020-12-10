@@ -50,9 +50,9 @@ class index(S3CustomController):
         if AUTHENTICATED not in roles:
 
             login_buttons = DIV(A(T("Login"),
-                                  _id="show-login",
-                                  _class="tiny secondary button"),
-                                _id="login-buttons"
+                                  _id = "show-login",
+                                  _class = "tiny secondary button"),
+                                _id = "login-buttons"
                                 )
             script = '''
 $('#show-mailform').click(function(e){
@@ -78,9 +78,9 @@ $('#show-login').click(function(e){
             if self_registration is True:
                 # Provide a Registration box on front page
                 login_buttons.append(A(T("Register"),
-                                       _id="show-register",
-                                       _class="tiny secondary button",
-                                       _style="margin-left:5px"))
+                                       _id = "show-register",
+                                       _class = "tiny secondary button",
+                                       _style = "margin-left:5px"))
                 script = '''
 $('#show-register').click(function(e){
  e.preventDefault()
