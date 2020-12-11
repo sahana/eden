@@ -8845,6 +8845,7 @@ class pr_Templates(S3Method):
                         (table.deleted == False)
                 templates = current.db(query).select(table.id,
                                                      table.name,
+                                                     orderby = table.name,
                                                      )
                 if not templates:
                     buttons = P(T("No document templates found."))
