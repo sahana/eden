@@ -1,0 +1,290 @@
+# -*- coding: utf-8 -*-
+
+"""
+    Helper functions and classes for RLP template
+
+    @license: MIT
+"""
+
+from gluon import current, A, URL
+
+from s3 import S3DateFilter, S3Represent, s3_fullname
+
+MSAGD = "Ministerium für Soziales, Arbeit, Gesundheit und Demografie"
+
+# =============================================================================
+def rlp_active_deployments(ctable, from_date=None, to_date=None):
+    """
+        Helper to construct a component filter expression
+        for active deployments within the given interval (or now)
+
+        @param ctable: the (potentially aliased) component table
+        @param from_date: start of the interval
+        @param to_date: end of the interval
+
+        @note: with no dates, today is assumed as the interval start+end
+    """
+
+    start = ctable.date
+    end = ctable.end_date
+
+    if not from_date and not to_date:
+        from_date = to_date = current.request.utcnow
+
+    if from_date and to_date:
+        query = ((start <= to_date) | (start == None)) & \
+                ((end >= from_date) | (end == None))
+    elif to_date:
+        query = (start <= to_date) | (start == None)
+    else:
+        query = (start >= from_date) | (end >= from_date) | \
+                ((start == None) & (end == None))
+
+    return query & ctable.status.belongs(("APPR", "IMPL"))
+
+# =============================================================================
+def rlp_deployed_with_org(person_id):
+    """
+        Check whether one or more volunteers have active or upcoming
+        deployments managed by the current user (i.e. where user is
+        either HRMANAGER for the deploying organisation, or COORDINATOR)
+
+        @param person_id: a pr_person record ID, or a set|list|tuple thereof
+    """
+
+    s3 = current.response.s3
+
+    if isinstance(person_id, (list, tuple)):
+        person_ids = set(person_id)
+    elif not isinstance(person_id, set):
+        person_ids = {person_id}
+    else:
+        person_ids = person_id
+
+    # Cache in response.s3 (we may need to check this at several points)
+    deployed_with_org = s3.rlp_deployed_with_org
+    if not deployed_with_org:
+        deployed_with_org = s3.rlp_deployed_with_org = set()
+    elif all(person_id in deployed_with_org for person_id in person_ids):
+        return True
+
+    # Check all other person_ids
+    check_ids = person_ids - deployed_with_org
+
+    today = current.request.utcnow.date()
+    dtable = current.s3db.hrm_delegation
+    query = current.auth.s3_accessible_query("read", dtable) & \
+            (dtable.person_id.belongs(check_ids)) & \
+            rlp_active_deployments(dtable, from_date=today) & \
+            (dtable.deleted == False)
+    deployed = current.db(query).select(dtable.person_id)
+    deployed_with_org |= {row.person_id for row in deployed}
+
+    # Update cache
+    s3.rlp_deployed_with_org = deployed_with_org
+
+    return all(person_id in deployed_with_org for person_id in person_ids)
+
+# =============================================================================
+def rlp_delegation_read_multiple_orgs():
+    """
+        Check if user can manage delegations of multiple orgs, and if yes,
+        which.
+
+        @returns: tuple (multiple_orgs, org_ids), where:
+                        multiple (boolean) - user can manage multiple orgs
+                        org_ids (list) - list of the orgs the user can manage
+
+        @note: multiple=True and org_ids=[] means the user can manage
+               delegations for all organisations (site-wide role)
+    """
+
+    realms = current.auth.permission.permitted_realms("hrm_delegation", "read")
+    if realms is None:
+        multiple_orgs = True
+        org_ids = []
+    else:
+        otable = current.s3db.org_organisation
+        query = (otable.pe_id.belongs(realms)) & \
+                (otable.deleted == False)
+        rows = current.db(query).select(otable.id)
+        multiple_orgs = len(rows) > 1
+        org_ids = [row.id for row in rows]
+
+    return multiple_orgs, org_ids
+
+# =============================================================================
+def rlp_deployment_sites(managed_orgs=False, organisation_id=None):
+    """
+        Lookup deployment sites
+
+        @param managed_orgs: limit to sites of organisations the user
+                             can manage delegations for
+        @param organisation_id: limit to sites of this organisation
+                                (overrides managed_orgs)
+
+        @returns: a dict {site_id:site_name}
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    if organisation_id:
+        # Only sites of the specified organisation
+        orgs = [organisation_id]
+    elif managed_orgs:
+        # Only sites of managed organisations
+        multiple, orgs = rlp_delegation_read_multiple_orgs()
+        if not multiple and not orgs:
+            return {} # No managed orgs
+    else:
+        orgs = None
+
+    if not orgs:
+        # Sites of all organisations except MSAGD
+        otable = current.s3db.org_organisation
+        query = (otable.name != MSAGD) & (otable.deleted == False)
+        orgs = [row.id for row in db(query).select(otable.id)]
+
+    if not orgs:
+        return {}
+
+    # Look up all sites of orgs (filter by type)
+    deployment_site_types = ("Vaccination Center",
+                             "Infection Test Station",
+                             "Public Health Office",
+                             )
+
+    stable = s3db.org_site
+    ltable = s3db.org_site_facility_type
+    ttable = s3db.org_facility_type
+    left = [ltable.on((ltable.site_id == stable.site_id) & (ltable.deleted == False)),
+            ttable.on(ttable.id == ltable.facility_type_id),
+            ]
+    query = (stable.organisation_id.belongs(orgs)) & \
+            (ttable.name.belongs(deployment_site_types)) & \
+            (stable.deleted == False)
+    rows = db(query).select(stable.site_id,
+                            left = left,
+                            orderby = stable.organisation_id,
+                            )
+    site_ids = [row.site_id for row in rows]
+
+    represent = s3db.org_SiteRepresent(show_link=False)
+
+    labels = represent.bulk(site_ids)
+    return {k: v for k, v in labels.items() if k}
+
+# =============================================================================
+class RLPAvailabilityFilter(S3DateFilter):
+    """
+        Date-Range filter with custom variable
+        - without this then we parse as a vfilter which clutters error console
+          & is inefficient (including preventing a bigtable optimisation)
+    """
+
+    @classmethod
+    def _variable(cls, selector, operator):
+
+        return super()._variable("available", operator)
+
+# =============================================================================
+class RLPDelegatedPersonRepresent(S3Represent):
+
+    def __init__(self, show_link=True, linkto=None):
+        """
+            Constructor
+
+            @param show_link: show representation as clickable link
+            @param linkto: URL for the link, using "[id]" as placeholder
+                           for the record ID
+        """
+
+        super(RLPDelegatedPersonRepresent, self).__init__(
+                                                lookup = "pr_person",
+                                                show_link = show_link,
+                                                linkto = linkto,
+                                                )
+
+        self.coordinator = current.auth.s3_has_role("COORDINATOR")
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        table = self.table
+
+        count = len(values)
+        if count == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+
+        # Get the person names
+        rows = db(query).select(table.id,
+                                table.pe_label,
+                                table.first_name,
+                                table.middle_name,
+                                table.last_name,
+                                limitby = (0, count),
+                                )
+        self.queries += 1
+        person_ids = {row.id for row in rows}
+
+        # For all persons found, get the alias
+        pdtable = s3db.pr_person_details
+        query = (pdtable.person_id.belongs(person_ids)) & \
+                (pdtable.deleted == False)
+        details = db(query).select(pdtable.person_id, pdtable.alias)
+        aliases = {item.person_id: item.alias for item in details}
+        self.queries += 1
+
+        # Check which persons are currently deployed with org
+        rlp_deployed_with_org(person_ids)
+
+        for row in rows:
+            alias = aliases.get(row.id, "***")
+            row.alias = alias if alias else "-"
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row, prefix=None):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        if self.coordinator or \
+           row.id in current.response.s3.rlp_deployed_with_org:
+            repr_str = "[%s] %s" % (row.pe_label, s3_fullname(row))
+        else:
+            repr_str = "[%s] %s" % (row.pe_label, row.alias)
+
+        return repr_str
+
+    # -------------------------------------------------------------------------
+    def link(self, k, v, row=None):
+        """
+            Represent a (key, value) as hypertext link
+
+            @param k: the key (br_case_activity.id)
+            @param v: the representation of the key
+            @param row: the row with this key
+        """
+
+        url = URL(c = "vol", f = "person", args = [row.id], extension = "")
+
+        return A(v, _href = url)
+
+# END =========================================================================
