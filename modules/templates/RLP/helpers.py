@@ -148,12 +148,7 @@ def rlp_deployment_sites(managed_orgs=False, organisation_id=None):
     if not orgs:
         return {}
 
-    # Look up all sites of orgs (filter by type)
-    deployment_site_types = ("Vaccination Center",
-                             "Infection Test Station",
-                             "Public Health Office",
-                             )
-
+    # Look up all sites of orgs (filter by vol_deployments type flag)
     stable = s3db.org_site
     ltable = s3db.org_site_facility_type
     ttable = s3db.org_facility_type
@@ -161,7 +156,7 @@ def rlp_deployment_sites(managed_orgs=False, organisation_id=None):
             ttable.on(ttable.id == ltable.facility_type_id),
             ]
     query = (stable.organisation_id.belongs(orgs)) & \
-            (ttable.name.belongs(deployment_site_types)) & \
+            (ttable.vol_deployments == True) & \
             (stable.deleted == False)
     rows = db(query).select(stable.site_id,
                             left = left,

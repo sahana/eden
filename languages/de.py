@@ -3885,6 +3885,7 @@
 'Position deleted': 'Standpunkt gelöscht',
 'Position updated': 'Standpunkt aktualisiert',
 'Positions': 'Positionen',
+'Possible Deployment Sites': 'Mögliche Einsatzstellen',
 'Postcode is Required!': 'Postleitzahl ist Erforderlich!',
 'Postcode': 'PLZ',
 'Posted on': 'Geposted auf',
@@ -5476,6 +5477,7 @@
 'Volume (m3)': 'Volumen (m3)',
 'Volunteer Availability': 'Verfügbarkeit von Freiwilligen',
 'Volunteer Contact': 'Kontaktdaten des Freiwilligen',
+'Volunteer Deployment Sites': 'Einsatzstellen für Freiwillige',
 'Volunteer Details': 'Details zum Freiwilligen',
 'Volunteer Information': 'Freiwilligeninformation',
 'Volunteer Management': 'Management von Freiwilligen',
@@ -5816,5 +5818,4 @@
 'xlwt module not available within the running Python - this needs installing for XLS output!': 'xlwt Modul nicht verfügbar im Rahmen der laufenden Python Umgebung - das muss installiert werden für XLS Ausgabe!',
 'yes': 'ja',
 'Åland Islands': 'Ålandinseln',
-'Possible Deployment Sites': 'Mögliche Einsatzstellen',
 }

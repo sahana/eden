@@ -3922,6 +3922,13 @@ class S3FacilityModel(S3Model):
                            readable = hierarchical_facility_types,
                            writable = hierarchical_facility_types,
                            ),
+                     Field("vol_deployments", "boolean",
+                           default = False,
+                           label = T("Volunteer Deployment Sites"),
+                           represent = s3_yes_no_represent,
+                           readable = False,
+                           writable = False,
+                           ),
                      s3_comments(),
                      *s3_meta_fields()
                      )

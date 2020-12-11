@@ -485,6 +485,22 @@ def config(settings):
     settings.customise_org_office_controller = customise_org_office_controller
 
     # -------------------------------------------------------------------------
+    def customise_org_facility_type_resource(r, tablename):
+
+        table = current.s3db.org_facility_type
+        field = table.vol_deployments
+        field.readable = field.writable = True
+
+        current.s3db.configure("org_facility_type",
+                               list_fields = ["name",
+                                              "vol_deployments",
+                                              "comments",
+                                              ],
+                               )
+
+    settings.customise_org_facility_type_resource = customise_org_facility_type_resource
+
+    # -------------------------------------------------------------------------
     def pr_group_onaccept(form):
 
         record_id = form.vars.id

@@ -12,6 +12,7 @@ AUTHENTICATED,Authenticated,,,pr,contact_emergency,,CREATE,READ|UPDATE|DELETE
 AUTHENTICATED,Authenticated,,,,,gis_location,CREATE|READ,UPDATE|DELETE
 AUTHENTICATED,Authenticated,,,,,hrm_competency,CREATE,READ|UPDATE|DELETE
 AUTHENTICATED,Authenticated,,,,,hrm_human_resource,NONE,READ|UPDATE
+AUTHENTICATED,Authenticated,,,,,org_facility_type,READ,
 AUTHENTICATED,Authenticated,,,,,pr_address,CREATE,READ|UPDATE|DELETE
 AUTHENTICATED,Authenticated,,,,,pr_contact,CREATE,READ|UPDATE|DELETE
 AUTHENTICATED,Authenticated,,,,,pr_contact_emergency,CREATE,READ|UPDATE|DELETE
@@ -69,6 +70,7 @@ ORG_GROUP_ADMIN,Organisation Group Admin,,true,admin,user,,CREATE|READ|UPDATE|DE
 ORG_GROUP_ADMIN,Organisation Group Admin,,true,org,organisation,,CREATE|READ|UPDATE|DELETE,
 ORG_GROUP_ADMIN,Organisation Group Admin,,true,org,,,CREATE|READ|UPDATE|DELETE,
 ORG_GROUP_ADMIN,Organisation Group Admin,,true,,,hrm_human_resource,CREATE|READ|UPDATE|DELETE,
+ORG_GROUP_ADMIN,Organisation Group Admin,,true,,,org_facility_type,CREATE|READ|UPDATE|DELETE,
 ORG_GROUP_ADMIN,Organisation Group Admin,,true,,,org_office,CREATE|READ|UPDATE|DELETE,
 ORG_GROUP_ADMIN,Organisation Group Admin,,true,,,org_organisation,READ|UPDATE,
 ORG_GROUP_ADMIN,Organisation Group Admin,,true,,,pr_person,CREATE|READ|UPDATE|DELETE,

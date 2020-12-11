@@ -1,4 +1,4 @@
-Type,Comments
-Vaccination Center,
-Infection Test Station,
-Public Health Office,
+Type,Volunteer Deployments,Comments
+Vaccination Center,true,
+Infection Test Station,true,
+Public Health Office,true,
