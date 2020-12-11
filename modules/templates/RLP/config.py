@@ -411,6 +411,48 @@ def config(settings):
     settings.customise_org_organisation_controller = customise_org_organisation_controller
 
     # -------------------------------------------------------------------------
+    def customise_org_office_resource(r, tablename):
+
+        if r.interactive:
+
+            from s3 import S3SQLCustomForm, S3SQLInlineLink
+            crud_fields = ["name",
+                            #"code",
+                            "organisation_id",
+                            "office_type_id",
+                            S3SQLInlineLink("facility_type",
+                                            field = "facility_type_id",
+                                            label = T("Facility Type"),
+                                            cols = 3,
+                                            ),
+                            "location_id",
+                            "phone1",
+                            "phone2",
+                            "email",
+                            "fax",
+                            "obsolete",
+                            "comments",
+                            ]
+
+            list_fields = ["id",
+                           "name",
+                           "office_type_id",
+                           "organisation_id",
+                           "location_id",
+                            "phone1",
+                            "phone2",
+                            "email",
+                            "fax",
+                           ]
+
+            current.s3db.configure("org_office",
+                                   crud_form = S3SQLCustomForm(*crud_fields),
+                                   list_fields = list_fields,
+                                   )
+
+    settings.customise_org_office_resource = customise_org_office_resource
+
+    # -------------------------------------------------------------------------
     def customise_org_office_controller(**attr):
 
         s3 = current.response.s3
@@ -428,7 +470,6 @@ def config(settings):
                                                     "name",
                                                     ],
                                      )
-
             return result
         s3.prep = custom_prep
 
@@ -867,6 +908,10 @@ def config(settings):
                                                  ),
                        )
 
+        # Don't show deployment sites as links (pointless for most users)
+        field = s3db.pr_person_availability_site.site_id
+        field.represent = s3db.org_SiteRepresent(show_link = False)
+
         if r.method == "import" or not current.auth.user:
             # Skip uniqueness validator for occupation types in imports
             # - deduplicate takes care of name matches
@@ -1152,6 +1197,7 @@ def config(settings):
                 ])
 
         # Common fields for all cases
+        from gluon import IS_IN_SET
         crud_fields.extend([
                 S3SQLInlineLink("occupation_type",
                                label = T("Occupation Type"),
@@ -1160,6 +1206,16 @@ def config(settings):
                 (T("Occupation / Speciality"), "person_details.occupation"),
                 "availability.hours_per_week",
                 "availability.schedule_json",
+                S3SQLInlineLink("availability_sites",
+                                field = "site_id",
+                                label = T("Possible Deployment Sites"),
+                                requires = IS_IN_SET(rlp_deployment_sites(),
+                                                     multiple = True,
+                                                     zero = None,
+                                                     sort = False,
+                                                     ),
+                                render_list = True,
+                                ),
                 "availability.comments",
                 "volunteer_record.comments",
                 ])
@@ -2631,37 +2687,31 @@ def rlp_deployment_sites(managed_orgs=False, organisation_id=None):
 
     sites = {}
 
-    # Look up all offices for orgs (filter by type?)
-    otable = s3db.org_office
-    query = (otable.organisation_id.belongs(orgs)) & \
-            (otable.obsolete == False) & \
-            (otable.deleted == False)
-    rows = db(query).select(otable.name,
-                            otable.site_id,
-                            )
-    for row in rows:
-        sites[row.site_id] = row.name
+    # Look up all sites of orgs (filter by type)
+    deployment_site_types = ("Vaccination Center",
+                             "Infection Test Station",
+                             "Public Health Office",
+                             )
 
-    # Look up all facilities of orgs (filter by type)
-    deployment_site_types = ("Vaccination Center", "Infection Test Station")
-
-    ftable = s3db.org_facility
+    stable = s3db.org_site
     ltable = s3db.org_site_facility_type
     ttable = s3db.org_facility_type
-    left = [ltable.on((ltable.site_id == ftable.site_id) & (ltable.deleted == False)),
+    left = [ltable.on((ltable.site_id == stable.site_id) & (ltable.deleted == False)),
             ttable.on(ttable.id == ltable.facility_type_id),
             ]
-    query = (ftable.organisation_id.belongs(orgs)) & \
+    query = (stable.organisation_id.belongs(orgs)) & \
             (ttable.name.belongs(deployment_site_types)) & \
-            (ftable.deleted == False)
-    rows = db(query).select(ftable.name,
-                            ftable.site_id,
+            (stable.deleted == False)
+    rows = db(query).select(stable.site_id,
                             left = left,
+                            orderby = stable.organisation_id,
                             )
-    for row in rows:
-        sites[row.site_id] = row.name
+    site_ids = [row.site_id for row in rows]
 
-    return sites
+    represent = s3db.org_SiteRepresent(show_link=False)
+
+    labels = represent.bulk(site_ids)
+    return {k: v for k, v in labels.items() if k}
 
 # =============================================================================
 def rlp_active_deployments(ctable, from_date=None, to_date=None):

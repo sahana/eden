@@ -1114,6 +1114,11 @@ class PRPersonModel(S3Model):
                                                  # Will need tochange in future
                                                  "multiple": False,
                                                  },
+                       org_site = {"name": "availability_sites",
+                                   "link": "pr_person_availability_site",
+                                   "joinby": "person_id",
+                                   "key": "site_id",
+                                   },
                        pr_person_availability_site = {"name": "availability_site",
                                                       "joinby": "person_id",
                                                       },

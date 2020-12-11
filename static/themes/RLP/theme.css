@@ -2288,60 +2288,61 @@ body.rtl .event-type-header {
 /* line 240, ../scss/theme/_misc.scss */
 .ui-widget-content {
   max-width: 100%;
+  width: auto !important;
 }
 
-/* line 244, ../scss/theme/_misc.scss */
+/* line 245, ../scss/theme/_misc.scss */
 .dvr-response-action-theme {
   font-size: 0.8rem;
 }
-/* line 246, ../scss/theme/_misc.scss */
+/* line 247, ../scss/theme/_misc.scss */
 .dvr-response-action-theme h6 {
   font-size: 0.9rem;
   font-weight: bold;
   color: black;
   margin: 0;
 }
-/* line 252, ../scss/theme/_misc.scss */
+/* line 253, ../scss/theme/_misc.scss */
 .dvr-response-action-theme .text-body {
   margin: 0.125rem 0.25rem 0.5rem 0.25rem;
 }
 
-/* line 256, ../scss/theme/_misc.scss */
+/* line 257, ../scss/theme/_misc.scss */
 .main-title .system-title .org-name {
   font-size: 0.8rem;
   text-transform: uppercase;
 }
 
-/* line 261, ../scss/theme/_misc.scss */
+/* line 262, ../scss/theme/_misc.scss */
 #hrm_delegation_inline_notifications__row {
   display: none;
 }
 
-/* line 265, ../scss/theme/_misc.scss */
+/* line 266, ../scss/theme/_misc.scss */
 .notification .notify-toggle {
   vertical-align: middle;
   margin-top: 0 !important;
   margin-bottom: 0.2rem !important;
 }
-/* line 270, ../scss/theme/_misc.scss */
+/* line 271, ../scss/theme/_misc.scss */
 .notification .preview-toggles {
   margin-top: 0.3rem;
 }
-/* line 272, ../scss/theme/_misc.scss */
+/* line 273, ../scss/theme/_misc.scss */
 .notification .preview-toggles .preview-toggle.action-lnk {
   margin-left: 0.2rem;
 }
 
-/* line 278, ../scss/theme/_misc.scss */
+/* line 279, ../scss/theme/_misc.scss */
 .preview-widget .highlight-sub {
   border-bottom: dotted 0.5px #C0C0C0;
   cursor: help;
 }
-/* line 282, ../scss/theme/_misc.scss */
+/* line 283, ../scss/theme/_misc.scss */
 .preview-widget .highlight-miss {
   background-color: #F4D48A;
 }
-/* line 285, ../scss/theme/_misc.scss */
+/* line 286, ../scss/theme/_misc.scss */
 .preview-widget p.preview {
   font-size: 0.9rem;
   font-weight: normal;
@@ -2353,7 +2354,7 @@ body.rtl .event-type-header {
   padding: 0.5rem;
   background-color: #F4F4F4;
 }
-/* line 296, ../scss/theme/_misc.scss */
+/* line 297, ../scss/theme/_misc.scss */
 .preview-widget h6.preview {
   font-size: 0.9rem;
   color: #550000;
@@ -2362,7 +2363,7 @@ body.rtl .event-type-header {
   padding: 0.5rem;
 }
 
-/* line 304, ../scss/theme/_misc.scss */
+/* line 305, ../scss/theme/_misc.scss */
 .register-intro {
   max-width: 60rem;
   padding: 1rem;
@@ -2370,11 +2371,11 @@ body.rtl .event-type-header {
   background-color: #ec9;
 }
 
-/* line 310, ../scss/theme/_misc.scss */
+/* line 311, ../scss/theme/_misc.scss */
 .auth_register {
   padding: 1rem !important;
 }
-/* line 311, ../scss/theme/_misc.scss */
+/* line 312, ../scss/theme/_misc.scss */
 .auth_register .subheading {
   background-color: #EEE;
   font-size: 1rem;
@@ -2383,21 +2384,21 @@ body.rtl .event-type-header {
   margin: 0.7rem 0;
   padding: 0.5rem 0.3rem 0.3rem 0.5rem;
 }
-/* line 319, ../scss/theme/_misc.scss */
+/* line 320, ../scss/theme/_misc.scss */
 .auth_register .subheading,
 .auth_register .consent-widget,
 .auth_register .controls {
   max-width: 48rem;
 }
 
-/* line 326, ../scss/theme/_misc.scss */
+/* line 327, ../scss/theme/_misc.scss */
 .registration-form {
   position: relative;
   max-width: 60rem;
   margin: 1rem auto;
 }
 
-/* line 331, ../scss/theme/_misc.scss */
+/* line 332, ../scss/theme/_misc.scss */
 .sub-label {
   font-weight: normal;
   font-size: 0.8rem;
@@ -2406,7 +2407,7 @@ body.rtl .event-type-header {
   padding-top: 0.2rem;
 }
 
-/* line 339, ../scss/theme/_misc.scss */
+/* line 340, ../scss/theme/_misc.scss */
 .avcomments {
   font-size: 0.7rem;
 }
