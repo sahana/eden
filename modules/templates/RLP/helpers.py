@@ -10,8 +10,6 @@ from gluon import current, A, URL
 
 from s3 import S3DateFilter, S3Represent, s3_fullname
 
-MSAGD = "Ministerium für Soziales, Arbeit, Gesundheit und Demografie"
-
 # =============================================================================
 def rlp_active_deployments(ctable, from_date=None, to_date=None):
     """
@@ -142,6 +140,7 @@ def rlp_deployment_sites(managed_orgs=False, organisation_id=None):
 
     if not orgs:
         # Sites of all organisations except MSAGD
+        from .config import MSAGD
         otable = current.s3db.org_organisation
         query = (otable.name != MSAGD) & (otable.deleted == False)
         orgs = [row.id for row in db(query).select(otable.id)]

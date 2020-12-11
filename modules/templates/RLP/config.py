@@ -17,9 +17,10 @@ from gluon.storage import Storage
 from s3 import FS, IS_LOCATION, S3DateFilter, S3Represent, s3_fieldmethod, s3_fullname, s3_yes_no_represent
 from s3dal import original_tablename
 
-from .helpers import MSAGD, rlp_active_deployments
+from .helpers import rlp_active_deployments
 #from .rlpgeonames import rlp_GeoNames
 
+MSAGD = "Ministerium für Soziales, Arbeit, Gesundheit und Demografie"
 ALLOWED_FORMATS = ("html", "iframe", "popup", "aadata", "json", "xls", "pdf")
 
 # =============================================================================
