@@ -1552,6 +1552,7 @@ def config(settings):
                 # Personal profile (default/person)
                 if not r.component:
                     # Custom Form
+                    from gluon import IS_IN_SET
                     from s3 import S3SQLInlineLink
                     crud_fields = name_fields
                     crud_fields.extend(["date_of_birth",
@@ -1566,6 +1567,16 @@ def config(settings):
                                         "volunteer_record.status",
                                         "availability.hours_per_week",
                                         "availability.schedule_json",
+                                        S3SQLInlineLink("availability_sites",
+                                                        field = "site_id",
+                                                        label = T("Possible Deployment Sites"),
+                                                        requires = IS_IN_SET(rlp_deployment_sites(),
+                                                                            multiple = True,
+                                                                            zero = None,
+                                                                            sort = False,
+                                                                            ),
+                                                        render_list = True,
+                                                        ),
                                         "availability.comments",
                                         "volunteer_record.comments",
                                         ])
