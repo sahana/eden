@@ -1375,26 +1375,13 @@ def config(settings):
                         resource.add_filter(FS("volunteer_record.status") == 1)
 
                 list_title = T("Volunteers")
+                from .helpers import RLPAvailabilityFilter, \
+                                        RLPAvailabilitySiteFilter, \
+                                        rlp_deployment_sites
                 if not record:
-                    # Availability Filter
-                    parse_dt = current.calendar.parse_date
-                    from_date = parse_dt(get_vars.get("available__ge"))
-                    to_date = parse_dt(get_vars.get("available__le"))
-                    if from_date or to_date:
-                        # Filter out volunteers who have a confirmed
-                        # deployment during selected date interval
-                        # (must pre-query to bypass realm limits)
-                        dtable = s3db.hrm_delegation
-                        query = rlp_active_deployments(dtable,
-                                                       from_date,
-                                                       to_date,
-                                                       )
-                        rows = db(query).select(dtable.person_id,
-                                                cache = s3db.cache,
-                                                )
-                        if rows:
-                            unavailable = {row.person_id for row in rows}
-                            resource.add_filter(~FS("id").belongs(unavailable))
+                    # Apply custom filters
+                    RLPAvailabilityFilter.apply_filter(resource, get_vars)
+                    RLPAvailabilitySiteFilter.apply_filter(resource, get_vars)
 
                     # Ongoing deployments as component
                     s3db.add_components("pr_person",
@@ -1487,7 +1474,6 @@ def config(settings):
                                               ]
                     text_search_fields.append("person_details.occupation")
 
-                    from .helpers import RLPAvailabilityFilter
                     filter_widgets = [
                         S3TextFilter(text_search_fields,
                                      label = T("Search"),
@@ -1522,6 +1508,11 @@ def config(settings):
                                         cols = 7,
                                         sort = False,
                                         ),
+                        RLPAvailabilitySiteFilter("availability_site.site_id",
+                                                  label = T("Possible Deployment Sites"),
+                                                  options = lambda: rlp_deployment_sites(managed_orgs=True),
+                                                  sort = False,
+                                                  ),
                         S3RangeFilter("availability.hours_per_week",
                                       ),
                         S3OptionsFilter("competency.skill_id",

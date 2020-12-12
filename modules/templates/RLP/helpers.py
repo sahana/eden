@@ -8,7 +8,7 @@
 
 from gluon import current, A, URL
 
-from s3 import S3DateFilter, S3Represent, s3_fullname
+from s3 import FS, S3DateFilter, S3OptionsFilter, S3Represent, s3_fullname
 
 # =============================================================================
 def rlp_active_deployments(ctable, from_date=None, to_date=None):
@@ -182,7 +182,64 @@ class RLPAvailabilityFilter(S3DateFilter):
     @classmethod
     def _variable(cls, selector, operator):
 
-        return super()._variable("available", operator)
+        return super()._variable("$$available", operator)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def apply_filter(resource, get_vars):
+        """
+            Filter out volunteers who have a confirmed deployment during
+            selected date interval
+        """
+
+        parse_dt = current.calendar.parse_date
+
+        from_date = parse_dt(get_vars.get("$$available__ge"))
+        to_date = parse_dt(get_vars.get("$$available__le"))
+
+        if from_date or to_date:
+
+            db = current.db
+            s3db = current.s3db
+
+            # Must pre-query to bypass realm limits
+            dtable = s3db.hrm_delegation
+            query = rlp_active_deployments(dtable, from_date, to_date)
+            rows = db(query).select(dtable.person_id,
+                                    cache = s3db.cache,
+                                    )
+            if rows:
+                unavailable = {row.person_id for row in rows}
+                resource.add_filter(~FS("id").belongs(unavailable))
+
+# =============================================================================
+class RLPAvailabilitySiteFilter(S3OptionsFilter):
+    """
+        Options filter with custom variable
+        - without this then we parse as a vfilter which clutters error console
+          & is inefficient (including preventing a bigtable optimisation)
+    """
+
+    @classmethod
+    def _variable(cls, selector, operator):
+
+        return super()._variable("$$sites", operator)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def apply_filter(resource, get_vars):
+        """
+            Include volunteers who have marked themselves available at
+            the selected sites, or have not chosen any sites
+        """
+
+        sites = get_vars.get("$$sites__belongs")
+        if sites:
+            sites = [int(site_id) for site_id in sites.split(",") if site_id.isdigit()]
+        if sites:
+            query = FS("availability_sites.site_id").belongs(sites) | \
+                    (~(FS("availability_sites.site_id") != None))
+            resource.add_filter(query)
 
 # =============================================================================
 class RLPDelegatedPersonRepresent(S3Represent):

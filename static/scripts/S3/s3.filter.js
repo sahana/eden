@@ -26,7 +26,7 @@ S3.search = {};
         // Helper function to check whether a URL variable is a filter expression
         var isFilterKey = function(k) {
             var k0 = k[0];
-            return (k == '$filter' || k0 != '_' && (k.search(/\./) != -1 || k0 == '(' && k.search(/\)/) != -1));
+            return (k == '$filter' || k.slice(0, 2) == '$$' || k0 != '_' && (k.search(/\./) != -1 || k0 == '(' && k.search(/\)/) != -1));
         };
 
         var parts = s.url.split('#'),
