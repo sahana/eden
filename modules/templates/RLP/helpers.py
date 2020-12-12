@@ -160,14 +160,16 @@ def rlp_deployment_sites(managed_orgs=False, organisation_id=None):
             (stable.deleted == False)
     rows = db(query).select(stable.site_id,
                             left = left,
-                            orderby = stable.organisation_id,
+                            orderby = (stable.organisation_id,
+                                       stable.name,
+                                       ),
                             )
     site_ids = [row.site_id for row in rows]
 
     represent = s3db.org_SiteRepresent(show_link=False)
-
     labels = represent.bulk(site_ids)
-    return {k: v for k, v in labels.items() if k}
+
+    return {site_id: labels[site_id] for site_id in site_ids}
 
 # =============================================================================
 class RLPAvailabilityFilter(S3DateFilter):
