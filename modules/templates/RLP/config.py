@@ -995,7 +995,7 @@ def config(settings):
             @param r: the current S3Request
         """
 
-        from s3 import S3WeeklyHoursWidget, s3_text_represent
+        from s3 import S3WeeklyHoursWidget, S3WithIntro, s3_text_represent
 
         avtable = current.s3db.pr_person_availability
         is_profile = r.controller == "default"
@@ -1009,7 +1009,9 @@ def config(settings):
         field.readable = field.writable = True
         if is_profile:
             # Add intro text for widget
-            field.widget = S3WeeklyHoursWidget(intro = ("pr", "person_availability", "HoursMatrixIntro"))
+            field.widget = S3WithIntro(field.widget,
+                                       intro = ("pr", "person_availability", "HoursMatrixIntro"),
+                                       )
         if r.representation == "xls":
             field.represent = lambda v: S3WeeklyHoursWidget.represent(v, html=False)
         else:
@@ -1570,7 +1572,7 @@ def config(settings):
                 if not r.component:
                     # Custom Form
                     from gluon import IS_IN_SET
-                    from s3 import S3SQLInlineLink
+                    from s3 import S3SQLInlineLink, S3WithIntro
                     from .helpers import rlp_deployment_sites
                     crud_fields = name_fields
                     crud_fields.extend(["date_of_birth",
@@ -1585,16 +1587,20 @@ def config(settings):
                                         "volunteer_record.status",
                                         "availability.hours_per_week",
                                         "availability.schedule_json",
-                                        S3SQLInlineLink("availability_sites",
-                                                        field = "site_id",
-                                                        label = T("Possible Deployment Sites"),
-                                                        requires = IS_IN_SET(rlp_deployment_sites(),
-                                                                            multiple = True,
-                                                                            zero = None,
-                                                                            sort = False,
-                                                                            ),
-                                                        render_list = True,
-                                                        ),
+                                        S3WithIntro(
+                                            S3SQLInlineLink("availability_sites",
+                                                            field = "site_id",
+                                                            label = T("Possible Deployment Sites"),
+                                                            requires = IS_IN_SET(rlp_deployment_sites(),
+                                                                                 multiple = True,
+                                                                                 zero = None,
+                                                                                 sort = False,
+                                                                                 ),
+                                                            render_list = True,
+                                                            ),
+                                            # Widget intro text from CMS
+                                            intro = ("pr", "person_availability_site", "AvailabilitySitesIntro"),
+                                            ),
                                         "availability.comments",
                                         "volunteer_record.comments",
                                         ])

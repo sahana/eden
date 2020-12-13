@@ -37,6 +37,7 @@ __all__ = ("S3SQLCustomForm",
            "S3SQLVerticalSubFormLayout",
            "S3SQLInlineComponent",
            "S3SQLInlineLink",
+           "S3WithIntro",
            )
 
 import json
@@ -4291,5 +4292,111 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             raise SyntaxError("No linktable for %s" % selector)
 
         return (component, link)
+
+# =============================================================================
+class S3WithIntro(S3SQLFormElement):
+    """
+        Wrapper for widgets to add an introductory text above them
+    """
+
+    def __init__(self, widget, intro=None, cmsxml=False):
+        """
+            Constructor
+
+            @param widget: the widget
+            @param intro: the intro, string|DIV|tuple,
+                          if specified as tuple (module, resource, name),
+                          the intro text will be looked up from CMS
+            @param cmsxml: do not XML-escape CMS contents, should only
+                           be used with safe origin content (=normally never)
+        """
+
+        self.widget = widget
+
+        self.intro = intro
+        self.cmsxml = cmsxml
+
+    # -------------------------------------------------------------------------
+    def resolve(self, resource):
+        """
+            Override S3SQLFormElement.resolve() to map to widget
+
+            @param resource: the S3Resource to resolve this form element
+                             against
+        """
+
+        resolved = self.widget.resolve(resource)
+
+        field = resolved[2]
+        if field:
+            field.widget = self
+        return resolved
+
+    # -------------------------------------------------------------------------
+    def __getattr__(self, key):
+        """
+            Attribute access => map to widget
+
+            @param key: the attribute key
+        """
+
+        if key in self.__dict__:
+            return self.__dict__[key]
+
+        sentinel = object()
+        value = getattr(self.widget, key, sentinel)
+        if value is sentinel:
+            raise AttributeError
+        return value
+
+    # -------------------------------------------------------------------------
+    def __call__(self, *args, **kwargs):
+        """
+            Widget renderer => map to widget, then add intro
+        """
+
+        w = self.widget(*args, **kwargs)
+
+        intro = self.intro
+        if isinstance(intro, tuple):
+            if len(intro) == 3 and current.deployment_settings.has_module("cms"):
+                intro = self.get_cms_intro(intro)
+            else:
+                intro = None
+        if intro:
+            return TAG[""](DIV(intro, _class="s3-widget-intro"), w)
+        else:
+            return w
+
+    # -------------------------------------------------------------------------
+    def get_cms_intro(self, intro):
+        """
+            Get intro from CMS
+
+            @param intro: the intro spec as tuple (module, resource, postname)
+        """
+
+        # Get intro text from CMS
+        db = current.db
+        s3db = current.s3db
+
+        ctable = s3db.cms_post
+        ltable = s3db.cms_post_module
+        join = ltable.on((ltable.post_id == ctable.id) & \
+                         (ltable.module == intro[0]) & \
+                         (ltable.resource == intro[1]) & \
+                         (ltable.deleted == False))
+
+        query = (ctable.name == intro[2]) & \
+                (ctable.deleted == False)
+        row = db(query).select(ctable.body,
+                               join = join,
+                               cache = s3db.cache,
+                               limitby = (0, 1),
+                               ).first()
+        if not row:
+            return None
+
+        return XML(row.body) if self.cmsxml else row.body
 
 # END =========================================================================

@@ -191,6 +191,13 @@ div.s3-groupedopts-widget {
     padding: 0.3em;
 }
 
+/* Widget Intro-Wrapper */
+.s3-widget-intro {
+    max-width: 42rem;
+    padding: 0.5rem 0;
+    font-size: 0.8rem;
+}
+
 /* pr_Contacts widgets */
 .pr-contacts-wrapper h3 {
   margin-top: 0.5rem;
@@ -481,11 +488,6 @@ form.anonymize-form,
 }
 
 /* Weekly Hours Widget */
-.wh-intro {
-    max-width: 42rem;
-    padding: 0.5rem 0;
-    font-size: 0.8rem;
-}
 .wh-raster {
     margin-top: 0.3rem;
     tr {

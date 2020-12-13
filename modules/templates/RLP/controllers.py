@@ -12,7 +12,8 @@ from gluon.storage import Storage
 from s3 import IS_ONE_OF, IS_PHONE_NUMBER_MULTI, IS_PHONE_NUMBER_SINGLE, \
                JSONERRORS, S3CustomController, S3GroupedOptionsWidget, \
                S3LocationSelector, S3MultiSelectWidget, S3WeeklyHoursWidget, \
-               S3Represent, s3_comments_widget, s3_date, s3_mark_required, s3_str
+               S3WithIntro, S3Represent, \
+               s3_comments_widget, s3_date, s3_mark_required, s3_str
 
 from .notifications import formatmap
 from .helpers import rlp_deployment_sites
@@ -631,7 +632,14 @@ class register(S3CustomController):
                             ),
                       Field("schedule_json", "json",
                             label = T("Availability Schedule"),
-                            widget = S3WeeklyHoursWidget(intro = ("pr", "person_availability", "HoursMatrixIntro"))
+                            widget = S3WithIntro(
+                                        S3WeeklyHoursWidget(),
+                                        # Widget intro from CMS
+                                        intro = ("pr",
+                                                 "person_availability",
+                                                 "HoursMatrixIntro",
+                                                 ),
+                                        ),
                             ),
                       Field("availability_sites", "list:integer",
                             label = T("Possible Deployment Sites"),
@@ -639,7 +647,14 @@ class register(S3CustomController):
                                                              multiple = True,
                                                              sort = False,
                                                              )),
-                            widget = S3MultiSelectWidget(),
+                            widget = S3WithIntro(
+                                        S3MultiSelectWidget(),
+                                        # Widget intro from CMS
+                                        intro = ("pr",
+                                                 "person_availability_site",
+                                                 "AvailabilitySitesIntro",
+                                                 ),
+                                        ),
                             ),
                       Field("availability_comments", "text",
                             label = T("Availability Comments"),
