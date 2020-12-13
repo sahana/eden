@@ -216,9 +216,10 @@ def user_mailmerge_fields(resource, record):
                             ctable.value,
                             orderby = (ctable.priority, ~(ctable.modified_on)),
                             )
-    rank = lambda row: row.priority * 10 + priority[row.contact_method]
-    numbers = sorted(((row.value, rank(row)) for row in rows), key = lambda i: i[1])
-    data["Telefon"] = numbers[0][0]
+    if rows:
+        rank = lambda row: row.priority * 10 + priority[row.contact_method]
+        numbers = sorted(((row.value, rank(row)) for row in rows), key = lambda i: i[1])
+        data["Telefon"] = numbers[0][0]
 
     return data
 
