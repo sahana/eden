@@ -8888,6 +8888,8 @@ class pr_Template(S3Method):
             @param attr: controller options for this request
         """
 
+        output = None
+
         if r.http == "GET":
             if r.representation == "docx":
 
@@ -8933,7 +8935,10 @@ class pr_Template(S3Method):
 
                 doc_data = {}
                 for key, selector in mailmerge_fields.items():
-                    if selector == "current_user.name":
+                    if callable(selector):
+                        for k, v in selector(resource, record).items():
+                            doc_data["%s_%s" % (key, k)] = s3_unicode(v)
+                    elif selector == "current_user.name":
                         user = current.auth.user
                         if user:
                             username = s3_format_fullname(fname = user.first_name,
@@ -8967,13 +8972,16 @@ class pr_Template(S3Method):
                 response.headers["Content-disposition"] = disposition
 
                 stream = open(filename, "rb")
-                return response.stream(stream, chunk_size=DEFAULT_CHUNK_SIZE,
-                                       request=r)
-
+                output = response.stream(stream,
+                                         chunk_size = DEFAULT_CHUNK_SIZE,
+                                         request = r,
+                                         )
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
+
+        return output
 
 # =============================================================================
 # Hierarchy Manipulation

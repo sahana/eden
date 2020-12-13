@@ -4,134 +4,14 @@ import datetime
 
 from collections import OrderedDict
 
-from gluon import current, A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_LENGTH, IS_NOT_EMPTY, SPAN, TAG, URL
+from gluon import current, A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_LENGTH, IS_NOT_EMPTY, TAG, URL
 from gluon.storage import Storage
 
 from s3 import FS, IS_ONE_OF
-from s3compat import long
 from s3dal import original_tablename
 
-# =============================================================================
-# UI options per organisation
-#
-UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
-               "case_collaboration": False,
-               "case_document_templates": False,
-               "case_header_protection_themes": False,
-               "case_hide_default_org": False,
-               "case_use_response_tab": True,
-               "case_use_photos_tab": False,
-               "case_use_bamf": False,
-               "case_use_address": True,
-               "case_use_appointments": False,
-               "case_use_education": False,
-               "case_use_flags": False,
-               "case_use_notes": False,
-               "case_use_occupation": True,
-               "case_use_pe_label": False,
-               "case_use_place_of_birth": False,
-               "case_use_residence_status": True,
-               "case_use_referral": True,
-               "case_use_service_contacts": False,
-               "case_lodging": None, # "site"|"text"|None
-               "case_lodging_dates": False,
-               "case_nationality_mandatory": False,
-               "case_show_total_consultations": True,
-               "activity_closure": True,
-               "activity_comments": True,
-               "activity_use_sector": True,
-               "activity_need_details": True,
-               "activity_follow_up": False,
-               "activity_priority": False,
-               "activity_pss_vulnerability": True,
-               "activity_use_need": False,
-               #"activity_tab_label": "Counseling Reasons",
-               "appointments_staff_link": False,
-               "appointments_use_organizer": False,
-               "response_activity_autolink": False,
-               "response_due_date": False,
-               "response_effort_required": True,
-               "response_planning": False,
-               "response_tab_need_filter": False,
-               "response_themes_details": False,
-               "response_themes_sectors": False,
-               "response_themes_needs": False,
-               "response_themes_optional": False,
-               "response_types": True,
-               "response_use_organizer": False,
-               "response_use_time": False,
-               "response_performance_indicators": None, # default
-               }
-
-UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
-                      "case_collaboration": True,
-                      "case_document_templates": True,
-                      "case_header_protection_themes": True,
-                      "case_hide_default_org": True,
-                      "case_use_response_tab": True,
-                      "case_use_photos_tab": True,
-                      "case_use_bamf": True,
-                      "case_use_address": False,
-                      "case_use_appointments": False,
-                      "case_use_education": True,
-                      "case_use_flags": False,
-                      "case_use_notes": False,
-                      "case_use_occupation": False,
-                      "case_use_pe_label": True,
-                      "case_use_place_of_birth": True,
-                      "case_use_residence_status": False,
-                      "case_use_referral": False,
-                      "case_use_service_contacts": False,
-                      "case_lodging": "site",
-                      "case_lodging_dates": False,
-                      "case_nationality_mandatory": True,
-                      "case_show_total_consultations": False,
-                      "activity_closure": False,
-                      "activity_comments": False,
-                      "activity_use_sector": False,
-                      "activity_need_details": False,
-                      "activity_follow_up": False,
-                      "activity_priority": True,
-                      "activity_pss_vulnerability": False,
-                      "activity_use_need": True,
-                      #"activity_tab_label": "Counseling Reasons",
-                      "appointments_staff_link": True,
-                      "appointments_use_organizer": True,
-                      "response_activity_autolink": True,
-                      "response_due_date": False,
-                      "response_effort_required": True,
-                      "response_planning": False,
-                      "response_tab_need_filter": True,
-                      "response_themes_details": True,
-                      "response_themes_sectors": True,
-                      "response_themes_needs": True,
-                      "response_themes_optional": True,
-                      "response_types": False,
-                      "response_use_organizer": True,
-                      "response_use_time": True,
-                      "response_performance_indicators": "lea",
-                      },
-              }
-
-UI_TYPES = {"LEA Ellwangen": "LEA",
-            "Ankunftszentrum Heidelberg": "LEA",
-            }
-
-def get_ui_options():
-    """ Get the UI options for the current user's root organisation """
-
-    ui_options = dict(UI_DEFAULTS)
-    ui_type = UI_TYPES.get(current.auth.root_org_name())
-    if ui_type:
-        ui_options.update(UI_OPTIONS[ui_type])
-    return ui_options
-
-def get_ui_option(key):
-    """ Getter for UI options, for lazy deployment settings """
-
-    def getter(default=None):
-        return get_ui_options().get(key, default)
-    return getter
+from .helpers import user_mailmerge_fields, case_read_multiple_orgs
+from .uioptions import get_ui_options, get_ui_option
 
 # =============================================================================
 def config(settings):
@@ -275,15 +155,16 @@ def config(settings):
                                      "Name": "last_name",
                                      "Geburtsdatum": "date_of_birth",
                                      "Geburtsort": "pr_person_details.place_of_birth",
+                                     "Adresse": "dvr_case.site_id$location_id$addr_street",
+                                     "PLZ": "dvr_case.site_id$location_id$addr_postcode",
+                                     "Wohnort": "dvr_case.site_id$location_id$L3",
                                      "Land": "pr_person_details.nationality",
                                      "Registrierungsdatum": "case_details.arrival_date",
                                      "AKN-Datum": "case_details.arrival_date",
                                      "Falldatum": "dvr_case.date",
                                      "BAMF-Az": "bamf.value",
                                      "Benutzername": "current_user.name",
-                                     "Adresse": "dvr_case.site_id$location_id$addr_street",
-                                     "PLZ": "dvr_case.site_id$location_id$addr_postcode",
-                                     "Wohnort": "dvr_case.site_id$location_id$L3",
+                                     "Berater": user_mailmerge_fields,
                                      }
 
     # -------------------------------------------------------------------------
@@ -564,6 +445,7 @@ def config(settings):
         if current.request.controller == "dvr":
 
             # Use custom rheader for case perspective
+            from .rheaders import drk_dvr_rheader
             attr["rheader"] = drk_dvr_rheader
 
             # Set contacts-method to retain the tab
@@ -770,6 +652,7 @@ def config(settings):
                             )
 
             # Configure anonymize-rules
+            from .anonymize import drk_person_anonymize
             s3db.configure("pr_person",
                            anonymize = drk_person_anonymize(),
                            )
@@ -826,40 +709,6 @@ def config(settings):
                                                       },
                                                      )
                                     )
-
-    # -------------------------------------------------------------------------
-    def case_default_org():
-        """
-            Determine the default organisation for new cases
-        """
-
-        auth = current.auth
-        realms = auth.permission.permitted_realms("dvr_case", "create")
-
-        default_org = None
-
-        if realms is None:
-            # User can create cases for any org
-            orgs = []
-            multiple_orgs = True
-        else:
-            otable = current.s3db.org_organisation
-            query = (otable.pe_id.belongs(realms)) & \
-                    (otable.deleted == False)
-            rows = current.db(query).select(otable.id)
-            orgs = [row.id for row in rows]
-            multiple_orgs = len(rows) > 1
-
-        if multiple_orgs:
-            # User can create cases for multiple orgs
-            user_org = auth.user.organisation_id if auth.user else None
-            if user_org and user_org in orgs:
-                default_org = user_org
-        elif orgs:
-            # User can create cases for exactly one org
-            default_org = orgs[0]
-
-        return default_org, multiple_orgs
 
     # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
@@ -1002,6 +851,7 @@ def config(settings):
                                        IS_PERSON_GENDER
 
                         # Default organisation
+                        from .helpers import case_default_org
                         ctable = s3db.dvr_case
                         field = ctable.organisation_id
                         default_org, selectable = case_default_org()
@@ -1433,8 +1283,11 @@ def config(settings):
 
         if current.request.controller == "dvr":
             attr = dict(attr)
+
             # Custom rheader
+            from .rheaders import drk_dvr_rheader
             attr["rheader"] = drk_dvr_rheader
+
             # Activate filters on component tabs
             if response_tab_need_filter:
                 attr["hide_filter"] = {"response_action": False}
@@ -1600,6 +1453,8 @@ def config(settings):
             return result
         s3.prep = custom_prep
 
+        # Custom rheader
+        from .rheaders import drk_dvr_rheader
         attr["rheader"] = drk_dvr_rheader
 
         return attr
@@ -2099,6 +1954,7 @@ def config(settings):
                 diagnosis = None
 
             # Customise Priority
+            from .helpers import PriorityRepresent
             field = table.priority
             priority_opts = [(0, T("Emergency")),
                              (1, T("High")),
@@ -3340,9 +3196,9 @@ def config(settings):
         s3.prep = custom_prep
 
 
-        # Custom rheader tabs
+        # Custom rheader
         if current.request.controller == "dvr":
-            attr = dict(attr)
+            from .rheaders import drk_dvr_rheader
             attr["rheader"] = drk_dvr_rheader
 
         return attr
@@ -3674,7 +3530,7 @@ def config(settings):
         s3.prep = custom_prep
 
         # Custom rheader
-        attr = dict(attr)
+        from .rheaders import drk_cr_rheader
         attr["rheader"] = drk_cr_rheader
 
         return attr
@@ -3718,7 +3574,8 @@ def config(settings):
 
         s3.prep = custom_prep
 
-        attr = dict(attr)
+        # Customr header
+        from .rheaders import drk_org_rheader
         attr["rheader"] = drk_org_rheader
 
         return attr
@@ -3816,7 +3673,7 @@ def config(settings):
 
         # Custom rheader+tabs
         if current.request.controller == "org":
-            attr = dict(attr)
+            from .rheaders import drk_org_rheader
             attr["rheader"] = drk_org_rheader
 
         return attr
@@ -4094,739 +3951,5 @@ def config(settings):
            module_type = None,
         )),
     ])
-
-# =============================================================================
-def case_read_multiple_orgs():
-    """
-        Check if the user has read access to cases of more than one org
-
-        @returns: tuple (multiple_orgs, org_ids)
-    """
-
-    realms = current.auth.permission.permitted_realms("dvr_case", "read")
-    if realms is None:
-        multiple_orgs = True
-        org_ids = []
-    else:
-        otable = current.s3db.org_organisation
-        query = (otable.pe_id.belongs(realms)) & \
-                (otable.deleted == False)
-        rows = current.db(query).select(otable.id)
-        multiple_orgs = len(rows) > 1
-        org_ids = [row.id for row in rows]
-
-    return multiple_orgs, org_ids
-
-# =============================================================================
-def drk_cr_rheader(r, tabs=None):
-    """ CR custom resource headers """
-
-    if r.representation != "html":
-        # Resource headers only used in interactive views
-        return None
-
-    from s3 import s3_rheader_resource, S3ResourceHeader
-
-    tablename, record = s3_rheader_resource(r)
-    if tablename != r.tablename:
-        resource = current.s3db.resource(tablename, id=record.id)
-    else:
-        resource = r.resource
-
-    rheader = None
-    rheader_fields = []
-
-    if record:
-        T = current.T
-
-        if tablename == "cr_shelter":
-
-            if not tabs:
-                tabs = [(T("Basic Details"), None),
-                        ]
-
-            rheader_fields = [["name",
-                               ],
-                              ["organisation_id",
-                               ],
-                              ["location_id",
-                               ],
-                              ]
-
-        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
-                                                         table=resource.table,
-                                                         record=record,
-                                                         )
-    return rheader
-
-# =============================================================================
-def get_protection_themes(person):
-    """
-        Get response themes of a case that are linked to protection needs
-
-        @param person: the beneficiary record (pr_person Row)
-
-        @returns: list-representation of response themes
-    """
-
-    db = current.db
-    s3db = current.s3db
-
-    # Get all theme_ids that are linked to protection needs
-    ntable = s3db.dvr_need
-    ttable = s3db.dvr_response_theme
-
-    query = (ntable.protection == True) & \
-            (ntable.id == ttable.need_id) & \
-            (ttable.deleted == False)
-    themes = db(query).select(ttable.id,
-                              cache = s3db.cache,
-                              )
-    theme_ids = set(theme.id for theme in themes)
-
-    # Find out which of these themes are linked to the person
-    rtable = s3db.dvr_response_action
-    ltable = s3db.dvr_response_action_theme
-
-    query = (ltable.theme_id.belongs(theme_ids)) & \
-            (ltable.action_id == rtable.id) & \
-            (ltable.deleted == False) & \
-            (rtable.person_id == person.id) & \
-            (rtable.deleted == False)
-    rows = db(query).select(ltable.theme_id,
-                            groupby = ltable.theme_id,
-                            )
-    theme_list = [row.theme_id for row in rows]
-
-    # Return presented as list
-    represent = rtable.response_theme_ids.represent
-    return represent(theme_list)
-
-# =============================================================================
-def get_total_consultations(person):
-    """
-        Get number of consultations for person
-
-        @param person: the beneficiary record (pr_person Row)
-
-        @returns: number of consultations
-    """
-
-    s3db = current.s3db
-
-    rtable = s3db.dvr_response_action
-
-    ui_options = get_ui_options()
-    if ui_options.get("response_types"):
-        # Filter by response type
-        ttable = s3db.dvr_response_type
-        join = ttable.on((ttable.id == rtable.response_type_id) & \
-                         (ttable.is_consultation == True))
-    else:
-        # Count all responses as consultations
-        join = None
-
-    query = (rtable.person_id == person.id) & \
-            (rtable.deleted == False)
-    count = rtable.id.count()
-
-    row = current.db(query).select(count, join=join).first()
-    return row[count]
-
-# =============================================================================
-def drk_dvr_rheader(r, tabs=None):
-    """ DVR custom resource headers """
-
-    if r.representation != "html":
-        # Resource headers only used in interactive views
-        return None
-
-    from s3 import s3_rheader_resource, \
-                   S3ResourceHeader, \
-                   s3_fullname
-
-    tablename, record = s3_rheader_resource(r)
-    if tablename != r.tablename:
-        resource = current.s3db.resource(tablename, id=record.id)
-    else:
-        resource = r.resource
-
-    rheader = None
-    rheader_fields = []
-
-    if record:
-        T = current.T
-        record_id = record.id
-
-        if tablename == "pr_person":
-
-            # UI Options and ability to read cases from multiple orgs
-            ui_opts = get_ui_options()
-            ui_opts_get = ui_opts.get
-            multiple_orgs = case_read_multiple_orgs()[0]
-
-            if not tabs:
-                activity_tab_label = ui_opts_get("activity_tab_label")
-                if activity_tab_label:
-                    ACTIVITIES = T(activity_tab_label)
-                else:
-                    ACTIVITIES = T("Counseling Reasons")
-
-                # Basic Case Documentation
-                tabs = [(T("Basic Details"), None),
-                        (T("Contact Info"), "contacts"),
-                        (T("Family Members"), "group_membership/"),
-                        (ACTIVITIES, "case_activity"),
-                        ]
-
-                # Optional Case Documentation
-                if ui_opts_get("case_use_response_tab"):
-                    tabs.append((T("Actions"), "response_action"))
-                if ui_opts_get("case_use_appointments"):
-                    tabs.append((T("Appointments"), "case_appointment"))
-                if ui_opts_get("case_use_service_contacts"):
-                    tabs.append((T("Service Contacts"), "service_contact"))
-                if ui_opts_get("case_use_photos_tab"):
-                    tabs.append((T("Photos"), "image"))
-
-                # Uploads
-                tabs.append((T("Documents"), "document/"))
-
-                # Notes etc.
-                if ui_opts_get("case_use_notes"):
-                    tabs.append((T("Notes"), "case_note"))
-
-            # Get the record data
-            lodging_opt = ui_opts_get("case_lodging")
-            if lodging_opt == "site":
-                lodging_sel = "dvr_case.site_id"
-                lodging_col = "dvr_case.site_id"
-            elif lodging_opt == "text":
-                lodging_sel = "case_details.lodging"
-                lodging_col = "dvr_case_details.lodging"
-            else:
-                lodging_sel = None
-                lodging_col = None
-
-            if ui_opts_get("case_use_flags"):
-                flags_sel = "dvr_case_flag_case.flag_id"
-            else:
-                flags_sel = None
-
-            if ui_opts_get("case_use_place_of_birth"):
-                pob_sel = "person_details.place_of_birth"
-            else:
-                pob_sel = None
-
-            if ui_opts_get("case_use_bamf"):
-                bamf_sel = "bamf.value"
-            else:
-                bamf_sel = None
-
-            case = resource.select(["first_name",
-                                    "last_name",
-                                    "dvr_case.status_id",
-                                    "dvr_case.archived",
-                                    "dvr_case.household_size",
-                                    "dvr_case.organisation_id",
-                                    "case_details.arrival_date",
-                                    bamf_sel,
-                                    "person_details.nationality",
-                                    pob_sel,
-                                    lodging_sel,
-                                    flags_sel,
-                                    ],
-                                    represent = True,
-                                    raw_data = True,
-                                    ).rows
-
-            if case:
-                # Extract case data
-                case = case[0]
-
-                name = lambda person: s3_fullname(person, truncate=False)
-                raw = case["_row"]
-
-                case_status = lambda row: case["dvr_case.status_id"]
-                archived = raw["dvr_case.archived"]
-                organisation = lambda row: case["dvr_case.organisation_id"]
-                arrival_date = lambda row: case["dvr_case_details.arrival_date"]
-                household_size = lambda row: case["dvr_case.household_size"]
-                nationality = lambda row: case["pr_person_details.nationality"]
-
-                # Warn if nationality is lacking while mandatory
-                if ui_opts_get("case_nationality_mandatory") and \
-                   raw["pr_person_details.nationality"] is None:
-                    current.response.warning = T("Nationality lacking!")
-
-                bamf = lambda row: case["pr_bamf_person_tag.value"]
-
-                if pob_sel:
-                    place_of_birth = lambda row: case["pr_person_details.place_of_birth"]
-                else:
-                    place_of_birth = None
-                if lodging_col:
-                    lodging = (T("Lodging"), lambda row: case[lodging_col])
-                else:
-                    lodging = None
-                if flags_sel:
-                    flags = lambda row: case["dvr_case_flag_case.flag_id"]
-                else:
-                    flags = None
-            else:
-                # Target record exists, but doesn't match filters
-                return None
-
-            arrival_date_label = ui_opts_get("case_arrival_date_label")
-            arrival_date_label = T(arrival_date_label) \
-                                 if arrival_date_label else T("Date of Entry")
-
-            # Adaptive rheader-fields
-            rheader_fields = [[None,
-                               (T("Nationality"), nationality),
-                               (T("Case Status"), case_status)],
-                              [None, None, None],
-                              [None, None, None],
-                              ]
-
-            if ui_opts_get("case_use_pe_label"):
-                rheader_fields[0][0] = (T("ID"), "pe_label")
-                rheader_fields[1][0] = "date_of_birth"
-            else:
-                rheader_fields[0][0] = "date_of_birth"
-
-            if pob_sel:
-                pob_row = 1 if rheader_fields[1][0] is None else 2
-                rheader_fields[pob_row][0] = (T("Place of Birth"), place_of_birth)
-
-            if bamf_sel:
-                doe_row = 2
-                rheader_fields[1][1] = (T("BAMF-Az"), bamf)
-            else:
-                doe_row = 1
-            rheader_fields[doe_row][1] = (arrival_date_label, arrival_date)
-
-            if lodging:
-                rheader_fields[1][2] = lodging
-
-            if ui_opts_get("case_show_total_consultations"):
-                total_consultations = (T("Number of Consultations"), get_total_consultations)
-                if rheader_fields[1][2] is None:
-                    rheader_fields[1][2] = total_consultations
-                else:
-                    rheader_fields[0].append(total_consultations)
-
-            hhsize = (T("Size of Family"), household_size)
-            if rheader_fields[1][0] is None:
-                rheader_fields[1][0] = hhsize
-            elif rheader_fields[2][0] is None:
-                rheader_fields[2][0] = hhsize
-            elif rheader_fields[1][2] is None:
-                rheader_fields[1][2] = hhsize
-            else:
-                rheader_fields[2][2] = hhsize
-
-            colspan = 5
-
-            if multiple_orgs:
-                # Show organisation if user can see cases from multiple orgs
-                rheader_fields.insert(0, [(T("Organisation"), organisation, colspan)])
-            if flags_sel:
-                rheader_fields.append([(T("Flags"), flags, colspan)])
-            if ui_opts_get("case_header_protection_themes"):
-                rheader_fields.append([(T("Protection Need"),
-                                        get_protection_themes,
-                                        colspan,
-                                        )])
-            if archived:
-                # "Case Archived" hint
-                hint = lambda record: SPAN(T("Invalid Case"), _class="invalid-case")
-                rheader_fields.insert(0, [(None, hint)])
-
-            # Generate rheader XML
-            rheader = S3ResourceHeader(rheader_fields, tabs, title=name)(
-                            r,
-                            table = resource.table,
-                            record = record,
-                            )
-
-            # Add profile picture
-            from s3 import s3_avatar_represent
-            rheader.insert(0, A(s3_avatar_represent(record_id,
-                                                    "pr_person",
-                                                    _class = "rheader-avatar",
-                                                    _width = 60,
-                                                    _height = 60,
-                                                    ),
-                                _href=URL(f = "person",
-                                          args = [record_id, "image"],
-                                          vars = r.get_vars,
-                                          ),
-                                )
-                           )
-
-            return rheader
-
-        elif tablename == "dvr_case":
-
-            if not tabs:
-                tabs = [(T("Basic Details"), None),
-                        (T("Activities"), "case_activity"),
-                        ]
-
-            rheader_fields = [["reference"],
-                              ["status_id"],
-                              ]
-
-        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
-                                                         table=resource.table,
-                                                         record=record,
-                                                         )
-
-    return rheader
-
-# =============================================================================
-def drk_org_rheader(r, tabs=None):
-    """ ORG custom resource headers """
-
-    if r.representation != "html":
-        # Resource headers only used in interactive views
-        return None
-
-    from s3 import s3_rheader_resource, s3_rheader_tabs, S3ResourceHeader
-
-    s3db = current.s3db
-
-    tablename, record = s3_rheader_resource(r)
-    if tablename != r.tablename:
-        resource = s3db.resource(tablename, id=record.id)
-    else:
-        resource = r.resource
-
-    rheader = None
-    rheader_fields = []
-
-    if record:
-        T = current.T
-        record_id = record.id
-
-        ui_options = get_ui_options()
-        is_admin = current.auth.s3_has_role("ADMIN")
-
-        if tablename == "org_organisation":
-
-            table = resource.table
-
-            if record.root_organisation == record_id:
-                branch = False
-            else:
-                branch = True
-
-            # Custom tabs
-            tabs = [(T("Basic Details"), None),
-                    (T("Branches"), "branch"),
-                    (T("Facilities"), "facility"),
-                    (T("Staff & Volunteers"), "human_resource"),
-                    #(T("Projects"), "project"),
-                    (T("Counseling Themes"), "response_theme"),
-                    ]
-
-            if is_admin or ui_options.get("response_themes_needs"):
-                # Ability to manage org-specific need types
-                # as they are used in themes:
-                tabs.append((T("Counseling Reasons"), "need"))
-
-            if not branch and \
-               (is_admin or \
-                ui_options.get("case_document_templates") and \
-                current.auth.s3_has_role("ORG_ADMIN")):
-                tabs.append((T("Document Templates"), "document"))
-
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-
-            # Custom header
-            from gluon import TABLE, TR, TH, TD
-            rheader = DIV()
-
-            # Name
-            record_data = TABLE(TR(TH("%s: " % table.name.label),
-                                   record.name,
-                                   ),
-                                )
-
-            # Parent Organisation
-            if branch:
-                btable = s3db.org_organisation_branch
-                query = (btable.branch_id == record_id) & \
-                        (btable.organisation_id == table.id)
-                row = current.db(query).select(table.id,
-                                               table.name,
-                                               limitby = (0, 1),
-                                               ).first()
-                if row:
-                    record_data.append(TR(TH("%s: " % T("Branch of")),
-                                          A(row.name, _href=URL(args=[row.id, "read"])),
-                                          ))
-
-            # Website as link
-            if record.website:
-                record_data.append(TR(TH("%s: " % table.website.label),
-                                      A(record.website, _href=record.website)))
-
-            logo = s3db.org_organisation_logo(record)
-            if logo:
-                rheader.append(TABLE(TR(TD(logo),
-                                        TD(record_data),
-                                        )))
-            else:
-                rheader.append(record_data)
-
-            rheader.append(rheader_tabs)
-            return rheader
-
-        elif tablename == "org_facility":
-
-            if not tabs:
-                tabs = [(T("Basic Details"), None),
-                        ]
-
-            rheader_fields = [["name", "email"],
-                              ["organisation_id", "phone1"],
-                              ["location_id", "phone2"],
-                              ]
-
-        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
-                                                         table=resource.table,
-                                                         record=record,
-                                                         )
-    return rheader
-
-# =============================================================================
-def drk_obscure_dob(record_id, field, value):
-    """
-        Helper to obscure a date of birth; maps to the first day of
-        the quarter, thus retaining the approximate age for statistics
-
-        @param record_id: the pr_address record ID
-        @param field: the location_id Field
-        @param value: the location_id
-
-        @return: the new date
-    """
-
-    if value:
-        month = int((value.month - 1) / 3) * 3 + 1
-        value = value.replace(month=month, day=1)
-
-    return value
-
-# -----------------------------------------------------------------------------
-def drk_person_anonymize():
-    """ Rules to anonymize a case file """
-
-    ANONYMOUS = "-"
-
-    # Helper to produce an anonymous ID (pe_label)
-    anonymous_id = lambda record_id, f, v: "NN%06d" % long(record_id)
-
-    # General rule for attachments
-    documents = ("doc_document", {"key": "doc_id",
-                                  "match": "doc_id",
-                                  "fields": {"name": ("set", ANONYMOUS),
-                                             "file": "remove",
-                                             "comments": "remove",
-                                             },
-                                  "delete": True,
-                                  })
-
-    # Cascade rule for case activities
-    activity_details = [("dvr_response_action", {"key": "case_activity_id",
-                                                 "match": "id",
-                                                 "fields": {"comments": "remove",
-                                                            },
-                                               }),
-                        ("dvr_case_activity_need", {"key": "case_activity_id",
-                                                    "match": "id",
-                                                    "fields": {"comments": "remove",
-                                                               },
-                                                  }),
-                        ("dvr_case_activity_update", {"key": "case_activity_id",
-                                                      "match": "id",
-                                                      "fields": {"comments": ("set", ANONYMOUS),
-                                                                 },
-                                                      }),
-                        ]
-
-    rules = [# Remove identity of beneficiary
-             {"name": "default",
-              "title": "Names, IDs, Reference Numbers, Contact Information, Addresses",
-              "fields": {"first_name": ("set", ANONYMOUS),
-                         "last_name": ("set", ANONYMOUS),
-                         "pe_label": anonymous_id,
-                         "date_of_birth": drk_obscure_dob,
-                         "comments": "remove",
-                         },
-              "cascade": [("dvr_case", {"key": "person_id",
-                                        "match": "id",
-                                        "fields": {"comments": "remove",
-                                                   },
-                                        }),
-                          ("dvr_case_details", {"key": "person_id",
-                                                "match": "id",
-                                                "fields": {"lodging": "remove",
-                                                           },
-                                                }),
-                          ("pr_contact", {"key": "pe_id",
-                                          "match": "pe_id",
-                                          "fields": {"contact_description": "remove",
-                                                     "value": ("set", ""),
-                                                     "comments": "remove",
-                                                     },
-                                          "delete": True,
-                                          }),
-                          ("pr_contact_emergency", {"key": "pe_id",
-                                                    "match": "pe_id",
-                                                    "fields": {"name": ("set", ANONYMOUS),
-                                                               "relationship": "remove",
-                                                               "phone": "remove",
-                                                               "comments": "remove",
-                                                               },
-                                                    "delete": True,
-                                                    }),
-                          ("pr_address", {"key": "pe_id",
-                                          "match": "pe_id",
-                                          "fields": {"location_id": current.s3db.pr_address_anonymise,
-                                                     "comments": "remove",
-                                                     },
-                                          }),
-                          ("pr_person_details", {"key": "person_id",
-                                                 "match": "id",
-                                                 "fields": {"education": "remove",
-                                                            "occupation": "remove",
-                                                            },
-                                                 }),
-                          ("pr_person_tag", {"key": "person_id",
-                                             "match": "id",
-                                             "fields": {"value": ("set", ANONYMOUS),
-                                                        },
-                                             "delete": True,
-                                             }),
-                          ("dvr_residence_status", {"key": "person_id",
-                                                    "match": "id",
-                                                    "fields": {"reference": ("set", ANONYMOUS),
-                                                               "comments": "remove",
-                                                               },
-                                                    }),
-                          ("dvr_service_contact", {"key": "person_id",
-                                                   "match": "id",
-                                                   "fields": {"reference": "remove",
-                                                              "contact": "remove",
-                                                              "phone": "remove",
-                                                              "email": "remove",
-                                                              "comments": "remove",
-                                                              },
-                                                   }),
-                          ],
-              },
-
-             # Remove activity details, appointments and notes
-             {"name": "activities",
-              "title": "Activity Details, Appointments, Notes",
-              "cascade": [("dvr_case_activity", {"key": "person_id",
-                                                 "match": "id",
-                                                 "fields": {"subject": ("set", ANONYMOUS),
-                                                            "need_details": "remove",
-                                                            "outcome": "remove",
-                                                            "comments": "remove",
-                                                            },
-                                                 "cascade": activity_details,
-                                                 }),
-                          ("dvr_case_appointment", {"key": "person_id",
-                                                    "match": "id",
-                                                    "fields": {"comments": "remove",
-                                                               },
-                                                    }),
-                          ("dvr_case_language", {"key": "person_id",
-                                                 "match": "id",
-                                                 "fields": {"comments": "remove",
-                                                            },
-                                                  }),
-                          ("dvr_note", {"key": "person_id",
-                                        "match": "id",
-                                        "fields": {"note": "remove",
-                                                   },
-                                        "delete": True,
-                                        }),
-                          ],
-              },
-
-             # Remove photos and attachments
-             {"name": "documents",
-              "title": "Photos and Documents",
-              "cascade": [("dvr_case", {"key": "person_id",
-                                        "match": "id",
-                                        "cascade": [documents,
-                                                    ],
-                                        }),
-                          ("dvr_case_activity", {"key": "person_id",
-                                                 "match": "id",
-                                                 "cascade": [documents,
-                                                             ],
-                                                 }),
-                          ("pr_image", {"key": "pe_id",
-                                        "match": "pe_id",
-                                        "fields": {"image": "remove",
-                                                   "url": "remove",
-                                                   "description": "remove",
-                                                   },
-                                        "delete": True,
-                                        }),
-                          ],
-              },
-
-              # TODO family membership
-
-             ]
-
-    return rules
-
-# =============================================================================
-class PriorityRepresent(object):
-    """
-        Color-coded representation of priorities
-
-        @todo: generalize/move to s3utils?
-    """
-
-    def __init__(self, options, classes=None):
-        """
-            Constructor
-
-            @param options: the options (as dict or anything that can be
-                            converted into a dict)
-            @param classes: a dict mapping keys to CSS class suffixes
-        """
-
-        self.options = dict(options)
-        self.classes = classes
-
-    def represent(self, value, row=None):
-        """
-            Representation function
-
-            @param value: the value to represent
-        """
-
-        css_class = base_class = "prio"
-
-        classes = self.classes
-        if classes:
-            suffix = classes.get(value)
-            if suffix:
-                css_class = "%s %s-%s" % (css_class, base_class, suffix)
-
-        label = self.options.get(value)
-
-        return DIV(label, _class=css_class)
 
 # END =========================================================================

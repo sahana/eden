@@ -108,6 +108,11 @@ $action_btn_fgcolor_disabled: $action_btn_fgcolor_hover !default;
     }
 }
 
+/* Submit-button in contacts inline-edit form */
+.pr-contacts-editable button {
+    @include tiny_button_style();
+}
+
 /* Debug buttons in footer */
 #footer {
     button.btn {

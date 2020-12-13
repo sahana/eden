@@ -849,8 +849,21 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
   white-space: nowrap;
 }
 
+/* Submit-button in contacts inline-edit form */
+/* line 112, ../scss/theme/_buttons.scss */
+.pr-contacts-editable button {
+  font-size: 0.6875rem;
+  border: 0;
+  line-height: 1;
+  margin-bottom: inherit;
+  padding: 0.25rem 0.5rem 0.375rem;
+  cursor: pointer;
+  text-decoration: none !important;
+  display: inline-block;
+}
+
 /* Debug buttons in footer */
-/* line 113, ../scss/theme/_buttons.scss */
+/* line 118, ../scss/theme/_buttons.scss */
 #footer button.btn {
   font-size: 0.6875rem;
   border: 0;
@@ -865,34 +878,34 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
   color: white;
   background: #dddddd;
 }
-/* line 120, ../scss/theme/_buttons.scss */
+/* line 125, ../scss/theme/_buttons.scss */
 #footer button.btn:hover {
   color: white;
   background: #a0a0a0;
 }
 
 /* Action links */
-/* line 127, ../scss/theme/_buttons.scss */
+/* line 132, ../scss/theme/_buttons.scss */
 .action-lnk {
   margin-left: 0.6rem;
 }
-/* line 129, ../scss/theme/_buttons.scss */
+/* line 134, ../scss/theme/_buttons.scss */
 .action-lnk:first-child {
   margin-left: 0;
 }
 
-/* line 133, ../scss/theme/_buttons.scss */
+/* line 138, ../scss/theme/_buttons.scss */
 body.rtl .action-lnk {
   margin-left: 0;
   margin-right: 0.6rem;
 }
-/* line 136, ../scss/theme/_buttons.scss */
+/* line 141, ../scss/theme/_buttons.scss */
 body.rtl .action-lnk:first-child {
   margin-right: 0;
 }
 
 /* Caret */
-/* line 142, ../scss/theme/_buttons.scss */
+/* line 147, ../scss/theme/_buttons.scss */
 .caret {
   display: inline-block;
   width: 0;
