@@ -62,7 +62,7 @@ Check For Errors
     Return From Keyword If  ${passed}==${1}  ${1}
 
     ${passed}=  Check For Ticket And Catch Exception  ${Failed URL}
-    Run Keyword If  ${passed}!=0  Append To File  ${Log File}  @{passed}[0]@{passed}[1]
+    Run Keyword If  ${passed}!=0  Append To File  ${Log File}  ${passed}[0]${passed}[1]
     Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
     Return From Keyword If  ${passed}!=${0}  ${1}
 

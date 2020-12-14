@@ -87,8 +87,8 @@ Check for ticket and catch exception
 
     # Log it
     ${passed}=  Run Keyword and Return Status  Should Not Be Empty  ${Failed URL}
-    Run Keyword If  ${passed}  Log  @{With Failed URL}[0] @{With Failed URL}[1]  ERROR
-    Run Keyword Unless  ${passed}  Log  @{Without Failed URL}[0] @{Without Failed URL}[1]  ERROR
+    Run Keyword If  ${passed}  Log  ${With Failed URL}[0] ${With Failed URL}[1]  ERROR
+    Run Keyword Unless  ${passed}  Log  ${Without Failed URL}[0] ${Without Failed URL}[1]  ERROR
 
     # Return errors if the Failed URL is given
     Return From Keyword if  ${passed}  @{With Failed URL}
