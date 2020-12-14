@@ -1,4 +1,32 @@
 Name,Type,Organisation,Building,Address,Postcode,Country,L1,L2,L3,L4,Lat,Lon,Phone,Phone1,Email,Website,Opening Times,Comments
-IZ Birkenfeld 1,Vaccination Center,Gesundheitsamt Birkenfeld,,,,,,,,,,,,,,,,
-IZ Birkenfeld 2,Vaccination Center,Gesundheitsamt Birkenfeld,,,,,,,,,,,,,,,,
-IZ Kaiserslautern 1,Vaccination Center,Gesundheitsamt Kaiserslautern,,,,,,,,,,,,,,,,
+IZ Altenkirchen 1,Vaccination Center,IZ Kreisverwaltung Altenkirchen 1,,Rathausstraße 56,57537,DE,Rheinland-Pfalz,Altenkirchen,Wissen,,50.781412293586,7.7345354253271,,,,,,Westerwald Bank Wissen
+IZ Ahrweiler 1,Vaccination Center,IZ Kreisverwaltung Ahrweiler 1,,Altenahrer Straße 13,53501,DE,Rheinland-Pfalz,Ahrweiler,Grafschaft,,50.581870656066,7.0324719213761,,,,,,Mehrzweckhalle / Feuergebäude Gelsdorf
+IZ Alzey-Worms 1,Vaccination Center,IZ Kreisverwaltung Alzey-Worms 1,,Albiger Straße 33,55232,DE,Rheinland-Pfalz,Alzey-Worms,Alzey,,49.755392913684,8.1163185605013,,,,,,SEG Halle
+IZ Bad Dürkheim 1,Vaccination Center,IZ Kreisverwaltung Bad Dürkheim 1,,Kurbrunnenstraße 30,67098,DE,Rheinland-Pfalz,Bad Dürkheim,Bad Dürkheim,,49.465496040782,8.172726422469,,,,,,Salierhalle
+IZ Bad Kreuznach 1,Vaccination Center,IZ Kreisverwaltung Bad Kreuznach 1,,Westtangente 3,55566,DE,Rheinland-Pfalz,Bad Kreuznach,Bad Sobernheim,,49.786741506261,7.6389621043265,,,,,,Ehemaliger Real-Markt
+IZ Bernkastel-Wittlich 1,Vaccination Center,IZ Kreisverwaltung Bernkastel-Wittlich 1,,Schloßstraße 31,54516,DE,Rheinland-Pfalz,Bernkastel-Wittlich,Wittlich,,49.980409244209,6.8968188901853,,,,,,ehemaliger Hela-Baumarkt
+IZ Birkenfeld 1,Vaccination Center,IZ Kreisverwaltung Birkenfeld 1,,John-F.-Kennedy-Straße 3,55743,DE,Rheinland-Pfalz,Birkenfeld,Idar-Oberstein,,49.711106718705,7.3579322045485,,,,,,Messe Idar-Oberstein
+IZ Bitburg-Prüm 1,Vaccination Center,IZ Kreisverwaltung Eifelkreis Bitburg-Prüm 1,,Am Wasserturm,54634,DE,Rheinland-Pfalz,Eifelkreis Bitburg-Prüm,Bitburg,,49.95837,6.54169,,,,,,Sporthalle der ehem. High-School
+IZ Cochem-Zell 1,Vaccination Center,IZ Kreisverwaltung Cochem-Zell 1,,Schulstraße 2,56814,DE,Rheinland-Pfalz,Cochem-Zell,Bruttig-Fankel,,50.129063014379,7.230616887755,,,,,,Eifelgoldhalle
+IZ Donnersbergkreis 1,Vaccination Center,IZ Kreisverwaltung Donnersbergkreis 1,,Dr.-Edeltraud-Sießl-Allee 4,67292,DE,Rheinland-Pfalz,Donnersbergkreis,Kirchheimbolanden,,49.66699723245,8.0140661662873,,,,,,Stadthalle Kirchheimbolanden
+IZ Frankenthal 1,Vaccination Center,IZ Stadtverwaltung Frankenthal (Pfalz) 1,,Petersgartenweg 9,67227,DE,Rheinland-Pfalz,Stadt Frankenthal (Pfalz),Frankenthal(Pfalz),,49.531957661496,8.3456892786515,,,,,,Andreas-Albert-Schule
+"IZ Germersheim, Südliche Weinstraße, Landau in der Pfalz 1",Vaccination Center,IZ Kreisverwaltung Südliche Weinstraße 1,,Mobilstraße 2,76744,DE,Rheinland-Pfalz,Germersheim,Wörth,,49.064413337991,8.29231606402,,,,,,Allgemeines Logistikzentrum
+IZ Kaiserslautern 1,Vaccination Center,IZ Kreisverwaltung Kaiserslautern 1,,Opelkreisel 1 - 9,67663,DE,Rheinland-Pfalz,Stadt Kaiserslautern,Kaiserslautern,,49.443549990522,7.7041425571268,,,,,,"Werkshalle Fa. Opel K1, Tor 3, süd-östlich hinter IKEA"
+IZ Koblenz 1,Vaccination Center,IZ Stadtverwaltung Koblenz 1,,Jupp-Gauchel-Straße 10,56075,DE,Rheinland-Pfalz,Stadt Koblenz,Koblenz,,50.331779532388,7.5848997898613,,,,,,"CGM - Arena, Fechthalle"
+IZ Kusel 1,Vaccination Center,IZ Kreisverwaltung Kusel 1,,Haischbachstraße 100,66869,DE,Rheinland-Pfalz,Kusel,Kusel,,49.54655 ,7.4086,,,,,,Instandsetzungshalle 20 (Bundeswehr)
+IZ Ludwigshafen am Rhein 1,Vaccination Center,IZ Stadtverwaltung Ludwigshafen 1,,Yorckstraße 2,67061,DE,Rheinland-Pfalz,Stadt Ludwigshafen a. Rh.,Ludwigshafen,,49.478143927248,8.4531497621863,,,,,,Walzmühle
+IZ Mainz 1,Vaccination Center,IZ Stadtverwaltung Mainz 1,,An der Bruchspitze ,55122,DE,Rheinland-Pfalz,Stadt Mainz,Mainz,,50.005733989949,8.2322949679033,,,,,,ehemalige FH 
+IZ Mainz-Bingen 1,Vaccination Center,IZ Kreisverwaltung Mainz-Bingen 1,,Konrad-Adenauer-Straße 51/5,55218,DE,Rheinland-Pfalz,Mainz-Bingen,Ingelheim,,49.986683212609,8.044183759206,,,,,,ehemalige Aufnahmeeinrichtung für Asylbegehrende
+IZ Mayen-Koblenz 1,Vaccination Center,IZ Kreisverwaltung Mayen-Koblenz 1,,Heinz-Gries-Straße 1,56751,DE,Rheinland-Pfalz,Mayen-Koblenz,Polch,,50.303749424779,7.3187231555074,,,,,,Maifeldhalle
+IZ Neustadt an der Weinstraße 1,Vaccination Center,IZ Stadtverwaltung Neustadt an der Weinstraße 1,,Chemnitzer Straße 2,67433,DE,Rheinland-Pfalz,Stadt Neustadt a.d. W.,Neustadt,,49.345326362654,8.1583645645427,,,,,,Telekomgebäude
+IZ Neuwied 1,Vaccination Center,IZ Kreisverwaltung Neuwied 1,,Erlenstraße 1 - 9,56587,DE,Rheinland-Pfalz,Neuwied,Oberhonnefeld-Gierend,,50.553323118641,7.5222842064894,,,,,,Halle 3
+IZ Pirmasens 1,Vaccination Center,IZ Stadtverwaltung Pirmasens 1,,Zeppelinstraße 11,66953,DE,Rheinland-Pfalz,Stadt Pirmasens,Pirmasens,,49.20504407535,7.610154777666,,,,,,Messe Pirmasens
+IZ Rhein-Hunsrück-Kreis 1,Vaccination Center,IZ Kreisverwaltung Rhein-Hunsrück-Kreis 1,,Holzbacher Straße 4,55469,DE,Rheinland-Pfalz,Rhein-Hunsrück-Kreis,Simmern,,49.974057554226,7.5142907249543,,,,,,ehem. Skonto-Gebäude
+IZ Rhein-Lahn-Kreis 1,Vaccination Center,IZ Kreisverwaltung Rhein-Lahn-Kreis 1,,Koblenzer Straße 27 29,56112,DE,Rheinland-Pfalz,Rhein-Lahn-Kreis,Lahnstein,,50.320906817373,7.5982943713016,,,,,,ehemaliger LIDL Markt (Impfzentrum Lahnstein)
+IZ Rhein-Pfalz-Kreis 1,Vaccination Center,IZ Kreisverwaltung Rhein-Pfalz-Kreis 1,,Neustückweg 3,67105,DE,Rheinland-Pfalz,Rhein-Pfalz-Kreis,Schifferstadt,,49.373071845188,8.3747190461555,,,,,,Neue Kreissporthalle
+IZ Speyer 1,Vaccination Center,IZ Stadtverwaltung Speyer 1,,Obere Langgasse 33,67346,DE,Rheinland-Pfalz,Stadt Speyer,Speyer,,49.318358488778,8.4245163237285,,,,,,Stadthalle Speyer
+IZ Trier und Trier-Saarburg 1,Vaccination Center,IZ Kreisverwaltung Trier-Saarburg 1,,In den Moselauen 1,54294,DE,Rheinland-Pfalz,Stadt Trier,Trier,,49.740908772722,6.6220467178492,,,,,,Messehalle
+IZ Vulkaneifel 1,Vaccination Center,IZ Kreisverwaltung Vulkaneifel 1,,Am Viehmarkt 5,54576,DE,Rheinland-Pfalz,Vulkaneifel,Hillesheim,,50.288784950741,6.6727764537684,,,,,,Markt- und Messehalle Hillesheim
+IZ Westerwaldkreis 1,Vaccination Center,IZ Kreisverwaltung Westerwaldkreis 1,,Schulstraße 1,57627,DE,Rheinland-Pfalz,Westerwaldkreis,Hachenburg,,50.659636937836,7.8290539471717,,,,,,Ehemalige Graf-Heinrich-Realschule
+IZ Worms 1,Vaccination Center,IZ Stadtverwaltung Worms 1,,Mainzer Straße 52,67547,DE,Rheinland-Pfalz,Stadt Worms,Worms,,49.639823229595,8.3639641102273,,,,,,Nikolaus-Dörr-Halle
+IZ Zweibrücken 1,Vaccination Center,IZ Stadtverwaltung Zweibrücken 1,,Hauptstraße 10,66482,DE,Rheinland-Pfalz,Stadt Zweibrücken,Zweibrücken,,49.247754472631,7.3651185363436,,,,,,City-Outlet
