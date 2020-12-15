@@ -158,18 +158,20 @@ input.date.hasDatepicker {
         margin-left: 0;
         margin-bottom: 0.5rem;
     }
-    label[title] {
+    label[title] .optlabel {
         border-bottom: dotted 1px #ccc;
     }
 }
 table.s3-groupedopts-widget {
     td {
         white-space: nowrap;
-        input {
+        input.s3-groupedopts-option {
             vertical-align: text-top;
+            margin: 0 0.3rem 0 0;
         }
         label {
             white-space: pre-wrap;
+            margin: 0 0.5rem;
         }
     }
     margin-bottom: 0;
@@ -180,7 +182,8 @@ div.s3-groupedopts-widget {
         padding-top: 0.15rem;
     }
     input.s3-groupedopts-option {
-        margin-top: 0;
+        vertical-align: text-top;
+        margin: 0 0.3rem 0 0;
     }
 }
 

@@ -160,11 +160,13 @@ input.date.hasDatepicker {
 table.s3-groupedopts-widget {
     td {
         white-space: nowrap;
-        input {
+        input.s3-groupedopts-option {
             vertical-align: text-top;
+            margin: 0 0.3rem 0 0;
         }
         label {
             white-space: pre-wrap;
+            margin: 0 0.5rem;
         }
     }
 /*     border: 0; TODO make configurable */
@@ -176,7 +178,8 @@ div.s3-groupedopts-widget {
         padding-top: 0.15rem;
     }
     input.s3-groupedopts-option {
-        margin-top: 0;
+        vertical-align: text-top;
+        margin: 0 0.3rem 0 0;
     }
 }
 

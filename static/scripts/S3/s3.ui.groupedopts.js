@@ -253,22 +253,23 @@
                 title = $item.attr('title'),
                 selected = this.selected;
 
-            var olabel = '<label for="' + id + '"';
+            // Generate the label
+            var $olabel = $('<label for="' + id + '">');
             if (title && title !== '') {
-                olabel += ' title="' + title + '"';
+                $olabel.attr('title', title);
             }
-            if ((!multiple) && (value != selected)) {
-                // Radio labels have a class for unselected items (to be able to make these appear as clickable hyperlinks)
-                olabel += ' class="inactive"';
+            if (!multiple && value != selected) {
+                $olabel.addClass('inactive');
             }
-            olabel += '>' + label + '</label>';
+            $olabel.append($('<span class="optlabel">' + label + '</span>'));
 
+            // Generate the input element (checkbox or radio)
             var oinput = $('<input '+
                            'type="' + type + '" ' +
                            'id="' + id + '" ' +
                            'name="' + this.name + '" ' +
                            'class="s3-groupedopts-option" ' +
-                           'value="' + value + '"/>'),
+                           'value="' + value + '"/>').prependTo($olabel),
                 pos;
 
             if (multiple) {
@@ -281,9 +282,9 @@
             }
 
             if (table) {
-                var widget = $('<td>').append(oinput).append($(olabel));
+                var widget = $('<td>').append($olabel);
             } else {
-                var widget = $('<div class="s3-groupedopts-item">').append(oinput).append($(olabel));
+                var widget = $('<div class="s3-groupedopts-item">').append($olabel);
             }
             if (comment) {
                  _.templateSettings = {interpolate: /\{(.+?)\}/g};
