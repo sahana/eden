@@ -48,7 +48,7 @@ HRASSIST,Human Resources Assistant,,,org,,,NONE,,
 HRASSIST,Human Resources Assistant,,,org,organisation,,READ,,
 HRASSIST,Human Resources Assistant,,,vol,,,READ,,
 HRASSIST,Human Resources Assistant,,,vol,delegation,,READ,,any
-HRASSIST,Human Resources Assistant,,,vol,person,,READ,,
+HRASSIST,Human Resources Assistant,,,vol,person,,READ,,any
 HRASSIST,Human Resources Assistant,,,,,hrm_delegation,READ,,any
 HRASSIST,Human Resources Assistant,,,,,org_facility,READ,,
 HRASSIST,Human Resources Assistant,,,,,org_office,READ,,
