@@ -206,6 +206,7 @@ def rlp_update_pool(form, tablename=None):
                 (mtable.deleted == False)
         rows = db(query).select(mtable.id,
                                 mtable.group_id,
+                                join = join,
                                 )
         existing = None
         for row in rows:
