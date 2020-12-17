@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<pool-assignment default="Weitere Freiwillige">
+    <assign pool="ImpfärztInnen">
+        <all-of>
+            <occupation>Arzt/Ärztin</occupation>
+            <any-of>
+                <skill>Unterstützung im Impfzentrum</skill>
+            </any-of>
+            <none-of>
+                <pool>ÄrzteMDK</pool>
+            </none-of>
+        </all-of>
+    </assign>
+</pool-assignment>
