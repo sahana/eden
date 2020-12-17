@@ -153,20 +153,37 @@ def rlp_profile_rheader(r, tabs=None):
 
         if tablename == "pr_person":
 
-            tabs = [(T("Person Details"), None),
-                    (T("User Account"), "user_profile"),
-                    (T("Address"), "address"),
-                    (T("Contact Information"), "contacts"),
-                    (T("Skills"), "competency"),
-                    ]
+            rows = r.resource.select(["volunteer_record.id"], limit = 1).rows
+            if rows:
+                volunteer_id = rows[0]["hrm_volunteer_record_human_resource.id"]
+            else:
+                volunteer_id = None
 
-            rheader_fields = [[(T("ID"), "pe_label"),
-                               ],
-                              [(T("Name"), s3_fullname),
-                               ],
-                              ["date_of_birth",
-                               ]
-                              ]
+            if volunteer_id:
+                # Volunteer users
+                tabs = [(T("Person Details"), None),
+                        (T("User Account"), "user_profile"),
+                        (T("Address"), "address"),
+                        (T("Contact Information"), "contacts"),
+                        (T("Skills"), "competency"),
+                        ]
+                rheader_fields = [[(T("ID"), "pe_label"),
+                                   ],
+                                  [(T("Name"), s3_fullname),
+                                   ],
+                                  ["date_of_birth",
+                                   ]
+                                  ]
+            else:
+                # Other users
+                tabs = [(T("Person Details"), None),
+                        (T("User Account"), "user_profile"),
+                        (T("Contact Information"), "contacts"),
+                        ]
+                rheader_fields = [[(T("Name"), s3_fullname),
+                                   ],
+                                  ]
+
 
         rheader = S3ResourceHeader(rheader_fields, tabs)(r,
                                                          table = resource.table,
