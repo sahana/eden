@@ -6,3 +6,4 @@ KL,HR Manager,kl_hrmanager@example.com,eden,"HRMANAGER,POOLREADER/pr_forum.name=
 BIR,VC Manager,bir_vcmanager@example.com,eden,"VCMANAGER,POOLREADER/pr_group.name=Weitere Freiwillige,POOLREADER/pr_group.name=Freiwillige teamRLP",IZ Kreisverwaltung Birkenfeld 1,de
 AW,VC Manager,aw_vcmanager@example.com,eden,"VCMANAGER,POOLREADER/pr_group.name=Weitere Freiwillige,POOLREADER/pr_group.name=Freiwillige teamRLP",IZ Kreisverwaltung Ahrweiler 1,de
 KL,VC Manager,kl_vcmanager@example.com,eden,"VCMANAGER,POOLREADER/pr_group.name=Weitere Freiwillige,POOLREADER/pr_group.name=Freiwillige teamRLP",IZ Kreisverwaltung Kaiserslautern 1,de
+KV,Coordinator,kv_coordinator@example.com,eden,"HRASSIST,POOLREADER/pr_group.name=ImpfärztInnen",Kassenärztliche Vereinigung Rheinland-Pfalz,de
