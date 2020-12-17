@@ -32,7 +32,7 @@ class PoolRules(object):
                                        "modules",
                                        "templates",
                                        settings.get_template(),
-                                       "poolrules.xml"
+                                       settings.get_custom("poolrules"),
                                        )
         else:
             self.source = str(rules)
@@ -68,14 +68,18 @@ class PoolRules(object):
             @returns: the pool ID
         """
 
+        rules = self.rules
+        if rules is None:
+            return None
+
         # Lookup the relevant properties of the person
         item = self.lookup(person_id)
 
         # Get the default pool name
-        pool = self.rules.get("default")
+        pool = rules.get("default")
 
         # Process each pool assignment rule
-        for option in self.rules.findall("assign"):
+        for option in rules.findall("assign"):
 
             # Get the pool name
             poolname = option.get("pool")

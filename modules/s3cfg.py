@@ -166,6 +166,7 @@ class S3Config(Storage):
         self.cap = Storage()
         self.cms = Storage()
         self.cr = Storage()
+        self.custom = Storage()
         self.database = Storage()
         self.dc = Storage()
         self.deploy = Storage()
@@ -5946,6 +5947,19 @@ class S3Config(Storage):
 
         if key:
             return self.frontpage.get(key, default)
+        else:
+            return default
+
+    # -------------------------------------------------------------------------
+    # Custom template options
+    #
+    def get_custom(self, key=None, default=None):
+        """
+            Template-specific configuration options
+        """
+
+        if key:
+            return self.custom.get(key, default)
         else:
             return default
 

@@ -173,6 +173,16 @@ def rlp_deployment_sites(managed_orgs=False, organisation_id=None):
 
 # =============================================================================
 def rlp_update_pool(form, tablename=None):
+    """
+        Form post-process to update pool membership if required
+        by pool rules
+            - called as post-process of default/person custom form
+            - called directly by custom onaccept/ondelete of
+              default/person/X/competency
+
+        @param form: a person FORM, or a nested Storage containing
+                     the person_id as form.vars.id
+    """
 
     try:
         person_id = form.vars.id

@@ -161,6 +161,9 @@ def config(settings):
                   }
     pool_type_ids = list(pool_types.keys())
 
+    # Override in models/000_config.py with site-specific file name
+    settings.custom.poolrules = "poolrules.default.xml"
+
     # -------------------------------------------------------------------------
     # Realm Rules
     #
