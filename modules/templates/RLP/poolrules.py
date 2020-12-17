@@ -31,7 +31,7 @@ class PoolRules(object):
             self.source = os.path.join(current.request.folder,
                                        "modules",
                                        "templates",
-                                       settings.get_template(),
+                                       "RLP",
                                        settings.get_custom("poolrules"),
                                        )
         else:
