@@ -1121,10 +1121,12 @@ class IS_ONE_OF_EMPTY(Validator):
             if isinstance(value, list):
                 values = [str(v) for v in value]
             elif isinstance(value, basestring):
-                if len(value) > 2 and value[0] == "|" and value[-1] == "|":
+                if not value:
+                    values = []
+                elif len(value) > 2 and value[0] == "|" and value[-1] == "|":
                     values = value[1:-1].split("|")
                 else:
-                    values = []
+                    values = [value]
             elif value:
                 values = [value]
             else:

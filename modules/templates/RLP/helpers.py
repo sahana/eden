@@ -172,6 +172,46 @@ def rlp_deployment_sites(managed_orgs=False, organisation_id=None):
     return {site_id: labels[site_id] for site_id in site_ids}
 
 # =============================================================================
+def rlp_update_pool(form, tablename=None):
+
+    try:
+        person_id = form.vars.id
+    except AttributeError:
+        person_id = None
+    if not person_id:
+        return
+
+    from .poolrules import PoolRules
+    pool_id = PoolRules()(person_id)
+
+    if pool_id:
+        db = current.db
+        s3db = current.s3db
+
+        gtable = s3db.pr_group
+        mtable = s3db.pr_group_membership
+        join = gtable.on((gtable.id == mtable.group_id) & \
+                         (gtable.group_type.belongs((21, 22))))
+        query = (mtable.person_id == person_id) & \
+                (mtable.deleted == False)
+        rows = db(query).select(mtable.id,
+                                mtable.group_id,
+                                )
+        existing = None
+        for row in rows:
+            if row.group_id == pool_id:
+                existing = row
+            else:
+                row.delete_record()
+        if existing:
+            s3db.onaccept(mtable, existing)
+        else:
+            data = {"group_id": pool_id, "person_id": person_id}
+            data["id"] = mtable.insert(**data)
+            current.auth.s3_set_record_owner(mtable, data["id"])
+            s3db.onaccept(mtable, data, method="create")
+
+# =============================================================================
 class RLPAvailabilityFilter(S3DateFilter):
     """
         Date-Range filter with custom variable

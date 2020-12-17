@@ -1605,7 +1605,10 @@ def config(settings):
                                         "volunteer_record.comments",
                                         ])
 
-                    resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
+                    from .helpers import rlp_update_pool
+                    resource.configure(crud_form = S3SQLCustomForm(*crud_fields,
+                                                                   postprocess = rlp_update_pool,
+                                                                   ),
                                        deletable = False,
                                        )
 
@@ -2468,6 +2471,32 @@ def config(settings):
     settings.customise_hrm_delegation_controller = customise_hrm_delegation_controller
 
     # -------------------------------------------------------------------------
+    # Custom callbacks for competency changes in user profile
+    #
+    def hrm_competency_onaccept(form):
+
+        try:
+            record_id = form.vars.id
+        except AttributeError:
+            return None
+
+        table = current.s3db.hrm_competency
+        query = (table.id == record_id) & (table.person_id != None)
+        row = current.db(query).select(table.person_id,
+                                       limitby = (0, 1),
+                                       ).first()
+        if row:
+            from .helpers import rlp_update_pool
+            rlp_update_pool(Storage(vars = Storage(id=row.person_id)))
+
+    def hrm_competency_ondelete(row):
+
+        person_id = row.person_id
+        if person_id:
+            from .helpers import rlp_update_pool
+            rlp_update_pool(Storage(vars = Storage(id=person_id)))
+
+    # -------------------------------------------------------------------------
     def customise_hrm_competency_resource(r, tablename):
 
         s3db = current.s3db
@@ -2488,6 +2517,16 @@ def config(settings):
                                       "comments",
                                       ],
                        )
+
+        if r.controller == "default" and r.function == "person":
+            # Add custom callbacks to change pool membership if required
+            # by pool rules
+            s3db.add_custom_callback("hrm_competency", "onaccept",
+                                     hrm_competency_onaccept,
+                                     )
+            s3db.add_custom_callback("hrm_competency", "ondelete",
+                                     hrm_competency_ondelete,
+                                     )
 
     settings.customise_hrm_competency_resource = customise_hrm_competency_resource
 
