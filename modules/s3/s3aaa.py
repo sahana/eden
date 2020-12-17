@@ -4998,13 +4998,13 @@ Please go to %(url)s to approve this user."""
             @note: This method does not work on GAE because it uses JOIN and IN
         """
 
+        if not hasattr(table, "_tablename"):
+            table = current.s3db[table]
+
         if self.override:
             return table.id > 0
 
         sr = self.get_system_roles()
-
-        if not hasattr(table, "_tablename"):
-            table = current.s3db[table]
 
         policy = current.deployment_settings.get_security_policy()
 
