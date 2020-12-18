@@ -61,6 +61,12 @@ def adjust_pools(rules):
     db = current.db
     s3db = current.s3db
 
+    # Customise Resources (doesn't happen automatically when running from CLI)
+    from s3 import s3_request
+    r = s3_request("pr", "person")
+    r.customise_resource("pr_person")
+    r.customise_resource("pr_group_membership")
+
     # Get all volunteer records
     htable = s3db.hrm_human_resource
     query = (htable.type == 2) & (htable.deleted == False)
