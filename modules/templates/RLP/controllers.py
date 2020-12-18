@@ -698,8 +698,8 @@ class register(S3CustomController):
                        (8, T("Address")),
                        (11, T("Occupation")),
                        (13, T("Availability and Resources")),
-                       (19, T("Comments")),
-                       (20, T("Privacy")),
+                       (20, T("Comments")),
+                       (21, T("Privacy")),
                        )
 
         # Geocoder
