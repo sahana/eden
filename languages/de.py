@@ -3141,6 +3141,7 @@
 'Mobile Basic Assessment': 'Mobile Grundlegende Beurteilung',
 'Mobile Commons Channels': 'Mobile Commons Kanäle',
 'Mobile Phone': 'Mobiltelefon',
+'Mobile Vaccination Team': 'Mobiles Impfteam',
 'Mobile': 'Handy',
 'Mode': 'Modus',
 'Model/Type': 'Modell/Typ',
