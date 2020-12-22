@@ -994,6 +994,7 @@ Thank you"""
                    })
             session.flash = messages.password_changed
             if settings.login_after_password_change:
+                user = Storage(table_user._filter_fields(user, id=True))
                 self.login_user(user)
             callback(onaccept, form)
             redirect(next, client_side=settings.client_side)

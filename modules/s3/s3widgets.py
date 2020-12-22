@@ -3305,7 +3305,9 @@ class S3GroupedOptionsWidget(FormWidget):
 
         fieldname = field.name
 
-        attr = Storage(attributes)
+        default = dict(value=value)
+        attr = self._attributes(field, default, **attributes)
+
         if "_id" in attr:
             _id = attr.pop("_id")
         else:
