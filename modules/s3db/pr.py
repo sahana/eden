@@ -5171,8 +5171,8 @@ class PRAvailabilityModel(S3Model):
                     missing.append(fn)
             if missing and record_id:
                 row = db(table.id == record_id).select(*missing,
-                                                    limitby=(0, 1),
-                                                    ).first()
+                                                       limitby=(0, 1),
+                                                       ).first()
                 if row:
                     for fn in missing:
                         availability[fn] = row[fn]
@@ -5228,7 +5228,14 @@ class PRAvailabilityModel(S3Model):
                 # Without rules, the person is available on all days
                 dow = all_week
 
-            db(table.id == record_id).update(days_of_week=sorted(list(dow)))
+            data = {"days_of_week": sorted(list(dow))}
+
+            # If the person has a user account, make that account the record owner
+            user_id = current.auth.s3_get_user_id(person_id = availability["person_id"])
+            if user_id:
+               data["owned_by_user"] = user_id
+
+            db(table.id == record_id).update(**data)
 
 # =============================================================================
 class PRUnavailabilityModel(S3Model):

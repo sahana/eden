@@ -5374,6 +5374,7 @@ Please go to %(url)s to approve this user."""
                   "pr_contact",
                   "pr_address",
                   "pr_contact_emergency",
+                  "pr_person_availability",
                   "pr_person_details",
                   "pr_physical_description",
                   "pr_group_membership",
