@@ -3542,10 +3542,11 @@ class PRForumModel(S3Model):
         if r.representation == "json":
             output = current.xml.json_message(True, 200, message)
             current.response.headers["Content-Type"] = "application/json"
-            return output
         else:
             current.session.confirmation = message
             redirect(URL(args=None))
+
+        return output
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -5233,7 +5234,7 @@ class PRAvailabilityModel(S3Model):
             # If the person has a user account, make that account the record owner
             user_id = current.auth.s3_get_user_id(person_id = availability["person_id"])
             if user_id:
-               data["owned_by_user"] = user_id
+                data["owned_by_user"] = user_id
 
             db(table.id == record_id).update(**data)
 
@@ -8837,13 +8838,15 @@ class pr_Templates(S3Method):
             @param attr: controller options for this request
         """
 
+        output = {}
+
         if r.http == "GET":
             if r.representation == "html":
 
                 T = current.T
-                s3db = current.s3db
+                output["title"] = "" #"%s:" % T("Select Template")
 
-                person_id = r.id
+                s3db = current.s3db
 
                 root_org = s3db.org_root_organisation(current.auth.user.organisation_id)
                 table = s3db.doc_document
@@ -8857,6 +8860,7 @@ class pr_Templates(S3Method):
                 if not templates:
                     buttons = P(T("No document templates found."))
                 else:
+                    person_id = r.id
                     buttons = UL()
                     bappend = buttons.append
                     for t in templates:
@@ -8868,16 +8872,15 @@ class pr_Templates(S3Method):
                                      _target = "_top",
                                      )))
 
-                output = {"title": "", #"%s:" % current.T("Select Template"),
-                          "item": buttons,
-                          }
+                output["item"] = buttons
                 current.response.view = "plain.html"
-                return output
 
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
+
+        return output
 
 # =============================================================================
 class pr_Template(S3Method):
@@ -9405,7 +9408,7 @@ def pr_define_role(pe_id,
     """
 
     if not pe_id:
-        return
+        return None
 
     s3db = current.s3db
     if role_type not in s3db.pr_role_types:
@@ -10098,19 +10101,20 @@ def pr_image_modify(image_file,
     # Import the specialist libraries
     try:
         from PIL import Image
-        PILImported = True
+        pil_imported = True
     except ImportError:
         try:
             import Image
-            PILImported = True
+            pil_imported = True
         except ImportError:
-            PILImported = False
-    if PILImported:
+            pil_imported = False
+
+    if pil_imported:
         from tempfile import TemporaryFile
         s3db = current.s3db
         table = s3db.pr_image_library
 
-        fileName, fileExtension = os.path.splitext(original_name)
+        filename, extension = os.path.splitext(original_name)
 
         image_file.seek(0)
         im = Image.open(image_file)
@@ -10134,19 +10138,19 @@ def pr_image_modify(image_file,
             msg = sys.exc_info()[1]
             current.log.error(msg)
             current.session.error = msg
-            return
+            return False
 
         if not to_format:
-            to_format = fileExtension[1:]
+            to_format = extension[1:]
         if to_format.upper() == "JPG":
             to_format = "JPEG"
         elif to_format.upper() == "BMP":
             im = im.convert("RGB")
-        save_im_name = "%s.%s" % (fileName, to_format)
-        tempFile = TemporaryFile()
-        im.save(tempFile, to_format)
-        tempFile.seek(0)
-        newfile = table.new_name.store(tempFile,
+        save_im_name = "%s.%s" % (filename, to_format)
+        tempfile = TemporaryFile()
+        im.save(tempfile, to_format)
+        tempfile.seek(0)
+        newfile = table.new_name.store(tempfile,
                                        save_im_name,
                                        table.new_name.uploadfolder)
         # rewind the original file so it can be read, if required

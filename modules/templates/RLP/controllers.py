@@ -958,6 +958,7 @@ class register(S3CustomController):
             availability.update_record(hours_per_week = hours_per_week,
                                        schedule_json = schedule_json,
                                        comments = availability_comments,
+                                       owned_by_user = user_id,
                                        )
             s3db_onaccept(atable, availability, method="update")
         else:
