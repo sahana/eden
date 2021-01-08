@@ -89,7 +89,6 @@
 
                     var scanButton = self.scanButton;
 
-                    hasCamera = false;
                     if (!hasCamera) {
                         scanButton.prop('disabled', true);
                         return;
