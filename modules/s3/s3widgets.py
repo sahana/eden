@@ -60,6 +60,7 @@ __all__ = ("S3ACLWidget",
            "S3LocationLatLonWidget",
            "S3PasswordWidget",
            "S3PhoneWidget",
+           "S3QRInput",
            "S3Selector",
            "S3LocationSelector",
            "S3MultiSelectWidget",
@@ -2905,6 +2906,84 @@ class S3WeeklyHoursWidget(FormWidget):
                 output.append("%s: %s" % (dn[day], slotsrepr))
 
         return output if html else "\n".join(output)
+
+# =============================================================================
+class S3QRInput(FormWidget):
+    """
+        Simple input widget with attached QR-code decoder, using the
+        device camera (if available) to capture the code
+
+        @status: experimental
+    """
+
+    def __init__(self):
+
+        pass
+
+    # -------------------------------------------------------------------------
+    def __call__(self, field, value, **attributes):
+        """
+            Widget builder
+
+            @param field: the Field
+            @param value: the current field value
+            @param attributes: additional DOM attributes for the widget
+        """
+
+        T = current.T
+
+        default = {"value": value,
+                   }
+        attr = StringWidget._attributes(field, default, **attributes)
+
+        widget_id = attr.get("_id")
+        if not widget_id:
+            widget_id = attr["_id"] = str(field).replace(".", "_")
+
+        widget = DIV(INPUT(**attr),
+                     BUTTON(T("Scan QR Code"),
+                            _type = "button",
+                            _class = "tiny primary button qrscan-btn",
+                            ),
+                     _class = "qrinput",
+                     )
+
+        options = {}
+        self.inject_script(widget_id, options)
+
+        return widget
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inject_script(selector, options):
+        """
+            Inject static JS and instantiate client-side UI widget
+
+            @param widget_id: the widget ID
+            @param options: JSON-serializable dict with UI widget options
+        """
+
+        s3 = current.response.s3
+        appname = current.request.application
+
+        opts = {}
+        opts.update(options)
+        opts["workerPath"] = "/%s/static/scripts/qr-scanner/qr-scanner-worker.min.js" % appname
+
+        # Global scripts
+        # TODO minify
+        scripts = ["/%s/static/scripts/qr-scanner/qr-scanner.umd.min.js",
+                   "/%s/static/scripts/S3/s3.ui.qrcode.js",
+                   ]
+        for script in scripts:
+            path = script % appname
+            if path not in s3.scripts:
+                s3.scripts.append(path)
+
+        # jQuery-ready script
+        script = '''$('#%(selector)s').qrScannerWidget(%(options)s);''' % \
+                 {"selector": selector, "options": json.dumps(opts)}
+        s3.jquery_ready.append(script)
 
 # =============================================================================
 class S3EmbeddedComponentWidget(FormWidget):
