@@ -4365,6 +4365,9 @@ $('.copy-link').click(function(e){
                     #districts = {d.id:d.name for d in districts}
                     districts = {d.name:d.name for d in districts}
 
+                    from s3 import S3DateTime
+                    s3db.pr_person.created_on.represent = lambda v: S3DateTime.date_represent(v, utc=True)
+
                     list_fields = ["first_name",
                                    "middle_name",
                                    "last_name",
@@ -4432,11 +4435,12 @@ $('.copy-link').click(function(e){
                             #f = convictions.table.value
                             #f.represent = S3Represent(options = yes_no_options)
                             #list_fields.append((T("Convictions"), "convictions.value"))
-                            # Registration Date
-                            from s3 import S3DateTime
-                            s3db.pr_person.created_on.represent = lambda dt: \
-                                      S3DateTime.datetime_represent(dt, utc=True)
-                            list_fields.append((T("Registration Date"), "created_on"))
+
+                    # Registration Date
+                    from s3 import S3DateTime
+                    s3db.pr_person.created_on.represent = lambda dt: \
+                              S3DateTime.datetime_represent(dt, utc=True)
+                    list_fields.append((T("Date Registered"), "created_on"))
 
                     from s3 import S3EmptyFilter, S3OptionsFilter, S3TextFilter
                     filter_widgets = [S3TextFilter(["first_name",
