@@ -126,7 +126,7 @@
                             function(result) {
                                 videoInput.hide();
                                 success.show();
-                                $el.val(result);
+                                $el.val(result).trigger('change' + self.eventNamespace);
                                 setTimeout(function() {
                                     dialog.dialog('close');
                                 }, 1000);
