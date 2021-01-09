@@ -289,6 +289,22 @@ div.s3-groupedopts-widget {
     vertical-align: super;
 }
 
+/* QR Input */
+.qrinput {
+    display: inline-block;
+    .qrscan-btn {
+        padding: 0.4rem 1.2rem;
+        margin: 3px 0.5rem;
+        vertical-align: top;
+    }
+}
+.qrinput-success {
+    text-align: center;
+    font-size: 4rem;
+    padding: 1rem;
+    color: darkgreen;
+}
+
 /* Anonymize-Widget */
 form.anonymize-form,
 .anonymize-success {

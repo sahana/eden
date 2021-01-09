@@ -1648,152 +1648,172 @@ div.s3-groupedopts-widget input.s3-groupedopts-option {
   vertical-align: super;
 }
 
-/* Anonymize-Widget */
+/* QR Input */
 /* line 289, ../../default/scss/theme/_widgets.scss */
+.qrinput {
+  display: inline-block;
+}
+/* line 291, ../../default/scss/theme/_widgets.scss */
+.qrinput .qrscan-btn {
+  padding: 0.4rem 1.2rem;
+  margin: 3px 0.5rem;
+  vertical-align: top;
+}
+
+/* line 297, ../../default/scss/theme/_widgets.scss */
+.qrinput-success {
+  text-align: center;
+  font-size: 4rem;
+  padding: 1rem;
+  color: darkgreen;
+}
+
+/* Anonymize-Widget */
+/* line 305, ../../default/scss/theme/_widgets.scss */
 form.anonymize-form,
 .anonymize-success {
   padding: 1rem;
 }
 
-/* line 293, ../../default/scss/theme/_widgets.scss */
+/* line 309, ../../default/scss/theme/_widgets.scss */
 .anonymize-select,
 .anonymize-confirm {
   margin-left: 1rem;
 }
 
-/* line 297, ../../default/scss/theme/_widgets.scss */
+/* line 313, ../../default/scss/theme/_widgets.scss */
 .anonymize-buttons {
   margin-top: 1rem;
 }
 
-/* line 300, ../../default/scss/theme/_widgets.scss */
+/* line 316, ../../default/scss/theme/_widgets.scss */
 .anonymize-btn {
   background-color: #D92C20;
 }
-/* line 302, ../../default/scss/theme/_widgets.scss */
+/* line 318, ../../default/scss/theme/_widgets.scss */
 .anonymize-btn:hover {
   background-color: #ae231a;
 }
 
-/* line 306, ../../default/scss/theme/_widgets.scss */
+/* line 322, ../../default/scss/theme/_widgets.scss */
 .s3-anonymize {
   display: inline-block;
   margin: 0.2rem;
 }
 
 /* Role Manager */
-/* line 313, ../../default/scss/theme/_widgets.scss */
+/* line 329, ../../default/scss/theme/_widgets.scss */
 .rm-form .controls {
   width: 100%;
 }
-/* line 316, ../../default/scss/theme/_widgets.scss */
+/* line 332, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign .action-lnk,
 .rm-form .rm-rules .action-lnk {
   display: inline-block;
   color: #386570;
   font-style: normal;
 }
-/* line 322, ../../default/scss/theme/_widgets.scss */
+/* line 338, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-toggle-all {
   margin-top: 0.2rem;
   margin-bottom: 0.5rem;
 }
-/* line 326, ../../default/scss/theme/_widgets.scss */
+/* line 342, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign {
   width: 80%;
   border-collapse: separate;
   border-spacing: 0;
 }
-/* line 330, ../../default/scss/theme/_widgets.scss */
+/* line 346, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign th {
   min-width: 10rem;
 }
-/* line 333, ../../default/scss/theme/_widgets.scss */
+/* line 349, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign th:first-child {
   width: 25%;
 }
-/* line 336, ../../default/scss/theme/_widgets.scss */
+/* line 352, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign td {
   padding: 0.5rem;
 }
-/* line 339, ../../default/scss/theme/_widgets.scss */
+/* line 355, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign tfoot td {
   border-top: 1px solid #C0C0C0;
 }
-/* line 342, ../../default/scss/theme/_widgets.scss */
+/* line 358, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-item-name,
 .rm-form .rm-assign .rm-item-title {
   display: block;
 }
-/* line 346, ../../default/scss/theme/_widgets.scss */
+/* line 362, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-item-title {
   font-size: 0.8rem;
   font-style: italic;
   color: #A0A0A0;
 }
-/* line 352, ../../default/scss/theme/_widgets.scss */
+/* line 368, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-duplicate td {
   border-top: 1px solid red;
   border-bottom: 1px solid red;
 }
-/* line 355, ../../default/scss/theme/_widgets.scss */
+/* line 371, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 1px solid red;
 }
-/* line 358, ../../default/scss/theme/_widgets.scss */
+/* line 374, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 1px solid red;
 }
-/* line 364, ../../default/scss/theme/_widgets.scss */
+/* line 380, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules {
   width: 100%;
 }
-/* line 366, ../../default/scss/theme/_widgets.scss */
+/* line 382, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header {
   cursor: pointer;
   background-color: #F0F0F0;
 }
-/* line 369, ../../default/scss/theme/_widgets.scss */
+/* line 385, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0.3rem;
   display: inline-block;
 }
-/* line 373, ../../default/scss/theme/_widgets.scss */
+/* line 389, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header .rm-module-toggle {
   width: 0.5rem;
 }
-/* line 376, ../../default/scss/theme/_widgets.scss */
+/* line 392, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header .rm-module-prefix {
   width: 6.5rem;
 }
-/* line 379, ../../default/scss/theme/_widgets.scss */
+/* line 395, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header .rm-module-numrules {
   font-weight: normal;
 }
-/* line 383, ../../default/scss/theme/_widgets.scss */
+/* line 399, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules.hasrules .rm-module-header {
   background-color: #D0D0D0;
 }
-/* line 387, ../../default/scss/theme/_widgets.scss */
+/* line 403, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules th, .rm-form .rm-module-rules td {
   padding: 0.5rem;
 }
-/* line 391, ../../default/scss/theme/_widgets.scss */
+/* line 407, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-default-rule td,
 .rm-form .rm-module-rules .rm-default-permissions td {
   font-style: italic;
   color: #a0a0a0;
 }
-/* line 396, ../../default/scss/theme/_widgets.scss */
+/* line 412, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-rule-target {
   width: 20%;
 }
-/* line 400, ../../default/scss/theme/_widgets.scss */
+/* line 416, ../../default/scss/theme/_widgets.scss */
 .rm-form input.rm-invalid {
   background-color: #FFA0A0;
 }
 
-/* line 404, ../../default/scss/theme/_widgets.scss */
+/* line 420, ../../default/scss/theme/_widgets.scss */
 .rm-fixed,
 .rm-hint {
   display: block;
@@ -1803,39 +1823,39 @@ form.anonymize-form,
 }
 
 /* Organizer */
-/* line 414, ../../default/scss/theme/_widgets.scss */
+/* line 430, ../../default/scss/theme/_widgets.scss */
 .s3-organizer-popup label {
   font-size: 0.7rem;
   font-weight: bold;
 }
-/* line 418, ../../default/scss/theme/_widgets.scss */
+/* line 434, ../../default/scss/theme/_widgets.scss */
 .s3-organizer-popup p {
   font-size: 0.8rem;
   font-weight: normal;
   margin-bottom: 0.3rem;
 }
-/* line 423, ../../default/scss/theme/_widgets.scss */
+/* line 439, ../../default/scss/theme/_widgets.scss */
 .s3-organizer-popup .action-btn {
   margin-left: 0;
   margin-right: 0.3rem;
 }
 
-/* line 429, ../../default/scss/theme/_widgets.scss */
+/* line 445, ../../default/scss/theme/_widgets.scss */
 .s3-organizer-create .action-btn {
   display: block;
 }
 
 /* Consent Widget */
-/* line 435, ../../default/scss/theme/_widgets.scss */
+/* line 451, ../../default/scss/theme/_widgets.scss */
 .consent-widget {
   border: 1px solid #E0E0E0;
   padding: 0.5rem 1rem;
 }
-/* line 438, ../../default/scss/theme/_widgets.scss */
+/* line 454, ../../default/scss/theme/_widgets.scss */
 .consent-widget .consent-option {
   margin-top: 0.3rem;
 }
-/* line 441, ../../default/scss/theme/_widgets.scss */
+/* line 457, ../../default/scss/theme/_widgets.scss */
 .consent-widget .consent-explanation {
   white-space: pre-wrap;
   padding: 0.3rem 2rem;
@@ -1843,20 +1863,20 @@ form.anonymize-form,
   font-style: italic;
   color: #7F7F7F;
 }
-/* line 448, ../../default/scss/theme/_widgets.scss */
+/* line 464, ../../default/scss/theme/_widgets.scss */
 .consent-widget .consent-title {
   font-weight: bold;
 }
-/* line 451, ../../default/scss/theme/_widgets.scss */
+/* line 467, ../../default/scss/theme/_widgets.scss */
 .consent-widget .consent-checkbox {
   vertical-align: bottom;
   margin-right: 0.5rem;
 }
-/* line 455, ../../default/scss/theme/_widgets.scss */
+/* line 471, ../../default/scss/theme/_widgets.scss */
 .consent-widget .req {
   padding: 0 0.2rem;
 }
-/* line 458, ../../default/scss/theme/_widgets.scss */
+/* line 474, ../../default/scss/theme/_widgets.scss */
 .consent-widget .req_key {
   font-size: 0.7rem;
   font-weight: normal;
@@ -1865,7 +1885,7 @@ form.anonymize-form,
 }
 
 /* Priority Representation */
-/* line 467, ../../default/scss/theme/_widgets.scss */
+/* line 483, ../../default/scss/theme/_widgets.scss */
 .prio {
   padding: 0 4px;
   border: 1px solid black;
@@ -1874,75 +1894,75 @@ form.anonymize-form,
   font-weight: normal;
 }
 
-/* line 474, ../../default/scss/theme/_widgets.scss */
+/* line 490, ../../default/scss/theme/_widgets.scss */
 .prio-red {
   color: white;
   background-color: #d10000;
 }
 
-/* line 478, ../../default/scss/theme/_widgets.scss */
+/* line 494, ../../default/scss/theme/_widgets.scss */
 .prio-blue {
   color: white;
   background-color: #10427b;
 }
 
-/* line 482, ../../default/scss/theme/_widgets.scss */
+/* line 498, ../../default/scss/theme/_widgets.scss */
 .prio-lightblue {
   background-color: #b7ddff;
 }
 
-/* line 485, ../../default/scss/theme/_widgets.scss */
+/* line 501, ../../default/scss/theme/_widgets.scss */
 .prio-grey {
   background-color: silver;
 }
 
 /* Weekly Hours Widget */
-/* line 490, ../../default/scss/theme/_widgets.scss */
+/* line 506, ../../default/scss/theme/_widgets.scss */
 .wh-intro {
   max-width: 42rem;
   padding: 0.5rem 0;
   font-size: 0.8rem;
 }
 
-/* line 495, ../../default/scss/theme/_widgets.scss */
+/* line 511, ../../default/scss/theme/_widgets.scss */
 .wh-raster {
   margin-top: 0.3rem;
 }
-/* line 497, ../../default/scss/theme/_widgets.scss */
+/* line 513, ../../default/scss/theme/_widgets.scss */
 .wh-raster tr {
   border-bottom: 1px solid #ccc;
 }
-/* line 500, ../../default/scss/theme/_widgets.scss */
+/* line 516, ../../default/scss/theme/_widgets.scss */
 .wh-raster td {
   border-left: 1px solid #ccc;
 }
-/* line 502, ../../default/scss/theme/_widgets.scss */
+/* line 518, ../../default/scss/theme/_widgets.scss */
 .wh-raster td.wh-tick {
   border-left-width: 2px;
 }
-/* line 507, ../../default/scss/theme/_widgets.scss */
+/* line 523, ../../default/scss/theme/_widgets.scss */
 .wh-raster thead td {
   min-width: 1.8rem;
   padding-right: 0.6rem !important;
   font-size: 0.6rem;
   font-weight: normal;
 }
-/* line 516, ../../default/scss/theme/_widgets.scss */
+/* line 532, ../../default/scss/theme/_widgets.scss */
 .wh-raster tbody td.wh-hour {
   text-align: center;
   font-weight: normal;
 }
-/* line 519, ../../default/scss/theme/_widgets.scss */
+/* line 535, ../../default/scss/theme/_widgets.scss */
 .wh-raster tbody td.wh-hour.wh-on {
   color: darkgreen;
 }
-/* line 523, ../../default/scss/theme/_widgets.scss */
+/* line 539, ../../default/scss/theme/_widgets.scss */
 .wh-raster tbody td.wh-day {
   text-align: left;
   font-size: 0.7rem;
   padding: 0.2rem 0.4rem;
 }
-/* line 530, ../../default/scss/theme/_widgets.scss */
+/* line 546, ../../default/scss/theme/_widgets.scss */
 .wh-raster .wh-hour {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -1951,73 +1971,73 @@ form.anonymize-form,
   -ms-user-select: none;
   user-select: none;
 }
-/* line 538, ../../default/scss/theme/_widgets.scss */
+/* line 554, ../../default/scss/theme/_widgets.scss */
 .wh-raster .wh-hour.wh-on {
   background-color: lightgreen;
 }
-/* line 541, ../../default/scss/theme/_widgets.scss */
+/* line 557, ../../default/scss/theme/_widgets.scss */
 .wh-raster .wh-hour.wh-off {
   background-color: transparent;
 }
 
 /* Weekly Hours Representation */
-/* line 548, ../../default/scss/theme/_widgets.scss */
+/* line 564, ../../default/scss/theme/_widgets.scss */
 .wh-schedule {
   list-style: none;
   white-space: pre;
   margin: 0;
   font-size: 0.7rem;
 }
-/* line 553, ../../default/scss/theme/_widgets.scss */
+/* line 569, ../../default/scss/theme/_widgets.scss */
 .wh-schedule .wh-dayname {
   width: 1.5rem;
   display: inline-block;
 }
-/* line 557, ../../default/scss/theme/_widgets.scss */
+/* line 573, ../../default/scss/theme/_widgets.scss */
 .wh-schedule .wh-dayname::after {
   content: ":";
 }
 
-/* line 565, ../../default/scss/theme/_widgets.scss */
+/* line 581, ../../default/scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header .ui-multiselect-filter {
   direction: rtl;
   float: right;
   margin-right: 3px;
   margin-left: 10px;
 }
-/* line 571, ../../default/scss/theme/_widgets.scss */
+/* line 587, ../../default/scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header ul li {
   float: right;
   padding: 0 3px 0 10px;
 }
-/* line 575, ../../default/scss/theme/_widgets.scss */
+/* line 591, ../../default/scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header li.ui-multiselect-close {
   float: left;
   text-align: left;
   padding-left: 0;
 }
-/* line 582, ../../default/scss/theme/_widgets.scss */
+/* line 598, ../../default/scss/theme/_widgets.scss */
 body.rtl .range-filter-widget input.date-filter-input {
   margin-right: 0;
   margin-left: 2px;
 }
-/* line 587, ../../default/scss/theme/_widgets.scss */
+/* line 603, ../../default/scss/theme/_widgets.scss */
 body.rtl #list-btn-add {
   float: left;
   margin-right: 0;
   margin-left: 0.35rem;
 }
-/* line 593, ../../default/scss/theme/_widgets.scss */
+/* line 609, ../../default/scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0;
   margin-left: 0.3rem;
 }
-/* line 599, ../../default/scss/theme/_widgets.scss */
+/* line 615, ../../default/scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 0;
   border-right: 1px solid red;
 }
-/* line 603, ../../default/scss/theme/_widgets.scss */
+/* line 619, ../../default/scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 0;
   border-left: 1px solid red;

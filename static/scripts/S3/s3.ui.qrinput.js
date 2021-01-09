@@ -7,12 +7,12 @@
 (function($, undefined) {
 
     "use strict";
-    var qrScannerWidgetID = 0;
+    var qrInputID = 0;
 
     /**
-     * qrScannerWidget
+     * qrInput
      */
-    $.widget('s3.qrScannerWidget', {
+    $.widget('s3.qrInput', {
 
         /**
          * Default options
@@ -30,10 +30,10 @@
          */
         _create: function() {
 
-            this.id = qrScannerWidgetID;
-            qrScannerWidgetID += 1;
+            this.id = qrInputID;
+            qrInputID += 1;
 
-            this.eventNamespace = '.qrScannerWidget';
+            this.eventNamespace = '.qrInput';
         },
 
         /**
@@ -97,18 +97,10 @@
                     }
 
                     var scanner,
-                        scanForm = $('<div>'),
+                        scanForm = $('<div class="qrinput-scan">'),
                         // TODO make success-message configurable
-                        success = $('<div>').html('<i class="fa fa-check">').hide().appendTo(scanForm),
+                        success = $('<div class="qrinput-success">').html('<i class="fa fa-check">').hide().appendTo(scanForm),
                         videoInput = $('<video>').appendTo(scanForm);
-
-                    // TODO move styles into CSS
-                    success.css({
-                        'text-align': 'center',
-                        'font-size': '4rem',
-                        'padding': '1rem',
-                        'color': 'darkgreen',
-                    });
 
                     // TODO make width/height configurable or auto-adapt to screen size
                     videoInput.css({width: '300', height: '300'});

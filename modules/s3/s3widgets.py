@@ -2916,9 +2916,14 @@ class S3QRInput(FormWidget):
         @status: experimental
     """
 
-    def __init__(self):
+    def __init__(self, hidden=False):
+        """
+            Constructor
 
-        pass
+            @param hidden: use a hidden input
+        """
+
+        self.hidden = hidden
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
@@ -2934,8 +2939,18 @@ class S3QRInput(FormWidget):
 
         default = {"value": value,
                    }
-        attr = StringWidget._attributes(field, default, **attributes)
+        if self.hidden:
+            default["_type"] = "hidden"
 
+        # Choose input type
+        if field.type == "text":
+            input_type = TextWidget
+        elif field.type == "string":
+            input_type = StringWidget
+        else:
+            input_type = self
+
+        attr = input_type._attributes(field, default, **attributes)
         widget_id = attr.get("_id")
         if not widget_id:
             widget_id = attr["_id"] = str(field).replace(".", "_")
@@ -2973,7 +2988,7 @@ class S3QRInput(FormWidget):
         # Global scripts
         # TODO minify
         scripts = ["/%s/static/scripts/qr-scanner/qr-scanner.umd.min.js",
-                   "/%s/static/scripts/S3/s3.ui.qrcode.js",
+                   "/%s/static/scripts/S3/s3.ui.qrinput.js",
                    ]
         for script in scripts:
             path = script % appname
@@ -2981,7 +2996,7 @@ class S3QRInput(FormWidget):
                 s3.scripts.append(path)
 
         # jQuery-ready script
-        script = '''$('#%(selector)s').qrScannerWidget(%(options)s);''' % \
+        script = '''$('#%(selector)s').qrInput(%(options)s);''' % \
                  {"selector": selector, "options": json.dumps(opts)}
         s3.jquery_ready.append(script)
 
