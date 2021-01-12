@@ -2243,6 +2243,9 @@ class IS_PHONE_NUMBER_MULTI(Validator):
         """
 
         value = value.strip()
+        if value == "":
+            # e.g. s3_mark_required test
+            raise ValidationError(translate(self.error_message))
         if value[0] == unichr(8206):
             # Strip the LRM character
             value = value[1:]
