@@ -28,6 +28,7 @@
 """
 
 __all__ = ("FinExpensesModel",
+           "FinVoucherModel",
            "FinPaymentServiceModel",
            "FinProductModel",
            "FinSubscriptionModel",
@@ -144,6 +145,219 @@ class FinExpensesModel(S3Model):
 
         return {"fin_expense_id": S3ReusableField.dummy("expense_id"),
                 }
+
+# =============================================================================
+class FinVoucherModel(S3Model):
+    """ Model for Voucher Programs """
+
+    names = ("fin_voucher_program",
+             "fin_voucher",
+             "fin_voucher_debit",
+             "fin_voucher_transaction",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        db = current.db
+
+        define_table = self.define_table
+
+        # Representation of bearer/provider
+        pe_represent = self.pr_PersonEntityRepresent(show_label = False,
+                                                     show_link = False,
+                                                     show_type = False,
+                                                     )
+
+        # -------------------------------------------------------------------------
+        # Voucher Program
+        # - holds the overall grant/debt balance for a voucher program
+        #
+        program_status = (("PLANNED", T("Planned")),
+                          ("ACTIVE", T("Active")),
+                          ("SUSPENDED", T("Suspended")),
+                          ("CLOSED", T("Closed")),
+                          )
+
+        tablename = "fin_voucher_program"
+        define_table(tablename,
+                     self.org_organisation_id(
+                            label = T("Administrator"),
+                            empty = False,
+                            ),
+                     Field("name",
+                           label = T("Title"),
+                           requires = IS_NOT_EMPTY(), # TODO unique?
+                           ),
+                     Field("credits", "integer",
+                           default = 0,
+                           label = T("Credits Balance"),
+                           writable = False,
+                           ),
+                     Field("compensated", "integer",
+                           default = 0,
+                           label = T("Compensation Balance"),
+                           writable = False,
+                           ),
+                     Field("status",
+                           label = T("Status"),
+                           default = "ACTIVE",
+                           represent = S3Represent(options = dict(program_status)),
+                           requires = IS_IN_SET(program_status,
+                                                zero = None,
+                                                sort = False,
+                                                ),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # TODO Reusable Field
+        represent = S3Represent(lookup = tablename)
+        program_id = S3ReusableField("program_id", "reference %s" % tablename,
+                                     represent = represent,
+                                     requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "%s.id" % tablename,
+                                                              represent,
+                                                              )),
+                                     )
+
+        # TODO CRUD Strings
+
+        # Components
+        self.add_components(tablename,
+                            fin_voucher = "program_id",
+                            fin_voucher_debit = "program_id",
+                            fin_voucher_transaction = "program_id",
+                            )
+
+        # -------------------------------------------------------------------------
+        # Voucher
+        # - represents the credit granted by the program to the bearer
+        #   to purchase a service/product under the scheme, is thus the
+        #   corresponding credit for the credits debt
+        #
+        tablename = "fin_voucher"
+        define_table(tablename,
+                     program_id(empty = False),
+                     Field("pe_id", "reference pr_pentity",
+                           label = T("Bearer"),
+                           represent = pe_represent,
+                           requires = IS_EMPTY_OR(IS_ONE_OF(db, "pr_pentity.pe_id",
+                                                            pe_represent,
+                                                            )),
+                           ),
+                     Field("signature", length=64,
+                           default = "FIXME", # TODO auto-generate
+                           writable = False,
+                           ),
+                     Field("balance", "integer",
+                           default = 0,
+                           writable = False,
+                           ),
+                     Field("unlimited", "boolean",
+                           default = False,
+                           # Expose as necessary
+                           readable = False,
+                           writable = False,
+                           ),
+                     s3_date("valid_from",
+                             label = T("Valid From"),
+                             default = "now",
+                             ),
+                     s3_date("valid_until",
+                             label = T("Valid Until"),
+                             # TODO default?
+                             ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+
+        # TODO Reusable field
+        # TODO Bearer notes?
+        # TODO Default initial credits
+        # TODO Create-onaccept to generate initial issue-transaction
+        # TODO rheader + primary controller
+
+        # -------------------------------------------------------------------------
+        # Voucher credit
+        # - represents a claim for compensation of the provider for redeeming
+        #   a voucher, is thus the credit corresponding to the debits debt
+        #
+        tablename = "fin_voucher_debit"
+        define_table(tablename,
+                     program_id(empty = False),
+                     # TODO voucher_id(),
+                     Field("pe_id", "reference pr_pentity",
+                           label = T("Provider"),
+                           represent = pe_represent,
+                           requires = IS_EMPTY_OR(IS_ONE_OF(db, "pr_pentity.pe_id",
+                                                            pe_represent,
+                                                            )),
+                           ),
+                     Field("code", length=64,
+                           # TODO requires IS_ONE_OF(fin_voucher_credit.code)
+                           ),
+                     s3_date(default = "now",
+                             label = T("Date Effected"),
+                             ),
+                     Field("balance", "integer",
+                           default = 0,
+                           writable = False,
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # TODO Reusable Field
+        # TODO onvalidate to find credit_id and voucher_id, and validate credit
+        # TODO onaccept to auto-generate redeem-transaction
+
+        # -------------------------------------------------------------------------
+        # Voucher transaction
+        # - records a debt transaction for a voucher program
+        #
+        transaction_types = {"ISS": T("Issued"),
+                             "DBT": T("Redeemed"),
+                             "CMP": T("Compensated"),
+                             }
+
+        tablename = "fin_voucher_transaction"
+        define_table(tablename,
+                     program_id(empty = False),
+                     s3_date(default="now"),
+                     Field("type",
+                           label = T("Type"),
+                           represent = S3Represent(options=transaction_types),
+                           requires = IS_IN_SET(transaction_types),
+                           ),
+                     Field("credits", "integer",
+                           default = 0,
+                           ),
+                     Field("voucher", "integer",
+                           default = 0,
+                           ),
+                     Field("debit", "integer",
+                           default = 0,
+                           ),
+                     Field("compensated", "integer",
+                           default = 0,
+                           ),
+                     # TODO voucher_id(),
+                     # TODO debit_id(),
+                     # TODO hash
+                     *s3_meta_fields())
+
+        # Table configuration
+        self.configure(tablename,
+                       insertable = False,
+                       editable = False,
+                       deletable = False,
+                       )
+
+        # TODO CRUD Strings
+
+        # TODO onvalidation to validate entirely
+        # TODO onaccept to generate hash
 
 # =============================================================================
 class FinPaymentServiceModel(S3Model):
@@ -1028,7 +1242,18 @@ def fin_rheader(r, tabs=None):
     if record:
 
         T = current.T
-        if tablename == "fin_payment_service":
+        if tablename == "fin_voucher_program":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        (T("Vouchers"), "voucher"),
+                        (T("Transactions"), "voucher_transaction"),
+                        ]
+            rheader_fields = [["organisation_id"],
+                              ]
+            rheader_title = "name"
+
+        elif tablename == "fin_payment_service":
 
             if not tabs:
                 tabs = [(T("Basic Details"), None),

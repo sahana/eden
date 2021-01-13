@@ -1,0 +1,10 @@
+First Name,Last Name,Email,Password,Role,Organisation,Language
+MSAGD,Coordinator,msagd_coordinator@example.com,eden,"COORDINATOR/0,NOTES_EDITOR","Ministerium für Soziales, Arbeit, Gesundheit und Demografie",de
+BIR,HR Manager,bir_hrmanager@example.com,eden,"HRMANAGER,POOLREADER/pr_forum.name=All Pools",Gesundheitsamt Birkenfeld,de
+AW,HR Manager,aw_hrmanager@example.com,eden,"HRMANAGER,POOLREADER/pr_forum.name=All Pools",Gesundheitsamt Ahrweiler,de
+KL,HR Manager,kl_hrmanager@example.com,eden,"HRMANAGER,POOLREADER/pr_forum.name=All Pools",Gesundheitsamt Kaiserslautern,de
+BIR,VC Manager,bir_vcmanager@example.com,eden,"VCMANAGER,POOLREADER/pr_group.name=Weitere Freiwillige,POOLREADER/pr_group.name=ImpfärztInnen",IZ Kreisverwaltung Birkenfeld 1,de
+AW,VC Manager,aw_vcmanager@example.com,eden,"VCMANAGER,POOLREADER/pr_group.name=Weitere Freiwillige,POOLREADER/pr_group.name=ImpfärztInnen",IZ Kreisverwaltung Ahrweiler 1,de
+KL,VC Manager,kl_vcmanager@example.com,eden,"VCMANAGER,POOLREADER/pr_group.name=Weitere Freiwillige,POOLREADER/pr_group.name=ImpfärztInnen",IZ Kreisverwaltung Kaiserslautern 1,de
+KV,Coordinator,kv_coordinator@example.com,eden,"HRASSIST,POOLREADER/pr_group.name=ImpfärztInnen",Kassenärztliche Vereinigung Rheinland-Pfalz,de
+MIT-KO,Coordinator,mit_ko_coordinator@example.com,eden,"VCMANAGER,POOLREADER/pr_group.name=Weitere Freiwillige,POOLREADER/pr_group.name=ImpfärztInnen",MIT-Koblenz,de

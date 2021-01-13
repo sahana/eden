@@ -23,6 +23,12 @@ def expense():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def voucher_program():
+    """ Voucher Programs: RESTful CRUD controller """
+
+    return s3_rest_controller(rheader = s3db.fin_rheader)
+
+# -----------------------------------------------------------------------------
 def payment_service():
     """ Payment Services: RESTful CRUD controller """
 
