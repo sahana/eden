@@ -190,15 +190,10 @@ class FinVoucherModel(S3Model):
                            label = T("Title"),
                            requires = IS_NOT_EMPTY(), # TODO unique?
                            ),
-                     Field("credits", "integer",
-                           default = 0,
-                           label = T("Credits Balance"),
-                           writable = False,
-                           ),
-                     Field("compensated", "integer",
-                           default = 0,
-                           label = T("Compensation Balance"),
-                           writable = False,
+                     Field("description", "text",
+                           label = T("Description"),
+                           represent = s3_text_represent,
+                           widget = s3_comments_widget,
                            ),
                      Field("status",
                            label = T("Status"),
@@ -209,10 +204,20 @@ class FinVoucherModel(S3Model):
                                                 sort = False,
                                                 ),
                            ),
+                     Field("credits", "integer",
+                           default = 0,
+                           label = T("Credits Balance"),
+                           writable = False,
+                           ),
+                     Field("compensated", "integer",
+                           default = 0,
+                           label = T("Compensation Balance"),
+                           writable = False,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
-        # TODO Reusable Field
+        # Reusable Field
         represent = S3Represent(lookup = tablename)
         program_id = S3ReusableField("program_id", "reference %s" % tablename,
                                      represent = represent,
@@ -233,9 +238,9 @@ class FinVoucherModel(S3Model):
 
         # -------------------------------------------------------------------------
         # Voucher
-        # - represents the credit granted by the program to the bearer
-        #   to purchase a service/product under the scheme, is thus the
-        #   corresponding credit for the credits debt
+        # - represents a credit granted by the program to the bearer
+        #   to purchase a service/product under the program
+        # - is the corresponding credit for the credits debt
         #
         tablename = "fin_voucher"
         define_table(tablename,
@@ -282,7 +287,8 @@ class FinVoucherModel(S3Model):
         # -------------------------------------------------------------------------
         # Voucher credit
         # - represents a claim for compensation of the provider for redeeming
-        #   a voucher, is thus the credit corresponding to the debits debt
+        #   a voucher
+        # - is the corresponding credit for the compensation debt
         #
         tablename = "fin_voucher_debit"
         define_table(tablename,
@@ -315,6 +321,11 @@ class FinVoucherModel(S3Model):
         # -------------------------------------------------------------------------
         # Voucher transaction
         # - records a debt transaction for a voucher program
+
+        # Transaction types:
+        #  - ISS: credits -x => voucher +x
+        #  - DBT: credits +1 <= voucher -1, debit +1 <= compensated -1
+        #  - CMP: debit -1 => compensated +1
         #
         transaction_types = {"ISS": T("Issued"),
                              "DBT": T("Redeemed"),
