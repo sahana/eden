@@ -161,8 +161,10 @@ class FinVoucherModel(S3Model):
         T = current.T
 
         db = current.db
+        s3 = current.response.s3
 
         define_table = self.define_table
+        crud_strings = s3.crud_strings
 
         # Representation of bearer/provider
         pe_represent = self.pr_PersonEntityRepresent(show_label = False,
@@ -172,7 +174,7 @@ class FinVoucherModel(S3Model):
 
         # -------------------------------------------------------------------------
         # Voucher Program
-        # - holds the overall grant/debt balance for a voucher program
+        # - holds the overall credit/compensation balance for a voucher program
         #
         program_status = (("PLANNED", T("Planned")),
                           ("ACTIVE", T("Active")),
@@ -204,18 +206,49 @@ class FinVoucherModel(S3Model):
                                                 sort = False,
                                                 ),
                            ),
-                     Field("credits", "integer",
-                           default = 0,
-                           label = T("Credits Balance"),
+                     Field("default_credit", "integer",
+                           label = T("Default Credit per Voucher"),
+                           default = 1,
+                           requires = IS_INT_IN_RANGE(1),
+                           # TODO setting to expose?
+                           readable = False,
                            writable = False,
                            ),
-                     Field("compensated", "integer",
+                     Field("credit", "integer",
+                           default = 0,
+                           label = T("Credit Balance"),
+                           writable = False,
+                           ),
+                     Field("compensation", "integer",
                            default = 0,
                            label = T("Compensation Balance"),
                            writable = False,
                            ),
                      s3_comments(),
                      *s3_meta_fields())
+
+        # TODO Table Configuration
+
+        # Components
+        self.add_components(tablename,
+                            fin_voucher = "program_id",
+                            fin_voucher_debit = "program_id",
+                            fin_voucher_transaction = "program_id",
+                            )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Program"),
+            title_display = T("Program Details"),
+            title_list = T("Programs"),
+            title_update = T("Edit Program"),
+            label_list_button = T("List Programs"),
+            label_delete_button = T("Delete Program"),
+            msg_record_created = T("Program created"),
+            msg_record_modified = T("Program updated"),
+            msg_record_deleted = T("Program deleted"),
+            msg_list_empty = T("No Programs currently registered"),
+        )
 
         # Reusable Field
         represent = S3Represent(lookup = tablename)
@@ -227,20 +260,10 @@ class FinVoucherModel(S3Model):
                                                               )),
                                      )
 
-        # TODO CRUD Strings
-
-        # Components
-        self.add_components(tablename,
-                            fin_voucher = "program_id",
-                            fin_voucher_debit = "program_id",
-                            fin_voucher_transaction = "program_id",
-                            )
-
         # -------------------------------------------------------------------------
         # Voucher
-        # - represents a credit granted by the program to the bearer
-        #   to purchase a service/product under the program
-        # - is the corresponding credit for the credits debt
+        # - represents a credit granted to the bearer to purchase a
+        #   service/product under the program
         #
         tablename = "fin_voucher"
         define_table(tablename,
@@ -277,23 +300,40 @@ class FinVoucherModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-
-        # TODO Reusable field
         # TODO Bearer notes?
-        # TODO Default initial credits
         # TODO Create-onaccept to generate initial issue-transaction
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Voucher"),
+            title_display = T("Voucher Details"),
+            title_list = T("Vouchers"),
+            title_update = T("Edit Voucher"),
+            label_list_button = T("List Vouchers"),
+            label_delete_button = T("Delete Voucher"),
+            msg_record_created = T("Voucher created"),
+            msg_record_modified = T("Voucher updated"),
+            msg_record_deleted = T("Voucher deleted"),
+            msg_list_empty = T("No Vouchers currently registered"),
+        )
+
+        # Reusable field
+        voucher_id = S3ReusableField("voucher_id", "reference %s" % tablename,
+                                     ondelete = "RESTRICT",
+                                     requires = IS_ONE_OF(db, "%s.id" % tablename),
+                                     )
+
         # TODO rheader + primary controller
 
         # -------------------------------------------------------------------------
-        # Voucher credit
+        # Voucher debit
         # - represents a claim for compensation of the provider for redeeming
         #   a voucher
-        # - is the corresponding credit for the compensation debt
         #
         tablename = "fin_voucher_debit"
         define_table(tablename,
                      program_id(empty = False),
-                     # TODO voucher_id(),
+                     voucher_id(),
                      Field("pe_id", "reference pr_pentity",
                            label = T("Provider"),
                            represent = pe_represent,
@@ -314,18 +354,42 @@ class FinVoucherModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        # TODO Reusable Field
-        # TODO onvalidate to find credit_id and voucher_id, and validate credit
-        # TODO onaccept to auto-generate redeem-transaction
+        # Table Configuration
+        self.configure(tablename,
+                       editable = False,
+                       deletable = False,
+                       # TODO onvalidate to find credit_id and voucher_id, and validate credit
+                       # TODO onaccept to auto-generate redeem-transaction
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Debit"),
+            title_display = T("Debit Details"),
+            title_list = T("Debits"),
+            title_update = T("Edit Debit"),
+            label_list_button = T("List Debits"),
+            label_delete_button = T("Delete Debit"),
+            msg_record_created = T("Debit created"),
+            msg_record_modified = T("Debit updated"),
+            msg_record_deleted = T("Debit deleted"),
+            msg_list_empty = T("No Debits currently registered"),
+        )
+
+        # Reusable field
+        debit_id = S3ReusableField("debit_id", "reference %s" % tablename,
+                                   ondelete = "RESTRICT",
+                                   requires = IS_ONE_OF(db, "%s.id" % tablename),
+                                   )
 
         # -------------------------------------------------------------------------
         # Voucher transaction
         # - records a debt transaction for a voucher program
 
         # Transaction types:
-        #  - ISS: credits -x => voucher +x
-        #  - DBT: credits +1 <= voucher -1, debit +1 <= compensated -1
-        #  - CMP: debit -1 => compensated +1
+        #  - ISS: credit -x => voucher +x
+        #  - DBT: credit +1 <= voucher -1, debit +1 <= compensation -1
+        #  - CMP: debit -1 => compensation +1
         #
         transaction_types = {"ISS": T("Issued"),
                              "DBT": T("Redeemed"),
@@ -341,7 +405,7 @@ class FinVoucherModel(S3Model):
                            represent = S3Represent(options=transaction_types),
                            requires = IS_IN_SET(transaction_types),
                            ),
-                     Field("credits", "integer",
+                     Field("credit", "integer",
                            default = 0,
                            ),
                      Field("voucher", "integer",
@@ -350,12 +414,19 @@ class FinVoucherModel(S3Model):
                      Field("debit", "integer",
                            default = 0,
                            ),
-                     Field("compensated", "integer",
+                     Field("compensation", "integer",
                            default = 0,
                            ),
-                     # TODO voucher_id(),
-                     # TODO debit_id(),
-                     # TODO hash
+                     voucher_id(),
+                     debit_id(),
+                     Field("ouuid",
+                           readable = False,
+                           writable = False,
+                           ),
+                     Field("vhash", "text",
+                           readable = False,
+                           writable = False,
+                           ),
                      *s3_meta_fields())
 
         # Table configuration
@@ -363,12 +434,48 @@ class FinVoucherModel(S3Model):
                        insertable = False,
                        editable = False,
                        deletable = False,
+                       # TODO onvalidation to validate entirely
+                       # TODO onaccept to generate hash
                        )
 
-        # TODO CRUD Strings
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Transaction"),
+            title_display = T("Transaction Details"),
+            title_list = T("Transactions"),
+            title_update = T("Edit Transaction"),
+            label_list_button = T("List Transactions"),
+            label_delete_button = T("Delete Transaction"),
+            msg_record_created = T("Transaction created"),
+            msg_record_modified = T("Transaction updated"),
+            msg_record_deleted = T("Transaction deleted"),
+            msg_list_empty = T("No Transactions currently registered"),
+        )
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
-        # TODO onvalidation to validate entirely
-        # TODO onaccept to generate hash
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        #dummy = S3ReusableField.dummy
+
+        return {#"example_example_id": dummy("example_id"),
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def voucher_create_onaccept(form):
+        # TODO implement
+
+        # if no initial balance in form => lookup from program
+        # generate ISS-transaction in program
+        # if no valid_until set => lookup TTL from program and compute
+        # generate voucher number and signature if neither is present
+        pass
 
 # =============================================================================
 class FinPaymentServiceModel(S3Model):
@@ -1316,5 +1423,307 @@ def fin_rheader(r, tabs=None):
                         )
 
     return rheader
+
+# =============================================================================
+class fin_VoucherProgram(object):
+    """
+        Helper to record transactions in voucher programs
+    """
+
+    def __init__(self, program_id):
+        """
+            Constructor
+
+            @param program_id: the voucher program ID
+        """
+
+        self.program_id = program_id
+        self._program = None
+
+    # -------------------------------------------------------------------------
+    @property
+    def program(self):
+        """
+            The program record (lazy property)
+
+            @returns: the program record (Row)
+        """
+
+        program = self._program
+        if program is None:
+
+            # Look up program
+            table = current.s3db.fin_voucher_program
+            query = (table.id == self.program_id) & \
+                    (table.status == "ACTIVE") & \
+                    (table.deleted == False)
+            program = current.db(query).select(table.id,
+                                               table.uuid,
+                                               table.default_credit,
+                                               limitby = (0, 1),
+                                               ).first()
+            self._program = program
+
+        return program
+
+    # -------------------------------------------------------------------------
+    def issue(self, voucher_id, credit=None):
+        """
+            Transfer credit from the program to the voucher
+
+            @param voucher_id: the new voucher
+            @param credit: the initial credit to transfer to the voucher
+
+            @returns: the number of credit transferred to the voucher,
+                      or None on failure
+        """
+
+        program = self.program
+        if not program:
+            return None
+
+        table = current.s3db.fin_voucher
+        query = (table.id == voucher_id) & \
+                (table.program_id == program.id) & \
+                (table.deleted == False)
+        voucher = db(query).select(table.id,
+                                   table.balance,
+                                   limitby = (0, 1),
+                                   ).first()
+        if not voucher:
+            return None
+
+        if not isinstance(credit, int):
+            credit = program.default_credit
+        if credit > 0:
+
+            transaction = {"type": "ISS",
+                           "credit": -credit,
+                           "voucher": credit,
+                           "voucher_id": voucher_id,
+                           }
+            if self._transaction(transaction):
+                voucher.update_record(
+                    balance = voucher.balance + transaction["voucher"],
+                    )
+                program.update_record(
+                    credit = program.credit + transaction["credit"],
+                    )
+            else:
+                return None
+
+        return credit if credit > 0 else 0
+
+    # -------------------------------------------------------------------------
+    def debit(self, voucher_id, debit_id, credit=None):
+        """
+            Transfer credit to the provider when redeeming a voucher, i.e.
+            debit a voucher.
+
+            Actually a double transaction:
+                1) transfer credit from the program's compensation account
+                   to the debit
+                2) return credit from the voucher to the program's credit
+                   account
+
+            @param voucher_id: the voucher ID
+            @param debit_id: the debit ID
+            @param credit: the credit to transfer (default 1)
+
+            @returns: the credit deducted from the voucher
+        """
+
+        program = self.program
+        if not program:
+            return None
+        program_id = program.id
+
+        vtable = current.s3db.fin_voucher
+        query = (vtable.id == voucher_id) & \
+                (vtable.program_id == program_id) & \
+                (vtable.deleted == False)
+        voucher = db(query).select(vtable.id,
+                                   vtable.balance,
+                                   limitby = (0, 1),
+                                   ).first()
+        if not voucher:
+            return None
+
+        dtable = current.s3db.fin_voucher_debit
+        query = (dtable.id == debit_id) & \
+                (dtable.program_id == program_id) & \
+                (dtable.deleted == False)
+        debit = db(query).select(dtable.id,
+                                 dtable.balance,
+                                 limitby = (0, 1),
+                                 ).first()
+        if not debit:
+            return None
+
+        if not isinstance(credit, int):
+            credit = 1
+        if credit > 0:
+
+            transaction = {"type": "DBT",
+                           "credit": credit,
+                           "voucher": -credit,
+                           "debit": credit,
+                           "compensation": -credit,
+                           "voucher_id": voucher_id,
+                           "debit_id": debit_id,
+                           }
+
+            if self._transaction(transaction):
+                voucher.update_record(
+                    balance = voucher.balance + transaction["voucher"],
+                    )
+                debit.update_record(
+                    balande = debit.balance + transaction["debit"],
+                    )
+                program.update_record(
+                    credit = program.credit + transaction["credit"],
+                    compensation = program.compensation + transaction["compensation"]
+                    )
+            else:
+                return None
+
+        return credit
+
+    # -------------------------------------------------------------------------
+    def compensate(self, debit_id):
+        # TODO implement this once we have a compensation model
+        pass
+
+    # -------------------------------------------------------------------------
+    def _verify(self, transaction, chain=False):
+
+        db = current.db
+        s3db = current.s3db
+
+        ouuid = transaction.ouuid
+
+        # Get preceding transaction's hash
+        if ouuid:
+            table = s3db.fin_voucher_transaction
+            p_transaction = db(table.uuid == ouuid).select(table.ALL,
+                                                           limitby = (0, 1),
+                                                           ).first()
+
+            if p_transaction is None:
+                return False
+            ohash = p_transaction.vhash
+
+        data = {"ouuid": ouuid,
+                "date": transaction.date,
+                "type": transaction.type,
+                "credit": transaction.credit,
+                "voucher": transaction.voucher,
+                "debit": transaction.debit,
+                "compensation": transaction.compensation,
+                "voucher_id": transaction.voucher_id,
+                "debit_id": transaction.debit_id,
+                }
+        vhash = self._hash(data, ohash)
+        if vhash != transaction.vhash:
+            return False
+
+        if chain:
+            return self._verify(p_transaction)
+
+        return True
+
+    # -------------------------------------------------------------------------
+    def _hash(self, transaction, ohash):
+        """
+            Generate a verification hash (vhash) for the transaction
+
+            @param transaction: the transaction data
+            @param ohash: the hash of the preceding transaction
+
+            @returns: the hash as string
+        """
+
+        # Generate signature from transaction data
+        signature = {}
+        signature.update(transaction)
+        signature["date"] = s3_format_datetime(transaction["date"])
+
+        # Hash it, together with program UUID and ohash
+        data = {"puuid": self.program.uuid,
+                "ohash": ohash,
+                "signature": signature,
+                }
+        inp = json.dumps(data, separators=SEPARATORS)
+
+        crypt = CRYPT(key = current.deployment_settings.hmac_key,
+                      digest_alg = "sha512",
+                      salt = False,
+                      )
+        return str(crypt(inp)[0])
+
+    # -------------------------------------------------------------------------
+    def _transaction(self, data):
+        """
+            Record a transaction under this program
+
+            @param data: the transaction details
+
+            @returns: True|False for success or failure
+        """
+
+        program = self.program
+        if not program:
+            return False
+
+        # Prevent recording of unbalanced transactions
+        total = data.get("credit", 0) + \
+                data.get("voucher", 0) + \
+                data.get("debit", 0) + \
+                data.get("compensation", 0)
+        if total != 0:
+            # Invalid - total change must always be 0
+            return False
+
+        # Get last preceding transaction in this program
+        table = current.s3db.fin_voucher_transaction
+        query = (table.program_id == program.id)
+        row = current.db(query).select(table.uuid,
+                                       table.vhash,
+                                       limitby = (0, 1),
+                                       orderby = ~(table.id)
+                                       )
+        if row:
+            ouuid = row.uuid
+            ohash = row.hash
+        else:
+            ouuid = ohash = None
+
+        # Build the transaction record
+        transaction = {"ouuid": ouuid,
+                       "date": current.request.utcnow,
+                       "type": None,
+                       "credit": 0,
+                       "voucher": 0,
+                       "debit": 0,
+                       "compensation": 0,
+                       "voucher_id": None,
+                       "debit_id": None
+                       }
+        transaction.update(data)
+        transaction["ouuid"] = ouuid
+        transaction["vhash"] = self._hash(transaction, ohash)
+        transaction["program_id"] = program.id
+
+        s3db = current.s3db
+
+        # Write the transaction
+        table = s3db.fin_voucher_transaction
+        transaction["id"] = table.insert(**transaction)
+
+        # Post-process it
+        current.auth.s3_set_record_owner(table, transaction)
+        s3db.onaccept(table, transaction, method="create")
+
+        return True
 
 # END =========================================================================
