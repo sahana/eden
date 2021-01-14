@@ -440,8 +440,6 @@ class FinVoucherModel(S3Model):
                        insertable = False,
                        editable = False,
                        deletable = False,
-                       # TODO onvalidation to validate entirely
-                       # TODO onaccept to generate hash
                        )
 
         # CRUD Strings
@@ -478,7 +476,7 @@ class FinVoucherModel(S3Model):
         """
             Onaccept of new voucher:
             - transfer initial credit to the voucher (issue)
-            - generate voucher number and signature (TODO)
+            - generate voucher signature
             - set expiration date (TODO)
 
             @param form: the FORM
@@ -496,6 +494,7 @@ class FinVoucherModel(S3Model):
         table = current.s3db.fin_voucher
         query = (table.id == record_id)
         voucher = current.db(query).select(table.id,
+                                           table.uuid,
                                            table.program_id,
                                            limitby = (0, 1),
                                            ).first()
@@ -503,9 +502,11 @@ class FinVoucherModel(S3Model):
         if not voucher:
             return
 
-        # TODO Better algorithm
+        # Generate voucher signature
         import uuid
-        voucher.update_record(signature = str(uuid.uuid4().int)[:16])
+        vn = "0%s0%s" % (voucher.program_id, voucher.id)
+        signature = "%s%s" % (str(uuid.uuid4().int)[:(16-len(vn))], vn)
+        voucher.update_record(signature=signature)
 
         program = fin_VoucherProgram(voucher.program_id)
         program.issue(voucher.id)
@@ -527,24 +528,35 @@ class FinVoucherModel(S3Model):
             return
 
         signature = form_vars["signature"]
-        vtable = current.s3db.fin_voucher
+        error = None
+
+        s3db = current.s3db
+
+        vtable = s3db.fin_voucher
+        ptable = s3db.fin_voucher_program
+        join = ptable.on(ptable.id == vtable.program_id)
         query = (vtable.signature == signature) & \
                 (vtable.deleted == False)
-        voucher = current.db(query).select(vtable.id,
-                                           vtable.balance,
-                                           vtable.valid_until,
-                                           limitby = (0, 1),
-                                           ).first()
+        row = current.db(query).select(vtable.id,
+                                       vtable.balance,
+                                       vtable.valid_until,
+                                       ptable.status,
+                                       join = join,
+                                       limitby = (0, 1),
+                                       ).first()
 
-        error = None
-        if voucher:
+        if not row:
+            error = T("Invalid voucher")
+        else:
+            voucher = row.fin_voucher
             valid_until = voucher.valid_until
-            if valid_until and valid_until < current.request.utcnow.date():
+
+            if row.fin_voucher_program.status != "ACTIVE":
+                error = T("Voucher suspended")
+            elif valid_until and valid_until < current.request.utcnow.date():
                 error = T("Voucher expired")
             elif voucher.balance <= 0:
                 error = T("Voucher credit exhausted")
-        else:
-            error = T("Invalid voucher")
 
         if error:
             form.errors["signature"] = error

@@ -214,6 +214,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Voucher Programs", f="voucher_program")(
                         M("Create", m="create", restrict=(ADMIN, ORG_GROUP_ADMIN)),
                         ),
+                    M("Debits", f="voucher_debit")(
+                        M("Create", m="create"),
+                        ),
                     )
 
 # END =========================================================================
