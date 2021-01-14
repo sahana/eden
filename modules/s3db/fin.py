@@ -337,7 +337,7 @@ class FinVoucherModel(S3Model):
         tablename = "fin_voucher_debit"
         define_table(tablename,
                      program_id(empty = False),
-                     voucher_id(),
+                     voucher_id(writable = False),
                      Field("pe_id", "reference pr_pentity",
                            label = T("Provider"),
                            represent = pe_represent,
@@ -345,11 +345,13 @@ class FinVoucherModel(S3Model):
                                                             pe_represent,
                                                             )),
                            ),
-                     Field("code", length=64,
-                           # TODO requires IS_ONE_OF(fin_voucher_credit.code)
+                     Field("signature", length=64,
+                           requires = IS_ONE_OF(db, "fin_voucher.signature"),
+                           widget = S3QRInput(),
                            ),
                      s3_date(default = "now",
                              label = T("Date Effected"),
+                             writable = False,
                              ),
                      Field("balance", "integer",
                            default = 0,
@@ -362,8 +364,8 @@ class FinVoucherModel(S3Model):
         self.configure(tablename,
                        editable = False,
                        deletable = False,
-                       # TODO onvalidate to find credit_id and voucher_id, and validate credit
-                       # TODO onaccept to auto-generate redeem-transaction
+                       onvalidation = self.debit_onvalidation,
+                       create_onaccept = self.debit_create_onaccept,
                        )
 
         # CRUD Strings
@@ -501,8 +503,101 @@ class FinVoucherModel(S3Model):
         if not voucher:
             return
 
+        # TODO Better algorithm
+        import uuid
+        voucher.update_record(signature = str(uuid.uuid4().int)[:16])
+
         program = fin_VoucherProgram(voucher.program_id)
         program.issue(voucher.id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def debit_onvalidation(form):
+        """
+            Validate debit:
+            - identify the voucher to debit
+        """
+
+        T = current.T
+
+        form_vars = form.vars
+
+        if "signature" not in form_vars:
+            form.errors["signature"] = T("Missing voucher signature")
+            return
+
+        signature = form_vars["signature"]
+        vtable = current.s3db.fin_voucher
+        query = (vtable.signature == signature) & \
+                (vtable.deleted == False)
+        voucher = current.db(query).select(vtable.id,
+                                           vtable.balance,
+                                           vtable.valid_until,
+                                           limitby = (0, 1),
+                                           ).first()
+
+        error = None
+        if voucher:
+            valid_until = voucher.valid_until
+            if valid_until and valid_until < current.request.utcnow.date():
+                error = T("Voucher expired")
+            elif voucher.balance <= 0:
+                error = T("Voucher credit exhausted")
+        else:
+            error = T("Invalid voucher")
+
+        if error:
+            form.errors["signature"] = error
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def debit_create_onaccept(form):
+        """
+            Onaccept of debit:
+            - transfer credit (redeem)
+
+            @param form: the FORM
+        """
+
+        # Get record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        # Look up the debit
+        table = s3db.fin_voucher_debit
+        query = (table.id == record_id)
+        debit = db(query).select(table.id,
+                                 table.signature,
+                                 limitby = (0, 1),
+                                 ).first()
+
+        if not debit:
+            return
+
+        # Look up the voucher from signature
+        vtable = s3db.fin_voucher
+        query = (vtable.signature == debit.signature) & \
+                (vtable.deleted == False)
+        voucher = db(query).select(vtable.id,
+                                   vtable.program_id,
+                                   limitby = (0, 1),
+                                   ).first()
+        if not voucher:
+            return
+        debit.update_record(program_id = voucher.program_id,
+                            voucher_id = voucher.id,
+                            )
+
+        program = fin_VoucherProgram(voucher.program_id)
+        program.debit(voucher.id, debit.id)
 
 # =============================================================================
 class FinPaymentServiceModel(S3Model):
@@ -1610,7 +1705,7 @@ class fin_VoucherProgram(object):
                     balance = voucher.balance + transaction["voucher"],
                     )
                 debit.update_record(
-                    balande = debit.balance + transaction["debit"],
+                    balance = debit.balance + transaction["debit"],
                     )
                 program.update_record(
                     credit = program.credit + transaction["credit"],
