@@ -301,7 +301,11 @@ class FinVoucherModel(S3Model):
                      *s3_meta_fields())
 
         # TODO Bearer notes?
-        # TODO Create-onaccept to generate initial issue-transaction
+
+        # Table Configuration
+        self.configure(tablename,
+                       create_onaccept = self.voucher_create_onaccept,
+                       )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -399,7 +403,7 @@ class FinVoucherModel(S3Model):
         tablename = "fin_voucher_transaction"
         define_table(tablename,
                      program_id(empty = False),
-                     s3_date(default="now"),
+                     s3_datetime(default="now"),
                      Field("type",
                            label = T("Type"),
                            represent = S3Represent(options=transaction_types),
@@ -469,13 +473,36 @@ class FinVoucherModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def voucher_create_onaccept(form):
-        # TODO implement
+        """
+            Onaccept of new voucher:
+            - transfer initial credit to the voucher (issue)
+            - generate voucher number and signature (TODO)
+            - set expiration date (TODO)
 
-        # if no initial balance in form => lookup from program
-        # generate ISS-transaction in program
-        # if no valid_until set => lookup TTL from program and compute
-        # generate voucher number and signature if neither is present
-        pass
+            @param form: the FORM
+        """
+
+        # Get record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        table = current.s3db.fin_voucher
+        query = (table.id == record_id)
+        voucher = current.db(query).select(table.id,
+                                           table.program_id,
+                                           limitby = (0, 1),
+                                           ).first()
+
+        if not voucher:
+            return
+
+        program = fin_VoucherProgram(voucher.program_id)
+        program.issue(voucher.id)
 
 # =============================================================================
 class FinPaymentServiceModel(S3Model):
@@ -1460,6 +1487,8 @@ class fin_VoucherProgram(object):
             program = current.db(query).select(table.id,
                                                table.uuid,
                                                table.default_credit,
+                                               table.credit,
+                                               table.compensation,
                                                limitby = (0, 1),
                                                ).first()
             self._program = program
@@ -1486,10 +1515,10 @@ class fin_VoucherProgram(object):
         query = (table.id == voucher_id) & \
                 (table.program_id == program.id) & \
                 (table.deleted == False)
-        voucher = db(query).select(table.id,
-                                   table.balance,
-                                   limitby = (0, 1),
-                                   ).first()
+        voucher = current.db(query).select(table.id,
+                                           table.balance,
+                                           limitby = (0, 1),
+                                           ).first()
         if not voucher:
             return None
 
@@ -1502,7 +1531,7 @@ class fin_VoucherProgram(object):
                            "voucher": credit,
                            "voucher_id": voucher_id,
                            }
-            if self._transaction(transaction):
+            if self.__transaction(transaction):
                 voucher.update_record(
                     balance = voucher.balance + transaction["voucher"],
                     )
@@ -1538,7 +1567,10 @@ class fin_VoucherProgram(object):
             return None
         program_id = program.id
 
-        vtable = current.s3db.fin_voucher
+        db = current.db
+        s3db = current.s3db
+
+        vtable = s3db.fin_voucher
         query = (vtable.id == voucher_id) & \
                 (vtable.program_id == program_id) & \
                 (vtable.deleted == False)
@@ -1549,7 +1581,7 @@ class fin_VoucherProgram(object):
         if not voucher:
             return None
 
-        dtable = current.s3db.fin_voucher_debit
+        dtable = s3db.fin_voucher_debit
         query = (dtable.id == debit_id) & \
                 (dtable.program_id == program_id) & \
                 (dtable.deleted == False)
@@ -1573,7 +1605,7 @@ class fin_VoucherProgram(object):
                            "debit_id": debit_id,
                            }
 
-            if self._transaction(transaction):
+            if self.__transaction(transaction):
                 voucher.update_record(
                     balance = voucher.balance + transaction["voucher"],
                     )
@@ -1595,24 +1627,41 @@ class fin_VoucherProgram(object):
         pass
 
     # -------------------------------------------------------------------------
-    def _verify(self, transaction, chain=False):
+    def verify(self, transaction_id):
+        """
+            Verify integrity of a transaction (=check the vhash)
+
+            @param transaction_id: the transaction record ID
+
+            @returns: True|False whether the transaction is intact
+        """
 
         db = current.db
-        s3db = current.s3db
+        table = current.s3db.fin_voucher_transaction
 
-        ouuid = transaction.ouuid
+        # Get the transaction record
+        query = (table.id == transaction_id)
+        transaction = db(query).select(table.ALL,
+                                       limitby = (0, 1),
+                                       ).first()
+        if not transaction:
+            return False
 
         # Get preceding transaction's hash
+        ouuid = transaction.ouuid
         if ouuid:
-            table = s3db.fin_voucher_transaction
-            p_transaction = db(table.uuid == ouuid).select(table.ALL,
-                                                           limitby = (0, 1),
-                                                           ).first()
-
+            query = (table.uuid == ouuid) & \
+                    (table.program_id == transaction.program_id)
+            p_transaction = db(query).select(table.vhash,
+                                             limitby = (0, 1),
+                                             ).first()
             if p_transaction is None:
                 return False
             ohash = p_transaction.vhash
+        else:
+            ohash = None
 
+        # Verify the hash
         data = {"ouuid": ouuid,
                 "date": transaction.date,
                 "type": transaction.type,
@@ -1624,11 +1673,22 @@ class fin_VoucherProgram(object):
                 "debit_id": transaction.debit_id,
                 }
         vhash = self._hash(data, ohash)
-        if vhash != transaction.vhash:
-            return False
 
-        if chain:
-            return self._verify(p_transaction)
+        return vhash == transaction.vhash
+
+    # -------------------------------------------------------------------------
+    def audit(self, correct=False):
+        """
+            Run a full audit of the entire program:
+            - verify all transactions
+            - verify all balances, vouchers and debits
+
+            @param correct: correct any incorrect balances
+
+            @returns: audit report
+
+            TODO: implement
+        """
 
         return True
 
@@ -1662,7 +1722,7 @@ class fin_VoucherProgram(object):
         return str(crypt(inp)[0])
 
     # -------------------------------------------------------------------------
-    def _transaction(self, data):
+    def __transaction(self, data):
         """
             Record a transaction under this program
 
@@ -1690,12 +1750,13 @@ class fin_VoucherProgram(object):
         row = current.db(query).select(table.uuid,
                                        table.vhash,
                                        limitby = (0, 1),
-                                       orderby = ~(table.id)
-                                       )
+                                       orderby = ~(table.created_on)
+                                       ).first()
         if row:
             ouuid = row.uuid
-            ohash = row.hash
+            ohash = row.vhash
         else:
+            # This is the first transaction
             ouuid = ohash = None
 
         # Build the transaction record
