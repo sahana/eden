@@ -88,7 +88,7 @@ class rlpptm_InviteUserOrg(S3Method):
                                        limitby = (0, 1),
                                        ).first()
             if contact:
-                email = contact.email
+                email = contact.value
 
         # Form Fields
         formfields = [Field("email",

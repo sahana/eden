@@ -7,15 +7,10 @@
     @license MIT
 """
 
-import datetime
-
 from collections import OrderedDict
 
-from gluon import current, redirect, URL, DIV, TABLE, TAG, TR
+from gluon import current, URL
 from gluon.storage import Storage
-
-from s3 import FS, IS_LOCATION, S3DateFilter, S3Represent, s3_fieldmethod, s3_fullname, s3_yes_no_represent
-from s3dal import original_tablename
 
 LSJV = "Landesamt für Soziales, Jugend und Versorgung"
 ALLOWED_FORMATS = ("html", "iframe", "popup", "aadata", "json", "xls", "pdf")
@@ -160,10 +155,10 @@ def config(settings):
             TODO
         """
 
-        db = current.db
-        s3db = current.s3db
+        #db = current.db
+        #s3db = current.s3db
 
-        tablename = original_tablename(table)
+        #tablename = original_tablename(table)
 
         realm_entity = 0
 
@@ -262,6 +257,7 @@ def config(settings):
             result = standard_prep(r) if callable(standard_prep) else True
 
             s3db = current.s3db
+            #settings = current.deployment_settings
 
             # Add invite-method for ORG_GROUP_ADMIN role
             from .helpers import rlpptm_InviteUserOrg
@@ -269,6 +265,48 @@ def config(settings):
                             method = "invite",
                             action = rlpptm_InviteUserOrg,
                             )
+
+            if not r.component:
+                if r.interactive:
+                    from s3 import S3SQLCustomForm, \
+                                   S3SQLInlineComponent, \
+                                   S3SQLInlineLink
+                    crud_fields = [S3SQLInlineLink(
+                                        "group",
+                                        field = "group_id",
+                                        label = T("Organisation Group"),
+                                        multiple = False,
+
+                                        ),
+                                   "name",
+                                   "acronym",
+                                   #S3SQLInlineLink(
+                                   #     "organisation_type",
+                                   #     field = "organisation_type_id",
+                                   #     search = False,
+                                   #     label = T("Type"),
+                                   #     multiple = settings.get_org_organisation_types_multiple(),
+                                   #     widget = "multiselect",
+                                   #     ),
+                                   #"country",
+                                   S3SQLInlineComponent(
+                                        "contact",
+                                        fields = [("", "value")],
+                                        filterby = {"field": "contact_method",
+                                                    "options": "EMAIL",
+                                                    },
+                                        label = T("Email"),
+                                        multiple = False,
+                                        name = "email",
+                                        ),
+                                   "phone",
+                                   #"website",
+                                   #"year",
+                                   #"logo",
+                                   "comments",
+                                   ]
+                    r.resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
+                                         )
 
             return result
         s3.prep = prep
