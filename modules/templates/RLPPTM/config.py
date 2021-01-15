@@ -54,7 +54,7 @@ def config(settings):
     # Disable password-retrieval feature
     settings.auth.password_retrieval = True
 
-    settings.auth.realm_entity_types = ("org_organisation", "pr_forum", "pr_group")
+    settings.auth.realm_entity_types = ("org_group", "org_organisation")
     settings.auth.privileged_roles = {"COORDINATOR": "COORDINATOR"}
 
     settings.auth.password_min_length = 8

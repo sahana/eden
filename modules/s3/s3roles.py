@@ -1829,7 +1829,20 @@ class S3RolesWidget(object):
                 query &= q
 
         query &= (table.deleted == False)
-        rows = current.db(query).select(field, table.pe_id)
+
+        realm_types = self.realm_types
+        if use_realms and realm_types:
+            # Exclude assignments for realm types that are not included
+            # in settings.auth.realm_entity_types
+            etable = current.s3db.pr_pentity
+            left = etable.on(etable.pe_id == table.pe_id)
+            realm_types = set(t[0] for t in self.realm_types if t[0] is not None)
+            query &= (etable.instance_type == None) | \
+                     (etable.instance_type.belongs(realm_types))
+        else:
+            left = None
+
+        rows = current.db(query).select(field, table.pe_id, left=left)
 
         assignments = set()
         for row in rows:

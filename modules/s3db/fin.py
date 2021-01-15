@@ -185,7 +185,7 @@ class FinVoucherModel(S3Model):
         tablename = "fin_voucher_program"
         define_table(tablename,
                      self.org_organisation_id(
-                            label = T("Administrator"),
+                            label = T("Administrator##fin"),
                             empty = False,
                             ),
                      Field("name",
@@ -269,24 +269,19 @@ class FinVoucherModel(S3Model):
         define_table(tablename,
                      program_id(empty = False),
                      Field("pe_id", "reference pr_pentity",
-                           label = T("Bearer"),
+                           label = T("Bearer##fin"),
                            represent = pe_represent,
                            requires = IS_EMPTY_OR(IS_ONE_OF(db, "pr_pentity.pe_id",
                                                             pe_represent,
                                                             )),
                            ),
                      Field("signature", length=64,
-                           default = "FIXME", # TODO auto-generate
+                           label = T("Voucher ID"),
                            writable = False,
                            ),
                      Field("balance", "integer",
+                           label = T("Balance##fin"),
                            default = 0,
-                           writable = False,
-                           ),
-                     Field("unlimited", "boolean",
-                           default = False,
-                           # Expose as necessary
-                           readable = False,
                            writable = False,
                            ),
                      s3_date("valid_from",
@@ -304,6 +299,8 @@ class FinVoucherModel(S3Model):
 
         # Table Configuration
         self.configure(tablename,
+                       deletable = False,
+                       editable = False,
                        create_onaccept = self.voucher_create_onaccept,
                        )
 
@@ -339,13 +336,14 @@ class FinVoucherModel(S3Model):
                      program_id(empty = False),
                      voucher_id(writable = False),
                      Field("pe_id", "reference pr_pentity",
-                           label = T("Provider"),
+                           label = T("Provider##fin"),
                            represent = pe_represent,
                            requires = IS_EMPTY_OR(IS_ONE_OF(db, "pr_pentity.pe_id",
                                                             pe_represent,
                                                             )),
                            ),
                      Field("signature", length=64,
+                           label = T("Voucher ID"),
                            requires = IS_ONE_OF(db, "fin_voucher.signature"),
                            widget = S3QRInput(),
                            ),
@@ -354,6 +352,7 @@ class FinVoucherModel(S3Model):
                              writable = False,
                              ),
                      Field("balance", "integer",
+                           label = T("Balance##fin"),
                            default = 0,
                            writable = False,
                            ),
@@ -397,9 +396,9 @@ class FinVoucherModel(S3Model):
         #  - DBT: credit +1 <= voucher -1, debit +1 <= compensation -1
         #  - CMP: debit -1 => compensation +1
         #
-        transaction_types = {"ISS": T("Issued"),
-                             "DBT": T("Redeemed"),
-                             "CMP": T("Compensated"),
+        transaction_types = {"ISS": T("Issued##fin"),
+                             "DBT": T("Redeemed##fin"),
+                             "CMP": T("Compensated##fin"),
                              }
 
         tablename = "fin_voucher_transaction"
@@ -435,8 +434,19 @@ class FinVoucherModel(S3Model):
                            ),
                      *s3_meta_fields())
 
-        # Table configuration
+        # List Fields
+        list_fields = ["program_id",
+                       "date",
+                       "type",
+                       (T("Voucher"), "voucher_id$signature"),
+                       (T("Bearer##fin"), "voucher_id$pe_id"),
+                       "debit_id$pe_id",
+                       ]
+
+        # Table Configuration
         self.configure(tablename,
+                       list_fields = list_fields,
+                       orderby = "fin_voucher_transaction.date desc",
                        insertable = False,
                        editable = False,
                        deletable = False,
