@@ -6,7 +6,7 @@
     @license: MIT
 """
 
-from gluon import current, Field, IS_EMAIL, INPUT, SQLFORM
+from gluon import current, CRYPT, Field, INPUT, IS_EMAIL, SQLFORM, URL
 
 from s3 import S3Method, s3_mark_required
 
@@ -78,7 +78,6 @@ class rlpptm_InviteUserOrg(S3Method):
         if account:
             email = account.email
         else:
-            # TODO Custom form for orgs including email address (pr_contact)
             ctable = s3db.pr_contact
             query = (ctable.pe_id == pe_id) & \
                     (ctable.contact_method == "EMAIL") & \
@@ -103,7 +102,7 @@ class rlpptm_InviteUserOrg(S3Method):
         response.s3.has_required = has_required
 
         # Form buttons
-        SEND_INVITATION = T("Send Invitation")
+        SEND_INVITATION = T("Send New Invitation") if account else T("Send Invitation")
         buttons = [INPUT(_type = "submit",
                          _value = SEND_INVITATION,
                          ),
@@ -133,13 +132,88 @@ class rlpptm_InviteUserOrg(S3Method):
                         #onvalidation = auth_settings.register_onvalidation,
                         ):
 
-            # TODO process form
-            pass
+            error = self.invite_account(r.record, form.vars.email, account=account)
+            if error:
+                response.error = T("Could not send invitation (%(reason)s)") % {"reason": error}
+            else:
+                response.confirmation = T("Invitation sent")
+        else:
+            if account:
+                response.warning = T("This organisation has been invited before!")
 
         output["form"] = form
 
         response.view = self._view(r, "update.html")
 
         return output
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def invite_account(cls, organisation, email, account=None):
+
+        request = current.request
+
+        data = {"first_name": organisation.name,
+                "email": email,
+                # TODO language => use default language
+                "link_user_to": ["staff"],
+                "organisation_id": organisation.id,
+                }
+
+        # Generate registration key and activation code
+        from uuid import uuid4
+        key = str(uuid4())
+        code = uuid4().hex[-6:].upper()
+
+        # Add hash to data
+        data["registration_key"] = cls.keyhash(key, code)
+
+        if account:
+            success = account.update_record(**data)
+            if not success:
+                return "could not update preliminary account"
+        else:
+            utable = current.auth.settings.table_user
+            user_id = utable.insert(**data)
+            if user_id:
+                ltable = current.s3db.pr_person_user
+                ltable.insert(pe_id = organisation.pe_id,
+                              user_id = user_id,
+                              )
+            else:
+                return "could not create preliminary account"
+
+        # Compose and send invitation email
+        registration_url = URL(c = "default",
+                               f = "index",
+                               args = ["register_invited", key],
+                               scheme = "https" if request.is_https else "http",
+                               )
+
+        data = {"url": registration_url,
+                "code": code,
+                }
+
+        from .notifications import CMSNotifications
+        return CMSNotifications.send(email, "InviteOrg", data,
+                                     module = "auth",
+                                     resource = "user",
+                                     )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def keyhash(key, code):
+        """
+            Generate a hash of the activation code using
+            the registration key
+
+            @param key: the registration key
+            @param code: the activation code
+
+            @returns: the hash as string
+        """
+
+        crypt = CRYPT(key=key, digest_alg="sha512", salt=None)
+        return str(crypt(code.upper())[0])
 
 # END =========================================================================

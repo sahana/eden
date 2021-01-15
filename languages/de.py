@@ -55,6 +55,7 @@
 '# of National Staff': '# der nationalen Mitarbeiter',
 '# of Vehicles': '# der Fahrzeuge',
 '%(event)s Crisis Management': 'Krisenmanagement %(event)s',
+'%(event)s Personnel Testing': '%(event)s Personaltestung',
 '%(event)s already registered %(number)s times today': '%(event)s heute bereits %(number)s mal registriert',
 '%(event)s already registered on %(timestamp)s': '%(event)s bereits registriert am %(timestamp)s',
 '%(event)s already registered today': '%(event)s heute bereits registriert',
