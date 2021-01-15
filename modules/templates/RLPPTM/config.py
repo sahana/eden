@@ -251,6 +251,38 @@ def config(settings):
     settings.customise_cms_post_controller = customise_cms_post_controller
 
     # -------------------------------------------------------------------------
+    def customise_org_organisation_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            s3db = current.s3db
+
+            # Add invite-method for ORG_GROUP_ADMIN role
+            from .helpers import rlpptm_InviteUserOrg
+            s3db.set_method("org", "organisation",
+                            method = "invite",
+                            action = rlpptm_InviteUserOrg,
+                            )
+
+            return result
+        s3.prep = prep
+
+        # Custom rheader
+        from .rheaders import rlpptm_org_rheader
+        attr = dict(attr)
+        attr["rheader"] = rlpptm_org_rheader
+
+        return attr
+
+    settings.customise_org_organisation_controller = customise_org_organisation_controller
+
+    # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
     settings.modules = OrderedDict([
