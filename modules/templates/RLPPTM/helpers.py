@@ -6,7 +6,8 @@
     @license: MIT
 """
 
-from gluon import current, CRYPT, Field, INPUT, IS_EMAIL, SQLFORM, URL
+from gluon import current, CRYPT, Field, INPUT, SQLFORM, URL, \
+                  IS_EMAIL, IS_LOWER, IS_NOT_IN_DB
 
 from s3 import S3Method, s3_mark_required
 
@@ -56,19 +57,22 @@ class rlpptm_InviteUserOrg(S3Method):
         session = current.session
 
         settings = current.deployment_settings
-        auth_settings = current.auth.settings
+        auth = current.auth
+        auth_settings = auth.settings
+        auth_messages = auth.messages
 
         output = {"title": T("Invite Organisation"),
                   }
 
+        # TODO Check for any active accounts => if they exist, don't allow new invite
+
         # Look up existing invite-account
         email = None
-        pe_id = r.record.pe_id
 
-        ltable = s3db.pr_person_user
+        ltable = s3db.org_organisation_user
         utable = auth_settings.table_user
         join = utable.on(utable.id == ltable.user_id)
-        query = (ltable.pe_id == pe_id) & \
+        query = (ltable.organisation_id == r.record.id) & \
                 (ltable.deleted == False)
         account = db(query).select(utable.id,
                                    utable.email,
@@ -79,7 +83,7 @@ class rlpptm_InviteUserOrg(S3Method):
             email = account.email
         else:
             ctable = s3db.pr_contact
-            query = (ctable.pe_id == pe_id) & \
+            query = (ctable.pe_id == r.record.pe_id) & \
                     (ctable.contact_method == "EMAIL") & \
                     (ctable.deleted == False)
             contact = db(query).select(ctable.value,
@@ -90,9 +94,15 @@ class rlpptm_InviteUserOrg(S3Method):
                 email = contact.value
 
         # Form Fields
+        dbset = db(utable.id != account.id) if account else db
         formfields = [Field("email",
                             default = email,
-                            requires = IS_EMAIL(),
+                            requires = [IS_EMAIL(error_message = auth_messages.invalid_email),
+                                        IS_LOWER(),
+                                        IS_NOT_IN_DB(dbset, "%s.email" % utable._tablename,
+                                                     error_message = auth_messages.duplicate_email,
+                                                     ),
+                                        ]
                             ),
                       ]
 
@@ -176,8 +186,8 @@ class rlpptm_InviteUserOrg(S3Method):
             utable = current.auth.settings.table_user
             user_id = utable.insert(**data)
             if user_id:
-                ltable = current.s3db.pr_person_user
-                ltable.insert(pe_id = organisation.pe_id,
+                ltable = current.s3db.org_organisation_user
+                ltable.insert(organisation_id = organisation.id,
                               user_id = user_id,
                               )
             else:

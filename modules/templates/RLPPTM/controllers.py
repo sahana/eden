@@ -4,8 +4,8 @@ import json
 from uuid import uuid4
 
 from gluon import A, BR, CRYPT, DIV, Field, H3, INPUT, \
-                  IS_EMPTY_OR, IS_EXPR, IS_INT_IN_RANGE, IS_IN_SET, \
-                  IS_LENGTH, IS_NOT_EMPTY, \
+                  IS_EMAIL, IS_EMPTY_OR, IS_EXPR, IS_INT_IN_RANGE, IS_IN_SET, \
+                  IS_LENGTH, IS_LOWER, IS_NOT_EMPTY, IS_NOT_IN_DB, \
                   P, SQLFORM, URL, XML, current, redirect
 from gluon.storage import Storage
 
@@ -15,8 +15,7 @@ from s3 import IS_ONE_OF, IS_PHONE_NUMBER_MULTI, IS_PHONE_NUMBER_SINGLE, \
                S3WithIntro, S3Represent, \
                s3_comments_widget, s3_date, s3_mark_required, s3_str
 
-from ..RLP.notifications import formatmap
-#from .helpers import rlp_deployment_sites
+from .notifications import formatmap
 
 THEME = "RLP"
 
@@ -1034,10 +1033,7 @@ class register(S3CustomController):
             s3db_onaccept(htable, volunteer_update, method="update")
 
             # Add to default pool
-            from .poolrules import PoolRules
-            default_pool = PoolRules()(person_id)
-            if not default_pool:
-                default_pool = cls.get_default_pool()
+            default_pool = cls.get_default_pool()
             if default_pool:
                 gtable = s3db.pr_group
                 mtable = s3db.pr_group_membership
@@ -1277,5 +1273,392 @@ class verify_email(S3CustomController):
                                          )
         if not success:
             current.response.error = auth_messages.unable_send_email
+
+# =============================================================================
+class register_invited(S3CustomController):
+    """ Custom Registration Page """
+
+    def __call__(self):
+
+        auth = current.auth
+
+        # Redirect if already logged-in
+        if auth.s3_logged_in():
+            redirect(URL(c="default", f="index"))
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+
+        settings = current.deployment_settings
+
+        request = current.request
+        response = current.response
+        session = current.session
+
+        # Get the registration key
+        if len(request.args) > 1:
+            key = request.args[-1]
+            session.s3.invite_key = key
+            redirect(URL(c="default", f="index", args = ["register_invited"]))
+        else:
+            key = session.s3.invite_key
+        if not key:
+            session.error = T("Missing registration key")
+            redirect(URL(c="default", f="index"))
+
+        # Page title and intro text
+        title = T("Registration")
+
+        # Get intro text from CMS
+        # TODO add to CMS prepop
+        db = current.db
+        s3db = current.s3db
+
+        ctable = s3db.cms_post
+        ltable = s3db.cms_post_module
+        join = ltable.on((ltable.post_id == ctable.id) & \
+                        (ltable.module == "auth") & \
+                        (ltable.resource == "user") & \
+                        (ltable.deleted == False))
+
+        query = (ctable.name == "InvitedRegistrationIntro") & \
+                (ctable.deleted == False)
+        row = db(query).select(ctable.body,
+                                join = join,
+                                cache = s3db.cache,
+                                limitby = (0, 1),
+                                ).first()
+        intro = row.body if row else None
+
+        # Customise Auth Messages
+        auth_settings = auth.settings
+        auth_messages = auth.messages
+        self.customise_auth_messages()
+
+        # Form Fields
+        formfields, required_fields = self.formfields()
+
+        # Generate labels (and mark required fields in the process)
+        labels, has_required = s3_mark_required(formfields,
+                                                mark_required = required_fields,
+                                                )
+        response.s3.has_required = has_required
+
+        # Form buttons
+        REGISTER = T("Register")
+        buttons = [INPUT(_type = "submit",
+                         _value = REGISTER,
+                         ),
+                   # TODO cancel-button?
+                   ]
+
+        # Construct the form
+        utable = auth_settings.table_user
+        response.form_label_separator = ""
+        form = SQLFORM.factory(table_name = utable._tablename,
+                               record = None,
+                               hidden = {"_next": request.vars._next},
+                               labels = labels,
+                               separator = "",
+                               showid = False,
+                               submit_button = REGISTER,
+                               delete_label = auth_messages.delete_label,
+                               formstyle = settings.get_ui_formstyle(),
+                               buttons = buttons,
+                               *formfields)
+
+        # Identify form for CSS & JS Validation
+        form.add_class("auth_register")
+
+        # Inject client-side Validation
+        auth.s3_register_validation()
+
+        if form.accepts(request.vars,
+                        session,
+                        formname = "register",
+                        onvalidation = self.validate(key),
+                        ):
+
+            form_vars = form.vars
+
+            # Get the account
+            account = self.account(key, form_vars.code)
+            account.update_record(**utable._filter_fields(form_vars, id=False))
+
+            del session.s3["invite_key"]
+
+            # Post-process the new user record
+            s3db.configure("auth_user",
+                           register_onaccept = self.register_onaccept,
+                           )
+
+            # Approve and link user
+            auth.s3_approve_user(account)
+
+            # Send welcome email (custom)
+            self.send_welcome_email(account)
+
+            # Log them in
+            user = Storage(utable._filter_fields(account, id=True))
+            auth.login_user(user)
+
+            auth_messages = auth.messages
+            auth.log_event(auth_messages.register_log, user)
+            session.flash = auth_messages.registration_successful
+
+            # TODO redirect to the org instead?
+            redirect(URL(c="default", f="person"))
+
+        elif form.errors:
+            response.error = T("There are errors in the form, please check your input")
+
+        # Custom View
+        self._view("RLPPTM", "register_invited.html")
+
+        return {"title": title,
+                "intro": intro,
+                "form": form,
+                }
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def validate(cls, key):
+        """
+            Custom validation of registration form
+            - check the registration code
+            - check for duplicate email
+        """
+
+        T = current.T
+
+        def register_onvalidation(form):
+
+            code = form.vars.get("code")
+
+            account = cls.account(key, code)
+            if not account:
+                form.errors["code"] = T("Invalid Registration Code")
+                return
+
+            email = form.vars.get("email")
+
+            from gluon.validators import ValidationError
+            auth = current.auth
+            utable = auth.settings.table_user
+            dbset = current.db(utable.id != account.id)
+            requires = IS_NOT_IN_DB(dbset, "%s.email" % utable._tablename)
+            try:
+                requires.validate(email)
+            except ValidationError:
+                form.errors["email"] = auth.messages.duplicate_email
+                return
+
+            onvalidation = current.auth.settings.register_onvalidation
+            if onvalidation:
+                from gluon.tools import callback
+                callback(onvalidation, form, tablename="auth_user")
+
+        return register_onvalidation
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def register_onaccept(cls, user_id):
+        """
+            Process Custom Fields
+        """
+
+        # TODO set necessary user roles
+        pass
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def send_welcome_email(cls, user):
+        """
+            Send a welcome email to the new user
+
+            @param user: the auth_user Row
+        """
+
+        cls.customise_auth_messages()
+        auth_messages = current.auth.messages
+
+        # Look up CMS template for welcome email
+        try:
+            recipient = user["email"]
+        except (KeyError, TypeError):
+            recipient = None
+        if not recipient:
+            current.response.error = auth_messages.unable_send_email
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        settings = current.deployment_settings
+
+        # Define join
+        ctable = s3db.cms_post
+        ltable = s3db.cms_post_module
+        join = ltable.on((ltable.post_id == ctable.id) & \
+                         (ltable.module == "auth") & \
+                         (ltable.resource == "user") & \
+                         (ltable.deleted == False))
+
+        # Get message template
+        query = (ctable.name == "WelcomeMessageInvited") & \
+                (ctable.deleted == False)
+        row = db(query).select(ctable.doc_id,
+                               ctable.body,
+                               join = join,
+                               limitby = (0, 1),
+                               ).first()
+        if row:
+            message_template = row.body
+        else:
+            # Disabled
+            return
+
+        # Look up attachments
+        dtable = s3db.doc_document
+        query = (dtable.doc_id == row.doc_id) & \
+                (dtable.file != None) & (dtable.file != "") & \
+                (dtable.deleted == False)
+        rows = db(query).select(dtable.file)
+        attachments = []
+        for row in rows:
+            filename, stream = dtable.file.retrieve(row.file)
+            attachments.append(current.mail.Attachment(stream, filename=filename))
+
+        # Default subject from auth.messages
+        system_name = s3_str(settings.get_system_name())
+        subject = s3_str(auth_messages.welcome_email_subject % \
+                         {"system_name": system_name})
+
+        # Custom message body
+        data = {"system_name": system_name,
+                "url": settings.get_base_public_url(),
+                "profile": URL("default", "person", host=True),
+                }
+        message = formatmap(message_template, data)
+
+        # Send email
+        success = current.msg.send_email(to = recipient,
+                                         subject = subject,
+                                         message = message,
+                                         attachments = attachments,
+                                         )
+        if not success:
+            current.response.error = auth_messages.unable_send_email
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def account(cls, key, code):
+        """
+            Find the account matching registration key and code
+
+            @param key: the registration key (from URL args)
+            @param code: the registration code (from form)
+        """
+
+        if key and code:
+            utable = current.auth.settings.table_user
+            query = (utable.registration_key == cls.keyhash(key, code))
+            account = current.db(query).select(utable.ALL, limitby=(0, 1)).first()
+        else:
+            account = None
+
+        return account
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def formfields():
+        """
+            Generate the form fields for the registration form
+
+            @returns: a tuple (formfields, required_fields)
+                      - formfields = list of form fields
+                      - required_fields = list of field names of required fields
+        """
+
+        T = current.T
+        request = current.request
+
+        auth = current.auth
+        auth_settings = auth.settings
+        auth_messages = auth.messages
+
+        utable = auth_settings.table_user
+        passfield = auth_settings.password_field
+
+        # Last name is required
+        utable.last_name.requires = IS_NOT_EMPTY(error_message=T("input required"))
+
+        # Don't check for duplicate email (will be done in onvalidation)
+        # => user might choose to use the current email address of the account
+        # => if registration key or code are invalid, we don't want to give away
+        #    any existing email addresses
+        utable.email.requires = [IS_EMAIL(error_message = auth_messages.invalid_email),
+                                 IS_LOWER(),
+                                 ]
+
+        # Form fields
+        formfields = [utable.first_name,
+                      utable.last_name,
+                      utable.email,
+                      utable[passfield],
+                      Field("password_two", "password",
+                            label = auth_messages.verify_password,
+                            requires = IS_EXPR("value==%s" % \
+                                               repr(request.vars.get(passfield)),
+                                               error_message = auth_messages.mismatched_password,
+                                               ),
+                            comment = DIV(_class = "tooltip",
+                                          _title = "%s|%s" % (auth_messages.verify_password,
+                                                              T("Enter the same password again"),
+                                                              ),
+                                          ),
+                            ),
+                      Field("code",
+                            label = T("Registration Code"),
+                            requires = IS_NOT_EMPTY(),
+                            ),
+                      ]
+
+
+        # Required fields
+        required_fields = ["first_name",
+                           "last_name",
+                           ]
+
+        return formfields, required_fields
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def keyhash(key, code):
+        """
+            Generate a hash of the activation code using
+            the registration key
+
+            @param key: the registration key
+            @param code: the activation code
+
+            @returns: the hash as string
+        """
+
+        crypt = CRYPT(key=key, digest_alg="sha512", salt=None)
+        return str(crypt(code.upper())[0])
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def customise_auth_messages():
+        """
+            Customise auth messages:
+            - welcome email subject
+        """
+
+        messages = current.auth.messages
+
+        messages.welcome_email_subject = "Welcome to the %(system_name)s Portal"
 
 # END =========================================================================
