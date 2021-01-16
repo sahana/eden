@@ -249,6 +249,21 @@ class legal(S3CustomController):
         return output
 
 # =============================================================================
+class approve(S3CustomController):
+    """ Custom Approval Page """
+
+    def __call__(self):
+
+        # @ToDo: Single User or List?
+        user_id = current.request.args(1)
+        # @ToDo: Check permitted
+
+        # Custom View
+        self._view(THEME, "approve.html")
+
+        return output
+
+# =============================================================================
 class register(S3CustomController):
     """ Custom Registration Page """
 
@@ -276,7 +291,7 @@ class register(S3CustomController):
         utable = auth_settings.table_user
 
         # Page title and intro text
-        title = T("Volunteer Registration")
+        title = T("Register Infection Test Station")
 
         # Get intro text from CMS
         db = current.db
@@ -306,11 +321,6 @@ class register(S3CustomController):
                                                 mark_required = required_fields,
                                                 )
         response.s3.has_required = has_required
-        labels["skill_id"] = DIV(labels["skill_id"],
-                                 DIV("(%s)" % T("Select all that apply"),
-                                     _class="sub-label",
-                                     ),
-                                 )
 
         # Form buttons
         REGISTER = T("Register")
@@ -360,14 +370,14 @@ class register(S3CustomController):
             formvars = form.vars
 
             # Add default organisation
-            organisation_id = formvars.get("organisation_id")
-            if not organisation_id:
-                formvars["organisation_id"] = settings.get_org_default_organisation
+            #organisation_id = formvars.get("organisation_id")
+            #if not organisation_id:
+            #    formvars["organisation_id"] = settings.get_org_default_organisation
 
             # Add HR type
-            link_user_to = formvars.get("link_user_to")
-            if link_user_to is None:
-                formvars["link_user_to"] = ["volunteer"]
+            #link_user_to = formvars.get("link_user_to")
+            #if link_user_to is None:
+            #    formvars["link_user_to"] = ["staff"]
 
             # Create the user record
             user_id = utable.insert(**utable._filter_fields(formvars, id=False))
@@ -377,35 +387,16 @@ class register(S3CustomController):
             temptable = s3db.auth_user_temp
             record  = {"user_id": user_id}
 
-            mobile = formvars.mobile_phone
-            if mobile:
-                record["mobile"] = mobile
-
             record["consent"] = formvars.consent
 
             # Store Custom fields
-            custom = {#"date_of_birth": formvars.date_of_birth,
-                      "home_phone": formvars.home_phone,
-                      #"office_phone": formvars.office_phone,
+            custom = {"organisation": formvars.organisation,
                       "location_id": formvars.location_id,
                       "addr_street": formvars.addr_street,
                       "addr_postcode": formvars.addr_postcode,
-                      "occupation_type_ids": formvars.occupation_type_ids,
-                      "occupation": formvars.occupation,
-                      #"start_date": formvars.start_date,
-                      #"end_date": formvars.end_date,
-                      "hours_per_week": formvars.hours_per_week,
-                      "schedule_json": formvars.schedule_json,
-                      "availability_sites": formvars.availability_sites,
-                      "availability_comments": formvars.availability_comments,
-                      "skill_id": formvars.skill_id,
-                      "comments": formvars.comments,
+                      "office_phone": formvars.office_phone,
+                      "opening_times": formvars.opening_times,
                       }
-            for datefield in ("date_of_birth", "start_date", "end_date"):
-                value = formvars.get(datefield)
-                if value:
-                    value = value.isoformat()
-                    custom[datefield] = value
             record["custom"] = json.dumps(custom)
 
             temptable.insert(**record)
@@ -514,10 +505,6 @@ class register(S3CustomController):
         utable = auth_settings.table_user
         passfield = auth_settings.password_field
 
-        occupation_type_represent = S3Represent(lookup = "pr_occupation_type",
-                                                multiple = True,
-                                                )
-
         # Instantiate Consent Tracker
         consent = s3db.auth_Consent(processing_types=["SHARE"])
 
@@ -529,12 +516,6 @@ class register(S3CustomController):
         # Form fields
         formfields = [utable.first_name,
                       utable.last_name,
-                      s3_date("date_of_birth",
-                              label = T("Date of Birth"),
-                              future = -156,
-                              empty = False,
-                              ),
-                      # --------------------------------------------
                       utable.email,
                       utable[passfield],
 
@@ -552,26 +533,19 @@ class register(S3CustomController):
                                           ),
                             ),
                       # --------------------------------------------
-                      Field("home_phone",
-                            label = T("Phone"),
-                            requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI()),
+                      Field("organisation",
+                            label = T("Organization"),
+                            requires = IS_NOT_EMPTY(),
                             ),
-                      Field("mobile_phone",
-                            label = T("Mobile Phone"),
-                            requires = IS_EMPTY_OR(IS_PHONE_NUMBER_SINGLE()),
-                            ),
-                      #Field("office_phone",
-                      #      label = T("Office Phone"),
-                      #      requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI()),
-                      #      ),
+
                       # --------------------------------------------
                       s3db.gis_location_id("location_id",
                                            widget = S3LocationSelector(
-                                                       levels = ("L1", "L2", "L3"),
-                                                       required_levels = ("L1", "L2", "L3"),
+                                                       levels = ("L1", "L2", "L3", "L4"),
+                                                       required_levels = ("L1", "L2", "L3", "L4"),
                                                        show_address = False,
                                                        show_postcode = False,
-                                                       show_map = False,
+                                                       show_map = True,
                                                        ),
                                            ),
                       Field("addr_street",
@@ -582,101 +556,13 @@ class register(S3CustomController):
                             requires = IS_NOT_EMPTY(),
                             ),
 
-                      # --------------------------------------------
-                      Field("occupation_type_ids",
-                            "list:reference pr_occupation_type",
-                            label = T("Occupation Type"),
-                            requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                          "pr_occupation_type.id",
-                                          occupation_type_represent,
-                                          multiple=True,
-                                          )),
-                            represent = occupation_type_represent,
-                            widget = S3MultiSelectWidget(),
-                            comment = DIV(_class = "tooltip",
-                                          _title = "%s|%s" % (T("Occupation Type"),
-                                                              T("Select all that apply"),
-                                                              ),
-                                          ),
+                      Field("office_phone",
+                            label = T("Office Phone"),
+                            requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI()),
                             ),
-                      Field("occupation",
-                            label = T("Occupation / Speciality"),
-                            comment = DIV(_class = "tooltip",
-                                          _title = "%s|%s" % (T("Occupation / Speciality"),
-                                                              T("Specify your exact job designation (max 128 characters)"),
-                                                              ),
-                                          ),
-                            requires = IS_EMPTY_OR(IS_LENGTH(128)),
-                            ),
-
-                      # --------------------------------------------
-                      s3_date("start_date",
-                              label = T("Available from"),
-                              default = "now",
-                              past = 0,
-                              set_min = "#auth_user_start_date",
-                              ),
-                      s3_date("end_date",
-                              label = T("Available until"),
-                              past = 0,
-                              set_max = "#auth_user_start_date",
-                              ),
-                      Field("hours_per_week", "integer",
-                            label = T("Hours per Week"),
-                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(1, 60)),
-                            comment = DIV(_class = "tooltip",
-                                          _title = "%s|%s" % (T("Hours per Week"),
-                                                              T("Specify the maximum number of weekly hours"),
-                                                              ),
-                                          ),
-                            ),
-                      Field("schedule_json", "json",
-                            label = T("Availability Schedule"),
-                            widget = S3WithIntro(
-                                        S3WeeklyHoursWidget(),
-                                        # Widget intro from CMS
-                                        intro = ("pr",
-                                                 "person_availability",
-                                                 "HoursMatrixIntro",
-                                                 ),
-                                        ),
-                            ),
-                      Field("availability_sites", "list:integer",
-                            label = T("Possible Deployment Sites"),
-                            requires = IS_EMPTY_OR(IS_IN_SET({}, #rlp_deployment_sites(),
-                                                             multiple = True,
-                                                             sort = False,
-                                                             )),
-                            widget = S3WithIntro(
-                                        S3MultiSelectWidget(),
-                                        # Widget intro from CMS
-                                        intro = ("pr",
-                                                 "person_availability_site",
-                                                 "AvailabilitySitesIntro",
-                                                 ),
-                                        ),
-                            ),
-                      Field("availability_comments", "text",
-                            label = T("Availability Comments"),
-                            widget = s3_comments_widget,
-                            comment = DIV(_class = "tooltip",
-                                          _title = "%s|%s" % (T("Availability Comments"),
-                                                              T("Use this field to indicate e.g. vacation dates or other information with regard to your availability to facilitate personnel planning"),
-                                                              ),
-                                         ),
-                            ),
-                      s3db.hrm_multi_skill_id(
-                            label = T("Skills / Resources"),
-                            widget = S3GroupedOptionsWidget(cols = 1,
-                                                            size = None,
-                                                            help_field = "comments",
-                                                            ),
-                            ),
-
-                      # --------------------------------------------
-                      Field("comments", "text",
-                            label = T("Comments"),
-                            widget = s3_comments_widget,
+                      Field("opening_times",
+                            label = T("Opening Hours"),
+                            #requires = IS_NOT_EMPTY(),
                             ),
 
                       # --------------------------------------------
@@ -693,13 +579,10 @@ class register(S3CustomController):
                            ]
 
         # Subheadings
-        subheadings = ((3, T("User Account")),
-                       (6, T("Contact Information")),
-                       (8, T("Address")),
-                       (11, T("Occupation")),
-                       (13, T("Availability and Resources")),
-                       (20, T("Comments")),
-                       (21, T("Privacy")),
+        subheadings = ((0, T("User Account")),
+                       (5, T("Organization")),
+                       (6, T("Infection Test Station")),
+                       (11, T("Privacy")),
                        )
 
         # Geocoder
@@ -713,47 +596,6 @@ class register(S3CustomController):
         #                           ))
 
         return formfields, required_fields, subheadings
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def get_default_pool():
-        """
-            Get the record ID of the default volunteer pool
-
-            @returns: the pr_group.id of the default pool
-        """
-
-        s3db = current.s3db
-        auth = current.auth
-
-        gtable = s3db.pr_group
-        query = (gtable.name == DEFAULT_POOL) & \
-                (gtable.group_type.belongs(21, 22)) & \
-                (gtable.deleted == False)
-        row = current.db(query).select(gtable.id,
-                                       limitby = (0, 1),
-                                       ).first()
-        if not row:
-            pool = {"name": DEFAULT_POOL, "group_type": 21}
-            pool_id = pool["id"] = gtable.insert(**pool)
-            s3db.update_super(gtable, pool)
-            auth.s3_set_record_owner(gtable, pool)
-            s3db.onaccept(gtable, pool, method="create")
-
-            # Link pool to default organisation
-            default_org = current.deployment_settings.get_org_default_organisation()
-            if default_org:
-                ltable = s3db.org_organisation_team
-                link = {"organisation_id": default_org,
-                        "group_id": pool_id,
-                        }
-                link["id"] = ltable.insert(**link)
-                auth.s3_set_record_owner(ltable, link)
-                s3db.onaccept(ltable, link, method="create")
-        else:
-            pool_id = row.id
-
-        return pool_id
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -777,7 +619,7 @@ class register(S3CustomController):
         from s3 import S3Request
         r = S3Request("auth", "user", args=[], get_vars={})
         customise_resource = current.deployment_settings.customise_resource
-        for tablename in ("pr_person", "pr_group", "pr_group_membership"):
+        for tablename in ("pr_person"):
             customise = customise_resource(tablename)
             if customise:
                 customise(r, tablename)
@@ -790,8 +632,6 @@ class register(S3CustomController):
         auth = current.auth
         set_record_owner = auth.s3_set_record_owner
         s3db_onaccept = s3db.onaccept
-
-        parse_date = current.calendar.parse_date
 
         # Get the person record
         ltable = s3db.pr_person_user
@@ -813,63 +653,9 @@ class register(S3CustomController):
             return
         person_id = person.id
 
-        # Update person record
-        person_update = {}
-        dob = custom.get("date_of_birth")
-        if dob:
-            person_update["date_of_birth"] = parse_date(dob)
-        if not person.pe_label:
-            person_update["pe_label"] = "S-%07d" % person_id
-        if person_update:
-            person.update_record(**person_update)
-            person_update["id"] = person_id
-        set_record_owner(ptable, person_id, force_update=True)
-        if person_update:
-            s3db_onaccept(ptable, person_update, method="update")
+        # Register Organisation
 
-        # Add/update person details
-        details_update = {}
-        occupation = custom.get("occupation")
-        if occupation:
-            details_update["occupation"] = occupation
-        if details_update:
-            dtable = s3db.pr_person_details
-            query = (dtable.person_id == person_id) & \
-                    (dtable.deleted == False)
-            details = db(query).select(dtable.id,
-                                       limitby = (0, 1),
-                                       ).first()
-            if details:
-                details.update_record(**details_update)
-                details_update["id"] = details.id
-                s3db_onaccept(dtable, details_update, method="update")
-            else:
-                details_update["person_id"] = person_id
-                details_update["id"] = dtable.insert(**details_update)
-                set_record_owner(dtable, details_update)
-                s3db_onaccept(dtable, details_update, method="create")
-
-        # Link to occupation_types
-        occupation_types = custom.get("occupation_type_ids")
-        if occupation_types:
-            occupation_types = set(occupation_types)
-        else:
-            occupation_types = set()
-        ltable = s3db.pr_occupation_type_person
-        query = (ltable.person_id == person_id) & \
-                (ltable.deleted == False)
-        links = db(query).select(ltable.occupation_type_id)
-        linked = set(link.occupation_type_id for link in links)
-        rmv = linked - occupation_types
-        if rmv:
-            db(query & ltable.occupation_type_id.belongs(rmv)).delete()
-        for occupation_type_id in (occupation_types - linked):
-            link = {"person_id": person_id,
-                    "occupation_type_id": occupation_type_id,
-                    }
-            link["id"] = ltable.insert(**link)
-            set_record_owner(ltable, link, owned_by_user=user_id)
-            s3db_onaccept(ltable, link, method="create")
+        # Register Test Site
 
         # Register address
         addr_street = custom.get("addr_street")
@@ -903,26 +689,6 @@ class register(S3CustomController):
                 set_record_owner(atable, address_data)
                 s3db_onaccept(atable, address_data, method="create")
 
-        # Register home phone
-        home_phone = custom.get("home_phone")
-        if home_phone:
-            ctable = s3db.pr_contact
-            query = (ctable.pe_id == person.pe_id) & \
-                    (ctable.value == home_phone) & \
-                    (ctable.contact_method == "HOME_PHONE") & \
-                    (ctable.deleted == False)
-            contact = db(query).select(ctable.id,
-                                       limitby = (0, 1),
-                                       ).first()
-            if not contact:
-                contact_data = {"pe_id": person.pe_id,
-                                "value": home_phone,
-                                "contact_method": "HOME_PHONE",
-                                }
-                contact_data["id"] = ctable.insert(**contact_data)
-                set_record_owner(ctable, contact_data)
-                s3db_onaccept(ctable, contact_data, method="create")
-
         # Register work phone
         office_phone = custom.get("office_phone")
         if office_phone:
@@ -942,119 +708,6 @@ class register(S3CustomController):
                 contact_data["id"] = ctable.insert(**contact_data)
                 set_record_owner(ctable, contact_data)
                 s3db_onaccept(ctable, contact_data, method="create")
-
-        # Register availability
-        hours_per_week = custom.get("hours_per_week")
-        schedule_json = custom.get("schedule_json")
-        availability_comments = custom.get("availability_comments")
-
-        atable = s3db.pr_person_availability
-        query = (atable.person_id == person_id) & \
-                (atable.deleted == False)
-        availability = db(query).select(atable.id,
-                                        limitby = (0, 1),
-                                        ).first()
-        if availability:
-            availability.update_record(hours_per_week = hours_per_week,
-                                       schedule_json = schedule_json,
-                                       comments = availability_comments,
-                                       owned_by_user = user_id,
-                                       )
-            s3db_onaccept(atable, availability, method="update")
-        else:
-            availability = {"person_id": person_id,
-                            "hours_per_week": hours_per_week,
-                            "schedule_json": schedule_json,
-                            "comments": availability_comments,
-                            }
-            availability["id"] = atable.insert(**availability)
-            set_record_owner(atable, availability, owned_by_user=user_id)
-            s3db_onaccept(atable, availability, method="create")
-
-        # Link to availability sites
-        sites = custom.get("availability_sites")
-        ltable = s3db.pr_person_availability_site
-        if isinstance(sites, list):
-            query = (ltable.person_id == person_id) & \
-                    (ltable.deleted == False)
-            for site_id in set(sites):
-                q = (ltable.site_id == site_id) & query
-                if not db(q).select(ltable.id, limitby = (0, 1)).first():
-                    data = {"person_id": person_id,
-                            "site_id": site_id,
-                            }
-                    data["id"] = ltable.insert(**data)
-                    set_record_owner(ltable, data, owned_by_user=user_id)
-                    s3db_onaccept(ltable, data, method="create")
-
-        # Register skills
-        skills = custom.get("skill_id")
-        skills = set(skills) if skills else set()
-        ctable = s3db.hrm_competency
-        query = (ctable.person_id == person_id) & \
-                (ctable.deleted == False)
-        links = db(query).select(ctable.skill_id)
-        linked = set(link.skill_id for link in links)
-        rmv = linked - skills
-        if rmv:
-            db(query & ctable.skill_id.belongs(rmv)).delete()
-        for skill_id in (skills - linked):
-            link = {"person_id": person_id,
-                    "skill_id": skill_id,
-                    }
-            link["id"] = ctable.insert(**link)
-            set_record_owner(ctable, link, owned_by_user=user_id)
-            s3db_onaccept(ctable, link, method="create")
-
-        # Get the volunteer record
-        htable = s3db.hrm_human_resource
-        query = (htable.person_id == person_id) & \
-                (htable.type == 2) & \
-                (htable.deleted == False)
-        volunteer = db(query).select(htable.id,
-                                     limitby = (0, 1),
-                                     ).first()
-        if volunteer:
-            # Update volunteer record
-            volunteer_update = {"start_date": None,
-                                "end_date": None,
-                                }
-            start_date = custom.get("start_date")
-            if start_date:
-                volunteer_update["start_date"] = parse_date(start_date)
-
-            end_date = custom.get("end_date")
-            if end_date:
-                volunteer_update["end_date"] = parse_date(end_date)
-
-            comments = custom.get("comments")
-            if comments:
-                volunteer_update["comments"] = comments
-            volunteer.update_record(**volunteer_update)
-            s3db_onaccept(htable, volunteer_update, method="update")
-
-            # Add to default pool
-            from .poolrules import PoolRules
-            default_pool = PoolRules()(person_id)
-            if not default_pool:
-                default_pool = cls.get_default_pool()
-            if default_pool:
-                gtable = s3db.pr_group
-                mtable = s3db.pr_group_membership
-                query = (mtable.person_id == person_id) & \
-                        (mtable.group_id == gtable.id) & \
-                        (mtable.deleted == False) & \
-                        (gtable.group_type.belongs(21, 22))
-                membership = db(query).select(mtable.id,
-                                              limitby = (0, 1),
-                                              ).first()
-                if not membership:
-                    data = {"person_id": person_id,
-                            "group_id": default_pool,
-                            }
-                    data["id"] = mtable.insert(**data)
-                    set_record_owner(mtable, data)
-                    s3db_onaccept(mtable, data, method="create")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1168,29 +821,109 @@ class verify_email(S3CustomController):
                 session.error = T("Registration not found")
                 redirect(auth_settings.verify_email_next)
 
-            # Configure callback to process custom fields
-            s3db.configure("auth_user",
-                           register_onaccept = register.register_onaccept,
-                           )
-
-            # Approve and link user
-            auth.s3_approve_user(user)
-
-            # Send welcome email (custom)
-            self.send_welcome_email(user)
-
-            # Log them in
-            user = Storage(utable._filter_fields(user, id=True))
-            auth.login_user(user)
-
-            auth_messages = auth.messages
+            user_id = user.id
+            db(utable.id == user_id).update(registration_key = "pending")
             auth.log_event(auth_messages.verify_email_log, user)
 
-            session = current.session
-            session.confirmation = auth_messages.email_verified
-            session.flash = auth_messages.registration_successful
+            # Lookup the Approver(s)
+            gtable = db.auth_group
+            mtable = db.auth_membership
 
-            redirect(URL(c="default", f="person"))
+            # Is this an existing Org?
+            # Get custom field data from DB
+            temptable = s3db.auth_user_temp
+            record = db(temptable.user_id == user_id).select(temptable.custom,
+                                                             limitby = (0, 1),
+                                                             ).first()
+            try:
+                custom = json.loads(record.custom)
+            except JSONERRORS:
+                custom = {}
+
+            query = None
+            org_name = custom.get("organisation")
+            if org_name:
+                otable = s3b.org_organisation
+                org = db(otable.name == org_name).select(otable.pe_id,
+                                                         limitby = (0, 1)
+                                                         ).first()
+                if org:
+                    # => send to ORG_ADMIN
+                    query = (gtable.uuid == "ORG_ADMIN") & \
+                            (mtable.group_id == gtable.id) & \
+                            (mtable.pe_id == org.pe_id) & \
+                            (mtable.user_id == utable.id)
+
+            if not query:
+                # send to ORG_GROUP_ADMIN(s) for "COVID-19 Test Stations"
+                ogtable = s3b.org_organisation_group
+                query = (gtable.uuid == "ORG_GROUP_ADMIN") & \
+                        (mtable.group_id == gtable.id) & \
+                        (mtable.pe_id == ogtable.pe_id) & \
+                        (ogtable.name == "COVID-19 Test Stations") & \
+                        (mtable.user_id == utable.id)
+
+            approvers = db(query).select(utable.email,
+                                         utable.language,
+                                         )
+            # Ensure that we send out the mails in the language that the approver(s) want
+            languages = {}
+            for approver in approvers:
+                language = approver.language
+                if language not in languages:
+                    languages[language] = []
+                languages[language].append(approver.email)
+
+            subjects = {}
+            messages = {}
+            approve_user_message = \
+"""Your action is required to approve a New Infection Test Station for %(system_name)s:
+%(org_name)s
+Please go to %(url)s to approve this station."""
+            base_url = response.s3.base_url
+            system_name = deployment_settings.get_system_name()
+            for language in languages:
+                T.force(language)
+                subjects[language] = \
+                    s3_str(T("%(system_name)s - New Infection Test Station Approval Pending") % \
+                            {"system_name": system_name})
+                messages[language] = \
+                    s3_str(T(approve_user_message) % {"org_name": org_name,
+                                                      "system_name": system_name,
+                                                      "url": "%(base_url)s/default/index/approve/%(id)s" % \
+                                                                {"base_url": base_url,
+                                                                 "id": user_id,
+                                                                 },
+                                                      })
+
+            # Restore language for UI
+            T.force(session.s3.language)
+
+            mailer = self.settings.mailer
+            if mailer.settings.server:
+                send_email = mailer.send
+                for approver in approvers:
+                    language = approver["language"]
+                    result = send_email(to = approver["email"],
+                                        subject = subjects[language],
+                                        message = messages[language]
+                                        )
+            else:
+                # Email system not configured (yet)
+                result = None
+
+            if result:
+                auth_messages = auth.messages
+
+                session = current.session
+                session.confirmation = auth_messages.email_verified
+                session.information = settings.get_auth_registration_pending_approval()
+            else:
+                # Don't prevent registration just because email not configured
+                #db.rollback()
+                session.error = auth_messages.email_send_failed
+
+            redirect(URL(c="default", f="index"))
 
         self._view(THEME, "register.html")
 
@@ -1210,7 +943,6 @@ class verify_email(S3CustomController):
         register.customise_auth_messages()
         auth_messages = current.auth.messages
 
-        # Look up CMS template for welcome email
         try:
             recipient = user["email"]
         except (KeyError, TypeError):
@@ -1219,6 +951,7 @@ class verify_email(S3CustomController):
             current.response.error = auth_messages.unable_send_email
             return
 
+        # Look up CMS template for welcome email
         db = current.db
         s3db = current.s3db
 
