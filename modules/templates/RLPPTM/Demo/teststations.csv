@@ -1,4 +1,4 @@
-Groups,Organisation,Acronym,Country,Website,Email,Phone,Phone2,Comments
-COVID-19 Test Stations,Praxis Dr. Beyer,,DE,,,,,
-COVID-19 Test Stations,Gemeinschaftspraxis Falter,,DE,,,,,
-COVID-19 Test Stations,Testzentrum Linz,,DE,,,,,
+Groups,Name,Organisation,Type,Country,L1,L2,L3,L4,Address,Postcode,Email,Phone,Opening Times
+COVID-19 Test Stations,Praxis Dr. Beyer,Praxis Dr. Beyer,Infection Test Station,DE,Rheinland-Pfalz,Ahrweiler,Adenau,Adenau,Armbruststraße 15,53518,beyer@adenau.de,+49-111,09:00-17:00
+COVID-19 Test Stations,Gemeinschaftspraxis Falter,Gemeinschaftspraxis Falter,Infection Test Station,DE,Rheinland-Pfalz,Altenkirchen (Westerwald),Altenkirchen (Westerwald),Altenkirchen (Westerwald),Armbruststraße 15,57610,falter@altenkirchen.de,+49-111,09:00-17:00
+COVID-19 Test Stations,Testzentrum Linz,Testzentrum Linz,Infection Test Station,DE,Rheinland-Pfalz,Alzey-Worms,Alzey,Alzey,Armbruststraße 15,55232,linz@alzey.de,+49-111,09:00-17:00

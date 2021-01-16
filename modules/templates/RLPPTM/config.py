@@ -247,6 +247,49 @@ def config(settings):
     settings.customise_cms_post_controller = customise_cms_post_controller
 
     # -------------------------------------------------------------------------
+    def customise_org_facility_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            s3db = current.s3db
+
+            if not r.component:
+                if r.interactive:
+                    from s3 import S3SQLCustomForm
+                    crud_fields = ["name",
+                                   "organisation_id",
+                                   "location_id",
+                                   "phone",
+                                   (T("Opening Hours"), "opening_times"),
+                                   "comments",
+                                   ]
+                    r.resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
+                                         # @ToDo
+                                         #filter_widgets = filter_widgets,
+                                         )
+
+            return result
+        s3.prep = prep
+
+        # Custom rheader
+        #from .rheaders import rlpptm_org_rheader
+        #attr = dict(attr)
+        #attr["rheader"] = rlpptm_org_rheader
+
+        # No Side Menu
+        current.menu.options = None
+
+        return attr
+
+    settings.customise_org_facility_controller = customise_org_facility_controller
+
+    # -------------------------------------------------------------------------
     def customise_org_organisation_controller(**attr):
 
         s3 = current.response.s3

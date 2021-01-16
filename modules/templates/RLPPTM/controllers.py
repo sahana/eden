@@ -910,8 +910,6 @@ Please go to %(url)s to approve this station."""
                 result = None
 
             if result:
-                auth_messages = auth.messages
-
                 session = current.session
                 session.confirmation = settings.get_auth_registration_pending_approval()
             else:

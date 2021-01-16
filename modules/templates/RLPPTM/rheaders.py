@@ -32,23 +32,33 @@ def rlpptm_org_rheader(r, tabs=None):
 
         if tablename == "org_organisation":
 
-
             if not tabs:
-                # TODO additionally check if record belongs to schools group
-                if current.auth.s3_has_role("ORG_GROUP_ADMIN"):
-                    invite_tab = (T("Invite"), "invite")
-                else:
-                    invite_tab = None
+
+                invite_tab = None
+                sites_tab = None
+
+                db = current.db
+                s3db = current.s3db
+                gtable = s3db.org_group
+                mtable = s3db.org_group_membership
+                query = (mtable.organisation_id == record.id) & \
+                        (mtable.group_id == gtable.id)
+                group = db(query).select(gtable.name,
+                                         limitby = (0, 1)
+                                         ).first()
+                if group:
+                    if group.name == "COVID-19 Test Stations":
+                        sites_tab = (T("Test Stations"), "facility")
+                    elif group.name == "Schools":
+                        sites_tab = (T("Administrative Offices"), "office")
+                        if current.auth.s3_has_role("ORG_GROUP_ADMIN"):
+                            invite_tab = (T("Invite"), "invite")
 
                 tabs = [(T("Organisation"), None),
                         invite_tab,
-                        # TODO Activate for Org-group "COVID-19 Test Stations":
-                        #(T("Administrative Offices"), "office"),
-                        # TODO Activate for Org-group "Schools":
-                        #(T("Facilities"), "facility"),
+                        sites_tab,
                         (T("Staff"), "human_resource"),
                         ]
-
 
             rheader_title = "name"
             rheader_fields = []

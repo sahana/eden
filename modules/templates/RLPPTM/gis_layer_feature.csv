@@ -1,0 +1,2 @@
+Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Aggregate,Points,Trackable,Style,Individual,Folder,Visible,Enabled,Refresh,Cluster Threshold
+Test Stations,All Active Test Stations,org,facility,health,Building,{name}<br>{location_id}<br>{opening_times},"name,location_id,opening_times",~.obsolete=False,,True,,,,,False,,,
