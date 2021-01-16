@@ -5025,7 +5025,7 @@ class S3LocationSelector(S3Selector):
         request = current.request
         s3 = current.response.s3
 
-        #self.field = field
+        self.field = field
 
         # Is the location input required?
         requires = field.requires
@@ -6599,9 +6599,11 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                 # Create new specific location (indicate by id=0)
                 values["id"] = 0
 
-                # Permission to create?
-                if not current.auth.s3_has_permission("create", table):
-                    return (values, current.auth.messages.access_denied)
+                # Skip Permission check if the field is JSON type (e.g. during Registration)
+                if self.field.type != "json":
+                    # Permission to create?
+                    if not current.auth.s3_has_permission("create", table):
+                        return (values, current.auth.messages.access_denied)
 
                 # Check for duplicate address
                 if self.prevent_duplicate_addresses:
@@ -6734,9 +6736,9 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         if location_id is None:
             return location_id, None
 
-        # Skip if the field is JSON type (e.g. during Registration)
-        #if self.field.type == "json":
-        #    return location_id, None
+        # Save raw data if the field is JSON type (e.g. during Registration)
+        if self.field.type == "json":
+            return values, None
 
         db = current.db
         table = current.s3db.gis_location

@@ -80,15 +80,14 @@ $(document).ready(function(){
                     var L1 = result.L1,
                         L2 = result.L2,
                         L3 = result.L3,
-                        L4 = result.L4,
-                        L5 = result.L5;
+                        L4 = result.L4;
 
                     if (L1) {
                         // Prevent forward geocoding
                         self.useGeocoder = false;
 
                         var pending;
-                        [L1, L2 || L3, L3 || L4, L4 || L5, L5].forEach(function(level, index) {
+                        [L1, L2 || L3, L3 || L4, L4].forEach(function(level, index) {
                             if (level) {
                                 if (pending) {
                                     pending = pending.then(function() {

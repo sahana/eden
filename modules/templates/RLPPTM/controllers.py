@@ -398,9 +398,9 @@ class register(S3CustomController):
 
             # Store Custom fields
             custom = {"organisation": formvars.organisation,
-                      "location_id": formvars.location_id,
-                      "addr_street": formvars.addr_street,
-                      "addr_postcode": formvars.addr_postcode,
+                      "location": formvars.location,
+                      #"addr_street": formvars.addr_street,
+                      #"addr_postcode": formvars.addr_postcode,
                       "office_phone": formvars.office_phone,
                       "opening_times": formvars.opening_times,
                       }
@@ -544,15 +544,15 @@ class register(S3CustomController):
                             label = T("Name"),
                             requires = IS_NOT_EMPTY(),
                             ),
-                      s3db.gis_location_id("location_id",
-                                           widget = S3LocationSelector(
-                                                       levels = ("L1", "L2", "L3", "L4"),
-                                                       required_levels = ("L1", "L2", "L3"),
-                                                       show_address = True,
-                                                       show_postcode = True,
-                                                       show_map = True,
-                                                       ),
-                                           ),
+                      Field("location", "json",
+                            widget = S3LocationSelector(
+                                        levels = ("L1", "L2", "L3", "L4"),
+                                        required_levels = ("L1", "L2", "L3"),
+                                        show_address = True,
+                                        show_postcode = True,
+                                        show_map = True,
+                                        ),
+                            ),
                       #Field("addr_street",
                       #      label = ltable.addr_street.label,
                       #      ),
@@ -820,7 +820,7 @@ class verify_email(S3CustomController):
 
             user_id = user.id
             db(utable.id == user_id).update(registration_key = "pending")
-            auth.log_event(auth_messages.verify_email_log, user)
+            auth.log_event(auth.messages.verify_email_log, user)
 
             # Lookup the Approver(s)
             gtable = db.auth_group
@@ -840,7 +840,7 @@ class verify_email(S3CustomController):
             query = None
             org_name = custom.get("organisation")
             if org_name:
-                otable = s3b.org_organisation
+                otable = s3db.org_organisation
                 org = db(otable.name == org_name).select(otable.pe_id,
                                                          limitby = (0, 1)
                                                          ).first()
@@ -853,7 +853,7 @@ class verify_email(S3CustomController):
 
             if not query:
                 # send to ORG_GROUP_ADMIN(s) for "COVID-19 Test Stations"
-                ogtable = s3b.org_organisation_group
+                ogtable = s3db.org_group
                 query = (gtable.uuid == "ORG_GROUP_ADMIN") & \
                         (mtable.group_id == gtable.id) & \
                         (mtable.pe_id == ogtable.pe_id) & \
@@ -874,15 +874,15 @@ class verify_email(S3CustomController):
             subjects = {}
             messages = {}
             approve_user_message = \
-"""Your action is required to approve a New Infection Test Station for %(system_name)s:
+"""Your action is required to approve a New Test Station for %(system_name)s:
 %(org_name)s
 Please go to %(url)s to approve this station."""
             base_url = response.s3.base_url
-            system_name = deployment_settings.get_system_name()
+            system_name = settings.get_system_name()
             for language in languages:
                 T.force(language)
                 subjects[language] = \
-                    s3_str(T("%(system_name)s - New Infection Test Station Approval Pending") % \
+                    s3_str(T("%(system_name)s - New Test Station Approval Pending") % \
                             {"system_name": system_name})
                 messages[language] = \
                     s3_str(T(approve_user_message) % {"org_name": org_name,
@@ -896,7 +896,7 @@ Please go to %(url)s to approve this station."""
             # Restore language for UI
             T.force(session.s3.language)
 
-            mailer = self.settings.mailer
+            mailer = auth_settings.mailer
             if mailer.settings.server:
                 send_email = mailer.send
                 for approver in approvers:
@@ -913,12 +913,11 @@ Please go to %(url)s to approve this station."""
                 auth_messages = auth.messages
 
                 session = current.session
-                session.confirmation = auth_messages.email_verified
-                session.information = settings.get_auth_registration_pending_approval()
+                session.confirmation = settings.get_auth_registration_pending_approval()
             else:
                 # Don't prevent registration just because email not configured
                 #db.rollback()
-                session.error = auth_messages.email_send_failed
+                session.error = auth.messages.email_send_failed
 
             redirect(URL(c="default", f="index"))
 
