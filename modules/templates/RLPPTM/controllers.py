@@ -298,7 +298,7 @@ class register(S3CustomController):
         utable = auth_settings.table_user
 
         # Page title and intro text
-        title = T("Register Infection Test Station")
+        title = T("Register Test Station")
 
         # Get intro text from CMS
         db = current.db
@@ -541,11 +541,9 @@ class register(S3CustomController):
                             ),
                       # --------------------------------------------
                       Field("organisation",
-                            label = T("Organization"),
+                            label = T("Name"),
                             requires = IS_NOT_EMPTY(),
                             ),
-
-                      # --------------------------------------------
                       s3db.gis_location_id("location_id",
                                            widget = S3LocationSelector(
                                                        levels = ("L1", "L2", "L3", "L4"),
@@ -587,8 +585,7 @@ class register(S3CustomController):
 
         # Subheadings
         subheadings = ((0, T("User Account")),
-                       (5, T("Organization")),
-                       (6, T("Infection Test Station")),
+                       (5, T("Test Station")),
                        (11, T("Privacy")),
                        )
 
@@ -1021,7 +1018,7 @@ Please go to %(url)s to approve this station."""
 # =============================================================================
 class register_invited(S3CustomController):
     """ Custom Registration Page """
-                                                                                       
+
     def __call__(self):
 
         auth = current.auth
@@ -1241,7 +1238,7 @@ class register_invited(S3CustomController):
             current.response.error = auth_messages.unable_send_email
             return
 
-                                                
+
         db = current.db
         s3db = current.s3db
 

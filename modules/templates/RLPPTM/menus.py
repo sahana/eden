@@ -38,6 +38,10 @@ class S3MainMenu(default.S3MainMenu):
 
         return [MM("Organizations", c="org", f="organisation"),
                 MM("Finance", c="fin", f="index"),
+                MM("Register Test Station",
+                   c="default", f="index", args=["register"],
+                   check = lambda i: not current.auth.s3_logged_in(),
+                   ),
                 ]
 
     # -------------------------------------------------------------------------
