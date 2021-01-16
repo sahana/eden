@@ -58,9 +58,9 @@ class S3MainMenu(default.S3MainMenu):
             if has_role("PROGRAM_MANAGER"):
                 label, f = "Voucher Programs", "voucher_program"
             elif has_role("VOUCHER_PROVIDER"):
-                label, f = "Voucher Billing", "voucher_debit"
+                label, f = "Voucher Acceptance", "voucher_debit"
             elif has_role("VOUCHER_ISSUER"):
-                label, f = "Vouchers", "voucher"
+                label, f = "Voucher Issuance", "voucher"
             if f:
                 menu.insert(0, MM(label, c="fin", f=f))
 
