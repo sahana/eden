@@ -127,8 +127,6 @@ class CMSNotifications(object):
         if not name:
             return None
 
-        print(name, module, resource)
-
         # Define join
         ctable = s3db.cms_post
         ltable = s3db.cms_post_module

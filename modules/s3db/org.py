@@ -3334,8 +3334,8 @@ class S3SiteModel(S3Model):
                 }
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def org_site_onaccept(form):
+    @classmethod
+    def org_site_onaccept(cls, form):
         """
             Create the code from the name
         """
@@ -3343,13 +3343,19 @@ class S3SiteModel(S3Model):
         name = form.vars.name
         if not name:
             return
-        code_len = current.deployment_settings.get_org_site_code_len()
-        temp_code = name[:code_len].upper()
+
+        # Normalize to ASCII-Alphanumeric
+        alnum = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        pname = "".join(c for c in name.upper() if c in alnum)
+
+        # Apply length-setting (max 10 characters though, as per model)
+        code_len = min(current.deployment_settings.get_org_site_code_len(), 10)
+        temp_code = pname[:code_len]
+
         db = current.db
         site_table = db.org_site
         query = (site_table.code == temp_code)
-        row = db(query).select(site_table.id,
-                               limitby=(0, 1)).first()
+        row = db(query).select(site_table.id, limitby=(0, 1)).first()
         if row:
             code = temp_code
             temp_code = None
@@ -3362,9 +3368,8 @@ class S3SiteModel(S3Model):
                     if wildcard_bit & pow(2, w):
                         wildcard_posn.append(length - (1 + w))
                 wildcard_bit += 1
-                code_list = S3SiteModel.getCodeList(code, wildcard_posn)
-                temp_code = S3SiteModel.returnUniqueCode(code, wildcard_posn,
-                                                         code_list)
+                code_list = cls.get_code_list(code, wildcard_posn)
+                temp_code = cls.get_unique_code(code, wildcard_posn, code_list)
         if temp_code:
             db(site_table.site_id == form.vars.site_id).update(code=temp_code)
 
@@ -3388,10 +3393,13 @@ class S3SiteModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def getCodeList(code, wildcard_posn=[]):
+    def get_code_list(code, wildcard_posn=None):
         """
             Called by org_site_onaccept
         """
+
+        if wildcard_posn is None:
+            wildcard_posn = []
 
         temp_code = ""
         # Inject the wildcard charater in the right positions
@@ -3407,17 +3415,23 @@ class S3SiteModel(S3Model):
         rows = db(query).select(site_table.id,
                                 site_table.code)
         # Extract the rows in the database to provide a list of used codes
-        codeList = []
+        code_list = []
         for record in rows:
-            codeList.append(record.code)
-        return codeList
+            code_list.append(record.code)
+
+        return code_list
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def returnUniqueCode(code, wildcard_posn=[], code_list=[]):
+    def get_unique_code(code, wildcard_posn=None, code_list=None):
         """
             Called by org_site_onaccept
         """
+
+        if wildcard_posn is None:
+            wildcard_posn = []
+        if code_list is None:
+            code_list = []
 
         # Select the replacement letters with numbers first and then
         # followed by the letters in least commonly used order

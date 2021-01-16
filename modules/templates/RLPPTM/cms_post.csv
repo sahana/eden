@@ -3,3 +3,8 @@ Subject InviteOrgDisabled,auth,user,{system}: Invitation to Register Account,Ren
 Message InviteOrg,auth,user,"Please visit {url} to register a user account.
 
 Your registration code: {code}",
+WelcomeMessageInvited,auth,user,"Welcome to the {system_name} Portal 
+
+- To edit your profile go to: {profile}
+
+Thank you",
