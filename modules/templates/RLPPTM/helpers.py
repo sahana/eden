@@ -12,6 +12,65 @@ from gluon import current, CRYPT, Field, INPUT, SQLFORM, URL, \
 from s3 import S3Method, s3_mark_required
 
 # =============================================================================
+def rlpptm_voucher_issue_multiple_orgs():
+    """
+        TODO move into fin model so it can be re-used
+
+        Check if user can issue vouchers for multiple issuer orgs
+
+        @returns: tuple (multiple_orgs, org_ids), where:
+                    multiple (boolean) - user can issue for multiple orgs
+                    org_ids (list) - list of the orgs the user can issue vouchers for
+
+        @note: multiple=True and org_ids=[] means the user can issue
+               vouchers for all organisations (site-wide role)
+    """
+
+    realms = current.auth.permission.permitted_realms("fin_voucher", "create")
+    if realms is None:
+        multiple_orgs = True
+        org_ids = []
+        pe_ids = []
+    else:
+        otable = current.s3db.org_organisation
+        query = (otable.pe_id.belongs(realms)) & \
+                (otable.deleted == False)
+        rows = current.db(query).select(otable.id, otable.pe_id)
+        multiple_orgs = len(rows) > 1
+        org_ids, pe_ids = [], []
+        for row in rows:
+            org_ids.append(row.id)
+            pe_ids.append(row.pe_id)
+
+    return multiple_orgs, org_ids, pe_ids
+
+# =============================================================================
+def rlpptm_voucher_issue_programs(issuers):
+    """
+        TODO move into fin model so it can be re-used
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    if issuers is None:
+        return []
+
+    ltable = s3db.org_group_membership
+    query = (ltable.deleted == False)
+    if issuers:
+        query = ltable.organisation_id.belongs(issuers) & query
+
+    ptable = s3db.fin_voucher_program
+    # TODO also check for end-date
+    left = ptable.on((ptable.issuers_id == ltable.group_id) & \
+                     (ptable.status == "ACTIVE"))
+    rows = db(query).select(ptable.id,
+                            left = left,
+                            )
+    return [row.id for row in rows]
+
+# =============================================================================
 class rlpptm_InviteUserOrg(S3Method):
     """ Custom Method Handler to invite User Organisations """
 

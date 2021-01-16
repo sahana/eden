@@ -166,6 +166,8 @@ class FinVoucherModel(S3Model):
         define_table = self.define_table
         crud_strings = s3.crud_strings
 
+        NONE = current.messages["NONE"]
+
         # Representation of bearer/provider
         pe_represent = self.pr_PersonEntityRepresent(show_label = False,
                                                      show_link = False,
@@ -213,6 +215,9 @@ class FinVoucherModel(S3Model):
                                                 sort = False,
                                                 ),
                            ),
+                     s3_date("end_date",
+                             label = T("End Date"),
+                             ),
                      org_group_id("issuers_id",
                             label = T("Issuers##fin"),
                             requires = org_group_requires,
@@ -228,6 +233,11 @@ class FinVoucherModel(S3Model):
                            # TODO setting to expose?
                            readable = False,
                            writable = False,
+                           ),
+                     Field("validity_period", "integer",
+                           label = T("Validity Period for Vouchers (Days)"),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(1)),
+                           represent = lambda v, row=None: str(v) if v else NONE,
                            ),
                      Field("credit", "integer",
                            default = 0,
@@ -268,6 +278,7 @@ class FinVoucherModel(S3Model):
         # Reusable Field
         represent = S3Represent(lookup = tablename)
         program_id = S3ReusableField("program_id", "reference %s" % tablename,
+                                     label = T("Program"),
                                      represent = represent,
                                      requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "%s.id" % tablename,
@@ -299,13 +310,13 @@ class FinVoucherModel(S3Model):
                            default = 0,
                            writable = False,
                            ),
-                     s3_date("valid_from",
-                             label = T("Valid From"),
+                     s3_date(label = T("Issued On"),
                              default = "now",
+                             writable = False,
                              ),
                      s3_date("valid_until",
                              label = T("Valid Until"),
-                             # TODO default?
+                             writable = False,
                              ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -316,6 +327,7 @@ class FinVoucherModel(S3Model):
         self.configure(tablename,
                        deletable = False,
                        editable = False,
+                       create_onvalidation = self.voucher_create_onvalidation,
                        create_onaccept = self.voucher_create_onaccept,
                        )
 
@@ -497,6 +509,40 @@ class FinVoucherModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def voucher_create_onvalidation(form):
+        """
+            Form validation of new vouchers:
+            - check that program is active and hasn't ended
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.fin_voucher
+        ptable = s3db.fin_voucher_program
+
+        form_vars = form.vars
+
+        if "program_id" in form_vars:
+            program_id = form_vars.program_id
+        else:
+            program_id = table.program_id.default
+
+        query = (ptable.id == program_id) & \
+                (ptable.deleted == False)
+        program = db(query).select(ptable.status,
+                                   ptable.end_date,
+                                   limitby = (0, 1),
+                                   ).first()
+        if program:
+            if program.status != "ACTIVE":
+                form.errors["program_id"] = T("Program inactive")
+            end_date = program.end_date
+            if end_date and end_date < current.request.utcnow.date():
+                form.errors["program_id"] = T("Program has ended")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def voucher_create_onaccept(form):
         """
             Onaccept of new voucher:
@@ -527,13 +573,23 @@ class FinVoucherModel(S3Model):
         if not voucher:
             return
 
+        update = {}
+        program = fin_VoucherProgram(voucher.program_id)
+
+        # Set end-date if program prescribes it
+        pdata = program.program
+        if pdata:
+            validity_period = pdata.validity_period
+            if validity_period:
+                now = current.request.utcnow
+                update["valid_until"] = (now + datetime.timedelta(days=validity_period)).date()
+
         # Generate voucher signature
         import uuid
         vn = "0%s0%s" % (voucher.program_id, voucher.id)
-        signature = "%s%s" % (str(uuid.uuid4().int)[:(16-len(vn))], vn)
-        voucher.update_record(signature=signature)
+        update["signature"] = "%s%s" % (str(uuid.uuid4().int)[:(16-len(vn))], vn)
 
-        program = fin_VoucherProgram(voucher.program_id)
+        voucher.update_record(**update)
         program.issue(voucher.id)
 
     # -------------------------------------------------------------------------
@@ -1618,7 +1674,10 @@ class fin_VoucherProgram(object):
                     (table.deleted == False)
             program = current.db(query).select(table.id,
                                                table.uuid,
+                                               table.status,
                                                table.default_credit,
+                                               table.validity_period,
+                                               table.end_date,
                                                table.credit,
                                                table.compensation,
                                                limitby = (0, 1),

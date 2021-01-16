@@ -635,49 +635,56 @@ body.rtl #markDuplicate {
   vertical-align: top;
 }
 /* line 43, ../scss/theme/_rheader.scss */
+#rheader .rheader-qrcode {
+  display: inline-block;
+  border: 1px solid #eee;
+  margin-right: 0.5rem;
+  vertical-align: top;
+}
+/* line 49, ../scss/theme/_rheader.scss */
 #rheader img.rheader-avatar {
   margin-right: 0.8rem;
 }
-/* line 46, ../scss/theme/_rheader.scss */
+/* line 52, ../scss/theme/_rheader.scss */
 #rheader .rheader-content {
   max-width: 90%;
   display: inline-block;
 }
-/* line 50, ../scss/theme/_rheader.scss */
+/* line 56, ../scss/theme/_rheader.scss */
 #rheader .rheader-title {
   color: #333;
   font-weight: bold;
   font-size: 1.1rem;
   line-height: 1.0;
 }
-/* line 56, ../scss/theme/_rheader.scss */
+/* line 62, ../scss/theme/_rheader.scss */
 #rheader table {
   display: inline;
   margin-bottom: 10px;
   border: none;
 }
-/* line 60, ../scss/theme/_rheader.scss */
+/* line 66, ../scss/theme/_rheader.scss */
 #rheader table tr {
   background: none;
 }
-/* line 64, ../scss/theme/_rheader.scss */
+/* line 70, ../scss/theme/_rheader.scss */
 #rheader th {
   color: #7F7F7F;
   line-height: 1.1rem;
   font-weight: normal;
 }
-/* line 69, ../scss/theme/_rheader.scss */
+/* line 75, ../scss/theme/_rheader.scss */
 #rheader td {
   line-height: 1.1rem;
   font-weight: bold;
 }
-/* line 72, ../scss/theme/_rheader.scss */
+/* line 78, ../scss/theme/_rheader.scss */
 #rheader td a {
   font-weight: normal;
 }
 
 /* Rheader Tabs */
-/* line 79, ../scss/theme/_rheader.scss */
+/* line 85, ../scss/theme/_rheader.scss */
 div.tabs {
   display: block;
   clear: none;
@@ -689,7 +696,7 @@ div.tabs {
   text-align: left;
   border-bottom: 1px solid #871D33;
 }
-/* line 95, ../scss/theme/_rheader.scss */
+/* line 101, ../scss/theme/_rheader.scss */
 div.tabs span {
   float: left;
   display: inline;
@@ -698,17 +705,17 @@ div.tabs span {
   padding: 0.1rem 0.3rem 0.1rem;
   border-radius: 3px 3px 0 0;
 }
-/* line 106, ../scss/theme/_rheader.scss */
+/* line 112, ../scss/theme/_rheader.scss */
 div.tabs span a {
   color: #ffffff !important;
   text-decoration: none !important;
   background: transparent !important;
 }
-/* line 110, ../scss/theme/_rheader.scss */
+/* line 116, ../scss/theme/_rheader.scss */
 div.tabs span a:hover {
   background: transparent !important;
 }
-/* line 116, ../scss/theme/_rheader.scss */
+/* line 122, ../scss/theme/_rheader.scss */
 div.tabs span.tab_here {
   font-size: 1rem;
   font-weight: bold;
@@ -721,19 +728,19 @@ div.tabs span.tab_here {
   border-bottom-style: solid;
   border-bottom-color: #ffffff;
 }
-/* line 134, ../scss/theme/_rheader.scss */
+/* line 140, ../scss/theme/_rheader.scss */
 div.tabs span.tab_here:hover {
   background-color: #f1edec;
 }
-/* line 137, ../scss/theme/_rheader.scss */
+/* line 143, ../scss/theme/_rheader.scss */
 div.tabs span.tab_here a {
   color: #666666 !important;
 }
-/* line 139, ../scss/theme/_rheader.scss */
+/* line 145, ../scss/theme/_rheader.scss */
 div.tabs span.tab_here a:hover {
   color: #666666 !important;
 }
-/* line 146, ../scss/theme/_rheader.scss */
+/* line 152, ../scss/theme/_rheader.scss */
 div.tabs span.tab_last, div.tabs span.tab_other {
   font-size: 0.9rem;
   margin: 0.35rem 0.2rem 0 0;
@@ -743,16 +750,16 @@ div.tabs span.tab_last, div.tabs span.tab_other {
   border-width: 0.0625rem 1px 0.0625rem 2px;
   border-style: solid;
 }
-/* line 160, ../scss/theme/_rheader.scss */
+/* line 166, ../scss/theme/_rheader.scss */
 div.tabs span.tab_last:hover, div.tabs span.tab_other:hover {
   background-color: #6c1729;
   border-color: #6c1729;
 }
-/* line 164, ../scss/theme/_rheader.scss */
+/* line 170, ../scss/theme/_rheader.scss */
 div.tabs span.tab_last a, div.tabs span.tab_other a {
   color: #ffffff !important;
 }
-/* line 166, ../scss/theme/_rheader.scss */
+/* line 172, ../scss/theme/_rheader.scss */
 div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
   color: #ffffff !important;
 }

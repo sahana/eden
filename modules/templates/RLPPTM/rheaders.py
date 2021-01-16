@@ -11,6 +11,63 @@ from gluon import current
 from s3 import S3ResourceHeader, s3_rheader_resource
 
 # =============================================================================
+def rlpptm_fin_rheader(r, tabs=None):
+    """ FIN custom resource headers """
+
+    if r.representation != "html":
+        # Resource headers only used in interactive views
+        return None
+
+    tablename, record = s3_rheader_resource(r)
+    if tablename != r.tablename:
+        resource = current.s3db.resource(tablename, id=record.id)
+    else:
+        resource = r.resource
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+        T = current.T
+
+        if tablename == "fin_voucher":
+
+            if not tabs:
+
+                tabs = [(T("Voucher"), None),
+                        ]
+
+            rheader_title = None
+            rheader_fields = [["program_id",
+                               ],
+                              ["signature",
+                               ],
+                              ["date",
+                               ],
+                              ["valid_until",
+                               ],
+                              ]
+
+            signature = record.signature
+            if signature:
+                try:
+                    import qrcode
+                except ImportError:
+                    pass
+                else:
+                    from s3 import s3_qrcode_represent
+                    img = s3_qrcode_represent(signature, show_value=False)
+                    img.add_class("rheader-qrcode")
+
+        rheader = S3ResourceHeader(rheader_fields, tabs, title=rheader_title)
+        rheader = rheader(r, table = resource.table, record = record)
+
+        if img:
+            rheader.insert(0, img)
+
+    return rheader
+
+# =============================================================================
 def rlpptm_org_rheader(r, tabs=None):
     """ ORG custom resource headers """
 

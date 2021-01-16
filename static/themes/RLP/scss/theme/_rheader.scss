@@ -40,6 +40,12 @@ $rheader_tabs_fgcolor_inactive_hover: #ffffff !default;
         padding: 0;
         vertical-align: top;
     }
+    .rheader-qrcode {
+        display: inline-block;
+        border: 1px solid #eee;
+        margin-right: 0.5rem;
+        vertical-align: top;
+    }
     img.rheader-avatar {
         margin-right: 0.8rem;
     }

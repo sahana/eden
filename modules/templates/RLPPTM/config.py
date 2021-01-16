@@ -7,10 +7,14 @@
     @license MIT
 """
 
+import datetime
+
 from collections import OrderedDict
 
 from gluon import current, URL
 from gluon.storage import Storage
+
+from s3 import IS_ONE_OF
 
 from .rlpgeonames import rlp_GeoNames
 
@@ -52,7 +56,10 @@ def config(settings):
     settings.auth.password_retrieval = True
 
     settings.auth.realm_entity_types = ("org_group", "org_organisation")
-    settings.auth.privileged_roles = {"COORDINATOR": "COORDINATOR"}
+    settings.auth.privileged_roles = {"PROGRAM_MANAGER": "PROGRAM_MANAGER",
+                                      "VOUCHER_ISSUER": "VOUCHER_ISSUER",
+                                      "VOUCHER_PROVIDER": "VOUCHER_PROVIDER",
+                                      }
 
     settings.auth.password_min_length = 8
     settings.auth.consent_tracking = True
@@ -247,6 +254,90 @@ def config(settings):
     settings.customise_cms_post_controller = customise_cms_post_controller
 
     # -------------------------------------------------------------------------
+    def customise_fin_voucher_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            db = current.db
+            s3db = current.s3db
+
+            # Check which programs and organisations the user can issue vouchers for
+            from .helpers import rlpptm_voucher_issue_multiple_orgs, \
+                                 rlpptm_voucher_issue_programs
+            multiple, org_ids, pe_ids = rlpptm_voucher_issue_multiple_orgs()
+            if org_ids or multiple:
+                programs = rlpptm_voucher_issue_programs(org_ids)
+            else:
+                programs = None
+
+            resource = r.resource
+            if not programs or not org_ids and not multiple:
+                resource.configure(insertable = False)
+            else:
+                table = resource.table
+
+                # Limit the program selector to permitted+active programs
+                field = table.program_id
+                ptable = s3db.fin_voucher_program
+                dbset = db(ptable.id.belongs(programs))
+                field.requires = IS_ONE_OF(dbset, "fin_voucher_program.id",
+                                           field.represent,
+                                           sort = True,
+                                           )
+                # Hide the program selector if only one program can be chosen
+                rows = dbset.select(ptable.id, limitby=(0, 2))
+                if len(rows) == 1:
+                    field.default = rows.first().id
+                    field.writable = False
+
+                if pe_ids:
+                    # Limit the issuer selector to permitted entities
+                    etable = s3db.pr_pentity
+                    field = table.pe_id
+                    dbset = db(etable.pe_id.belongs(pe_ids))
+                    field.requires = IS_ONE_OF(dbset, "pr_pentity.pe_id",
+                                               field.represent,
+                                               )
+                    # Hide the issuer selector if only one entity can be chosen
+                    rows = dbset.select(etable.pe_id, limitby=(0, 2))
+                    if len(rows) == 1:
+                        field.default = rows.first().pe_id
+                        field.readable = field.writable = False
+
+                if r.interactive:
+
+                    field = table.valid_until
+                    field.readable = bool(r.record)
+                    field.writable = False
+
+                list_fields = ["program_id",
+                               "signature",
+                               "balance",
+                               "date",
+                               "valid_until",
+                               "comments",
+                               ]
+                resource.configure(list_fields = list_fields,
+                                   )
+
+            return result
+        s3.prep = prep
+
+        # Custom rheader
+        from .rheaders import rlpptm_fin_rheader
+        attr["rheader"] = rlpptm_fin_rheader
+
+        return attr
+
+    settings.customise_fin_voucher_controller = customise_fin_voucher_controller
+
+    # -------------------------------------------------------------------------
     def customise_org_facility_controller(**attr):
 
         s3 = current.response.s3
@@ -264,7 +355,7 @@ def config(settings):
 
 
             if not r.component:
-            
+
                 from s3 import S3SQLCustomForm, S3SQLInlineLink, \
                                S3LocationFilter, S3TextFilter
 
@@ -289,7 +380,7 @@ def config(settings):
                                      levels = ("L1", "L2", "L3", "L4"),
                                      ),
                     ]
-            
+
                 crud_fields = ["name",
                                S3SQLInlineLink(
                                       "facility_type",
