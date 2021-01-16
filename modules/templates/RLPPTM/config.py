@@ -322,6 +322,51 @@ def config(settings):
     settings.customise_org_organisation_controller = customise_org_organisation_controller
 
     # -------------------------------------------------------------------------
+    def customise_pr_person_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            from gluon import IS_NOT_EMPTY
+            from s3 import S3SQLCustomForm, \
+                           StringTemplateParser
+
+            # Determine order of name fields
+            NAMES = ("first_name", "middle_name", "last_name")
+            keys = StringTemplateParser.keys(settings.get_pr_name_format())
+            name_fields = [fn for fn in keys if fn in NAMES]
+
+            if r.controller == "default":
+                # Personal profile (default/person)
+                if not r.component:
+
+                    # Last name is required
+                    table = r.resource.table
+                    table.last_name.requires = IS_NOT_EMPTY()
+
+                    # Custom Form
+                    crud_fields = name_fields
+                    r.resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
+                                         deletable = False,
+                                         )
+            return result
+        s3.prep = prep
+
+        # Custom rheader
+        if current.request.controller == "default":
+            from .rheaders import rlpptm_profile_rheader
+            attr["rheader"] = rlpptm_profile_rheader
+
+        return attr
+
+    settings.customise_pr_person_controller = customise_pr_person_controller
+
+    # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
     settings.modules = OrderedDict([
