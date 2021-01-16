@@ -1,3 +1,4 @@
 First Name,Last Name,Email,Password,Role,Organisation,Language
 LSJV,Admin,lsjv_admin@example.com,eden,"PROGRAM_MANAGER,ORG_GROUP_ADMIN/org_group.name=Schools,ORG_GROUP_ADMIN/org_group.name=COVID-19 Test Stations","Landesamt für Jugend, Soziales und Versorgung",de
 GS Linz,Admin,gs_linz_admin@example.com,eden,"VOUCHER_ISSUER,ORG_ADMIN",GS Linz,de
+TZ Linz,Admin,tz_linz_admin@example.com,eden,"VOUCHER_PROVIDER,ORG_ADMIN",Testzentrum Linz,de
