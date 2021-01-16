@@ -43,10 +43,9 @@ class S3MainMenu(default.S3MainMenu):
                    c = "org", f = "organisation",
                    restrict = ("ORG_GROUP_ADMIN", "ORG_ADMIN"),
                    ),
-                # TODO Public Register of Test Stations:
-                #MM("Find Test Station",
-                #   c = "org", f = "facility",
-                #   ),
+                MM("Find Test Station",
+                   c = "org", f = "facility", m = "map",
+                   ),
                 MM("Register Test Station",
                    c = "default", f = "index", args = ["register"],
                    check = lambda i: not current.auth.s3_logged_in(),
