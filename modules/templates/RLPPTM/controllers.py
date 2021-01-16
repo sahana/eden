@@ -586,7 +586,7 @@ class register(S3CustomController):
         # Subheadings
         subheadings = ((0, T("User Account")),
                        (5, T("Test Station")),
-                       (11, T("Privacy")),
+                       (9, T("Privacy")),
                        )
 
         # Geocoder
