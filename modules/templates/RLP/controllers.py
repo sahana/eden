@@ -705,7 +705,7 @@ class register(S3CustomController):
         # Geocoder
         # @ToDo: Either move Address into LocationSelector or make a variant of geocoder.js to match these IDs
         #s3 = current.response.s3
-        #s3.scripts.append("/%s/static/themes/RLP/js/geocoder.js" % r.application)
+        #s3.scripts.append("/%s/static/themes/RLP/js/geocoder.js" % request.application)
         #s3.jquery_ready.append('''S3.rlp_GeoCoder("pr_address_location_id")''')
         #s3.js_global.append('''i18n.location_found="%s"
 #i18n.location_not_found="%s"''' % (T("Location Found"),

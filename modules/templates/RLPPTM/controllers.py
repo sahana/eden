@@ -590,14 +590,7 @@ class register(S3CustomController):
                        )
 
         # Geocoder
-        # @ToDo: Either move Address into LocationSelector or make a variant of geocoder.js to match these IDs
-        #s3 = current.response.s3
-        #s3.scripts.append("/%s/static/themes/RLP/js/geocoder.js" % r.application)
-        #s3.jquery_ready.append('''S3.rlp_GeoCoder("pr_address_location_id")''')
-        #s3.js_global.append('''i18n.location_found="%s"
-#i18n.location_not_found="%s"''' % (T("Location Found"),
-        #                           T("Location NOT Found"),
-        #                           ))
+        current.response.s3.scripts.append("/%s/static/themes/RLP/js/geocoderPlugin.js" % request.application)
 
         return formfields, required_fields, subheadings
 
@@ -1407,5 +1400,39 @@ class register_invited(S3CustomController):
         messages = current.auth.messages
 
         messages.welcome_email_subject = "Welcome to the %(system_name)s Portal"
+
+# =============================================================================
+class geocode(S3CustomController):
+    """
+        Custom Geocoder
+        - looks up Lat/Lon from Postcode &/or Address
+        - looks up Lx from Lat/Lon
+    """
+
+    def __call__(self):
+
+        gis = current.gis
+
+        post_vars_get = current.request.post_vars.get
+        postcode = post_vars_get("postcode")
+        address = post_vars_get("address")
+        if address:
+            full_address = "%s %s" %(postcode, address)
+        else:
+            full_address = postcode
+
+        latlon = gis.geocode(full_address)
+        if not isinstance(latlon, dict):
+            return None
+
+        lat = latlon["lat"]
+        lon = latlon["lon"]
+        results = gis.geocode_r(lat, lon)
+
+        results["lat"] = lat
+        results["lon"] = lon
+
+        current.response.headers["Content-Type"] = "application/json"
+        return json.dumps(results)
 
 # END =========================================================================
