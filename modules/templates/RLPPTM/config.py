@@ -257,22 +257,52 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
-            s3db = current.s3db
 
             if not r.component:
-                if r.interactive:
-                    from s3 import S3SQLCustomForm
-                    crud_fields = ["name",
-                                   "organisation_id",
-                                   "location_id",
-                                   "phone",
-                                   (T("Opening Hours"), "opening_times"),
-                                   "comments",
-                                   ]
-                    r.resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
-                                         # @ToDo
-                                         #filter_widgets = filter_widgets,
-                                         )
+            
+                from s3 import S3SQLCustomForm, S3SQLInlineLink, \
+                               S3LocationFilter, S3TextFilter
+
+                text_fields = ["name",
+                               #"code",
+                               "comments",
+                               "organisation_id$name",
+                               "organisation_id$acronym",
+                               "location_id$L1",
+                               "location_id$L2",
+                               "location_id$L3",
+                               "location_id$L4",
+                               ]
+
+                filter_widgets = [
+                    S3TextFilter(text_fields,
+                                 label = T("Search"),
+                                 #_class = "filter-search",
+                                 ),
+                    S3LocationFilter("location_id",
+                                     #label = T("Location"),
+                                     levels = ("L1", "L2", "L3", "L4"),
+                                     ),
+                    ]
+            
+                crud_fields = ["name",
+                               S3SQLInlineLink(
+                                      "facility_type",
+                                      label = T("Facility Type"),
+                                      field = "facility_type_id",
+                                      widget = "groupedopts",
+                                      cols = 3,
+                                ),
+                               "organisation_id",
+                               "location_id",
+                               (T("Telephone"), "phone1",),
+                               (T("Opening Hours"), "opening_times"),
+                               "obsolete",
+                               "comments",
+                               ]
+                r.resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
+                                     filter_widgets = filter_widgets,
+                                     )
 
             return result
         s3.prep = prep
@@ -281,6 +311,7 @@ def config(settings):
         #from .rheaders import rlpptm_org_rheader
         #attr = dict(attr)
         #attr["rheader"] = rlpptm_org_rheader
+        attr["rheader"] = None
 
         # No Side Menu
         current.menu.options = None
