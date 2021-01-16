@@ -36,13 +36,35 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Modules Menu """
 
-        return [MM("Organizations", c="org", f="organisation"),
-                MM("Finance", c="fin", f="index"),
+        auth = current.auth
+        has_role = auth.s3_has_role
+
+        menu = [MM("Organizations",
+                   c = "org", f = "organisation",
+                   restrict = ("ORG_GROUP_ADMIN", "ORG_ADMIN"),
+                   ),
+                # TODO Public Register of Test Stations:
+                #MM("Find Test Station",
+                #   c = "org", f = "facility",
+                #   ),
                 MM("Register Test Station",
-                   c="default", f="index", args=["register"],
+                   c = "default", f = "index", args = ["register"],
                    check = lambda i: not current.auth.s3_logged_in(),
                    ),
                 ]
+
+        # Link to voucher management
+        if auth.s3_logged_in():
+            if has_role("PROGRAM_MANAGER"):
+                label, f = "Voucher Programs", "voucher_program"
+            elif has_role("VOUCHER_PROVIDER"):
+                label, f = "Voucher Billing", "voucher_debit"
+            elif has_role("VOUCHER_ISSUER"):
+                label, f = "Vouchers", "voucher"
+            if f:
+                menu.insert(0, MM(label, c="fin", f=f))
+
+        return menu
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -135,14 +157,12 @@ class S3MainMenu(default.S3MainMenu):
     @classmethod
     def menu_about(cls):
 
-        ADMIN = current.auth.get_system_roles().ADMIN
-
         menu_about = MA(c="default")(
             MA("Help", f="help"),
             MA("Contact", f="contact"),
             MA("Privacy", f="index", args=["privacy"]),
             MA("Legal Notice", f="index", args=["legal"]),
-            MA("Version", f="about", restrict = (ADMIN, "COORDINATOR")),
+            MA("Version", f="about", restrict = ("ORG_GROUP_ADMIN")),
         )
         return menu_about
 
@@ -187,17 +207,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def org():
         """ ORG / Organization Registry """
 
-        sysroles = current.auth.get_system_roles()
-
-        ADMIN = sysroles.ADMIN
-        ORG_GROUP_ADMIN = sysroles.ORG_GROUP_ADMIN
-
         return M(c="org")(
                     M("Organizations", f="organisation")(
-                        #M("Hierarchy", m="hierarchy"),
-                        M("Create", m="create", restrict=(ADMIN, ORG_GROUP_ADMIN)),
+                        M("Create", m="create", restrict=("ORG_GROUP_ADMIN")),
                         ),
-                    M("Administration", restrict=(ADMIN, ORG_GROUP_ADMIN))(
+                    M("Administration", restrict=("ORG_GROUP_ADMIN"))(
                         M("Facility Types", f="facility_type"),
                     #    M("Organization Types", f="organisation_type"),
                     #    M("Sectors", f="sector"),
@@ -208,11 +222,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
     @staticmethod
     def fin():
         """ FIN / Finance """
-
-        sysroles = current.auth.get_system_roles()
-
-        ADMIN = sysroles.ADMIN
-        ORG_GROUP_ADMIN = sysroles.ORG_GROUP_ADMIN
 
         return M(c="fin")(
                     M("Voucher Programs", f="voucher_program")(
