@@ -251,6 +251,11 @@ def config(settings):
 
         s3 = current.response.s3
 
+        # Load model for default CRUD strings
+        current.s3db.org_facility
+
+        s3.crud_strings.org_facility.title_map = T("Find Test Station")
+
         # Custom prep
         standard_prep = s3.prep
         def prep(r):
