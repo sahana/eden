@@ -12,6 +12,8 @@ from collections import OrderedDict
 from gluon import current, URL
 from gluon.storage import Storage
 
+from .rlpgeonames import rlp_GeoNames
+
 LSJV = "Landesamt für Soziales, Jugend und Versorgung"
 ALLOWED_FORMATS = ("html", "iframe", "popup", "aadata", "json", "xls", "pdf")
 
@@ -71,9 +73,8 @@ def config(settings):
     # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
     #settings.gis.print_button = True
 
-    # Use custom geocoder (disabled until production-ready)
-    #if rlp_GeoNames.enable:
-    #    settings.gis.geocode_service = rlp_GeoNames
+    # Use custom geocoder
+    settings.gis.geocode_service = rlp_GeoNames
 
     # L10n settings
     # Languages used in the deployment (used for Language Toolbar, GIS Locations, etc)

@@ -549,19 +549,19 @@ class register(S3CustomController):
                       s3db.gis_location_id("location_id",
                                            widget = S3LocationSelector(
                                                        levels = ("L1", "L2", "L3", "L4"),
-                                                       required_levels = ("L1", "L2", "L3", "L4"),
-                                                       show_address = False,
-                                                       show_postcode = False,
+                                                       required_levels = ("L1", "L2", "L3"),
+                                                       show_address = True,
+                                                       show_postcode = True,
                                                        show_map = True,
                                                        ),
                                            ),
-                      Field("addr_street",
-                            label = ltable.addr_street.label,
-                            ),
-                      Field("addr_postcode",
-                            label = ltable.addr_postcode.label,
-                            requires = IS_NOT_EMPTY(),
-                            ),
+                      #Field("addr_street",
+                      #      label = ltable.addr_street.label,
+                      #      ),
+                      #Field("addr_postcode",
+                      #      label = ltable.addr_postcode.label,
+                      #      requires = IS_NOT_EMPTY(),
+                      #      ),
 
                       Field("office_phone",
                             label = T("Office Phone"),
@@ -588,8 +588,8 @@ class register(S3CustomController):
         # Subheadings
         subheadings = ((0, T("User Account")),
                        (5, T("Organization")),
-                       (6, T("Infection Test Station")),
-                       (11, T("Privacy")),
+                       (4, T("Infection Test Station")),
+                       (9, T("Privacy")),
                        )
 
         # Geocoder
