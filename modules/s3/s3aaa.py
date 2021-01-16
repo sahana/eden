@@ -2498,7 +2498,7 @@ Please go to %(url)s to approve this user."""
             subjects[language] = \
                 s3_str(T("%(system_name)s - New User Registration Approval Pending") % \
                         {"system_name": system_name})
-            messages[language] = s3_str(approve_user_message % \
+            messages[language] = s3_str(T(approve_user_message) % \
                         {"system_name": system_name,
                          "first_name": first_name,
                          "last_name": last_name,
