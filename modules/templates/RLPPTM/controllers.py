@@ -1462,14 +1462,19 @@ class register_invited(S3CustomController):
         return register_onvalidation
 
     # -------------------------------------------------------------------------
-    @classmethod
-    def register_onaccept(cls, user_id):
+    @staticmethod
+    def register_onaccept(user_id):
         """
-            Process Custom Fields
+            Process Registration
+
+            @param user_id: the user ID
         """
 
-        # TODO set necessary user roles
-        pass
+        auth = current.auth
+        assign_role = auth.s3_assign_role
+
+        assign_role(user_id, "ORG_ADMIN")
+        assign_role(user_id, "VOUCHER_ISSUER")
 
     # -------------------------------------------------------------------------
     @classmethod
