@@ -2000,29 +2000,39 @@ class S3CRUD(S3Method):
 
             if self._permitted("approve"):
 
-                approve = FORM(INPUT(_value=T("Approve"),
-                                     _type="submit",
-                                     _name="approve-btn",
-                                     _id="approve-btn",
-                                     _class="action-btn"))
+                approve = FORM(INPUT(_value = T("Approve"),
+                                     _type = "submit",
+                                     _name = "approve-btn",
+                                     _id = "approve-btn",
+                                     _class = "action-btn",
+                                     ))
 
-                reject = FORM(INPUT(_value=T("Reject"),
-                                    _type="submit",
-                                    _name="reject-btn",
-                                    _id="reject-btn",
-                                    _class="action-btn"))
+                reject = FORM(INPUT(_value = T("Reject"),
+                                    _type = "submit",
+                                    _name = "reject-btn",
+                                    _id = "reject-btn",
+                                    _class = "action-btn",
+                                    ))
 
                 edit = A(T("Edit"),
-                         _href=r.url(id=r.id, method="update",
-                                     vars={"_next": r.url(id=r.id, method="review")}),
-                         _class="action-btn")
+                         _href = r.url(id = r.id, method = "update",
+                                       vars = {"_next": r.url(id=r.id, method="review")}),
+                         _class = "action-btn",
+                         )
 
                 cancel = A(T("Cancel"),
-                           _href=r.url(id=0),
-                           _class="action-lnk")
+                           _href = r.url(id=0),
+                           _class = "action-lnk",
+                           )
 
-                output["approve_form"] = DIV(TABLE(TR(approve, reject, edit, cancel)),
-                                             _id="approve_form")
+                output["approve_form"] = DIV(TABLE(TR(approve,
+                                                      reject,
+                                                      edit,
+                                                      cancel,
+                                                      ),
+                                                   ),
+                                             _id = "approve_form",
+                                             )
 
                 reviewing = False
                 if approve.accepts(r.post_vars, session, formname="approve"):

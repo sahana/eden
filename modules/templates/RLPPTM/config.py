@@ -180,7 +180,7 @@ def config(settings):
                                register_onaccept = register.register_onaccept,
                                )
 
-    settings.customise_auth_user_resource = customise_auth_user_resource
+    #settings.customise_auth_user_resource = customise_auth_user_resource
 
     # -------------------------------------------------------------------------
     def customise_cms_post_resource(r, tablename):
