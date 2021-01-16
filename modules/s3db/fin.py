@@ -182,6 +182,13 @@ class FinVoucherModel(S3Model):
                           ("CLOSED", T("Closed")),
                           )
 
+        org_group_id = self.org_group_id
+        org_group_represent = org_group_id.attr.represent
+        org_group_requires = IS_EMPTY_OR(IS_ONE_OF(db, "org_group.id",
+                                                   org_group_represent,
+                                                   sort = True,
+                                                   ))
+
         tablename = "fin_voucher_program"
         define_table(tablename,
                      self.org_organisation_id(
@@ -206,11 +213,13 @@ class FinVoucherModel(S3Model):
                                                 sort = False,
                                                 ),
                            ),
-                     self.org_group_id("issuers_id",
+                     org_group_id("issuers_id",
                             label = T("Issuers##fin"),
+                            requires = org_group_requires,
                             ),
-                     self.org_group_id("providers_id",
+                     org_group_id("providers_id",
                             label = T("Providers##fin"),
+                            requires = org_group_requires,
                             ),
                      Field("default_credit", "integer",
                            label = T("Default Credit per Voucher"),
