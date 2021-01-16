@@ -29,6 +29,12 @@ def voucher_program():
     return s3_rest_controller(rheader = s3db.fin_rheader)
 
 # -----------------------------------------------------------------------------
+def voucher():
+    """ Vouchers: RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def voucher_debit():
     """ Voucher Debits: RESTful CRUD controller """
 

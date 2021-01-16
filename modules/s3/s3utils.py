@@ -777,6 +777,57 @@ def s3_url_represent(url):
     return A(url, _href=url, _target="_blank")
 
 # =============================================================================
+def s3_qrcode_represent(value, row=None, show_value=True):
+    """
+        Simple QR Code representer, produces a DIV with embedded SVG,
+        useful to embed QR Codes that are to be scanned directly from
+        the screen, or for previews
+
+        @requires: python-qrcode (pip install qrcode), and PIL
+
+        @param value: the value to render (will be converted to str)
+        @param row: the Row (unused, for API-compatibility)
+        @param show_value: include the value (as str) in the representation
+
+        @returns: DIV
+    """
+
+    try:
+        import qrcode
+        import qrcode.image.svg
+    except ImportError:
+        return s3_str(value)
+
+    # Generate the QR Code
+    qr = qrcode.QRCode(version = 2,
+                       error_correction = qrcode.constants.ERROR_CORRECT_M,
+                       box_size = 10,
+                       border = 4,
+                       image_factory=qrcode.image.svg.SvgImage,
+                       )
+    qr.add_data(s3_str(value))
+    qr.make(fit=True)
+
+    # Write the SVG into a buffer
+    qr_svg = qr.make_image()
+
+    from s3compat import BytesIO
+    stream = BytesIO()
+    qr_svg.save(stream)
+
+    # Generate XML string to embed
+    stream.seek(0)
+    svgxml = XML(stream.read())
+
+    output = DIV(DIV(svgxml, _class="s3-qrcode-svg"),
+                 _class="s3-qrcode-display",
+                 )
+    if show_value:
+        output.append(DIV(s3_str(value), _class="s3-qrcode-val"))
+
+    return output
+
+# =============================================================================
 def s3_URLise(text):
     """
         Convert all URLs in a text into an HTML <A> tag.
