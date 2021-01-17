@@ -421,10 +421,15 @@ class approve(S3CustomController):
                     user.update_record(organisation_id = organisation_id,
                                        registration_key = None,
                                        )
+                    # Grant ORG_ADMIN
+                    auth.s3_assign_role(user_id, "ORG_ADMIN",
+                                        for_pe = org.pe_id)
                 else:
                     # Update User
                     user.update_record(registration_key = None,
                                        )
+                # Grant VOUCHER_PROVIDER
+                auth.s3_assign_role(user_id, "VOUCHER_PROVIDER")
 
                 location_id = location_get("id")
                 if not location_id:
@@ -460,13 +465,10 @@ class approve(S3CustomController):
 
                 # Approve user
                 auth.s3_approve_user(user)
-                # Grant ORG_ADMIN if first
-                auth.add_membership(user_id = user_id,
-                                    role = "Organisation Admin",
-                                    entity = org.pe_id)
                 # Send welcome email
                 # Done within s3_approve_user
                 #auth.s3_send_welcome_email(form.vars)
+
                 session.confirmation = T("Site approved")
                 redirect(URL(c = "default",
                              f = "index",
