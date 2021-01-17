@@ -594,6 +594,14 @@ class approve(S3CustomController):
                                     id = list_id,
                                     **dtargs)
 
+                # Action Buttons
+                s3.actions = [{"label": s3_str(T("Review")),
+                               "url": URL(args = ["approve", "[id]"],
+                                          ),
+                               "_class": "action-btn",
+                               },
+                              ]
+
                 output = {"items": datatable,
                           "title": T("Test Stations to be Approved"),
                           }
