@@ -4,16 +4,13 @@ import json
 from uuid import uuid4
 
 from gluon import A, BR, CRYPT, DIV, Field, FORM, H3, INPUT, \
-                  IS_EMAIL, IS_EMPTY_OR, IS_EXPR, IS_INT_IN_RANGE, IS_IN_SET, \
-                  IS_LENGTH, IS_LOWER, IS_NOT_EMPTY, IS_NOT_IN_DB, \
+                  IS_EMAIL, IS_EMPTY_OR, IS_EXPR, IS_LOWER, IS_NOT_EMPTY, IS_NOT_IN_DB, \
                   P, SQLFORM, TABLE, TD, TR, URL, XML, current, redirect
+
 from gluon.storage import Storage
 
-from s3 import IS_ONE_OF, IS_PHONE_NUMBER_MULTI, IS_PHONE_NUMBER_SINGLE, \
-               JSONERRORS, S3CustomController, S3GroupedOptionsWidget, \
-               S3LocationSelector, S3MultiSelectWidget, S3WeeklyHoursWidget, \
-               S3WithIntro, S3Represent, \
-               s3_comments_widget, s3_date, s3_mark_required, s3_str
+from s3 import IS_PHONE_NUMBER_MULTI, JSONERRORS, S3CustomController, \
+               S3LocationSelector, S3Represent, s3_mark_required, s3_str
 
 from .notifications import formatmap
 
@@ -274,6 +271,7 @@ class approve(S3CustomController):
             # NB This is non trivial as data is inside auth_user_temp.custom
             permitted = True
 
+        session = current.session
         if not permitted:
             session.error = T("Not Permitted!")
             redirect(URL(c = "default",
@@ -282,7 +280,6 @@ class approve(S3CustomController):
                          ))
 
         request = current.request
-        session = current.session
 
         # Single User or List?
         if len(request.args) > 1:
@@ -444,7 +441,7 @@ class approve(S3CustomController):
                                                        )
 
                 # Approve user
-                auth.s3_approve_user
+                auth.s3_approve_user(user)
                 # Grant ORG_ADMIN if first
                 auth.add_membership(user_id = user_id,
                                     role = "Organisation Admin",
@@ -723,7 +720,6 @@ class register(S3CustomController):
         T = current.T
         request = current.request
 
-        db = current.db
         s3db = current.s3db
 
         auth = current.auth
@@ -739,7 +735,7 @@ class register(S3CustomController):
         # Last name is required
         utable.last_name.requires = IS_NOT_EMPTY(error_message=T("input required"))
 
-        ltable = s3db.gis_location
+        #ltable = s3db.gis_location
 
         # Form fields
         formfields = [utable.first_name,

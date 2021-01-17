@@ -7,8 +7,6 @@
     @license MIT
 """
 
-import datetime
-
 from collections import OrderedDict
 
 from gluon import current, URL
@@ -175,18 +173,18 @@ def config(settings):
     settings.auth.realm_entity = rlpptm_realm_entity
 
     # -------------------------------------------------------------------------
-    def customise_auth_user_resource(r, tablename):
-        """
-            Configure custom register-onaccept
-
-            TODO Differential registration processes for Bearer/Provider orgs
-        """
-
-        from .controllers import register
-        current.s3db.configure("auth_user",
-                               register_onaccept = register.register_onaccept,
-                               )
-
+    #def customise_auth_user_resource(r, tablename):
+    #    """
+    #        Configure custom register-onaccept
+    #
+    #        TODO Differential registration processes for Bearer/Provider orgs
+    #    """
+    #
+    #    from .controllers import register
+    #    current.s3db.configure("auth_user",
+    #                           register_onaccept = register.register_onaccept,
+    #                           )
+    #
     #settings.customise_auth_user_resource = customise_auth_user_resource
 
     # -------------------------------------------------------------------------
@@ -343,7 +341,7 @@ def config(settings):
         s3 = current.response.s3
 
         # Load model for default CRUD strings
-        current.s3db.org_facility
+        current.s3db.table("org_facility")
 
         s3.crud_strings.org_facility.title_map = T("Find Test Station")
 
