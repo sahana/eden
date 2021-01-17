@@ -832,7 +832,16 @@ class S3CRUD(S3Method):
                                           pagesize = pagesize,
                                           )
 
-            disposition = "attachment; filename=\"%s_card.pdf\"" % resource.name
+            # Suffix for the filename
+            default = lambda: None
+            suffix = resource.get_config("pdf_card_suffix", default)
+            if suffix is default:
+                suffix = "%s" % r.record.id if r.record else None
+            elif callable(suffix):
+                suffix = suffix(r.record)
+            suffix = "_%s" % suffix if suffix is not None else ""
+
+            disposition = "attachment; filename=\"%s_card%s.pdf\"" % (resource.name, suffix)
             response.headers["Content-Type"] = contenttype(".pdf")
             response.headers["Content-disposition"] = disposition
 

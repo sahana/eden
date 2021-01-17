@@ -9,10 +9,10 @@
 
 from collections import OrderedDict
 
-from gluon import current, URL, DIV
+from gluon import current, URL, A, DIV, TAG
 from gluon.storage import Storage
 
-from s3 import IS_ONE_OF
+from s3 import IS_ONE_OF, s3_str
 
 from .rlpgeonames import rlp_GeoNames
 
@@ -331,7 +331,11 @@ def config(settings):
                 if r.representation == "card":
                     # Configure ID card layout
                     from .vouchers import VoucherCardLayout
-                    resource.configure(pdf_card_layout = VoucherCardLayout)
+                    resource.configure(pdf_card_layout = VoucherCardLayout,
+                                       pdf_card_suffix = lambda record: \
+                                           s3_str(record.signature) \
+                                           if record and record.signature else None,
+                                       )
 
             if r.interactive:
 
@@ -356,6 +360,34 @@ def config(settings):
             return result
         s3.prep = prep
 
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if not r.component and isinstance(output, dict):
+                if r.record and r.method in (None, "update", "read"):
+
+                    # Custom CRUD buttons
+                    if "buttons" not in output:
+                        buttons = output["buttons"] = {}
+                    else:
+                        buttons = output["buttons"]
+
+                    # PDF-button
+                    pdf_download = A(T("Download PDF"),
+                                     _href = "/%s/fin/voucher/%s.card" % (r.application, r.record.id),
+                                     _class="action-btn",
+                                     )
+
+                    # Render in place of the delete-button
+                    buttons["delete_btn"] = TAG[""](pdf_download,
+                                                    )
+            return output
+        s3.postp = custom_postp
+
         # Custom rheader
         from .rheaders import rlpptm_fin_rheader
         attr["rheader"] = rlpptm_fin_rheader
@@ -363,6 +395,12 @@ def config(settings):
         return attr
 
     settings.customise_fin_voucher_controller = customise_fin_voucher_controller
+
+    # -------------------------------------------------------------------------
+    def customise_fin_voucher_debit_controller(**attr):
+
+        # TODO
+        pass
 
     # -------------------------------------------------------------------------
     def customise_org_facility_controller(**attr):
