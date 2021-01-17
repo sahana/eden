@@ -3,10 +3,10 @@
 import json
 from uuid import uuid4
 
-from gluon import A, BR, CRYPT, DIV, Field, H3, INPUT, \
+from gluon import A, BR, CRYPT, DIV, Field, FORM, H3, INPUT, \
                   IS_EMAIL, IS_EMPTY_OR, IS_EXPR, IS_INT_IN_RANGE, IS_IN_SET, \
                   IS_LENGTH, IS_LOWER, IS_NOT_EMPTY, IS_NOT_IN_DB, \
-                  P, SQLFORM, URL, XML, current, redirect
+                  P, SQLFORM, TABLE, TD, TR, URL, XML, current, redirect
 from gluon.storage import Storage
 
 from s3 import IS_ONE_OF, IS_PHONE_NUMBER_MULTI, IS_PHONE_NUMBER_SINGLE, \
@@ -253,17 +253,233 @@ class approve(S3CustomController):
 
     def __call__(self):
 
+        T = current.T
+        auth = current.auth
+        db = current.db
+        s3db = current.s3db
+
+        ogtable = s3db.org_group
+        org_group = db(ogtable.name == "COVID-19 Test Stations").select(ogtable.id,
+                                                                        ogtable.pe_id,
+                                                                        limitby = (0, 1)
+                                                                        ).first()
+
+        permitted = False
+        if auth.s3_has_role("ORG_GROUP_ADMIN",
+                            for_pe = org_group.pe_id):
+            permitted = True
+
+        elif auth.s3_has_role("ORG_ADMIN"):
+            # @ToDo: Filter to just their Users
+            # NB This is non trivial as data is inside auth_user_temp.custom
+            permitted = True
+
+        if not permitted:
+            session.error = T("Not Permitted!")
+            redirect(URL(c = "default",
+                         f = "index",
+                         args = None,
+                         ))
+
         request = current.request
+        session = current.session
 
         # Single User or List?
         if len(request.args) > 1:
-            user_id = current.request.args[1]
-            # @ToDo: Check permitted
+            user_id = request.args[1]
+            utable = db.auth_user
+            user = db(utable.id == user_id).select(utable.id,
+                                                   utable.first_name,
+                                                   utable.last_name,
+                                                   utable.email,
+                                                   utable.org_group_id,
+                                                   utable.registration_key,
+                                                   limitby = (0, 1)
+                                                   ).first()
+
+            if not user or user.org_group_id != org_group.id:
+                session.error = T("Invalid Site!")
+                redirect(URL(c = "default",
+                             f = "index",
+                             args = ["approve"],
+                             ))
+
+            person = "%(first_name)s %(last_name)s <%(email)s>" % {"first_name": user.first_name,
+                                                                   "last_name": user.last_name,
+                                                                   "email": user.email,
+                                                                   }
+
+            ttable = s3db.auth_user_temp
+            temp = db(ttable.user_id == user_id).select(ttable.custom,
+                                                        limitby = (0, 1)
+                                                        ).first()
+
+            try:
+                custom = json.loads(temp.custom)
+            except JSONERRORS:
+                custom = {}
+
+            custom_get = custom.get
+            organisation = custom_get("organisation")
+            location = custom_get("location")
+            location_get = location.get
+            addr_street = location_get("addr_street")
+            addr_postcode = location_get("addr_postcode")
+            L1 = location_get("L1")
+            L2 = location_get("L2")
+            L3 = location_get("L3")
+            L4 = location_get("L4")
+            represent = S3Represent(lookup = "gis_location")
+            address = TABLE(TR(addr_street or ""),
+                            TR(addr_postcode or ""),
+                            TR(represent(L4) if L4 else ""),
+                            TR(represent(L3) if L3 else ""),
+                            TR(represent(L2) if L2 else ""),
+                            TR(represent(L1) if L1 else ""),
+                            )
+            phone = custom_get("office_phone")
+            opening_times = custom_get("opening_times")
+
+            if user.registration_key is None:
+                current.response.warning = T("Site has previously been Approved")
+            elif user.registration_key == "rejected":
+                current.response.warning = T("Site has previously been Rejected")
+            elif user.registration_key != "pending":
+                current.response.warning = T("Site hasn't verified their email")
+
+            approve = FORM(INPUT(_value = T("Approve"),
+                                 _type = "submit",
+                                 _name = "approve-btn",
+                                 _id = "approve-btn",
+                                 _class = "button round",
+                                 ))
+
+            reject = FORM(INPUT(_value = T("Reject"),
+                                _type = "submit",
+                                _name = "reject-btn",
+                                _id = "reject-btn",
+                                _class = "button round",
+                                ))
+
+            form = TABLE(TR(approve,
+                            reject,
+                            ),
+                         TR(TD("%s:" % T("Person")),
+                            TD(person),
+                            ),
+                         TR(TD("%s:" % T("Test Station")),
+                            TD(organisation),
+                            ),
+                         TR(TD("%s:" % T("Address")),
+                            TD(address),
+                            ),
+                         TR(TD("%s:" % T("Telephone")),
+                            TD(phone or ""),
+                            ),
+                         TR(TD("%s:" % T("Opening Hours")),
+                            TD(opening_times or ""),
+                            ),
+                         )
+
+            if approve.accepts(request.post_vars, session, formname="approve"):
+                set_record_owner = auth.s3_set_record_owner
+                s3db_onaccept = s3db.onaccept
+                update_super = s3db.update_super
+                # Create Organisation
+                otable = s3db.org_organisation
+                org = db(otable.name == organisation).select(otable.id,
+                                                             otable.pe_id,
+                                                             limitby = (0, 1)
+                                                             ).first()
+                if org:
+                    organisation_id = org.id
+                else:
+                    org = Storage(name = organisation,
+                                  )
+                    organisation_id = otable.insert(**org)
+                    org.id = organisation_id
+                    update_super(otable, org)
+                    set_record_owner(otable, org, owned_by_user=user_id)
+                    s3db_onaccept(otable, org, method="create")
+                    # Link to Org_Group: "COVID-19 Test Stations"
+                    s3db.org_group_membership.insert(group_id = org_group.id,
+                                                     organisation_id = organisation_id,
+                                                     )
+                # Update User
+                user.update_record(organisation_id = organisation_id,
+                                   registration_key = None,
+                                   )
+
+                # Create Location
+                ltable = s3db.gis_location
+                location = Storage(addr_street = addr_street,
+                                   addr_postcode = addr_postcode,
+                                   parent = L4 or L3 or L2 or L1,
+                                   )
+                location_id = ltable.insert(**location)
+                location.id = location_id
+                set_record_owner(ltable, location, owned_by_user=user_id)
+                s3db_onaccept(ltable, location, method="create")
+
+                # Create Facility
+                ftable = s3db.org_facility
+                facility = Storage(name = organisation,
+                                   organisation_id = organisation_id,
+                                   location_id = location_id,
+                                   phone1 = phone,
+                                   opening_times = opening_times,
+                                   )
+                facility.id = ftable.insert(**facility)
+                update_super(ftable, facility)
+                set_record_owner(ftable, facility, owned_by_user=user_id)
+                s3db_onaccept(ftable, facility, method="create")
+                # Assign Type
+                fttable = s3db.org_facility_type
+                facility_type = db(fttable.name == "Infection Test Station").select(fttable.id,
+                                                                                    limitby = (0, 1)
+                                                                                    ).first()
+                if facility_type:
+                    s3db.org_site_facility_type.insert(site_id = facility.site_id,
+                                                       facility_type_id = facility_type.id,
+                                                       )
+
+                # Approve user
+                auth.s3_approve_user
+                # Grant ORG_ADMIN if first
+                auth.add_membership(user_id = user_id,
+                                    role = "Organisation Admin",
+                                    entity = org.pe_id)
+                # Send welcome email
+                # Done within s3_approve_user
+                #auth.s3_send_welcome_email(form.vars)
+                session.confirmation = T("Site approved")
+                redirect(URL(c = "default",
+                             f = "index",
+                             args = ["approve"],
+                             ))
+
+            elif reject.accepts(request.post_vars, session, formname="reject"):
+                user.update_record(registration_key = "rejected")
+                # @ToDo: Delete Org & Fac, if created previously
+                session.confirmation = T("Site rejected")
+                redirect(URL(c = "default",
+                             f = "index",
+                             args = ["approve"],
+                             ))
+
+            output = {"form": form,
+                      "title": T("Approve Test Station"),
+                      }
 
             # Custom View
             self._view(THEME, "approve.html")
+
         else:
-            # @ToDo: List View
+            # List View
+
+            output = {#"list": list,
+                      "title": T("Test Stations to be Approved"),
+                      }
 
             # Custom View
             self._view(THEME, "approve.html")
@@ -390,6 +606,13 @@ class register(S3CustomController):
             user_id = utable.insert(**utable._filter_fields(formvars, id=False))
             formvars.id = user_id
 
+            # Set org_group
+            ogtable = s3db.org_group
+            org_group = db(ogtable.name == "COVID-19 Test Stations").select(ogtable.id,
+                                                                            limitby = (0, 1)
+                                                                            ).first()
+            db(utable.id == user_id).update(org_group_id = org_group.id)
+
             # Save temporary user fields in s3db.auth_user_temp
             temptable = s3db.auth_user_temp
             record  = {"user_id": user_id}
@@ -399,8 +622,6 @@ class register(S3CustomController):
             # Store Custom fields
             custom = {"organisation": formvars.organisation,
                       "location": formvars.location,
-                      #"addr_street": formvars.addr_street,
-                      #"addr_postcode": formvars.addr_postcode,
                       "office_phone": formvars.office_phone,
                       "opening_times": formvars.opening_times,
                       }
@@ -593,118 +814,6 @@ class register(S3CustomController):
         current.response.s3.scripts.append("/%s/static/themes/RLP/js/geocoderPlugin.js" % request.application)
 
         return formfields, required_fields, subheadings
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def register_onaccept(cls, user_id):
-        """
-            Process Custom Fields
-        """
-
-        db = current.db
-        s3db = current.s3db
-
-        # Get custom field data from DB
-        temptable = s3db.auth_user_temp
-        record = db(temptable.user_id == user_id).select(temptable.custom,
-                                                         limitby = (0, 1),
-                                                         ).first()
-        if not record:
-            return
-
-        # Customise resources
-        #from s3 import S3Request
-        #r = S3Request("auth", "user", args=[], get_vars={})
-        #customise_resource = current.deployment_settings.customise_resource
-        #for tablename in ("pr_person",):
-        #    customise = customise_resource(tablename)
-        #    if customise:
-        #        customise(r, tablename)
-
-        try:
-            custom = json.loads(record.custom)
-        except JSONERRORS:
-            return
-
-        auth = current.auth
-        set_record_owner = auth.s3_set_record_owner
-        s3db_onaccept = s3db.onaccept
-
-        # Get the person record
-        ltable = s3db.pr_person_user
-        ptable = s3db.pr_person
-        query = (ltable.user_id == user_id) & \
-                (ltable.deleted == False) & \
-                (ptable.pe_id == ltable.pe_id) & \
-                (ptable.deleted == False)
-        person = db(query).select(ptable.id,
-                                  ptable.pe_id,
-                                  #ptable.pe_label,
-                                  ptable.first_name,
-                                  ptable.middle_name,
-                                  ptable.last_name,
-                                  limitby = (0, 1),
-                                  ).first()
-        if not person:
-            current.log.error("Person record for user %s not found" % user_id)
-            return
-        person_id = person.id
-
-        # Register Organisation
-
-        # Register Test Site
-
-        # Register address
-        #addr_street = custom.get("addr_street")
-        #addr_postcode = custom.get("addr_postcode")
-        #location_id = custom.get("location_id")
-        #if addr_street or addr_postcode:
-        #    # Generate individual location
-        #    ltable = s3db.gis_location
-        #    location = Storage(addr_street = addr_street,
-        #                       addr_postcode = addr_postcode,
-        #                       parent = location_id,
-        #                       )
-        #    location_id = location.id = ltable.insert(**location)
-        #    set_record_owner(ltable, location, owned_by_user=user_id)
-        #    s3db_onaccept(ltable, location, method="create")
-        #if location_id:
-        #    atable = s3db.pr_address
-        #    query = (atable.pe_id == person.pe_id) & \
-        #            (atable.location_id == location_id) & \
-        #            (atable.type == 1) & \
-        #            (atable.deleted == False)
-        #    address = db(query).select(atable.id,
-        #                               limitby = (0, 1),
-        #                               ).first()
-        #    if not address:
-        #        address_data = {"pe_id": person.pe_id,
-        #                        "location_id": location_id,
-        #                        "type": 1,
-        #                        }
-        #        address_data["id"] = atable.insert(**address_data)
-        #        set_record_owner(atable, address_data)
-        #        s3db_onaccept(atable, address_data, method="create")
-
-        # Register work phone
-        #office_phone = custom.get("office_phone")
-        #if office_phone:
-        #    ctable = s3db.pr_contact
-        #    query = (ctable.pe_id == person.pe_id) & \
-        #            (ctable.value == office_phone) & \
-        #            (ctable.contact_method == "WORK_PHONE") & \
-        #            (ctable.deleted == False)
-        #    contact = db(query).select(ctable.id,
-        #                               limitby = (0, 1),
-        #                               ).first()
-        #    if not contact:
-        #        contact_data = {"pe_id": person.pe_id,
-        #                        "value": office_phone,
-        #                        "contact_method": "WORK_PHONE",
-        #                        }
-        #        contact_data["id"] = ctable.insert(**contact_data)
-        #        set_record_owner(ctable, contact_data)
-        #        s3db_onaccept(ctable, contact_data, method="create")
 
     # -------------------------------------------------------------------------
     @staticmethod
