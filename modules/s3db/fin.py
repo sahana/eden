@@ -633,6 +633,7 @@ class FinVoucherModel(S3Model):
         """
 
         T = current.T
+        s3db = current.s3db
 
         form_vars = form.vars
 
@@ -640,10 +641,15 @@ class FinVoucherModel(S3Model):
             form.errors["signature"] = T("Missing voucher signature")
             return
 
+        if "program_id" in form_vars:
+            program_id = form_vars.program_id
+        else:
+            table = s3db.fin_voucher_debit
+            program_id = table.program_id.default
+
         signature = form_vars["signature"]
         error = None
 
-        s3db = current.s3db
         settings = current.deployment_settings
 
         # Find the voucher
@@ -657,6 +663,7 @@ class FinVoucherModel(S3Model):
                                        vtable.bearer_pin,
                                        vtable.balance,
                                        vtable.valid_until,
+                                       ptable.id,
                                        ptable.status,
                                        ptable.end_date,
                                        join = join,
@@ -675,17 +682,22 @@ class FinVoucherModel(S3Model):
 
             personalize = settings.get_fin_voucher_personalize()
 
-            # Verify bearer identity feature (if required)
-            if personalize == "dob" and voucher.bearer_dob:
-                bearer_dob = form_vars.get("bearer_dob")
-                if bearer_dob != voucher.bearer_dob:
-                    field = "bearer_dob"
-                    error = T("Incorrect Date of Birth")
-            elif personalize == "pin" and voucher.bearer_pin:
-                bearer_pin = form_vars.get("bearer_pin")
-                if bearer_pin != voucher.bearer_pin:
-                    field = "bearer_pin"
-                    error = T("Incorrect PIN")
+            # Voucher must match the selected program
+            if program_id and str(program_id) != str(program.id):
+                error = T("Voucher is for a different program")
+
+            if not error:
+                # Verify bearer identity feature (if required)
+                if personalize == "dob" and voucher.bearer_dob:
+                    bearer_dob = form_vars.get("bearer_dob")
+                    if bearer_dob != voucher.bearer_dob:
+                        field = "bearer_dob"
+                        error = T("Incorrect Date of Birth")
+                elif personalize == "pin" and voucher.bearer_pin:
+                    bearer_pin = form_vars.get("bearer_pin")
+                    if bearer_pin != voucher.bearer_pin:
+                        field = "bearer_pin"
+                        error = T("Incorrect PIN")
 
             if not error:
                 # Verify program status
