@@ -428,16 +428,16 @@ class FinVoucherModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            label_create = T("Create Debit"),
-            title_display = T("Debit Details"),
-            title_list = T("Debits"),
-            title_update = T("Edit Debit"),
-            label_list_button = T("List Debits"),
-            label_delete_button = T("Delete Debit"),
-            msg_record_created = T("Debit created"),
-            msg_record_modified = T("Debit updated"),
-            msg_record_deleted = T("Debit deleted"),
-            msg_list_empty = T("No Debits currently registered"),
+            label_create = T("Accept Voucher"),
+            title_display = T("Accepted Voucher"),
+            title_list = T("Accepted Vouchers"),
+            title_update = T("Edit Accepted Voucher"),
+            label_list_button = T("List Accepted Vouchers"),
+            label_delete_button = T("Delete Accepted Voucher"),
+            msg_record_created = T("Voucher accepted"),
+            msg_record_modified = T("Accepted Voucher updated"),
+            msg_record_deleted = T("Accepted Voucher deleted"),
+            msg_list_empty = T("No Accepted Vouchers currently registered"),
         )
 
         # Reusable field

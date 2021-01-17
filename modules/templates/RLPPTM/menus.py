@@ -225,13 +225,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         return M(c="fin")(
                     M("Voucher Programs", f="voucher_program")(
-                        M("Create", m="create", restrict=("PROGRAM_ADMIN")),
+                        M("Create", m="create", restrict=("PROGRAM_MANAGER")),
                         ),
                     M("Vouchers", f="voucher")(
-                        M("Create", m="create", restrict=("VOUCHER_ADMIN")),
+                        M("Create Voucher", m="create", restrict=("VOUCHER_ADMIN")),
                         ),
-                    M("Debits", f="voucher_debit")(
-                        M("Create", m="create", restrict=("VOUCHER_PROVIDER")),
+                    M("Gutschein-Annahme", f="voucher_debit")(
+                        M("Accept Voucher", m="create", restrict=("VOUCHER_PROVIDER")),
                         ),
                     )
 

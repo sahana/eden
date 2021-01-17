@@ -335,6 +335,10 @@ def config(settings):
                                               ),
                             )
 
+        field = table.balance
+        field.label = T("Status")
+        field.represent = lambda v: T("Issued##fin") if v > 0 else T("Redeemed##fin")
+
     settings.customise_fin_voucher_resource = customise_fin_voucher_resource
 
     # -------------------------------------------------------------------------
@@ -389,10 +393,6 @@ def config(settings):
                     field.default = rows.first().pe_id
                     field.readable = field.writable = False
 
-            field = table.balance
-            field.label = T("Status")
-            field.represent = lambda v: T("Issued##fin") if v > 0 else T("Redeemed##fin")
-
             if r.interactive:
 
                 # Hide valid_until from create-form (will be set onaccept)
@@ -418,7 +418,8 @@ def config(settings):
                             "valid_until",
                             "comments",
                             ]
-            if settings.get_fin_voucher_personalize() == "dob":
+            if settings.get_fin_voucher_personalize() == "dob" and \
+               current.auth.s3_has_role("VOUCHER_ISSUER"):
                 list_fields.insert(2, "bearer_dob")
             resource.configure(list_fields = list_fields,
                                 )
@@ -520,6 +521,10 @@ def config(settings):
                            "voucher_id$signature",
                            "comments", # TODO adapt label + tooltip analogous to voucher
                            ]
+            if current.auth.s3_has_role("PROGRAM_MANAGER"):
+                list_fields[3:3] = ["voucher_id$pe_id",
+                                    "pe_id",
+                                    ]
             resource.configure(list_fields = list_fields,
                                 )
 
