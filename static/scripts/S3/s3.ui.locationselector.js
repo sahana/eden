@@ -684,7 +684,7 @@
                 level,
                 value;
 
-            for (level=0; level<6; level++) {
+            for (level = 0; level < 6; level++) {
                 dropdown = $(selector + '_L' + level);
                 // Only update if the dropdown exists, else retain default
                 if (dropdown.length) {

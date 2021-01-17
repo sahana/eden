@@ -1,0 +1,16 @@
+{{extend "layout.html"}}
+<section">
+<div class='row'>
+ <div class='small-12 columns'>
+  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+ </div>
+</div>
+<div class='row'>
+ {{try:}}{{items = items}}
+  <div id='table-container' class='small-12 columns'>
+   {{=items}}
+  </div>
+ {{except:}}{{pass}}
+</div>
+</section>
+{{include "dataTables.html"}}

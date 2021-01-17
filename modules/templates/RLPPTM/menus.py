@@ -54,6 +54,7 @@ class S3MainMenu(default.S3MainMenu):
 
         # Link to voucher management
         if auth.s3_logged_in():
+            f = None
             if has_role("PROGRAM_MANAGER"):
                 label, f = "Voucher Programs", "voucher_program"
             elif has_role("VOUCHER_PROVIDER"):

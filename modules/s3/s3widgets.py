@@ -6212,7 +6212,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         path_ok = True
         if level:
             # Lx location
-            values["level"] = level
+            #values["level"] = level # Currently unused and not updated by s3.ui.locationselector.js
             values["specific"] = None
 
             if len(path) != (int(level[1:]) + 1):
@@ -6736,8 +6736,23 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         if location_id is None:
             return location_id, None
 
-        # Save raw data if the field is JSON type (e.g. during Registration)
         if self.field.type == "json":
+            # Save raw data suitable for later link to location_id or creation of new location
+            # e.g. during Approval of a new Registration
+            if location_id == 0:
+                del values["id"]
+            try:
+                del values["specific"]
+            except KeyError:
+                pass
+            try:
+                del values["address"] # Duplicate of addr_street
+            except KeyError:
+                pass
+            try:
+                del values["postcode"] # Duplicate of addr_postcode
+            except KeyError:
+                pass
             return values, None
 
         db = current.db

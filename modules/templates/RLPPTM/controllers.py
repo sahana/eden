@@ -9,14 +9,13 @@ from gluon import A, BR, CRYPT, DIV, Field, FORM, H3, INPUT, \
 
 from gluon.storage import Storage
 
-from s3 import IS_PHONE_NUMBER_MULTI, JSONERRORS, S3CustomController, \
-               S3LocationSelector, S3Represent, s3_mark_required, s3_str
+from s3 import IS_PHONE_NUMBER_MULTI, JSONERRORS, S3CRUD, S3CustomController, \
+               S3LocationSelector, S3Represent, S3Request, s3_get_extension, \
+               s3_mark_required, s3_str
 
 from .notifications import formatmap
 
 THEME = "RLP"
-
-DEFAULT_POOL = "Weitere Freiwillige"
 
 # =============================================================================
 class index(S3CustomController):
@@ -210,7 +209,8 @@ class legal(S3CustomController):
                 (table.deleted != True)
         item = current.db(query).select(table.body,
                                         table.id,
-                                        limitby=(0, 1)).first()
+                                        limitby = (0, 1)
+                                        ).first()
         if item:
             if ADMIN:
                 content = DIV(XML(item.body),
@@ -254,6 +254,7 @@ class approve(S3CustomController):
         auth = current.auth
         db = current.db
         s3db = current.s3db
+        session = current.session
 
         ogtable = s3db.org_group
         org_group = db(ogtable.name == "COVID-19 Test Stations").select(ogtable.id,
@@ -261,45 +262,62 @@ class approve(S3CustomController):
                                                                         limitby = (0, 1)
                                                                         ).first()
 
-        permitted = False
-        if auth.s3_has_role("ORG_GROUP_ADMIN",
-                            for_pe = org_group.pe_id):
-            permitted = True
-
-        elif auth.s3_has_role("ORG_ADMIN"):
-            # @ToDo: Filter to just their Users
-            # NB This is non trivial as data is inside auth_user_temp.custom
-            permitted = True
-
-        session = current.session
-        if not permitted:
+        has_role = auth.s3_has_role
+        if has_role("ORG_GROUP_ADMIN",
+                    for_pe = org_group.pe_id):
+            ORG_ADMIN = False
+        elif has_role("ORG_ADMIN"):
+            ORG_ADMIN = True
+        else:
             session.error = T("Not Permitted!")
             redirect(URL(c = "default",
                          f = "index",
                          args = None,
                          ))
 
+        utable = db.auth_user
         request = current.request
+        response = current.response
+        org_group_id = org_group.id
 
         # Single User or List?
         if len(request.args) > 1:
             user_id = request.args[1]
-            utable = db.auth_user
             user = db(utable.id == user_id).select(utable.id,
                                                    utable.first_name,
                                                    utable.last_name,
                                                    utable.email,
+                                                   utable.organisation_id,
                                                    utable.org_group_id,
                                                    utable.registration_key,
+                                                   utable.link_user_to, # Needed for s3_approve_user
+                                                   utable.site_id, # Needed for s3_link_to_human_resource (calledfrom s3_approve_user)
                                                    limitby = (0, 1)
                                                    ).first()
 
-            if not user or user.org_group_id != org_group.id:
+            if not user or user.org_group_id != org_group_id:
                 session.error = T("Invalid Site!")
                 redirect(URL(c = "default",
                              f = "index",
                              args = ["approve"],
                              ))
+
+            otable = s3db.org_organisation
+            organisation_id = user.organisation_id
+            if organisation_id:
+                org = db(otable.id == organisation_id).select(otable.name,
+                                                              otable.pe_id,
+                                                              limitby = (0, 1)
+                                                              ).first()
+            if ORG_ADMIN:
+                if not organisation_id or \
+                   not has_role("ORG_ADMIN",
+                                for_pe = org.pe_id):
+                    session.error = T("Site not within your Organisation!")
+                    redirect(URL(c = "default",
+                                 f = "index",
+                                 args = ["approve"],
+                                 ))
 
             person = "%(first_name)s %(last_name)s <%(email)s>" % {"first_name": user.first_name,
                                                                    "last_name": user.last_name,
@@ -318,6 +336,12 @@ class approve(S3CustomController):
 
             custom_get = custom.get
             organisation = custom_get("organisation")
+            if organisation:
+                test_station = TR(TD("%s:" % T("Test Station")),
+                                  TD(organisation),
+                                  )
+            else:
+                test_station = None
             location = custom_get("location")
             location_get = location.get
             addr_street = location_get("addr_street")
@@ -338,11 +362,11 @@ class approve(S3CustomController):
             opening_times = custom_get("opening_times")
 
             if user.registration_key is None:
-                current.response.warning = T("Site has previously been Approved")
+                response.warning = T("Site has previously been Approved")
             elif user.registration_key == "rejected":
-                current.response.warning = T("Site has previously been Rejected")
+                response.warning = T("Site has previously been Rejected")
             elif user.registration_key != "pending":
-                current.response.warning = T("Site hasn't verified their email")
+                response.warning = T("Site hasn't verified their email")
 
             approve = FORM(INPUT(_value = T("Approve"),
                                  _type = "submit",
@@ -364,9 +388,7 @@ class approve(S3CustomController):
                          TR(TD("%s:" % T("Person")),
                             TD(person),
                             ),
-                         TR(TD("%s:" % T("Test Station")),
-                            TD(organisation),
-                            ),
+                         test_station,
                          TR(TD("%s:" % T("Address")),
                             TD(address),
                             ),
@@ -382,15 +404,8 @@ class approve(S3CustomController):
                 set_record_owner = auth.s3_set_record_owner
                 s3db_onaccept = s3db.onaccept
                 update_super = s3db.update_super
-                # Create Organisation
-                otable = s3db.org_organisation
-                org = db(otable.name == organisation).select(otable.id,
-                                                             otable.pe_id,
-                                                             limitby = (0, 1)
-                                                             ).first()
-                if org:
-                    organisation_id = org.id
-                else:
+                if not organisation_id:
+                    # Create Organisation
                     org = Storage(name = organisation,
                                   )
                     organisation_id = otable.insert(**org)
@@ -399,28 +414,31 @@ class approve(S3CustomController):
                     set_record_owner(otable, org, owned_by_user=user_id)
                     s3db_onaccept(otable, org, method="create")
                     # Link to Org_Group: "COVID-19 Test Stations"
-                    s3db.org_group_membership.insert(group_id = org_group.id,
+                    s3db.org_group_membership.insert(group_id = org_group_id,
                                                      organisation_id = organisation_id,
                                                      )
-                # Update User
-                user.update_record(organisation_id = organisation_id,
-                                   registration_key = None,
-                                   )
+                    # Update User
+                    user.update_record(organisation_id = organisation_id,
+                                       registration_key = None,
+                                       )
+                else:
+                    # Update User
+                    user.update_record(registration_key = None,
+                                       )
 
-                # Create Location
-                ltable = s3db.gis_location
-                location = Storage(addr_street = addr_street,
-                                   addr_postcode = addr_postcode,
-                                   parent = L4 or L3 or L2 or L1,
-                                   )
-                location_id = ltable.insert(**location)
-                location.id = location_id
-                set_record_owner(ltable, location, owned_by_user=user_id)
-                s3db_onaccept(ltable, location, method="create")
+                location_id = location_get("id")
+                if not location_id:
+                    # Create Location
+                    ltable = s3db.gis_location
+                    del location["wkt"] # Will get created during onaccept & we don't want the 'Source WKT has been cleaned by Shapely" warning
+                    location_id = ltable.insert(**location)
+                    location["id"] = location_id
+                    set_record_owner(ltable, location, owned_by_user=user_id)
+                    s3db_onaccept(ltable, location, method="create")
 
                 # Create Facility
                 ftable = s3db.org_facility
-                facility = Storage(name = organisation,
+                facility = Storage(name = organisation or org.name,
                                    organisation_id = organisation_id,
                                    location_id = location_id,
                                    phone1 = phone,
@@ -473,13 +491,157 @@ class approve(S3CustomController):
 
         else:
             # List View
+            if ORG_ADMIN:
+                # Filter to just their users
+                gtable = db.auth_group
+                mtable = db.auth_membership
+                query = (mtable.user_id == auth.user.id) & \
+                        (mtable.group_id == gtable.id) & \
+                        (gtable.uuid == "ORG_ADMIN")
+                memberships = db(query).select(mtable.pe_id)
+                pe_id = [m.pe_id for m in memberships]
+                otable = s3db.org_organisation
+                orgs = db(otable.pe_id.belongs(pe_id)).select(otable.id)
+                organisation_id = [org.id for org in orgs]
+                filter = (utable.organisation_id.belongs(organisation_id))
+            else:
+                # Filter to all for the ORG_GROUP
+                filter = (utable.org_group_id == org_group_id)
+            # Only include pending accounts
+            filter &= (utable.registration_key == "pending")
+                
+            resource = s3db.resource("auth_user", filter=filter)
 
-            output = {#"list": list,
-                      "title": T("Test Stations to be Approved"),
-                      }
+            list_id = "datatable"
 
-            # Custom View
-            self._view(THEME, "approve.html")
+            # List fields
+            list_fields = resource.list_fields()
+
+            orderby = None
+
+            s3 = response.s3
+            representation = s3_get_extension(request) or \
+                             S3Request.DEFAULT_REPRESENTATION
+
+            # Pagination
+            get_vars = request.get_vars
+            if representation == "aadata":
+                start, limit = S3CRUD._limits(get_vars)
+            else:
+                # Initial page request always uses defaults (otherwise
+                # filtering and pagination would have to be relative to
+                # the initial limits, but there is no use-case for that)
+                start = None
+                limit = None if s3.no_sspag else 0
+
+            left = []
+            distinct = False
+            dtargs = {}
+
+            if representation in S3Request.INTERACTIVE_FORMATS:
+
+                # How many records per page?
+                if s3.dataTable_pageLength:
+                    display_length = s3.dataTable_pageLength
+                else:
+                    display_length = 25
+
+                # Server-side pagination?
+                if not s3.no_sspag:
+                    dt_pagination = "true"
+                    if not limit:
+                        limit = 2 * display_length
+                    session.s3.filter = get_vars
+                    if orderby is None:
+                        dt_sorting = {"iSortingCols": "1",
+                                      "sSortDir_0": "asc"
+                                      }
+
+                        if len(list_fields) > 1:
+                            dt_sorting["bSortable_0"] = "false"
+                            dt_sorting["iSortCol_0"] = "1"
+                        else:
+                            dt_sorting["bSortable_0"] = "true"
+                            dt_sorting["iSortCol_0"] = "0"
+
+                        orderby, left = resource.datatable_filter(list_fields,
+                                                                  dt_sorting,
+                                                                  )[1:3]
+                else:
+                    dt_pagination = "false"
+
+                # Get the data table
+                dt, totalrows = resource.datatable(fields = list_fields,
+                                                   start = start,
+                                                   limit = limit,
+                                                   left = left,
+                                                   orderby = orderby,
+                                                   distinct = distinct,
+                                                   )
+                displayrows = totalrows
+
+                # Always show table, otherwise it can't be Ajax-filtered
+                # @todo: need a better algorithm to determine total_rows
+                #        (which excludes URL filters), so that datatables
+                #        shows the right empty-message (ZeroRecords instead
+                #        of EmptyTable)
+                dtargs["dt_pagination"] = dt_pagination
+                dtargs["dt_pageLength"] = display_length
+                dtargs["dt_base_url"] = URL(c="default", f="index", args="approve")
+                dtargs["dt_permalink"] = URL(c="default", f="index", args="approve")
+                datatable = dt.html(totalrows,
+                                    displayrows,
+                                    id = list_id,
+                                    **dtargs)
+
+                output = {"items": datatable,
+                          "title": T("Test Stations to be Approved"),
+                          }
+
+                # Custom View
+                self._view(THEME, "approve_list.html")
+
+            elif representation == "aadata":
+
+                # Apply datatable filters
+                searchq, orderby, left = resource.datatable_filter(list_fields,
+                                                                   get_vars)
+                if searchq is not None:
+                    totalrows = resource.count()
+                    resource.add_filter(searchq)
+                else:
+                    totalrows = None
+
+                # Get a data table
+                if totalrows != 0:
+                    dt, displayrows = resource.datatable(fields = list_fields,
+                                                         start = start,
+                                                         limit = limit,
+                                                         left = left,
+                                                         orderby = orderby,
+                                                         distinct = distinct,
+                                                         )
+                else:
+                    dt, displayrows = None, 0
+                if totalrows is None:
+                    totalrows = displayrows
+
+                # Echo
+                draw = int(get_vars.get("draw", 0))
+
+                # Representation
+                if dt is not None:
+                    output = dt.json(totalrows,
+                                     displayrows,
+                                     list_id,
+                                     draw,
+                                     **dtargs)
+                else:
+                    output = '{"recordsTotal":%s,' \
+                             '"recordsFiltered":0,' \
+                             '"dataTable_id":"%s",' \
+                             '"draw":%s,' \
+                             '"data":[]}' % (totalrows, list_id, draw)
 
         return output
 
@@ -589,15 +751,17 @@ class register(S3CustomController):
 
             formvars = form.vars
 
-            # Add default organisation
-            #organisation_id = formvars.get("organisation_id")
-            #if not organisation_id:
-            #    formvars["organisation_id"] = settings.get_org_default_organisation
-
-            # Add HR type
-            #link_user_to = formvars.get("link_user_to")
-            #if link_user_to is None:
-            #    formvars["link_user_to"] = ["staff"]
+            # Add Organisation, if existing
+            organisation = formvars.get("organisation")
+            otable = s3db.org_organisation
+            org = db(otable.name == organisation).select(otable.id,
+                                                         limitby = (0, 1)
+                                                         ).first()
+            if org:
+                organisation_id = org.id
+                formvars["organisation_id"] = organisation_id
+            else:
+                organisation_id = None
 
             # Create the user record
             user_id = utable.insert(**utable._filter_fields(formvars, id=False))
@@ -617,11 +781,12 @@ class register(S3CustomController):
             record["consent"] = formvars.consent
 
             # Store Custom fields
-            custom = {"organisation": formvars.organisation,
-                      "location": formvars.location,
+            custom = {"location": formvars.location,
                       "office_phone": formvars.office_phone,
                       "opening_times": formvars.opening_times,
                       }
+            if not organisation_id:
+                custom["organisation"] = organisation
             record["custom"] = json.dumps(custom)
 
             temptable.insert(**record)
@@ -930,33 +1095,35 @@ class verify_email(S3CustomController):
             # Lookup the Approver(s)
             gtable = db.auth_group
             mtable = db.auth_membership
+            query = None
 
             # Is this an existing Org?
-            # Get custom field data from DB
-            temptable = s3db.auth_user_temp
-            record = db(temptable.user_id == user_id).select(temptable.custom,
-                                                             limitby = (0, 1),
-                                                             ).first()
-            try:
-                custom = json.loads(record.custom)
-            except JSONERRORS:
-                custom = {}
-
-            query = None
-            org_name = custom.get("organisation")
-            if org_name:
+            organisation_id = user.organisation_id
+            if organisation_id:
                 otable = s3db.org_organisation
-                org = db(otable.name == org_name).select(otable.pe_id,
-                                                         limitby = (0, 1)
-                                                         ).first()
+                org = db(otable.id == organisation_id).select(otable.name,
+                                                              otable.pe_id,
+                                                              limitby = (0, 1)
+                                                              ).first()
                 if org:
-                    # => send to ORG_ADMIN
+                    org_name = org.name
+                    # send to ORG_ADMIN
                     query = (gtable.uuid == "ORG_ADMIN") & \
                             (mtable.group_id == gtable.id) & \
                             (mtable.pe_id == org.pe_id) & \
                             (mtable.user_id == utable.id)
 
             if not query:
+                # Read org_name from auth_user_temp
+                ttable= s3db.auth_user_temp
+                temp = db(ttable.user_id == user_id).select(ttable.custom,
+                                                            limitby = (0, 1)
+                                                            ).first()
+                try:
+                    custom = json.loads(temp.custom)
+                except JSONERRORS:
+                    custom = {}
+                org_name = custom.get("organisation")
                 # send to ORG_GROUP_ADMIN(s) for "COVID-19 Test Stations"
                 ogtable = s3db.org_group
                 query = (gtable.uuid == "ORG_GROUP_ADMIN") & \

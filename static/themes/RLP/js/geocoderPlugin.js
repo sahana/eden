@@ -91,10 +91,10 @@ $(document).ready(function(){
                             if (level) {
                                 if (pending) {
                                     pending = pending.then(function() {
-                                        return self.lxSelect(index, level);
+                                        return self.lxSelect(index + 1, level);
                                     });
                                 } else {
-                                    pending = self.lxSelect(index, level);
+                                    pending = self.lxSelect(index + 1, level);
                                 }
                             }
                         });
