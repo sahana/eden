@@ -424,6 +424,73 @@ def config(settings):
         pass
 
     # -------------------------------------------------------------------------
+    def customise_org_facility_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm, S3SQLInlineLink, \
+                       S3LocationFilter, S3TextFilter
+
+        text_fields = ["name",
+                       #"code",
+                       "comments",
+                       "organisation_id$name",
+                       "organisation_id$acronym",
+                       "location_id$L1",
+                       "location_id$L2",
+                       "location_id$L3",
+                       "location_id$L4",
+                       ]
+
+        filter_widgets = [
+            S3TextFilter(text_fields,
+                         label = T("Search"),
+                         #_class = "filter-search",
+                         ),
+            S3LocationFilter("location_id",
+                             #label = T("Location"),
+                             levels = ("L1", "L2", "L3", "L4"),
+                             ),
+            ]
+
+        crud_fields = ["name",
+                       S3SQLInlineLink(
+                              "facility_type",
+                              label = T("Facility Type"),
+                              field = "facility_type_id",
+                              widget = "groupedopts",
+                              cols = 3,
+                        ),
+                       "organisation_id",
+                       "location_id",
+                       (T("Telephone"), "phone1"),
+                       (T("Opening Hours"), "opening_times"),
+                       "obsolete",
+                       "comments",
+                       ]
+
+        list_fields = ["name",
+                       #"site_facility_type.facility_type_id",
+                       "location_id$L1",
+                       "location_id$L2",
+                       "location_id$L3",
+                       "location_id$L4",
+                       "location_id$addr_street",
+                       "location_id$addr_postcode",
+                       (T("Telephone"), "phone1"),
+                       (T("Opening Hours"), "opening_times"),
+                       "organisation_id",
+                       #"obsolete",
+                       #"comments",
+                       ]
+
+        current.s3db.configure(tablename,
+                               crud_form = S3SQLCustomForm(*crud_fields),
+                               filter_widgets = filter_widgets,
+                               list_fields = list_fields,
+                               )
+
+    settings.customise_org_facility_resource = customise_org_facility_resource
+
+    # -------------------------------------------------------------------------
     def customise_org_facility_controller(**attr):
 
         s3 = current.response.s3
@@ -431,7 +498,7 @@ def config(settings):
         # Load model for default CRUD strings
         current.s3db.table("org_facility")
 
-        s3.crud_strings.org_facility.title_map = T("Find Test Station")
+        s3.crud_strings.org_facility.title_list = T("Find Test Station")
 
         # Custom prep
         standard_prep = s3.prep
@@ -439,52 +506,15 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
-
-            if not r.component:
-
-                from s3 import S3SQLCustomForm, S3SQLInlineLink, \
-                               S3LocationFilter, S3TextFilter
-
-                text_fields = ["name",
-                               #"code",
-                               "comments",
-                               "organisation_id$name",
-                               "organisation_id$acronym",
-                               "location_id$L1",
-                               "location_id$L2",
-                               "location_id$L3",
-                               "location_id$L4",
-                               ]
-
-                filter_widgets = [
-                    S3TextFilter(text_fields,
-                                 label = T("Search"),
-                                 #_class = "filter-search",
-                                 ),
-                    S3LocationFilter("location_id",
-                                     #label = T("Location"),
-                                     levels = ("L1", "L2", "L3", "L4"),
-                                     ),
-                    ]
-
-                crud_fields = ["name",
-                               S3SQLInlineLink(
-                                      "facility_type",
-                                      label = T("Facility Type"),
-                                      field = "facility_type_id",
-                                      widget = "groupedopts",
-                                      cols = 3,
-                                ),
-                               "organisation_id",
-                               "location_id",
-                               (T("Telephone"), "phone1",),
-                               (T("Opening Hours"), "opening_times"),
-                               "obsolete",
-                               "comments",
-                               ]
-                r.resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
-                                     filter_widgets = filter_widgets,
-                                     )
+            settings.ui.summary = ({"name": "map",
+                                    "label": "Map",
+                                    "widgets": [{"method": "map", "ajax_init": True}],
+                                    },
+                                   {"name": "table",
+                                    "label": "Table",
+                                    "widgets": [{"method": "datatable"}]
+                                    },
+                                   )
 
             return result
         s3.prep = prep

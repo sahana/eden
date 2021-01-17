@@ -44,7 +44,7 @@ class S3MainMenu(default.S3MainMenu):
                    restrict = ("ORG_GROUP_ADMIN", "ORG_ADMIN"),
                    ),
                 MM("Find Test Station",
-                   c = "org", f = "facility", m = "map",
+                   c = "org", f = "facility", m = "summary",
                    ),
                 MM("Register Test Station",
                    c = "default", f = "index", args = ["register"],
