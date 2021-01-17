@@ -2061,6 +2061,7 @@
 'Find Dead Body Report': 'Suche Leichenbericht',
 'Find Hospital': 'Krankenhaus finden',
 'Find Person Record': 'Personendatensatz finden',
+'Find Test Station': 'Teststelle finden',
 'Find Volunteers': 'Freiwillige finden',
 'Find a Person Record': 'Suche einen Personendatensatz',
 'Find': 'Suchen',
@@ -2564,7 +2565,7 @@
 'Is this a strict hierarchy?': 'Ist dies eine strenge Hierarchie?',
 'Isle of Man': 'Insel Man',
 'Issued On': 'Ausgegeben am',
-'Issued##fin': 'Ausgegeben',
+'Issued##fin': 'Ausgestellt',
 'Issuers##fin': 'Ausgeber',
 'Issuing Authority': 'Ausstellende Behörde',
 'It captures not only the places where they are active, but also captures information on the range of projects they are providing in each area.': 'Es erfasst nicht nur die Orte wo sie aktiv sind, sondern erfasst auch Informationen über den Umfang der Projekte die sie im jeweiligen Gebiet durchführen.',
@@ -5843,5 +5844,4 @@
 'xlwt module not available within the running Python - this needs installing for XLS output!': 'xlwt Modul nicht verfügbar im Rahmen der laufenden Python Umgebung - das muss installiert werden für XLS Ausgabe!',
 'yes': 'ja',
 'Åland Islands': 'Ålandinseln',
-'Find Test Station': 'Teststelle finden',
 }

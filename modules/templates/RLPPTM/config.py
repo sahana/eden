@@ -389,6 +389,10 @@ def config(settings):
                     field.default = rows.first().pe_id
                     field.readable = field.writable = False
 
+            field = table.balance
+            field.label = T("Status")
+            field.represent = lambda v: T("Issued##fin") if v > 0 else T("Redeemed##fin")
+
             if r.interactive:
 
                 # Hide valid_until from create-form (will be set onaccept)
