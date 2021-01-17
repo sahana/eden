@@ -13,6 +13,7 @@ from gluon import current, URL, A, DIV, TAG
 from gluon.storage import Storage
 
 from s3 import IS_ONE_OF, s3_str
+from s3dal import original_tablename
 
 from .rlpgeonames import rlp_GeoNames
 
@@ -163,16 +164,57 @@ def config(settings):
     def rlpptm_realm_entity(table, row):
         """
             Assign a Realm Entity to records
-
-            TODO
         """
 
-        #db = current.db
-        #s3db = current.s3db
+        db = current.db
+        s3db = current.s3db
 
-        #tablename = original_tablename(table)
+        realm_entity = 0 # = use default
+        tablename = original_tablename(table)
 
-        realm_entity = 0
+        #if tablename in ("org_group",
+        #                 "org_organisation",
+        #                 "org_facility",
+        #                 "org_office",
+        #                 ):
+        #    # These entities own themselves by default, and form
+        #    # a OU hierarchy (default ok)
+        #    realm_entity = 0
+        #
+        #elif tablename == "pr_person":
+        #
+        #    # Persons are owned by the org employing them (default ok)
+        #    realm_entity = 0
+        #
+        #elif tablename == "fin_voucher_program":
+        #
+        #    # Voucher programs are owned by the organisation managing
+        #    # them (default ok)
+        #    realm_entity = 0
+        #
+        #elif tablename == "fin_voucher":
+        #
+        #    # Vouchers are owned by the issuer PE (default ok)
+        #    realm_entity = 0
+        #
+        #elif tablename == "fin_voucher_debit":
+        #
+        #    # Debits are owned by the provider PE (default ok)
+        #    realm_entity = 0
+        #
+        if tablename == "fin_voucher_transaction":
+
+            # Vouchers inherit the realm-entity from the program
+            table = s3db.table(tablename)
+            ptable = s3db.fin_voucher_program
+            query = (table._id == row.id) & \
+                    (ptable.id == table.program_id)
+            program = db(query).select(ptable.realm_entity,
+                                       limitby = (0, 1),
+                                       ).first()
+            if program:
+                realm_entity = program.realm_entity
+
 
         return realm_entity
 
@@ -317,13 +359,13 @@ def config(settings):
                 programs = None
 
             resource = r.resource
+            table = resource.table
+
             if not programs or not org_ids and not multiple:
                 # User is not permitted to issue vouchers for any programs/issuers
                 resource.configure(insertable = False)
 
             else:
-                table = resource.table
-
                 # Limit the program selector to permitted+active programs
                 field = table.program_id
                 ptable = s3db.fin_voucher_program
