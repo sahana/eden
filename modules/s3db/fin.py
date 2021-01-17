@@ -33,6 +33,8 @@ __all__ = ("FinExpensesModel",
            "FinProductModel",
            "FinSubscriptionModel",
            "fin_rheader",
+           "fin_voucher_permitted_issuers",
+           "fin_voucher_permitted_programs",
            )
 
 from gluon import *
@@ -2035,5 +2037,73 @@ class fin_VoucherProgram(object):
         s3db.onaccept(table, transaction, method="create")
 
         return True
+
+# =============================================================================
+def fin_voucher_permitted_issuers():
+    """
+        Organisations the current user can issue vouchers for
+
+        @returns: tuple (multiple, org_ids, pe_ids), where:
+
+                    multiple (boolean) - user can issue for multiple orgs
+                    org_ids (list) - permitted issuer organisations
+                    pe_ids (list) - the corresponding pe_ids
+
+        @note: multiple=True and org_ids=[] means the user can issue
+               vouchers for all organisations (site-wide role)
+    """
+
+    realms = current.auth.permission.permitted_realms("fin_voucher", "create")
+    if realms is None:
+        # Site-wide permission (any organisation)
+        multiple = True
+        org_ids = []
+        pe_ids = []
+    else:
+        # Limited permission (only some or no organisations)
+        otable = current.s3db.org_organisation
+        query = (otable.pe_id.belongs(realms)) & \
+                (otable.deleted == False)
+        rows = current.db(query).select(otable.id, otable.pe_id)
+
+        multiple = len(rows) > 1
+
+        org_ids, pe_ids = [], []
+        for row in rows:
+            org_ids.append(row.id)
+            pe_ids.append(row.pe_id)
+
+    return multiple, org_ids, pe_ids
+
+# =============================================================================
+def fin_voucher_permitted_programs(issuers):
+    """
+        Programs the issuer(s) can issue vouchers for
+
+        @param issuers: list of organisation IDs (empty list for any issuer)
+
+        @returns: list of program IDs
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    if issuers is None:
+        return []
+
+    ltable = s3db.org_group_membership
+    query = (ltable.deleted == False)
+    if issuers:
+        query = ltable.organisation_id.belongs(issuers) & query
+
+    today = current.request.utcnow.date()
+
+    ptable = s3db.fin_voucher_program
+    left = ptable.on((ptable.issuers_id == ltable.group_id) & \
+                     (ptable.status == "ACTIVE") & \
+                     ((ptable.end_date == None) | (ptable.end_date >= today)))
+    rows = db(query).select(ptable.id, left = left)
+
+    return [row.id for row in rows]
 
 # END =========================================================================

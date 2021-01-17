@@ -9,7 +9,7 @@
 
 from collections import OrderedDict
 
-from gluon import current, URL
+from gluon import current, URL, DIV
 from gluon.storage import Storage
 
 from s3 import IS_ONE_OF
@@ -255,6 +255,23 @@ def config(settings):
     settings.customise_cms_post_controller = customise_cms_post_controller
 
     # -------------------------------------------------------------------------
+    def customise_fin_voucher_resource(r, tablename):
+
+        s3db = current.s3db
+
+        table = s3db.fin_voucher
+
+        field = table.comments
+        field.label = T("Memoranda")
+        field.comment = DIV(_class="tooltip",
+                            _title="%s|%s" % (T("Memoranda"),
+                                              T("Notes of the Issuer"),
+                                              ),
+                            )
+
+    settings.customise_fin_voucher_resource = customise_fin_voucher_resource
+
+    # -------------------------------------------------------------------------
     def customise_fin_voucher_controller(**attr):
 
         s3 = current.response.s3
@@ -269,17 +286,17 @@ def config(settings):
             s3db = current.s3db
 
             # Check which programs and organisations the user can issue vouchers for
-            from .helpers import rlpptm_voucher_issue_multiple_orgs, \
-                                 rlpptm_voucher_issue_programs
-            multiple, org_ids, pe_ids = rlpptm_voucher_issue_multiple_orgs()
+            multiple, org_ids, pe_ids = s3db.fin_voucher_permitted_issuers()
             if org_ids or multiple:
-                programs = rlpptm_voucher_issue_programs(org_ids)
+                programs = s3db.fin_voucher_permitted_programs(org_ids)
             else:
                 programs = None
 
             resource = r.resource
             if not programs or not org_ids and not multiple:
+                # User is not permitted to issue vouchers for any programs/issuers
                 resource.configure(insertable = False)
+
             else:
                 table = resource.table
 
@@ -311,21 +328,25 @@ def config(settings):
                         field.default = rows.first().pe_id
                         field.readable = field.writable = False
 
-                if r.interactive:
+            if r.interactive:
 
-                    field = table.valid_until
-                    field.readable = bool(r.record)
-                    field.writable = False
+                # Hide valid_until from create-form (will be set onaccept)
+                field = table.valid_until
+                field.readable = bool(r.record)
+                field.writable = False
 
-                list_fields = ["program_id",
-                               "signature",
-                               "balance",
-                               "date",
-                               "valid_until",
-                               "comments",
-                               ]
-                resource.configure(list_fields = list_fields,
-                                   )
+            list_fields = ["program_id",
+                            "signature",
+                            #"bearer_dob",
+                            "balance",
+                            "date",
+                            "valid_until",
+                            "comments",
+                            ]
+            if settings.get_fin_voucher_personalize() == "dob":
+                list_fields.insert(2, "bearer_dob")
+            resource.configure(list_fields = list_fields,
+                                )
 
             return result
         s3.prep = prep
