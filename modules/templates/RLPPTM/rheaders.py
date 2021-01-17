@@ -104,9 +104,10 @@ def rlpptm_org_rheader(r, tabs=None):
                                          limitby = (0, 1)
                                          ).first()
                 if group:
-                    if group.name == "COVID-19 Test Stations":
+                    from .config import TESTSTATIONS, SCHOOLS
+                    if group.name == TESTSTATIONS:
                         sites_tab = (T("Test Stations"), "facility")
-                    elif group.name == "Schools":
+                    elif group.name == SCHOOLS:
                         sites_tab = (T("Administrative Offices"), "office")
                         if current.auth.s3_has_role("ORG_GROUP_ADMIN"):
                             invite_tab = (T("Invite"), "invite")

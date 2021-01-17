@@ -17,6 +17,9 @@ from s3 import IS_ONE_OF, s3_str
 from .rlpgeonames import rlp_GeoNames
 
 LSJV = "Landesamt für Soziales, Jugend und Versorgung"
+SCHOOLS = "Schulen"
+TESTSTATIONS = "Teststellen"
+
 ALLOWED_FORMATS = ("html", "iframe", "popup", "aadata", "json", "xls", "pdf")
 
 # =============================================================================
@@ -179,7 +182,7 @@ def config(settings):
     def customise_auth_user_resource(r, tablename):
         """
             Configure custom approvals function
-    
+
         """
 
         def approve_user(r, **args):
@@ -196,19 +199,19 @@ def config(settings):
                 org_group = db(ogtable.id == org_group_id).select(ogtable.name,
                                                                   limitby = (0, 1)
                                                                   ).first()
-                if org_group and org_group.name == "COVID-19 Test Stations":
+                if org_group and org_group.name == TESTSTATIONS:
                     # Custom Approval process
                     redirect(URL(c= "default", f="index", args=["approve", r.id]))
-                
+
             # Default Approval
-            auth.s3_approve_user(user)
-            session.confirmation = T("User Account has been Approved")
+            current.auth.s3_approve_user(user)
+            current.session.confirmation = T("User Account has been Approved")
             redirect(URL(args=[r.id, "roles"]))
 
         current.s3db.configure("auth_user",
                                approve_user = approve_user,
                                )
-    
+
     settings.customise_auth_user_resource = customise_auth_user_resource
 
     # -------------------------------------------------------------------------

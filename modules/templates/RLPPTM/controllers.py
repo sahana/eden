@@ -9,10 +9,11 @@ from gluon import A, BR, CRYPT, DIV, Field, FORM, H3, INPUT, \
 
 from gluon.storage import Storage
 
-from s3 import IS_PHONE_NUMBER_MULTI, JSONERRORS, S3CRUD, S3CustomController, \
+from s3 import FS, IS_PHONE_NUMBER_MULTI, JSONERRORS, S3CRUD, S3CustomController, \
                S3LocationSelector, S3Represent, S3Request, s3_get_extension, \
                s3_mark_required, s3_str
 
+from .config import TESTSTATIONS
 from .notifications import formatmap
 
 THEME = "RLP"
@@ -257,10 +258,10 @@ class approve(S3CustomController):
         session = current.session
 
         ogtable = s3db.org_group
-        org_group = db(ogtable.name == "COVID-19 Test Stations").select(ogtable.id,
-                                                                        ogtable.pe_id,
-                                                                        limitby = (0, 1)
-                                                                        ).first()
+        org_group = db(ogtable.name == TESTSTATIONS).select(ogtable.id,
+                                                            ogtable.pe_id,
+                                                            limitby = (0, 1)
+                                                            ).first()
 
         has_role = auth.s3_has_role
         if has_role("ORG_GROUP_ADMIN",
@@ -413,7 +414,7 @@ class approve(S3CustomController):
                     update_super(otable, org)
                     set_record_owner(otable, org, owned_by_user=user_id)
                     s3db_onaccept(otable, org, method="create")
-                    # Link to Org_Group: "COVID-19 Test Stations"
+                    # Link to Org_Group TESTSTATIONS
                     s3db.org_group_membership.insert(group_id = org_group_id,
                                                      organisation_id = organisation_id,
                                                      )
@@ -505,14 +506,14 @@ class approve(S3CustomController):
                 otable = s3db.org_organisation
                 orgs = db(otable.pe_id.belongs(pe_id)).select(otable.id)
                 organisation_id = [org.id for org in orgs]
-                filter = (utable.organisation_id.belongs(organisation_id))
+                accounts_filter = FS("organisation_id").belongs(organisation_id)
             else:
                 # Filter to all for the ORG_GROUP
-                filter = (utable.org_group_id == org_group_id)
+                accounts_filter = FS("org_group_id") == org_group_id
             # Only include pending accounts
-            filter &= (utable.registration_key == "pending")
-                
-            resource = s3db.resource("auth_user", filter=filter)
+            accounts_filter &= FS("registration_key") == "pending"
+
+            resource = s3db.resource("auth_user", filter=accounts_filter)
 
             list_id = "datatable"
 
@@ -779,9 +780,9 @@ class register(S3CustomController):
 
             # Set org_group
             ogtable = s3db.org_group
-            org_group = db(ogtable.name == "COVID-19 Test Stations").select(ogtable.id,
-                                                                            limitby = (0, 1)
-                                                                            ).first()
+            org_group = db(ogtable.name == TESTSTATIONS).select(ogtable.id,
+                                                                limitby = (0, 1)
+                                                                ).first()
             db(utable.id == user_id).update(org_group_id = org_group.id)
 
             # Save temporary user fields in s3db.auth_user_temp
@@ -1134,12 +1135,12 @@ class verify_email(S3CustomController):
                 except JSONERRORS:
                     custom = {}
                 org_name = custom.get("organisation")
-                # send to ORG_GROUP_ADMIN(s) for "COVID-19 Test Stations"
+                # send to ORG_GROUP_ADMIN(s) for TESTSTATIONS
                 ogtable = s3db.org_group
                 query = (gtable.uuid == "ORG_GROUP_ADMIN") & \
                         (mtable.group_id == gtable.id) & \
                         (mtable.pe_id == ogtable.pe_id) & \
-                        (ogtable.name == "COVID-19 Test Stations") & \
+                        (ogtable.name == TESTSTATIONS) & \
                         (mtable.user_id == utable.id)
 
             approvers = db(query).select(utable.email,
