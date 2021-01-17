@@ -687,17 +687,17 @@ class FinVoucherModel(S3Model):
                     field = "bearer_pin"
                     error = T("Incorrect PIN")
 
-            # Verify program status
-            elif program.status != "ACTIVE":
-                error = T("Voucher program suspended")
-            elif program.end_date and program.end_date < today:
-                error = T("Voucher program has ended")
-
-            # Verify voucher status
-            elif valid_until and valid_until < today:
-                error = T("Voucher expired")
-            elif voucher.balance <= 0:
-                error = T("Voucher credit exhausted")
+            if not error:
+                # Verify program status
+                if program.status != "ACTIVE":
+                    error = T("Voucher program suspended")
+                elif program.end_date and program.end_date < today:
+                    error = T("Voucher program has ended")
+                # Verify voucher status
+                elif valid_until and valid_until < today:
+                    error = T("Voucher expired")
+                elif voucher.balance <= 0:
+                    error = T("Voucher credit exhausted")
 
         if error:
             form.errors[field] = error

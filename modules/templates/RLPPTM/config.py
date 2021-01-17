@@ -328,6 +328,11 @@ def config(settings):
                         field.default = rows.first().pe_id
                         field.readable = field.writable = False
 
+                if r.representation == "card":
+                    # Configure ID card layout
+                    from .vouchers import VoucherCardLayout
+                    resource.configure(pdf_card_layout = VoucherCardLayout)
+
             if r.interactive:
 
                 # Hide valid_until from create-form (will be set onaccept)
@@ -495,7 +500,7 @@ def config(settings):
                                    "phone",
                                    #"website",
                                    #"year",
-                                   #"logo",
+                                   "logo",
                                    "comments",
                                    ]
                     r.resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
