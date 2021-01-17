@@ -176,19 +176,40 @@ def config(settings):
     settings.auth.realm_entity = rlpptm_realm_entity
 
     # -------------------------------------------------------------------------
-    #def customise_auth_user_resource(r, tablename):
-    #    """
-    #        Configure custom register-onaccept
-    #
-    #        TODO Differential registration processes for Bearer/Provider orgs
-    #    """
-    #
-    #    from .controllers import register
-    #    current.s3db.configure("auth_user",
-    #                           register_onaccept = register.register_onaccept,
-    #                           )
-    #
-    #settings.customise_auth_user_resource = customise_auth_user_resource
+    def customise_auth_user_resource(r, tablename):
+        """
+            Configure custom approvals function
+    
+        """
+
+        def approve_user(r, **args):
+
+            from gluon import redirect
+
+            db = current.db
+            user = db(db.auth_user.id == r.id).select(limitby = (0, 1)
+                                                      ).first()
+            org_group_id = user.org_group_id
+            if org_group_id:
+                # Check if this is a COVID-19 Test Station
+                ogtable = current.s3db.org_group
+                org_group = db(ogtable.id == org_group_id).select(ogtable.name,
+                                                                  limitby = (0, 1)
+                                                                  ).first()
+                if org_group and org_group.name == "COVID-19 Test Stations":
+                    # Custom Approval process
+                    redirect(URL(c= "default", f="index", args=["approve", r.id]))
+                
+            # Default Approval
+            auth.s3_approve_user(user)
+            session.confirmation = T("User Account has been Approved")
+            redirect(URL(args=[r.id, "roles"]))
+
+        current.s3db.configure("auth_user",
+                               approve_user = approve_user,
+                               )
+    
+    settings.customise_auth_user_resource = customise_auth_user_resource
 
     # -------------------------------------------------------------------------
     def customise_cms_post_resource(r, tablename):

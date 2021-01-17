@@ -159,12 +159,18 @@ def user():
             session.error = T("Can only approve 1 record at a time!")
             redirect(URL(args=[]))
 
-        user = db(table.id == r.id).select(limitby = (0, 1)
-                                           ).first()
-        auth.s3_approve_user(user)
+        # Call Custom Hook, if present
+        approve_user = s3db.get_config("auth_user", "approve_user")
+        if callable(approve_user):
+            approve_user(r, **args)
+        else:
+            # Default Approval
+            user = db(table.id == r.id).select(limitby = (0, 1)
+                                               ).first()
+            auth.s3_approve_user(user)
 
-        session.confirmation = T("User Account has been Approved")
-        redirect(URL(args=[r.id, "roles"]))
+            session.confirmation = T("User Account has been Approved")
+            redirect(URL(args=[r.id, "roles"]))
 
     def link_user(r, **args):
         if not r.id:
