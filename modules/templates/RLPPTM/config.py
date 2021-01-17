@@ -152,6 +152,9 @@ def config(settings):
     settings.org.default_organisation = LSJV
 
     # -------------------------------------------------------------------------
+    settings.fin.voucher_personalize = "dob"
+
+    # -------------------------------------------------------------------------
     # Realm Rules
     #
     def rlpptm_realm_entity(table, row):

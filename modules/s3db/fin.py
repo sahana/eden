@@ -162,6 +162,7 @@ class FinVoucherModel(S3Model):
 
         db = current.db
         s3 = current.response.s3
+        settings = current.deployment_settings
 
         define_table = self.define_table
         crud_strings = s3.crud_strings
@@ -173,6 +174,10 @@ class FinVoucherModel(S3Model):
                                                      show_link = False,
                                                      show_type = False,
                                                      )
+
+        personalize = settings.get_fin_voucher_personalize()
+        bearer_dob = personalize == "dob"
+        bearer_pin = personalize == "pin"
 
         # -------------------------------------------------------------------------
         # Voucher Program
@@ -305,6 +310,18 @@ class FinVoucherModel(S3Model):
                            label = T("Voucher ID"),
                            writable = False,
                            ),
+                     s3_date("bearer_dob",
+                             label = T("Beneficiary Date of Birth"),
+                             readable = bearer_dob,
+                             writable = bearer_dob,
+                             empty = not bearer_dob,
+                             ),
+                     Field("bearer_pin",
+                           label = T("PIN"),
+                           readable = bearer_pin,
+                           writable = bearer_pin,
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(maxsize=10, minsize=4)] if bearer_pin else None,
+                           ),
                      Field("balance", "integer",
                            label = T("Balance##fin"),
                            default = 0,
@@ -373,6 +390,18 @@ class FinVoucherModel(S3Model):
                            label = T("Voucher ID"),
                            requires = IS_ONE_OF(db, "fin_voucher.signature"),
                            widget = S3QRInput(),
+                           ),
+                     s3_date("bearer_dob",
+                             label = T("Beneficiary Date of Birth"),
+                             readable = bearer_dob,
+                             writable = bearer_dob,
+                             empty = not bearer_dob,
+                             ),
+                     Field("bearer_pin",
+                           label = T("PIN"),
+                           readable = bearer_pin,
+                           writable = bearer_pin,
+                           requires = IS_NOT_EMPTY() if bearer_pin else None,
                            ),
                      s3_date(default = "now",
                              label = T("Date Effected"),
@@ -598,6 +627,7 @@ class FinVoucherModel(S3Model):
         """
             Validate debit:
             - identify the voucher to debit
+            - verify bearer identity features, program and voucher status
         """
 
         T = current.T
@@ -612,35 +642,63 @@ class FinVoucherModel(S3Model):
         error = None
 
         s3db = current.s3db
+        settings = current.deployment_settings
 
+        # Find the voucher
         vtable = s3db.fin_voucher
         ptable = s3db.fin_voucher_program
         join = ptable.on(ptable.id == vtable.program_id)
         query = (vtable.signature == signature) & \
                 (vtable.deleted == False)
         row = current.db(query).select(vtable.id,
+                                       vtable.bearer_dob,
+                                       vtable.bearer_pin,
                                        vtable.balance,
                                        vtable.valid_until,
                                        ptable.status,
+                                       ptable.end_date,
                                        join = join,
                                        limitby = (0, 1),
                                        ).first()
 
+        field = "signature"
         if not row:
             error = T("Invalid voucher")
         else:
+            program = row.fin_voucher_program
             voucher = row.fin_voucher
+
+            today = current.request.utcnow.date()
             valid_until = voucher.valid_until
 
-            if row.fin_voucher_program.status != "ACTIVE":
-                error = T("Voucher suspended")
-            elif valid_until and valid_until < current.request.utcnow.date():
+            personalize = settings.get_fin_voucher_personalize()
+
+            # Verify bearer identity feature (if required)
+            if personalize == "dob" and voucher.bearer_dob:
+                bearer_dob = form_vars.get("bearer_dob")
+                if bearer_dob != voucher.bearer_dob:
+                    field = "bearer_dob"
+                    error = T("Incorrect Date of Birth")
+            elif personalize == "pin" and voucher.bearer_pin:
+                bearer_pin = form_vars.get("bearer_pin")
+                if bearer_pin != voucher.bearer_pin:
+                    field = "bearer_pin"
+                    error = T("Incorrect PIN")
+
+            # Verify program status
+            elif program.status != "ACTIVE":
+                error = T("Voucher program suspended")
+            elif program.end_date and program.end_date < today:
+                error = T("Voucher program has ended")
+
+            # Verify voucher status
+            elif valid_until and valid_until < today:
                 error = T("Voucher expired")
             elif voucher.balance <= 0:
                 error = T("Voucher credit exhausted")
 
         if error:
-            form.errors["signature"] = error
+            form.errors[field] = error
 
     # -------------------------------------------------------------------------
     @staticmethod

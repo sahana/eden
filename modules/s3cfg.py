@@ -1299,6 +1299,14 @@ class S3Config(Storage):
         """
         return self.__lazy("fin", "currency_default", default="USD")
 
+    def get_fin_voucher_personalize(self):
+        """
+            Bearer identification feature to use for vouchers
+            - dob => bearer date of birth
+            - pin => PIN code
+        """
+        return self.fin.get("voucher_personalize")
+
     # -------------------------------------------------------------------------
     # GIS (Map) Settings
     #
