@@ -26,6 +26,8 @@ def rlpptm_fin_rheader(r, tabs=None):
 
     rheader = None
     rheader_fields = []
+    rheader_title = None
+    img = None
 
     if record:
         T = current.T

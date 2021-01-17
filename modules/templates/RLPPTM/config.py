@@ -352,16 +352,12 @@ def config(settings):
             s3db = current.s3db
 
             # Check which programs and organisations the user can issue vouchers for
-            multiple, org_ids, pe_ids = s3db.fin_voucher_permitted_issuers()
-            if org_ids or multiple:
-                programs = s3db.fin_voucher_permitted_programs(org_ids)
-            else:
-                programs = None
+            program_ids, org_ids, pe_ids = s3db.fin_voucher_permitted_programs(mode="issuer")
 
             resource = r.resource
             table = resource.table
 
-            if not programs or not org_ids and not multiple:
+            if not program_ids or not org_ids:
                 # User is not permitted to issue vouchers for any programs/issuers
                 resource.configure(insertable = False)
 
@@ -369,7 +365,7 @@ def config(settings):
                 # Limit the program selector to permitted+active programs
                 field = table.program_id
                 ptable = s3db.fin_voucher_program
-                dbset = db(ptable.id.belongs(programs))
+                dbset = db(ptable.id.belongs(program_ids))
                 field.requires = IS_ONE_OF(dbset, "fin_voucher_program.id",
                                            field.represent,
                                            sort = True,
@@ -380,28 +376,18 @@ def config(settings):
                     field.default = rows.first().id
                     field.writable = False
 
-                if pe_ids:
-                    # Limit the issuer selector to permitted entities
-                    etable = s3db.pr_pentity
-                    field = table.pe_id
-                    dbset = db(etable.pe_id.belongs(pe_ids))
-                    field.requires = IS_ONE_OF(dbset, "pr_pentity.pe_id",
-                                               field.represent,
-                                               )
-                    # Hide the issuer selector if only one entity can be chosen
-                    rows = dbset.select(etable.pe_id, limitby=(0, 2))
-                    if len(rows) == 1:
-                        field.default = rows.first().pe_id
-                        field.readable = field.writable = False
-
-                if r.representation == "card":
-                    # Configure ID card layout
-                    from .vouchers import VoucherCardLayout
-                    resource.configure(pdf_card_layout = VoucherCardLayout,
-                                       pdf_card_suffix = lambda record: \
-                                           s3_str(record.signature) \
-                                           if record and record.signature else None,
-                                       )
+                # Limit the issuer selector to permitted entities
+                etable = s3db.pr_pentity
+                field = table.pe_id
+                dbset = db(etable.pe_id.belongs(pe_ids))
+                field.requires = IS_ONE_OF(dbset, "pr_pentity.pe_id",
+                                            field.represent,
+                                            )
+                # Hide the issuer selector if only one entity can be chosen
+                rows = dbset.select(etable.pe_id, limitby=(0, 2))
+                if len(rows) == 1:
+                    field.default = rows.first().pe_id
+                    field.readable = field.writable = False
 
             if r.interactive:
 
@@ -410,6 +396,16 @@ def config(settings):
                 field.readable = bool(r.record)
                 field.writable = False
 
+            elif r.representation == "card":
+                # Configure ID card layout
+                from .vouchers import VoucherCardLayout
+                resource.configure(pdf_card_layout = VoucherCardLayout,
+                                    pdf_card_suffix = lambda record: \
+                                        s3_str(record.signature) \
+                                        if record and record.signature else None,
+                                    )
+
+            # Custom list fields
             list_fields = ["program_id",
                             "signature",
                             #"bearer_dob",
@@ -465,8 +461,74 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_fin_voucher_debit_controller(**attr):
 
-        # TODO
-        pass
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            db = current.db
+            s3db = current.s3db
+
+            # Check which programs and organisations the user can accept vouchers for
+            program_ids, org_ids, pe_ids = s3db.fin_voucher_permitted_programs(mode="provider")
+
+            resource = r.resource
+            table = resource.table
+
+            if not program_ids or not org_ids:
+                # User is not permitted to accept vouchers for any programs/providers
+                resource.configure(insertable = False)
+
+            else:
+                # Limit the program selector to permitted programs
+                field = table.program_id
+                ptable = s3db.fin_voucher_program
+                dbset = db(ptable.id.belongs(program_ids))
+                field.requires = IS_ONE_OF(dbset, "fin_voucher_program.id",
+                                           field.represent,
+                                           sort = True,
+                                           )
+                # Hide the program selector if only one program can be chosen
+                rows = dbset.select(ptable.id, limitby=(0, 2))
+                if len(rows) == 1:
+                    field.default = rows.first().id
+                    field.writable = False
+
+                # Limit the provider selector to permitted entities
+                etable = s3db.pr_pentity
+                field = table.pe_id
+                dbset = db(etable.pe_id.belongs(pe_ids))
+                field.requires = IS_ONE_OF(dbset, "pr_pentity.pe_id",
+                                           field.represent,
+                                           )
+                # Hide the provider selector if only one entity can be chosen
+                rows = dbset.select(etable.pe_id, limitby=(0, 2))
+                if len(rows) == 1:
+                    field.default = rows.first().pe_id
+                    field.readable = field.writable = False
+
+            # Custom list fields
+            list_fields = [(T("Date"), "date"),
+                           "program_id",
+                           "voucher_id$signature",
+                           "comments", # TODO adapt label + tooltip analogous to voucher
+                           ]
+            resource.configure(list_fields = list_fields,
+                                )
+
+            return result
+        s3.prep = prep
+
+        # Custom rheader
+        from .rheaders import rlpptm_fin_rheader
+        attr["rheader"] = rlpptm_fin_rheader
+
+        return attr
+
+    settings.customise_fin_voucher_debit_controller = customise_fin_voucher_debit_controller
 
     # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
