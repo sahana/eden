@@ -227,6 +227,14 @@ def config(settings):
 
         """
 
+        auth = current.auth
+        has_role = auth.s3_has_role
+        if not has_role("ADMIN") and \
+           has_role("ORG_ADMIN"):
+            insertable = False
+        else:
+            insertable = True
+
         def approve_user(r, **args):
 
             from gluon import redirect
@@ -246,12 +254,13 @@ def config(settings):
                     redirect(URL(c= "default", f="index", args=["approve", r.id]))
 
             # Default Approval
-            current.auth.s3_approve_user(user)
+            auth.s3_approve_user(user)
             current.session.confirmation = T("User Account has been Approved")
             redirect(URL(args=[r.id, "roles"]))
 
         current.s3db.configure("auth_user",
                                approve_user = approve_user,
+                               insertable = insertable,
                                )
 
     settings.customise_auth_user_resource = customise_auth_user_resource

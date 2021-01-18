@@ -406,14 +406,15 @@ def user():
                                               )
                 else:
                     switch_view = ""
-                output["showadd_btn"] = DIV(crud_button(T("Create User"),
-                                                        _href = URL(args = ["create"]),
-                                                        ),
-                                            crud_button(T("Import Users"),
-                                                        _href = URL(args = ["import"]),
-                                                        ),
-                                            switch_view,
-                                            )
+                if not s3db.get_config("auth_user", "insertable") == False:
+                    output["showadd_btn"] = DIV(crud_button(T("Create User"),
+                                                            _href = URL(args = ["create"]),
+                                                            ),
+                                                crud_button(T("Import Users"),
+                                                            _href = URL(args = ["import"]),
+                                                            ),
+                                                switch_view,
+                                                )
                 return output
 
             # Assume formstyle callable
