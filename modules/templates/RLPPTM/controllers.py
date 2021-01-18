@@ -477,7 +477,7 @@ class approve(S3CustomController):
                 settings = current.deployment_settings
                 from .notifications import CMSNotifications
                 error = CMSNotifications.send(user.email,
-                                              "WelcomeMessageTeststation",
+                                              "WelcomeProvider",
                                               {"name": organisation or org.name,
                                                "homepage": settings.get_base_public_url(),
                                                "profile": URL("default", "person", host=True),
