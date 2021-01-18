@@ -233,8 +233,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                            ))
 
         org_menu(
-            M("Create", m="create", restrict="ORG_GROUP_ADMIN"),
-            M("My Organizations", vars={"mine": 1}, restrict="ORG_ADMIN")
+            M("My Organizations", vars={"mine": 1}, restrict="ORG_ADMIN"),
+            M("Create Organization", m="create", restrict="ORG_GROUP_ADMIN"),
             )
 
         return M(c="org")(

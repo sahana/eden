@@ -58,7 +58,7 @@ def config(settings):
     settings.auth.password_retrieval = True
 
     settings.auth.realm_entity_types = ("org_group", "org_organisation")
-    settings.auth.privileged_roles = {"PROGRAM_MANAGER": "PROGRAM_MANAGER",
+    settings.auth.privileged_roles = {"PROGRAM_MANAGER": "ORG_GROUP_ADMIN",
                                       "VOUCHER_ISSUER": "VOUCHER_ISSUER",
                                       "VOUCHER_PROVIDER": "VOUCHER_PROVIDER",
                                       }
