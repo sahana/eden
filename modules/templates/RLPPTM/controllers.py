@@ -263,9 +263,14 @@ class approve(S3CustomController):
                                                             limitby = (0, 1)
                                                             ).first()
 
+        try:
+            org_group_pe_id = org_group.pe_id
+        except:
+            RuntimeError("Cannot approve user account as Org Group '%s' is missing " % TESTSTATIONS)
+
         has_role = auth.s3_has_role
         if has_role("ORG_GROUP_ADMIN",
-                    for_pe = org_group.pe_id):
+                    for_pe = org_group_pe_id):
             ORG_ADMIN = False
         elif has_role("ORG_ADMIN"):
             ORG_ADMIN = True
@@ -783,7 +788,11 @@ class register(S3CustomController):
             org_group = db(ogtable.name == TESTSTATIONS).select(ogtable.id,
                                                                 limitby = (0, 1)
                                                                 ).first()
-            db(utable.id == user_id).update(org_group_id = org_group.id)
+            try:
+                org_group_id = org_group.id
+            except:
+                raise RuntimeError("Cannot register user account as Org Group '%s' is missing " % TESTSTATIONS)
+            db(utable.id == user_id).update(org_group_id = org_group_id)
 
             # Save temporary user fields in s3db.auth_user_temp
             temptable = s3db.auth_user_temp
@@ -1179,6 +1188,7 @@ Please go to %(url)s to approve this station."""
             # Restore language for UI
             T.force(session.s3.language)
 
+            result = None
             mailer = auth_settings.mailer
             if mailer.settings.server:
                 send_email = mailer.send
@@ -1188,9 +1198,6 @@ Please go to %(url)s to approve this station."""
                                         subject = subjects[language],
                                         message = messages[language]
                                         )
-            else:
-                # Email system not configured (yet)
-                result = None
 
             if result:
                 session = current.session
