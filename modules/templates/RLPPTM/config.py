@@ -38,6 +38,7 @@ def config(settings):
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "RLP"
+    settings.base.theme_layouts = "RLPPTM"
     # Custom Logo
     #settings.ui.menu_logo = "/%s/static/themes/<templatename>/img/logo.png" % current.request.application
 
@@ -229,11 +230,6 @@ def config(settings):
 
         auth = current.auth
         has_role = auth.s3_has_role
-        if not has_role("ADMIN") and \
-           has_role("ORG_ADMIN"):
-            insertable = False
-        else:
-            insertable = True
 
         def approve_user(r, **args):
 
@@ -260,7 +256,6 @@ def config(settings):
 
         current.s3db.configure("auth_user",
                                approve_user = approve_user,
-                               insertable = insertable,
                                )
 
     settings.customise_auth_user_resource = customise_auth_user_resource
@@ -410,7 +405,7 @@ def config(settings):
                 field.writable = False
 
                 # Filter Widgets
-                from s3 import S3DateFilter, S3OptionsFilter, S3TextFilter
+                from s3 import S3DateFilter, S3TextFilter
                 filter_widgets = [
                     S3TextFilter(["signature",
                                   "comments",
@@ -421,8 +416,6 @@ def config(settings):
                     S3DateFilter("date",
                                  ),
                     ]
-                # TODO add explicit program filter if the user can see
-                #      vouchers from more than one program
                 resource.configure(filter_widgets = filter_widgets,
                                    )
 
@@ -698,6 +691,7 @@ def config(settings):
             result = standard_prep(r) if callable(standard_prep) else True
 
             s3db = current.s3db
+            auth = current.auth
             #settings = current.deployment_settings
 
             # Add invite-method for ORG_GROUP_ADMIN role
@@ -712,7 +706,7 @@ def config(settings):
             mine = get_vars.get("mine")
             if mine == "1":
                 # Filter to managed orgs
-                managed_orgs = current.auth.get_managed_orgs()
+                managed_orgs = auth.get_managed_orgs()
                 if managed_orgs is True:
                     query = None
                 elif managed_orgs is None:
@@ -736,14 +730,7 @@ def config(settings):
                     from s3 import S3SQLCustomForm, \
                                    S3SQLInlineComponent, \
                                    S3SQLInlineLink
-                    crud_fields = [S3SQLInlineLink(
-                                        "group",
-                                        field = "group_id",
-                                        label = T("Organisation Group"),
-                                        multiple = False,
-
-                                        ),
-                                   "name",
+                    crud_fields = ["name",
                                    "acronym",
                                    # TODO Activate after correct type prepop
                                    #S3SQLInlineLink(
@@ -771,6 +758,15 @@ def config(settings):
                                    "logo",
                                    "comments",
                                    ]
+
+                    if auth.s3_has_role("ORG_GROUP_ADMIN"):
+                        crud_fields.insert(0, S3SQLInlineLink(
+                                                    "group",
+                                                    field = "group_id",
+                                                    label = T("Organisation Group"),
+                                                    multiple = False,
+                                                    ))
+
                     r.resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
                                          )
 
