@@ -39,12 +39,18 @@ class S3MainMenu(default.S3MainMenu):
         auth = current.auth
         has_role = auth.s3_has_role
 
+        is_org_group_admin = lambda i: not has_role("ADMIN") and \
+                                       has_role("ORG_GROUP_ADMIN")
         menu = [MM("Organizations",
                    c = "org", f = "organisation",
+                   vars = {"mine": 1} if not has_role("ORG_GROUP_ADMIN") else None,
                    restrict = ("ORG_GROUP_ADMIN", "ORG_ADMIN"),
                    ),
                 MM("Find Test Station",
                    c = "org", f = "facility", m = "summary",
+                   ),
+                MM("Pending Approvals", c="default", f="index", args=["approve"],
+                   check = is_org_group_admin,
                    ),
                 MM("Register Test Station",
                    c = "default", f = "index", args = ["register"],
@@ -136,14 +142,9 @@ class S3MainMenu(default.S3MainMenu):
             s3_has_role = auth.s3_has_role
             is_org_admin = lambda i: not s3_has_role(ADMIN) and \
                                      s3_has_role("ORG_ADMIN")
-            is_org_group_admin = lambda i: not s3_has_role(ADMIN) and \
-                                           s3_has_role("ORG_GROUP_ADMIN")
             menu_personal = MP()(
                         MP("Administration", c="admin", f="index",
                            restrict = ADMIN,
-                           ),
-                        MP("Pending Approvals", c="default", f="index", args=["approve"],
-                           check = is_org_group_admin,
                            ),
                         MP("Administration", c="admin", f="user",
                            check = is_org_admin,
@@ -212,13 +213,35 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def org():
         """ ORG / Organization Registry """
 
+        from .config import SCHOOLS, TESTSTATIONS
+
+        org_menu = M("Organizations", f="organisation", link=False)
+
+        if current.auth.s3_has_role("ORG_GROUP_ADMIN"):
+            realms = current.auth.permission.permitted_realms("org_group", "update")
+            gtable = current.s3db.org_group
+            query = (gtable.deleted == False)
+            if realms is not None:
+                query = (gtable.pe_id.belongs(realms)) & query
+            groups = current.db(query).select(gtable.id,
+                                              gtable.name,
+                                              orderby = gtable.name,
+                                              )
+            for group in groups:
+                org_menu(M(group.name, f="organisation",
+                           vars = {"g": group.id}, translate = False,
+                           ))
+
+        org_menu(
+            M("Create", m="create", restrict="ORG_GROUP_ADMIN"),
+            M("My Organizations", vars={"mine": 1}, restrict="ORG_ADMIN")
+            )
+
         return M(c="org")(
-                    M("Organizations", f="organisation")(
-                        M("Create", m="create", restrict=("ORG_GROUP_ADMIN")),
-                        ),
+                    org_menu,
                     M("Administration", restrict=("ADMIN"))(
                         M("Facility Types", f="facility_type"),
-                    #    M("Organization Types", f="organisation_type"),
+                        M("Organization Types", f="organisation_type"),
                     #    M("Sectors", f="sector"),
                         )
                     )

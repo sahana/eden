@@ -16,6 +16,7 @@ from s3 import FS, IS_PHONE_NUMBER_MULTI, JSONERRORS, S3CRUD, S3CustomController
 from .config import TESTSTATIONS
 from .notifications import formatmap
 
+TEMPLATE = "RLPPTM"
 THEME = "RLP"
 
 # =============================================================================
@@ -378,14 +379,14 @@ class approve(S3CustomController):
                                  _type = "submit",
                                  _name = "approve-btn",
                                  _id = "approve-btn",
-                                 _class = "button round",
+                                 _class = "small primary button",
                                  ))
 
             reject = FORM(INPUT(_value = T("Reject"),
                                 _type = "submit",
                                 _name = "reject-btn",
                                 _id = "reject-btn",
-                                _class = "button round",
+                                _class = "small alert button",
                                 ))
 
             form = TABLE(TR(approve,
@@ -495,7 +496,7 @@ class approve(S3CustomController):
                       }
 
             # Custom View
-            self._view(THEME, "approve.html")
+            self._view("RLPPTM", "approve.html")
 
         else:
             # List View
@@ -615,7 +616,7 @@ class approve(S3CustomController):
                           }
 
                 # Custom View
-                self._view(THEME, "approve_list.html")
+                self._view(TEMPLATE, "approve_list.html")
 
             elif representation == "aadata":
 
@@ -1435,7 +1436,7 @@ class register_invited(S3CustomController):
             response.error = T("There are errors in the form, please check your input")
 
         # Custom View
-        self._view("RLPPTM", "register_invited.html")
+        self._view(TEMPLATE, "register_invited.html")
 
         return {"title": title,
                 "intro": intro,

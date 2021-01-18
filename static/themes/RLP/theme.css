@@ -201,9 +201,15 @@ body.rtl .username i.icon, body.rtl .username i.fa {
   font-size: 1.1em;
   padding-bottom: 5px;
 }
+/* line 168, ../../default/scss/theme/_page.scss */
+#content site-title h2 {
+  font-size: 1.3rem;
+  background: none;
+  padding: 0;
+}
 
 /* Footer */
-/* line 171, ../../default/scss/theme/_page.scss */
+/* line 176, ../../default/scss/theme/_page.scss */
 #footer {
   background: transparent;
   padding-top: 20px;
@@ -212,12 +218,12 @@ body.rtl .username i.icon, body.rtl .username i.fa {
   margin-bottom: 1rem;
 }
 
-/* line 181, ../../default/scss/theme/_page.scss */
+/* line 186, ../../default/scss/theme/_page.scss */
 #poweredby {
   margin-right: 0.5rem;
   text-align: right;
 }
-/* line 184, ../../default/scss/theme/_page.scss */
+/* line 189, ../../default/scss/theme/_page.scss */
 #poweredby a {
   color: #999;
   text-decoration: none;
@@ -225,24 +231,24 @@ body.rtl .username i.icon, body.rtl .username i.fa {
   margin-left: 0.2rem;
 }
 
-/* line 192, ../../default/scss/theme/_page.scss */
+/* line 197, ../../default/scss/theme/_page.scss */
 body.rtl #poweredby {
   text-align: left;
 }
 
-/* line 198, ../../default/scss/theme/_page.scss */
+/* line 203, ../../default/scss/theme/_page.scss */
 .sub-nav.about-menu {
   color: #999;
   text-align: left;
   margin-left: 0;
   margin-right: 0;
 }
-/* line 200, ../../default/scss/theme/_page.scss */
+/* line 205, ../../default/scss/theme/_page.scss */
 .sub-nav.about-menu a {
   color: #999;
 }
 
-/* line 208, ../../default/scss/theme/_page.scss */
+/* line 213, ../../default/scss/theme/_page.scss */
 body.rtl .about-menu {
   text-align: right;
 }

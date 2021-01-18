@@ -12,7 +12,7 @@ from collections import OrderedDict
 from gluon import current, URL, A, DIV, TAG
 from gluon.storage import Storage
 
-from s3 import IS_ONE_OF, s3_str
+from s3 import FS, IS_ONE_OF, s3_str
 from s3dal import original_tablename
 
 from .rlpgeonames import rlp_GeoNames
@@ -707,6 +707,30 @@ def config(settings):
                             action = rlpptm_InviteUserOrg,
                             )
 
+            resource = r.resource
+            get_vars = r.get_vars
+            mine = get_vars.get("mine")
+            if mine == "1":
+                # Filter to managed orgs
+                managed_orgs = current.auth.get_managed_orgs()
+                if managed_orgs is True:
+                    query = None
+                elif managed_orgs is None:
+                    query = FS("id") == None
+                else:
+                    query = FS("pe_id").belongs(managed_orgs)
+                if query:
+                    resource.add_filter(query)
+            else:
+                # Filter by org_group_membership
+                org_group_id = get_vars.get("g")
+                if org_group_id:
+                    if isinstance(org_group_id, list):
+                        query = FS("group.id").belongs(org_group_id)
+                    else:
+                        query = FS("group.id") == org_group_id
+                    resource.add_filter(query)
+
             if not r.component:
                 if r.interactive:
                     from s3 import S3SQLCustomForm, \
@@ -721,6 +745,7 @@ def config(settings):
                                         ),
                                    "name",
                                    "acronym",
+                                   # TODO Activate after correct type prepop
                                    #S3SQLInlineLink(
                                    #     "organisation_type",
                                    #     field = "organisation_type_id",
