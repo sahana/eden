@@ -4686,8 +4686,12 @@ class S3BulkImporter(object):
         """
 
         # Check if the source file is accessible
+        from s3compat import PY2
         try:
-            openFile = open(filename, "r")
+            if PY2:
+                openFile = open(filename, "r")
+            else:
+                openFile = open(filename, "r", encoding="utf-8")
         except IOError:
             return "Unable to open file %s" % filename
 
