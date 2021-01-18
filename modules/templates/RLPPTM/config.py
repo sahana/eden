@@ -19,7 +19,7 @@ from .rlpgeonames import rlp_GeoNames
 
 LSJV = "Landesamt für Soziales, Jugend und Versorgung"
 SCHOOLS = "Schulen"
-TESTSTATIONS = "Teststellen"
+TESTSTATIONS = "COVID-19 Teststellen"
 
 ALLOWED_FORMATS = ("html", "iframe", "popup", "aadata", "json", "xls", "pdf")
 
@@ -399,6 +399,23 @@ def config(settings):
                 field = table.valid_until
                 field.readable = bool(r.record)
                 field.writable = False
+
+                # Filter Widgets
+                from s3 import S3DateFilter, S3OptionsFilter, S3TextFilter
+                filter_widgets = [
+                    S3TextFilter(["signature",
+                                  "comments",
+                                  "program_id$name",
+                                  ],
+                                 label = T("Search"),
+                                 ),
+                    S3DateFilter("date",
+                                 ),
+                    ]
+                # TODO add explicit program filter if the user can see
+                #      vouchers from more than one program
+                resource.configure(filter_widgets = filter_widgets,
+                                   )
 
             elif r.representation == "card":
                 # Configure ID card layout
