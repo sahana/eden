@@ -543,7 +543,19 @@ def config(settings):
     def customise_org_facility_resource(r, tablename):
 
         from s3 import S3SQLCustomForm, S3SQLInlineLink, \
-                       S3LocationFilter, S3TextFilter
+                       S3LocationSelector, S3LocationFilter, S3TextFilter
+
+        s3db = current.s3db
+
+        s3db.org_facility.location_id.widget = S3LocationSelector(levels = ("L1", "L2", "L3", "L4"),
+                                                                  required_levels = ("L1", "L2", "L3"),
+                                                                  show_address = True,
+                                                                  show_postcode = True,
+                                                                  show_map = True,
+                                                                  )
+
+        # Geocoder
+        current.response.s3.scripts.append("/%s/static/themes/RLP/js/geocoderPlugin.js" % r.application)
 
         text_fields = ["name",
                        #"code",
@@ -598,11 +610,11 @@ def config(settings):
                        #"comments",
                        ]
 
-        current.s3db.configure(tablename,
-                               crud_form = S3SQLCustomForm(*crud_fields),
-                               filter_widgets = filter_widgets,
-                               list_fields = list_fields,
-                               )
+        s3db.configure(tablename,
+                       crud_form = S3SQLCustomForm(*crud_fields),
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
 
     settings.customise_org_facility_resource = customise_org_facility_resource
 
