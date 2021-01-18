@@ -660,13 +660,13 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
-            settings.ui.summary = ({"name": "map",
-                                    "label": "Map",
-                                    "widgets": [{"method": "map", "ajax_init": True}],
-                                    },
-                                   {"name": "table",
+            settings.ui.summary = ({"name": "table",
                                     "label": "Table",
                                     "widgets": [{"method": "datatable"}]
+                                    },
+                                   {"name": "map",
+                                    "label": "Map",
+                                    "widgets": [{"method": "map", "ajax_init": True}],
                                     },
                                    )
 
