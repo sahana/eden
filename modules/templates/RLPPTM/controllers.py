@@ -303,7 +303,7 @@ class approve(S3CustomController):
                                                    ).first()
 
             if not user or user.org_group_id != org_group_id:
-                session.error = T("Invalid Site!")
+                session.error = T("Invalid Account!")
                 redirect(URL(c = "default",
                              f = "index",
                              args = ["approve"],
@@ -320,7 +320,7 @@ class approve(S3CustomController):
                 if not organisation_id or \
                    not has_role("ORG_ADMIN",
                                 for_pe = org.pe_id):
-                    session.error = T("Site not within your Organisation!")
+                    session.error = T("Account not within your Organisation!")
                     redirect(URL(c = "default",
                                  f = "index",
                                  args = ["approve"],
@@ -369,11 +369,11 @@ class approve(S3CustomController):
             opening_times = custom_get("opening_times")
 
             if user.registration_key is None:
-                response.warning = T("Site has previously been Approved")
+                response.warning = T("Registration has previously been Approved")
             elif user.registration_key == "rejected":
-                response.warning = T("Site has previously been Rejected")
+                response.warning = T("Registration has previously been Rejected")
             elif user.registration_key != "pending":
-                response.warning = T("Site hasn't verified their email")
+                response.warning = T("User hasn't verified their email")
 
             approve = FORM(INPUT(_value = T("Approve"),
                                  _type = "submit",
@@ -490,7 +490,7 @@ class approve(S3CustomController):
                                                   error,
                                                   )
 
-                session.confirmation = T("Site approved")
+                session.confirmation = T("Registration approved")
                 redirect(URL(c = "default",
                              f = "index",
                              args = ["approve"],
@@ -499,7 +499,7 @@ class approve(S3CustomController):
             elif reject.accepts(request.post_vars, session, formname="reject"):
                 user.update_record(registration_key = "rejected")
                 # @ToDo: Delete Org & Fac, if created previously
-                session.confirmation = T("Site rejected")
+                session.confirmation = T("Registration rejected")
                 redirect(URL(c = "default",
                              f = "index",
                              args = ["approve"],

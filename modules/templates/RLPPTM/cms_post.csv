@@ -1,5 +1,5 @@
 Name,Module,Resource,Body,Comments
-Subject InviteOrg,auth,user,{system}: Invitation to Register Account,Rename into 'Subject InviteOrg' to activate notifications
+Subject InviteOrg,auth,user,{system}: Invitation to Register Account,
 Message InviteOrg,auth,user,"Please visit {url} to register a user account.
 
 Your registration code: {code}",
