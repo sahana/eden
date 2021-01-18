@@ -2053,8 +2053,14 @@ class fin_VoucherProgram(object):
 
 # =============================================================================
 def fin_voucher_permitted_programs(mode="issuer"):
+    """
+        Get a list of programs and organisations the current user
+        is permitted to issue/accept vouchers for
 
-    # TODO any org must belong to an issuer or provider org_group
+        @param mode: the permission to look for ('issuer'|'provider')
+
+        @returns: tuple of lists (program_ids, org_ids, pe_ids)
+    """
 
     s3db = current.s3db
 
@@ -2103,6 +2109,6 @@ def fin_voucher_permitted_programs(mode="issuer"):
         org_ids.add(organisation.id)
         pe_ids.add(organisation.pe_id)
 
-    return program_ids, org_ids, pe_ids
+    return list(program_ids), list(org_ids), list(pe_ids)
 
 # END =========================================================================
