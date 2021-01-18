@@ -136,12 +136,17 @@ class S3MainMenu(default.S3MainMenu):
             s3_has_role = auth.s3_has_role
             is_org_admin = lambda i: not s3_has_role(ADMIN) and \
                                      s3_has_role("ORG_ADMIN")
+            is_org_group_admin = lambda i: not s3_has_role(ADMIN) and \
+                                           s3_has_role("ORG_GROUP_ADMIN")
             menu_personal = MP()(
                         MP("Administration", c="admin", f="index",
                            restrict = ADMIN,
                            ),
                         MP("Administration", c="admin", f="user",
                            check = is_org_admin,
+                           ),
+                        MP("Administration", c="default", f="index", args=["approve"],
+                           check = is_org_group_admin,
                            ),
                         MP("Profile", c="default", f="person"),
                         MP("Change Password", c="default", f="user",
