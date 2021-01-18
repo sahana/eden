@@ -472,8 +472,22 @@ class approve(S3CustomController):
                 # Approve user
                 auth.s3_approve_user(user)
                 # Send welcome email
-                # Done within s3_approve_user
-                #auth.s3_send_welcome_email(form.vars)
+                from .notifications import CMSNotifications
+
+                error = CMSNotifications.send(user.email,
+                                              "WelcomeEmailTeststations",
+                                              {"name": organisation or org.name,
+                                               "url": URL(c="default",
+                                                          f="person",
+                                                          ),
+                                               },
+                                              module = "auth",
+                                              resource = "user",
+                                              )
+                if error:
+                    session.warning = "%s: %s" % (T("Welcome Email NOT sent"),
+                                                  error,
+                                                  )
 
                 session.confirmation = T("Site approved")
                 redirect(URL(c = "default",
