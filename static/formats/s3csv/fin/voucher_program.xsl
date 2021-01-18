@@ -12,6 +12,7 @@
          Description..........string..........Description
          Issuers..............string..........Organisation Group Name
          Providers............string..........Organisation Group Name
+         Instructions.........text............Instructions to Voucher Bearers
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -89,6 +90,14 @@
                         <xsl:value-of select="$providers"/>
                     </xsl:attribute>
                 </reference>
+            </xsl:if>
+
+            <!-- Instructions -->
+            <xsl:variable name="instructions" select="col[@field='Instructions']/text()"/>
+            <xsl:if test="$instructions!=''">
+                <data field="voucher_instructions">
+                    <xsl:value-of select="$instructions"/>
+                </data>
             </xsl:if>
 
         </resource>

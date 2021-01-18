@@ -39,6 +39,7 @@ class VoucherCardLayout(S3PDFCardLayout):
         """
 
         return ["id",
+                "program_id",
                 "program_id$name",
                 "program_id$organisation_id$name",
                 "program_id$organisation_id$root_organisation",
@@ -86,21 +87,17 @@ class VoucherCardLayout(S3PDFCardLayout):
         else:
             root_org_names = None
 
-        # Get instruction text from CMS
-        ctable = s3db.cms_post
-        ltable = s3db.cms_post_module
-        join = ltable.on((ltable.post_id == ctable.id) & \
-                         (ltable.module == "fin") & \
-                         (ltable.resource == "voucher") & \
-                         (ltable.deleted == False))
-        subject_name = "VoucherInstructions"
-        query = (ctable.name == subject_name) & \
-                (ctable.deleted == False)
-        row = db(query).select(ctable.body,
-                               join = join,
-                               limitby = (0, 1),
-                               ).first()
-        instructions = row.body if row else None
+        # Get voucher instructions from programs
+        program_ids = set(item["_row"]["fin_voucher.program_id"] for item in items)
+        program_ids.discard(None)
+        ptable = s3db.fin_voucher_program
+        query = (ptable.id.belongs(program_ids)) & \
+                (ptable.voucher_instructions != None) & \
+                (ptable.deleted == False)
+        programs = db(query).select(ptable.id,
+                                    ptable.voucher_instructions,
+                                    )
+        instructions = {p.id: p.voucher_instructions for p in programs}
 
         return {"logos": logos,
                 "root_org_names": root_org_names,
@@ -142,10 +139,11 @@ class VoucherCardLayout(S3PDFCardLayout):
 
         # Get the org logo
         logos = common.get("logos")
-        if logos:
-            logo = logos.get(root_org)
-        else:
-            logo = None
+        logo = logos.get(root_org) if logos else None
+
+        # Get the voucher instructions
+        pinst = common.get("instructions")
+        instructions = pinst.get(raw["fin_voucher.program_id"])
 
         draw_value = self.draw_value
 
@@ -211,9 +209,8 @@ class VoucherCardLayout(S3PDFCardLayout):
                 draw_value(DR, DY[2], vdate, width=180, height=20, size=12)
 
             # Instructions
-            instructions = common.get("instructions")
             if instructions:
-                draw_value(285, h-250, instructions, width=450, height=100, size=8, bold=False, halign="center")
+                draw_value(285, h-225, instructions, width=450, height=100, size=8, bold=False, valign="top", halign="center")
 
             # Add a cutting line with multiple cards per page
             if self.multiple:
