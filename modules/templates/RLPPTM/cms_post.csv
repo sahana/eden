@@ -8,4 +8,3 @@ WelcomeMessageInvited,auth,user,"Welcome to the {system_name} Portal
 - To edit your profile go to: {profile}
 
 Thank you",
-VoucherInstructions,fin,voucher,"Bring this voucher to the test station in order to get a test. Do not fold the voucher or write on it. If you loose the voucher, see your head master to get a new one.",

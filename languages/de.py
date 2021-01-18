@@ -5097,6 +5097,7 @@
 'Tertiary Server (Optional)': 'Tertiärer Server (Optional)',
 'Test Results': 'Testergebnisse',
 'Test Station': 'Teststelle',
+'Test Stations': 'Teststellen',
 'Text Color for Text blocks': 'Text Farbe für Text Blöcke',
 'Thank you for validating your email. Your user account is still pending for approval by the system administator (%s).You will get a notification by email when your account is activated.': 'Danke für die Validierung Ihrer E-Mail. Ihr Benutzeraccount wurde vom Systemadministrator noch nicht genehmigt (%s). Sie werden eine Benachrichtigung per E-Mail erhalten wenn ihr Account aktiviert wurde.',
 'Thanks for your assistance': 'Danke für Ihre Hilfe',
@@ -5871,5 +5872,4 @@
 'xlwt module not available within the running Python - this needs installing for XLS output!': 'xlwt Modul nicht verfügbar im Rahmen der laufenden Python Umgebung - das muss installiert werden für XLS Ausgabe!',
 'yes': 'ja',
 'Åland Islands': 'Ålandinseln',
-'Test Stations': 'Teststellen',
 }
