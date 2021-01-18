@@ -266,7 +266,7 @@ class approve(S3CustomController):
         try:
             org_group_pe_id = org_group.pe_id
         except:
-            RuntimeError("Cannot approve user account as Org Group '%s' is missing " % TESTSTATIONS)
+            raise RuntimeError("Cannot approve user account as Org Group '%s' is missing " % TESTSTATIONS)
 
         has_role = auth.s3_has_role
         if has_role("ORG_GROUP_ADMIN",
