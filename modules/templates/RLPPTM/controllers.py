@@ -472,15 +472,15 @@ class approve(S3CustomController):
 
                 # Approve user
                 auth.s3_approve_user(user)
-                # Send welcome email
-                from .notifications import CMSNotifications
 
+                # Send welcome email
+                settings = current.deployment_settings
+                from .notifications import CMSNotifications
                 error = CMSNotifications.send(user.email,
-                                              "WelcomeEmailTeststations",
+                                              "WelcomeMessageTeststation",
                                               {"name": organisation or org.name,
-                                               "url": URL(c="default",
-                                                          f="person",
-                                                          ),
+                                               "homepage": settings.get_base_public_url(),
+                                               "profile": URL("default", "person", host=True),
                                                },
                                               module = "auth",
                                               resource = "user",
