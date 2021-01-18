@@ -8,8 +8,8 @@ WelcomeMessageInvited,auth,user,"Welcome to the {system_name} Portal
 - To edit your profile go to: {profile}
 
 Thank you",
-Subject WelcomeProvider,auth,user,Welcome to the {system_name} Portal,
-Message WelcomeProvider,auth,user,"Your account at the {system_name} Portal has been approved, you can now login.
+Subject WelcomeProvider,auth,user,Welcome to the {system} Portal,
+Message WelcomeProvider,auth,user,"Your account at the {system} Portal has been approved, you can now login.
 
 - Visit the portal: {homepage}
 - To edit your profile go to: {profile}
