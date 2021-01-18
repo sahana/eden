@@ -216,7 +216,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Organizations", f="organisation")(
                         M("Create", m="create", restrict=("ORG_GROUP_ADMIN")),
                         ),
-                    M("Administration", restrict=("ORG_GROUP_ADMIN"))(
+                    M("Administration", restrict=("ADMIN"))(
                         M("Facility Types", f="facility_type"),
                     #    M("Organization Types", f="organisation_type"),
                     #    M("Sectors", f="sector"),
