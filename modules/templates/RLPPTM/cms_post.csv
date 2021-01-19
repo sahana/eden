@@ -15,3 +15,4 @@ Message WelcomeProvider,auth,user,"Your account at the {system} Portal has been 
 - To edit your profile go to: {profile}
 
 Thank you",
+InvitedRegistrationIntro,auth,user,,

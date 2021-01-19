@@ -233,7 +233,6 @@ def config(settings):
         """
 
         auth = current.auth
-        has_role = auth.s3_has_role
 
         def approve_user(r, **args):
 

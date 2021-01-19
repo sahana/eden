@@ -33,7 +33,7 @@ $(document).ready(function(){
     rlpGeocode= function(self) {
 
         var fieldname = self.fieldname,
-            data = self.data
+            data = self.data;
         var selector = '#' + fieldname;
 
         // Hide old messages, show throbber
@@ -76,7 +76,7 @@ $(document).ready(function(){
                             self._zoomMap();
                         }
                     }
-                    
+
                     var L1 = result.L1,
                         L2 = result.L2,
                         L3 = result.L3,

@@ -47,7 +47,7 @@ from uuid import uuid4
 
 #from gluon import *
 from gluon import current, redirect, CRYPT, DAL, HTTP, SQLFORM, URL, \
-                  A, BUTTON, DIV, INPUT, LABEL, OPTGROUP, OPTION, SELECT, SPAN, XML, \
+                  A, DIV, INPUT, LABEL, OPTGROUP, OPTION, SELECT, SPAN, XML, \
                   IS_EMAIL, IS_EMPTY_OR, IS_EXPR, IS_IN_DB, IS_IN_SET, \
                   IS_LOWER, IS_NOT_EMPTY, IS_NOT_IN_DB
 
@@ -4032,7 +4032,7 @@ Please go to %(url)s to approve this user."""
                 self.user["realms"][ANONYMOUS] = None
 
     # -------------------------------------------------------------------------
-    def s3_create_role(self, role, description=None, *acls, **args):
+    def s3_create_role(self, role, *acls, description=None, **args):
         """
             Back-end method to create roles with ACLs
 
@@ -4204,12 +4204,12 @@ Please go to %(url)s to approve this user."""
                           str(sr.ANONYMOUS),
                           str(sr.AUTHENTICATED),
                           ]
-        for group_id in group_ids:
-            if group_id not in assigned_groups:
+        for gid in group_ids:
+            if gid not in assigned_groups:
                 membership = {"user_id": user_id,
-                              "group_id": group_id,
+                              "group_id": gid,
                               }
-                if for_pe is not None and str(group_id) not in unrestrictable:
+                if for_pe is not None and str(gid) not in unrestrictable:
                     membership["pe_id"] = for_pe
                 #membership_id = mtable.insert(**membership)
                 mtable.insert(**membership)
@@ -4608,9 +4608,9 @@ Please go to %(url)s to approve this user."""
                         pr_rebuild_path(pe_id, clear=True)
                 roles.append(role_id)
 
-        for role_id in roles:
-            for group_id in group_ids:
-                dtable.insert(role_id=role_id, group_id=group_id)
+        for rid in roles:
+            for gid in group_ids:
+                dtable.insert(role_id=rid, group_id=gid)
 
         # Update roles for current user if required
         self.s3_set_roles()
@@ -5633,17 +5633,17 @@ Please go to %(url)s to approve this user."""
                 query = table._id == record
                 limitby = (0, 1)
             fields = [table[f] for f in tables]
-            records = db(query).select(limitby=limitby, *fields)
+            instance_records = db(query).select(limitby=limitby, *fields)
         else:
-            records = [record]
-        if not records:
+            instance_records = [record]
+        if not instance_records:
             return
 
-        for record in records:
+        for instance_record in instance_records:
             for skey in tables:
                 supertable = tables[skey]
-                if skey in record:
-                    query = (supertable[skey] == record[skey])
+                if skey in instance_record:
+                    query = (supertable[skey] == instance_record[skey])
                 else:
                     continue
                 updates = dict((f, data[f])
@@ -5944,8 +5944,9 @@ class S3Permission(object):
         self.record_approval = settings.get_auth_record_approval()
         self.strict_ownership = settings.get_security_strict_ownership()
 
-        # Clear cache
-        self.clear_cache()
+        # Initialize cache
+        self.permission_cache = {}
+        self.query_cache = {}
 
         # Pages which never require permission:
         # Make sure that any data access via these pages uses

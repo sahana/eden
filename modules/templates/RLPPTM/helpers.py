@@ -64,9 +64,7 @@ class rlpptm_InviteUserOrg(S3Method):
         output = {"title": T("Invite Organisation"),
                   }
 
-        # TODO Check for any active accounts => if they exist, don't allow new invite
-        # Get all accounts that are linked to this org and to a person
-
+        # Get all accounts that are linked to this org
         utable = auth_settings.table_user
         oltable = s3db.org_organisation_user
         pltable = s3db.pr_person_user

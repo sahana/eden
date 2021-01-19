@@ -1347,7 +1347,6 @@ class register_invited(S3CustomController):
         title = T("Registration")
 
         # Get intro text from CMS
-        # TODO add to CMS prepop
         db = current.db
         s3db = current.s3db
 

@@ -220,8 +220,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def org():
         """ ORG / Organization Registry """
 
-        from .config import SCHOOLS, TESTSTATIONS
-
         org_menu = M("Organizations", f="organisation", link=False)
 
         if current.auth.s3_has_role("ORG_GROUP_ADMIN"):
