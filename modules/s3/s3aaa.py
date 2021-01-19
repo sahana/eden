@@ -4032,7 +4032,7 @@ Please go to %(url)s to approve this user."""
                 self.user["realms"][ANONYMOUS] = None
 
     # -------------------------------------------------------------------------
-    def s3_create_role(self, role, *acls, description=None, **args):
+    def s3_create_role(self, role, description=None, *acls, **args):
         """
             Back-end method to create roles with ACLs
 
