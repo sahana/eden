@@ -209,6 +209,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 )
 
     # -------------------------------------------------------------------------
+    @classmethod
+    def hrm(cls):
+        """ HRM / Human Resources Management """
+
+        return cls.org()
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def org():
         """ ORG / Organization Registry """

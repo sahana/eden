@@ -147,6 +147,10 @@ def config(settings):
     # -------------------------------------------------------------------------
     settings.hrm.record_tab = False
     settings.hrm.staff_experience = False
+    settings.hrm.teams = False
+    settings.hrm.use_address = False
+    settings.hrm.use_id = False
+    settings.hrm.use_skills = False
     settings.hrm.use_certificates = False
     settings.hrm.use_credentials = False
     settings.hrm.use_description = False
