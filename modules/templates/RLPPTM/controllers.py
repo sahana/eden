@@ -1724,16 +1724,18 @@ class geocode(S3CustomController):
 
         latlon = gis.geocode(full_address)
         if not isinstance(latlon, dict):
-            return None
+            output = "{}"
+        else:
+            lat = latlon["lat"]
+            lon = latlon["lon"]
+            results = gis.geocode_r(lat, lon)
 
-        lat = latlon["lat"]
-        lon = latlon["lon"]
-        results = gis.geocode_r(lat, lon)
+            results["lat"] = lat
+            results["lon"] = lon
 
-        results["lat"] = lat
-        results["lon"] = lon
+            output = json.dumps(results)
 
         current.response.headers["Content-Type"] = "application/json"
-        return json.dumps(results)
+        return output
 
 # END =========================================================================
