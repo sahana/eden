@@ -64,9 +64,9 @@ class CMSNotifications(object):
                                   cc = cc,
                                   subject = message[0],
                                   message = message[1],
+                                  attachments = message[2],
                                   ):
                     error = T("failed to send email")
-
             else:
                 error = T("message template not found")
         else:
@@ -105,8 +105,9 @@ class CMSNotifications(object):
 
         subject = formatmap(templates[0], data)
         message = formatmap(templates[1], data)
+        attachments = templates[2] if len(templates) > 2 else None
 
-        return subject, message
+        return subject, message, attachments
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -118,7 +119,7 @@ class CMSNotifications(object):
             @param module: the module prefix
             @param resource: the resource name
 
-            @returns: tuple (subject_template, message_template), or None
+            @returns: tuple (subject_template, message_template, attachments), or None
         """
 
         db = current.db
@@ -153,7 +154,8 @@ class CMSNotifications(object):
         message_name = "Message %s" % name
         query = (ctable.name == message_name) & \
                 (ctable.deleted == False)
-        row = db(query).select(ctable.body,
+        row = db(query).select(ctable.doc_id,
+                               ctable.body,
                                join = join,
                                limitby = (0, 1),
                                ).first()
@@ -162,7 +164,20 @@ class CMSNotifications(object):
         else:
             message_template = ""
 
-        return subject_template, message_template
+        # Look up attachments
+        dtable = s3db.doc_document
+        query = (dtable.doc_id == row.doc_id) & \
+                (dtable.file != None) & (dtable.file != "") & \
+                (dtable.deleted == False)
+        rows = db(query).select(dtable.file)
+        attachments = []
+        for row in rows:
+            filename, stream = dtable.file.retrieve(row.file)
+            attachments.append(current.mail.Attachment(stream, filename=filename))
+        if not attachments:
+            attachments = None
+
+        return subject_template, message_template, attachments
 
     # -------------------------------------------------------------------------
     @staticmethod

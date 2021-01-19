@@ -305,6 +305,12 @@ div.s3-groupedopts-widget {
     color: darkgreen;
 }
 
+/* Location Selector */
+.geocode_fail,
+.geocode_success {
+    margin: 0.2rem 0.7rem;
+}
+
 /* Anonymize-Widget */
 form.anonymize-form,
 .anonymize-success {
