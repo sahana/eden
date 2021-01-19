@@ -11,7 +11,7 @@ try:
 
         enable = True
 
-        geocode_path = '/mapbender/geoportal/gaz_geom_mobile.php?q=fall%2010&outputFormat=json&resultTarget=web&searchEPSG=4326&forcePoint=true&forceGeonames=true'
+        geocode_path = '/mapbender/geoportal/gaz_geom_mobile.php?q=fall%2010&outputFormat=json&resultTarget=web&searchEPSG=4326&forcePoint=true&forceGeonames=true&bundesland=Rheinland-Pfalz'
 
         def __init__(
                 self,
