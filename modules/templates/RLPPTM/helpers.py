@@ -65,20 +65,72 @@ class rlpptm_InviteUserOrg(S3Method):
                   }
 
         # TODO Check for any active accounts => if they exist, don't allow new invite
+        # Get all accounts that are linked to this org and to a person
+
+        utable = auth_settings.table_user
+        oltable = s3db.org_organisation_user
+        pltable = s3db.pr_person_user
+
+        organisation_id = r.record.id
+        join = oltable.on((oltable.user_id == utable.id) & \
+                          (oltable.deleted == False))
+        left = pltable.on((pltable.user_id == utable.id) & \
+                          (pltable.deleted == False))
+        query = (oltable.organisation_id == organisation_id)
+        rows = db(query).select(utable.id,
+                                utable.first_name,
+                                utable.last_name,
+                                utable.email,
+                                utable.registration_key,
+                                pltable.pe_id,
+                                join = join,
+                                left = left,
+                                )
+
+        active, disabled, invited = [], [], []
+        for row in rows:
+            user = row[utable]
+            person_link = row.pr_person_user
+            if person_link.pe_id:
+                if user.registration_key:
+                    disabled.append(user)
+                else:
+                    active.append(user)
+            else:
+                invited.append(user)
+
+        if active or disabled:
+            response.error = T("There are already user accounts registered for this organization")
+
+            from gluon import UL, LI, H4, DIV
+            from s3 import s3_format_fullname
+
+            fullname = lambda user: s3_format_fullname(fname = user.first_name,
+                                                    lname = user.last_name,
+                                                    truncate = False,
+                                                    )
+            account_list = DIV(_class="org-account-list")
+            if active:
+                account_list.append(H4(T("Active Accounts")))
+                accounts = UL()
+                for user in active:
+                    accounts.append(LI("%s <%s>" % (fullname(user), user.email)))
+                account_list.append(accounts)
+            if disabled:
+                account_list.append(H4(T("Disabled Accounts")))
+                accounts = UL()
+                for user in disabled:
+                    accounts.append(LI("%s <%s>" % (fullname(user), user.email)))
+                account_list.append(accounts)
+
+            output["item"] = account_list
+            response.view = self._view(r, "display.html")
+            return output
+
+        account = invited[0] if invited else None
 
         # Look up existing invite-account
         email = None
-
-        ltable = s3db.org_organisation_user
-        utable = auth_settings.table_user
-        join = utable.on(utable.id == ltable.user_id)
-        query = (ltable.organisation_id == r.record.id) & \
-                (ltable.deleted == False)
-        account = db(query).select(utable.id,
-                                   utable.email,
-                                   join = join,
-                                   limitby = (0, 1),
-                                   ).first()
         if account:
             email = account.email
         else:
