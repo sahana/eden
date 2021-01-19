@@ -264,7 +264,19 @@ class FinVoucherModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        # TODO Table Configuration
+        # List fields
+        list_fields = ["name",
+                       "organisation_id",
+                       "issuers_id",
+                       "providers_id",
+                       "end_date",
+                       "status",
+                       ]
+
+        # Table Configuration
+        self.configure(tablename,
+                       list_fields = list_fields,
+                       )
 
         # Components
         self.add_components(tablename,

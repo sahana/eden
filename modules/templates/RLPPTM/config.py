@@ -335,6 +335,7 @@ def config(settings):
 
         table = s3db.fin_voucher
 
+        # Customise fields
         field = table.comments
         field.label = T("Memoranda")
         field.comment = DIV(_class="tooltip",
@@ -346,6 +347,24 @@ def config(settings):
         field = table.balance
         field.label = T("Status")
         field.represent = lambda v: T("Issued##fin") if v > 0 else T("Redeemed##fin")
+
+        # Custom list fields
+        list_fields = ["program_id",
+                       "signature",
+                       #"bearer_dob",
+                       "balance",
+                       "date",
+                       "valid_until",
+                       #"comments",
+                       ]
+        if current.auth.s3_has_role("VOUCHER_ISSUER"):
+            if settings.get_fin_voucher_personalize() == "dob":
+                list_fields.insert(2, "bearer_dob")
+            list_fields.append("comments")
+
+        s3db.configure("fin_voucher",
+                       list_fields = list_fields,
+                       )
 
     settings.customise_fin_voucher_resource = customise_fin_voucher_resource
 
@@ -431,22 +450,6 @@ def config(settings):
                                         s3_str(record.signature) \
                                         if record and record.signature else None,
                                     )
-
-            # Custom list fields
-            list_fields = ["program_id",
-                            "signature",
-                            #"bearer_dob",
-                            "balance",
-                            "date",
-                            "valid_until",
-                            "comments",
-                            ]
-            if settings.get_fin_voucher_personalize() == "dob" and \
-               current.auth.s3_has_role("VOUCHER_ISSUER"):
-                list_fields.insert(2, "bearer_dob")
-            resource.configure(list_fields = list_fields,
-                                )
-
             return result
         s3.prep = prep
 
@@ -485,6 +488,45 @@ def config(settings):
         return attr
 
     settings.customise_fin_voucher_controller = customise_fin_voucher_controller
+
+    # -------------------------------------------------------------------------
+    def customise_fin_voucher_debit_resource(r, tablename):
+
+        s3db = current.s3db
+
+        table = s3db.fin_voucher_debit
+
+        # Customise fields
+        field = table.comments
+        field.label = T("Memoranda")
+        field.comment = DIV(_class="tooltip",
+                            _title="%s|%s" % (T("Memoranda"),
+                                              T("Notes of the Provider"),
+                                              ),
+                            )
+
+        field = table.balance
+        field.label = T("Status")
+        field.represent = lambda v: T("Redeemed##fin") if v > 0 else T("Compensated##fin")
+
+        # Custom list_fields
+        list_fields = [(T("Date"), "date"),
+                        "program_id",
+                        "voucher_id$signature",
+                        "balance",
+                        ]
+        if current.auth.s3_has_role("PROGRAM_MANAGER"):
+            list_fields[3:3] = ["voucher_id$pe_id",
+                                "pe_id",
+                                ]
+        if current.auth.s3_has_role("VOUCHER_PROVIDER"):
+            list_fields.append("comments")
+
+        s3db.configure("fin_voucher_debit",
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_fin_voucher_debit_resource = customise_fin_voucher_debit_resource
 
     # -------------------------------------------------------------------------
     def customise_fin_voucher_debit_controller(**attr):
@@ -537,19 +579,6 @@ def config(settings):
                 if len(rows) == 1:
                     field.default = rows.first().pe_id
                     field.readable = field.writable = False
-
-            # Custom list fields
-            list_fields = [(T("Date"), "date"),
-                           "program_id",
-                           "voucher_id$signature",
-                           "comments", # TODO adapt label + tooltip analogous to voucher
-                           ]
-            if current.auth.s3_has_role("PROGRAM_MANAGER"):
-                list_fields[3:3] = ["voucher_id$pe_id",
-                                    "pe_id",
-                                    ]
-            resource.configure(list_fields = list_fields,
-                                )
 
             return result
         s3.prep = prep
