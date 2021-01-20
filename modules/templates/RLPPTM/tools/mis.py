@@ -144,7 +144,7 @@ if not failed:
 #
 if failed:
     db.rollback()
-    infoln("UPGRADE FAILED - Action rolled back.")
+    infoln("PROCESS FAILED - Action rolled back.")
 else:
     db.commit()
-    infoln("UPGRADE SUCCESSFUL.")
+    infoln("PROCESS SUCCESSFUL.")
