@@ -459,6 +459,20 @@ def config(settings):
                        report_options = report_options,
                        )
 
+        crud_strings = current.response.s3.crud_strings
+        crud_strings["disease_case_diagnostics"] = Storage(
+            label_create = T("Register Test Result"),
+            title_display = T("Test Result"),
+            title_list = T("Test Results"),
+            title_update = T("Edit Test Result"),
+            title_upload = T("Import Test Results"),
+            label_list_button = T("List Test Results"),
+            label_delete_button = T("Delete Test Result"),
+            msg_record_created = T("Test Result added"),
+            msg_record_modified = T("Test Result updated"),
+            msg_record_deleted = T("Test Result deleted"),
+            msg_list_empty = T("No Test Results currently registered"))
+
     settings.customise_disease_case_diagnostics_resource = customise_disease_case_diagnostics_resource
 
     # -------------------------------------------------------------------------
