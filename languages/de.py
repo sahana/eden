@@ -3291,7 +3291,7 @@
 'Needs Maintenance': 'Braucht Wartung',
 'Needs to reduce vulnerability to violence': 'Handlungsbedarf um die Anfälligkeit für Gewalt zu verringern',
 'Needs': 'Bedarf',
-'Negative': 'Negative',
+'Negative': 'Negativ',
 'Neighborhood': 'Nachbarschaft',
 'Neighbouring building hazard': 'Risiko durch benachbarte Gebäude',
 'Neonatal ICU': 'Neugeborenen ICU',
