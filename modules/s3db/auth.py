@@ -323,6 +323,7 @@ class AuthConsentModel(S3Model):
 
         # Table Configuration
         self.configure(tablename,
+                       # NB must not deduplicate! (invalid operation + breaks vhash chain)
                        list_fields = list_fields,
                        onaccept = self.consent_option_onaccept,
                        )
