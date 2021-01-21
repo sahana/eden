@@ -402,9 +402,47 @@ def config(settings):
                                     "result",
                                     )
 
+        # Filters
+        from s3 import S3DateFilter, S3OptionsFilter
+        filter_widgets = [S3DateFilter("result_date",
+                                       label = T("Date"),
+                                       ),
+                          S3OptionsFilter("disease_id", hidden=True),
+                          S3OptionsFilter("project_id", hidden=True),
+                          S3OptionsFilter("test_type",
+                                          options = OrderedDict(type_options),
+                                          hidden = True,
+                                          ),
+                          S3OptionsFilter("result",
+                                          options = OrderedDict(result_options),
+                                          hidden = True,
+                                          ),
+                          ]
+
+        # Report options
+        facts = ((T("Number of Tests"), "count(id)"),
+                 )
+        axes = ["result",
+                "test_type",
+                "disease_id",
+                "project_id",
+                ]
+        report_options = {
+            "rows": axes,
+            "cols": axes,
+            "fact": facts,
+            "defaults": {"rows": axes[1],
+                         "cols": axes[0],
+                         "fact": facts[0],
+                         "totals": True,
+                         },
+            }
+
         s3db.configure("disease_case_diagnostics",
                        crud_form = crud_form,
+                       filter_widgets = filter_widgets,
                        list_fields = list_fields,
+                       report_options = report_options,
                        )
 
     settings.customise_disease_case_diagnostics_resource = customise_disease_case_diagnostics_resource
