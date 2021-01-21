@@ -48,7 +48,7 @@ class S3MainMenu(default.S3MainMenu):
                    ),
                 MM("Test Results",
                    c = "disease", f="case_diagnostics",
-                   restrict = "PROGRAM_MANAGER",
+                   restrict = ("VOUCHER_PROVIDER", "DISEASE_TEST_READER"),
                    ),
                 MM("Projects",
                    c = "project", f="project",

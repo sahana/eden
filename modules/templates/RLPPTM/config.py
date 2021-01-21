@@ -62,6 +62,7 @@ def config(settings):
     settings.auth.privileged_roles = {"PROGRAM_MANAGER": "ORG_GROUP_ADMIN",
                                       "VOUCHER_ISSUER": "VOUCHER_ISSUER",
                                       "VOUCHER_PROVIDER": "VOUCHER_PROVIDER",
+                                      "DISEASE_TEST_READER": "ORG_GROUP_ADMIN",
                                       }
 
     settings.auth.password_min_length = 8
@@ -191,6 +192,19 @@ def config(settings):
         #    # Persons are owned by the org employing them (default ok)
         #    realm_entity = 0
         #
+        if tablename == "disease_case_diagnostics":
+
+            # Test results are owned by the user organisation
+            user = current.auth.user
+            organisation_id = user.organisation_id if user else None
+            if not organisation_id:
+                # Fall back to default organisation
+                organisation_id = settings.get_org_default_organisation()
+            if organisation_id:
+                realm_entity = s3db.pr_get_pe_id("org_organisation",
+                                                 organisation_id,
+                                                 )
+
         #elif tablename == "fin_voucher_program":
         #
         #    # Voucher programs are owned by the organisation managing
@@ -207,7 +221,7 @@ def config(settings):
         #    # Debits are owned by the provider PE (default ok)
         #    realm_entity = 0
         #
-        if tablename == "fin_voucher_transaction":
+        elif tablename == "fin_voucher_transaction":
 
             # Vouchers inherit the realm-entity from the program
             table = s3db.table(tablename)

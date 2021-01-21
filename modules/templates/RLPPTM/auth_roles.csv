@@ -11,6 +11,7 @@ AUTHENTICATED,Authenticated,,,gis,ldata,,CREATE|READ|UPDATE|DELETE,,
 AUTHENTICATED,Authenticated,,,gis,location,,CREATE|READ,UPDATE|DELETE,
 AUTHENTICATED,Authenticated,,,pr,contact,,CREATE,READ|UPDATE|DELETE,
 AUTHENTICATED,Authenticated,,,pr,contact_emergency,,CREATE,READ|UPDATE|DELETE,
+AUTHENTICATED,Authenticated,,,,,disease_disease,READ,,
 AUTHENTICATED,Authenticated,,,,,gis_location,CREATE|READ,UPDATE|DELETE,
 AUTHENTICATED,Authenticated,,,,,hrm_human_resource,NONE,READ|UPDATE,
 AUTHENTICATED,Authenticated,,,,,org_facility_type,READ,,
@@ -57,6 +58,7 @@ PROGRAM_MANAGER,Program Manager,,,fin,voucher_program,,CREATE|READ|UPDATE|DELETE
 PROGRAM_MANAGER,Program Manager,,,fin,,,READ,,
 PROGRAM_MANAGER,Program Manager,,,,,fin_voucher_program,CREATE|READ|UPDATE|DELETE,,
 PROGRAM_MANAGER,Program Manager,,,,,fin_voucher_transaction,READ,,
+PROGRAM_MANAGER,Program Manager,,,,,project_project,READ|UPDATE,,
 VOUCHER_ISSUER,Voucher Issuer,,,fin,voucher,,READ,,any
 VOUCHER_ISSUER,Voucher Issuer,,,fin,voucher,,CREATE|READ|UPDATE,,
 VOUCHER_ISSUER,Voucher Issuer,,,fin,voucher_debit,,NONE,,
@@ -64,6 +66,10 @@ VOUCHER_ISSUER,Voucher Issuer,,,fin,voucher_program,,NONE,,
 VOUCHER_ISSUER,Voucher Issuer,,,fin,,,READ,,
 VOUCHER_ISSUER,Voucher Issuer,,,,,fin_voucher,CREATE|READ|UPDATE,,
 VOUCHER_ISSUER,Voucher Issuer,,,,,fin_voucher_program,READ,,any
+VOUCHER_PROVIDER,Voucher Provider,,,disease,case_diagnostics,,CREATE|READ|UPDATE|DELETE,,
+VOUCHER_PROVIDER,Voucher Provider,,,disease,case_diagnostics,,READ,,any
+VOUCHER_PROVIDER,Voucher Provider,,,disease,,,READ,,
+VOUCHER_PROVIDER,Voucher Provider,,,,,disease_case_diagnostics,CREATE|READ|UPDATE|DELETE,,
 VOUCHER_PROVIDER,Voucher Provider,,,fin,voucher,,NONE,,
 VOUCHER_PROVIDER,Voucher Provider,,,fin,voucher_debit,,READ,,any
 VOUCHER_PROVIDER,Voucher Provider,,,fin,voucher_debit,,CREATE|READ|UPDATE,,
@@ -72,3 +78,8 @@ VOUCHER_PROVIDER,Voucher Provider,,,fin,,,READ,,
 VOUCHER_PROVIDER,Voucher Provider,,,,,fin_voucher,READ,,any
 VOUCHER_PROVIDER,Voucher Provider,,,,,fin_voucher_debit,CREATE|READ|UPDATE,,
 VOUCHER_PROVIDER,Voucher Provider,,,,,fin_voucher_program,READ,,any
+VOUCHER_PROVIDER,Voucher Provider,,,,,project_project,READ,,any
+DISEASE_TEST_READER,Disease Test Reader,,,disease,case_diagnostics,,READ,,any
+DISEASE_TEST_READER,Disease Test Reader,,,disease,,,READ,,
+DISEASE_TEST_READER,Disease Test Reader,,,,,disease_case_diagnostics,READ,,any
+DISEASE_TEST_READER,Disease Test Reader,,,,,project_project,READ,,any

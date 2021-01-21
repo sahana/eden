@@ -634,6 +634,10 @@ class CaseTrackingModel(S3Model):
                         "INVALID": T("Invalid"),
                         "LOST": T("Lost"),
                         }
+
+        project_id = self.project_project_id
+        project_represent = project_id.attr.represent
+
         tablename = "disease_case_diagnostics"
         define_table(tablename,
                      case_id(empty=False),
@@ -644,6 +648,10 @@ class CaseTrackingModel(S3Model):
                             ),
                      # Optional link to project funding this test
                      self.project_project_id(
+                            requires = IS_EMPTY_OR(
+                                            IS_ONE_OF(db, "project_project.id",
+                                                      project_represent,
+                                                      )),
                             readable = False,
                             writable = False,
                             ),

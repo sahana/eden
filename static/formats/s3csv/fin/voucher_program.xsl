@@ -18,7 +18,8 @@
     <xsl:output method="xml"/>
 
     <!-- Indexes for faster processing -->
-    <xsl:key name="org" match="row" use="col[@field='Organisation']"/>
+    <xsl:key name="organisations" match="row" use="col[@field='Organisation']"/>
+    <xsl:key name="projects" match="row" use="col[@field='Project']"/>
     <xsl:key name="issuers" match="row" use="col[@field='Issuers']"/>
     <xsl:key name="providers" match="row" use="col[@field='Providers']"/>
 
@@ -26,8 +27,13 @@
     <xsl:template match="/">
         <s3xml>
             <!-- Orgs -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('org', col[@field='Organisation'])[1])]">
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisations', col[@field='Organisation'])[1])]">
                 <xsl:call-template name="Organisation"/>
+            </xsl:for-each>
+
+            <!-- Projects -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('projects', col[@field='Project'])[1])]">
+                <xsl:call-template name="Project"/>
             </xsl:for-each>
 
             <!-- Issuers -->
@@ -72,6 +78,16 @@
                 </xsl:attribute>
             </reference>
 
+            <!-- Link to Project -->
+            <xsl:variable name="ProjectName" select="col[@field='Project']/text()"/>
+            <xsl:if test="$ProjectName!=''">
+                <reference field="project_id" resource="project_project">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$ProjectName"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
+
             <!-- Link to Issuers -->
             <xsl:variable name="issuers" select="col[@field='Issuers']/text()"/>
             <xsl:if test="$issuers!=''">
@@ -106,16 +122,39 @@
     <!-- ****************************************************************** -->
     <xsl:template name="Organisation">
 
-        <xsl:variable name="org" select="col[@field='Organisation']/text()"/>
+        <xsl:variable name="OrganisationName" select="col[@field='Organisation']/text()"/>
 
         <resource name="org_organisation">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$org"/>
+                <xsl:value-of select="$OrganisationName"/>
             </xsl:attribute>
-            <data field="name"><xsl:value-of select="$org"/></data>
+            <data field="name"><xsl:value-of select="$OrganisationName"/></data>
         </resource>
 
     </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Project">
+        <xsl:variable name="ProjectName" select="col[@field='Project']/text()"/>
+        <xsl:variable name="OrganisationName" select="col[@field='Organisation']/text()"/>
+
+        <xsl:if test="$ProjectName!=''">
+            <resource name="project_project">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$ProjectName"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$ProjectName"/></data>
+                <!-- Link to Organisation -->
+                <reference field="organisation_id" resource="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$OrganisationName"/>
+                    </xsl:attribute>
+                </reference>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
     <!-- ****************************************************************** -->
     <xsl:template name="OrgGroup">
 
