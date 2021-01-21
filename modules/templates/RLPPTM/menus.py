@@ -224,6 +224,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Test Results", f="case_diagnostics")(
                         M("Registrieren", m="create"),
                         ),
+                    M("Administration", restrict="ADMIN")(
+                        M("Diseases", f="disease"),
+                        )
                     )
 
     # -------------------------------------------------------------------------

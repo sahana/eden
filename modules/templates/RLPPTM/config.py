@@ -337,7 +337,17 @@ def config(settings):
         # Enable project link and make it mandatory
         field = table.project_id
         field.readable = field.writable = True
-        field.comment = None
+        field.comment = None # TODO add tooltip
+        requires = field.requires
+        if isinstance(requires, (list, tuple)):
+            requires = requires[0]
+        if isinstance(requires, IS_EMPTY_OR):
+            field.requires = requires.other
+
+        # Enable disease link and make it mandatory
+        field = table.disease_id
+        field.readable = field.writable = True
+        field.comment = None # TODO add tooltip?
         requires = field.requires
         if isinstance(requires, (list, tuple)):
             requires = requires[0]
@@ -349,6 +359,7 @@ def config(settings):
         field.default = current.request.utcnow.date()
 
         # Formal test types
+        # TODO move to lookup table?
         type_options = (("LFD", T("LFD Antigen Test")),
                         ("PCR", T("PCR Test")),
                         ("SER", T("Serum Antibody Test")),
@@ -376,16 +387,18 @@ def config(settings):
 
         # Custom list_fields
         list_fields = ["project_id",
-                       "result_date",
+                       "disease_id",
                        "test_type",
+                       "result_date",
                        "result",
                        ]
 
         # Custom form
         from s3 import S3SQLCustomForm
         crud_form = S3SQLCustomForm("project_id",
-                                    "result_date",
+                                    "disease_id",
                                     "test_type",
+                                    "result_date",
                                     "result",
                                     )
 

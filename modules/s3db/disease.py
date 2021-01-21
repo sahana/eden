@@ -637,6 +637,11 @@ class CaseTrackingModel(S3Model):
         tablename = "disease_case_diagnostics"
         define_table(tablename,
                      case_id(empty=False),
+                     # Alternative link to disease for anonymous reporting
+                     self.disease_disease_id(
+                            readable = False,
+                            writable = False,
+                            ),
                      # Optional link to project funding this test
                      self.project_project_id(
                             readable = False,
