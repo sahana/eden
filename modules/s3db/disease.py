@@ -637,6 +637,11 @@ class CaseTrackingModel(S3Model):
         tablename = "disease_case_diagnostics"
         define_table(tablename,
                      case_id(empty=False),
+                     # Optional link to project funding this test
+                     self.project_project_id(
+                            readable = False,
+                            writable = False,
+                            ),
                      # @todo: make a lookup table in DiseaseDataModel:
                      Field("probe_type"),
                      Field("probe_number", length=64, unique=True,

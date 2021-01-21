@@ -46,6 +46,14 @@ class S3MainMenu(default.S3MainMenu):
                    vars = {"mine": 1} if not has_role("ORG_GROUP_ADMIN") else None,
                    restrict = ("ORG_GROUP_ADMIN", "ORG_ADMIN"),
                    ),
+                MM("Test Results",
+                   c = "disease", f="case_diagnostics",
+                   restrict = "PROGRAM_MANAGER",
+                   ),
+                MM("Projects",
+                   c = "project", f="project",
+                   restrict = "ADMIN",
+                   ),
                 MM("Find Test Station",
                    c = "org", f = "facility", m = "summary",
                    ),
@@ -209,6 +217,33 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 )
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def disease():
+
+        return M(c="disease")(
+                    M("Test Results", f="case_diagnostics")(
+                        M("Registrieren", m="create"),
+                        ),
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def fin():
+        """ FIN / Finance """
+
+        return M(c="fin")(
+                    M("Voucher Programs", f="voucher_program")(
+                        M("Create", m="create", restrict=("PROGRAM_MANAGER")),
+                        ),
+                    M("Vouchers", f="voucher")(
+                        M("Create Voucher", m="create", restrict=("VOUCHER_ISSUER")),
+                        ),
+                    M("Accepted Vouchers", f="voucher_debit")(
+                        M("Accept Voucher", m="create", restrict=("VOUCHER_PROVIDER")),
+                        ),
+                    )
+
+    # -------------------------------------------------------------------------
     @classmethod
     def hrm(cls):
         """ HRM / Human Resources Management """
@@ -253,19 +288,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def fin():
-        """ FIN / Finance """
+    def project():
+        """ PROJECT / Project Management """
 
-        return M(c="fin")(
-                    M("Voucher Programs", f="voucher_program")(
-                        M("Create", m="create", restrict=("PROGRAM_MANAGER")),
-                        ),
-                    M("Vouchers", f="voucher")(
-                        M("Create Voucher", m="create", restrict=("VOUCHER_ISSUER")),
-                        ),
-                    M("Accepted Vouchers", f="voucher_debit")(
-                        M("Accept Voucher", m="create", restrict=("VOUCHER_PROVIDER")),
-                        ),
+        return M(c="project") (
+                    M("Projects", f="project")(
+                        M("Create", m="create")
+                        )
                     )
 
 # END =========================================================================

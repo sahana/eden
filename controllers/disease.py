@@ -200,6 +200,12 @@ def tracing():
     return s3_rest_controller(rheader = s3db.disease_rheader)
 
 # -----------------------------------------------------------------------------
+def case_diagnostics():
+    """ Diagnostic Tests: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def statistic():
     """ RESTful CRUD Controller """
 

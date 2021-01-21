@@ -203,6 +203,9 @@ class FinVoucherModel(S3Model):
                             label = T("Administrator##fin"),
                             empty = False,
                             ),
+                     self.project_project_id(
+                            label = T("Project"),
+                            ),
                      Field("name",
                            label = T("Title"),
                            requires = IS_NOT_EMPTY(), # TODO unique?

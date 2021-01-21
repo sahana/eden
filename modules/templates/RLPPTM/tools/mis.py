@@ -45,7 +45,7 @@ timestmp = s3_format_datetime(dtfmt="%Y%m%d%H%M%S")
 LOGFILE = os.path.join(request.folder, "private", "mis_%s.log" % timestmp)
 
 # -----------------------------------------------------------------------------
-# Upgrade user roles
+# Invite organisations
 #
 if not failed:
 
