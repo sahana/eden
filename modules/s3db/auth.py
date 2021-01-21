@@ -344,6 +344,7 @@ class AuthConsentModel(S3Model):
                      Field("vhash", "text"),
                      Field("option_id", "reference auth_consent_option",
                            ondelete = "RESTRICT",
+                           represent = S3Represent(lookup="auth_consent_option"),
                            ),
                      Field("consenting", "boolean",
                            default = False,

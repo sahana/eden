@@ -930,7 +930,7 @@ class register(S3CustomController):
         passfield = auth_settings.password_field
 
         # Instantiate Consent Tracker
-        consent = s3db.auth_Consent(processing_types=["SHARE"])
+        consent = s3db.auth_Consent(processing_types=["SHARE", "RULES_PRO"])
 
         # Last name is required
         utable.last_name.requires = IS_NOT_EMPTY(error_message=T("input required"))
@@ -1428,6 +1428,15 @@ class register_invited(S3CustomController):
                            register_onaccept = self.register_onaccept,
                            )
 
+            # Store consent response (for approve_user to register it)
+            consent = form_vars.consent
+            if consent:
+                ttable = s3db.auth_user_temp
+                record  = {"user_id": account.id,
+                           "consent": form_vars.consent
+                           }
+                ttable.insert(**record)
+
             # Approve and link user
             auth.s3_approve_user(account)
 
@@ -1625,6 +1634,7 @@ class register_invited(S3CustomController):
         T = current.T
         request = current.request
 
+        s3db = current.s3db
         auth = current.auth
         auth_settings = auth.settings
         auth_messages = auth.messages
@@ -1642,6 +1652,9 @@ class register_invited(S3CustomController):
         utable.email.requires = [IS_EMAIL(error_message = auth_messages.invalid_email),
                                  IS_LOWER(),
                                  ]
+
+        # Instantiate Consent Tracker
+        consent = s3db.auth_Consent(processing_types=["STORE", "RULES_ISS"])
 
         # Form fields
         formfields = [utable.first_name,
@@ -1663,6 +1676,10 @@ class register_invited(S3CustomController):
                       Field("code",
                             label = T("Registration Code"),
                             requires = IS_NOT_EMPTY(),
+                            ),
+                      Field("consent",
+                            label = T("Consent"),
+                            widget = consent.widget,
                             ),
                       ]
 
