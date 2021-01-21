@@ -1,5 +1,5 @@
 Code,Name,Comments
-SHARE,Share Infection Test Station Data,
-STORE,Store User Personal Information,
-RULES_PRO,Provider Rules,
-RULES_ISS,Issuer Rules,
+SHARE,Share Infection Test Station Data,For registration of test stations
+RULES_PRO,Provider Rules,For registration of test stations
+STORE,Store User Personal Information,For registration of schools
+RULES_ISS,Issuer Rules,For registration of schools

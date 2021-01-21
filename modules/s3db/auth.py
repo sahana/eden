@@ -200,6 +200,13 @@ class AuthConsentModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        # Table configuration
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("code",),
+                                                 secondary = ("name",),
+                                                 ),
+                       )
+
         # Representation
         type_represent = S3Represent(lookup=tablename)
 
