@@ -1214,8 +1214,8 @@ Please go to %(url)s to approve this station."""
                                         message = messages[language]
                                         )
 
+            session = current.session
             if result:
-                session = current.session
                 session.confirmation = settings.get_auth_registration_pending_approval()
             else:
                 # Don't prevent registration just because email not configured
