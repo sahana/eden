@@ -52,7 +52,9 @@ def settings_task(taskname, user_id=None, **kwargs):
 def maintenance(period = "daily"):
     """
         Run all maintenance tasks which should be done daily
-        - these are read from the template
+        - instantiates and calls the Daily() class defined in the template's
+          maintenance.py file - if it exists
+        - falls back to the default template's maintenancy.py
     """
 
     maintenance = None
@@ -64,7 +66,7 @@ def maintenance(period = "daily"):
         if not isinstance(templates, (tuple, list)):
             templates = (templates,)
         for template in templates[::-1]:
-            package = "applications.%s.modules.templates.%s" % (appname, template)
+            package = "templates.%s" % template
             name = "maintenance"
             try:
                 maintenance = getattr(__import__(package, fromlist=[name]), name)

@@ -17,7 +17,7 @@ class Daily():
         s3db = current.s3db
         request = current.request
 
-        current.log.info("Daily Maintenance RLP")
+        current.log.info("Daily Maintenance RLPPTM")
 
         now = datetime.datetime.utcnow()
         month_past = now - datetime.timedelta(weeks=4)
