@@ -15,6 +15,9 @@ from s3 import s3_format_datetime
 from templates.RLPPTM.config import SCHOOLS
 from templates.RLPPTM.helpers import rlpptm_InviteUserOrg
 
+# Batch limit
+BATCH_LIMIT = 250
+
 # Override auth (disables all permission checks)
 auth.override = True
 
@@ -64,9 +67,11 @@ if not failed:
                                              otable.pe_id,
                                              otable.name,
                                              join = join,
+                                             orderby = otable.id,
                                              )
 
-            infoln("Total: %s Organisations" % len(organisations))
+            total = len(organisations)
+            infoln("Total: %s Organisations" % total)
             infoln("")
             skipped = sent = failures = 0
             invite_org = rlpptm_InviteUserOrg.invite_account
@@ -127,7 +132,12 @@ if not failed:
                     infoln("invited.")
                 else:
                     failures += 1
-                    infoln("invitation failed.")
+                    infoln("invitation failed (%s)." % error)
+
+                if sent >= BATCH_LIMIT:
+                    infoln("Batch limit (%s) reached" % BATCH_LIMIT)
+                    skipped = total - (sent + failures)
+                    break
 
             infoln("")
             infoln("%s invitations sent" % sent)
