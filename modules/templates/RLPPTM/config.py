@@ -344,33 +344,49 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_disease_case_diagnostics_resource(r, tablename):
 
+        db = current.db
         s3db = current.s3db
 
         table = s3db.disease_case_diagnostics
 
-        # Enable project link and make it mandatory
-        field = table.project_id
-        field.readable = field.writable = True
-        field.comment = None # TODO add tooltip
-        requires = field.requires
-        if isinstance(requires, (list, tuple)):
-            requires = requires[0]
-        if isinstance(requires, IS_EMPTY_OR):
-            field.requires = requires.other
+        if r.interactive and r.method != "report":
+            # Enable project link and make it mandatory
+            field = table.project_id
+            field.readable = field.writable = True
+            field.comment = None
+            requires = field.requires
+            if isinstance(requires, (list, tuple)):
+                requires = requires[0]
+            if isinstance(requires, IS_EMPTY_OR):
+                field.requires = requires.other
 
-        # Enable disease link and make it mandatory
-        field = table.disease_id
-        field.readable = field.writable = True
-        field.comment = None # TODO add tooltip?
-        requires = field.requires
-        if isinstance(requires, (list, tuple)):
-            requires = requires[0]
-        if isinstance(requires, IS_EMPTY_OR):
-            field.requires = requires.other
+            # If there is only one project, default the selector + make r/o
+            ptable = s3db.project_project
+            rows = db(ptable.deleted == False).select(ptable.id, limitby=(0, 2))
+            if len(rows) == 1:
+                field.default = rows[0].id
+                field.writable = False
 
-        # Default result date
-        field = table.result_date
-        field.default = current.request.utcnow.date()
+            # Enable disease link and make it mandatory
+            field = table.disease_id
+            field.readable = field.writable = True
+            field.comment = None
+            requires = field.requires
+            if isinstance(requires, (list, tuple)):
+                requires = requires[0]
+            if isinstance(requires, IS_EMPTY_OR):
+                field.requires = requires.other
+
+            # If there is only one disease, default the selector + make r/o
+            dtable = s3db.disease_disease
+            rows = db(dtable.deleted == False).select(dtable.id, limitby=(0, 2))
+            if len(rows) == 1:
+                field.default = rows[0].id
+                field.writable = False
+
+            # Default result date
+            field = table.result_date
+            field.default = current.request.utcnow.date()
 
         # Formal test types
         # TODO move to lookup table?
@@ -381,6 +397,7 @@ def config(settings):
                         )
         field = table.test_type
         field.default = "LFD"
+        field.writable = False # fixed for now
         field.requires = IS_IN_SET(type_options,
                                    zero = "",
                                    sort = False,
