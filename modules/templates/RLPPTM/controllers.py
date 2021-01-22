@@ -1130,26 +1130,37 @@ class verify_email(S3CustomController):
             # Lookup the Approver(s)
             gtable = db.auth_group
             mtable = db.auth_membership
-            query = None
+            pe_id = None
 
             # Is this an existing Org?
             organisation_id = user.organisation_id
             if organisation_id:
+                role_required = "ORG_ADMIN"
+
+                # Get org_name and pe_id from organisation
                 otable = s3db.org_organisation
-                org = db(otable.id == organisation_id).select(otable.name,
+                row = db(otable.id == organisation_id).select(otable.name,
                                                               otable.pe_id,
                                                               limitby = (0, 1)
                                                               ).first()
-                if org:
-                    org_name = org.name
-                    # send to ORG_ADMIN
-                    query = (gtable.uuid == "ORG_ADMIN") & \
-                            (mtable.group_id == gtable.id) & \
-                            (mtable.pe_id == org.pe_id) & \
-                            (mtable.user_id == utable.id)
+                if row:
+                    org_name = row.name
+                    pe_id = row.pe_id
 
-            if not query:
-                # Read org_name from auth_user_temp
+                subject = """%(system_name)s - New User Approval Pending"""
+                message = """Your action is required to approve a New User for %(org_name)s:
+%(user_name)s
+Please go to %(url)s to approve this user."""
+
+            if not pe_id:
+                role_required = "ORG_GROUP_ADMIN"
+
+                subject = """%(system_name)s - New Test Station Approval Pending"""
+                message = """Your action is required to approve a New Test Station for %(system_name)s:
+%(org_name)s
+Please go to %(url)s to approve this station."""
+
+                # Get org_name from auth_user_temp
                 ttable= s3db.auth_user_temp
                 temp = db(ttable.user_id == user_id).select(ttable.custom,
                                                             limitby = (0, 1)
@@ -1159,49 +1170,54 @@ class verify_email(S3CustomController):
                 except JSONERRORS:
                     custom = {}
                 org_name = custom.get("organisation")
-                # send to ORG_GROUP_ADMIN(s) for TESTSTATIONS
-                ogtable = s3db.org_group
-                query = (gtable.uuid == "ORG_GROUP_ADMIN") & \
-                        (mtable.group_id == gtable.id) & \
-                        (mtable.pe_id == ogtable.pe_id) & \
-                        (ogtable.name == TESTSTATIONS) & \
-                        (mtable.user_id == utable.id)
 
+                # Get pe_id of TESTSTATIONS group
+                ogtable = s3db.org_group
+                query = (ogtable.name == TESTSTATIONS) & \
+                        (ogtable.deleted == False)
+                row = db(query).select(ogtable.pe_id, limitby=(0, 1)).first()
+                if row:
+                    pe_id = row.pe_id
+
+            query = (mtable.pe_id == 0)
+            if pe_id:
+                query |= (mtable.pe_id == pe_id)
+            join = [mtable.on((mtable.user_id == utable.id) & \
+                              (mtable.deleted == False)),
+                    gtable.on((gtable.id == mtable.group_id) & \
+                              (gtable.uuid == role_required)),
+                    ]
             approvers = db(query).select(utable.email,
                                          utable.language,
+                                         join = join,
                                          )
+
             # Ensure that we send out the mails in the language that the approver(s) want
             languages = {}
             for approver in approvers:
                 language = approver.language
                 if language not in languages:
-                    languages[language] = []
-                languages[language].append(approver.email)
+                    languages[language] = [approver.email]
+                else:
+                    languages[language].append(approver.email)
 
             subjects = {}
             messages = {}
-            approve_user_message = \
-"""Your action is required to approve a New Test Station for %(system_name)s:
-%(org_name)s
-Please go to %(url)s to approve this station."""
-            base_url = response.s3.base_url
             system_name = settings.get_system_name()
-            for language in languages:
-                T.force(language)
-                subjects[language] = \
-                    s3_str(T("%(system_name)s - New Test Station Approval Pending") % \
-                            {"system_name": system_name})
-                messages[language] = \
-                    s3_str(T(approve_user_message) % {"org_name": org_name,
-                                                      "system_name": system_name,
-                                                      "url": "%(base_url)s/default/index/approve/%(id)s" % \
-                                                                {"base_url": base_url,
-                                                                 "id": user_id,
-                                                                 },
-                                                      })
 
-            # Restore language for UI
-            T.force(session.s3.language)
+            base_url = response.s3.base_url
+            url = "%s/default/index/approve/%s" % (base_url, user_id)
+
+            for language in languages:
+                subjects[language] = s3_str(T(subject, language=language) %
+                                            {"system_name": system_name,
+                                             })
+                messages[language] = s3_str(T(message, language=language) %
+                                            {"org_name": org_name,
+                                             "system_name": system_name,
+                                             "user_name": user.email,
+                                             "url": url,
+                                             })
 
             result = None
             mailer = auth_settings.mailer
