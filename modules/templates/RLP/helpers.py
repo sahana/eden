@@ -288,8 +288,7 @@ class RLPAvailabilitySiteFilter(S3OptionsFilter):
         if sites:
             sites = [int(site_id) for site_id in sites.split(",") if site_id.isdigit()]
         if sites:
-            query = FS("availability_sites.site_id").belongs(sites) | \
-                    (~(FS("availability_sites.site_id") != None))
+            query = FS("availability_sites.site_id").belongs(sites)
             resource.add_filter(query)
 
 # =============================================================================
