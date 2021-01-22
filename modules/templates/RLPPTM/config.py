@@ -696,6 +696,45 @@ def config(settings):
                        list_fields = list_fields,
                        )
 
+        # Filters
+        if r.interactive:
+            from s3 import S3DateFilter, S3TextFilter
+            filter_widgets = [S3TextFilter(["program_id$name",
+                                            "signature",
+                                            ],
+                                        label = T("Search"),
+                                        ),
+                            S3DateFilter("date",
+                                        label = T("Date"),
+                                        ),
+                            ]
+            s3db.configure("fin_voucher_debit",
+                           filter_widgets = filter_widgets,
+                           )
+
+        # Report options
+        if r.method == "report":
+            facts = ((T("Number of Accepted Vouchers"), "count(id)"),
+                    )
+            axes = ["program_id",
+                    "balance",
+                    ]
+            if current.auth.s3_has_role("PROGRAM_MANAGER"):
+                axes.insert(0, "pe_id")
+            report_options = {
+                "rows": axes,
+                "cols": axes,
+                "fact": facts,
+                "defaults": {"rows": axes[0],
+                            "cols": None,
+                            "fact": facts[0],
+                            "totals": True,
+                            },
+                }
+            s3db.configure("fin_voucher_debit",
+                           report_options = report_options,
+                           )
+
     settings.customise_fin_voucher_debit_resource = customise_fin_voucher_debit_resource
 
     # -------------------------------------------------------------------------

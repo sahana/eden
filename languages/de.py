@@ -3567,6 +3567,7 @@
 'Notifications sent': 'Benachrichtigungen verschickt',
 'Notifications': 'Benachrichtigungen',
 'Notify': 'Benachrichtigen',
+'Number of Accepted Vouchers': 'Anzahl akzeptierter Gutscheine',
 'Number of Actions': 'Anzahl Maßnahmen',
 'Number of Activities per': 'Zahl der Aktivitäten pro',
 'Number of Activities': 'Anzahl Aktivitäten',
