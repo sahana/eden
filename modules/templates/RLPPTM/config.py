@@ -362,7 +362,10 @@ def config(settings):
 
             # If there is only one project, default the selector + make r/o
             ptable = s3db.project_project
-            rows = db(ptable.deleted == False).select(ptable.id, limitby=(0, 2))
+            rows = db(ptable.deleted == False).select(ptable.id,
+                                                      cache = s3db.cache,
+                                                      limitby = (0, 2),
+                                                      )
             if len(rows) == 1:
                 field.default = rows[0].id
                 field.writable = False
@@ -379,7 +382,10 @@ def config(settings):
 
             # If there is only one disease, default the selector + make r/o
             dtable = s3db.disease_disease
-            rows = db(dtable.deleted == False).select(dtable.id, limitby=(0, 2))
+            rows = db(dtable.deleted == False).select(dtable.id,
+                                                      cache = s3db.cache,
+                                                      limitby = (0, 2),
+                                                      )
             if len(rows) == 1:
                 field.default = rows[0].id
                 field.writable = False
