@@ -3536,6 +3536,7 @@ class S3Resource(object):
             link_id = ltable.insert(**data)
             data[ltable._id.name] = link_id
             s3db.update_super(ltable, data)
+            current.auth.s3_set_record_owner(ltable, data)
             if link_id and onaccept:
                 callback(onaccept, Storage(vars=Storage(data)))
         else:
