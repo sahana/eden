@@ -234,7 +234,7 @@ class rlpptm_InviteUserOrg(S3Method):
                 return "could not update preliminary account"
         else:
             utable = current.auth.settings.table_user
-            if db(utable.email == email).select(utable.id, limitby = (0, 1)).first():
+            if current.db(utable.email == email).select(utable.id, limitby = (0, 1)).first():
                 return "email address %s already in use" % email
             user_id = utable.insert(**data)
             if user_id:
