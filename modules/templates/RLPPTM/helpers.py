@@ -246,8 +246,9 @@ class rlpptm_InviteUserOrg(S3Method):
                 return "could not create preliminary account"
 
         # Compose and send invitation email
+        appname = request.application
         base_url = current.deployment_settings.get_base_public_url()
-        registration_url = "%s/default/index/register_invited/%s" % (base_url, key)
+        registration_url = "%s/%s/default/index/register_invited/%s" % (base_url, appname, key)
         #registration_url = URL(c = "default",
         #                       f = "index",
         #                       args = ["register_invited", key],
