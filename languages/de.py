@@ -4673,6 +4673,7 @@
 'Send Commitment as Shipment': 'Zusage Lieferung zu senden',
 'Send Invitation': 'Einladung abschicken',
 'Send Message': 'Nachricht senden',
+'Send New Invitation': 'Neue Einladung schicken',
 'Send New Shipment': 'Neue Lieferung senden',
 'Send Notification': 'Benachrichtigung senden',
 'Send Shipment': 'Lieferung senden',

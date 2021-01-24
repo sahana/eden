@@ -6,7 +6,7 @@
     @license: MIT
 """
 
-from gluon import current, CRYPT, Field, INPUT, SQLFORM, URL, \
+from gluon import current, CRYPT, Field, INPUT, SQLFORM, \
                   IS_EMAIL, IS_LOWER, IS_NOT_IN_DB
 
 from s3 import S3Method, s3_mark_required
@@ -234,8 +234,13 @@ class rlpptm_InviteUserOrg(S3Method):
                 return "could not update preliminary account"
         else:
             utable = current.auth.settings.table_user
-            if current.db(utable.email == email).select(utable.id, limitby = (0, 1)).first():
+
+            # Catch email addresses already used in existing accounts
+            if current.db(utable.email == email).select(utable.id,
+                                                        limitby = (0, 1),
+                                                        ).first():
                 return "email address %s already in use" % email
+
             user_id = utable.insert(**data)
             if user_id:
                 ltable = current.s3db.org_organisation_user
@@ -246,16 +251,13 @@ class rlpptm_InviteUserOrg(S3Method):
                 return "could not create preliminary account"
 
         # Compose and send invitation email
-        appname = request.application
+        # => must use public_url setting because URL() produces a
+        #    localhost address when called from CLI or script
         base_url = current.deployment_settings.get_base_public_url()
-        registration_url = "%s/%s/default/index/register_invited/%s" % (base_url, appname, key)
-        #registration_url = URL(c = "default",
-        #                       f = "index",
-        #                       args = ["register_invited", key],
-        #                       scheme = "https" if request.is_https else "http",
-        #                       )
+        appname = request.application
+        registration_url = "%s/%s/default/index/register_invited/%s"
 
-        data = {"url": registration_url,
+        data = {"url": registration_url % (base_url, appname, key),
                 "code": code,
                 }
 

@@ -15,7 +15,7 @@ from s3 import s3_format_datetime
 from templates.RLPPTM.config import SCHOOLS
 from templates.RLPPTM.helpers import rlpptm_InviteUserOrg
 
-# Batch limit
+# Batch limit (set to False to disable)
 BATCH_LIMIT = 250
 
 # Override auth (disables all permission checks)
@@ -135,7 +135,7 @@ if not failed:
                     failures += 1
                     infoln("invitation failed (%s)." % error)
 
-                if sent >= BATCH_LIMIT:
+                if BATCH_LIMIT and sent >= BATCH_LIMIT:
                     infoln("Batch limit (%s) reached" % BATCH_LIMIT)
                     skipped = total - (sent + failures)
                     break
