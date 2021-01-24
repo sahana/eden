@@ -130,6 +130,7 @@ if not failed:
                 if not error:
                     sent += 1
                     infoln("invited.")
+                    db.commit()
                 else:
                     failures += 1
                     infoln("invitation failed (%s)." % error)
