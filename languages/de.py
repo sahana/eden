@@ -923,6 +923,7 @@
 'Clinical Laboratory': 'Klinisches Labor',
 'Clinical Operations': 'Klinikbetrieb',
 'Clinical Status': 'Klinischer Status',
+'Close map': 'Karte verstecken',
 'Closed Cases': 'Abgeschlossene Fälle',
 'Closed at': 'Geschlossen am',
 'Closed': 'Geschlossen',

@@ -895,6 +895,22 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
+            record = r.record
+            if record:
+                s3db = current.s3db
+                auth = current.auth
+                if not auth.s3_has_role("ORG_GROUP_ADMIN") and \
+                   not auth.s3_has_role("ORG_ADMIN", for_pe=record.pe_id):
+                    s3.hide_last_update = True
+
+                    table = r.resource.table
+
+                    field = table.obsolete
+                    field.readable = field.writable = False
+
+                    field = table.organisation_id
+                    field.represent = s3db.org_OrganisationRepresent(show_link=False)
+
             settings.ui.summary = ({"name": "table",
                                     "label": "Table",
                                     "widgets": [{"method": "datatable"}]

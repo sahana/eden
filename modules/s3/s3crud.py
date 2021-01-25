@@ -2442,6 +2442,9 @@ class S3CRUD(S3Method):
         """
 
         output = {}
+        if current.response.s3.hide_last_update:
+            return output
+
         record_id = self.record_id
         if record_id:
             record = None
