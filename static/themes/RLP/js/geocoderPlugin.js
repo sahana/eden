@@ -48,6 +48,7 @@ $(document).ready(function(){
             type: 'POST',
             data: {address: data.address,
                    postcode: data.postcode,
+                   k: $(selector + '_geocode button').data('k')
                    },
             dataType: 'json',
             success: function(result) {

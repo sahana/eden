@@ -3234,26 +3234,42 @@ def geocode():
         @param postcode: Postcode
     """
 
+    vars_get = request.post_vars.get
+
+    # Validate the formkey
+    formkey = vars_get("k", None)
+    keyname = "_formkey[geocode]"
+    if not formkey or formkey not in session.get(keyname, []):
+        status = 403
+        message = current.ERROR.NOT_PERMITTED
+        headers = {"Content-Type":"application/json"}
+        current.log.error(message)
+        raise HTTP(status,
+                   body = current.xml.json_message(success = False,
+                                                   statuscode = status,
+                                                   message = message),
+                   web2py_error = message,
+                   **headers)
+
     # Read the request
-    vars = request.post_vars
-    street = vars.get("address", None)
-    postcode = vars.get("postcode", None)
-    L0 = vars.get("L0", None)
+    street = vars_get("address", None)
+    postcode = vars_get("postcode", None)
+    L0 = vars_get("L0", None)
     if L0:
         L0 = int(L0)
-    L1 = vars.get("L1", None)
+    L1 = vars_get("L1", None)
     if L1:
         L1 = int(L1)
-    L2 = vars.get("L2", None)
+    L2 = vars_get("L2", None)
     if L2:
         L2 = int(L2)
-    L3 = vars.get("L3", None)
+    L3 = vars_get("L3", None)
     if L3:
         L3 = int(L3)
-    L4 = vars.get("L4", None)
+    L4 = vars_get("L4", None)
     if L4:
         L4 = int(L4)
-    L5 = vars.get("L5", None)
+    L5 = vars_get("L5", None)
     if L5:
         L5 = int(L5)
     # Is this a Street or Lx?
@@ -3290,10 +3306,26 @@ def geocode_r():
         @param lon: float (as string)
     """
 
+    vars_get = request.post_vars.get
+
+    # Validate the formkey
+    formkey = vars_get("k", None)
+    keyname = "_formkey[geocode]"
+    if not formkey or formkey not in session.get(keyname, []):
+        status = 403
+        message = current.ERROR.NOT_PERMITTED
+        headers = {"Content-Type":"application/json"}
+        current.log.error(message)
+        raise HTTP(status,
+                   body = current.xml.json_message(success = False,
+                                                   statuscode = status,
+                                                   message = message),
+                   web2py_error = message,
+                   **headers)
+
     # Read the request
-    vars = request.post_vars
-    lat = vars.get("lat", None)
-    lon = vars.get("lon", None)
+    lat = vars_get("lat", None)
+    lon = vars_get("lon", None)
 
     # Reverse Geocode
     results = gis.geocode_r(lat, lon)

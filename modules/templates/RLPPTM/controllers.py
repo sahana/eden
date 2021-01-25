@@ -1339,8 +1339,6 @@ class register_invited(S3CustomController):
             redirect(URL(c="default", f="index"))
 
         T = current.T
-        db = current.db
-        s3db = current.s3db
 
         settings = current.deployment_settings
 
@@ -1745,11 +1743,27 @@ class geocode(S3CustomController):
 
     def __call__(self):
 
+        vars_get = current.request.post_vars.get
+
+        # Validate the formkey
+        formkey = vars_get("k", None)
+        keyname = "_formkey[geocode]"
+        if not formkey or formkey not in current.session.get(keyname, []):
+            status = 403
+            message = current.ERROR.NOT_PERMITTED
+            headers = {"Content-Type":"application/json"}
+            current.log.error(message)
+            raise HTTP(status,
+                       body = current.xml.json_message(success = False,
+                                                       statuscode = status,
+                                                       message = message),
+                       web2py_error = message,
+                       **headers)
+
         gis = current.gis
 
-        post_vars_get = current.request.post_vars.get
-        postcode = post_vars_get("postcode")
-        address = post_vars_get("address")
+        postcode = vars_get("postcode")
+        address = vars_get("address")
         if address:
             full_address = "%s %s" %(postcode, address)
         else:

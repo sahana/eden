@@ -6129,13 +6129,24 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                    T("Address NOT Found"),
                                    ))
 
-            map_icon.append(DIV(DIV(_class = "throbber hide"),
+        # Generate form key
+        formkey = uuid4().hex
+
+        # Store form key in session
+        session = current.session
+        keyname = "_formkey[geocode]"
+        session[keyname] = session.get(keyname, [])[-9:] + [formkey]
+
+        btn = BUTTON(T("Geocode"),
+                     _type = "button", # defaults to 'submit' otherwise!
+                     _class = "hide",
+                     )
+        btn["_data-k"] = formkey
+
+        map_icon.append(DIV(DIV(_class = "throbber hide"),
                                 DIV(_class = "geocode_success hide"),
                                 DIV(_class = "geocode_fail hide"),
-                                BUTTON(T("Geocode"),
-                                       _type = "button", # defaults to 'submit' otherwise!
-                                       _class = "hide",
-                                       ),
+                                btn,
                                 _id = "%s_geocode" % fieldname,
                                 _class = "controls geocode",
                                 ))

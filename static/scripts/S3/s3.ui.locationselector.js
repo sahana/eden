@@ -992,6 +992,9 @@
                 }
             }
 
+            // Add the formkey
+            postData['k'] = $(selector + '_geocode button').data('k');
+
             // Submit to Geocoder
             var url = S3.Ap.concat('/gis/geocode');
             $.ajaxS3({
@@ -1070,6 +1073,9 @@
             // Collect the Lat/Lon
             var data = this.data;
             var postData = {lat: data.lat, lon: data.lon};
+
+            // Add the formkey
+            postData['k'] = $(selector + '_geocode button').data('k');
 
             // Submit to Geocoder
             var url = S3.Ap.concat('/gis/geocode_r');

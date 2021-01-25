@@ -1365,11 +1365,11 @@ class S3Request(object):
             headers = {"Content-Type":"application/json"}
             current.log.error(message)
             raise HTTP(status,
-                       body=current.xml.json_message(success=False,
-                                                     statuscode=status,
-                                                     message=message,
-                                                     tree=tree),
-                       web2py_error=message,
+                       body = current.xml.json_message(success = False,
+                                                       statuscode = status,
+                                                       message = message,
+                                                       tree = tree),
+                       web2py_error = message,
                        **headers)
 
     # -------------------------------------------------------------------------
