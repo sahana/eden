@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from gluon import A, BR, CRYPT, DIV, Field, FORM, H3, INPUT, \
                   IS_EMAIL, IS_EMPTY_OR, IS_EXPR, IS_LOWER, IS_NOT_EMPTY, IS_NOT_IN_DB, \
-                  P, SQLFORM, TABLE, TD, TR, URL, XML, current, redirect
+                  P, SQLFORM, TABLE, TD, TR, URL, XML, HTTP, current, redirect
 
 from gluon.storage import Storage
 
@@ -1746,7 +1746,7 @@ class geocode(S3CustomController):
         vars_get = current.request.post_vars.get
 
         # Validate the formkey
-        formkey = vars_get("k", None)
+        formkey = vars_get("k")
         keyname = "_formkey[geocode]"
         if not formkey or formkey not in current.session.get(keyname, []):
             status = 403
@@ -1780,7 +1780,8 @@ class geocode(S3CustomController):
             results["lat"] = lat
             results["lon"] = lon
 
-            output = json.dumps(results)
+            from s3.s3xml import SEPARATORS
+            output = json.dumps(results, separators=SEPARATORS)
 
         current.response.headers["Content-Type"] = "application/json"
         return output
