@@ -91,6 +91,9 @@ def rlpptm_org_rheader(r, tabs=None):
 
         if tablename == "org_organisation":
 
+            auth = current.auth
+            is_org_group_admin = auth.s3_has_role("ORG_GROUP_ADMIN")
+
             if not tabs:
 
                 invite_tab = None
@@ -111,7 +114,7 @@ def rlpptm_org_rheader(r, tabs=None):
                         sites_tab = (T("Test Stations"), "facility")
                     elif group.name == SCHOOLS:
                         sites_tab = (T("Administrative Offices"), "office")
-                        if current.auth.s3_has_role("ORG_GROUP_ADMIN"):
+                        if is_org_group_admin:
                             invite_tab = (T("Invite"), "invite")
 
                 tabs = [(T("Organisation"), None),
@@ -120,8 +123,19 @@ def rlpptm_org_rheader(r, tabs=None):
                         (T("Staff"), "human_resource"),
                         ]
 
+            # Check for active user accounts:
+            if is_org_group_admin:
+
+                from .helpers import get_org_accounts
+                active = get_org_accounts(record.id)[0]
+
+                active_accounts = lambda row: len(active)
+                rheader_fields = [[(T("Active Accounts"), active_accounts)],
+                                  ]
+            else:
+                rheader_fields = []
+
             rheader_title = "name"
-            rheader_fields = []
 
         rheader = S3ResourceHeader(rheader_fields, tabs, title=rheader_title)
         rheader = rheader(r, table = resource.table, record = record)

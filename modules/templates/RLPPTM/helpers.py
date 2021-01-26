@@ -12,6 +12,46 @@ from gluon import current, CRYPT, Field, INPUT, SQLFORM, \
 from s3 import S3Method, s3_mark_required
 
 # =============================================================================
+def get_org_accounts(organisation_id):
+
+    auth = current.auth
+    s3db = current.s3db
+
+    # Get all accounts that are linked to this org
+    utable = auth.settings.table_user
+    oltable = s3db.org_organisation_user
+    pltable = s3db.pr_person_user
+
+    join = oltable.on((oltable.user_id == utable.id) & \
+                      (oltable.deleted == False))
+    left = pltable.on((pltable.user_id == utable.id) & \
+                      (pltable.deleted == False))
+    query = (oltable.organisation_id == organisation_id)
+    rows = current.db(query).select(utable.id,
+                                    utable.first_name,
+                                    utable.last_name,
+                                    utable.email,
+                                    utable.registration_key,
+                                    pltable.pe_id,
+                                    join = join,
+                                    left = left,
+                                    )
+
+    active, disabled, invited = [], [], []
+    for row in rows:
+        user = row[utable]
+        person_link = row.pr_person_user
+        if person_link.pe_id:
+            if user.registration_key:
+                disabled.append(user)
+            else:
+                active.append(user)
+        else:
+            invited.append(user)
+
+    return active, disabled, invited
+
+# =============================================================================
 class rlpptm_InviteUserOrg(S3Method):
     """ Custom Method Handler to invite User Organisations """
 
@@ -64,39 +104,8 @@ class rlpptm_InviteUserOrg(S3Method):
         output = {"title": T("Invite Organisation"),
                   }
 
-        # Get all accounts that are linked to this org
-        utable = auth_settings.table_user
-        oltable = s3db.org_organisation_user
-        pltable = s3db.pr_person_user
-
-        organisation_id = r.record.id
-        join = oltable.on((oltable.user_id == utable.id) & \
-                          (oltable.deleted == False))
-        left = pltable.on((pltable.user_id == utable.id) & \
-                          (pltable.deleted == False))
-        query = (oltable.organisation_id == organisation_id)
-        rows = db(query).select(utable.id,
-                                utable.first_name,
-                                utable.last_name,
-                                utable.email,
-                                utable.registration_key,
-                                pltable.pe_id,
-                                join = join,
-                                left = left,
-                                )
-
-        active, disabled, invited = [], [], []
-        for row in rows:
-            user = row[utable]
-            person_link = row.pr_person_user
-            if person_link.pe_id:
-                if user.registration_key:
-                    disabled.append(user)
-                else:
-                    active.append(user)
-            else:
-                invited.append(user)
-
+        # Check for existing accounts
+        active, disabled, invited = get_org_accounts(r.record.id)
         if active or disabled:
             response.error = T("There are already user accounts registered for this organization")
 
@@ -127,7 +136,7 @@ class rlpptm_InviteUserOrg(S3Method):
 
         account = invited[0] if invited else None
 
-        # Look up existing invite-account
+        # Look up email to use for invitation
         email = None
         if account:
             email = account.email
@@ -144,6 +153,7 @@ class rlpptm_InviteUserOrg(S3Method):
                 email = contact.value
 
         # Form Fields
+        utable = auth_settings.table_user
         dbset = db(utable.id != account.id) if account else db
         formfields = [Field("email",
                             default = email,
@@ -157,8 +167,7 @@ class rlpptm_InviteUserOrg(S3Method):
                       ]
 
         # Generate labels (and mark required fields in the process)
-        labels, has_required = s3_mark_required(formfields,
-                                                )
+        labels, has_required = s3_mark_required(formfields)
         response.s3.has_required = has_required
 
         # Form buttons
