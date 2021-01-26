@@ -4223,7 +4223,7 @@
 'Order updated': 'อัปเดตแล้ว',
 'Orders': 'สั่งซื้อ',
 'OrgAdmin - allowed to manage user roles for organisation realms': 'OrgAdmin - allowed to manage user roles for organisation realms',
-'Organisation Group': 'กลุ่มองค์กร',
+'Organization Group': 'กลุ่มองค์กร',
 'Organization': 'องค์กร',
 'Organization added': 'เพิ่มองค์กรแล้ว',
 'Organization added to Policy/Strategy': 'เพิ่มองค์กรที่เข้าร่วมในนโยบาย/ยุทธศาสตร์',

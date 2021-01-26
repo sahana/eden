@@ -483,7 +483,7 @@ def newsfeed():
         nappend((T("Organization"), org_field))
     if org_group_field:
         if isinstance(group_label, bool):
-           group_label = T("Organisation Group")
+           group_label = T("Organization Group")
         nappend((T(group_label), org_group_field))
     if contact_field:
         nappend((T("Contact"), contact_field))

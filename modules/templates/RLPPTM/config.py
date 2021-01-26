@@ -948,9 +948,10 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
-            s3db = current.s3db
             auth = current.auth
-            #settings = current.deployment_settings
+            s3db = current.s3db
+
+            is_org_group_admin = auth.s3_has_role("ORG_GROUP_ADMIN")
 
             # Add invite-method for ORG_GROUP_ADMIN role
             from .helpers import rlpptm_InviteUserOrg
@@ -988,6 +989,8 @@ def config(settings):
                     from s3 import S3SQLCustomForm, \
                                    S3SQLInlineComponent, \
                                    S3SQLInlineLink
+
+                    # Custom form
                     crud_fields = ["name",
                                    "acronym",
                                    # TODO Activate after correct type prepop
@@ -1011,22 +1014,53 @@ def config(settings):
                                         name = "email",
                                         ),
                                    "phone",
-                                   #"website",
+                                   "website",
                                    #"year",
                                    "logo",
                                    "comments",
                                    ]
-
-                    if auth.s3_has_role("ORG_GROUP_ADMIN"):
+                    if is_org_group_admin:
                         crud_fields.insert(0, S3SQLInlineLink(
                                                     "group",
                                                     field = "group_id",
-                                                    label = T("Organisation Group"),
+                                                    label = T("Organization Group"),
                                                     multiple = False,
                                                     ))
 
-                    r.resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
-                                         )
+                    # Filters
+                    from s3 import S3OptionsFilter, S3TextFilter, s3_get_filter_opts
+                    text_fields = ["name", "acronym", "website", "phone"]
+                    if is_org_group_admin:
+                        text_fields.append("email.value")
+                    filter_widgets = [S3TextFilter(text_fields,
+                                                   label = T("Search"),
+                                                   ),
+                                      ]
+                    if is_org_group_admin:
+                        filter_widgets.append(S3OptionsFilter("group__link.group_id",
+                                                              label = T("Group"),
+                                                              options = lambda: s3_get_filter_opts("org_group"),
+                                                              ))
+
+                    resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
+                                       filter_widgets = filter_widgets,
+                                       )
+
+                # Custom list fields
+                list_fields = [#"group__link.group_id",
+                               "name",
+                               "acronym",
+                               # TODO Activate after correct type prepop
+                               #"organisation_type__link.organisation_type_id",
+                               "website",
+                               "phone",
+                               #"email.value"
+                               ]
+                if is_org_group_admin:
+                    list_fields.insert(0, (T("Organization Group"), "group__link.group_id"))
+                    list_fields.append((T("Email"), "email.value"))
+                r.resource.configure(list_fields = list_fields,
+                                     )
 
             return result
         s3.prep = prep

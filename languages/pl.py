@@ -3640,7 +3640,7 @@
 'Order No': 'Nr zamówienia',
 'Order updated': 'Zamówienie zaktualizowane',
 'Orders': 'Zamówienia',
-'Organisation Group': 'Grupa organizacji',
+'Organization Group': 'Grupa organizacji',
 'Organization': 'Organizacja',
 'Organization / Branch': 'Organization / Branch',
 'Organization added': 'Organizacja dodana',

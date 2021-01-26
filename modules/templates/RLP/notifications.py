@@ -316,7 +316,7 @@ class DeploymentNotifications(object):
                           status = "SENT" if success else "FAILED",
                           )
         if not success:
-            warnings.append(T("Organisation could not be notified"))
+            warnings.append(T("Organization could not be notified"))
 
         success = False
         email = data.get("volunteer_email")
