@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 {
+'%Y-%m-%d %H:%M:%S': '%Y-%m-%d %H:%M:%S',
 "A volunteer is defined as active if they've participated in an average of 8 or more hours of Program work or Trainings per month in the last year": "A volunteer is defined as active if they've participated in an average of 8 or more hours of Programme work or Trainings per month in the last year",
 'Ability to customize the list of details tracked at a Shelter': 'Ability to customise the list of details tracked at a Shelter',
 'Ability to customize the list of human resource tracked at a Shelter': 'Ability to customise the list of human resource tracked at a Shelter',
@@ -134,7 +135,6 @@
 'Organization Domain Details': 'Organisation Domain Details',
 'Organization Domain updated': 'Organisation Domain updated',
 'Organization Domains': 'Organisation Domains',
-'Organization Domains': 'Organisation Domains',
 'Organization Name': 'Organisation Name',
 'Organization not found': 'Organisation not found',
 'Organization removed from Project': 'Organisation removed from Project',
@@ -179,7 +179,6 @@
 'Project Details including organizations and communities': 'Project Details including organisations and communities',
 'Project Organization Details': 'Project Organisation Details',
 'Project Organization updated': 'Project Organisation updated',
-'Project Organizations': 'Project Organisations',
 'Project Organizations': 'Project Organisations',
 'Public Sector Organization': 'Public Sector Organisation',
 'Register as an Organization or Agency': 'Register as an Organisation or Agency',

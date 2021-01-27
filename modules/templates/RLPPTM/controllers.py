@@ -1751,7 +1751,7 @@ class geocode(S3CustomController):
         if not formkey or formkey not in current.session.get(keyname, []):
             status = 403
             message = current.ERROR.NOT_PERMITTED
-            headers = {"Content-Type":"application/json"}
+            headers = {"Content-Type": "application/json"}
             current.log.error(message)
             raise HTTP(status,
                        body = current.xml.json_message(success = False,
