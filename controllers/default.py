@@ -952,6 +952,7 @@ def page():
     table = s3db.cms_post
     query = (table.name == page) & \
             (table.deleted != True)
+    query &= auth.s3_accessible_query("read", table)
     row = db(query).select(table.id,
                            table.title,
                            table.body,
@@ -976,7 +977,7 @@ def page():
         item.append(A(current.T("Edit"),
                      _href = URL(c="cms", f="post",
                                  args = [row.id, "update"],
-                                 vars = vars,
+                                 vars = {"page": page},
                                  ),
                      _class = "action-btn",
                      ))
