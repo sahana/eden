@@ -1218,7 +1218,7 @@ Thank you"""
 
         # Requires login
         if not self.s3_logged_in():
-            session.error = T("Login required")
+            session.error = T("Authentication required")
             redirect(URL(c = "default", f = "user",
                          args = ["login"],
                          vars = {"_next": URL(args=current.request.args)},
