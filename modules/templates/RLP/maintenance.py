@@ -20,15 +20,15 @@ class Daily():
         current.log.info("Daily Maintenance RLP")
 
         now = datetime.datetime.utcnow()
-        month_past = now - datetime.timedelta(weeks=4)
+        week_past = now - datetime.timedelta(weeks=1)
 
         # Cleanup Scheduler logs
         table = s3db.scheduler_run
-        db(table.start_time < month_past).delete()
+        db(table.start_time < week_past).delete()
 
         # Cleanup Sync logs
         table = s3db.sync_log
-        db(table.timestmp < month_past).delete()
+        db(table.timestmp < week_past).delete()
 
         # Cleanup Sessions
         osjoin = os.path.join
@@ -40,11 +40,11 @@ class Daily():
                         )
 
         # Convert to UNIX time
-        month_past_u = time.mktime(month_past.timetuple())
+        week_past_u = time.mktime(week_past.timetuple())
         for file in os.listdir(folder):
             filepath = osjoin(folder, file)
             status = osstat(filepath)
-            if status.st_mtime < month_past_u:
+            if status.st_mtime < week_past_u:
                 try:
                     osremove(filepath)
                 except:
