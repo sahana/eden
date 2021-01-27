@@ -3316,6 +3316,12 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # CMS: Content Management System
     #
+    def get_cms_expose_pages(self):
+        """
+            Global control over default/page controller
+        """
+        return self.cms.get("expose_pages", False)
+
     def get_cms_bookmarks(self):
         """
             Whether to allow users to bookmark Posts in News feed

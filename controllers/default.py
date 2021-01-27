@@ -944,6 +944,9 @@ def page():
         Show a custom CMS page
     """
 
+    if not settings.get_cms_expose_pages():
+        raise HTTP(403, "CMS pages disabled")
+
     try:
         page = request.args[0]
     except:
@@ -961,7 +964,7 @@ def page():
     try:
         title = row.title
     except:
-        raise HTTP(400, "Page not found in CMS")
+        raise HTTP(404, "Page not found in CMS")
 
     if row.body:
         from s3compat import StringIO
