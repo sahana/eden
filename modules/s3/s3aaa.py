@@ -1286,6 +1286,10 @@ Thank you"""
             session.confirmation = T("Consent registered")
             redirect(next_url)
 
+        # Remind the user that form should be submitted even if they didn't
+        # enter anything:
+        response.s3.jquery_ready.append('''S3SetNavigateAwayConfirm();''')
+
         return form
 
     # -------------------------------------------------------------------------
