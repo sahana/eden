@@ -891,6 +891,14 @@ class S3Config(Storage):
         """ Expose options to track user consent """
         return self.auth.get("consent_tracking", False)
 
+    def get_auth_consent_check(self):
+        """
+            Ask for consent renewal upon login
+            - a function that returns a list of processing type codes for
+              which the user shall renew their consent after login
+        """
+        return self.auth.get("consent_check", None)
+
     def get_auth_registration_volunteer(self):
         """ Redirect the newly-registered user to their volunteer details page """
         return self.auth.get("registration_volunteer", False)

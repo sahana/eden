@@ -1422,6 +1422,10 @@ def user():
         title = response.title = T("User Profile")
         form = auth.profile()
 
+    elif arg == "consent":
+        title = response.title = T("Consent")
+        form = auth.consent()
+
     elif arg == "options.s3json":
         # Used when adding organisations from registration form
         return s3_rest_controller(prefix="auth", resourcename="user")

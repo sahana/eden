@@ -1051,6 +1051,41 @@ class auth_Consent(object):
         return row is not None
 
     # -------------------------------------------------------------------------
+    def pending_responses(self, person_id):
+        """
+            Identify all processing types for which a person has not
+            responded to the updated consent questions, or where their
+            previously given consent has expired
+
+            @param person_id: the person ID
+            @returns: list of processing type codes
+        """
+
+        # Get all current consent options for the given processing types
+        options = self.extract()
+        option_ids = {spec["id"] for spec in options.values()}
+
+        # Find all responses of this person to these options
+        today = current.request.utcnow.date()
+        ctable = current.s3db.auth_consent
+        query = (ctable.person_id == person_id) & \
+                (ctable.option_id.belongs(option_ids)) & \
+                ((ctable.consenting == False) | \
+                 (ctable.expires_on == None) | \
+                 (ctable.expires_on > today)) & \
+                (ctable.deleted == False)
+        rows = current.db(query).select(ctable.option_id)
+
+        # Identify any pending responses
+        responded = {row.option_id for row in rows}
+        pending = []
+        for code, spec in options.items():
+            if spec["id"] not in responded:
+                pending.append(code)
+
+        return pending
+
+    # -------------------------------------------------------------------------
     @classmethod
     def consent_query(cls, table, code, field=None):
         """

@@ -792,19 +792,30 @@ Thank you"""
 
         # How to continue
         if next is DEFAULT:
-            if deployment_settings.has_module("setup") and \
-               deployment_settings.get_setup_wizard_questions() and \
-               self.s3_has_role("ADMIN"):
-                itable = current.s3db.setup_instance
-                instance = db(itable.url == "https://%s" % request.env.HTTP_HOST).select(itable.id,
-                                                                                         itable.deployment_id,
-                                                                                         itable.configured,
-                                                                                         limitby = (0, 1)
-                                                                                         ).first()
-                if instance and not instance.configured:
-                    # Run Configuration Wizard
-                    next = URL(c="setup", f="deployment",
-                               args = [instance.deployment_id, "instance", instance.id, "wizard"])
+            is_admin = self.s3_has_role("ADMIN")
+            if is_admin:
+                # Setup
+                if deployment_settings.has_module("setup") and \
+                   deployment_settings.get_setup_wizard_questions():
+                    itable = current.s3db.setup_instance
+                    instance = db(itable.url == "https://%s" % request.env.HTTP_HOST).select(itable.id,
+                                                                                             itable.deployment_id,
+                                                                                             itable.configured,
+                                                                                             limitby = (0, 1)
+                                                                                             ).first()
+                    if instance and not instance.configured:
+                        # Run Configuration Wizard
+                        next = URL(c="setup", f="deployment",
+                                   args = [instance.deployment_id, "instance", instance.id, "wizard"])
+
+            elif accepted_form:
+                # Check for pending consent upon login?
+                pending_consent = deployment_settings.get_auth_consent_check()
+                if callable(pending_consent):
+                    pending_consent = pending_consent()
+                if pending_consent:
+                    next = URL(c="default", f="user", args=["consent"])
+
             if next is DEFAULT:
                 if deployment_settings.get_auth_login_next_always():
                     next = deployment_settings.get_auth_login_next()
@@ -816,6 +827,7 @@ Thank you"""
                         next = deployment_settings.get_auth_login_next()
                         if callable(next):
                             next = next()
+
         if settings.login_form == self:
             if accepted_form:
                 if onaccept:
@@ -1171,6 +1183,110 @@ Thank you"""
                 s3tracker(db.pr_person,
                           person_id).set_location(closestpoint,
                                                   timestmp = request.utcnow)
+
+    # -------------------------------------------------------------------------
+    def consent(self):
+        """
+            Consent question form, e.g.
+            - when consent requires renewal, or
+            - new consent questions need to be asked, or
+            - user has been added by ADMIN and shall give consent upon login
+            - ...
+
+            NB: this form cannot meaningfully prevent the user from simply
+                bypassing the question and navigating away. To prevent the
+                user from accessing functionality for which consent is
+                mandatory, the respective controllers must check for consent
+                using auth_Consent.has_consented, and refuse if not given
+                (though they can still redirect to this form where useful)
+        """
+
+        T = current.T
+
+        request = current.request
+        response = current.response
+        session = current.session
+        settings = current.deployment_settings
+
+        next_url = request.vars.get("_next")
+        if not next_url:
+            next_url = settings.get_auth_login_next()
+            if callable(next_url):
+                next_url = next_url()
+        if not next_url:
+            next_url = URL(c = "default", f = "index")
+
+        # Requires login
+        if not self.s3_logged_in():
+            session.error = T("Login required")
+            redirect(URL(c = "default", f = "user",
+                         args = ["login"],
+                         vars = {"_next": URL(args=current.request.args)},
+                         ))
+
+        # Requires person record
+        person_id = self.s3_logged_in_person()
+        if not person_id:
+            session.error = T("No person record for the current user")
+            redirect(next_url)
+
+        # Get all pending consent questions for the current user
+        pending_consent = settings.get_auth_consent_check()
+        if callable(pending_consent):
+            pending_consent = pending_consent()
+        if not pending_consent:
+            session.warning = T("No pending consent questions for the current user")
+            redirect(next_url)
+        else:
+            response.warning = T("Consent required")
+
+         # Instantiate Consent Tracker
+        consent = current.s3db.auth_Consent(processing_types=pending_consent)
+
+        # Form fields
+        formfields = [Field("consent",
+                            label = T("Consent"),
+                            widget = consent.widget,
+                            ),
+                      ]
+        # Generate labels (and mark required fields in the process)
+        labels, has_required = s3_mark_required(formfields)
+        response.s3.has_required = has_required
+
+        # Form buttons
+        SUBMIT = T("Submit")
+        buttons = [INPUT(_type = "submit",
+                         _value = SUBMIT,
+                         ),
+                   ]
+
+        # Construct the form
+        response.form_label_separator = ""
+        form = SQLFORM.factory(table_name = "auth_consent",
+                               record = None,
+                               hidden = {"_next": request.vars._next},
+                               labels = labels,
+                               separator = "",
+                               showid = False,
+                               submit_button = SUBMIT,
+                               delete_label = self.messages.delete_label,
+                               formstyle = settings.get_ui_formstyle(),
+                               buttons = buttons,
+                               *formfields)
+
+        # Identify form for CSS
+        form.add_class("auth_consent")
+
+        if form.accepts(current.request.vars,
+                        current.session,
+                        formname = "consent",
+                        ):
+
+            consent.track(person_id, form.vars.get("consent"))
+            session.confirmation = T("Consent registered")
+            redirect(next_url)
+
+        return form
 
     # -------------------------------------------------------------------------
     def register(self,
