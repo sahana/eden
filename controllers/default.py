@@ -976,7 +976,7 @@ def page():
         item.append(A(current.T("Edit"),
                      _href = URL(c="cms", f="post",
                                  args = [row.id, "update"],
-                                 vars = vars,
+                                 vars = {"page": page},
                                  ),
                      _class = "action-btn",
                      ))
