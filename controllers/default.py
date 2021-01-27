@@ -939,6 +939,55 @@ def organisation():
     return items
 
 # -----------------------------------------------------------------------------
+def page():
+    """
+        Show a custom CMS page
+    """
+
+    try:
+        page = request.args[0]
+    except:
+        raise HTTP(400, "Page not specified")
+
+    table = s3db.cms_post
+    query = (table.name == page) & \
+            (table.deleted != True)
+    row = db(query).select(table.id,
+                           table.title,
+                           table.body,
+                           limitby = (0, 1)
+                           ).first()
+    try:
+        title = row.title
+    except:
+        raise HTTP(400, "Page not found in CMS")
+
+    if row.body:
+        from s3compat import StringIO
+        try:
+            body = current.response.render(StringIO(row.body), {})
+        except:
+            body = row.body
+    else:
+        body = ""
+    item = DIV(XML(body), _class="cms-item")
+    if auth.s3_has_role(session.s3.system_roles.ADMIN):
+        item.append(BR())
+        item.append(A(current.T("Edit"),
+                     _href = URL(c="cms", f="post",
+                                 args = [row.id, "update"],
+                                 vars = vars,
+                                 ),
+                     _class = "action-btn",
+                     ))
+
+    response.title = title
+    _custom_view("page")
+
+    return {"item": item,
+            }
+
+# -----------------------------------------------------------------------------
 def person():
     """
         Profile to show:
