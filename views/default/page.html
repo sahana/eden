@@ -1,9 +1,10 @@
 {{extend "layout.html"}}
+{{try:}}{{title=title}}
 <div class='row'>
  <div class='small-12 columns'>
-  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+  {{=H2(title)}}
  </div>
-</div>
+</div>{{except:}}{{pass}}
 <div class='row'>
  <div class='small-12 columns'>
   <div class='item-container'>
