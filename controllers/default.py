@@ -952,6 +952,7 @@ def page():
     table = s3db.cms_post
     query = (table.name == page) & \
             (table.deleted != True)
+    query &= auth.s3_accessible_query("read", table)
     row = db(query).select(table.id,
                            table.title,
                            table.body,
