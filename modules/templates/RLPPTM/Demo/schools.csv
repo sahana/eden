@@ -1,4 +1,6 @@
-Groups,Organisation,Acronym,Country,Website,Email,KV:SchulNr
-Schulen,GS Linz,,DE,http://www.grundschule-linz.de,gs_linz@example.com,10091
-Schulen,GS Nackenheim,,DE,http://www.grundschule-nackenheim.de,gs_nackenheim@example.com,10135
-Schulen,GS Weingarten,,DE,http://www.grundschule-weingarten.de,gs_weingarten@example.com,10181
+Groups,Organisation,Acronym,Type,Country,Website,Email,KV:SchulNr,KV:KitaNr
+Schulen,GS Linz,,Bildungseinrichtung,DE,http://www.grundschule-linz.de,gs_linz@example.com,10091,
+Schulen,GS Nackenheim,,Bildungseinrichtung,DE,http://www.grundschule-nackenheim.de,gs_nackenheim@example.com,10135,
+Schulen,GS Weingarten,,Bildungseinrichtung,DE,http://www.grundschule-weingarten.de,gs_weingarten@example.com,10181,
+Schulen,Evangelischer Kindertagesstätte Arche Noah,,Kinderbetreuung,DE,,kita_anoah@example.com,,50432
+Schulen,Kindergarten St. Pius,,Kinderbetreuung,DE,,kiga_pius@example.com,,51387
