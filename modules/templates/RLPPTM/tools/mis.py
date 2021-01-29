@@ -115,9 +115,9 @@ if not failed:
                         (ctable.contact_method == "EMAIL") & \
                         (ctable.deleted == False)
                 contact = db(query).select(ctable.value,
-                                        orderby = ctable.priority,
-                                        limitby = (0, 1),
-                                        ).first()
+                                           orderby = ctable.priority,
+                                           limitby = (0, 1),
+                                           ).first()
                 if contact:
                     email = contact.value
                     info("(%s)..." % email)

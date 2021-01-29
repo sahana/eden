@@ -21,7 +21,7 @@ LSJV = "Landesamt für Soziales, Jugend und Versorgung"
 SCHOOLS = "Schulen"
 TESTSTATIONS = "COVID-19 Teststellen"
 
-ALLOWED_FORMATS = ("html", "iframe", "popup", "aadata", "json", "xls", "pdf")
+ALLOWED_FORMATS = ("html", "iframe", "popup", "aadata", "json")
 
 # =============================================================================
 def config(settings):
@@ -578,6 +578,11 @@ def config(settings):
         def prep(r):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
+
+            # Restrict data formats
+            settings.ui.export_formats = None
+            if r.representation not in ALLOWED_FORMATS:
+                r.error(403, current.ERROR.NOT_PERMITTED)
 
             db = current.db
             s3db = current.s3db

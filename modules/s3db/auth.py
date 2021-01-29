@@ -301,6 +301,7 @@ class AuthConsentModel(S3Model):
                      Field("obsolete", "boolean",
                            default = False,
                            label = T("Obsolete"),
+                           represent = s3_yes_no_represent,
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" % (T("Obsolete"),
                                                              T("This description of the data processing is obsolete"),

@@ -1288,7 +1288,8 @@ Thank you"""
 
         # Remind the user that form should be submitted even if they didn't
         # enter anything:
-        response.s3.jquery_ready.append('''S3SetNavigateAwayConfirm();''')
+        response.s3.jquery_ready.append('''S3SetNavigateAwayConfirm();
+$('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
 
         return form
 
