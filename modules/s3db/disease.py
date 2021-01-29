@@ -4,7 +4,7 @@
 
     @ToDo Extend to Vector Tracking for Dengue/Malaria
 
-    @copyright: 2014-2020 (c) Sahana Software Foundation
+    @copyright: 2014-2021 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person

@@ -1,7 +1,7 @@
 /**
  * jQuery UI Widget for org_SiteCheckIn
  *
- * @copyright 2016-2020 (c) Sahana Software Foundation
+ * @copyright 2016-2021 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+

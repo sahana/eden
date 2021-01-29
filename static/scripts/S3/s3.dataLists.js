@@ -2,7 +2,7 @@
  * jQuery UI DataList Widget for "lists of data cards"
  * - server-side implementation is S3DataList in modules/s3/s3data.py
  *
- * @copyright 2013-2020 (c) Sahana Software Foundation
+ * @copyright 2013-2021 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+

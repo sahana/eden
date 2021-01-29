@@ -2,7 +2,7 @@
 
 """ Resource Summary Pages
 
-    @copyright: 2013-2020 (c) Sahana Software Foundation
+    @copyright: 2013-2021 (c) Sahana Software Foundation
     @license: MIT
 
     @requires: U{B{I{gluon}} <http://web2py.com>}

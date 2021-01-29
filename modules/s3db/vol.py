@@ -3,7 +3,7 @@
     Sahana Eden Volunteers Management
     (Extends modules/eden/hrm.py)
 
-    @copyright: 2012-2020 (c) Sahana Software Foundation
+    @copyright: 2012-2021 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person

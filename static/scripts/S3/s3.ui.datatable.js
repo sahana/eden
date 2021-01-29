@@ -10,7 +10,7 @@
  *
  * Server-side script in modules/s3/s3data.py.
  *
- * @copyright 2018-2020 (c) Sahana Software Foundation
+ * @copyright 2018-2021 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+

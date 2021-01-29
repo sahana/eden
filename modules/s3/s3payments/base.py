@@ -2,7 +2,7 @@
 
 """ Online Payment Services Integration
 
-    @copyright: (c) 2020-2020 Sahana Software Foundation
+    @copyright: (c) 2020-2021 Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person

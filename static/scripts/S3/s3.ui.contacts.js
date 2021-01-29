@@ -1,7 +1,7 @@
 /**
  * jQuery UI PersonContacts Widget
  *
- * @copyright 2015-2020 (c) Sahana Software Foundation
+ * @copyright 2015-2021 (c) Sahana Software Foundation
  * @license MIT
  */
 (function($, undefined) {

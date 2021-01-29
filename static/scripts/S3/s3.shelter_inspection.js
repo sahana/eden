@@ -1,7 +1,7 @@
 /**
  * jQuery UI Widget for Shelter Inspection (used by CRShelterInspection)
  *
- * @copyright 2017-2020 (c) Sahana Software Foundation
+ * @copyright 2017-2021 (c) Sahana Software Foundation
  * @license MIT
  */
 (function($, undefined) {

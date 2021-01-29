@@ -2,7 +2,7 @@
 
 """ S3 Date/Time Toolkit
 
-    @copyright: 2015-2020 (c) Sahana Software Foundation
+    @copyright: 2015-2021 (c) Sahana Software Foundation
     @license: MIT
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
