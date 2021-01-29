@@ -2600,6 +2600,7 @@
 'Isle of Man': 'Insel Man',
 'Issued On': 'Ausgestellt am',
 'Issued##fin': 'Ausgestellt',
+'Issuer##fin': 'Aussteller',
 'Issuers##fin': 'Aussteller',
 'Issuing Authority': 'Ausstellende Behörde',
 'It captures not only the places where they are active, but also captures information on the range of projects they are providing in each area.': 'Es erfasst nicht nur die Orte wo sie aktiv sind, sondern erfasst auch Informationen über den Umfang der Projekte die sie im jeweiligen Gebiet durchführen.',

@@ -536,6 +536,9 @@ def config(settings):
         table = s3db.fin_voucher
 
         # Customise fields
+        field = table.pe_id
+        field.label = T("Issuer##fin")
+
         field = table.comments
         field.label = T("Memoranda")
         field.comment = DIV(_class="tooltip",
@@ -549,21 +552,28 @@ def config(settings):
         field.represent = lambda v: T("Issued##fin") if v > 0 else T("Redeemed##fin")
 
         # Custom list fields
-        list_fields = ["program_id",
-                       "signature",
-                       #"bearer_dob",
-                       "balance",
-                       "date",
-                       "valid_until",
-                       #"comments",
-                       ]
-        if current.auth.s3_has_role("VOUCHER_ISSUER"):
-            if settings.get_fin_voucher_personalize() == "dob":
-                list_fields.insert(2, "bearer_dob")
-            list_fields.append("comments")
+        has_role = current.auth.s3_has_role
+        if has_role("PROGRAM_MANAGER"):
+            list_fields = ["program_id",
+                           "signature",
+                           "balance",
+                           "pe_id",
+                           "date",
+                           "valid_until",
+                           ]
+        elif has_role("VOUCHER_ISSUER"):
+            list_fields = ["program_id",
+                           "signature",
+                           "bearer_dob",
+                           "balance",
+                           "date",
+                           "valid_until",
+                           "comments",
+                           ]
 
         s3db.configure("fin_voucher",
                        list_fields = list_fields,
+                       orderby = "fin_voucher.date desc",
                        )
 
     settings.customise_fin_voucher_resource = customise_fin_voucher_resource
