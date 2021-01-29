@@ -944,9 +944,6 @@ def page():
         Show a custom CMS page
     """
 
-    if not settings.get_cms_expose_pages():
-        raise HTTP(403, "CMS pages disabled")
-
     try:
         page = request.args[0]
     except:
@@ -960,8 +957,7 @@ def page():
                      (ltable.resource == "page") & \
                      (ltable.deleted == False))
 
-    query = auth.s3_accessible_query("read", ctable) & \
-            (ctable.name == page) & \
+    query = (ctable.name == page) & \
             (ctable.deleted == False)
     row = db(query).select(ctable.id,
                            ctable.title,
@@ -999,8 +995,7 @@ def page():
     response.title = title
     _custom_view("page")
 
-    return {#"title": title, # Page would normally render the title itself?
-            "item": item,
+    return {"item": item,
             }
 
 # -----------------------------------------------------------------------------
