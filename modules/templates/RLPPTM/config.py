@@ -581,7 +581,9 @@ def config(settings):
 
             # Restrict data formats
             settings.ui.export_formats = None
-            if r.representation not in ALLOWED_FORMATS:
+            representation = r.representation
+            if representation not in ALLOWED_FORMATS and \
+               not(r.record and representation == "card"):
                 r.error(403, current.ERROR.NOT_PERMITTED)
 
             db = current.db
