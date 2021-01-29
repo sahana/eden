@@ -241,6 +241,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                     M("Vouchers", f="voucher")(
                         M("Create Voucher", m="create", restrict=("VOUCHER_ISSUER")),
+                        M("Statistics", m="report", restrict=("PROGRAM_MANAGER")),
                         ),
                     M("Accepted Vouchers", f="voucher_debit")(
                         M("Accept Voucher", m="create", restrict=("VOUCHER_PROVIDER")),

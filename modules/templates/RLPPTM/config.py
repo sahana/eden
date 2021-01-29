@@ -21,8 +21,9 @@ LSJV = "Landesamt für Soziales, Jugend und Versorgung"
 SCHOOLS = "Schulen"
 TESTSTATIONS = "COVID-19 Teststellen"
 
-ALLOWED_FORMATS = ("html", "iframe", "popup", "aadata", "json")
+ISSUER_ORG_TYPE = "pe_id$pe_id:org_organisation.org_organisation_organisation_type.organisation_type_id"
 
+ALLOWED_FORMATS = ("html", "iframe", "popup", "aadata", "json")
 # =============================================================================
 def config(settings):
 
@@ -558,6 +559,7 @@ def config(settings):
                            "signature",
                            "balance",
                            "pe_id",
+                           #(T("Issuer Type"), ISSUER_ORG_TYPE),
                            "date",
                            "valid_until",
                            ]
@@ -570,6 +572,29 @@ def config(settings):
                            "valid_until",
                            "comments",
                            ]
+
+        # Report Options
+        if r.method == "report":
+            facts = ((T("Number of Vouchers"), "count(id)"),
+                    )
+            axes = ["program_id",
+                    "balance",
+                    ISSUER_ORG_TYPE,
+                    "pe_id",
+                    ]
+            report_options = {
+                "rows": axes,
+                "cols": axes,
+                "fact": facts,
+                "defaults": {"rows": axes[0],
+                             "cols": axes[1],
+                             "fact": facts[0],
+                             "totals": True,
+                             },
+                }
+            s3db.configure("fin_voucher",
+                           report_options = report_options,
+                           )
 
         s3db.configure("fin_voucher",
                        list_fields = list_fields,
@@ -595,6 +620,8 @@ def config(settings):
             if representation not in ALLOWED_FORMATS and \
                not(r.record and representation == "card"):
                 r.error(403, current.ERROR.NOT_PERMITTED)
+
+            is_program_manager = current.auth.s3_has_role("PROGRAM_MANAGER")
 
             db = current.db
             s3db = current.s3db
@@ -629,8 +656,8 @@ def config(settings):
                 field = table.pe_id
                 dbset = db(etable.pe_id.belongs(pe_ids))
                 field.requires = IS_ONE_OF(dbset, "pr_pentity.pe_id",
-                                            field.represent,
-                                            )
+                                           field.represent,
+                                           )
                 # Hide the issuer selector if only one entity can be chosen
                 rows = dbset.select(etable.pe_id, limitby=(0, 2))
                 if len(rows) == 1:
@@ -646,16 +673,24 @@ def config(settings):
 
                 # Filter Widgets
                 from s3 import S3DateFilter, S3TextFilter
+                text_fields = ["signature", "comments", "program_id$name"]
+                if is_program_manager:
+                    text_fields.append("pe_id$pe_id:org_organisation.name")
                 filter_widgets = [
-                    S3TextFilter(["signature",
-                                  "comments",
-                                  "program_id$name",
-                                  ],
+                    S3TextFilter(text_fields,
                                  label = T("Search"),
                                  ),
                     S3DateFilter("date",
                                  ),
                     ]
+                #if is_program_manager:
+                #    from s3 import S3OptionsFilter, s3_get_filter_opts
+                #    filter_widgets.append(
+                #        S3OptionsFilter(ISSUER_ORG_TYPE,
+                #                        hidden = True,
+                #                        label = T("Issuer Type"),
+                #                        options = lambda: s3_get_filter_opts("org_organisation_type"),
+                #                        ))
                 resource.configure(filter_widgets = filter_widgets,
                                    )
 
