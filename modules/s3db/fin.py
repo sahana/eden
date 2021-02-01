@@ -180,6 +180,8 @@ class FinVoucherModel(S3Model):
         bearer_dob = personalize == "dob"
         bearer_pin = personalize == "pin"
 
+        use_eligibility_types = settings.get_fin_voucher_eligibility_types()
+
         # -------------------------------------------------------------------------
         # Voucher Program
         # - holds the overall credit/compensation balance for a voucher program
@@ -286,6 +288,7 @@ class FinVoucherModel(S3Model):
                             fin_voucher = "program_id",
                             fin_voucher_debit = "program_id",
                             fin_voucher_transaction = "program_id",
+                            fin_voucher_eligibility_type = "program_id",
                             )
 
         # CRUD Strings
@@ -314,6 +317,45 @@ class FinVoucherModel(S3Model):
                                      )
 
         # -------------------------------------------------------------------------
+        # Voucher eligibility type
+        # - represents a eligibility criterion for beneficiaries of a
+        #   voucher program
+        #
+        tablename = "fin_voucher_eligibility_type"
+        define_table(tablename,
+                     program_id(empty=False),
+                     Field("name",
+                           label = T("Type of Eligibility"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Eligibility Type"),
+            title_display = T("Eligibility Type Details"),
+            title_list = T("Eligibility Types"),
+            title_update = T("Edit Eligibility Type"),
+            label_list_button = T("List Eligibility Types"),
+            label_delete_button = T("Delete Eligibility Type"),
+            msg_record_created = T("Eligibility Type created"),
+            msg_record_modified = T("Eligibility Type updated"),
+            msg_record_deleted = T("Eligibility Type deleted"),
+            msg_list_empty = T("No Eligibility Types currently registered"),
+        )
+
+        represent = S3Represent(lookup = tablename, translate = True)
+        eligibility_type_id = S3ReusableField("eligibility_type_id", "reference %s" % tablename,
+                                              label = T("Type of Eligibility"),
+                                              represent = represent,
+                                              requires = IS_EMPTY_OR(
+                                                            IS_ONE_OF(db, "%s.id" % tablename,
+                                                                      represent,
+                                                                      )),
+                                              )
+
+        # -------------------------------------------------------------------------
         # Voucher
         # - represents a credit granted to the bearer to purchase a
         #   service/product under the program
@@ -322,13 +364,17 @@ class FinVoucherModel(S3Model):
         define_table(tablename,
                      program_id(empty = False),
                      Field("pe_id", "reference pr_pentity",
-                           label = T("Bearer##fin"),
+                           label = T("Issuer##fin"),
                            represent = pe_represent,
                            requires = IS_EMPTY_OR(IS_ONE_OF(db, "pr_pentity.pe_id",
                                                             pe_represent,
                                                             instance_types = ["org_organisation"],
                                                             )),
                            ),
+                     eligibility_type_id(
+                            readable = use_eligibility_types,
+                            writable = use_eligibility_types,
+                            ),
                      Field("signature", length=64,
                            label = T("Voucher ID"),
                            writable = False,
@@ -1669,6 +1715,8 @@ def fin_rheader(r, tabs=None):
     if record:
 
         T = current.T
+        settings = current.deployment_settings
+
         if tablename == "fin_voucher_program":
 
             if not tabs:
@@ -1676,6 +1724,8 @@ def fin_rheader(r, tabs=None):
                         (T("Vouchers"), "voucher"),
                         (T("Transactions"), "voucher_transaction"),
                         ]
+                if settings.get_fin_voucher_eligibility_types():
+                    tabs.insert(1, (T("Eligibility"), "voucher_eligibility_type"))
             rheader_fields = [["organisation_id"],
                               ]
             rheader_title = "name"

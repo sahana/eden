@@ -164,6 +164,7 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     settings.fin.voucher_personalize = "dob"
+    settings.fin.voucher_eligibility_types = True
 
     # -------------------------------------------------------------------------
     # Realm Rules
@@ -580,6 +581,7 @@ def config(settings):
             axes = ["program_id",
                     "balance",
                     ISSUER_ORG_TYPE,
+                    "eligibility_type_id",
                     "pe_id",
                     ]
             report_options = {
@@ -646,10 +648,28 @@ def config(settings):
                                            sort = True,
                                            )
                 # Hide the program selector if only one program can be chosen
-                rows = dbset.select(ptable.id, limitby=(0, 2))
+                ttable = s3db.fin_voucher_eligibility_type
+                if len(program_ids) == 1:
+                    program_id = program_ids[0]
+                    field.default = program_id
+                    field.writable = False
+                    etset = db(ttable.program_id == program_id)
+                else:
+                    etset = db(ttable.program_id.belongs(program_ids))
+
+                # Limit the eligibility type selector to applicable types
+                field = table.eligibility_type_id
+                field.requires = IS_ONE_OF(etset, "fin_voucher_eligibility_type.id",
+                                            field.represent,
+                                            sort = True,
+                                            )
+                rows = etset.select(ttable.id, limitby=(0, 2))
                 if len(rows) == 1:
                     field.default = rows.first().id
                     field.writable = False
+                elif not rows:
+                    field.requires = IS_EMPTY_OR(field.requires)
+                    field.readable = field.writable = False
 
                 # Limit the issuer selector to permitted entities
                 etable = s3db.pr_pentity
@@ -659,9 +679,8 @@ def config(settings):
                                            field.represent,
                                            )
                 # Hide the issuer selector if only one entity can be chosen
-                rows = dbset.select(etable.pe_id, limitby=(0, 2))
-                if len(rows) == 1:
-                    field.default = rows.first().pe_id
+                if len(pe_ids) == 1:
+                    field.default = pe_ids[0]
                     field.readable = field.writable = False
 
             if r.interactive:
