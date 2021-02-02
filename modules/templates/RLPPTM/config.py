@@ -674,7 +674,7 @@ def config(settings):
                 if etype_ids is None:
                     # No selectable eligibility types => hide selector
                     field.readable = field.writable = False
-                elif len(etype_ids) == 1:
+                elif len(etype_ids) == 1 and not allow_empty:
                     # Only one type selectable => default
                     field.default = etype_ids[0]
                     field.writable = False

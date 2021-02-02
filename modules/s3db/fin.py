@@ -364,6 +364,7 @@ class FinVoucherModel(S3Model):
         represent = S3Represent(lookup = tablename, translate = True)
         eligibility_type_id = S3ReusableField("eligibility_type_id", "reference %s" % tablename,
                                               label = T("Type of Eligibility"),
+                                              ondelete = "RESTRICT",
                                               represent = represent,
                                               requires = IS_EMPTY_OR(
                                                             IS_ONE_OF(db, "%s.id" % tablename,
@@ -1789,7 +1790,7 @@ def fin_rheader(r, tabs=None):
                         (T("Transactions"), "voucher_transaction"),
                         ]
                 if settings.get_fin_voucher_eligibility_types():
-                    tabs.insert(1, (T("Eligibility"), "voucher_eligibility_type"))
+                    tabs.insert(1, (T("Eligibility Types"), "voucher_eligibility_type"))
             rheader_fields = [["organisation_id"],
                               ]
             rheader_title = "name"
