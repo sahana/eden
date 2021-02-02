@@ -235,12 +235,17 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def fin():
         """ FIN / Finance """
 
+        s3db = current.s3db
+        voucher_create = lambda i: s3db.get_config("fin_voucher", "insertable", True)
+
         return M(c="fin")(
                     M("Voucher Programs", f="voucher_program")(
                         M("Create", m="create", restrict=("PROGRAM_MANAGER")),
                         ),
                     M("Vouchers", f="voucher")(
-                        M("Create Voucher", m="create", restrict=("VOUCHER_ISSUER")),
+                        M("Create Voucher", m="create", restrict=("VOUCHER_ISSUER"),
+                          check = voucher_create,
+                          ),
                         M("Statistics", m="report", restrict=("PROGRAM_MANAGER")),
                         ),
                     M("Accepted Vouchers", f="voucher_debit")(
