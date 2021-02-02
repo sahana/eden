@@ -1158,10 +1158,18 @@ def config(settings):
                                                    ),
                                       ]
                     if is_org_group_admin:
-                        filter_widgets.append(S3OptionsFilter("group__link.group_id",
-                                                              label = T("Group"),
-                                                              options = lambda: s3_get_filter_opts("org_group"),
-                                                              ))
+                        filter_widgets.extend([
+                            S3OptionsFilter(
+                                "group__link.group_id",
+                                label = T("Group"),
+                                options = lambda: s3_get_filter_opts("org_group"),
+                                ),
+                            S3OptionsFilter(
+                                "organisation_type__link.organisation_type_id",
+                                label = T("Type"),
+                                options = lambda: s3_get_filter_opts("org_organisation_type"),
+                                ),
+                            ])
 
                     resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
                                        filter_widgets = filter_widgets,
