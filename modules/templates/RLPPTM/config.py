@@ -561,6 +561,7 @@ def config(settings):
                            "balance",
                            "pe_id",
                            #(T("Issuer Type"), ISSUER_ORG_TYPE),
+                           "eligibility_type_id",
                            "date",
                            "valid_until",
                            ]
@@ -720,14 +721,19 @@ def config(settings):
                     S3DateFilter("date",
                                  ),
                     ]
-                #if is_program_manager:
-                #    from s3 import S3OptionsFilter, s3_get_filter_opts
-                #    filter_widgets.append(
-                #        S3OptionsFilter(ISSUER_ORG_TYPE,
-                #                        hidden = True,
-                #                        label = T("Issuer Type"),
-                #                        options = lambda: s3_get_filter_opts("org_organisation_type"),
-                #                        ))
+                if is_program_manager:
+                    from s3 import S3OptionsFilter, s3_get_filter_opts
+                    filter_widgets.extend([
+                        S3OptionsFilter("eligibility_type_id",
+                                        hidden = True,
+                                        label = T("Type of Eligibility"),
+                                        ),
+                        S3OptionsFilter(ISSUER_ORG_TYPE,
+                                        hidden = True,
+                                        label = T("Issuer Type"),
+                                        options = lambda: s3_get_filter_opts("org_organisation_type"),
+                                        ),
+                        ])
                 resource.configure(filter_widgets = filter_widgets,
                                    )
 
