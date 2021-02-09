@@ -2041,6 +2041,20 @@ class S3SQLSubForm(S3SQLFormElement):
     """
 
     # -------------------------------------------------------------------------
+    def __init__(self, selector, **options):
+        """
+            Constructor to define the form element, to be extended
+            in subclass.
+
+            @param selector: the data object selector
+            @param options: options for the form element
+        """
+
+        super(S3SQLSubForm, self).__init__(selector, **options)
+
+        self.alias = None
+
+    # -------------------------------------------------------------------------
     def extract(self, resource, record_id):
         """
             Initialize this form element for a particular record. This
@@ -2057,7 +2071,7 @@ class S3SQLSubForm(S3SQLFormElement):
         return None
 
     # -------------------------------------------------------------------------
-    def parse(self, value):
+    def parse(self, value, record_id=None):
         """
             Validator method for the input field, used to extract the
             data from the input field and prepare them for further
@@ -2066,6 +2080,7 @@ class S3SQLSubForm(S3SQLFormElement):
             in the resolve()-method of this form element.
 
             @param value: the value returned from the input field
+            @param record_id: usused (for API compatibility with validators)
             @return: tuple of (value, error) where value is the
                       pre-processed field value and error an error
                       message in case of invalid data, or None.
@@ -2540,9 +2555,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         super(S3SQLInlineComponent, self).__init__(selector, **options)
 
-        self.alias = None
         self.resource = None
-
         self.upload = {}
 
     # -------------------------------------------------------------------------
@@ -2785,7 +2798,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             field into a Python object.
 
             @param value: the JSON from the input field.
-            @param record_id: the record ID (unused, for API compatibility)
+            @param record_id: usused (for API compatibility with validators)
             @return: tuple of (value, error), where value is the converted
                       JSON, and error the error message if the decoding
                       fails, otherwise None

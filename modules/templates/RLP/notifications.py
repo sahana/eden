@@ -159,34 +159,58 @@ class DeploymentNotifications(object):
         db = current.db
         s3db = current.s3db
 
-        # Lookup delegation
         dtable = s3db.hrm_delegation
         ptable = s3db.pr_person
-        join = ptable.on(ptable.id == dtable.person_id)
-        query = (dtable.id == self.delegation_id)
-        row = db(query).select(dtable.status,
-                               dtable.organisation_id,
-                               #dtable.person_id,
-                               dtable.date,
-                               dtable.end_date,
-                               dtable.comments,
-                               ptable.id,
-                               ptable.pe_id,
-                               ptable.pe_label,
-                               ptable.first_name,
-                               ptable.middle_name,
-                               ptable.last_name,
-                               join = join,
-                               limitby = (0, 1),
-                               ).first()
-        if not row: # or row.status != "APPR":
-            return None
 
-        delegation = row.hrm_delegation
-        person = row.pr_person
-        person_id = person.id
-        if not person_id:
-            return None
+        delegation_id = self.delegation_id
+        if delegation_id:
+            # Lookup delegation
+            dtable = s3db.hrm_delegation
+            ptable = s3db.pr_person
+            join = ptable.on(ptable.id == dtable.person_id)
+            query = (dtable.id == self.delegation_id)
+            row = db(query).select(dtable.organisation_id,
+                                   dtable.date,
+                                   dtable.end_date,
+                                   dtable.comments,
+                                   ptable.id,
+                                   ptable.pe_id,
+                                   ptable.pe_label,
+                                   ptable.first_name,
+                                   ptable.middle_name,
+                                   ptable.last_name,
+                                   join = join,
+                                   limitby = (0, 1),
+                                   ).first()
+            if not row:
+                return None
+            person = row.pr_person
+            person_id = person.id
+            if not person_id:
+                return None
+            delegation = row.hrm_delegation
+
+        else:
+            # Use defaults
+            person_id = dtable.person_id.default
+            if not person_id:
+                return None
+
+            query = (ptable.id == person_id)
+            person = db(query).select(ptable.id,
+                                      ptable.pe_id,
+                                      ptable.pe_label,
+                                      ptable.first_name,
+                                      ptable.middle_name,
+                                      ptable.last_name,
+                                      limitby = (0, 1),
+                                      ).first()
+            if not person:
+                return None
+
+            fields = ("organisation_id", "date", "end_date", "comments")
+            from gluon.storage import Storage
+            delegation = Storage({fn: dtable[fn].default for fn in fields})
 
         lookup_contact = self.lookup_contact
 
@@ -194,11 +218,6 @@ class DeploymentNotifications(object):
                 "start": dtable.date.represent(delegation.date),
                 "end": dtable.end_date.represent(delegation.end_date),
                 "comments": delegation.comments,
-                "deployment_uri": URL(c = "hrm",
-                                      f = "delegation",
-                                      args = [self.delegation_id],
-                                      host = True,
-                                      ),
                 "volunteer_id": person.pe_label,
                 "volunteer_name": s3_fullname(person),
                 "volunteer_first_name": person.first_name,
@@ -211,6 +230,12 @@ class DeploymentNotifications(object):
                                      host = True,
                                      ),
                 }
+        if delegation_id:
+            data["deployment_uri"] = URL(c = "hrm",
+                                         f = "delegation",
+                                         args = [delegation_id],
+                                         host = True,
+                                         )
 
         # Lookup volunteer office
         htable = s3db.hrm_human_resource
@@ -239,6 +264,7 @@ class DeploymentNotifications(object):
                          (stable.deleted == False))
         query = (otable.id == delegation.organisation_id)
         row = db(query).select(otable.name,
+                               otable.pe_id,
                                stable.email,
                                stable.phone1,
                                left = left,
@@ -246,9 +272,12 @@ class DeploymentNotifications(object):
                                orderby = stable.created_on,
                                ).first()
         if row:
-            data.update({"organisation": row.org_organisation.name,
-                         "organisation_email": row.org_office.email,
-                         "organisation_phone": row.org_office.phone1,
+            organisation = row.org_organisation
+            office = row.org_office
+            org_email = lookup_contact(organisation.pe_id, "EMAIL")
+            data.update({"organisation": organisation.name,
+                         "organisation_email": org_email if org_email else office.email,
+                         "organisation_phone": office.phone1,
                          })
 
         # Lookup current user (=coordinator)
@@ -365,6 +394,8 @@ class DeploymentNotifications(object):
         """
 
         data = self.data()
+        if not data:
+            return {}
 
         for key, value in list(data.items()):
             if value is None:
@@ -411,7 +442,6 @@ class DeploymentNotifications(object):
             @param status: the status of the message SENT|FAILED
         """
 
-        db = current.db
         s3db = current.s3db
 
         table = s3db.hrm_delegation_message
@@ -439,16 +469,14 @@ class InlineNotificationsData(S3Method):
         response = current.response
         output = None
 
-        if not r.record:
-            # Must have a delegation record
-            r.error(404, current.ERROR.BAD_RECORD)
         if not self._permitted("update"):
-            # Must be permitted to update the delegation
+            # Must be permitted to update delegations
             r.unauthorised()
 
         if r.http == "GET":
             if r.representation == "json":
-                notifications = DeploymentNotifications(r.record.id)
+                delegation_id = r.record.id if r.record else None
+                notifications = DeploymentNotifications(delegation_id)
                 response.headers["Content-Type"] = "application/json"
                 output = json.dumps(notifications.json())
             else:
@@ -462,6 +490,23 @@ class InlineNotificationsData(S3Method):
 class InlineNotifications(S3SQLSubForm):
     """
         Subform to compose and edit notifications for a delegation
+
+        Constructor options:
+            label         - the label for the subform
+            person_id     - the default person_id for new delegations
+            recipients    - the possible recipients for notifications,
+                            tuple of strings:
+
+                volunteer......the volunteer themselves
+                organisation...the requesting organisation
+                office.........the office where the volunteer normally works
+
+            organisations - the names of selectable organisations, a dict
+                            {organisation_id: organisation_name}
+            reply_to_org  - whether replys to notification emails should go
+                            to the requesting organisation rather than the
+                            site operator (sets the reply-to header in those
+                            emails, not the sender address)
     """
 
     def resolve(self, resource):
@@ -534,6 +579,7 @@ class InlineNotifications(S3SQLSubForm):
             field into a Python object.
 
             @param value: the JSON from the input field.
+            @param record_id: usused (for API compatibility with validators)
             @return: tuple of (value, error), where value is the converted
                       JSON, and error the error message if the decoding
                       fails, otherwise None
@@ -569,15 +615,15 @@ class InlineNotifications(S3SQLSubForm):
         T = current.T
         settings = current.deployment_settings
 
-        # Check current value (must have a delegation ID)
+        # Check current value
         if isinstance(value, str):
             try:
                 value = json.loads(value) if value else {}
             except JSONERRORS:
                 value = {}
-        delegation_id = value.get("delegationID")
-        if not delegation_id:
-            return "-"
+        elif not value:
+            value = {}
+        delegation_id = value.get("delegationID") if value else None
 
         # Form name and widget ID
         formname = self._formname()
@@ -585,14 +631,37 @@ class InlineNotifications(S3SQLSubForm):
         if not widget_id:
             widget_id = str(field).replace(".", "_")
 
+        # Ajax parameters
+        if delegation_id:
+            ajax_args = [delegation_id, "notifications.json"]
+            ajax_vars = {}
+        else:
+            ajax_args = ["notifications.json"]
+            dtable = current.s3db.hrm_delegation
+            person_id = dtable.person_id.default
+            ajax_vars = {"viewing": "pr_person.%s" % person_id} if person_id else {}
+
+        # Recipient types
+        all_recipients = ["organisation", "volunteer", "office"]
+        recipients = self.options.get("recipients")
+        if recipients is None:
+            recipients = all_recipients
+        if not isinstance(recipients, (tuple, list)):
+            recipients = [recipients]
+        recipients = [n for n in recipients if n in all_recipients]
+
+        # Selectable organisations
+        organisations = self.options.get("organisations")
+
         # Inject script
         options = {"ajaxURL": URL(c = "hrm",
                                   f = "delegation",
-                                  args = [delegation_id,
-                                          "notifications.json",
-                                          ],
+                                  args = ajax_args,
+                                  vars = ajax_vars,
                                   ),
                    "formName": formname,
+                   "recipients": recipients,
+                   "organisations": organisations,
                    }
         self.inject_js(widget_id, options)
 
@@ -611,7 +680,7 @@ class InlineNotifications(S3SQLSubForm):
                   "office": T("Office##gov"),
                   }
         formstyle = settings.get_ui_formstyle()
-        for recipient in ("organisation", "volunteer", "office"):
+        for recipient in recipients:
             input_name = "%s_%s" % (formname, recipient)
             formfields = [Field("%s_email" % input_name,
                                 label = T("Email"),
@@ -747,10 +816,16 @@ class InlineNotifications(S3SQLSubForm):
                     subject, message = notifications.compose((subject, message),
                                                              data,
                                                              )
+                    # Reply to org?
+                    if self.options.get("reply_to_org"):
+                        reply_to = data.get("organisation_email")
+                    else:
+                        reply_to = None
                     success = send_email(to = email,
                                          cc = cc,
                                          subject = subject,
                                          message = message,
+                                         reply_to = reply_to,
                                          )
                     notifications.save(email, subject, message,
                                        status = "SENT" if success else "FAILED",
@@ -770,10 +845,16 @@ class InlineNotifications(S3SQLSubForm):
                     subject, message = notifications.compose((subject, message),
                                                              data,
                                                              )
+                    # Reply to org?
+                    if self.options.get("reply_to_org"):
+                        reply_to = data.get("organisation_email")
+                    else:
+                        reply_to = None
                     success = send_email(to = email,
                                          cc = cc,
                                          subject = subject,
                                          message = message,
+                                         reply_to = reply_to,
                                          )
                     notifications.save(email, subject, message,
                                        status = "SENT" if success else "FAILED",

@@ -1,7 +1,7 @@
 /**
  * jQuery UI Widget for RLP Inline Notifications
  *
- * @copyright 2020-2020 (c) Sahana Software Foundation
+ * @copyright 2020-2021 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+
@@ -25,7 +25,9 @@
          */
         options: {
             ajaxURL: null,
-            formName: null
+            formName: null,
+            recipients: ["organisation", "volunteer", "office"],
+            organisations: null
         },
 
         /**
@@ -49,11 +51,12 @@
             this.trigger = $('#hrm_delegation_status');
             this.input = $('.notification-data', el).first();
 
-            this.watch = '#hrm_delegation_date, #hrm_delegation_end_date, #hrm_delegation_comments';
+            this.watch = '#hrm_delegation_date, #hrm_delegation_end_date, #hrm_delegation_comments, #hrm_delegation_organisation_id';
             this.watchFields = {
                 'start': $('#hrm_delegation_date'),
                 'end': $('#hrm_delegation_end_date'),
-                'comments': $('#hrm_delegation_comments')
+                'comments': $('#hrm_delegation_comments'),
+                'organisation': $('#hrm_delegation_organisation_id')
             };
 
             this.refresh();
@@ -97,8 +100,9 @@
         _serialize: function() {
 
             var $el = $(this.element),
-                formName = this.options.formName,
-                fieldSets = ['organisation', 'volunteer', 'office'],
+                opts = this.options,
+                formName = opts.formName,
+                fieldSets = opts.recipients,
                 formFields = ['subject', 'message'],
                 emailAddresses = {},
                 templates = {},
@@ -256,8 +260,9 @@
                 templates = data.templates || {};
 
             var $el = $(this.element),
-                formName = this.options.formName,
-                fieldSets = ["organisation", "volunteer", "office"],
+                opts = this.options,
+                formName = opts.formName,
+                fieldSets = opts.recipients,
                 formFields = ['subject', 'message'];
 
             fieldSets.forEach(function(recipient) {
@@ -313,7 +318,18 @@
             for (var key in watchFields) {
                 var field = watchFields[key];
                 if (field.length) {
-                    update[key] = field.val();
+                    var value = field.val();
+                    if (key == 'organisation') {
+                        var labels = this.options.organisations;
+                        if (labels.hasOwnProperty(value)) {
+                            update[key] = labels[value];
+                            continue;
+                        }
+                    }
+                    if (field.prop('tagName') == 'SELECT') {
+                        value = $('option[value=' + value + ']', field).text();
+                    }
+                    update[key] = value;
                 }
             }
             this.data.data = $.extend({}, this.data.data, update);
@@ -345,14 +361,20 @@
         _renderPreviews: function() {
 
             var $el = $(this.element),
-                formName = this.options.formName,
-                fieldSets = ["organisation", "volunteer", "office"],
+                opts = this.options,
+                formName = opts.formName,
+                fieldSets = opts.recipients,
                 formFields = ['subject', 'message'],
                 self = this;
 
             fieldSets.forEach(function(recipient) {
 
                 var prefix = '#sub_' + formName + '_' + recipient + '_';
+
+                if (!$(prefix + 'email__row', $el).length) {
+                    return;
+                }
+
                 formFields.forEach(function(key) {
                     var input = $(prefix + key, $el);
                     if (!input.length) {
@@ -381,7 +403,7 @@
             var $el = $(this.element),
                 opts = this.options,
                 formName = opts.formName,
-                fieldSets = ["organisation", "volunteer", "office"],
+                fieldSets = opts.recipients,
                 formFields = ['email', 'subject', 'message'];
 
             fieldSets.forEach(function(recipient) {
@@ -420,9 +442,9 @@
             // Show/hide field sets when notification is selected/deselected
             $('.notify-toggle', $el).on('change' + ns, function() {
                 if ($(this).prop('checked')) {
-                    $('.form-row, .preview-toggle', $(this).closest('fieldset')).show();
+                    $('.form-row, .preview-toggles', $(this).closest('fieldset')).show();
                 } else {
-                    $('.form-row, .preview-toggle', $(this).closest('fieldset')).hide();
+                    $('.form-row, .preview-toggles', $(this).closest('fieldset')).hide();
                 }
                 self._serialize();
             });

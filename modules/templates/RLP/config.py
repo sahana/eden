@@ -374,6 +374,52 @@ def config(settings):
     settings.customise_cms_post_controller = customise_cms_post_controller
 
     # -------------------------------------------------------------------------
+    def customise_org_organisation_resource(r, tablename):
+
+        T = current.T
+
+        s3db = current.s3db
+
+        if r.tablename == "org_organisation" and not r.component:
+
+            # Use custom form with email-address
+            from s3 import S3SQLCustomForm, \
+                           S3SQLInlineComponent, \
+                           S3SQLInlineLink
+
+            crud_fields = ["name",
+                           "acronym",
+                           S3SQLInlineLink(
+                                "organisation_type",
+                                field = "organisation_type_id",
+                                search = False,
+                                label = T("Type"),
+                                multiple = settings.get_org_organisation_types_multiple(),
+                                widget = "multiselect",
+                                ),
+                           S3SQLInlineComponent(
+                                "contact",
+                                fields = [("", "value")],
+                                filterby = {"field": "contact_method",
+                                            "options": "EMAIL",
+                                            },
+                                label = T("Email"),
+                                multiple = False,
+                                name = "email",
+                                ),
+                           "phone",
+                           "website",
+                           "logo",
+                           "comments",
+                           ]
+
+            s3db.configure("org_organisation",
+                           crud_form = S3SQLCustomForm(*crud_fields),
+                           )
+
+    settings.customise_org_organisation_resource = customise_org_organisation_resource
+
+    # -------------------------------------------------------------------------
     def customise_org_organisation_controller(**attr):
 
         s3 = current.response.s3
@@ -406,7 +452,6 @@ def config(settings):
 
                 # TODO adjust list_fields to what is necessary
                 # TODO use simplified form
-
 
             return result
         s3.prep = custom_prep
@@ -1791,6 +1836,8 @@ def config(settings):
             #    field.writable = False
             #    field.comment = None
 
+        return next_status
+
     # -------------------------------------------------------------------------
     def delegation_free_interval(target, occupied, recurse=False, original=None):
         """
@@ -2095,6 +2142,7 @@ def config(settings):
 
         table = s3db.hrm_delegation
 
+        # Custom representation of person_id
         from .helpers import RLPDelegatedPersonRepresent
         field = table.person_id
         field.represent = RLPDelegatedPersonRepresent()
@@ -2174,7 +2222,7 @@ def config(settings):
                 min_date = min(record.date, tomorrow) if record.date else tomorrow
             elif not coordinator:
                 min_date = tomorrow
-            delegation_workflow(r.resource.table, record, person_id=volunteer_id)
+            next_status = delegation_workflow(r.resource.table, record, person_id=volunteer_id)
 
         elif r.component.tablename == "hrm_delegation":
             # On tab of volunteer file
@@ -2185,7 +2233,8 @@ def config(settings):
                 r.component.add_filter(FS("status") != "NVLD")
                 record = None
 
-            delegation_workflow(r.component.table, record, person_id=r.id)
+            volunteer_id = r.id
+            next_status = delegation_workflow(r.component.table, record, person_id=volunteer_id)
 
             # Determine earliest start date
             if record:
@@ -2199,6 +2248,8 @@ def config(settings):
                                        "requested_on",
                                        "status",
                                        ]
+        else:
+            next_status = None
 
         # Start and end date are mandatory
         from gluon import IS_EMPTY_OR
@@ -2217,8 +2268,9 @@ def config(settings):
                                             set_min = "#hrm_delegation_end_date",
                                             )
 
-        if current.auth.s3_has_role("COORDINATOR"):
-            # Coordinators use custom form
+        # Configure custom forms
+        auth = current.auth
+        if auth.s3_has_role("COORDINATOR"):
             from s3 import S3SQLCustomForm
             crud_form = S3SQLCustomForm("organisation_id",
                                         "person_id",
@@ -2238,21 +2290,58 @@ def config(settings):
                                         ))
             s3db.configure("hrm_delegation", crud_form=crud_form)
 
-        #elif current.auth.s3_has_roles(("HRMANAGER", "VCMANAGER")):
-        #    # Enable site_id and filter to sites of org
-        #    field = table.site_id
-        #    field.readable = field.writable = True
-        #    field.label = T("Deployment Site")
-        #    from s3 import IS_ONE_OF
-        #    field.requires = IS_EMPTY_OR(IS_ONE_OF(current.db, "org_site.site_id",
-        #                                           s3db.org_site_represent,
-        #                                           ))
-        #    script = '''$.filterOptionsS3({
-        #'trigger':'organisation_id',
-        #'target':'site_id',
-        #'lookupURL':S3.Ap.concat('/org/sites_for_org/'),
-        #})'''
-        #    current.response.s3.jquery_ready.append(script)
+        elif auth.s3_has_roles(("HRMANAGER", "VCMANAGER")):
+            from s3 import S3SQLCustomForm
+            crud_form = S3SQLCustomForm("organisation_id",
+                                        "person_id",
+                                        "date",
+                                        "end_date",
+                                        "requested_on",
+                                        "status",
+                                        "comments",
+                                        )
+            if not record or record.status != "APPR" and \
+               next_status and "APPR" in next_status:
+                # Request that can be approved
+
+                # Lookup labels for selectable organisations
+                field = table.organisation_id
+                requires = field.requires
+                if isinstance(requires, (list, tuple)):
+                    requires = requires[0]
+                if hasattr(requires, "options"):
+                    represent = S3Represent(lookup="org_organisation")
+                    options = requires.options()
+                    organisations = represent.bulk([o[0] for o in options if o[0]])
+                else:
+                    organisations = None
+
+                # Append inline-notifications
+                from .notifications import InlineNotifications
+                crud_form.append(
+                    InlineNotifications("notifications",
+                                        label = T("Notifications"),
+                                        person_id = volunteer_id,
+                                        recipients = ("volunteer",),
+                                        organisations = organisations,
+                                        reply_to_org = True,
+                                        ))
+            s3db.configure("hrm_delegation", crud_form=crud_form)
+
+            # Enable site_id and filter to sites of org
+            #field = table.site_id
+            #field.readable = field.writable = True
+            #field.label = T("Deployment Site")
+            #from s3 import IS_ONE_OF
+            #field.requires = IS_EMPTY_OR(IS_ONE_OF(current.db, "org_site.site_id",
+            #                                       s3db.org_site_represent,
+            #                                       ))
+            #script = '''$.filterOptionsS3({
+            #'trigger':'organisation_id',
+            #'target':'site_id',
+            #'lookupURL':S3.Ap.concat('/org/sites_for_org/'),
+            #})'''
+            #current.response.s3.jquery_ready.append(script)
 
         # Reconfigure
         s3db.add_custom_callback("hrm_delegation",
