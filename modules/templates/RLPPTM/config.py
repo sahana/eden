@@ -611,6 +611,9 @@ def config(settings):
 
         s3 = current.response.s3
 
+        # Enable bigtable features
+        settings.base.bigtable = True
+
         # Custom prep
         standard_prep = s3.prep
         def prep(r):
@@ -867,6 +870,9 @@ def config(settings):
 
         s3 = current.response.s3
 
+        # Enable bigtable features
+        settings.base.bigtable = True
+
         # Custom prep
         standard_prep = s3.prep
         def prep(r):
@@ -924,6 +930,16 @@ def config(settings):
         return attr
 
     settings.customise_fin_voucher_debit_controller = customise_fin_voucher_debit_controller
+
+    # -------------------------------------------------------------------------
+    def customise_fin_voucher_program_controller(**attr):
+
+        # Enable bigtable features
+        settings.base.bigtable = True
+
+        return attr
+
+    settings.customise_fin_voucher_program_controller = customise_fin_voucher_program_controller
 
     # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
@@ -1068,6 +1084,9 @@ def config(settings):
     def customise_org_organisation_controller(**attr):
 
         s3 = current.response.s3
+
+        # Enable bigtable features
+        settings.base.bigtable = True
 
         # Custom prep
         standard_prep = s3.prep
