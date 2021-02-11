@@ -105,7 +105,7 @@ def rlp_delegation_read_multiple_orgs():
         otable = current.s3db.org_organisation
         query = (otable.pe_id.belongs(realms)) & \
                 (otable.deleted == False)
-        rows = current.db(query).select(otable.id)
+        rows = current.db(query).select(otable.id, limitby=(0, len(realms)))
         multiple_orgs = len(rows) > 1
         org_ids = [row.id for row in rows]
 

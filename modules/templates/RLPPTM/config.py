@@ -1141,10 +1141,21 @@ def config(settings):
 
                     # Custom form
                     if is_org_group_admin:
+                        record = r.record
+                        user = auth.user
+                        if record and user:
+                            # Only OrgGroupAdmins managing this organisation can change
+                            # its org group membership (=organisation must be within realm):
+                            realm = user.realms.get(auth.get_system_roles().ORG_GROUP_ADMIN)
+                            groups_readonly = realm is not None and record.pe_id not in realm
+                        else:
+                            groups_readonly = False
+
                         groups = S3SQLInlineLink("group",
                                                  field = "group_id",
                                                  label = T("Organization Group"),
                                                  multiple = False,
+                                                 readonly = groups_readonly,
                                                  )
                         types = S3SQLInlineLink("organisation_type",
                                                 field = "organisation_type_id",
