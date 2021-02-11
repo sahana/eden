@@ -4,7 +4,8 @@ import json
 from uuid import uuid4
 
 from gluon import A, BR, CRYPT, DIV, Field, FORM, H3, INPUT, \
-                  IS_EMAIL, IS_EMPTY_OR, IS_EXPR, IS_LOWER, IS_NOT_EMPTY, IS_NOT_IN_DB, \
+                  IS_EMAIL, IS_EMPTY_OR, IS_EXPR, IS_LENGTH, IS_LOWER, \
+                  IS_NOT_EMPTY, IS_NOT_IN_DB, \
                   P, SQLFORM, TABLE, TD, TR, URL, XML, HTTP, current, redirect
 
 from gluon.storage import Storage
@@ -450,7 +451,8 @@ class approve(S3CustomController):
 
                 # Create Facility
                 ftable = s3db.org_facility
-                facility = Storage(name = organisation or org.name,
+                facility_name = organisation if organisation else org.name
+                facility = Storage(name = s3_truncate(facility_name),
                                    organisation_id = organisation_id,
                                    location_id = location_id,
                                    phone1 = phone,
@@ -959,7 +961,12 @@ class register(S3CustomController):
                       # --------------------------------------------
                       Field("organisation",
                             label = T("Name"),
-                            requires = IS_NOT_EMPTY(),
+                            requires = [IS_NOT_EMPTY(), IS_LENGTH(60)],
+                            comment = DIV(_class = "tooltip",
+                                          _title = "%s|%s" % (T("Test Station Name"),
+                                                              T("Specify the name of the test station (max 60 characters)"),
+                                                              ),
+                                          ),
                             ),
                       Field("location", "json",
                             widget = S3LocationSelector(
