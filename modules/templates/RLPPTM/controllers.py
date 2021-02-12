@@ -11,8 +11,8 @@ from gluon import A, BR, CRYPT, DIV, Field, FORM, H3, INPUT, \
 from gluon.storage import Storage
 
 from s3 import FS, IS_PHONE_NUMBER_MULTI, JSONERRORS, S3CRUD, S3CustomController, \
-               S3LocationSelector, S3Represent, S3Request, s3_get_extension, \
-               s3_mark_required, s3_str
+               S3LocationSelector, S3Represent, S3Request, s3_comments_widget, \
+               s3_get_extension, s3_mark_required, s3_str, s3_text_represent, s3_truncate
 
 from .config import TESTSTATIONS
 from .notifications import formatmap
@@ -366,8 +366,11 @@ class approve(S3CustomController):
                             TR(represent(L2) if L2 else ""),
                             TR(represent(L1) if L1 else ""),
                             )
-            phone = custom_get("office_phone")
+
+            facility_phone = custom_get("facility_phone") or custom_get("office_phone")
+            facility_email = custom_get("facility_email")
             opening_times = custom_get("opening_times")
+            comments = custom_get("comments")
 
             if user.registration_key is None:
                 response.warning = T("Registration has previously been Approved")
@@ -390,6 +393,7 @@ class approve(S3CustomController):
                                 _class = "small alert button",
                                 ))
 
+            strrepr = lambda v: v if v else "-"
             form = TABLE(TR(approve,
                             reject,
                             ),
@@ -401,10 +405,16 @@ class approve(S3CustomController):
                             TD(address),
                             ),
                          TR(TD("%s:" % T("Telephone")),
-                            TD(phone or ""),
+                            TD(strrepr(facility_phone)),
+                            ),
+                         TR(TD("%s:" % T("Email")),
+                            TD(strrepr(facility_email)),
                             ),
                          TR(TD("%s:" % T("Opening Hours")),
-                            TD(opening_times or ""),
+                            TD(strrepr(opening_times)),
+                            ),
+                         TR(TD("%s:" % T("Comments")),
+                            TD(s3_text_represent(strrepr(comments))),
                             ),
                          )
 
@@ -414,13 +424,14 @@ class approve(S3CustomController):
                 update_super = s3db.update_super
                 if not organisation_id:
                     # Create Organisation
-                    org = Storage(name = organisation,
-                                  )
-                    organisation_id = otable.insert(**org)
-                    org.id = organisation_id
+                    org = {"name": organisation}
+                    org["id"] = organisation_id = otable.insert(**org)
+
+                    # Post-process Organisation
                     update_super(otable, org)
                     set_record_owner(otable, org, owned_by_user=user_id)
                     s3db_onaccept(otable, org, method="create")
+
                     # Link to Org_Group TESTSTATIONS
                     s3db.org_group_membership.insert(group_id = org_group_id,
                                                      organisation_id = organisation_id,
@@ -430,12 +441,11 @@ class approve(S3CustomController):
                                        registration_key = None,
                                        )
                     # Grant ORG_ADMIN
-                    auth.s3_assign_role(user_id, "ORG_ADMIN",
-                                        for_pe = org.pe_id)
+                    auth.s3_assign_role(user_id, "ORG_ADMIN", for_pe=org["pe_id"])
                 else:
                     # Update User
-                    user.update_record(registration_key = None,
-                                       )
+                    user.update_record(registration_key = None)
+
                 # Grant VOUCHER_PROVIDER
                 auth.s3_assign_role(user_id, "VOUCHER_PROVIDER")
 
@@ -444,31 +454,33 @@ class approve(S3CustomController):
                     # Create Location
                     ltable = s3db.gis_location
                     del location["wkt"] # Will get created during onaccept & we don't want the 'Source WKT has been cleaned by Shapely" warning
-                    location_id = ltable.insert(**location)
-                    location["id"] = location_id
+                    location["id"] = location_id = ltable.insert(**location)
                     set_record_owner(ltable, location, owned_by_user=user_id)
                     s3db_onaccept(ltable, location, method="create")
 
                 # Create Facility
                 ftable = s3db.org_facility
                 facility_name = organisation if organisation else org.name
-                facility = Storage(name = s3_truncate(facility_name),
-                                   organisation_id = organisation_id,
-                                   location_id = location_id,
-                                   phone1 = phone,
-                                   opening_times = opening_times,
-                                   )
-                facility.id = ftable.insert(**facility)
+                facility = {"name": s3_truncate(facility_name),
+                            "organisation_id": organisation_id,
+                            "location_id": location_id,
+                            "phone1": facility_phone,
+                            "email": facility_email,
+                            "opening_times": opening_times,
+                            "comments": comments,
+                            }
+                facility["id"] = ftable.insert(**facility)
                 update_super(ftable, facility)
                 set_record_owner(ftable, facility, owned_by_user=user_id)
                 s3db_onaccept(ftable, facility, method="create")
-                # Assign Type
+
+                # Link to Facility Type
                 fttable = s3db.org_facility_type
                 facility_type = db(fttable.name == "Infection Test Station").select(fttable.id,
-                                                                                    limitby = (0, 1)
+                                                                                    limitby = (0, 1),
                                                                                     ).first()
                 if facility_type:
-                    s3db.org_site_facility_type.insert(site_id = facility.site_id,
+                    s3db.org_site_facility_type.insert(site_id = facility["site_id"],
                                                        facility_type_id = facility_type.id,
                                                        )
 
@@ -819,8 +831,10 @@ class register(S3CustomController):
 
             # Store Custom fields
             custom = {"location": formvars.location,
-                      "office_phone": formvars.office_phone,
+                      "facility_phone": formvars.facility_phone,
+                      "facility_email": formvars.facility_email,
                       "opening_times": formvars.opening_times,
+                      "comments": formvars.comments,
                       }
             if not organisation_id:
                 custom["organisation"] = organisation
@@ -985,13 +999,21 @@ class register(S3CustomController):
                       #      requires = IS_NOT_EMPTY(),
                       #      ),
 
-                      Field("office_phone",
-                            label = T("Office Phone"),
+                      Field("facility_phone",
+                            label = T("Telephone"),
                             requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI()),
+                            ),
+                      Field("facility_email",
+                            label = T("Email"),
+                            requires = IS_EMPTY_OR(IS_EMAIL()),
                             ),
                       Field("opening_times",
                             label = T("Opening Hours"),
                             #requires = IS_NOT_EMPTY(),
+                            ),
+                      Field("comments", "text",
+                            label = T("Comments"),
+                            widget = s3_comments_widget,
                             ),
 
                       # --------------------------------------------
@@ -1010,7 +1032,7 @@ class register(S3CustomController):
         # Subheadings
         subheadings = ((0, T("User Account")),
                        (5, T("Test Station")),
-                       (9, T("Privacy")),
+                       (11, T("Privacy")),
                        )
 
         # Geocoder

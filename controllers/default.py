@@ -1008,16 +1008,26 @@ def person():
          - Map Config
     """
 
-    # Set to current user
-    user_person_id = str(auth.s3_logged_in_person())
+    # Get person_id of current user
+    if auth.s3_logged_in():
+        user_person_id = str(auth.s3_logged_in_person())
+    else:
+        user_person_id = None
 
-    # When request.args = [], set it as user_person_id.
-    # When it is not an ajax request and the first argument is not user_person_id, set it.
-    # If it is an json request, leave the arguments unmodified.
-    if not request.args or (request.args[0] != user_person_id and \
-                            request.args[-1] != "options.s3json" and \
-                            request.args[-1] != "validate.json"
-                            ):
+    # Fix request args:
+    # - leave as-is if this is an options/validate Ajax-request
+    # - otherwise, make sure user_person_id is the first argument
+    request_args = request.args
+    if not request_args or \
+       request_args[0] != user_person_id and \
+       request_args[-1] not in ("options.s3json", "validate.json"):
+        if not user_person_id:
+            # Call to profile before login (e.g. from link in welcome email)
+            # => redirect to login, then return here
+            redirect(URL(f = "user",
+                         args = ["login"],
+                         vars = {"_next": URL(f="person", args=request_args)},
+                         ))
         request.args = [user_person_id]
 
     set_method = s3db.set_method
@@ -1044,10 +1054,10 @@ def person():
         form = auth.profile(next = next,
                             onaccept = onaccept)
 
-        return dict(title = s3.crud_strings["pr_person"]["title_display"],
-                    rheader = rheader,
-                    form = form,
-                    )
+        return {"title": s3.crud_strings["pr_person"]["title_display"],
+                "rheader": rheader,
+                "form": form,
+                }
 
     set_method("pr", "person",
                method = "user_profile",
