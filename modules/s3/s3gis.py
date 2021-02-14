@@ -715,7 +715,7 @@ class GIS(object):
             - used by S3LocationSelector
         """
 
-        if not lat or not lon:
+        if lat is None or lon is None:
             return "Need Lat & Lon"
 
         results = ""

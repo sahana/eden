@@ -2609,8 +2609,11 @@ $('.copy-link').click(function(e){
         f = table.location_id
         f.readable = f.writable = True
         f.widget = S3LocationSelector(levels = ("L3", "L4"),
+                                      #levels = ("L2", "L3", "L4"),
                                       required_levels = ("L3",),
-                                      show_address = True)
+                                      show_address = True,
+                                      #show_map = False,
+                                      )
 
         list_fields = ["start_date",
                        "name",

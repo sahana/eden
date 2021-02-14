@@ -3002,6 +3002,7 @@ Thank you"""
                                        "total_value",
                                        ],
                             "groupby": ["site_id",
+                                        #"supply_org_id",
                                         ],
                             "orderby": ["site_id$name",
                                         "item_id$name",

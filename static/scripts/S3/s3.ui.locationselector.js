@@ -124,11 +124,19 @@
             var selector = '#' + this.fieldname,
                 opts = this.options;
 
-            // Should we use the Geocoder?
+            // Should we use a Geocoder?
             if ($(selector + '_geocode button').length) {
                 this.useGeocoder = true;
             } else {
                 this.useGeocoder = false;
+            }
+
+            // Should we use a Postcode to Address lookup?
+            var formkey = $(selector + '_postcode').data('k');
+            if (formkey) {
+                this.postcodeToAddress = formkey;
+            } else {
+                this.postcodeToAddress = false;
             }
 
             // Populate L0 selector (if present)
@@ -195,12 +203,24 @@
             // Store original Lx path
             this.lx = [L0, L1, L2, L3, L4, L5].join('|');
 
-            // Show Address/Postcode Rows (__row1 = tuple themes)
-            $(selector + '_address').val(data.address);
-            $(selector + '_address__row').removeClass('hide').show();
-            $(selector + '_address__row1').removeClass('hide').show();
+            var address = data.address;
+            $(selector + '_address').val(address);
+
+            if (address) {
+                // Show Address Rows (__row1 = tuple themes)
+                $(selector + '_address__row').removeClass('hide').show();
+                $(selector + '_address__row1').removeClass('hide').show();
+            } else if (this.postcodeToAddress) {
+                // Pass
+            } else {
+                // Show Address Rows (__row1 = tuple themes)
+                $(selector + '_address__row').removeClass('hide').show();
+                $(selector + '_address__row1').removeClass('hide').show();
+            }
 
             $(selector + '_postcode').val(data.postcode);
+
+            // Show Postcode Rows (__row1 = tuple themes)
             $(selector + '_postcode__row').removeClass('hide').show();
             $(selector + '_postcode__row1').removeClass('hide').show();
 
@@ -564,9 +584,13 @@
                                     select.append(option);
                                 }
 
-                                // Show dropdown
-                                dropdown_row.removeClass('hide').show();
-                                $(selector + '_L' + next + '__row1').removeClass('hide').show(); // Tuple themes
+                                if (self.postcodeToAddress && !self.data.address) {
+                                    // Don't show Dropdown
+                                } else {
+                                    // Show dropdown
+                                    dropdown_row.removeClass('hide').show();
+                                    $(selector + '_L' + next + '__row1').removeClass('hide').show(); // Tuple themes
+                                }
 
                                 // Instantiate (or refresh) multiselect
                                 if (select.hasClass('multiselect')) {
@@ -1198,6 +1222,148 @@
         },
 
         /**
+         * Lookup a list of Addresses from the Postcode
+         */
+        _postcodeToAddress: function() {
+
+            // Collect postcode
+            this._collectData();
+
+            var fieldname = this.fieldname,
+                self = this,
+                selector = '#' + fieldname,
+                data = this.data,
+                postcode = data.postcode;
+
+            // Postcode is mandatory for lookup
+            if (!postcode) {
+                return;
+            }
+
+            // Hide old menu and messages, show throbber
+            $(selector + '_address_menu').remove();
+            var failure = $(selector + '_postcode__row .geocode_fail').hide(),
+                throbber = $(selector + '_postcode__row .throbber').removeClass('hide').show();
+            if (!failure.length) {
+                $(selector + '_postcode__row .columns').append('<div class="geocode_fail hide"></div>');
+                failure = $(selector + '_postcode__row .geocode_fail');
+            }
+            if (!throbber.length) {
+                $(selector + '_postcode__row .columns').append('<div class="throbber"></div>');
+                throbber = $(selector + '_postcode__row .throbber');
+            }
+            // Submit to Server
+            $.ajaxS3({
+                //async: false,
+                url: S3.Ap.concat('/gis/postcode_to_address'),
+                type: 'POST',
+                data: {postcode: postcode,
+                       k: self.postcodeToAddress
+                       },
+                dataType: 'json',
+                success: function(result) {
+
+                    var addresses = result.addresses;
+                    if (addresses && addresses.length) {
+
+                        // Notify results
+                        throbber.hide();
+
+                        // Show list of Addresses
+                        var address_list = '<ul id="' + fieldname + '_address_menu">';
+                        for (var i = 0; i < addresses.length; i++) {
+                            address_list += '<li><div>' + addresses[i] + '</div></li>';
+                        }
+                        address_list += '</ul>'
+                        $(selector + '_postcode').after(address_list);
+                        $(selector + '_address_menu').menu({
+                            select: function(event, ui) {
+                                // Address has been selected
+                                // Update data dict + serialize
+                                data.address = ui.item[0].innerText;
+                                $(selector + '_address').val(data.address);
+                                data.lat = parseFloat(result.lat);
+                                data.lon = parseFloat(result.lon);
+                                self._collectData();
+
+                                // Show Address field
+                                $(selector + '_address__row').removeClass('hide').show();
+                                $(selector + '_address__row1').removeClass('hide').show();
+
+                                // Remove the menu
+                                $(selector + '_address_menu').menu('destroy').remove();
+
+                                // If Map Showing then add/move Point
+                                var gis = S3.gis;
+                                if (gis.maps) {
+                                    var map = gis.maps['location_selector_' + fieldname];
+                                    if (map) {
+                                        var draftLayer = map.s3.draftLayer;
+                                        draftLayer.removeAllFeatures();
+                                        var geometry = new OpenLayers.Geometry.Point(data.lon, data.lat);
+                                        geometry.transform(gis.proj4326, map.getProjectionObject());
+                                        var feature = new OpenLayers.Feature.Vector(geometry);
+                                        draftLayer.addFeatures([feature]);
+                                        // Move viewport to this feature
+                                        self._zoomMap();
+                                    }
+                                }
+
+                                var L0 = result.L0,
+                                    L1 = result.L1,
+                                    L2 = result.L2,
+                                    L3 = result.L3,
+                                    L4 = result.L4,
+                                    L5 = result.L5;
+
+                                if (L0) {
+                                    // Prevent forward geocoding
+                                    // Geocoder incompatible with Postcode to Address
+                                    //self.useGeocoder = false;
+
+                                    var pending;
+                                    [L0, L1 || L2, L2 || L3, L3 || L4, L4 || L5, L5].forEach(function(level, index) {
+                                        if (level) {
+                                            if (pending) {
+                                                pending = pending.then(function() {
+                                                    return self.lxSelect(index, level, true);
+                                                });
+                                            } else {
+                                                pending = self.lxSelect(index, level, true);
+                                            }
+                                        }
+                                    });
+
+                                    // Reset Geocoder-option
+                                    //self.useGeocoder = true;
+                                }
+                            }
+                        });
+                    } else {
+
+                        // Notify results
+                        throbber.hide();
+                        failure.html(i18n.no_addresses_found).removeClass('hide').show();
+                        s3_debug(result);
+                    }
+                },
+                error: function(request, status, error) {
+                    var msg;
+                    if (error == 'UNAUTHORIZED') {
+                        msg = i18n.gis_requires_login;
+                    } else {
+                        msg = request.responseText;
+                    }
+                    // Notify results
+                    throbber.hide();
+                    failure.html(msg).removeClass('hide').show();
+                    s3_debug(msg);
+                }
+            });
+
+        },
+
+        /**
          * Show the Map
          * - this doesn't imply that a specific location is to be created
          * - that only happens if a Point is created on the Map
@@ -1708,13 +1874,24 @@
                 self.lxSelect(5);
             });
 
-            $(selector + '_address,' +
-              selector + '_postcode').bind('change' + ns, function() {
+            $(selector + '_address').bind('change' + ns, function() {
                 self._removeErrors(this);
                 if (self.useGeocoder) {
                     // geocodeDecision includes collectData
                     //self._collectData();
                     self._geocodeDecision();
+                } else {
+                    self._collectData();
+                }
+            });
+            $(selector + '_postcode').bind('change' + ns, function() {
+                self._removeErrors(this);
+                if (self.useGeocoder) {
+                    // geocodeDecision includes collectData
+                    //self._collectData();
+                    self._geocodeDecision();
+                } else if (self.postcodeToAddress) {
+                    self._postcodeToAddress();
                 } else {
                     self._collectData();
                 }

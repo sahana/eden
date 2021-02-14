@@ -4815,6 +4815,7 @@ class S3LocationSelector(S3Selector):
                  show_address = False,
                  show_postcode = None,
                  postcode_required = None,
+                 postcode_to_address = None,
                  show_latlon = None,
                  latlon_mode = "decimal",
                  latlon_mode_toggle = True,
@@ -4851,6 +4852,7 @@ class S3LocationSelector(S3Selector):
                                  If the parameter is set to a string then this is used as the label.
             @param show_postcode: show a field for postcode
             @param postcode_required: postcode field is mandatory
+            @param postcode_to_address: service to use to lookup a list of addresses from the postcode
             @param show_latlon: show fields for manual Lat/Lon input
             @param latlon_mode: (initial) lat/lon input mode ("decimal" or "dms")
             @param latlon_mode_toggle: allow user to toggle lat/lon input mode
@@ -4886,6 +4888,8 @@ class S3LocationSelector(S3Selector):
         self.show_address = show_address
         self.show_postcode = show_postcode
         self.postcode_required = postcode_required
+        self.postcode_to_address = postcode_to_address or \
+                                   settings.get_gis_postcode_to_address()
         self.prevent_duplicate_addresses = prevent_duplicate_addresses
 
         if show_latlon is None:
@@ -5153,13 +5157,26 @@ class S3LocationSelector(S3Selector):
             show_postcode = settings.get_gis_postcode_selector()
         if show_postcode:
             postcode = values_get("postcode")
-            components["postcode"] = manual_input(fieldname,
-                                                  "postcode",
-                                                  postcode,
-                                                  settings.get_ui_label_postcode(),
-                                                  hidden = not postcode,
-                                                  required = self.postcode_required,
-                                                  )
+            postcode_component = manual_input(fieldname,
+                                              "postcode",
+                                              postcode,
+                                              settings.get_ui_label_postcode(),
+                                              hidden = not postcode,
+                                              required = self.postcode_required,
+                                              )
+            if self.postcode_to_address:
+                # Generate form key
+                formkey = uuid4().hex
+
+                # Store form key in session
+                session = current.session
+                keyname = "_formkey[geocode]"
+                session[keyname] = session.get(keyname, [])[-9:] + [formkey]
+
+                # Store form key in form
+                postcode_component[1]["data"] = {"k": formkey}
+
+            components["postcode"] = postcode_component
 
         # Lat/Lon INPUTs
         lat = values_get("lat")
@@ -6128,25 +6145,25 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                    T("Address NOT Found"),
                                    ))
 
-        # Generate form key
-        formkey = uuid4().hex
+            # Generate form key
+            formkey = uuid4().hex
 
-        # Store form key in session
-        session = current.session
-        keyname = "_formkey[geocode]"
-        session[keyname] = session.get(keyname, [])[-9:] + [formkey]
+            # Store form key in session
+            session = current.session
+            keyname = "_formkey[geocode]"
+            session[keyname] = session.get(keyname, [])[-9:] + [formkey]
 
-        map_icon.append(DIV(DIV(_class = "throbber hide"),
-                            DIV(_class = "geocode_success hide"),
-                            DIV(_class = "geocode_fail hide"),
-                            BUTTON(T("Geocode"),
-                                   _class = "hide",
-                                   _type = "button", # defaults to 'submit' otherwise!
-                                   data = {"k": formkey},
-                                   ),
-                            _class = "controls geocode",
-                            _id = "%s_geocode" % fieldname,
-                            ))
+            map_icon.append(DIV(DIV(_class = "throbber hide"),
+                                DIV(_class = "geocode_success hide"),
+                                DIV(_class = "geocode_fail hide"),
+                                BUTTON(T("Geocode"),
+                                       _class = "hide",
+                                       _type = "button", # defaults to 'submit' otherwise!
+                                       data = {"k": formkey},
+                                       ),
+                                _class = "controls geocode",
+                                _id = "%s_geocode" % fieldname,
+                                ))
 
         # Inject map directly behind map icon
         map_icon.append(_map)
