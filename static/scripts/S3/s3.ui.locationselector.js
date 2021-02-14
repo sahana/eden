@@ -622,6 +622,7 @@
                                     self.lxSelect(next, previous, refresh);
                                 } else if (numLocations == 1 && locationID) {
                                     // Only one option available, so select this one
+                                    // @ToDo: This fails if we geocode/postcode_to_address to an area outside of the coverage of the polygons that we have imported and the closest exact match is hidden
                                     self.lxSelect(next, locationID, refresh);
                                 }
                             }
