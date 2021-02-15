@@ -513,6 +513,13 @@ class S3Config(Storage):
         return module_name in self.modules
 
     # -------------------------------------------------------------------------
+    def get_facebook_pixel_id(self):
+        """
+            Facebook Pixel ID
+        """
+        return self.base.get("facebook_pixel_id")
+
+    # -------------------------------------------------------------------------
     def get_google_analytics_tracking_id(self):
         """
             Google Analytics Key
