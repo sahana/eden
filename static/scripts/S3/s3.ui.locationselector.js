@@ -1275,7 +1275,7 @@
                         for (var i = 0; i < addresses.length; i++) {
                             address_list += '<li><div>' + addresses[i] + '</div></li>';
                         }
-                        address_list += '</ul>'
+                        address_list += '</ul>';
                         $(selector + '_postcode').after(address_list);
                         $(selector + '_address_menu').menu({
                             select: function(event, ui) {

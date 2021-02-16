@@ -712,6 +712,16 @@ def config(settings):
                 field.readable = bool(r.record)
                 field.writable = False
 
+                # Insert hint for bearer DoB
+                from s3 import S3WithIntro
+                field = table.bearer_dob
+                field.widget = S3WithIntro(field.widget,
+                                           intro = ("fin",
+                                                    "voucher",
+                                                    "BearerDoBIntro",
+                                                    ),
+                                           )
+
                 # Filter Widgets
                 from s3 import S3DateFilter, S3TextFilter
                 text_fields = ["signature", "comments", "program_id$name"]

@@ -16,3 +16,4 @@ Message WelcomeProvider,auth,user,"Your account at the {system} Portal has been 
 
 Thank you",
 InvitedRegistrationIntro,auth,user,,
+BearerDoBIntro,fin,voucher,,
