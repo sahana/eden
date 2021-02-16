@@ -2916,14 +2916,18 @@ class S3QRInput(FormWidget):
         @status: experimental
     """
 
-    def __init__(self, hidden=False):
+    def __init__(self, hidden=False, icon=True, label=False):
         """
             Constructor
 
             @param hidden: use a hidden input
+            @param icon: show icon on button
+            @param label: show label on button
         """
 
         self.hidden = hidden
+        self.icon = icon
+        self.label = label
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
@@ -2955,11 +2959,33 @@ class S3QRInput(FormWidget):
         if not widget_id:
             widget_id = attr["_id"] = str(field).replace(".", "_")
 
+        title = T("Scan QR Code")
+
+        icon = self.icon
+        if not icon:
+            icon = ""
+        elif icon is True:
+            icon = ICON("fa fa-qrcode")
+
+        label = self.label
+        if not label:
+            label = "" if icon else title
+        elif label is True:
+            label = title
+
+        scanbtn = BUTTON(icon,
+                         label,
+                         _title = title if not label else None,
+                         _type = "button",
+                         _class = "tiny primary button qrscan-btn",
+                         )
+
         widget = DIV(INPUT(**attr),
-                     BUTTON(T("Scan QR Code"),
-                            _type = "button",
-                            _class = "tiny primary button qrscan-btn",
-                            ),
+                     SPAN(ICON("fa fa-close"),
+                          _class = "postfix clear-btn",
+                          _title = T("Clear"),
+                          ),
+                     scanbtn,
                      _class = "qrinput",
                      )
 

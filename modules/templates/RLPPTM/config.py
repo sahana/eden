@@ -167,6 +167,10 @@ def config(settings):
     settings.fin.voucher_eligibility_types = True
 
     # -------------------------------------------------------------------------
+    # UI Settings
+    settings.ui.calendar_clear_icon = True
+
+    # -------------------------------------------------------------------------
     # Realm Rules
     #
     def rlpptm_realm_entity(table, row):

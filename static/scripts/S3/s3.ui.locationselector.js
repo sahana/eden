@@ -283,7 +283,7 @@
 
             // Arrange the widget's inner elements
             var formRow = $(selector + '__row'),
-                errorWrapper = this.input.next('.error_wrapper'),
+                errorWrapper = this.input.next('.error_wrapper').addClass('error_top'),
                 mapIconRow = $(selector + '_map_icon__row'),
                 L0Row = $(selector + '_L0__row'),
                 postcodeRow = $(selector + '_postcode__row');

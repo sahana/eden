@@ -293,8 +293,23 @@ div.s3-groupedopts-widget {
 .qrinput {
     display: inline-block;
     .qrscan-btn {
-        padding: 0.4rem 1.2rem;
-        margin: 3px 0.5rem;
+        padding: 0.4rem 0.8rem;
+        text-align: center;
+        margin: 0 0.5rem;
+        vertical-align: top;
+        .fa {
+            font-size: 16px;
+            margin: 0 0.2rem;
+            vertical-align: middle;
+        }
+    }
+    .postfix.clear-btn {
+        cursor: pointer;
+        .fa {
+            color: #B0B0B0;
+        }
+        display: inline-block;
+        width: 1.2rem;
         vertical-align: top;
     }
 }
