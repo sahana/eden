@@ -19,8 +19,17 @@ fbq('track','PageView');{{pass}}
 {{pass}}$(document).ready(function(){
  {{if s3.rtl:}}$('body').addClass('rtl'){{else:}}$('body').addClass('ltr'){{pass}}
  {{if fb_pixel_id or ga_id:}}$('body').ihavecookies({
-  cookieTypes:[{type:i18n.analytics,value:'analytics',description:i18n.analytics_desc}],
+  title:i18n.ihc_title,
+  message:i18n.ihc_message,
   link:S3.Ap.concat('/default/privacy'),
+  expires:365,
+  moreInfoLabel:i18n.ihc_moreInfoLabel,
+  acceptBtnLabel:i18n.ihc_acceptBtnLabel,
+  advancedBtnLabel:i18n.ihc_advancedBtnLabel,
+  cookieTypesTitle:i18n.ihc_cookieTypesTitle,
+  fixedCookieTypeLabel:i18n.ihc_fixedCookieTypeLabel,
+  fixedCookieTypeDesc:i18n.ihc_fixedCookieTypeDesc,
+  cookieTypes:[{type:i18n.ihc_analytics,value:'analytics',description:i18n.ihc_analytics_desc}],
   onAccept:function(){if($.fn.ihavecookies.preference('analytics')){
   {{if fb_pixel_id:}}fbq('consent', 'grant');{{pass}}
   {{if ga_id:}}ga('create','{{=ga_id}}','auto');ga('send','pageview');{{pass}}

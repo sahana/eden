@@ -20,7 +20,13 @@ i18n.minute='{{=T("Minute")}}'
 i18n.no_match='{{=T("No match")}}'
 i18n.no_matching_records='{{=T("No matching records found")}}'
 i18n.unsaved_changes="{{=T("You have unsaved changes. Click Cancel now, then 'Save' to save them. Click OK now to discard them.")}}"
-{{fb_pixel_id = settings.get_facebook_pixel_id()}}{{ga_id = settings.get_google_analytics_tracking_id()}}{{if fb_pixel_id or ga_id:}}
-i18n.analytics='{{=T("Analytics")}}'
-i18n.analytics_desc='{{=T("Cookies related to site visits, browser types, etc.")}}'
-{{pass}}
+{{fb_pixel_id = settings.get_facebook_pixel_id()}}{{ga_id = settings.get_google_analytics_tracking_id()}}{{if fb_pixel_id or ga_id:}}i18n.ihc_title='{{=T("Cookies & Privacy")}}'
+i18n.ihc_message='{{=T("Cookies enable you to personalize your experience on our sites, tell us which parts of our websites people have visited, help us measure the effectiveness of ads and web searches, and give us insights into user behavior so we can improve our communications and products.")}}'
+i18n.ihc_moreInfoLabel='{{=T("More information")}}'
+i18n.ihc_acceptBtnLabel='{{=T("Accept Cookies")}}'
+i18n.ihc_advancedBtnLabel='{{=T("Customize Cookies")}}'
+i18n.ihc_cookieTypesTitle='{{=T("Select cookies to accept")}}'
+i18n.ihc_fixedCookieTypeLabel='{{=T("Necessary")}}'
+i18n.ihc_fixedCookieTypeDesc='{{=T("These are cookies that are essential for the website to work correctly.")}}'
+i18n.ihc_analytics='{{=T("Analytics")}}'
+i18n.ihc_analytics_desc='{{=T("Cookies related to site visits, browser types, etc.")}}'{{pass}}
