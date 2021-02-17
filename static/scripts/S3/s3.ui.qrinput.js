@@ -41,7 +41,8 @@
          */
         _init: function() {
 
-            this.scanButton = $('.qrscan-btn', $(this.element).closest('.qrinput'));
+            this.container = $(this.element).closest('.qrinput');
+            this.scanButton = $('.qrscan-btn', this.container);
 
             // Set up qr-scanner worker
             var workerPath = this.options.workerPath;
@@ -82,6 +83,8 @@
                 self = this;
 
             this._unbindEvents();
+
+            $('.error_wrapper', this.container).appendTo(this.container);
 
             if (self.scanButton.length) {
 
@@ -145,9 +148,26 @@
         },
 
         /**
+         * Clear input
+         */
+        _clearInput: function() {
+
+            $(this.element).val('').trigger('change' + this.eventNamespace);
+        },
+
+        /**
          * Bind events to generated elements (after refresh)
          */
         _bindEvents: function() {
+
+            var $el = $(this.element),
+                ns = this.eventNamespace,
+                self = this;
+
+            $('.clear-btn', $el.closest('.qrinput')).on('click' + ns, function() {
+                self._clearInput();
+            });
+
             return true;
         },
 
@@ -155,6 +175,12 @@
          * Unbind events (before refresh)
          */
         _unbindEvents: function() {
+
+            var $el = $(this.element),
+                ns = this.eventNamespace;
+
+            $('.clear-btn', $el.closest('.qrinput')).off(ns);
+
             return true;
         }
     });

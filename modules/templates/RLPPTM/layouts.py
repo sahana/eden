@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from gluon import *
-from gluon.storage import Storage
-from s3 import *
+from gluon import URL, current, \
+                  A, FORM, IMG, INPUT, LI, OPTION, SELECT, SPAN, TAG, UL
+from s3 import S3NavigationItem
 from s3theme import NAV, SECTION
 
 # =============================================================================
@@ -21,104 +21,107 @@ class S3MainMenuLayout(S3NavigationItem):
             item.enabled = True
             item.visible = True
 
-        if item.enabled and item.visible:
+        if not item.enabled or not item.visible:
+            return None
 
-            items = item.render_components()
-            if item.parent is not None:
+        items = item.render_components()
+        if item.parent is not None:
 
-                classes = []
+            classes = []
 
-                if item.parent.parent is None:
-                    # Item at the top-level?
-                    toplevel = True
-                    if item.opts.right:
-                        classes.append("menu-right")
+            if item.parent.parent is None:
+                # Item at the top-level?
+                toplevel = True
+                if item.opts.right:
+                    classes.append("menu-right")
+            else:
+                toplevel = False
+
+            if item.components:
+                classes.append("has-dropdown not-click")
+                if item.selected:
+                    classes.append("active")
+                _class = " ".join(classes)
+                # Menu item with Dropdown
+                if item.get_first(enabled=True, link=True):
+                    _href = item.url()
+                    return LI(A(item.label,
+                                _href = _href,
+                                _id = item.attr._id
+                                ),
+                                UL(items,
+                                    _class = "dropdown"
+                                    ),
+                                _class = _class,
+                                )
                 else:
-                    toplevel = False
-
-                if item.components:
-                    classes.append("has-dropdown not-click")
+                    # No active items in drop-down
+                    # => hide the entire entry
+                    return None
+            else:
+                # Menu item without Drop-Down
+                item_url = item.url()
+                label = item.label
+                if toplevel:
+                    # Top-level item
+                    if item_url == URL(c="default", f="index"):
+                        classes.append("menu-home")
                     if item.selected:
                         classes.append("active")
                     _class = " ".join(classes)
-                    # Menu item with Dropdown
-                    if item.get_first(enabled=True, link=True):
-                        _href = item.url()
-                        return LI(A(item.label,
-                                    _href=_href,
-                                    _id=item.attr._id
-                                    ),
-                                    UL(items,
-                                        _class="dropdown"
-                                        ),
-                                    _class=_class,
-                                    )
                 else:
-                    # Menu item without Drop-Down
-                    if toplevel:
-                        item_url = item.url()
-                        if item_url == URL(c="default", f="index"):
-                            classes.append("menu-home")
-                        if item.selected:
-                            classes.append("active")
-                        _class = " ".join(classes)
-                        return LI(A(item.label,
-                                    _href=item_url,
-                                    _id=item.attr._id,
-                                    ),
-                                    _class=_class,
-                                    )
-                    else:
-                        # Submenu item
-                        if isinstance(item.label, dict):
-                            if "name" in item.label:
-                                label = item.label["name"]
-                            else:
-                                return None
+                    # Submenu item
+                    if isinstance(label, dict):
+                        if "name" in label:
+                            label = label["name"]
                         else:
-                            label = item.label
-                        link = A(label, _href=item.url(), _id=item.attr._id)
-                        return LI(link)
-            else:
-                # Main menu
-
-                right = []
-                left = []
-                for item in items:
-                    if "menu-right" in item["_class"]:
-                        item.remove_class("menu-right")
-                        right.append(item)
-                    else:
-                        left.append(item)
-                right.reverse()
-                if current.response.s3.rtl:
-                    right, left = left, right
-
-                T = current.T
-                data_options = {"back": T("Back"),
-                                }
-
-                return NAV(UL(LI(A(" ",
-                                   _href=URL(c="default", f="index"),
-                                   ),
-                                 _class="name"
-                                 ),
-                              LI(A(SPAN(current.T("Menu"))),
-                                 _class="toggle-topbar menu-icon",
-                                 ),
-                              _class="title-area",
-                              ),
-                           SECTION(UL(right, _class="right"),
-                                   UL(left, _class="left"),
-                                   _class="top-bar-section",
-                                   ),
-                           _class = "top-bar",
-                           data = {"topbar": " ",
-                                   "options": "back_text:%(back)s" % data_options,
-                                   },
-                           )
+                            return None
+                    _class = None
+                link_class = "s3_modal" if item.opts.modal else None
+                return LI(A(label,
+                            _class = link_class,
+                            _href = item_url,
+                            _id = item.attr._id,
+                            ),
+                            _class = _class,
+                            )
         else:
-            return None
+            # Main menu
+            right = []
+            left = []
+            for child in items:
+                if "menu-right" in child["_class"]:
+                    child.remove_class("menu-right")
+                    right.append(child)
+                else:
+                    left.append(child)
+            right.reverse()
+            if current.response.s3.rtl:
+                right, left = left, right
+
+            T = current.T
+            data_options = {"back": T("Back"),
+                            }
+
+            return NAV(UL(LI(A(" ",
+                                _href = URL(c="default", f="index"),
+                                ),
+                                _class = "name"
+                                ),
+                            LI(A(SPAN(current.T("Menu"))),
+                                _class = "toggle-topbar menu-icon",
+                                ),
+                            _class = "title-area",
+                            ),
+                        SECTION(UL(right, _class="right"),
+                                UL(left, _class="left"),
+                                _class = "top-bar-section",
+                                ),
+                        _class = "top-bar",
+                        data = {"topbar": " ",
+                                "options": "back_text:%(back)s" % data_options,
+                                },
+                        )
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -255,10 +258,7 @@ class S3LanguageMenuLayout(S3NavigationItem):
     def check_enabled(self):
         """ Check whether the language menu is enabled """
 
-        if current.deployment_settings.get_L10n_display_toolbar():
-            return True
-        else:
-            return False
+        return bool(current.deployment_settings.get_L10n_display_toolbar())
 
 # -----------------------------------------------------------------------------
 # Shortcut

@@ -283,7 +283,7 @@
 
             // Arrange the widget's inner elements
             var formRow = $(selector + '__row'),
-                errorWrapper = this.input.next('.error_wrapper'),
+                errorWrapper = this.input.next('.error_wrapper').addClass('error_top'),
                 mapIconRow = $(selector + '_map_icon__row'),
                 L0Row = $(selector + '_L0__row'),
                 postcodeRow = $(selector + '_postcode__row');
@@ -1275,7 +1275,7 @@
                         for (var i = 0; i < addresses.length; i++) {
                             address_list += '<li><div>' + addresses[i] + '</div></li>';
                         }
-                        address_list += '</ul>'
+                        address_list += '</ul>';
                         $(selector + '_postcode').after(address_list);
                         $(selector + '_address_menu').menu({
                             select: function(event, ui) {

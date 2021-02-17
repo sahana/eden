@@ -167,6 +167,10 @@ def config(settings):
     settings.fin.voucher_eligibility_types = True
 
     # -------------------------------------------------------------------------
+    # UI Settings
+    settings.ui.calendar_clear_icon = True
+
+    # -------------------------------------------------------------------------
     # Realm Rules
     #
     def rlpptm_realm_entity(table, row):
@@ -448,8 +452,9 @@ def config(settings):
                           ("INC", T("Inconclusive")),
                           )
         field = table.result
+        field.default = "POS"
         field.requires = IS_IN_SET(result_options,
-                                   zero = "",
+                                   zero = None,
                                    sort = False,
                                    )
         field.represent = S3Represent(options=dict(result_options))
@@ -711,6 +716,16 @@ def config(settings):
                 field = table.valid_until
                 field.readable = bool(r.record)
                 field.writable = False
+
+                # Insert hint for bearer DoB
+                from s3 import S3WithIntro
+                field = table.bearer_dob
+                field.widget = S3WithIntro(field.widget,
+                                           intro = ("fin",
+                                                    "voucher",
+                                                    "BearerDoBIntro",
+                                                    ),
+                                           )
 
                 # Filter Widgets
                 from s3 import S3DateFilter, S3TextFilter

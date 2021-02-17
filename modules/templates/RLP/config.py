@@ -165,6 +165,10 @@ def config(settings):
     settings.custom.poolrules = "poolrules.default.xml"
 
     # -------------------------------------------------------------------------
+    # UI Settings
+    settings.ui.calendar_clear_icon = True
+
+    # -------------------------------------------------------------------------
     # Realm Rules
     #
     def rlp_realm_entity(table, row):
