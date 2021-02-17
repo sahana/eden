@@ -20,3 +20,7 @@ i18n.minute='{{=T("Minute")}}'
 i18n.no_match='{{=T("No match")}}'
 i18n.no_matching_records='{{=T("No matching records found")}}'
 i18n.unsaved_changes="{{=T("You have unsaved changes. Click Cancel now, then 'Save' to save them. Click OK now to discard them.")}}"
+{{fb_pixel_id = settings.get_facebook_pixel_id()}}{{ga_id = settings.get_google_analytics_tracking_id()}}{{if fb_pixel_id or ga_id:}}
+i18n.analytics='{{=T("Analytics")}}'
+i18n.analytics_desc='{{=T("Cookies related to site visits, browser types, etc.")}}'
+{{pass}}

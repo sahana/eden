@@ -156,14 +156,14 @@ class S3Migration(object):
                       )
 
     # -------------------------------------------------------------------------
-    def prep(self, moves=None,
-                   news=None,
-                   ondeletes=None,
-                   strbools=None,
-                   strints=None,
-                   add_notnulls=None,
-                   remove_foreigns=None,
-                   remove_uniques=None,
+    def prep(self, moves = None,
+                   news = None,
+                   ondeletes = None,
+                   strbools = None,
+                   strints = None,
+                   add_notnulls = None,
+                   remove_foreigns = None,
+                   remove_uniques = None,
                    ):
         """
             Preparation before migration
