@@ -1,16 +1,27 @@
-{{# Include dynamically added Scripts at the end of the body}}
-{{include "chat.html"}}
-{{for script in s3.scripts:}}{{=SCRIPT(_src=script)}}
-{{pass}}
-{{for script in s3.scripts_modules:}}{{=SCRIPT(_type="module", _src=script)}}{{pass}}
-{{ga_id = settings.get_google_analytics_tracking_id()}}{{if ga_id:}}<script async src="https://www.googletagmanager.com/gtag/js?id={{=ga_id}}"></script>
+{{fb_pixel_id = settings.get_facebook_pixel_id()}}{{ga_id = settings.get_google_analytics_tracking_id()}}{{if fb_pixel_id or ga_id:}}
+{{if s3.debug:}}<script src="/{{=appname}}/static/scripts/jquery.ihavecookies.js"></script>{{else:}}<script src="/{{=appname}}/static/scripts/jquery.ihavecookies.min.js"></script>{{pass}}
+{{if ga_id:}}<script async src='https://www.google-analytics.com/analytics.js'></script>{{pass}}
 <script type="text/javascript">//<![CDATA[
-window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date);gtag("config","{{=ga_id}}");
-{{else:}}
+{{if fb_pixel_id:}}!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('consent','revoke');{{# Do not activate Facebook Pixel ID until consent granted}}
+fbq('init','{{=fb_pixel_id}}');
+fbq('track','PageView');{{pass}}
+{{if ga_id:}}window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;{{pass}}
+</script>{{pass}}
+{{include "chat.html"}}
+{{# Include dynamically added Scripts at the end of the body}}{{for script in s3.scripts:}}{{=SCRIPT(_src=script)}}{{pass}}
+{{for script in s3.scripts_modules:}}{{=SCRIPT(_type="module", _src=script)}}{{pass}}
 <script type="text/javascript">//<![CDATA[
 {{pass}}{{for script in s3.js_global:}}{{=XML(script)}}
 {{pass}}$(document).ready(function(){
  {{if s3.rtl:}}$('body').addClass('rtl'){{else:}}$('body').addClass('ltr'){{pass}}
+ {{if fb_pixel_id or ga_id:}}$('body').ihavecookies({onAccept:function(){
+  {{if fb_pixel_id:}}fbq('consent', 'grant');{{pass}}
+  {{if ga_id:}}ga('create','{{=ga_id}}','auto');ga('send','pageview');{{pass}}
+ }});{{pass}}
  {{for script in s3.jquery_ready:}}{{=XML(script)}}
  {{pass}}})
 //]]></script>
