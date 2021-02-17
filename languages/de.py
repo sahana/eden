@@ -4256,6 +4256,7 @@
 'Report Another Assessment...': 'Melde andere Beurteilung...',
 'Report Details': 'Details zum Bericht',
 'Report Options': 'Optionen zum Bericht',
+'Report Test Result': 'Testergebnis melden',
 'Report To': 'Melden bei',
 'Report Types Include': 'Berichtstypen beinhalten',
 'Report added': 'Bericht hinzugefügt',

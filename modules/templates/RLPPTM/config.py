@@ -452,8 +452,9 @@ def config(settings):
                           ("INC", T("Inconclusive")),
                           )
         field = table.result
+        field.default = "POS"
         field.requires = IS_IN_SET(result_options,
-                                   zero = "",
+                                   zero = None,
                                    sort = False,
                                    )
         field.represent = S3Represent(options=dict(result_options))

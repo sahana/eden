@@ -41,15 +41,20 @@ class S3MainMenu(default.S3MainMenu):
 
         is_org_group_admin = lambda i: not has_role("ADMIN") and \
                                        has_role("ORG_GROUP_ADMIN")
+        is_voucher_provider = lambda i: not has_role("ADMIN") and \
+                                        has_role("VOUCHER_PROVIDER")
         menu = [MM("Organizations",
-                   c = "org", f = "organisation",
+                   c="org", f="organisation", restrict=("ORG_GROUP_ADMIN", "ORG_ADMIN"),
                    vars = {"mine": 1} if not has_role("ORG_GROUP_ADMIN") else None,
-                   restrict = ("ORG_GROUP_ADMIN", "ORG_ADMIN"),
                    ),
                 MM("Test Results",
-                   c = "disease", f="case_diagnostics",
-                   restrict = ("VOUCHER_PROVIDER", "DISEASE_TEST_READER"),
+                   c="disease", f="case_diagnostics", restrict="DISEASE_TEST_READER",
                    ),
+                MM("Test Results",
+                   c="disease", f="case_diagnostics", check=is_voucher_provider, link=False)(
+                    MM("Report Test Result", m="create", vars={"format": "popup"}, modal=True),
+                    MM("List Test Results"),
+                    ),
                 MM("Projects",
                    c = "project", f="project",
                    restrict = "ADMIN",
