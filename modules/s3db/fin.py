@@ -802,7 +802,7 @@ class FinVoucherModel(S3Model):
 
         if hasattr(row, "fin_voucher"):
             row = row.fin_voucher
-        if hasattr(row, "balance"):
+        if hasattr(row, "balance") and row.balance is not None:
             if row.balance > 0:
                 return T("Issued##fin")
             else:
@@ -978,7 +978,7 @@ class FinVoucherModel(S3Model):
 
         if hasattr(row, "fin_voucher_debit"):
             row = row.fin_voucher_debit
-        if hasattr(row, "balance"):
+        if hasattr(row, "balance") and row.balance is not None:
             if row.balance > 0:
                 return T("Compensation pending##fin")
             else:
@@ -2000,7 +2000,8 @@ class fin_VoucherProgram(object):
         if not program:
             return None
 
-        table = current.s3db.fin_voucher
+        s3db = current.s3db
+        table = s3db.fin_voucher
         query = (table.id == voucher_id) & \
                 (table.program_id == program.id) & \
                 (table.deleted == False)
@@ -2034,8 +2035,11 @@ class fin_VoucherProgram(object):
                 voucher.update_record(
                     balance = voucher.balance + transaction["voucher"],
                     )
+                ptable = s3db.fin_voucher_program
                 program.update_record(
                     credit = program.credit + transaction["credit"],
+                    modified_on = ptable.modified_on,
+                    modified_by = ptable.modified_by,
                     )
             else:
                 return None
@@ -2058,7 +2062,8 @@ class fin_VoucherProgram(object):
         if not program:
             return None
 
-        table = current.s3db.fin_voucher
+        s3db = current.s3db
+        table = s3db.fin_voucher
         query = (table.id == voucher_id) & \
                 (table.program_id == program.id) & \
                 (table.deleted == False)
@@ -2080,8 +2085,11 @@ class fin_VoucherProgram(object):
                 voucher.update_record(
                     balance = voucher.balance + transaction["voucher"],
                     )
+                ptable = s3db.fin_voucher_program
                 program.update_record(
                     credit = program.credit + transaction["credit"],
+                    modified_on = ptable.modified_on,
+                    modified_by = ptable.modified_by,
                     )
             else:
                 return None
@@ -2165,9 +2173,12 @@ class fin_VoucherProgram(object):
                 debit.update_record(
                     balance = debit.balance + transaction["debit"],
                     )
+                ptable = s3db.fin_voucher_program
                 program.update_record(
                     credit = program.credit + transaction["credit"],
-                    compensation = program.compensation + transaction["compensation"]
+                    compensation = program.compensation + transaction["compensation"],
+                    modified_on = ptable.modified_on,
+                    modified_by = ptable.modified_by,
                     )
                 if voucher.balance > 0 and voucher.single_debit:
                     # Voucher can only be debited once

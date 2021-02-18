@@ -1007,6 +1007,23 @@ def config(settings):
     settings.customise_fin_voucher_debit_controller = customise_fin_voucher_debit_controller
 
     # -------------------------------------------------------------------------
+    def customise_fin_voucher_program_resource(r, tablename):
+
+        table = current.s3db.fin_voucher_program
+
+        represent = lambda v, row=None: -v if v else current.messages["NONE"]
+
+        field = table.credit
+        field.label = T("Pending Credits")
+        field.represent = represent
+
+        field = table.compensation
+        field.label = T("Pending Compensation Claims")
+        field.represent = represent
+
+    settings.customise_fin_voucher_program_resource = customise_fin_voucher_program_resource
+
+    # -------------------------------------------------------------------------
     def customise_fin_voucher_program_controller(**attr):
 
         # Enable bigtable features
