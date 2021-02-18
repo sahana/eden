@@ -251,10 +251,17 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create Voucher", m="create", restrict=("VOUCHER_ISSUER"),
                           check = voucher_create,
                           ),
+                        M("Create Group Voucher", m="create", restrict=("VOUCHER_ISSUER"),
+                          vars = {"g": "1"},
+                          check = voucher_create,
+                          ),
                         M("Statistics", m="report", restrict=("PROGRAM_MANAGER")),
                         ),
                     M("Accepted Vouchers", f="voucher_debit")(
                         M("Accept Voucher", m="create", restrict=("VOUCHER_PROVIDER")),
+                        M("Accept Group Voucher", m="create", restrict=("VOUCHER_PROVIDER"),
+                          vars = {"g": "1"},
+                          ),
                         M("Statistics", m="report"),
                         ),
                     )

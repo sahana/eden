@@ -257,6 +257,12 @@ class FinVoucherModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
+                     Field("multi_debit", "boolean",
+                           label = T("Allow multiple debits per voucher"),
+                           default = False,
+                           readable = False,
+                           writable = False,
+                           ),
                      Field("validity_period", "integer",
                            label = T("Validity Period for Vouchers (Days)"),
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(1)),
@@ -408,8 +414,14 @@ class FinVoucherModel(S3Model):
                            writable = bearer_pin,
                            requires = [IS_NOT_EMPTY(), IS_LENGTH(maxsize=10, minsize=4)] if bearer_pin else None,
                            ),
+                     Field("initial_credit", "integer",
+                           label = T("Initial Credit##fin"),
+                           default = 1,
+                           readable = False,
+                           writable = False,
+                           ),
                      Field("balance", "integer",
-                           label = T("Balance##fin"),
+                           label = T("Credit##fin"),
                            default = 0,
                            writable = False,
                            ),
@@ -421,6 +433,9 @@ class FinVoucherModel(S3Model):
                              label = T("Valid Until"),
                              writable = False,
                              ),
+                     Field.Virtual("status", self.voucher_status,
+                                   label = T("Status"),
+                                   ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -428,6 +443,7 @@ class FinVoucherModel(S3Model):
 
         # Table Configuration
         self.configure(tablename,
+                       extra_fields = ["balance"],
                        deletable = False,
                        editable = False,
                        create_onvalidation = self.voucher_create_onvalidation,
@@ -453,8 +469,6 @@ class FinVoucherModel(S3Model):
                                      ondelete = "RESTRICT",
                                      requires = IS_ONE_OF(db, "%s.id" % tablename),
                                      )
-
-        # TODO rheader + primary controller
 
         # -------------------------------------------------------------------------
         # Voucher debit
@@ -494,16 +508,26 @@ class FinVoucherModel(S3Model):
                              label = T("Date Effected"),
                              writable = False,
                              ),
+                     Field("quantity", "integer",
+                           label = T("Service Quantity"),
+                           default = 1,
+                           readable = False,
+                           writable = False,
+                           ),
                      Field("balance", "integer",
                            label = T("Balance##fin"),
                            default = 0,
                            writable = False,
                            ),
+                     Field.Virtual("status", self.debit_status,
+                                   label = T("Status"),
+                                   ),
                      s3_comments(),
                      *s3_meta_fields())
 
         # Table Configuration
         self.configure(tablename,
+                       extra_fields = ["balance"],
                        editable = False,
                        deletable = False,
                        onvalidation = self.debit_onvalidation,
@@ -536,10 +560,12 @@ class FinVoucherModel(S3Model):
 
         # Transaction types:
         #  - ISS: credit -x => voucher +x
+        #  - VOI: credit +x => voucher -x
         #  - DBT: credit +1 <= voucher -1, debit +1 <= compensation -1
         #  - CMP: debit -1 => compensation +1
         #
         transaction_types = {"ISS": T("Issued##fin"),
+                             "VOI": T("Voided##fin"),
                              "DBT": T("Redeemed##fin"),
                              "CMP": T("Compensated##fin"),
                              }
@@ -712,7 +738,7 @@ class FinVoucherModel(S3Model):
             Onaccept of new voucher:
             - transfer initial credit to the voucher (issue)
             - generate voucher signature
-            - set expiration date (TODO)
+            - set expiration date
 
             @param form: the FORM
         """
@@ -758,6 +784,25 @@ class FinVoucherModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def voucher_status(row):
+        """
+            Virtual field indicating the status of the voucher
+        """
+
+        T = current.T
+
+        if hasattr(row, "fin_voucher"):
+            row = row.fin_voucher
+        if hasattr(row, "balance"):
+            if row.balance > 0:
+                return T("Issued##fin")
+            else:
+                return T("Redeemed##fin")
+        else:
+            return current.messages["NONE"]
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def debit_onvalidation(form):
         """
             Validate debit:
@@ -799,6 +844,7 @@ class FinVoucherModel(S3Model):
                                        ptable.id,
                                        ptable.status,
                                        ptable.end_date,
+                                       ptable.multi_debit,
                                        join = join,
                                        limitby = (0, 1),
                                        ).first()
@@ -812,6 +858,7 @@ class FinVoucherModel(S3Model):
 
             today = current.request.utcnow.date()
             valid_until = voucher.valid_until
+            balance = voucher.balance
 
             personalize = settings.get_fin_voucher_personalize()
 
@@ -841,8 +888,18 @@ class FinVoucherModel(S3Model):
                 # Verify voucher status
                 elif valid_until and valid_until < today:
                     error = T("Voucher expired")
-                elif voucher.balance <= 0:
+                elif balance <= 0:
                     error = T("Voucher credit exhausted")
+
+            if not error:
+                # Verify quantity/balance
+                if "quantity" in form_vars:
+                    quantity = form_vars["quantity"]
+                    if quantity > balance:
+                        field = "quantity"
+                        error = T("Max %(number)s allowed")
+                elif balance > 1 and not program.multi_debit:
+                    error = T("Group voucher, must use dedicated form")
 
         if error:
             form.errors[field] = error
@@ -896,6 +953,25 @@ class FinVoucherModel(S3Model):
 
         program = fin_VoucherProgram(voucher.program_id)
         program.debit(voucher.id, debit.id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def debit_status(row):
+        """
+            Virtual field indicating the status of the debit
+        """
+
+        T = current.T
+
+        if hasattr(row, "fin_voucher_debit"):
+            row = row.fin_voucher_debit
+        if hasattr(row, "balance"):
+            if row.balance > 0:
+                return T("Accepted")
+            else:
+                return T("Compensated##fin")
+        else:
+            return current.messages["NONE"]
 
 # =============================================================================
 class FinPaymentServiceModel(S3Model):
@@ -1889,6 +1965,7 @@ class fin_VoucherProgram(object):
                                                table.end_date,
                                                table.credit,
                                                table.compensation,
+                                               table.multi_debit,
                                                limitby = (0, 1),
                                                ).first()
             self._program = program
@@ -1916,6 +1993,7 @@ class fin_VoucherProgram(object):
                 (table.program_id == program.id) & \
                 (table.deleted == False)
         voucher = current.db(query).select(table.id,
+                                           table.initial_credit,
                                            table.balance,
                                            limitby = (0, 1),
                                            ).first()
@@ -1923,9 +2001,18 @@ class fin_VoucherProgram(object):
             return None
 
         if not isinstance(credit, int):
+            credit = voucher.initial_credit
+        if credit is None:
             credit = program.default_credit
-        if credit > 0:
+        if credit is None:
+            return 0
 
+        balance = voucher.balance
+        if balance:
+            credit -= balance
+
+        if credit:
+            # Transfer initial credit to the voucher
             transaction = {"type": "ISS",
                            "credit": -credit,
                            "voucher": credit,
@@ -1941,7 +2028,55 @@ class fin_VoucherProgram(object):
             else:
                 return None
 
-        return credit if credit > 0 else 0
+        return credit
+
+    # -------------------------------------------------------------------------
+    def void(self, voucher_id):
+        """
+            Charge back the remaining balance of a voucher to the program,
+            thereby voiding the voucher
+
+            @param voucher_id: the voucher ID
+
+            @returns: the number of credits charged back to the program,
+                      or None on failure
+        """
+
+        program = self.program
+        if not program:
+            return None
+
+        table = current.s3db.fin_voucher
+        query = (table.id == voucher_id) & \
+                (table.program_id == program.id) & \
+                (table.deleted == False)
+        voucher = current.db(query).select(table.id,
+                                           table.balance,
+                                           limitby = (0, 1),
+                                           ).first()
+        if not voucher:
+            return None
+        balance = voucher.balance
+        if balance and balance > 0:
+            # Transfer remaining balance back to the program
+            transaction = {"type": "VOI",
+                           "credit": balance,
+                           "voucher": -balance,
+                           "voucher_id": voucher_id,
+                           }
+            if self.__transaction(transaction):
+                voucher.update_record(
+                    balance = voucher.balance + transaction["voucher"],
+                    )
+                program.update_record(
+                    credit = program.credit + transaction["credit"],
+                    )
+            else:
+                return None
+        else:
+            return 0
+
+        return balance
 
     # -------------------------------------------------------------------------
     def debit(self, voucher_id, debit_id, credit=None):
@@ -1986,6 +2121,7 @@ class fin_VoucherProgram(object):
                 (dtable.program_id == program_id) & \
                 (dtable.deleted == False)
         debit = db(query).select(dtable.id,
+                                 dtable.quantity,
                                  dtable.balance,
                                  limitby = (0, 1),
                                  ).first()
@@ -1993,9 +2129,13 @@ class fin_VoucherProgram(object):
             return None
 
         if not isinstance(credit, int):
+            credit = debit.quantity
+        if credit is None:
             credit = 1
-        if credit > 0:
+        if credit > voucher.balance:
+            return None
 
+        if credit > 0:
             transaction = {"type": "DBT",
                            "credit": credit,
                            "voucher": -credit,
@@ -2016,6 +2156,9 @@ class fin_VoucherProgram(object):
                     credit = program.credit + transaction["credit"],
                     compensation = program.compensation + transaction["compensation"]
                     )
+                if voucher.balance > 0 and not program.multi_debit:
+                    # Voucher can only be debited once
+                    self.void(voucher.id)
             else:
                 return None
 

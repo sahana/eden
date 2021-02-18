@@ -539,12 +539,36 @@ def config(settings):
     def customise_fin_voucher_resource(r, tablename):
 
         s3db = current.s3db
-
         table = s3db.fin_voucher
+
+        # Determine form mode
+        resource = r.resource
+        group_voucher = resource.tablename == "fin_voucher" and \
+                        r.get_vars.get("g") == "1"
 
         # Customise fields
         field = table.pe_id
         field.label = T("Issuer##fin")
+
+        from s3 import S3WithIntro
+        field = table.bearer_dob
+        if group_voucher:
+            label = T("Date of Birth of Group Representative")
+            intro = "GroupDoBIntro"
+        else:
+            label = T("Date of Birth of the Entitled")
+            intro = "BearerDoBIntro"
+        field.label = label
+        field.widget = S3WithIntro(field.widget,
+                                   intro = ("fin",
+                                            "voucher",
+                                            intro,
+                                            ),
+                                   )
+
+        field = table.initial_credit
+        field.label = T("Number Entitled")
+        field.readable = field.writable = group_voucher
 
         field = table.comments
         field.label = T("Memoranda")
@@ -554,27 +578,25 @@ def config(settings):
                                               ),
                             )
 
-        field = table.balance
-        field.label = T("Status")
-        field.represent = lambda v: T("Issued##fin") if v > 0 else T("Redeemed##fin")
-
         # Custom list fields
         has_role = current.auth.s3_has_role
         if has_role("PROGRAM_MANAGER"):
             list_fields = ["program_id",
                            "signature",
-                           "balance",
+                           (T("Status"), "status"),
                            "pe_id",
                            #(T("Issuer Type"), ISSUER_ORG_TYPE),
                            "eligibility_type_id",
+                           "initial_credit",
                            "date",
                            "valid_until",
                            ]
         elif has_role("VOUCHER_ISSUER"):
             list_fields = ["program_id",
                            "signature",
-                           "bearer_dob",
-                           "balance",
+                           (T("Entitled/Representative Date of Birth"), "bearer_dob"),
+                           "initial_credit",
+                           (T("Status"), "status"),
                            "date",
                            "valid_until",
                            "comments",
@@ -583,9 +605,11 @@ def config(settings):
         # Report Options
         if r.method == "report":
             facts = ((T("Number of Vouchers"), "count(id)"),
-                    )
+                     (T("Credits Issued"), "sum(initial_credit)"),
+                     (T("Remaining Credits"), "sum(balance)"),
+                     )
             axes = ["program_id",
-                    "balance",
+                    "status",
                     ISSUER_ORG_TYPE,
                     "eligibility_type_id",
                     "pe_id",
@@ -717,16 +741,6 @@ def config(settings):
                 field.readable = bool(r.record)
                 field.writable = False
 
-                # Insert hint for bearer DoB
-                from s3 import S3WithIntro
-                field = table.bearer_dob
-                field.widget = S3WithIntro(field.widget,
-                                           intro = ("fin",
-                                                    "voucher",
-                                                    "BearerDoBIntro",
-                                                    ),
-                                           )
-
                 # Filter Widgets
                 from s3 import S3DateFilter, S3TextFilter
                 text_fields = ["signature", "comments", "program_id$name"]
@@ -759,10 +773,10 @@ def config(settings):
                 # Configure ID card layout
                 from .vouchers import VoucherCardLayout
                 resource.configure(pdf_card_layout = VoucherCardLayout,
-                                    pdf_card_suffix = lambda record: \
+                                   pdf_card_suffix = lambda record: \
                                         s3_str(record.signature) \
                                         if record and record.signature else None,
-                                    )
+                                   )
             return result
         s3.prep = prep
 
@@ -806,8 +820,12 @@ def config(settings):
     def customise_fin_voucher_debit_resource(r, tablename):
 
         s3db = current.s3db
-
         table = s3db.fin_voucher_debit
+
+        # Determine form mode
+        resource = r.resource
+        group_voucher = resource.tablename == "fin_voucher_debit" and \
+                        r.get_vars.get("g") == "1"
 
         # Customise fields
         field = table.comments
@@ -818,21 +836,33 @@ def config(settings):
                                               ),
                             )
 
+        field = table.bearer_dob
+        if group_voucher:
+            label = T("Date of Birth of Group Representative")
+        else:
+            label = T("Date of Birth of the Entitled")
+        field.label = label
+
+        field = table.quantity
+        field.readable = field.writable = group_voucher
+
         field = table.balance
-        field.label = T("Status")
-        field.represent = lambda v: T("Redeemed##fin") if v > 0 else T("Compensated##fin")
+        field.label = T("Remaining Compensation Claims")
 
         # Custom list_fields
         list_fields = [(T("Date"), "date"),
-                        "program_id",
-                        "voucher_id$signature",
-                        "balance",
-                        ]
+                       "program_id",
+                       "voucher_id$signature",
+                       "quantity",
+                       "status",
+                       ]
         if current.auth.s3_has_role("PROGRAM_MANAGER"):
+            # Include issuer and provider
             list_fields[3:3] = ["voucher_id$pe_id",
                                 "pe_id",
                                 ]
         if current.auth.s3_has_role("VOUCHER_PROVIDER"):
+            # Include provider notes
             list_fields.append("comments")
 
         s3db.configure("fin_voucher_debit",
@@ -845,12 +875,12 @@ def config(settings):
             filter_widgets = [S3TextFilter(["program_id$name",
                                             "signature",
                                             ],
-                                        label = T("Search"),
-                                        ),
-                            S3DateFilter("date",
-                                        label = T("Date"),
-                                        ),
-                            ]
+                                           label = T("Search"),
+                                           ),
+                              S3DateFilter("date",
+                                           label = T("Date"),
+                                           ),
+                              ]
             s3db.configure("fin_voucher_debit",
                            filter_widgets = filter_widgets,
                            )
@@ -858,9 +888,11 @@ def config(settings):
         # Report options
         if r.method == "report":
             facts = ((T("Number of Accepted Vouchers"), "count(id)"),
-                    )
+                     (T("Total Service Quantity"), "sum(quantity)"),
+                     (T("Remaining Compensation Claims"), "sum(balance)"),
+                     )
             axes = ["program_id",
-                    "balance",
+                    "status",
                     ]
             if current.auth.s3_has_role("PROGRAM_MANAGER"):
                 axes.insert(0, "pe_id")
@@ -869,10 +901,10 @@ def config(settings):
                 "cols": axes,
                 "fact": facts,
                 "defaults": {"rows": axes[0],
-                            "cols": None,
-                            "fact": facts[0],
-                            "totals": True,
-                            },
+                             "cols": None,
+                             "fact": facts[0],
+                             "totals": True,
+                             },
                 }
             s3db.configure("fin_voucher_debit",
                            report_options = report_options,
@@ -934,6 +966,10 @@ def config(settings):
                 if len(rows) == 1:
                     field.default = rows.first().pe_id
                     field.readable = field.writable = False
+
+                if r.record:
+                    field = table.quantity
+                    field.readable = True
 
             return result
         s3.prep = prep
