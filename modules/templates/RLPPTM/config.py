@@ -9,7 +9,7 @@
 
 from collections import OrderedDict
 
-from gluon import current, URL, A, DIV, IS_EMPTY_OR, IS_IN_SET, TAG
+from gluon import current, URL, A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, TAG
 from gluon.storage import Storage
 
 from s3 import FS, IS_ONE_OF, S3Represent, s3_str
@@ -553,10 +553,10 @@ def config(settings):
         from s3 import S3WithIntro
         field = table.bearer_dob
         if group_voucher:
-            label = T("Date of Birth of Group Representative")
+            label = T("Group Representative Date of Birth")
             intro = "GroupDoBIntro"
         else:
-            label = T("Date of Birth of the Entitled")
+            label = T("Beneficiary Date of Birth")
             intro = "BearerDoBIntro"
         field.label = label
         field.widget = S3WithIntro(field.widget,
@@ -567,8 +567,13 @@ def config(settings):
                                    )
 
         field = table.initial_credit
-        field.label = T("Number Entitled")
-        field.readable = field.writable = group_voucher
+        field.label = T("Number of Beneficiaries")
+        if group_voucher:
+            field.default = None
+            field.requires = IS_INT_IN_RANGE(1,
+                                error_message = T("Enter the number of beneficiaries"),
+                                )
+            field.readable = field.writable = True
 
         field = table.comments
         field.label = T("Memoranda")
@@ -594,7 +599,7 @@ def config(settings):
         elif has_role("VOUCHER_ISSUER"):
             list_fields = ["program_id",
                            "signature",
-                           (T("Entitled/Representative Date of Birth"), "bearer_dob"),
+                           (T("Beneficiary/Representative Date of Birth"), "bearer_dob"),
                            "initial_credit",
                            (T("Status"), "status"),
                            "date",
@@ -736,10 +741,18 @@ def config(settings):
 
             if r.interactive:
 
+                if r.get_vars.get("g") == "1":
+                    s3.crud_strings["fin_voucher"]["label_create"] = T("Create Group Voucher")
+
                 # Hide valid_until from create-form (will be set onaccept)
                 field = table.valid_until
                 field.readable = bool(r.record)
                 field.writable = False
+
+                # Always show number of beneficiaries
+                if r.record:
+                    field = table.initial_credit
+                    field.readable = True
 
                 # Filter Widgets
                 from s3 import S3DateFilter, S3TextFilter
@@ -838,13 +851,18 @@ def config(settings):
 
         field = table.bearer_dob
         if group_voucher:
-            label = T("Date of Birth of Group Representative")
+            label = T("Group Representative Date of Birth")
         else:
-            label = T("Date of Birth of the Entitled")
+            label = T("Beneficiary Date of Birth")
         field.label = label
 
         field = table.quantity
-        field.readable = field.writable = group_voucher
+        if group_voucher:
+            field.default = None
+            field.requires = IS_INT_IN_RANGE(1,
+                                error_message = T("Enter the service quantity"),
+                                )
+            field.readable = field.writable = True
 
         field = table.balance
         field.label = T("Remaining Compensation Claims")
@@ -887,8 +905,8 @@ def config(settings):
 
         # Report options
         if r.method == "report":
-            facts = ((T("Number of Accepted Vouchers"), "count(id)"),
-                     (T("Total Service Quantity"), "sum(quantity)"),
+            facts = ((T("Total Services Rendered"), "sum(quantity)"),
+                     (T("Number of Accepted Vouchers"), "count(id)"),
                      (T("Remaining Compensation Claims"), "sum(balance)"),
                      )
             axes = ["program_id",
@@ -967,9 +985,15 @@ def config(settings):
                     field.default = rows.first().pe_id
                     field.readable = field.writable = False
 
+                # Always show quantity
                 if r.record:
                     field = table.quantity
                     field.readable = True
+
+            if r.interactive:
+
+                if r.get_vars.get("g") == "1":
+                    s3.crud_strings["fin_voucher_debit"]["label_create"] = T("Accept Group Voucher")
 
             return result
         s3.prep = prep

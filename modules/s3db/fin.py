@@ -257,12 +257,6 @@ class FinVoucherModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
-                     Field("multi_debit", "boolean",
-                           label = T("Allow multiple debits per voucher"),
-                           default = False,
-                           readable = False,
-                           writable = False,
-                           ),
                      Field("validity_period", "integer",
                            label = T("Validity Period for Vouchers (Days)"),
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(1)),
@@ -416,7 +410,13 @@ class FinVoucherModel(S3Model):
                            ),
                      Field("initial_credit", "integer",
                            label = T("Initial Credit##fin"),
-                           default = 1,
+                           requires = IS_INT_IN_RANGE(1),
+                           readable = False,
+                           writable = False,
+                           ),
+                     Field("single_debit", "boolean",
+                           default = True,
+                           label = T("Voucher can only be used once"),
                            readable = False,
                            writable = False,
                            ),
@@ -478,7 +478,9 @@ class FinVoucherModel(S3Model):
         tablename = "fin_voucher_debit"
         define_table(tablename,
                      program_id(empty = False),
-                     voucher_id(writable = False),
+                     voucher_id(readable = False,
+                                writable = False,
+                                ),
                      Field("pe_id", "reference pr_pentity",
                            label = T("Provider##fin"),
                            represent = pe_represent,
@@ -510,7 +512,7 @@ class FinVoucherModel(S3Model):
                              ),
                      Field("quantity", "integer",
                            label = T("Service Quantity"),
-                           default = 1,
+                           requires = IS_INT_IN_RANGE(1),
                            readable = False,
                            writable = False,
                            ),
@@ -757,6 +759,7 @@ class FinVoucherModel(S3Model):
         voucher = current.db(query).select(table.id,
                                            table.uuid,
                                            table.program_id,
+                                           table.initial_credit,
                                            limitby = (0, 1),
                                            ).first()
 
@@ -773,6 +776,12 @@ class FinVoucherModel(S3Model):
             if validity_period:
                 now = current.request.utcnow
                 update["valid_until"] = (now + datetime.timedelta(days=validity_period)).date()
+
+        # Set default initial credit from program
+        if voucher.initial_credit is None:
+            default_credit = pdata.default_credit
+            if default_credit:
+                update["initial_credit"] = default_credit
 
         # Generate voucher signature
         import uuid
@@ -841,10 +850,10 @@ class FinVoucherModel(S3Model):
                                        vtable.bearer_pin,
                                        vtable.balance,
                                        vtable.valid_until,
+                                       vtable.single_debit,
                                        ptable.id,
                                        ptable.status,
                                        ptable.end_date,
-                                       ptable.multi_debit,
                                        join = join,
                                        limitby = (0, 1),
                                        ).first()
@@ -897,9 +906,9 @@ class FinVoucherModel(S3Model):
                     quantity = form_vars["quantity"]
                     if quantity > balance:
                         field = "quantity"
-                        error = T("Max %(number)s allowed")
-                elif balance > 1 and not program.multi_debit:
-                    error = T("Group voucher, must use dedicated form")
+                        error = T("Max %(number)s allowed") % {"number": balance}
+                elif balance > 1 and voucher.single_debit:
+                    error = T("Group voucher! - use dedicated form")
 
         if error:
             form.errors[field] = error
@@ -931,9 +940,9 @@ class FinVoucherModel(S3Model):
         query = (table.id == record_id)
         debit = db(query).select(table.id,
                                  table.signature,
+                                 table.quantity,
                                  limitby = (0, 1),
                                  ).first()
-
         if not debit:
             return
 
@@ -947,8 +956,12 @@ class FinVoucherModel(S3Model):
                                    ).first()
         if not voucher:
             return
+        quantity = debit.quantity
+        if not quantity:
+            quantity = 1
         debit.update_record(program_id = voucher.program_id,
                             voucher_id = voucher.id,
+                            quantity = quantity
                             )
 
         program = fin_VoucherProgram(voucher.program_id)
@@ -967,7 +980,7 @@ class FinVoucherModel(S3Model):
             row = row.fin_voucher_debit
         if hasattr(row, "balance"):
             if row.balance > 0:
-                return T("Accepted")
+                return T("Compensation pending##fin")
             else:
                 return T("Compensated##fin")
         else:
@@ -1965,7 +1978,6 @@ class fin_VoucherProgram(object):
                                                table.end_date,
                                                table.credit,
                                                table.compensation,
-                                               table.multi_debit,
                                                limitby = (0, 1),
                                                ).first()
             self._program = program
@@ -2111,6 +2123,7 @@ class fin_VoucherProgram(object):
                 (vtable.deleted == False)
         voucher = db(query).select(vtable.id,
                                    vtable.balance,
+                                   vtable.single_debit,
                                    limitby = (0, 1),
                                    ).first()
         if not voucher:
@@ -2156,7 +2169,7 @@ class fin_VoucherProgram(object):
                     credit = program.credit + transaction["credit"],
                     compensation = program.compensation + transaction["compensation"]
                     )
-                if voucher.balance > 0 and not program.multi_debit:
+                if voucher.balance > 0 and voucher.single_debit:
                     # Voucher can only be debited once
                     self.void(voucher.id)
             else:
