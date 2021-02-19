@@ -45,6 +45,7 @@ class VoucherCardLayout(S3PDFCardLayout):
                 "program_id$organisation_id$root_organisation",
                 "program_id$end_date",
                 "signature",
+                "initial_credit",
                 "date",
                 "valid_until",
                 ]
@@ -186,7 +187,7 @@ class VoucherCardLayout(S3PDFCardLayout):
             # Alignments for data items
             DL = 250
             DR = 380
-            DY = (h - 135, h - 155, h - 175)
+            DY = (h - 135, h - 155, h - 175, h - 195)
 
             # Voucher ID (Signature)
             draw_value(DL, DY[0], "%s:" % T("Voucher ID"), width=100, height=20, size=9, bold=False)
@@ -197,6 +198,11 @@ class VoucherCardLayout(S3PDFCardLayout):
             draw_value(DL, DY[1], "%s:" % T("Issued On"), width=100, height=20, size=9, bold=False)
             draw_value(DR, DY[1], idate, width=180, height=20, size=12)
 
+            # Number of initial credits
+            credits = s3_str(item.get("fin_voucher.initial_credit"))
+            draw_value(DL, DY[2], "%s:" % T("Number of Beneficiaries"), width=100, height=20, size=9, bold=False)
+            draw_value(DR, DY[2], credits, width=180, height=20, size=12)
+
             # Voucher Valid-until Date
             if raw["fin_voucher.valid_until"]:
                 vdate = s3_str(item.get("fin_voucher.valid_until"))
@@ -205,8 +211,8 @@ class VoucherCardLayout(S3PDFCardLayout):
             else:
                 vdate = None
             if vdate:
-                draw_value(DL, DY[2], "%s:" % T("Valid Until"), width=100, height=20, size=9, bold=False)
-                draw_value(DR, DY[2], vdate, width=180, height=20, size=12)
+                draw_value(DL, DY[3], "%s:" % T("Valid Until"), width=100, height=20, size=9, bold=False)
+                draw_value(DR, DY[3], vdate, width=180, height=20, size=12)
 
             # Instructions
             if instructions:
