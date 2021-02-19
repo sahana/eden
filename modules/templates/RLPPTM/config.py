@@ -593,30 +593,33 @@ def config(settings):
                            #(T("Issuer Type"), ISSUER_ORG_TYPE),
                            "eligibility_type_id",
                            "initial_credit",
+                           "credit_spent",
                            "date",
-                           "valid_until",
+                           #"valid_until",
                            ]
         elif has_role("VOUCHER_ISSUER"):
             list_fields = ["program_id",
                            "signature",
                            (T("Beneficiary/Representative Date of Birth"), "bearer_dob"),
                            "initial_credit",
+                           "credit_spent",
                            (T("Status"), "status"),
                            "date",
-                           "valid_until",
+                           #"valid_until",
                            "comments",
                            ]
 
         # Report Options
         if r.method == "report":
-            facts = ((T("Number of Vouchers"), "count(id)"),
-                     (T("Credits Issued"), "sum(initial_credit)"),
-                     (T("Remaining Credits"), "sum(balance)"),
+            facts = ((T("Credit Redeemed"), "sum(credit_spent)"),
+                     (T("Credit Issued"), "sum(initial_credit)"),
+                     (T("Remaining Credit"), "sum(balance)"),
+                     (T("Number of Vouchers"), "count(id)"),
                      )
-            axes = ["program_id",
-                    "status",
-                    ISSUER_ORG_TYPE,
+            axes = [ISSUER_ORG_TYPE,
                     "eligibility_type_id",
+                    "program_id",
+                    "status",
                     "pe_id",
                     ]
             report_options = {

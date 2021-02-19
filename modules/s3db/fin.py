@@ -414,6 +414,11 @@ class FinVoucherModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
+                     Field("credit_spent", "integer",
+                           label = T("Credit Redeemed"),
+                           default = 0,
+                           writable = False,
+                           ),
                      Field("single_debit", "boolean",
                            default = True,
                            label = T("Voucher can only be used once"),
@@ -2132,6 +2137,7 @@ class fin_VoucherProgram(object):
         voucher = db(query).select(vtable.id,
                                    vtable.balance,
                                    vtable.single_debit,
+                                   vtable.credit_spent,
                                    limitby = (0, 1),
                                    ).first()
         if not voucher:
@@ -2167,7 +2173,13 @@ class fin_VoucherProgram(object):
                            }
 
             if self.__transaction(transaction):
+                credit_spent = voucher.credit_spent
+                if credit_spent:
+                    credit_spent += transaction["debit"]
+                else:
+                    credit_spent = transaction["debit"]
                 voucher.update_record(
+                    credit_spent = credit_spent,
                     balance = voucher.balance + transaction["voucher"],
                     )
                 debit.update_record(
