@@ -397,6 +397,7 @@ class FinVoucherModel(S3Model):
                            writable = False,
                            ),
                      s3_date("bearer_dob",
+                             future = 0,
                              label = T("Beneficiary Date of Birth"),
                              readable = bearer_dob,
                              writable = bearer_dob,

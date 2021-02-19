@@ -570,8 +570,8 @@ def config(settings):
         field.label = T("Number of Beneficiaries")
         if group_voucher:
             field.default = None
-            field.requires = IS_INT_IN_RANGE(1,
-                                error_message = T("Enter the number of beneficiaries"),
+            field.requires = IS_INT_IN_RANGE(1, 51,
+                                error_message = T("Enter the number of beneficiaries (max %(max)s)"),
                                 )
             field.readable = field.writable = True
 
