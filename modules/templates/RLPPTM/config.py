@@ -1138,6 +1138,19 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
+            resource = r.resource
+
+            # Filter list by project code
+            # - default to original subset for consistency in bookmarks/links
+            code = r.get_vars.get("$$code", "TESTS-SCHOOLS")
+            if code:
+                query = FS("~.organisation_id$project.code") == code
+                resource.add_filter(query)
+                if code == "TESTS-SCHOOLS":
+                    s3.crud_strings.org_facility.title_list = T("Test Stations for School and Child Care Staff")
+                elif code == "TESTS-PUBLIC":
+                    s3.crud_strings.org_facility.title_list = T("Test Stations for Everybody")
+
             record = r.record
             if record:
                 s3db = current.s3db
@@ -1146,7 +1159,7 @@ def config(settings):
                    not auth.s3_has_role("ORG_ADMIN", for_pe=record.pe_id):
                     s3.hide_last_update = True
 
-                    table = r.resource.table
+                    table = resource.table
 
                     field = table.obsolete
                     field.readable = field.writable = False
@@ -1154,15 +1167,16 @@ def config(settings):
                     field = table.organisation_id
                     field.represent = s3db.org_OrganisationRepresent(show_link=False)
 
-            settings.ui.summary = ({"name": "table",
-                                    "label": "Table",
-                                    "widgets": [{"method": "datatable"}]
-                                    },
-                                   {"name": "map",
-                                    "label": "Map",
-                                    "widgets": [{"method": "map", "ajax_init": True}],
-                                    },
-                                   )
+            resource.configure(summary = ({"name": "table",
+                                           "label": "Table",
+                                           "widgets": [{"method": "datatable"}]
+                                           },
+                                          {"name": "map",
+                                           "label": "Map",
+                                           "widgets": [{"method": "map", "ajax_init": True}],
+                                           },
+                                          ),
+                               )
 
             return result
         s3.prep = prep
