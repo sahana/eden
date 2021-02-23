@@ -15,7 +15,7 @@
 </section>
 <script type="text/javascript">//<![CDATA[
 $(document).ready(function(){
-  $('#approve-btn').live('click', function(event) {
+  $('#approve-btn').on('click', function(event) {
     if (confirm('{{=T("Do you really want to approve this record?")}}')) {
       return true;
     } else {
@@ -23,7 +23,7 @@ $(document).ready(function(){
       return false;
     }
   });
-  $('#reject-btn').live('click', function(event) {
+  $('#reject-btn').on('click', function(event) {
     if (confirm('{{=T("Do you really want to reject this record? (This action can not be reversed)")}}')) {
       return true;
     } else {
