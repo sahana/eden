@@ -30,8 +30,8 @@ def config(settings):
     T = current.T
 
     purpose = {"event": "COVID-19"}
-    settings.base.system_name = T("%(event)s Personnel Testing") % purpose
-    settings.base.system_name_short = T("%(event)s Personnel Testing") % purpose
+    settings.base.system_name = T("%(event)s Testing") % purpose
+    settings.base.system_name_short = T("%(event)s Testing") % purpose
 
     # PrePopulate data
     settings.base.prepopulate += ("RLPPTM",)
