@@ -1148,19 +1148,19 @@ def config(settings):
 
             resource = r.resource
 
-            # Filter list by project code
-            # - default to original subset for consistency in bookmarks/links
-            code = r.get_vars.get("$$code", "TESTS-SCHOOLS")
-            if code:
-                query = FS("~.organisation_id$project.code") == code
-                resource.add_filter(query)
-                if code == "TESTS-SCHOOLS":
-                    s3.crud_strings.org_facility.title_list = T("Test Stations for School and Child Care Staff")
-                elif code == "TESTS-PUBLIC":
-                    s3.crud_strings.org_facility.title_list = T("Test Stations for Everybody")
-
             record = r.record
-            if record:
+            if not record:
+                # Filter list by project code
+                # - default to original subset for consistency in bookmarks/links
+                code = r.get_vars.get("$$code", "TESTS-SCHOOLS")
+                if code:
+                    query = FS("~.organisation_id$project.code") == code
+                    resource.add_filter(query)
+                    if code == "TESTS-SCHOOLS":
+                        s3.crud_strings.org_facility.title_list = T("Test Stations for School and Child Care Staff")
+                    elif code == "TESTS-PUBLIC":
+                        s3.crud_strings.org_facility.title_list = T("Test Stations for Everybody")
+            else:
                 s3db = current.s3db
                 auth = current.auth
                 if not auth.s3_has_role("ORG_GROUP_ADMIN") and \
