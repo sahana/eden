@@ -1286,7 +1286,7 @@ def config(settings):
                                                  )
                         projects = S3SQLInlineLink("project",
                                                    field = "project_id",
-                                                   label = T("Projects"),
+                                                   label = T("Project Partner for"),
                                                    cols = 1,
                                                    )
                         types = S3SQLInlineLink("organisation_type",

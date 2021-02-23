@@ -4071,6 +4071,7 @@
 'Project Organization Details': 'Details zur Teilnehmerorganisation',
 'Project Organization updated': 'Teilnehmerorganisation aktualisiert',
 'Project Organizations': 'Teilnehmerorganisationen',
+'Project Partner for': 'Projektpartner bei',
 'Project Status': 'Projektstatus',
 'Project added': 'Projekt hinzugefügt',
 'Project deleted': 'Projekt gelöscht',
