@@ -51,6 +51,45 @@ def get_org_accounts(organisation_id):
 
     return active, disabled, invited
 
+# -----------------------------------------------------------------------------
+def get_stats_projects():
+    """
+        Find all projects the current user can report test results, i.e.
+        - projects marked as STATS=Y where
+        - the current user has the VOUCHER_PROVIDER role for a partner organisation
+    """
+
+    permitted_realms = current.auth.permission.permitted_realms
+    realms = permitted_realms("disease_case_diagnostics", "create")
+
+    if realms is not None and not realms:
+        return []
+
+    s3db = current.s3db
+
+    otable = s3db.org_organisation
+    ltable = s3db.project_organisation
+    ttable = s3db.project_project_tag
+
+    oquery = otable.deleted == False
+    if realms:
+        oquery = otable.pe_id.belongs(realms) & oquery
+
+    join = [ltable.on((ltable.project_id == ttable.project_id) & \
+                      (ltable.deleted == False)),
+            otable.on((otable.id == ltable.organisation_id) & oquery),
+            ]
+
+    query = (ttable.tag == "STATS") & \
+            (ttable.value == "Y") & \
+            (ttable.deleted == False)
+    rows = current.db(query).select(ttable.project_id,
+                                    cache = s3db.cache,
+                                    join = join,
+                                    groupby = ttable.project_id,
+                                    )
+    return [row.project_id for row in rows]
+
 # =============================================================================
 class rlpptm_InviteUserOrg(S3Method):
     """ Custom Method Handler to invite User Organisations """

@@ -388,26 +388,34 @@ def config(settings):
 
         table = s3db.disease_case_diagnostics
 
-        if r.interactive and r.method != "report":
+        from .helpers import get_stats_projects
+        report_results = get_stats_projects()
+
+        if not report_results: # or current.auth.s3_has_role("ADMIN"):
+            s3db.configure("disease_case_diagnostics",
+                           insertable = False,
+                           )
+
+        if r.interactive and report_results and r.method != "report":
+
             # Enable project link and make it mandatory
             field = table.project_id
-            field.readable = field.writable = True
-            field.comment = None
-            requires = field.requires
-            if isinstance(requires, (list, tuple)):
-                requires = requires[0]
-            if isinstance(requires, IS_EMPTY_OR):
-                field.requires = requires.other
+            field.readable = True
 
-            # If there is only one project, default the selector + make r/o
             ptable = s3db.project_project
-            rows = db(ptable.deleted == False).select(ptable.id,
-                                                      cache = s3db.cache,
-                                                      limitby = (0, 2),
-                                                      )
-            if len(rows) == 1:
-                field.default = rows[0].id
+            if len(report_results) == 1:
+                project_id = report_results[0]
+                dbset = db(ptable.id == project_id)
+                field.default = project_id
                 field.writable = False
+            else:
+                dbset = ptable.id.belongs(report_results)
+                field.writable = True
+            field.requires = IS_ONE_OF(dbset, "project_project.id",
+                                       field.represent,
+                                       )
+
+            field.comment = None
 
             # Enable disease link and make it mandatory
             field = table.disease_id

@@ -9,6 +9,8 @@ except ImportError:
     pass
 import s3menus as default
 
+from .helpers import get_stats_projects
+
 # =============================================================================
 class S3MainMenu(default.S3MainMenu):
     """ Custom Application Main Menu """
@@ -41,8 +43,10 @@ class S3MainMenu(default.S3MainMenu):
 
         is_org_group_admin = lambda i: not has_role("ADMIN") and \
                                        has_role("ORG_GROUP_ADMIN")
-        is_voucher_provider = lambda i: not has_role("ADMIN") and \
-                                        has_role("VOUCHER_PROVIDER")
+        report_results = lambda i: not has_role("ADMIN") and \
+                                   has_role("VOUCHER_PROVIDER") and \
+                                   len(get_stats_projects()) > 0
+
         menu = [MM("Organizations",
                    c="org", f="organisation", restrict=("ORG_GROUP_ADMIN", "ORG_ADMIN"),
                    vars = {"mine": 1} if not has_role("ORG_GROUP_ADMIN") else None,
@@ -51,7 +55,7 @@ class S3MainMenu(default.S3MainMenu):
                    c="disease", f="case_diagnostics", restrict="DISEASE_TEST_READER",
                    ),
                 MM("Test Results",
-                   c="disease", f="case_diagnostics", check=is_voucher_provider, link=False)(
+                   c="disease", f="case_diagnostics", check=report_results, link=False)(
                     MM("Report Test Result", m="create", vars={"format": "popup"}, modal=True),
                     MM("List Test Results"),
                     ),
@@ -230,9 +234,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
     @staticmethod
     def disease():
 
+        s3db = current.s3db
+        report_results = lambda i: s3db.get_config("disease_case_diagnostics",
+                                                   "insertable", True)
+
         return M(c="disease")(
                     M("Test Results", f="case_diagnostics")(
-                        M("Registrieren", m="create"),
+                        M("Registrieren", m="create", check=report_results),
                         M("Statistics", m="report"),
                         ),
                     M("Administration", restrict="ADMIN")(
