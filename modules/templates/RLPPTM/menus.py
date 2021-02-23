@@ -242,6 +242,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         s3db = current.s3db
         voucher_create = lambda i: s3db.get_config("fin_voucher", "insertable", True)
+        voucher_accept = lambda i: s3db.get_config("fin_voucher_debit", "insertable", True)
 
         return M(c="fin")(
                     M("Voucher Programs", f="voucher_program")(
@@ -258,9 +259,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Statistics", m="report", restrict=("PROGRAM_MANAGER")),
                         ),
                     M("Accepted Vouchers", f="voucher_debit")(
-                        M("Accept Voucher", m="create", restrict=("VOUCHER_PROVIDER")),
+                        M("Accept Voucher", m="create", restrict=("VOUCHER_PROVIDER"),
+                          check = voucher_accept,
+                          ),
                         M("Accept Group Voucher", m="create", restrict=("VOUCHER_PROVIDER"),
                           vars = {"g": "1"},
+                          check = voucher_accept,
                           ),
                         M("Statistics", m="report"),
                         ),
@@ -278,7 +282,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def org():
         """ ORG / Organization Registry """
 
-        org_menu = M("Organizations", f="organisation", link=False)
+        org_menu = M("Organizations", f="organisation")
 
         auth = current.auth
 

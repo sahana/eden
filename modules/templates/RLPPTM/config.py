@@ -163,6 +163,9 @@ def config(settings):
     settings.org.default_organisation = LSJV
 
     # -------------------------------------------------------------------------
+    settings.project.multiple_organisations = True
+
+    # -------------------------------------------------------------------------
     settings.fin.voucher_personalize = "dob"
     settings.fin.voucher_eligibility_types = True
 
@@ -951,8 +954,10 @@ def config(settings):
             s3db = current.s3db
 
             # Check which programs and organisations the user can accept vouchers for
-            program_ids, org_ids, pe_ids = s3db.fin_voucher_permitted_programs(mode="provider")
-
+            program_ids, org_ids, pe_ids = s3db.fin_voucher_permitted_programs(
+                                                        mode = "provider",
+                                                        partners_only = True,
+                                                        )
             resource = r.resource
             table = resource.table
 
@@ -1227,6 +1232,11 @@ def config(settings):
 
             if not r.component:
                 if r.interactive:
+
+                    ltable = s3db.project_organisation
+                    field = ltable.project_id
+                    field.represent = S3Represent(lookup="project_project")
+
                     from s3 import S3SQLCustomForm, \
                                    S3SQLInlineComponent, \
                                    S3SQLInlineLink, \
@@ -1252,6 +1262,11 @@ def config(settings):
                                                  multiple = False,
                                                  readonly = groups_readonly,
                                                  )
+                        projects = S3SQLInlineLink("project",
+                                                   field = "project_id",
+                                                   label = T("Projects"),
+                                                   cols = 1,
+                                                   )
                         types = S3SQLInlineLink("organisation_type",
                                                 field = "organisation_type_id",
                                                 search = False,
@@ -1260,9 +1275,10 @@ def config(settings):
                                                 widget = "multiselect",
                                                 )
                     else:
-                        groups = types = None
+                        groups = projects = types = None
 
                     crud_fields = [groups,
+                                   projects,
                                    "name",
                                    "acronym",
                                    types,
@@ -1335,6 +1351,114 @@ def config(settings):
         return attr
 
     settings.customise_org_organisation_controller = customise_org_organisation_controller
+
+    # -------------------------------------------------------------------------
+    def customise_project_project_resource(r, tablename):
+
+        s3db = current.s3db
+
+        # Expose code field
+        table = s3db.project_project
+        field = table.code
+        field.readable = field.writable = True
+
+        # Tags as filtered components (for embedding in form)
+        s3db.add_components("project_project",
+                            project_project_tag = ({"name": "apply",
+                                                    "joinby": "project_id",
+                                                    "filterby": {"tag": "APPLY"},
+                                                    "multiple": False,
+                                                    },
+                                                   {"name": "stats",
+                                                    "joinby": "project_id",
+                                                    "filterby": {"tag": "STATS"},
+                                                    "multiple": False,
+                                                    },
+                                                   ),
+                            )
+
+        from s3 import S3SQLCustomForm, \
+                       S3TextFilter, \
+                       S3OptionsFilter
+
+        # Custom CRUD Form
+        crud_fields = ["organisation_id",
+                       "name",
+                       (T("Code"), "code"),
+                       "description",
+                       (T("Provider Self-Registration"), "apply.value"),
+                       (T("Test Results Statistics"), "stats.value"),
+                       "comments",
+                       ]
+
+        # Custom list fields
+        list_fields = ["id",
+                       "organisation_id",
+                       "name",
+                       (T("Code"), "code"),
+                       ]
+
+        # Custom filters
+        filter_widgets = [S3TextFilter(["name",
+                                        "code",
+                                        ],
+                                       label = T("Search"),
+                                       ),
+                          S3OptionsFilter("organisation_id",
+                                          ),
+                          ]
+
+        s3db.configure("project_project",
+                       crud_form = S3SQLCustomForm(*crud_fields),
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_project_project_resource = customise_project_project_resource
+
+    # -------------------------------------------------------------------------
+    def customise_project_project_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            resource = r.resource
+
+            # Configure binary tags
+            binary_tag_opts = {"Y": T("Yes"), "N": T("No")}
+            for cname in ("apply", "stats"):
+                component = resource.components.get(cname)
+                table = component.table
+                field = table.value
+                field.requires = IS_IN_SET(binary_tag_opts,
+                                        zero = None,
+                                        )
+                field.represent = lambda v, row=None: binary_tag_opts.get(v, "-")
+
+            if r.component_name == "organisation":
+
+                table = r.component.table
+                field = table.amount
+                field.readable = field.writable = False
+
+                field = table.currency
+                field.readable = field.writable = False
+
+            return result
+        s3.prep = prep
+
+        # Custom rheader
+        from .rheaders import rlpptm_project_rheader
+        attr["rheader"] = rlpptm_project_rheader
+
+        return attr
+
+    settings.customise_project_project_controller = customise_project_project_controller
 
     # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):

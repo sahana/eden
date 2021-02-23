@@ -2417,12 +2417,16 @@ def fin_voucher_eligibility_types(program_ids, organisation_ids=None):
     return eligibility_types
 
 # =============================================================================
-def fin_voucher_permitted_programs(mode="issuer"):
+def fin_voucher_permitted_programs(mode="issuer", partners_only=False):
     """
         Get a list of programs and organisations the current user
         is permitted to issue/accept vouchers for
 
         @param mode: the permission to look for ('issuer'|'provider')
+        @param partners_only: organisations must also be project partners
+                              for the project under which a voucher program
+                              runs, in order to issue/accept vouchers under
+                              that program
 
         @returns: tuple of lists (program_ids, org_ids, pe_ids)
     """
@@ -2453,6 +2457,11 @@ def fin_voucher_permitted_programs(mode="issuer"):
                       (ptable.status == "ACTIVE") & \
                       ((ptable.end_date == None) | (ptable.end_date >= today))),
             ]
+    if partners_only:
+        ltable = s3db.project_organisation
+        join.append(ltable.on((ltable.project_id == ptable.project_id) & \
+                              (ltable.organisation_id == otable.id) & \
+                              (ltable.deleted == False)))
 
     query = (otable.deleted == False)
     if realms:

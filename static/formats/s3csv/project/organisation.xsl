@@ -141,23 +141,25 @@
                 <xsl:value-of select="concat('Organisation:', $OrgName)"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$OrgName"/></data>
-            <resource name="org_organisation_organisation_type">
-                <xsl:choose>
-                    <!-- Use Type if-specified -->
-                    <xsl:when test="$Type!=''">
-                        <reference field="organisation_type_id" resource="org_organisation_type">
-                            <xsl:attribute name="tuid">
-                                <xsl:value-of select="concat('OrgType:', $Type)"/>
-                            </xsl:attribute>
-                        </reference>
-                    </xsl:when>
-                    <!-- If not-specified, then provide a default via a dummy field
-                         to be caught in xml_post_parse -->
-                    <xsl:otherwise>
-                        <data field="_organisation_type_id"><xsl:value-of select="$Role"/></data>
-                    </xsl:otherwise>
-                </xsl:choose>
-            </resource>
+            <xsl:if test="$Type!='' or $Role!=''">
+                <resource name="org_organisation_organisation_type">
+                    <xsl:choose>
+                        <!-- Use Type if-specified -->
+                        <xsl:when test="$Type!=''">
+                            <reference field="organisation_type_id" resource="org_organisation_type">
+                                <xsl:attribute name="tuid">
+                                    <xsl:value-of select="concat('OrgType:', $Type)"/>
+                                </xsl:attribute>
+                            </reference>
+                        </xsl:when>
+                        <!-- If not-specified, then provide a default via a dummy field
+                            to be caught in xml_post_parse -->
+                        <xsl:otherwise>
+                            <data field="_organisation_type_id"><xsl:value-of select="$Role"/></data>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </resource>
+            </xsl:if>
         </resource>
 
     </xsl:template>

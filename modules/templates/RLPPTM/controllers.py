@@ -4,15 +4,16 @@ import json
 from uuid import uuid4
 
 from gluon import A, BR, CRYPT, DIV, Field, FORM, H3, INPUT, \
-                  IS_EMAIL, IS_EMPTY_OR, IS_EXPR, IS_LENGTH, IS_LOWER, \
+                  IS_EMAIL, IS_EMPTY_OR, IS_EXPR, IS_IN_SET, IS_LENGTH, IS_LOWER, \
                   IS_NOT_EMPTY, IS_NOT_IN_DB, \
                   P, SQLFORM, TABLE, TD, TR, URL, XML, HTTP, current, redirect
 
 from gluon.storage import Storage
 
 from s3 import FS, IS_PHONE_NUMBER_MULTI, JSONERRORS, S3CRUD, S3CustomController, \
-               S3LocationSelector, S3Represent, S3Request, s3_comments_widget, \
-               s3_get_extension, s3_mark_required, s3_str, s3_text_represent, s3_truncate
+               S3GroupedOptionsWidget, S3LocationSelector, S3Represent, S3Request, \
+               S3WithIntro, s3_comments_widget, s3_get_extension, s3_mark_required, \
+               s3_str, s3_text_represent, s3_truncate
 
 from .config import TESTSTATIONS
 from .notifications import formatmap
@@ -370,6 +371,35 @@ class approve(S3CustomController):
             facility_phone = custom_get("facility_phone") or custom_get("office_phone")
             facility_email = custom_get("facility_email")
             opening_times = custom_get("opening_times")
+
+            # Map selected projects to the projects selectable at time of approval
+            selectable_projects = register.selectable_projects()
+            projects = []
+            selected = custom_get("projects")
+            if not isinstance(selected, (tuple, list)):
+                selected = [selected]
+            for v in selected:
+                try:
+                    project_id = int(v)
+                except (ValueError, TypeError):
+                    continue
+                else:
+                    if project_id in selectable_projects:
+                        projects.append(project_id)
+
+            # Add project selector
+            field = Field("projects", "list:integer",
+                          label = T("Programs"),
+                          requires = [IS_IN_SET(selectable_projects,
+                                                multiple = True,
+                                                zero = None,
+                                                ),
+                                      IS_NOT_EMPTY(),
+                                      ],
+                          )
+            field.tablename = "approve" # Dummy to make widget work
+            projects_selector = S3GroupedOptionsWidget(cols=1)(field, projects)
+
             comments = custom_get("comments")
 
             if user.registration_key is None:
@@ -379,145 +409,175 @@ class approve(S3CustomController):
             elif user.registration_key != "pending":
                 response.warning = T("User hasn't verified their email")
 
-            approve = FORM(INPUT(_value = T("Approve"),
-                                 _type = "submit",
-                                 _name = "approve-btn",
-                                 _id = "approve-btn",
-                                 _class = "small primary button",
-                                 ))
+            approve = INPUT(_value = T("Approve"),
+                            _type = "submit",
+                            _name = "approve-btn",
+                            _id = "approve-btn",
+                            _class = "small primary button",
+                            )
 
-            reject = FORM(INPUT(_value = T("Reject"),
-                                _type = "submit",
-                                _name = "reject-btn",
-                                _id = "reject-btn",
-                                _class = "small alert button",
-                                ))
+            reject = INPUT(_value = T("Reject"),
+                           _type = "submit",
+                           _name = "reject-btn",
+                           _id = "reject-btn",
+                           _class = "small alert button",
+                           )
 
             strrepr = lambda v: v if v else "-"
-            form = TABLE(TR(approve,
-                            reject,
-                            ),
-                         TR(TD("%s:" % T("Person")),
-                            TD(person),
-                            ),
-                         test_station,
-                         TR(TD("%s:" % T("Address")),
-                            TD(address),
-                            ),
-                         TR(TD("%s:" % T("Telephone")),
-                            TD(strrepr(facility_phone)),
-                            ),
-                         TR(TD("%s:" % T("Email")),
-                            TD(strrepr(facility_email)),
-                            ),
-                         TR(TD("%s:" % T("Opening Hours")),
-                            TD(strrepr(opening_times)),
-                            ),
-                         TR(TD("%s:" % T("Comments")),
-                            TD(s3_text_represent(strrepr(comments))),
-                            ),
-                         )
+            form = FORM(TABLE(TR(approve,
+                                 reject,
+                                 ),
+                              TR(TD("%s:" % T("Person")),
+                                 TD(person),
+                                 ),
+                              test_station,
+                              TR(TD("%s:" % T("Address")),
+                                 TD(address),
+                                 ),
+                              TR(TD("%s:" % T("Telephone")),
+                                 TD(strrepr(facility_phone)),
+                                 ),
+                              TR(TD("%s:" % T("Email")),
+                                 TD(strrepr(facility_email)),
+                                 ),
+                              TR(TD("%s:" % T("Opening Hours")),
+                                 TD(strrepr(opening_times)),
+                                 ),
+                              TR(TD("%s:" % T("Projects")),
+                                 TD(projects_selector),
+                                 ),
+                              TR(TD("%s:" % T("Comments")),
+                                 TD(s3_text_represent(strrepr(comments))),
+                                 ),
+                              )
+                        )
 
-            if approve.accepts(request.post_vars, session, formname="approve"):
-                set_record_owner = auth.s3_set_record_owner
-                s3db_onaccept = s3db.onaccept
-                update_super = s3db.update_super
-                if not organisation_id:
-                    # Create Organisation
-                    org = {"name": organisation}
-                    org["id"] = organisation_id = otable.insert(**org)
+            if form.accepts(request.post_vars, session, formname="approve"):
 
-                    # Post-process Organisation
-                    update_super(otable, org)
-                    set_record_owner(otable, org, owned_by_user=user_id)
-                    s3db_onaccept(otable, org, method="create")
+                form_vars = form.vars
 
-                    # Link to Org_Group TESTSTATIONS
-                    s3db.org_group_membership.insert(group_id = org_group_id,
-                                                     organisation_id = organisation_id,
-                                                     )
-                    # Update User
-                    user.update_record(organisation_id = organisation_id,
-                                       registration_key = None,
-                                       )
-                    # Grant ORG_ADMIN
-                    auth.s3_assign_role(user_id, "ORG_ADMIN", for_pe=org["pe_id"])
-                else:
-                    # Update User
-                    user.update_record(registration_key = None)
+                rejected = bool(form_vars.get("reject-btn"))
+                approved = bool(form_vars.get("approve-btn")) and not rejected
 
-                # Grant VOUCHER_PROVIDER
-                auth.s3_assign_role(user_id, "VOUCHER_PROVIDER")
+                if approved:
 
-                location_id = location_get("id")
-                if not location_id:
-                    # Create Location
-                    ltable = s3db.gis_location
-                    del location["wkt"] # Will get created during onaccept & we don't want the 'Source WKT has been cleaned by Shapely" warning
-                    location["id"] = location_id = ltable.insert(**location)
-                    set_record_owner(ltable, location, owned_by_user=user_id)
-                    s3db_onaccept(ltable, location, method="create")
+                    set_record_owner = auth.s3_set_record_owner
+                    s3db_onaccept = s3db.onaccept
+                    update_super = s3db.update_super
 
-                # Create Facility
-                ftable = s3db.org_facility
-                facility_name = organisation if organisation else org.name
-                facility = {"name": s3_truncate(facility_name),
-                            "organisation_id": organisation_id,
-                            "location_id": location_id,
-                            "phone1": facility_phone,
-                            "email": facility_email,
-                            "opening_times": opening_times,
-                            "comments": comments,
-                            }
-                facility["id"] = ftable.insert(**facility)
-                update_super(ftable, facility)
-                set_record_owner(ftable, facility, owned_by_user=user_id)
-                s3db_onaccept(ftable, facility, method="create")
+                    if not organisation_id:
+                        # Create Organisation
+                        org = {"name": organisation}
+                        org["id"] = organisation_id = otable.insert(**org)
 
-                # Link to Facility Type
-                fttable = s3db.org_facility_type
-                facility_type = db(fttable.name == "Infection Test Station").select(fttable.id,
-                                                                                    limitby = (0, 1),
-                                                                                    ).first()
-                if facility_type:
-                    s3db.org_site_facility_type.insert(site_id = facility["site_id"],
-                                                       facility_type_id = facility_type.id,
-                                                       )
+                        # Post-process Organisation
+                        update_super(otable, org)
+                        set_record_owner(otable, org, owned_by_user=user_id)
+                        s3db_onaccept(otable, org, method="create")
 
-                # Approve user
-                auth.s3_approve_user(user)
+                        # Link to Org_Group TESTSTATIONS
+                        s3db.org_group_membership.insert(group_id = org_group_id,
+                                                         organisation_id = organisation_id,
+                                                         )
 
-                # Send welcome email
-                settings = current.deployment_settings
-                from .notifications import CMSNotifications
-                error = CMSNotifications.send(user.email,
-                                              "WelcomeProvider",
-                                              {"name": organisation or org.name,
-                                               "homepage": settings.get_base_public_url(),
-                                               "profile": URL("default", "person", host=True),
-                                               },
-                                              module = "auth",
-                                              resource = "user",
-                                              )
-                if error:
-                    session.warning = "%s: %s" % (T("Welcome Email NOT sent"),
-                                                  error,
+                        # Link Organisation to selected projects
+                        selected = form_vars.get("projects")
+                        if isinstance(selected, (tuple, list)):
+                            ltable = s3db.project_organisation
+                            for item in selected:
+                                try:
+                                    project_id = int(item)
+                                except (ValueError, TypeError):
+                                    continue
+                                link = {"project_id": project_id,
+                                        "organisation_id": organisation_id,
+                                        "role": 2,
+                                        }
+                                link["id"] = ltable.insert(**link)
+                                set_record_owner(ltable, link)
+                                s3db_onaccept(ltable, link, method="create")
+
+                        # Update User
+                        user.update_record(organisation_id = organisation_id,
+                                           registration_key = None,
+                                           )
+                        # Grant ORG_ADMIN
+                        auth.s3_assign_role(user_id, "ORG_ADMIN", for_pe=org["pe_id"])
+                    else:
+                        # Update User
+                        user.update_record(registration_key = None)
+
+                    # Grant VOUCHER_PROVIDER
+                    auth.s3_assign_role(user_id, "VOUCHER_PROVIDER")
+
+                    location_id = location_get("id")
+                    if not location_id:
+                        # Create Location
+                        ltable = s3db.gis_location
+                        del location["wkt"] # Will get created during onaccept & we don't want the 'Source WKT has been cleaned by Shapely" warning
+                        location["id"] = location_id = ltable.insert(**location)
+                        set_record_owner(ltable, location, owned_by_user=user_id)
+                        s3db_onaccept(ltable, location, method="create")
+
+                    # Create Facility
+                    ftable = s3db.org_facility
+                    facility_name = organisation if organisation else org.name
+                    facility = {"name": s3_truncate(facility_name),
+                                "organisation_id": organisation_id,
+                                "location_id": location_id,
+                                "phone1": facility_phone,
+                                "email": facility_email,
+                                "opening_times": opening_times,
+                                "comments": comments,
+                                }
+                    facility["id"] = ftable.insert(**facility)
+                    update_super(ftable, facility)
+                    set_record_owner(ftable, facility, owned_by_user=user_id)
+                    s3db_onaccept(ftable, facility, method="create")
+
+                    # Link to Facility Type
+                    fttable = s3db.org_facility_type
+                    facility_type = db(fttable.name == "Infection Test Station").select(fttable.id,
+                                                                                        limitby = (0, 1),
+                                                                                        ).first()
+                    if facility_type:
+                        s3db.org_site_facility_type.insert(site_id = facility["site_id"],
+                                                           facility_type_id = facility_type.id,
+                                                           )
+
+                    # Approve user
+                    auth.s3_approve_user(user)
+
+                    # Send welcome email
+                    settings = current.deployment_settings
+                    from .notifications import CMSNotifications
+                    error = CMSNotifications.send(user.email,
+                                                  "WelcomeProvider",
+                                                  {"name": organisation or org.name,
+                                                   "homepage": settings.get_base_public_url(),
+                                                   "profile": URL("default", "person", host=True),
+                                                   },
+                                                  module = "auth",
+                                                  resource = "user",
                                                   )
+                    if error:
+                        session.warning = "%s: %s" % (T("Welcome Email NOT sent"), error)
 
-                session.confirmation = T("Registration approved")
-                redirect(URL(c = "default",
-                             f = "index",
-                             args = ["approve"],
-                             ))
+                    session.confirmation = T("Registration approved")
+                    redirect(URL(c = "default",
+                                 f = "index",
+                                 args = ["approve"],
+                                 ))
 
-            elif reject.accepts(request.post_vars, session, formname="reject"):
-                user.update_record(registration_key = "rejected")
-                # @ToDo: Delete Org & Fac, if created previously
-                session.confirmation = T("Registration rejected")
-                redirect(URL(c = "default",
-                             f = "index",
-                             args = ["approve"],
-                             ))
+                elif rejected:
+
+                    user.update_record(registration_key = "rejected")
+                    # @ToDo: Delete Org & Fac, if created previously
+                    session.confirmation = T("Registration rejected")
+                    redirect(URL(c = "default",
+                                 f = "index",
+                                 args = ["approve"],
+                                 ))
 
             output = {"form": form,
                       "title": T("Approve Test Station"),
@@ -834,6 +894,7 @@ class register(S3CustomController):
                       "facility_phone": formvars.facility_phone,
                       "facility_email": formvars.facility_email,
                       "opening_times": formvars.opening_times,
+                      "projects": formvars.projects,
                       "comments": formvars.comments,
                       }
             if not organisation_id:
@@ -921,8 +982,8 @@ class register(S3CustomController):
                 }
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def formfields():
+    @classmethod
+    def formfields(cls):
         """
             Generate the form fields for the registration form
 
@@ -936,6 +997,7 @@ class register(S3CustomController):
         T = current.T
         request = current.request
 
+        db = current.db
         s3db = current.s3db
 
         auth = current.auth
@@ -952,6 +1014,9 @@ class register(S3CustomController):
         utable.last_name.requires = IS_NOT_EMPTY(error_message=T("input required"))
 
         #ltable = s3db.gis_location
+
+        # Lookup projects with provider self-registration
+        projects = cls.selectable_projects()
 
         # Form fields
         formfields = [utable.first_name,
@@ -1011,6 +1076,22 @@ class register(S3CustomController):
                             label = T("Opening Hours"),
                             #requires = IS_NOT_EMPTY(),
                             ),
+                      Field("projects", "list:integer",
+                            label = T("Programs"),
+                            requires = [IS_IN_SET(projects,
+                                                  multiple = True,
+                                                  zero = None,
+                                                  ),
+                                        IS_NOT_EMPTY(),
+                                        ],
+                            widget = S3WithIntro(S3GroupedOptionsWidget(cols=1),
+                                                 # Widget intro from CMS
+                                                 intro = ("org",
+                                                          "organisation",
+                                                          "ProjectParticipationIntro",
+                                                          ),
+                                                 )
+                            ),
                       Field("comments", "text",
                             label = T("Comments"),
                             widget = s3_comments_widget,
@@ -1023,7 +1104,6 @@ class register(S3CustomController):
                            ),
                       ]
 
-
         # Required fields
         required_fields = ["first_name",
                            "last_name",
@@ -1032,7 +1112,7 @@ class register(S3CustomController):
         # Subheadings
         subheadings = ((0, T("User Account")),
                        (5, T("Test Station")),
-                       (11, T("Privacy")),
+                       (12, T("Privacy")),
                        )
 
         # Geocoder
@@ -1081,6 +1161,34 @@ Your Activation Code: %(code)s
 
 Thank you
 """
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def selectable_projects():
+        """
+            Projects the user can select during test station registration
+            => all projects that are tagged with APPLY=Y
+
+            @returns: list of project_ids
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Lookup projects with provider self-registration
+        ptable = s3db.project_project
+        ttable = s3db.project_project_tag
+        join = ttable.on((ttable.project_id == ptable.id) & \
+                         (ttable.tag == "APPLY") & \
+                         (ttable.value == "Y") & \
+                         (ttable.deleted == False))
+        query = (ptable.deleted == False)
+        rows = db(query).select(ptable.id,
+                                ptable.name,
+                                join = join,
+                                )
+        projects = {row.id: row.name for row in rows}
+        return projects
 
 # =============================================================================
 class verify_email(S3CustomController):
