@@ -957,6 +957,7 @@ def config(settings):
                   #"pr_person.fullname": (HIDDEN, HIDDEN),
                   "pr_person_details.alias": (HIDDEN, HIDDEN),
                   "pr_phone_contact.value": (None, HIDDEN),
+                  "pr_phonenumber_contact.value": (None, HIDDEN),
                   "pr_email_contact.value": (None, HIDDEN),
                   }
         for person_id in person_ids:
