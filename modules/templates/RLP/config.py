@@ -2599,7 +2599,9 @@ def config(settings):
                                          _href = r.url(method=""),
                                          _class = "action-btn",
                                          )
-
+                    # Use custom view
+                    from s3 import S3CustomController
+                    S3CustomController._view("RLP", "organize.html")
             return output
         s3.postp = custom_postp
 
