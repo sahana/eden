@@ -2582,7 +2582,7 @@ def config(settings):
                                _class = "action-btn",
                                )
                     add_btn = output.get("showadd_btn")
-                    output["showadd_btn"] = TAG[""](switch, add_btn) if add_btn else switch
+                    output["showadd_btn"] = TAG[""](add_btn, switch) if add_btn else switch
 
                 elif method == "organize":
                     # Add hint how to use the organizer
