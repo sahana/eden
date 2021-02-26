@@ -2574,3 +2574,15 @@ body.rtl .event-type-header {
   font-weight: bold;
   color: #333;
 }
+
+/* line 359, ../scss/theme/_misc.scss */
+.organizer-alternatives .action-btn {
+  margin: 0.5rem 0 1rem 0;
+}
+/* line 362, ../scss/theme/_misc.scss */
+.organizer-alternatives .organizer-intro {
+  font-size: 0.8rem;
+  margin: 0.5rem 0 1rem 0;
+  padding: 0.2rem 0.7rem;
+  background: #ffdeb8;
+}

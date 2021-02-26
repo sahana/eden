@@ -6,7 +6,7 @@
     @license: MIT
 """
 
-from gluon import current, A, URL
+from gluon import current, A, URL, XML
 
 from s3 import FS, S3DateFilter, S3OptionsFilter, S3Represent, s3_fullname
 
@@ -221,6 +221,42 @@ def rlp_update_pool(form, tablename=None):
             data["id"] = mtable.insert(**data)
             current.auth.s3_set_record_owner(mtable, data["id"])
             s3db.onaccept(mtable, data, method="create")
+
+# =============================================================================
+def get_cms_intro(module, resource, name, cmsxml=False):
+    """
+        Get intro from CMS
+
+        @param module: the module prefix
+        @param resource: the resource name
+        @param name: the post name
+        @param cmsxml: whether to XML-escape the contents or not
+
+        @returns: the post contents, or None if not available
+    """
+
+    # Get intro text from CMS
+    db = current.db
+    s3db = current.s3db
+
+    ctable = s3db.cms_post
+    ltable = s3db.cms_post_module
+    join = ltable.on((ltable.post_id == ctable.id) & \
+                        (ltable.module == module) & \
+                        (ltable.resource == resource) & \
+                        (ltable.deleted == False))
+
+    query = (ctable.name == name) & \
+            (ctable.deleted == False)
+    row = db(query).select(ctable.body,
+                            join = join,
+                            cache = s3db.cache,
+                            limitby = (0, 1),
+                            ).first()
+    if not row:
+        return None
+
+    return XML(row.body) if cmsxml else row.body
 
 # =============================================================================
 class RLPAvailabilityFilter(S3DateFilter):

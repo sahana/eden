@@ -11,7 +11,7 @@ import datetime
 
 from collections import OrderedDict
 
-from gluon import current, redirect, URL, DIV, TABLE, TAG, TR
+from gluon import current, redirect, URL, A, DIV, TABLE, TAG, TR
 from gluon.storage import Storage
 
 from s3 import FS, IS_LOCATION, S3DateFilter, S3Represent, s3_fieldmethod, s3_fullname, s3_yes_no_represent
@@ -2393,11 +2393,11 @@ def config(settings):
                            insertable = False,
                            )
 
+        auth = current.auth
+        coordinator = auth.s3_has_role("COORDINATOR")
+
         standard_prep = s3.prep
         def custom_prep(r):
-
-            auth = current.auth
-            coordinator = auth.s3_has_role("COORDINATOR")
 
             if not coordinator:
                 settings.ui.export_formats = ("pdf", "xls")
@@ -2564,6 +2564,44 @@ def config(settings):
                             )
             return result
         s3.prep = custom_prep
+
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.controller == "vol" and volunteer_id and isinstance(output, dict):
+
+                method = r.method
+                if not method:
+                    # Add switch to organizer
+                    switch = A(T("Switch to organizer"),
+                               _href = r.url(method="organize"),
+                               _class = "action-btn",
+                               )
+                    add_btn = output.get("showadd_btn")
+                    output["showadd_btn"] = TAG[""](switch, add_btn) if add_btn else switch
+
+                elif method == "organize":
+                    # Add hint how to use the organizer
+                    if not coordinator:
+                        from .helpers import get_cms_intro
+                        intro = get_cms_intro("hrm", "delegation",
+                                              "DelegationOrganizerIntro",
+                                              cmsxml = True,
+                                              )
+                        if intro:
+                            output["intro"] = intro
+                    # Add switch to list view
+                    output["switch"] = A(T("Switch to list view"),
+                                         _href = r.url(method=""),
+                                         _class = "action-btn",
+                                         )
+
+            return output
+        s3.postp = custom_postp
 
         # Custom rheaders
         from .rheaders import rlp_vol_rheader, rlp_delegation_rheader
