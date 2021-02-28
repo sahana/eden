@@ -341,6 +341,7 @@ def config(settings):
                                               "date",
                                               "comments",
                                               ],
+                               orderby = "cms_post.name",
                                )
 
     settings.customise_cms_post_resource = customise_cms_post_resource
@@ -2327,9 +2328,9 @@ def config(settings):
                     InlineNotifications("notifications",
                                         label = T("Notifications"),
                                         person_id = volunteer_id,
-                                        recipients = ("volunteer",),
                                         organisations = organisations,
-                                        reply_to_org = True,
+                                        reply_to = "user", #"org",
+                                        sender = "org",
                                         ))
             s3db.configure("hrm_delegation", crud_form=crud_form)
 

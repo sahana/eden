@@ -257,6 +257,7 @@
             }
 
             var emailAdresses = data.email || {},
+                autoSelect = data.autoSelect || {},
                 templates = data.templates || {};
 
             var $el = $(this.element),
@@ -269,7 +270,7 @@
 
                 var prefix = '#sub_' + formName + '_' + recipient + '_',
                     email = emailAdresses[recipient],
-                    deactivate = false;
+                    deactivate = !autoSelect[recipient];
 
                 // Set the email address
                 if (!email) {
@@ -298,7 +299,7 @@
                     }
                 });
                 if (deactivate) {
-                    // Email, subject template or message template missing
+                    // Email, subject template or message template missing, or not autoSelect
                     // => deactivate sending
                     $('#' + formName + '_notify_' + recipient).prop('checked', false).change();
                 }

@@ -31,14 +31,26 @@ class DeploymentNotifications(object):
         Helper class to send deployment approval notifications
     """
 
-    def __init__(self, delegation_id):
+    def __init__(self, delegation_id, sender=None):
         """
             Constructor
 
             @param delegation_id: the hrm_delegation record ID
+            @param sender: the sender type
         """
 
         self.delegation_id = delegation_id
+
+        if sender == "org":
+            # Notifications from the Deploying Organisation
+            self.recipients = {"volunteer": ("OrgToVolunteer", False),
+                               }
+        else:
+            # Notifications from the Pool Coordinator
+            self.recipients = {"volunteer": ("Volunteer", True),
+                               "organisation": ("Organisation", True),
+                               "office": ("Office", True),
+                               }
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -70,6 +82,9 @@ class DeploymentNotifications(object):
                 {organisation}....................Deploying organisation name
                 {organisation_email}..............Deploying organisation email
                 {organisation_phone}..............Deploying organisation phone
+                {organisation_street}.............Deploying organisation street address
+                {organisation_postcode}...........Deploying organisation postcode
+                {organisation_place}..............Deploying organisation place name (L4|L3)
                 {coordinator}.....................Name of approving coordinator
                 {coordinator_email}...............Coordinator email address
                 {coordinator_phone}...............Coordinator phone number
@@ -260,25 +275,71 @@ class DeploymentNotifications(object):
 
         # Lookup requesting org and office
         otable = s3db.org_organisation
-        left = stable.on((stable.organisation_id == otable.id) & \
-                         (stable.deleted == False))
-        query = (otable.id == delegation.organisation_id)
-        row = db(query).select(otable.name,
-                               otable.pe_id,
-                               stable.email,
-                               stable.phone1,
-                               left = left,
-                               limitby = (0, 1),
-                               orderby = stable.created_on,
-                               ).first()
-        if row:
-            organisation = row.org_organisation
-            office = row.org_office
+        ftable = s3db.org_facility
+        organisation_id = delegation.organisation_id
+
+        query = (otable.id == organisation_id)
+        organisation = db(query).select(otable.name,
+                                        otable.pe_id,
+                                        limitby = (0, 1),
+                                        ).first()
+        if organisation:
+            data["organisation"] = organisation.name
             org_email = lookup_contact(organisation.pe_id, "EMAIL")
-            data.update({"organisation": organisation.name,
-                         "organisation_email": org_email if org_email else office.email,
-                         "organisation_phone": office.phone1,
+
+            site_email = None
+            site_phone = None
+            location_id = None
+
+            # Lookup facility for address and phone number
+            query = (ftable.organisation_id == organisation_id) & \
+                    (ftable.obsolete == False) & \
+                    (ftable.deleted == False)
+            row = db(query).select(ftable.email,
+                                   ftable.phone1,
+                                   ftable.location_id,
+                                   limitby = (0, 1),
+                                   orderby = ftable.created_on,
+                                   ).first()
+            if not row:
+                # Fall back to office
+                query = (stable.organisation_id == organisation_id) & \
+                        (stable.obsolete == False) & \
+                        (stable.deleted == False)
+                row = db(query).select(stable.email,
+                                       stable.phone1,
+                                       stable.location_id,
+                                       limitby = (0, 1),
+                                       orderby = stable.created_on,
+                                       ).first()
+            if row:
+                site_email = row.email
+                site_phone = row.phone1
+                location_id = row.location_id
+
+            data.update({"organisation_email": org_email if org_email else site_email,
+                         "organisation_phone": site_phone,
                          })
+
+            if location_id:
+                # Lookup address details
+                ltable = s3db.gis_location
+                query = (ltable.id == location_id) & \
+                        (ltable.deleted == False)
+                location = db(query).select(ltable.addr_street,
+                                            ltable.addr_postcode,
+                                            ltable.L3,
+                                            ltable.L4,
+                                            limitby = (0, 1),
+                                            ).first()
+                if location:
+                    place = location.L4 or location.L3 # L4 is optional
+                    if place:
+                        data["organisation_place"] = place
+                    if location.addr_postcode:
+                        data["organisation_postcode"] = location.addr_postcode
+                    if location.addr_street:
+                        data["organisation_street"] = location.addr_street
 
         # Lookup current user (=coordinator)
         user = current.auth.user
@@ -319,7 +380,9 @@ class DeploymentNotifications(object):
     # -------------------------------------------------------------------------
     def send(self):
         """
-            Send notification emails
+            Send notification emails (unconditionally, onaccept)
+
+            TODO: unused - deprecate?
         """
 
         T = current.T
@@ -406,27 +469,35 @@ class DeploymentNotifications(object):
         output = {"delegationID": self.delegation_id,
                   "data": data,
                   "email": {},
+                  "autoSelect": {},
                   "cc": data.get("coordinator_email"),
                   "templates": {},
                   }
 
-        template_names = {"organisation": "Organisation",
-                          "volunteer": "Volunteer",
-                          "office": "Office",
-                          }
-
+        recipients = self.recipients
         for recipient in ("organisation", "volunteer", "office"):
-            templates = self.templates(template_names[recipient])
+
+            config = recipients.get(recipient)
+            if not config:
+                continue
+            template_name, auto_select = config
+
+            templates = self.templates(template_name)
             if templates:
                 output["templates"][recipient] = {"subject": templates[0],
                                                   "message": templates[1],
                                                   }
+            else:
+                continue
+
             if recipient == "office":
                 email = data.get("volunteer_office_email")
             else:
                 email = data.get("%s_email" % recipient)
             if email:
                 output["email"][recipient] = email
+
+            output["autoSelect"][recipient] = auto_select
 
         return output
 
@@ -476,7 +547,8 @@ class InlineNotificationsData(S3Method):
         if r.http == "GET":
             if r.representation == "json":
                 delegation_id = r.record.id if r.record else None
-                notifications = DeploymentNotifications(delegation_id)
+                sender = r.get_vars.get("sender")
+                notifications = DeploymentNotifications(delegation_id, sender=sender)
                 response.headers["Content-Type"] = "application/json"
                 output = json.dumps(notifications.json())
             else:
@@ -503,10 +575,9 @@ class InlineNotifications(S3SQLSubForm):
 
             organisations - the names of selectable organisations, a dict
                             {organisation_id: organisation_name}
-            reply_to_org  - whether replys to notification emails should go
-                            to the requesting organisation rather than the
-                            site operator (sets the reply-to header in those
-                            emails, not the sender address)
+            reply_to      - where replies to notification emails should go
+                            instead of the server's email address:
+                            string "coordinator"|"organisation"
     """
 
     def resolve(self, resource):
@@ -641,14 +712,12 @@ class InlineNotifications(S3SQLSubForm):
             person_id = dtable.person_id.default
             ajax_vars = {"viewing": "pr_person.%s" % person_id} if person_id else {}
 
-        # Recipient types
-        all_recipients = ["organisation", "volunteer", "office"]
-        recipients = self.options.get("recipients")
-        if recipients is None:
-            recipients = all_recipients
-        if not isinstance(recipients, (tuple, list)):
-            recipients = [recipients]
-        recipients = [n for n in recipients if n in all_recipients]
+        # Sender and recipient types
+        sender = self.options.get("sender")
+        if sender:
+            ajax_vars["sender"] = sender
+        notifications = DeploymentNotifications(delegation_id, sender=sender)
+        recipients = list(notifications.recipients.keys())
 
         # Selectable organisations
         organisations = self.options.get("organisations")
@@ -763,7 +832,8 @@ class InlineNotifications(S3SQLSubForm):
             # Do nothing
             return True
 
-        notifications = DeploymentNotifications(master_id)
+        sender = self.options.get("sender")
+        notifications = DeploymentNotifications(master_id, sender=sender)
 
         T = current.T
         formname = self._formname()
@@ -779,6 +849,15 @@ class InlineNotifications(S3SQLSubForm):
         send_email = current.msg.send_email
 
         data = notifications.data()
+
+        # Alternative recipient for replies?
+        reply_to_type = self.options.get("reply_to")
+        if reply_to_type == "org":
+            reply_to = data.get("organisation_email")
+        elif reply_to_type == "user":
+            reply_to = data.get("coordinator_email")
+        else:
+            reply_to = None
 
         # Send notification to requesting organisation
         notify_organisation = form_vars.get("%s_notify_organisation" % formname)
@@ -816,11 +895,6 @@ class InlineNotifications(S3SQLSubForm):
                     subject, message = notifications.compose((subject, message),
                                                              data,
                                                              )
-                    # Reply to org?
-                    if self.options.get("reply_to_org"):
-                        reply_to = data.get("organisation_email")
-                    else:
-                        reply_to = None
                     success = send_email(to = email,
                                          cc = cc,
                                          subject = subject,
@@ -845,11 +919,6 @@ class InlineNotifications(S3SQLSubForm):
                     subject, message = notifications.compose((subject, message),
                                                              data,
                                                              )
-                    # Reply to org?
-                    if self.options.get("reply_to_org"):
-                        reply_to = data.get("organisation_email")
-                    else:
-                        reply_to = None
                     success = send_email(to = email,
                                          cc = cc,
                                          subject = subject,
