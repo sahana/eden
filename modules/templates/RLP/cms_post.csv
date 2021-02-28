@@ -14,3 +14,4 @@ HoursMatrixIntro,pr,person_availability,,"Bitte markieren Sie alle Zeiten zu den
 SelfRegistrationIntro,auth,user,,"Bitte tragen Sie hier alle relevanten Informationen für einen Einsatz ein. Für die Suche nach geeigneten UnterstützerInnen ist vor allem die Angabe Ihres Wohnorts (PLZ und Wohnort), Ihrer Kontaktdaten (Telefon und E-Mail) und die Angabe Ihrer wöchentlichen Verfügbarkeit (Stunden/Woche) wichtig."
 AvailabilitySitesIntro,pr,person_availability_site,,Bitte wählen Sie über die untenstehende Liste alle für Sie möglichen Einsatzorte (d.h. Gesundheitsämter oder/und Impfzentren (IZ)) aus (Mehrfachauswahl ist möglich).
 DelegationOrganizerIntro,hrm,delegation,,Markieren Sie einen oder mehrere aufeinanderfolgende Tage um einen Einsatz anzulegen.
+NotificationIntroOrg,hrm,delegation,,Wählen Sie welche Benachrichtigungen Sie senden wollen. Sie können die Mitteilung vor dem Versenden bearbeiten. Eine Kopie der Mitteilung wird an Sie selbst gesendet.

@@ -2323,15 +2323,19 @@ def config(settings):
                     organisations = None
 
                 # Append inline-notifications
+                from s3 import S3WithIntro
                 from .notifications import InlineNotifications
                 crud_form.append(
-                    InlineNotifications("notifications",
-                                        label = T("Notifications"),
-                                        person_id = volunteer_id,
-                                        organisations = organisations,
-                                        reply_to = "user", #"org",
-                                        sender = "org",
-                                        ))
+                    S3WithIntro(
+                        InlineNotifications("notifications",
+                                            label = T("Notifications"),
+                                            person_id = volunteer_id,
+                                            organisations = organisations,
+                                            reply_to = "user", #"org",
+                                            sender = "org",
+                                            ),
+                        intro = ("hrm", "delegation", "NotificationIntroOrg"),
+                        ))
             s3db.configure("hrm_delegation", crud_form=crud_form)
 
             # Enable site_id and filter to sites of org
