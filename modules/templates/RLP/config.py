@@ -2586,7 +2586,7 @@ def config(settings):
                     # Add link to organizer
                     output["switch_btn"] = A(T("Switch to organizer"),
                                              _href = r.url(method="organize"),
-                                             _class = "action-btn",
+                                             _class = "action-btn organizer-switch",
                                              )
 
                     # Use custom view to keep organizer-link above form

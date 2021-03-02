@@ -2575,11 +2575,16 @@ body.rtl .event-type-header {
   color: #333;
 }
 
-/* line 359, ../scss/theme/_misc.scss */
+/* line 358, ../scss/theme/_misc.scss */
+.action-btn.organizer-switch {
+  margin-bottom: -1.2em;
+}
+
+/* line 362, ../scss/theme/_misc.scss */
 .organizer-alternatives .action-btn {
   margin: 0.5rem 0 1rem 0;
 }
-/* line 362, ../scss/theme/_misc.scss */
+/* line 365, ../scss/theme/_misc.scss */
 .organizer-alternatives .organizer-intro {
   font-size: 0.8rem;
   margin: 0.5rem 0 1rem 0;
