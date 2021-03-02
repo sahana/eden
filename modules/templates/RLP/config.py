@@ -2579,15 +2579,18 @@ def config(settings):
 
             if r.controller == "vol" and volunteer_id and isinstance(output, dict):
 
+                from s3 import S3CustomController
+
                 method = r.method
                 if not method:
-                    # Add switch to organizer
-                    switch = A(T("Switch to organizer"),
-                               _href = r.url(method="organize"),
-                               _class = "action-btn",
-                               )
-                    add_btn = output.get("showadd_btn")
-                    output["showadd_btn"] = TAG[""](add_btn, switch) if add_btn else switch
+                    # Add link to organizer
+                    output["switch_btn"] = A(T("Switch to organizer"),
+                                             _href = r.url(method="organize"),
+                                             _class = "action-btn",
+                                             )
+
+                    # Use custom view to keep organizer-link above form
+                    S3CustomController._view("RLP", "delegation.html")
 
                 elif method == "organize":
                     # Add hint how to use the organizer
@@ -2605,8 +2608,8 @@ def config(settings):
                                          _class = "action-btn",
                                          )
                     # Use custom view
-                    from s3 import S3CustomController
                     S3CustomController._view("RLP", "organize.html")
+
             return output
         s3.postp = custom_postp
 
