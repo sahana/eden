@@ -35,6 +35,7 @@ __all__ = ("FinExpensesModel",
            "fin_rheader",
            "fin_voucher_permitted_programs",
            "fin_voucher_eligibility_types",
+           "fin_voucher_start_billing",
            )
 
 from gluon import *
@@ -153,6 +154,10 @@ class FinVoucherModel(S3Model):
     """ Model for Voucher Programs """
 
     names = ("fin_voucher_program",
+             "fin_voucher_billing",
+             "fin_voucher_claim",
+             "fin_voucher_invoice",
+             "fin_voucher_eligibility_type",
              "fin_voucher",
              "fin_voucher_debit",
              "fin_voucher_transaction",
@@ -183,6 +188,9 @@ class FinVoucherModel(S3Model):
 
         use_eligibility_types = settings.get_fin_voucher_eligibility_types()
 
+        price_represent = lambda v, row=None: \
+                          IS_FLOAT_AMOUNT.represent(v, precision=2, fixed=True)
+
         # -------------------------------------------------------------------------
         # Voucher Program
         # - holds the overall credit/compensation balance for a voucher program
@@ -199,7 +207,6 @@ class FinVoucherModel(S3Model):
                                                    org_group_represent,
                                                    sort = True,
                                                    ))
-
         tablename = "fin_voucher_program"
         define_table(tablename,
                      self.org_organisation_id(
@@ -238,6 +245,22 @@ class FinVoucherModel(S3Model):
                             label = T("Providers##fin"),
                             requires = org_group_requires,
                             ),
+                     # Compensation Details:
+                     Field("unit",
+                           label = T("Unit of Service"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Unit of Service"),
+                                                           T('Unit to determine the service quantity (e.g. "Meals")'),
+                                                           ),
+                                         ),
+                           ),
+                     Field("price_per_unit", "float",
+                           label = T("Price per Unit"),
+                           default = 0,
+                           requires = IS_FLOAT_AMOUNT(0),
+                           represent = price_represent,
+                           ),
+                     s3_currency(),
                      Field("credit", "integer",
                            default = 0,
                            label = T("Credit Balance"),
@@ -290,6 +313,7 @@ class FinVoucherModel(S3Model):
                             fin_voucher_debit = "program_id",
                             fin_voucher_transaction = "program_id",
                             fin_voucher_eligibility_type = "program_id",
+                            fin_voucher_billing = "program_id",
                             )
 
         # CRUD Strings
@@ -316,6 +340,408 @@ class FinVoucherModel(S3Model):
                                                               represent,
                                                               )),
                                      )
+
+        # -------------------------------------------------------------------------
+        # Voucher billing
+        # - billing process for a voucher program
+        #
+        billing_status = (("SCHEDULED", T("Scheduled")),
+                          ("IN PROGRESS", T("In Progress")),
+                          ("ABORTED", T("Aborted")),
+                          ("COMPLETE", T("Completed")),
+                          )
+
+        tablename = "fin_voucher_billing"
+        define_table(tablename,
+                     program_id(ondelete="RESTRICT"),
+                     s3_date(default = "now",
+                             #writable = False, # TODO only writable while scheduled
+                             ),
+                     Field("status",
+                           default = "SCHEDULED",
+                           requires = IS_IN_SET(billing_status,
+                                                zero = None,
+                                                ),
+                           represent = S3Represent(options=dict(billing_status),
+                                                   ),
+                           writable = False,
+                           ),
+                     Field("vouchers_total", "integer",
+                           label = T("Total number of vouchers"),
+                           default = 0,
+                           writable = False,
+                           ),
+                     Field("quantity_total", "integer",
+                           label = T("Total quantity of service"),
+                           default = 0,
+                           writable = False,
+                           ),
+                     Field("quantity_invoiced", "integer",
+                           label = T("Service quantity invoiced"),
+                           default = 0,
+                           writable = False,
+                           ),
+                     Field("quantity_compensated", "integer",
+                           label = T("Service quantity compensated"),
+                           default = 0,
+                           writable = False,
+                           ),
+                     Field("verification", "text",
+                           label = T("Verification Details"),
+                           writable = False,
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Components
+        self.add_components(tablename,
+                            fin_voucher_claim = "billing_id",
+                            fin_voucher_invoice = "billing_id",
+                            )
+
+        # List fields
+        list_fields = ["program_id",
+                       "date",
+                       "quantity_total",
+                       "quantity_invoiced",
+                       "quantity_compensated",
+                       "status",
+                       ]
+
+        # Table configureation
+        # TODO onvalidation to enforce order
+        # - must be later than any active billing for the same program
+        # TODO onaccept to
+        # - schedule task to generate claims
+        self.configure(tablename,
+                       list_fields = list_fields,
+                       deletable = False, # must cancel, not delete
+                       )
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename, fields=["date"])
+        billing_id = S3ReusableField("billing_id", "reference %s" % tablename,
+                                     label = T("Billing"),
+                                     represent = represent,
+                                     requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "%s.id" % tablename,
+                                                              represent,
+                                                              )),
+                                     )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Billing"),
+            title_display = T("Billing Details"),
+            title_list = T("Billings"),
+            title_update = T("Edit Billing"),
+            label_list_button = T("List Billings"),
+            label_delete_button = T("Delete Billing"),
+            msg_record_created = T("Billing created"),
+            msg_record_modified = T("Billing updated"),
+            msg_record_deleted = T("Billing deleted"),
+            msg_list_empty = T("No Billings currently registered"),
+        )
+
+        # -------------------------------------------------------------------------
+        # Voucher invoice
+        # - invoice for a provider claim
+        #
+        invoice_status = (("NEW", T("New")),
+                          ("VERIFIED", T("Verified")),
+                          ("APPROVED", T("Approved")),
+                          ("REJECTED", T("Rejected")),
+                          ("PAID", T("Paid")),
+                          )
+
+        tablename = "fin_voucher_invoice"
+        define_table(tablename,
+                     program_id(empty = False,
+                                writable = False,
+                                ),
+                     billing_id(empty = False,
+                                writable = False,
+                                ),
+                     Field("pe_id", "reference pr_pentity",
+                           label = T("Provider##fin"),
+                           represent = pe_represent,
+                           requires = IS_EMPTY_OR(IS_ONE_OF(db, "pr_pentity.pe_id",
+                                                            pe_represent,
+                                                            instance_types = ["org_organisation"],
+                                                            )),
+                           writable = False,
+                           ),
+
+                     # Date of invoice
+                     s3_date(label = T("Invoice Date"),
+                             default = "now",
+                             writable = False,
+                             ),
+
+                     # Payer references
+                     Field("refno",
+                           label = T("Ref.No."),
+                           ),
+                     Field("po_number",
+                           label = T("Payment Order Number"),
+                           ),
+
+                     # Totals
+                     Field("quantity_total", "integer",
+                           label = T("Total Service Quantity"),
+                           writable = False,
+                           ),
+                     Field("price_per_unit", "float",
+                           label = T("Price per Unit"),
+                           represent = price_represent,
+                           writable = False,
+                           ),
+                     Field("amount_receivable", "float",
+                           label = T("Amount Receivable"),
+                           represent = price_represent,
+                           writable = False,
+                           ),
+                     s3_currency(writable = False),
+
+                     # Bank account details
+                     Field("account_holder",
+                           writable = False,
+                           ),
+                     Field("account_number",
+                           label = T("Account Number (IBAN)"),
+                           writable = False,
+                           ),
+                     Field("bank_name",
+                           writable = False,
+                           ),
+                     Field("bank_address",
+                           writable = False,
+                           ),
+
+                     # Status (and reason for status)
+                     Field("status",
+                           default = "NEW",
+                           label = T("Status"),
+                           requires = IS_IN_SET(invoice_status,
+                                                zero = None,
+                                                ),
+                           represent = S3Represent(options=dict(invoice_status),
+                                                   ),
+                           ),
+                     Field("reason", "text",
+                           label = T("Reason for Dispute"),
+                           represent = s3_text_represent,
+                           widget = s3_comments_widget,
+                           ),
+
+                     # Verification hash of the underlying claim
+                     Field("vhash", "text",
+                           readable = False,
+                           writable = False,
+                           ),
+
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Components
+        self.add_components(tablename,
+                            fin_voucher_claim = {"joinby": "invoice_id",
+                                                 "multiple": False,
+                                                 },
+                            )
+
+        # List fields
+        list_fields = ["program_id",
+                       "billing_id",
+                       "date",
+                       "refno",
+                       "pe_id",
+                       "amount_receivable",
+                       "status",
+                       ]
+
+        # TODO filter widgets
+
+        # TODO onaccept to
+        # - compensate debits and notify provider (async)
+
+        self.configure(tablename,
+                       list_fields = list_fields,
+                       insertable = False, # will be auto-created from claim
+                       deletable = False,
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Invoice"),
+            title_display = T("Invoice Details"),
+            title_list = T("Invoices"),
+            title_update = T("Edit Invoice"),
+            label_list_button = T("List Invoices"),
+            label_delete_button = T("Delete Invoice"),
+            msg_record_created = T("Invoice created"),
+            msg_record_modified = T("Invoice updated"),
+            msg_record_deleted = T("Invoice deleted"),
+            msg_list_empty = T("No Invoices currently registered"),
+        )
+
+        # Reusable field
+        # TODO Represent
+        represent = S3Represent(lookup=tablename, fields=["refno", "date"])
+        invoice_id = S3ReusableField("invoice_id", "reference %s" % tablename,
+                                     label = T("Invoice"),
+                                     represent = represent,
+                                     requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "%s.id" % tablename,
+                                                              represent,
+                                                              )),
+                                     )
+
+
+        # -------------------------------------------------------------------------
+        # Compensation claim
+        # - provider-issued claim for compensation under a billing cycle
+        #
+        claim_status = (("NEW", T("New")),
+                        ("CONFIRMED", T("Confirmed")),
+                        ("INVOICED", T("Invoiced")),
+                        ("PAID", T("Paid")),
+                        )
+
+        tablename = "fin_voucher_claim"
+        define_table(tablename,
+                     program_id(writable=False),
+                     billing_id(writable=False),
+                     Field("pe_id", "reference pr_pentity",
+                           label = T("Provider##fin"),
+                           represent = pe_represent,
+                           requires = IS_EMPTY_OR(IS_ONE_OF(db, "pr_pentity.pe_id",
+                                                            pe_represent,
+                                                            instance_types = ["org_organisation"],
+                                                            )),
+                           writable = False,
+                           ),
+
+                     # Date of claim
+                     s3_date(default = "now",
+                             writable = False,
+                             ),
+
+                     # Claimant reference number
+                     Field("refno",
+                           label = T("Ref.No."),
+                           ),
+
+                     # Totals
+                     Field("vouchers_total", "integer",
+                           label = T("Number of Vouchers"),
+                           writable = False,
+                           ),
+                     Field("quantity_total", "integer",
+                           label = T("Service Quantity"),
+                           writable = False,
+                           ),
+                     Field("price_per_unit", "float",
+                           label = T("Price per Unit"),
+                           represent = price_represent,
+                           writable = False,
+                           ),
+                     Field("amount_receivable", "float",
+                           label = T("Amount Receivable"),
+                           represent = price_represent,
+                           writable = False,
+                           ),
+                     s3_currency(writable=False),
+
+                     # Bank account details
+                     Field("account_holder",
+                           label = T("Account Holder"),
+                           ),
+                     Field("account_number",
+                           label = T("Account Number (IBAN)"),
+                           # TODO validator?
+                           # TODO represent
+                           ),
+                     Field("bank_name",
+                           label = T("Bank Name"),
+                           ),
+                     Field("bank_address",
+                           label = T("Bank Address"),
+                           ),
+
+                     # Status
+                     Field("status",
+                           default = "NEW",
+                           label = T("Status"),
+                           requires = IS_IN_SET(claim_status,
+                                                zero = None,
+                                                ),
+                           represent = S3Represent(options=dict(claim_status),
+                                                   ),
+                           ),
+
+                     # Invoice details
+                     invoice_id(writable=False),
+                     Field("vhash", "text",
+                           readable = False,
+                           writable = False,
+                           ),
+
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # List fields
+        list_fields = ["id",
+                       "refno",
+                       "program_id",
+                       "date",
+                       "vouchers_total",
+                       "quantity_total",
+                       "amount_receivable",
+                       "currency",
+                       "status",
+                       ]
+
+        # TODO CRUD Form
+
+        # TODO onvalidation to
+        # - enforce bank account details for confirmation
+
+        # TODO onaccept to
+        # - generate invoice when confirmed
+
+        self.configure(tablename,
+                       list_fields = list_fields,
+                       # TODO cannot be edited once confirmed
+                       insertable = False,
+                       deletable = False,
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Compensation Claim"),
+            title_display = T("Compensation Claim Details"),
+            title_list = T("Compensation Claims"),
+            title_update = T("Edit Compensation Claim"),
+            label_list_button = T("List Compensation Claims"),
+            label_delete_button = T("Delete Compensation Claim"),
+            msg_record_created = T("Compensation Claim created"),
+            msg_record_modified = T("Compensation Claim updated"),
+            msg_record_deleted = T("Compensation Claim deleted"),
+            msg_list_empty = T("No Compensation Claims currently registered"),
+        )
+
+        # Reusable field
+        # TODO Represent
+        represent = S3Represent(lookup=tablename, fields=["refno", "date"])
+        claim_id = S3ReusableField("claim_id", "reference %s" % tablename,
+                                   label = T("Compensation Claim"),
+                                   represent = represent,
+                                   requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "%s.id" % tablename,
+                                                          represent,
+                                                          )),
+                                   )
 
         # -------------------------------------------------------------------------
         # Voucher eligibility type
@@ -478,8 +904,8 @@ class FinVoucherModel(S3Model):
 
         # -------------------------------------------------------------------------
         # Voucher debit
-        # - represents a claim for compensation of the provider for redeeming
-        #   a voucher
+        # - represents a debt of the program owner owed to the service provider
+        #   for redeeming a voucher
         #
         tablename = "fin_voucher_debit"
         define_table(tablename,
@@ -527,6 +953,13 @@ class FinVoucherModel(S3Model):
                            default = 0,
                            writable = False,
                            ),
+                     # Billing details (internal)
+                     billing_id(readable = False,
+                                writable = False,
+                                ),
+                     claim_id(readable = False,
+                              writable = False,
+                              ),
                      Field.Virtual("status", self.debit_status,
                                    label = T("Status"),
                                    ),
@@ -642,6 +1075,7 @@ class FinVoucherModel(S3Model):
             msg_record_deleted = T("Transaction deleted"),
             msg_list_empty = T("No Transactions currently registered"),
         )
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
@@ -1883,6 +2317,7 @@ def fin_rheader(r, tabs=None):
                 tabs = [(T("Basic Details"), None),
                         (T("Vouchers"), "voucher"),
                         (T("Transactions"), "voucher_transaction"),
+                        #(T("Billing"), "voucher_billing"),
                         ]
                 if settings.get_fin_voucher_eligibility_types():
                     tabs.insert(1, (T("Eligibility Types"), "voucher_eligibility_type"))
@@ -1984,6 +2419,9 @@ class fin_VoucherProgram(object):
                                                table.end_date,
                                                table.credit,
                                                table.compensation,
+                                               table.unit,
+                                               table.price_per_unit,
+                                               table.currency,
                                                limitby = (0, 1),
                                                ).first()
             self._program = program
@@ -2202,9 +2640,60 @@ class fin_VoucherProgram(object):
         return credit
 
     # -------------------------------------------------------------------------
-    def compensate(self, debit_id):
-        # TODO implement this once we have a compensation model
-        pass
+    def compensate(self, debit_id, credit=None):
+        """
+            Compensate a debit (transfer credit back to the program), usually
+            when the provider is compensated for the service rendered
+
+            @param debit_id: the debit ID
+            @param credit: the number of credits compensated
+
+            @returns: the number of credits transferred, None on failure
+        """
+
+        program = self.program
+        if not program:
+            return None
+
+        s3db = current.s3db
+        table = s3db.fin_voucher_debit
+        query = (table.id == debit_id) & \
+                (table.program_id == program.id) & \
+                (table.deleted == False)
+        debit = current.db(query).select(table.id,
+                                         table.balance,
+                                         limitby = (0, 1),
+                                         ).first()
+        if not debit:
+            return None
+        if not isinstance(credit, int):
+            credit = debit.balance
+        if credit is None or credit > debit.balance:
+            return None
+
+        if credit:
+            # Transfer remaining balance to the compensation account
+            transaction = {"type": "CMP",
+                           "compensation": credit,
+                           "debit": -credit,
+                           "debit_id": debit.id,
+                           }
+            if self.__transaction(transaction):
+                debit.update_record(
+                    balance = debit.balance + transaction["debit"],
+                    )
+                ptable = s3db.fin_voucher_program
+                program.update_record(
+                    compensation = program.compensation + transaction["compensation"],
+                    modified_on = ptable.modified_on,
+                    modified_by = ptable.modified_by,
+                    )
+            else:
+                return None
+        else:
+            return 0
+
+        return credit
 
     # -------------------------------------------------------------------------
     def verify(self, transaction_id):
@@ -2368,6 +2857,640 @@ class fin_VoucherProgram(object):
         return True
 
 # =============================================================================
+class fin_VoucherBilling(object):
+    """
+        Helper to facilitate the billing process for a voucher program
+    """
+
+    invoice_fields = ("program_id",
+                      "billing_id",
+                      "pe_id",
+                      "quantity_total",
+                      "price_per_unit",
+                      "amount_receivable",
+                      "currency",
+                      "account_holder",
+                      "account_number",
+                      "bank_name",
+                      "bank_address",
+                      )
+
+    def __init__(self, billing_id):
+        """
+            Constructor
+
+            @param billing_id: the billing record ID
+        """
+
+        self.billing_id = billing_id
+
+        self._record = None
+        self._program = None
+
+    # -------------------------------------------------------------------------
+    @property
+    def billing(self):
+        """
+            Get the billing record (lazy property)
+
+            @returns: Row
+
+            @raises: ValueError if the billing reference is invalid
+        """
+
+        billing = self._record
+        if not billing:
+            btable = current.s3db.fin_voucher_billing
+            query = (btable.id == self.billing_id) & \
+                    (btable.deleted == False)
+            billing = current.db(query).select(btable.id,
+                                               btable.program_id,
+                                               btable.date,
+                                               btable.status,
+                                               limitby = (0, 1),
+                                               ).first()
+            if not billing:
+                raise ValueError("Billing record not found")
+            self._record = billing
+
+        return billing
+
+    # -------------------------------------------------------------------------
+    @property
+    def program(self):
+        """
+            Get the voucher program for this billing process (lazy property)
+
+            @returns: fin_VoucherProgram
+
+            @raises: ValueError if the program reference is invalid
+        """
+
+        program = self._program
+        if not program:
+            program = fin_VoucherProgram(self.billing.program_id)
+            if not program.program:
+                raise ValueError("Invalid program reference")
+            self._program = program
+
+        return program
+
+    # -------------------------------------------------------------------------
+    def verify(self):
+        """
+            Verify all relevant debits, fix any incorrect balances
+
+            @returns: number of invalid transactions
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        billing = self.billing
+        program = self.program
+
+        dtable = s3db.fin_voucher_debit
+        ttable = s3db.fin_voucher_transaction
+
+        query = (dtable.billing_id == billing.id) & \
+                (dtable.claim_id == None) & \
+                (dtable.deleted == False)
+        left = ttable.on((ttable.debit_id == dtable.id) & \
+                         (ttable.deleted == False))
+        rows = db(query).select(dtable.id,
+                                dtable.balance,
+                                ttable.id,
+                                ttable.debit,
+                                left = left,
+                                orderby = dtable.date,
+                                )
+
+        log = current.log
+        invalid_debit = "Voucher program billing - invalid debit: #%s"
+        invalid_transaction = "Voucher program billing - corrupted transaction: #%s"
+
+        invalid = 0
+        totals = {}
+        debits = {}
+        for row in rows:
+            debit = row.fin_voucher_debit
+            transaction = row.fin_voucher_transaction
+
+            if transaction.id is None:
+                # Invalid debit, drop it from billing
+                log.warning(invalid_debit % debit.id)
+                debit.update_record(billing_id = None,
+                                    modified_on = dtable.modified_on,
+                                    modified_by = dtable.modified_by,
+                                    )
+            elif program.verify(transaction.id):
+                # Valid transaction
+                debit_id = debit.id
+                if debit_id in totals:
+                    totals[debit_id] += transaction.debit
+                else:
+                    totals[debit_id] = transaction.debit
+                debits[debit_id] = debit
+            else:
+                # Invalid transaction
+                log.error(invalid_transaction % transaction.id)
+                invalid += 1
+
+        if not invalid:
+            # Fix any incorrect debit balances
+            for debit_id, total in totals.items():
+                debit = debits[debit_id]
+                if debit.balance != total:
+                    debit.update_record(balance = total,
+                                        modified_on = dtable.modified_on,
+                                        modified_by = dtable.modified_by,
+                                        )
+
+        return invalid
+
+    # -------------------------------------------------------------------------
+    def generate_claims(self):
+        """
+            Generate claims for compensation for any unprocessed debits
+            under this billing process
+
+            @returns: number of claims generated, None on error
+
+            @raises: ValueError if the action is invalid
+        """
+
+        # Activate the billing process
+        billing = self.__activate()
+
+        # Get the program
+        try:
+            program = self.program
+        except ValueError:
+            self.__abort("Program not found")
+            raise
+
+        # Abort if there is no unit price (never raise zero-charge claims)
+        pdata = program.program
+        ppu = pdata.price_per_unit
+        if not ppu or ppu <= 0:
+            error = "Program has no valid unit price!"
+            self.__abort(error)
+            raise ValueError(error)
+
+        # Verify all relevant transactions
+        invalid = self.verify()
+        if invalid:
+            error = "%s invalid transactions found!" % invalid
+            self.__abort(error)
+            raise ValueError(error)
+
+        db = current.db
+        s3db = current.s3db
+
+        dtable = s3db.fin_voucher_debit
+        ctable = s3db.fin_voucher_claim
+
+        # Base query
+        query = (dtable.billing_id == billing.id) & \
+                (dtable.claim_id == None) & \
+                (dtable.deleted == False)
+
+        # Get totals per provider
+        provider_id = dtable.pe_id
+        balance_total = dtable.balance.sum()
+        num_vouchers = dtable.voucher_id.count()
+        rows = db(query).select(provider_id,
+                                balance_total,
+                                num_vouchers,
+                                groupby = provider_id,
+                                having = balance_total > 0,
+                                )
+
+        # Generate claims
+        billing_id = billing.id
+        total_claims = 0
+
+        s3db_onaccept = s3db.onaccept
+        set_record_owner = current.auth.s3_set_record_owner
+
+        for row in rows:
+
+            # Check provider
+            provider = row[provider_id]
+            if not provider:
+                continue
+
+            # Compute amount receivable
+            vouchers = row[num_vouchers]
+            quantity = row[balance_total]
+            amount = quantity * ppu if ppu else 0
+
+            # Claim details
+            data = {"program_id": pdata.id,
+                    "billing_id": billing_id,
+                    "pe_id": provider,
+                    "date": datetime.datetime.utcnow(),
+                    "status": "NEW",
+                    "vouchers_total": vouchers,
+                    "quantity_total": quantity,
+                    "price_per_unit": ppu,
+                    "amount_receivable": amount,
+                    "currency": pdata.currency,
+                    }
+
+            data["id"] = claim_id = ctable.insert(**data)
+            if claim_id:
+                # Post-process the claim
+                set_record_owner(ctable, data)
+                s3db_onaccept(ctable, data, method="create")
+
+                # Update all debits with claim_id
+                q = query & (dtable.pe_id == provider)
+                db(q).update(claim_id = claim_id,
+                             modified_by = dtable.modified_by,
+                             modified_on = dtable.modified_on,
+                             )
+                total_claims += 1
+
+        # Update totals in billing
+        query = (ctable.billing_id == billing_id) & \
+                (ctable.deleted == False)
+        vouchers_total = ctable.vouchers_total.sum()
+        quantity_total = ctable.quantity_total.sum()
+        row = db(query).select(vouchers_total,
+                               quantity_total,
+                               ).first()
+
+        btable = s3db.fin_voucher_billing
+        billing.update_record(vouchers_total = row[vouchers_total],
+                              quantity_total = row[quantity_total],
+                              modified_by = btable.modified_by,
+                              modified_on = btable.modified_on,
+                              )
+        return total_claims
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def generate_invoice(cls, claim_id):
+        """
+            Generate an invoice for a claim
+
+            @param claim_id: the claim record ID
+
+            @returns: tuple (invoice_id, error)
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        ctable = s3db.fin_voucher_claim
+        dtable = s3db.fin_voucher_debit
+        itable = s3db.fin_voucher_invoice
+
+        invoice_fields = cls.invoice_fields
+
+        # Get the claim
+        fields = [ctable.id, ctable.uuid, ctable.date, ctable.status, ctable.invoice_id] + \
+                 [ctable[fn] for fn in invoice_fields]
+        query = (ctable.id == claim_id) & \
+                (ctable.deleted == False)
+        claim = db(query).select(limitby=(0, 1), *fields).first()
+
+        # Verify claim status
+        if not claim:
+            return None, "Claim not found"
+        if claim.status != "CONFIRMED":
+            return None, "Claim must be confirmed"
+        if claim.invoice_id:
+            return None, "Claim already invoiced"
+
+        # Verify claim details
+        query = (dtable.claim_id == claim.id) & \
+                (dtable.deleted == False)
+        total = dtable.balance.sum()
+        row = db(query).select(total).first()
+
+        quantity_total = claim.quantity_total
+        if quantity_total != row[total]:
+            return None, "Invalid claim: incorrect quantity"
+        ppu = claim.price_per_unit
+        if not ppu or ppu <= 0:
+            return None, "Invalid claim: no valid unit price"
+        amount_receivable = claim.amount_receivable
+        if not amount_receivable or amount_receivable != quantity_total * ppu:
+            return None, "Invalid claim: incorrect total amount receivable"
+
+        # The claim details
+        data = {fn: claim[fn] for fn in invoice_fields}
+
+        # Generate invoice
+        idata = {"date": datetime.datetime.utcnow().date(),
+                 "status": "NEW",
+                 "vhash": cls._hash(claim.uuid, claim.date, data),
+                 }
+        idata.update(data)
+        invoice_id = idata["id"] = itable.insert(**idata)
+
+        # Postprocess invoice
+        current.auth.s3_set_record_owner(itable, idata)
+        s3db.onaccept(itable, idata, method="create")
+
+        # Update claim with invoice_id and verification hash
+        query = (itable.id == invoice_id)
+        invoice = db(query).select(itable.uuid,
+                                   itable.billing_id,
+                                   itable.date,
+                                   itable.quantity_total,
+                                   limitby = (0, 1),
+                                   ).first()
+        claim.update_record(invoice_id = invoice_id,
+                            status = "INVOICED",
+                            vhash = cls._hash(invoice.uuid, invoice.date, data),
+                            modified_on = ctable.modified_on,
+                            modified_by = ctable.modified_by,
+                            )
+
+        # Update totals in billing
+        query = (itable.billing_id == invoice.billing_id) & \
+                (itable.deleted == False)
+        quantity_total = itable.quantity_total.sum()
+        row = db(query).select(quantity_total).first()
+
+        btable = s3db.fin_voucher_billing
+        query = (btable.id == invoice.billing_id)
+        db(query).update(quantity_invoiced = row[quantity_total],
+                         modified_by = btable.modified_by,
+                         modified_on = btable.modified_on,
+                         )
+
+        return invoice_id, None
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def settle_invoice(cls, invoice_id):
+
+        db = current.db
+        s3db = current.s3db
+
+        invoice_fields = cls.invoice_fields
+
+        # Get the invoice
+        itable = s3db.fin_voucher_invoice
+        fields = [itable.id, itable.uuid, itable.date, itable.status, itable.vhash]
+        fields += [itable[fn] for fn in invoice_fields]
+        query = (itable.id == invoice_id) & \
+                (itable.deleted == False)
+        invoice = db(query).select(limitby=(0, 1), *fields).first()
+
+        # Verify that the invoice is status=PAYMENT_ORDERED or PAID
+        if not invoice:
+            raise ValueError("Invoice not found")
+        if invoice.status != "PAID":
+            raise ValueError("Incorrect invoice status")
+
+        # Get the claim
+        ctable = s3db.fin_voucher_claim
+        fields = [ctable.id, ctable.uuid, ctable.date, ctable.status, ctable.vhash]
+        fields += [ctable[fn] for fn in invoice_fields]
+        query = (ctable.invoice_id == invoice.id) & \
+                (ctable.deleted == False)
+        claim = db(query).select(limitby = (0, 1),
+                                 orderby = ctable.id,
+                                 *fields).first()
+        if not claim:
+            raise ValueError("Claim not found")
+        if claim.status != "INVOICED":
+            raise ValueError("Incorrect claim status")
+
+        data = {fn: invoice[fn] for fn in invoice_fields}
+
+        # Verify the hashes
+        vhash = cls._hash(claim.uuid, claim.date, data)
+        if invoice.vhash != vhash:
+            raise ValueError("Invoice with invalid verification hash")
+        vhash = cls._hash(invoice.uuid, invoice.date, data)
+        if claim.vhash != vhash:
+           raise ValueError("Claim with invalid verification hash")
+
+        # Get all debits linked to the claim, verify the total
+        dtable = s3db.fin_voucher_debit
+        query = (dtable.claim_id == claim.id) & \
+                (dtable.deleted == False)
+        debits = db(query).select(dtable.id,
+                                  dtable.balance,
+                                  )
+        balance_total = sum(d.balance for d in debits if d.balance)
+        if balance_total != invoice.quantity_total:
+            raise ValueError("Invoice quantity does not match debit balance")
+
+        # Compensate all debits
+        total = 0
+        program = fin_VoucherProgram(claim.program_id)
+        for debit in debits:
+            credit = program.compensate(debit.id)
+            if credit is None:
+                raise ValueError("Could not compensate debit %s" % debit.id)
+            total += credit
+
+        # Mark the claim as paid + call onaccept
+        claim.update_record(status="PAID",
+                            modified_on = ctable.modified_on,
+                            modified_by = ctable.modified_by,
+                            )
+        s3db.onaccept(ctable, claim, method="update")
+
+        # Update totals in billing
+        query = (ctable.billing_id == invoice.billing_id) & \
+                (ctable.status == "PAID") & \
+                (ctable.deleted == False)
+        quantity_total = ctable.quantity_total.sum()
+        row = db(query).select(quantity_total).first()
+
+        btable = s3db.fin_voucher_billing
+        query = (btable.id == invoice.billing_id)
+        db(query).update(quantity_compensated = row[quantity_total],
+                         modified_by = btable.modified_by,
+                         modified_on = btable.modified_on,
+                         )
+        return total
+
+    # -------------------------------------------------------------------------
+    def check_complete(self):
+        """
+            Check whether this billing process is complete (+update status
+            if so)
+
+            @returns: True|False
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        billing = self.billing
+
+        ctable = s3db.fin_voucher_claim
+        query = (ctable.billing_id == billing.id) & \
+                (ctable.deleted == False)
+        existing = db(query).select(ctable.id, limitby=(0, 1)).first()
+        if existing:
+            # Check if there are any unpaid claims
+            query &= (ctable.status != "PAID")
+            pending = db(query).select(ctable.id, limitby=(0, 1)).first()
+        else:
+            # No claims generated yet
+            pending = True
+
+        if pending:
+            return False
+
+        btable = s3db.fin_voucher_billing
+        billing.update_record(status = "COMPLETE",
+                              modified_on = btable.modified_on,
+                              modified_by = btable.modified_by,
+                              )
+        return True
+
+    # -------------------------------------------------------------------------
+    def has_claims_or_invoices(self):
+        """
+            Check if this billing process has generated any claims
+            or invoices
+
+            @returns: True|False
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        billing = self.billing
+
+        # Check for existing claims
+        ctable = s3db.fin_voucher_claim
+        query = (ctable.billing_id == billing.id) & \
+                (ctable.deleted == False)
+        if db(query).select(ctable.id, limitby=(0, 1)).first():
+            return True
+
+        # Check for existing invoices
+        itable = s3db.fin_voucher_invoice
+        query = (itable.billing_id == billing.id) & \
+                (itable.deleted == False)
+        if db(query).select(itable.id, limitby=(0, 1)).first():
+            return True
+
+        return False
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _hash(uuid, date, data):
+        """
+            Generate a verification hash (vhash)
+
+            @param uuid: the uuid of the reference record
+            @param date: the date of the reference record
+            @param data: the data to hash
+
+            @returns: the hash as string
+        """
+
+        data = {"data": data,
+                "date": date.isoformat(),
+                "uuid": uuid,
+                }
+        inp = json.dumps(data, separators=SEPARATORS)
+
+        crypt = CRYPT(key = current.deployment_settings.hmac_key,
+                      digest_alg = "sha512",
+                      salt = False,
+                      )
+        return str(crypt(inp)[0])
+
+    # -------------------------------------------------------------------------
+    def __activate(self):
+        """
+            Activate the billing process
+                - allocate all relevant debits of the program to the billing
+                - set the process status to "in progress"
+
+            @returns: the billing record (Row)
+
+            @raises: ValueError if the billing reference is invalid,
+                     or when the billing process is already closed
+        """
+
+        billing = self.billing
+
+        # Check status
+        if billing.status not in ("SCHEDULED", "IN PROGRESS"):
+            raise ValueError("Invalid process status")
+
+        db = current.db
+        s3db = current.s3db
+
+        # Allocate relevant debits to this billing
+        # - all debits under the program effected before the billing date,
+        #   which have not yet been allocated to the billing and are not
+        #   yet part of any existing claim
+        dtable = s3db.fin_voucher_debit
+        query = (dtable.program_id == billing.program_id) & \
+                (dtable.date <= billing.date) & \
+                (dtable.billing_id == None) & \
+                (dtable.claim_id == None) & \
+                (dtable.deleted == False)
+        db(query).update(billing_id = billing.id,
+                         modified_on = dtable.modified_on,
+                         modified_by = dtable.modified_by,
+                         )
+
+        # Update billing process status
+        btable = s3db.fin_voucher_billing
+        billing.update_record(status = "IN PROGRESS",
+                              modified_on = btable.modified_on,
+                              modified_by = btable.modified_by,
+                              )
+
+        db.commit()
+        return billing
+
+    # -------------------------------------------------------------------------
+    def __abort(self, reason):
+        """
+            Abort this billing process
+                - release all debits allocated to this process
+                - set the process status to "aborted" and record reason
+
+            @param reason: the reason to abort the process
+
+            @raises: ValueError if the billing reference is invalid,
+                     or when the billing process is already closed
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        billing = self.billing
+
+        # Release all allocated debits that have not been processed yet
+        dtable = s3db.fin_voucher_debit
+        query = (dtable.billing_id == billing.id) & \
+                (dtable.claim_id == None)
+        db(query).update(billing_id = None,
+                         modified_on = dtable.modified_on,
+                         modified_by = dtable.modified_by,
+                         )
+
+        # Update billing process status
+        if billing.status in ("SCHEDULED", "IN PROGRESS") and \
+           not self.has_claims_or_invoices():
+            btable = s3db.fin_voucher_billing
+            billing.update_record(status = "ABORTED",
+                                  verification = reason,
+                                  modified_on = btable.modified_on,
+                                  modified_by = btable.modified_by,
+                                  )
+        db.commit()
+
+# =============================================================================
 def fin_voucher_eligibility_types(program_ids, organisation_ids=None):
     """
         Look up permissible eligibility types for programs
@@ -2484,5 +3607,23 @@ def fin_voucher_permitted_programs(mode="issuer", partners_only=False):
         pe_ids.add(organisation.pe_id)
 
     return list(program_ids), list(org_ids), list(pe_ids)
+
+# =============================================================================
+def fin_voucher_start_billing(billing_id=None):
+    """
+        Scheduler task to start a billing process, to be scheduled
+        via s3db_task
+
+        @param billing_id: the billing ID
+        @returns: success message
+    """
+
+    if not billing_id:
+        raise TypeError("Argument missing: billing ID")
+
+    billing = fin_VoucherBilling(billing_id)
+
+    claims = billing.generate_claims()
+    return "Billing process started (%s claims generated)" % claims
 
 # END =========================================================================

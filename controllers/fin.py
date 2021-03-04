@@ -41,6 +41,18 @@ def voucher_debit():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def voucher_claim():
+    """ Compensation Claims: RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def voucher_invoice():
+    """ Voucher Invoice: RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def payment_service():
     """ Payment Services: RESTful CRUD controller """
 
