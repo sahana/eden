@@ -32,6 +32,7 @@ __all__ = ("FinExpensesModel",
            "FinPaymentServiceModel",
            "FinProductModel",
            "FinSubscriptionModel",
+           "fin_VoucherProgram",
            "fin_rheader",
            "fin_voucher_permitted_programs",
            "fin_voucher_eligibility_types",
@@ -346,25 +347,27 @@ class FinVoucherModel(S3Model):
         # - billing process for a voucher program
         #
         billing_status = (("SCHEDULED", T("Scheduled")),
-                          ("IN PROGRESS", T("In Progress")),
                           ("ABORTED", T("Aborted")),
-                          ("COMPLETE", T("Completed")),
                           )
+        status_repr = dict(billing_status)
+
+        # Additional statuses that cannot be entered or imported
+        status_repr["IN PROGRESS"] = T("In Progress")
+        status_repr["COMPLETE"] = T("Completed")
 
         tablename = "fin_voucher_billing"
         define_table(tablename,
                      program_id(ondelete="RESTRICT"),
                      s3_date(default = "now",
-                             #writable = False, # TODO only writable while scheduled
+                             writable = False, # Only writable while scheduled
                              ),
                      Field("status",
                            default = "SCHEDULED",
                            requires = IS_IN_SET(billing_status,
                                                 zero = None,
                                                 ),
-                           represent = S3Represent(options=dict(billing_status),
-                                                   ),
-                           writable = False,
+                           represent = S3Represent(options=status_repr),
+                           writable = False, # Only writable while scheduled
                            ),
                      Field("vouchers_total", "integer",
                            label = T("Total number of vouchers"),
@@ -388,6 +391,12 @@ class FinVoucherModel(S3Model):
                            ),
                      Field("verification", "text",
                            label = T("Verification Details"),
+                           represent = s3_text_represent,
+                           writable = False,
+                           ),
+                     Field("task_id", "reference scheduler_task",
+                           ondelete = "SET NULL",
+                           readable = False,
                            writable = False,
                            ),
                      s3_comments(),
@@ -416,6 +425,8 @@ class FinVoucherModel(S3Model):
         self.configure(tablename,
                        list_fields = list_fields,
                        deletable = False, # must cancel, not delete
+                       onvalidation = self.billing_onvalidation,
+                       onaccept = self.billing_onaccept,
                        )
 
         # Reusable Field
@@ -1090,6 +1101,173 @@ class FinVoucherModel(S3Model):
 
         return {#"example_example_id": dummy("example_id"),
                 }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def billing_onvalidation(form):
+        """
+            Validation of billing form:
+            - must not change date or status once process has started
+            - can only change status to ABORT before start
+            - date must be after any active or completed billing
+            - date must be on a different day than any scheduled billing
+        """
+
+        T = current.T
+
+        db = current.db
+        s3db = current.s3db
+
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            record_id = None
+
+        table = s3db.fin_voucher_billing
+
+        # Get the existing record
+        if record_id:
+            query = (table.id == record_id)
+            record = db(query).select(table.id,
+                                      table.program_id,
+                                      table.date,
+                                      table.status,
+                                      limitby=(0, 1),
+                                      ).first()
+        else:
+            record = None
+
+        # Get the program
+        if "program_id" in form_vars:
+            program_id = form_vars["program_id"]
+        elif record:
+            program_id = record.program_id
+        else:
+            program_id = table.program_id.default
+
+        date_error = False
+        if record:
+            # Update
+            if "date" in form_vars:
+                date = form_vars["date"]
+                if record.status != "SCHEDULED" and record.date != date:
+                    form.errors.date = T("Date can only be changed while process has not yet started")
+                    date_error = True
+
+            if "status" in form_vars:
+                status = form_vars["status"]
+                if status != record.status:
+                    if record.status != "SCHEDULED":
+                        form.errors.status = T("Status cannot be changed once process has started")
+                    elif status != "ABORTED":
+                        form.errors.status = T("Invalid status")
+
+        if not date_error and "date" in form_vars:
+            date = form_vars["date"]
+            if date:
+                p = fin_VoucherProgram(program_id)
+                earliest = p.earliest_billing_date(billing_id = record_id)
+                if earliest and date < earliest:
+                    form.errors.date = T("Date must be %(min)s or later!") % {"min": earliest}
+                else:
+                    query = (table.program_id == program_id)
+                    if record_id:
+                        query &= (table.id != record_id)
+                    query &= (table.status == "SCHEDULED") & \
+                             (table.date == date) & \
+                             (table.deleted == False)
+                    row = db(query).select(table.id, limitby = (0, 1)).first()
+                    if row:
+                        form.errors.date = T("Billing already scheduled for that date")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def billing_onaccept(form):
+        """
+            Onaccept-routine for billing
+              - schedule task to start the process
+        """
+
+        # Get record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get the record
+        table = s3db.fin_voucher_billing
+        query = (table.id == record_id)
+        billing = db(query).select(table.id,
+                                   table.date,
+                                   table.status,
+                                   table.task_id,
+                                   limitby = (0, 1),
+                                   ).first()
+
+        if not billing:
+            return
+
+        # Get the scheduler task (if any)
+        ttable = s3db.scheduler_task
+        task_id = billing.task_id
+        if task_id:
+            query = (ttable.id == task_id)
+            task = db(query).select(ttable.id,
+                                    ttable.status,
+                                    ttable.start_time,
+                                    ttable.next_run_time,
+                                    limitby = (0, 1),
+                                    ).first()
+        else:
+            task = None
+
+        if billing.status == "SCHEDULED" and billing.date:
+
+            start = datetime.datetime.combine(billing.date, datetime.time(22,0,0))
+            if task:
+                # Make sure task starts at the right time
+                if task.status not in ("ASSIGNED", "RUNNING"):
+                    task.update_record(start_time = start,
+                                       next_run_time = start,
+                                       stop_time = None,
+                                       status = "QUEUED",
+                                       enabled = True,
+                                       )
+            else:
+                # Schedule task
+                scheduler = current.s3task.scheduler
+                application = "%s/default" % current.request.application
+                task = scheduler.queue_task("s3db_task",
+                                            pargs = ["fin_voucher_start_billing"],
+                                            pvars = {"billing_id": billing.id},
+                                            application_name = application,
+                                            start_time = start,
+                                            stop_time = None,
+                                            timeout = 600,
+                                            repeats = 1,
+                                            )
+                if task:
+                    task_id = task.id
+
+        elif task.status == "QUEUED":
+            # Remove the task
+            task.delete_record()
+            task_id = None
+
+        # Store the task_id
+        billing.update_record(task_id = task_id,
+                              modified_by = table.modified_by,
+                              modified_on = table.modified_on,
+                              )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2317,7 +2495,7 @@ def fin_rheader(r, tabs=None):
                 tabs = [(T("Basic Details"), None),
                         (T("Vouchers"), "voucher"),
                         (T("Transactions"), "voucher_transaction"),
-                        #(T("Billing"), "voucher_billing"),
+                        (T("Billing"), "voucher_billing"),
                         ]
                 if settings.get_fin_voucher_eligibility_types():
                     tabs.insert(1, (T("Eligibility Types"), "voucher_eligibility_type"))
@@ -2760,6 +2938,47 @@ class fin_VoucherProgram(object):
         """
 
         return True
+
+    # -------------------------------------------------------------------------
+    def earliest_billing_date(self, billing_id=None, configure=None):
+        """
+            Get the earliest possible billing date for the program
+              - must be after any active or completed billing processes
+
+            @param billing_id: the billing ID
+            @param configure: a Field to configure accordingly
+                              (typically fin_voucher_billing.date itself)
+
+            @returns: the earliest possible billing date
+        """
+
+        program = self.program
+        if not program:
+            return None
+
+        db = current.db
+        s3db = current.s3db
+
+        btable = s3db.fin_voucher_billing
+        query = (btable.program_id == program.id) & \
+                (btable.status.belongs(("IN PROGRESS", "COMPLETED")))
+        if billing_id:
+            query &= (btable.id != billing_id)
+        query &= (btable.date != None) & (btable.deleted == False)
+
+        row = db(query).select(btable.date,
+                               limitby = (0, 1),
+                               orderby = ~btable.date,
+                               ).first()
+
+        earliest = row.date + datetime.timedelta(days=1) if row else None
+
+        if earliest and configure:
+            configure.default = earliest
+            configure.requires = IS_EMPTY_OR(IS_UTC_DATE(minimum=earliest))
+            configure.widget = S3CalendarWidget(minimum=earliest)
+
+        return earliest
 
     # -------------------------------------------------------------------------
     def _hash(self, transaction, ohash):
@@ -3270,7 +3489,7 @@ class fin_VoucherBilling(object):
             raise ValueError("Invoice with invalid verification hash")
         vhash = cls._hash(invoice.uuid, invoice.date, data)
         if claim.vhash != vhash:
-           raise ValueError("Claim with invalid verification hash")
+            raise ValueError("Claim with invalid verification hash")
 
         # Get all debits linked to the claim, verify the total
         dtable = s3db.fin_voucher_debit
