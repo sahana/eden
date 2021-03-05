@@ -3262,5 +3262,23 @@ class IS_IBAN(Validator):
             raise ValidationError(translate(self.error_message))
 
         return iban
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def represent(value, row=None):
+        """
+            Format an IBAN as 4-character blocks, for better readability
+
+            @param value: the IBAN
+            @param row: unused, for API compatibility
+
+            @returns: the formatted IBAN
+        """
+
+        if not value:
+            reprstr = "-"
+        else:
+            iban = s3_str(value).strip().replace(" ", "").upper()
+            reprstr = " ".join(re.findall('..?.?.?', iban))
+        return reprstr
 
 # END =========================================================================

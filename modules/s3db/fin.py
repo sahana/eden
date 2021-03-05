@@ -521,12 +521,15 @@ class FinVoucherModel(S3Model):
                      Field("account_number",
                            label = T("Account Number (IBAN)"),
                            requires = IS_IBAN(),
+                           represent = IS_IBAN.represent,
                            writable = False,
                            ),
                      Field("bank_name",
                            writable = False,
                            ),
                      Field("bank_address",
+                           # Enable in template if required:
+                           readable = False,
                            writable = False,
                            ),
 
@@ -677,13 +680,16 @@ class FinVoucherModel(S3Model):
                      Field("account_number",
                            label = T("Account Number (IBAN)"),
                            requires = IS_EMPTY_OR(IS_IBAN()),
-                           # TODO represent
+                           represent = IS_IBAN.represent,
                            ),
                      Field("bank_name",
                            label = T("Bank Name"),
                            ),
                      Field("bank_address",
                            label = T("Bank Address"),
+                           # Enable in template if required:
+                           readable = False,
+                           writable = False,
                            ),
 
                      # Status
