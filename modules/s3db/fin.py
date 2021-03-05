@@ -676,17 +676,23 @@ class FinVoucherModel(S3Model):
                      # Bank account details
                      Field("account_holder",
                            label = T("Account Holder"),
+                           represent = lambda v, row=None: v if v else "-",
+                           writable = False,
                            ),
                      Field("account_number",
                            label = T("Account Number (IBAN)"),
                            requires = IS_EMPTY_OR(IS_IBAN()),
                            represent = IS_IBAN.represent,
+                           writable = False,
                            ),
                      Field("bank_name",
                            label = T("Bank Name"),
+                           represent = lambda v, row=None: v if v else "-",
+                           writable = False,
                            ),
                      Field("bank_address",
                            label = T("Bank Address"),
+                           represent = lambda v, row=None: v if v else "-",
                            # Enable in template if required:
                            readable = False,
                            writable = False,
@@ -699,8 +705,9 @@ class FinVoucherModel(S3Model):
                            requires = IS_IN_SET(claim_status,
                                                 zero = None,
                                                 ),
-                           represent = S3Represent(options=dict(claim_status),
+                           represent = S3Represent(options=dict(status_repr),
                                                    ),
+                           writable = False,
                            ),
 
                      # Invoice details
@@ -725,19 +732,13 @@ class FinVoucherModel(S3Model):
                        "status",
                        ]
 
-        # TODO CRUD Form
-
-        # TODO onvalidation to
-        # - enforce bank account details for confirmation
-
-        # TODO onaccept to
-        # - generate invoice when confirmed
-
+        # Table configuration
         self.configure(tablename,
                        list_fields = list_fields,
-                       # TODO cannot be edited once confirmed
                        insertable = False,
                        deletable = False,
+                       onvalidation = self.claim_onvalidation,
+                       onaccept = self.claim_onaccept,
                        )
 
         # CRUD Strings
@@ -1280,6 +1281,117 @@ class FinVoucherModel(S3Model):
                               modified_by = table.modified_by,
                               modified_on = table.modified_on,
                               )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def claim_onvalidation(form):
+        """
+            Onvalidation of claims:
+                - if claim has already been confirmed, or even invoiced,
+                  immutable fields can no longer be changed
+                - if claim is to be any other status than new, bank account
+                  details are required
+        """
+
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            record_id = None
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.fin_voucher_claim
+
+        if record_id:
+            # Check current status
+            query = (table.id == record_id)
+            record = db(query).select(table.id,
+                                      table.status,
+                                      table.invoice_id,
+                                      table.account_holder,
+                                      table.account_number,
+                                      limitby = (0, 1),
+                                      ).first()
+        else:
+            record = None
+
+        T = current.T
+
+        if record:
+            if record.invoice_id or record.status != "NEW":
+                # This claim has already been invoiced and cannot be changed
+                immutable = ("program_id", "billing_id", "pe_id",
+                             "date", "vouchers_total", "quantity_total",
+                             "price_per_unit", "amount_receivable",
+                             "account_holder", "account_number",
+                             "status", "invoice_id",
+                             )
+                for fn in immutable:
+                    if fn in form_vars:
+                        form.errors[fn] = T("Value can no longer be changed")
+
+            elif "status" in form_vars and form_vars["status"] != "NEW":
+                # Changing status of a NEW claim requires account details
+                check = (("account_number", T("Account number is required")),
+                         ("account_holder", T("Account holder is required")),
+                         )
+                for fn, msg in check:
+                    value = form_vars[fn] if fn in form_vars else record[fn]
+                    if value is None or not value.strip():
+                        if fn in form_vars:
+                            form.errors[fn] = msg
+                        else:
+                            form.errors["status"] = msg
+                            break
+
+        elif "status" in form_vars and form_vars["status"] != "NEW":
+            # A new claim can only have status "NEW"
+            form.errors["status"] = T("Invalid status")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def claim_onaccept(form):
+
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.fin_voucher_claim
+        query = (table.id == record_id)
+        record = db(query).select(table.id,
+                                  table.billing_id,
+                                  table.status,
+                                  table.invoice_id,
+                                  table.comments,
+                                  limitby = (0, 1),
+                                  ).first()
+        if not record:
+            return
+
+        billing_id = record.billing_id
+        if billing_id and \
+           record.status == "CONFIRMED" and not record.invoice_id:
+            error = fin_VoucherBilling.generate_invoice(record.id)[1]
+            if error:
+                # Write error into comments
+                msg = "%s Could not generate invoice - ERROR: %s" % \
+                      (current.request.utcnow.isoformat(), error)
+                current.response.warning = msg
+                comments = [msg]
+                if record.comments:
+                    comments.append(record.comments)
+                record.update_record(comments = "\n\n".join(comments))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3102,8 +3214,8 @@ class fin_VoucherBilling(object):
                       "currency",
                       "account_holder",
                       "account_number",
-                      "bank_name",
-                      "bank_address",
+                      #"bank_name",
+                      #"bank_address",
                       )
 
     def __init__(self, billing_id):
@@ -3382,7 +3494,8 @@ class fin_VoucherBilling(object):
 
         # Get the claim
         fields = [ctable.id, ctable.uuid, ctable.date, ctable.status, ctable.invoice_id] + \
-                 [ctable[fn] for fn in invoice_fields]
+                 [ctable[fn] for fn in invoice_fields] + \
+                 [ctable.bank_name, ctable.bank_address]
         query = (ctable.id == claim_id) & \
                 (ctable.deleted == False)
         claim = db(query).select(limitby=(0, 1), *fields).first()
@@ -3418,6 +3531,8 @@ class fin_VoucherBilling(object):
         idata = {"date": datetime.datetime.utcnow().date(),
                  "status": "NEW",
                  "vhash": cls._hash(claim.uuid, claim.date, data),
+                 "bank_name": claim.bank_name,
+                 "bank_address": claim.bank_address,
                  }
         idata.update(data)
         invoice_id = idata["id"] = itable.insert(**idata)

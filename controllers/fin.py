@@ -70,6 +70,27 @@ def voucher_debit():
 def voucher_claim():
     """ Compensation Claims: RESTful CRUD controller """
 
+    def prep(r):
+
+        table = r.resource.table
+
+        record = r.record
+        if not record or record.status == "NEW":
+            # Make additional fields writable in new claims
+            writable = ("account_holder",
+                        "account_number",
+                        "bank_name",
+                        "bank_address",
+                        "status",
+                        )
+            for fn in writable:
+                field = table[fn]
+                if field.readable:
+                    field.writable = True
+
+        return True
+    s3.prep = prep
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
