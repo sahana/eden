@@ -520,6 +520,7 @@ class FinVoucherModel(S3Model):
                            ),
                      Field("account_number",
                            label = T("Account Number (IBAN)"),
+                           requires = IS_IBAN(),
                            writable = False,
                            ),
                      Field("bank_name",
@@ -615,9 +616,14 @@ class FinVoucherModel(S3Model):
         #
         claim_status = (("NEW", T("New")),
                         ("CONFIRMED", T("Confirmed")),
-                        ("INVOICED", T("Invoiced")),
-                        ("PAID", T("Paid")),
+                        #("INVOICED", T("Invoiced")),
+                        #("PAID", T("Paid")),
                         )
+        status_repr = dict(claim_status)
+
+        # Additional statuses that cannot be entered or imported
+        status_repr["INVOICED"] = T("Invoiced")
+        status_repr["PAID"] = T("Paid")
 
         tablename = "fin_voucher_claim"
         define_table(tablename,
@@ -670,7 +676,7 @@ class FinVoucherModel(S3Model):
                            ),
                      Field("account_number",
                            label = T("Account Number (IBAN)"),
-                           # TODO validator?
+                           requires = IS_EMPTY_OR(IS_IBAN()),
                            # TODO represent
                            ),
                      Field("bank_name",
