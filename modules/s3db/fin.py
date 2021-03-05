@@ -554,7 +554,11 @@ class FinVoucherModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
-
+                     # Processing authorization token for async tasks
+                     Field("ptoken",
+                           readable = False,
+                           writable = False,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -577,13 +581,12 @@ class FinVoucherModel(S3Model):
 
         # TODO filter widgets
 
-        # TODO onaccept to
-        # - compensate debits and notify provider (async)
-
         self.configure(tablename,
                        list_fields = list_fields,
                        insertable = False, # will be auto-created from claim
                        deletable = False,
+                       onvalidation = self.invoice_onvalidation,
+                       onaccept = self.invoice_onaccept,
                        )
 
         # CRUD Strings
@@ -1305,9 +1308,8 @@ class FinVoucherModel(S3Model):
         s3db = current.s3db
 
         table = s3db.fin_voucher_claim
-
         if record_id:
-            # Check current status
+            # Get the record
             query = (table.id == record_id)
             record = db(query).select(table.id,
                                       table.status,
@@ -1392,6 +1394,184 @@ class FinVoucherModel(S3Model):
                 if record.comments:
                     comments.append(record.comments)
                 record.update_record(comments = "\n\n".join(comments))
+
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def invoice_onvalidation(form):
+        """
+            Onvalidation of invoices:
+              - new invoices can only have status NEW
+              - status PAID requires payment order number
+              - status REJECTED requires a reason
+              - changing status to anything other than NEW or REJECTED
+                requires the verification hashes to be intact and the claim
+                to have INVOICED status
+              - once marked as PAID, the status can no longer be changed
+        """
+
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            record_id = None
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.fin_voucher_invoice
+        if record_id:
+            # Get the record
+            query = (table.id == record_id)
+            record = db(query).select(table.id,
+                                      table.status,
+                                      table.po_number,
+                                      limitby = (0, 1),
+                                      ).first()
+        else:
+            record = None
+
+        T = current.T
+
+        status = form_vars.get("status")
+        change_status = "status" in form_vars
+        if record:
+            change_status = change_status and status != record.status
+            status_error = False
+
+            if record.status == "PAID":
+                # Status cannot be changed
+                if change_status:
+                    form.errors.status = T("Status cannot be changed")
+                    status_error = True
+
+            elif change_status and status not in ("NEW", "REJECTED"):
+                # Verify the hashes
+                if not fin_VoucherBilling.check_invoice(record.id):
+                    form.errors.status = T("Invoice integrity compromised")
+                    status_error = True
+                else:
+                    # Verify that the claim status is INVOICED
+                    ctable = s3db.fin_voucher_claim
+                    query = (ctable.invoice_id == record.id) & \
+                            (ctable.deleted == False)
+                    claim = db(query).select(ctable.id,
+                                             ctable.status,
+                                             limitby = (0, 1),
+                                             ).first()
+                    if not claim or claim.status != "INVOICED":
+                        form.errors.status = T("Claim has incorrect status")
+                        status_error = True
+
+            if not status_error:
+                # Check required fields
+                check = None
+                if not change_status:
+                    status = record.status
+                if status == "REJECTED":
+                    check = (("reason", T("Reason is required")),
+                             )
+                elif status == "PAID":
+                    check = (("po_number", T("Payment order number is required")),
+                             )
+                if check:
+                    for fn, msg in check:
+                        value = form_vars[fn] if fn in form_vars else record[fn]
+                        if value is None or not value.strip():
+                            if fn in form_vars:
+                                form.errors[fn] = msg
+                            else:
+                                form.errors["status"] = msg
+                                break
+
+        elif change_status and status != "NEW":
+            # A new invoice can only have status "NEW"
+            form.errors["status"] = T("Invalid status")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def invoice_onaccept(form):
+        """
+            Onaccept procedure for invoices:
+              - if status is PAID and the claim is still INVOICED,
+                start the settle_invoice process (async, if possible)
+        """
+
+        # Get record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get the record
+        table = s3db.fin_voucher_invoice
+        query = (table.id == record_id)
+        record = db(query).select(table.id,
+                                  table.status,
+                                  table.ptoken,
+                                  limitby = (0, 1),
+                                  ).first()
+        if not record:
+            return
+
+        # Get the underlying claim
+        ctable = s3db.fin_voucher_claim
+        query = (ctable.invoice_id == record.id) & \
+                (ctable.deleted == False)
+        claim = db(query).select(ctable.id,
+                                 ctable.status,
+                                 limitby = (0, 1),
+                                 orderby = ctable.id,
+                                 ).first()
+
+        if record.status == "PAID" and not record.ptoken and \
+           claim.status == "INVOICED":
+
+            # Generate authorization token
+            import uuid
+            ptoken = str(int(uuid.uuid4()))
+            record.update_record(ptoken = ptoken,
+                                 modified_by = table.modified_by,
+                                 modified_on = table.modified_on,
+                                 )
+
+            s3task = current.s3task
+            settle_async = s3task._is_alive()
+            if settle_async:
+                # Schedule task (not using run_async to allow delayed start)
+                start = datetime.datetime.utcnow() + datetime.timedelta(seconds=3)
+                application = "%s/default" % current.request.application
+                s3task.scheduler.queue_task("s3db_task",
+                                            pargs = ["fin_voucher_settle_invoice"],
+                                            pvars = {"invoice_id": record.id,
+                                                     "ptoken": ptoken,
+                                                     },
+                                            application_name = application,
+                                            start_time = start,
+                                            stop_time = None,
+                                            timeout = 600,
+                                            repeats = 1,
+                                            )
+            else:
+                # Run synchronously
+                # NB this can take a long time if there are many debits
+                try:
+                    fin_voucher_settle_invoice(invoice_id = record.id,
+                                               ptoken = ptoken,
+                                               )
+                except (TypeError, ValueError):
+                    import sys
+                    msg = sys.exc_info()[1]
+                    current.response.error = msg
+                    current.log.error(msg)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3573,7 +3753,14 @@ class fin_VoucherBilling(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def settle_invoice(cls, invoice_id):
+    def check_invoice(cls, invoice_id):
+        """
+            Check the integrity of an invoice/claim pair (=check the hashes)
+
+            @param invoice_id: the invoice ID
+
+            @returns: True|False
+        """
 
         db = current.db
         s3db = current.s3db
@@ -3582,15 +3769,62 @@ class fin_VoucherBilling(object):
 
         # Get the invoice
         itable = s3db.fin_voucher_invoice
-        fields = [itable.id, itable.uuid, itable.date, itable.status, itable.vhash]
+        fields = [itable.id, itable.uuid, itable.date, itable.vhash]
+        fields += [itable[fn] for fn in invoice_fields]
+        query = (itable.id == invoice_id) & \
+                (itable.deleted == False)
+        invoice = db(query).select(limitby=(0, 1), *fields).first()
+        if not invoice:
+            return False
+
+        # Get the claim
+        ctable = s3db.fin_voucher_claim
+        fields = [ctable.id, ctable.uuid, ctable.date, ctable.vhash]
+        fields += [ctable[fn] for fn in invoice_fields]
+        query = (ctable.invoice_id == invoice.id) & \
+                (ctable.deleted == False)
+        claim = db(query).select(limitby = (0, 1),
+                                 orderby = ctable.id,
+                                 *fields).first()
+        if not claim:
+            return False
+
+
+        # Verify the hashes
+        data = {fn: claim[fn] for fn in invoice_fields}
+        vhash = cls._hash(claim.uuid, claim.date, data)
+        if invoice.vhash != vhash:
+            return False
+
+        data = {fn: invoice[fn] for fn in invoice_fields}
+        vhash = cls._hash(invoice.uuid, invoice.date, data)
+        if claim.vhash != vhash:
+            return False
+
+        return True
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def settle_invoice(cls, invoice_id, ptoken):
+
+        db = current.db
+        s3db = current.s3db
+
+        invoice_fields = cls.invoice_fields
+
+        # Get the invoice
+        itable = s3db.fin_voucher_invoice
+        fields = [itable.id, itable.uuid, itable.date, itable.status, itable.vhash, itable.ptoken]
         fields += [itable[fn] for fn in invoice_fields]
         query = (itable.id == invoice_id) & \
                 (itable.deleted == False)
         invoice = db(query).select(limitby=(0, 1), *fields).first()
 
-        # Verify that the invoice is status=PAYMENT_ORDERED or PAID
+        # Verify that the invoice is status=PAID
         if not invoice:
             raise ValueError("Invoice not found")
+        if invoice.ptoken != ptoken:
+            raise ValueError("Process not authorized")
         if invoice.status != "PAID":
             raise ValueError("Incorrect invoice status")
 
@@ -3608,12 +3842,12 @@ class fin_VoucherBilling(object):
         if claim.status != "INVOICED":
             raise ValueError("Incorrect claim status")
 
-        data = {fn: invoice[fn] for fn in invoice_fields}
-
         # Verify the hashes
+        data = {fn: claim[fn] for fn in invoice_fields}
         vhash = cls._hash(claim.uuid, claim.date, data)
         if invoice.vhash != vhash:
             raise ValueError("Invoice with invalid verification hash")
+        data = {fn: invoice[fn] for fn in invoice_fields}
         vhash = cls._hash(invoice.uuid, invoice.date, data)
         if claim.vhash != vhash:
             raise ValueError("Claim with invalid verification hash")
@@ -3638,7 +3872,7 @@ class fin_VoucherBilling(object):
                 raise ValueError("Could not compensate debit %s" % debit.id)
             total += credit
 
-        # Mark the claim as paid + call onaccept
+        # Mark the claim as paid + call onaccept to trigger any notifications
         claim.update_record(status="PAID",
                             modified_on = ctable.modified_on,
                             modified_by = ctable.modified_by,
@@ -3658,6 +3892,10 @@ class fin_VoucherBilling(object):
                          modified_by = btable.modified_by,
                          modified_on = btable.modified_on,
                          )
+
+        # Check if billing is complete
+        cls(invoice.billing_id).check_complete()
+
         return total
 
     # -------------------------------------------------------------------------
@@ -3971,5 +4209,25 @@ def fin_voucher_start_billing(billing_id=None):
 
     claims = billing.generate_claims()
     return "Billing process started (%s claims generated)" % claims
+
+# =============================================================================
+def fin_voucher_settle_invoice(invoice_id=None, ptoken=None):
+    """
+        Scheduler task to settle an invoice, to be scheduled
+        via s3db_task
+
+        @param invoice_id: the invoice ID
+        @param ptoken: the processing authorization token
+
+        @returns: success message
+    """
+
+    if not invoice_id:
+        raise TypeError("Argument missing: invoice ID")
+    if not ptoken:
+        raise TypeError("Argument missing: authorization token")
+
+    quantity = fin_VoucherBilling.settle_invoice(invoice_id, ptoken)
+    return "Invoice settled (%s units compensated)" % quantity
 
 # END =========================================================================
