@@ -37,6 +37,7 @@ __all__ = ("FinExpensesModel",
            "fin_voucher_permitted_programs",
            "fin_voucher_eligibility_types",
            "fin_voucher_start_billing",
+           "fin_voucher_settle_invoice",
            )
 
 from gluon import *
