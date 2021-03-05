@@ -66,8 +66,6 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Find Test Station", link=False)(
                     MM("Test Stations for Everybody",
                        c = "org", f = "facility", m = "summary", vars={"$$code": "TESTS-PUBLIC"},
-                       # TODO remove once project goes public
-                       restrict = "ORG_GROUP_ADMIN",
                        ),
                     MM("Test Stations for School and Child Care Staff",
                        c = "org", f = "facility", m = "summary", vars={"$$code": "TESTS-SCHOOLS"},

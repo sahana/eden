@@ -1159,9 +1159,6 @@ def config(settings):
                     if code == "TESTS-SCHOOLS":
                         s3.crud_strings.org_facility.title_list = T("Test Stations for School and Child Care Staff")
                     elif code == "TESTS-PUBLIC":
-                        # TODO remove once project goes public
-                        if not current.auth.s3_has_role("ORG_GROUP_ADMIN"):
-                            r.unauthorised()
                         s3.crud_strings.org_facility.title_list = T("Test Stations for Everybody")
             else:
                 s3db = current.s3db
