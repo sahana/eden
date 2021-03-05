@@ -1151,9 +1151,13 @@ def config(settings):
             record = r.record
             if not record:
                 # Filter list by project code
+                # - re-use last used $$code filter of this session
                 # - default to original subset for consistency in bookmarks/links
-                code = r.get_vars.get("$$code", "TESTS-SCHOOLS")
+                session_s3 = current.session.s3
+                default_filter = session_s3.get("rlp_facility_filter", "TESTS-SCHOOLS")
+                code = r.get_vars.get("$$code", default_filter)
                 if code:
+                    session_s3.rlp_facility_filter = code
                     query = FS("~.organisation_id$project.code") == code
                     resource.add_filter(query)
                     if code == "TESTS-SCHOOLS":
