@@ -39,7 +39,9 @@ class S3MainMenu(default.S3MainMenu):
         """ Modules Menu """
 
         auth = current.auth
+
         has_role = auth.s3_has_role
+        has_roles = auth.s3_has_roles
 
         is_org_group_admin = lambda i: not has_role("ADMIN") and \
                                        has_role("ORG_GROUP_ADMIN")
@@ -83,9 +85,9 @@ class S3MainMenu(default.S3MainMenu):
         # Link to voucher management
         if auth.s3_logged_in():
             f = None
-            if has_role("PROGRAM_MANAGER"):
+            if has_roles(("PROGRAM_MANAGER", "PROGRAM_READER")):
                 label, f = "Voucher Programs", "voucher_program"
-            elif has_role("VOUCHER_PROVIDER"):
+            elif has_roles(("VOUCHER_PROVIDER", "PROVIDER_ACCOUNTANT")):
                 label, f = "Voucher Acceptance", "voucher_debit"
             elif has_role("VOUCHER_ISSUER"):
                 label, f = "Voucher Issuance", "voucher"

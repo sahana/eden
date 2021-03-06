@@ -1,7 +1,7 @@
 uid,role,description,hidden,controller,function,table,uacl,oacl,entity
+ANONYMOUS,Anonymous,Unauthenticated users,,gis,display_feature,,READ,,
 ANONYMOUS,Anonymous,Unauthenticated users,,gis,hdata,,READ,,
 ANONYMOUS,Anonymous,Unauthenticated users,,gis,ldata,,READ,,
-ANONYMOUS,Anonymous,Unauthenticated users,,gis,display_feature,,READ,,
 ANONYMOUS,Anonymous,Unauthenticated users,,org,facility,,READ,,
 ANONYMOUS,Anonymous,Unauthenticated users,,org,sites_for_org,,READ,,
 ANONYMOUS,Anonymous,Unauthenticated users,,,,gis_location,READ,,
@@ -28,6 +28,10 @@ AUTHENTICATED,Authenticated,,,,,pr_occupation_type,READ,,
 AUTHENTICATED,Authenticated,,,,,pr_occupation_type_person,CREATE|READ,UPDATE|DELETE,
 AUTHENTICATED,Authenticated,,,,,pr_person,NONE,READ|UPDATE|DELETE,
 AUTHENTICATED,Authenticated,,,,,pr_person_details,CREATE,READ|UPDATE,
+DISEASE_TEST_READER,Disease Test Reader,,,disease,case_diagnostics,,READ,,any
+DISEASE_TEST_READER,Disease Test Reader,,,disease,,,READ,,
+DISEASE_TEST_READER,Disease Test Reader,,,,,disease_case_diagnostics,READ,,any
+DISEASE_TEST_READER,Disease Test Reader,,,,,project_project,READ,,any
 MAP_ADMIN,,,true,gis,location,,CREATE|READ|UPDATE|DELETE,,
 ORG_ADMIN,Organisation Admin,,,admin,user,,CREATE|READ|UPDATE|DELETE,,
 ORG_ADMIN,Organisation Admin,,,hrm,person,,CREATE|READ|UPDATE|DELETE,,
@@ -44,9 +48,10 @@ ORG_ADMIN,Organisation Admin,,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,false,fin,,,READ,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,,hrm,person,,CREATE|READ|UPDATE|DELETE,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,,hrm,staff,,CREATE|READ|UPDATE|DELETE,,
-ORG_GROUP_ADMIN,Organisation Group Admin,,,org,,,CREATE|READ|UPDATE|DELETE,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,,org,organisation,,CREATE|READ|UPDATE|DELETE,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,org,,,CREATE|READ|UPDATE|DELETE,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,,,,fin_voucher,READ,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,,fin_voucher_claim,READ,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,,,,fin_voucher_debit,READ,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,,,,hrm_human_resource,CREATE|READ|UPDATE|DELETE,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,,,,org_facility,CREATE|READ|UPDATE|DELETE,,
@@ -58,6 +63,14 @@ ORG_GROUP_ADMIN,Organisation Group Admin,,,,,pr_contact,CREATE|READ|UPDATE|DELET
 ORG_GROUP_ADMIN,Organisation Group Admin,,,,,pr_contact_emergency,CREATE|READ|UPDATE|DELETE,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,,,,pr_person,CREATE|READ|UPDATE|DELETE,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,
+PROGRAM_ACCOUNTANT,Program Accountant,,,fin,voucher_debit,,READ,,
+PROGRAM_ACCOUNTANT,Program Accountant,,,fin,voucher_invoice,,READ|UPDATE,,
+PROGRAM_ACCOUNTANT,Program Accountant,,,fin,voucher_program,,READ,,any
+PROGRAM_ACCOUNTANT,Program Accountant,,,fin,,,READ,,
+PROGRAM_ACCOUNTANT,Program Accountant,,,,,fin_voucher_debit,READ,,
+PROGRAM_ACCOUNTANT,Program Accountant,,,,,fin_voucher_invoice,READ|UPDATE,,
+PROGRAM_ACCOUNTANT,Program Accountant,,,,,fin_voucher_program,READ,,
+PROGRAM_ACCOUNTANT,Program Accountant,,,,,org_group,READ,,any
 PROGRAM_MANAGER,Program Manager,,,fin,voucher_program,,CREATE|READ|UPDATE|DELETE,,
 PROGRAM_MANAGER,Program Manager,,,fin,voucher_program,,READ,,any
 PROGRAM_MANAGER,Program Manager,,,fin,,,READ,,
@@ -65,6 +78,18 @@ PROGRAM_MANAGER,Program Manager,,,,,fin_voucher_program,CREATE|READ|UPDATE|DELET
 PROGRAM_MANAGER,Program Manager,,,,,fin_voucher_transaction,READ,,
 PROGRAM_MANAGER,Program Manager,,,,,org_group,READ,,any
 PROGRAM_MANAGER,Program Manager,,,,,project_project,READ|UPDATE,,
+PROGRAM_READER,Program Reader,,,fin,voucher_program,,READ,,any
+PROGRAM_READER,Program Reader,,,fin,,,READ,,
+PROGRAM_READER,Program Reader,,,,,fin_voucher_program,READ,,
+PROGRAM_READER,Program Reader,,,,,org_group,READ,,any
+PROVIDER_ACCOUNTANT,Provider Accountant,,,fin,voucher,,NONE,,
+PROVIDER_ACCOUNTANT,Provider Accountant,,,fin,voucher_claim,,READ|UPDATE,,
+PROVIDER_ACCOUNTANT,Provider Accountant,,,fin,voucher_debit,,READ,,any
+PROVIDER_ACCOUNTANT,Provider Accountant,,,fin,voucher_program,,NONE,,
+PROVIDER_ACCOUNTANT,Provider Accountant,,,fin,,,READ,,
+PROVIDER_ACCOUNTANT,Provider Accountant,,,,,fin_voucher_claim,READ|UPDATE,,
+PROVIDER_ACCOUNTANT,Provider Accountant,,,,,fin_voucher_debit,READ,,
+PROVIDER_ACCOUNTANT,Provider Accountant,,,,,fin_voucher_program,READ,,any
 VOUCHER_ISSUER,Voucher Issuer,,,fin,voucher,,READ,,any
 VOUCHER_ISSUER,Voucher Issuer,,,fin,voucher,,CREATE|READ|UPDATE,,
 VOUCHER_ISSUER,Voucher Issuer,,,fin,voucher_debit,,NONE,,
@@ -75,17 +100,13 @@ VOUCHER_ISSUER,Voucher Issuer,,,,,fin_voucher_program,READ,,any
 VOUCHER_PROVIDER,Voucher Provider,,,disease,case_diagnostics,,CREATE|READ|UPDATE|DELETE,,
 VOUCHER_PROVIDER,Voucher Provider,,,disease,case_diagnostics,,READ,,any
 VOUCHER_PROVIDER,Voucher Provider,,,disease,,,READ,,
-VOUCHER_PROVIDER,Voucher Provider,,,,,disease_case_diagnostics,CREATE|READ|UPDATE|DELETE,,
 VOUCHER_PROVIDER,Voucher Provider,,,fin,voucher,,NONE,,
 VOUCHER_PROVIDER,Voucher Provider,,,fin,voucher_debit,,READ,,any
 VOUCHER_PROVIDER,Voucher Provider,,,fin,voucher_debit,,CREATE|READ|UPDATE,,
 VOUCHER_PROVIDER,Voucher Provider,,,fin,voucher_program,,NONE,,
 VOUCHER_PROVIDER,Voucher Provider,,,fin,,,READ,,
+VOUCHER_PROVIDER,Voucher Provider,,,,,disease_case_diagnostics,CREATE|READ|UPDATE|DELETE,,
 VOUCHER_PROVIDER,Voucher Provider,,,,,fin_voucher,READ,,any
 VOUCHER_PROVIDER,Voucher Provider,,,,,fin_voucher_debit,CREATE|READ|UPDATE,,
 VOUCHER_PROVIDER,Voucher Provider,,,,,fin_voucher_program,READ,,any
 VOUCHER_PROVIDER,Voucher Provider,,,,,project_project,READ,,any
-DISEASE_TEST_READER,Disease Test Reader,,,disease,case_diagnostics,,READ,,any
-DISEASE_TEST_READER,Disease Test Reader,,,disease,,,READ,,
-DISEASE_TEST_READER,Disease Test Reader,,,,,disease_case_diagnostics,READ,,any
-DISEASE_TEST_READER,Disease Test Reader,,,,,project_project,READ,,any
