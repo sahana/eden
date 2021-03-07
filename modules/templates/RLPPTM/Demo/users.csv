@@ -1,5 +1,5 @@
 First Name,Last Name,Email,Password,Role,Organisation,Language
-ADD,Accountant,add@example.com,eden,"ORG_ADMIN,PROGRAM_ACCOUNTANT/org_group.name=COVID-19 Teststellen,PROGRAM_READER/org_organisation.acronym=LSJV",Aufsichts- und Dienstleistungsdirektion,de
+ADD,Accountant,add@example.com,eden,"ORG_ADMIN,PROGRAM_ACCOUNTANT",Aufsichts- und Dienstleistungsdirektion,de
 GS Linz,Admin,gs_linz_admin@example.com,eden,"VOUCHER_ISSUER,ORG_ADMIN",GS Linz,de
 LSJV,Admin,lsjv_admin@example.com,eden,"ORG_GROUP_ADMIN/0,ORG_ADMIN,PROGRAM_MANAGER,DISEASE_TEST_READER","Landesamt für Soziales, Jugend und Versorgung",de
 LSJV,OrgGroupAdmin,lsjv_ogadmin@example.com,eden,"ORG_GROUP_ADMIN/0,ORG_ADMIN","Landesamt für Soziales, Jugend und Versorgung",de

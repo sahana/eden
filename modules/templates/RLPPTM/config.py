@@ -60,10 +60,12 @@ def config(settings):
     settings.auth.password_retrieval = True
 
     settings.auth.realm_entity_types = ("org_group", "org_organisation")
-    settings.auth.privileged_roles = {"PROGRAM_MANAGER": "ORG_GROUP_ADMIN",
+    settings.auth.privileged_roles = {"DISEASE_TEST_READER": "ORG_GROUP_ADMIN",
+                                      "PROGRAM_ACCOUNTANT": "PROGRAM_ACCOUNTANT",
+                                      "PROGRAM_MANAGER": "ORG_GROUP_ADMIN",
+                                      "PROVIDER_ACCOUNTANT": "PROVIDER_ACCOUNTANT",
                                       "VOUCHER_ISSUER": "VOUCHER_ISSUER",
                                       "VOUCHER_PROVIDER": "VOUCHER_PROVIDER",
-                                      "DISEASE_TEST_READER": "ORG_GROUP_ADMIN",
                                       }
 
     settings.auth.password_min_length = 8
@@ -230,9 +232,36 @@ def config(settings):
         #    # Debits are owned by the provider PE (default ok)
         #    realm_entity = 0
         #
-        elif tablename == "fin_voucher_transaction":
+        #elif tablename == "fin_voucher_claim":
+        #
+        #    # Claims are owned by the provider PE (default ok)
+        #    realm_entity = 0
+        #
+        elif tablename == "fin_voucher_invoice":
 
-            # Vouchers inherit the realm-entity from the program
+            # Invoices are owned by the accountant organization of the billing
+            table = s3db.table(tablename)
+            btable = s3db.fin_voucher_billing
+            query = (table._id == row.id) & \
+                    (btable.id == table.billing_id)
+            billing = db(query).select(btable.organisation_id,
+                                       btable.realm_entity,
+                                       limitby = (0, 1),
+                                       ).first()
+            if billing:
+                organisation_id = billing.organisation_id
+                if organisation_id:
+                    realm_entity = s3db.pr_get_pe_id("org_organisation",
+                                                     organisation_id,
+                                                     )
+                else:
+                    realm_entity = billing.realm_entity
+
+        elif tablename in ("fin_voucher_billing",
+                           "fin_voucher_transaction",
+                           ):
+
+            # Billings and transactions inherit realm-entity of the program
             table = s3db.table(tablename)
             ptable = s3db.fin_voucher_program
             query = (table._id == row.id) & \
@@ -242,7 +271,6 @@ def config(settings):
                                        ).first()
             if program:
                 realm_entity = program.realm_entity
-
 
         return realm_entity
 
@@ -549,6 +577,9 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_fin_voucher_resource(r, tablename):
 
+        auth = current.auth
+        has_role = auth.s3_has_role
+
         s3db = current.s3db
         table = s3db.fin_voucher
 
@@ -576,6 +607,8 @@ def config(settings):
                                             intro,
                                             ),
                                    )
+        if not has_role("VOUCHER_ISSUER"):
+            field.readable = field.writable = False
 
         field = table.initial_credit
         field.label = T("Number of Beneficiaries")
@@ -593,10 +626,22 @@ def config(settings):
                                               T("Notes of the Issuer"),
                                               ),
                             )
+        if not has_role("VOUCHER_PROVIDER"):
+            field.readable = field.writable = False
 
         # Custom list fields
-        has_role = current.auth.s3_has_role
-        if has_role("PROGRAM_MANAGER"):
+        if has_role("VOUCHER_ISSUER"):
+            list_fields = ["program_id",
+                           "signature",
+                           (T("Beneficiary/Representative Date of Birth"), "bearer_dob"),
+                           "initial_credit",
+                           "credit_spent",
+                           (T("Status"), "status"),
+                           "date",
+                           #"valid_until",
+                           "comments",
+                           ]
+        else:
             list_fields = ["program_id",
                            "signature",
                            (T("Status"), "status"),
@@ -607,17 +652,6 @@ def config(settings):
                            "credit_spent",
                            "date",
                            #"valid_until",
-                           ]
-        elif has_role("VOUCHER_ISSUER"):
-            list_fields = ["program_id",
-                           "signature",
-                           (T("Beneficiary/Representative Date of Birth"), "bearer_dob"),
-                           "initial_credit",
-                           "credit_spent",
-                           (T("Status"), "status"),
-                           "date",
-                           #"valid_until",
-                           "comments",
                            ]
 
         # Report Options
@@ -844,7 +878,63 @@ def config(settings):
     settings.customise_fin_voucher_controller = customise_fin_voucher_controller
 
     # -------------------------------------------------------------------------
+    def customise_fin_voucher_claim_resource(r, tablename):
+
+        auth = current.auth
+        s3db = current.s3db
+
+        table = s3db.fin_voucher_claim
+
+        is_provider_accountant = auth.s3_has_role("PROVIDER_ACCOUNTANT")
+
+        if not is_provider_accountant:
+            # Hide comments
+            field = table.comments
+            field.readable = field.writable = False
+
+        # Custom list fields
+        list_fields = [#"refno",
+                       "date",
+                       "program_id",
+                       #"pe_id",
+                       "vouchers_total",
+                       "quantity_total",
+                       "amount_receivable",
+                       "currency",
+                       "status",
+                       ]
+        if is_provider_accountant:
+            list_fields.insert(0, "refno")
+            text_fields = ["refno",
+                           "comments",
+                           ]
+        else:
+            list_fields.insert(2, "pe_id")
+            text_fields = ["pe_id$pe_id:org_organisation.name",
+                           ]
+
+        # Filter widgets
+        from s3 import S3TextFilter, S3OptionsFilter, s3_get_filter_opts
+        filter_widgets = [S3TextFilter(text_fields,
+                                       label = T("Search"),
+                                       ),
+                          S3OptionsFilter("program_id",
+                                          options = lambda: s3_get_filter_opts("fin_voucher_program"),
+                                          ),
+                          ]
+
+        s3db.configure("fin_voucher_claim",
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_fin_voucher_claim_resource = customise_fin_voucher_claim_resource
+
+    # -------------------------------------------------------------------------
     def customise_fin_voucher_debit_resource(r, tablename):
+
+        auth = current.auth
+        has_role = auth.s3_has_role
 
         s3db = current.s3db
         table = s3db.fin_voucher_debit
@@ -862,6 +952,8 @@ def config(settings):
                                               T("Notes of the Provider"),
                                               ),
                             )
+        if not has_role("VOUCHER_PROVIDER"):
+            field.readable = field.writable = False
 
         field = table.bearer_dob
         if group_voucher:
@@ -869,6 +961,8 @@ def config(settings):
         else:
             label = T("Beneficiary Date of Birth")
         field.label = label
+        if not has_role("VOUCHER_ISSUER"):
+            field.readable = field.writable = False
 
         field = table.quantity
         if group_voucher:
@@ -888,12 +982,12 @@ def config(settings):
                        "quantity",
                        "status",
                        ]
-        if current.auth.s3_has_role("PROGRAM_MANAGER"):
+        if current.auth.s3_has_roles(("PROGRAM_MANAGER", "PROGRAM_ACCOUNTANT")):
             # Include issuer and provider
             list_fields[3:3] = ["voucher_id$pe_id",
                                 "pe_id",
                                 ]
-        if current.auth.s3_has_role("VOUCHER_PROVIDER"):
+        if has_role("VOUCHER_PROVIDER"):
             # Include provider notes
             list_fields.append("comments")
 

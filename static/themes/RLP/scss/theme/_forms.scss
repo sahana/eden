@@ -233,6 +233,9 @@ select {
 }
 
 /* Form and Item containers */
+.form-info {
+    min-height: 1.2rem;
+}
 #last_update,
 #markDuplicate {
     float: right;
@@ -240,7 +243,8 @@ select {
     text-align: right;
 }
 #markDuplicate {
-    margin-bottom: 1rem;
+    margin-bottom: 0;
+    margin-top: -0.5rem;
 }
 body.rtl {
     #last_update,

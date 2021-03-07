@@ -91,13 +91,32 @@ def voucher_claim():
         return True
     s3.prep = prep
 
-    return s3_rest_controller()
+    return s3_rest_controller(rheader = s3db.fin_rheader)
 
 # -----------------------------------------------------------------------------
 def voucher_invoice():
     """ Voucher Invoice: RESTful CRUD controller """
 
-    return s3_rest_controller()
+    def prep(r):
+
+        table = r.resource.table
+
+        record = r.record
+        if not record or record.status != "PAID":
+            # Make additional fields writable in unpaid invoices
+            writable = ("po_number",
+                        "status",
+                        "reason",
+                        )
+            for fn in writable:
+                field = table[fn]
+                if field.readable:
+                    field.writable = True
+
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller(rheader = s3db.fin_rheader)
 
 # -----------------------------------------------------------------------------
 def payment_service():

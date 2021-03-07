@@ -63,13 +63,15 @@ ORG_GROUP_ADMIN,Organisation Group Admin,,,,,pr_contact,CREATE|READ|UPDATE|DELET
 ORG_GROUP_ADMIN,Organisation Group Admin,,,,,pr_contact_emergency,CREATE|READ|UPDATE|DELETE,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,,,,pr_person,CREATE|READ|UPDATE|DELETE,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,
-PROGRAM_ACCOUNTANT,Program Accountant,,,fin,voucher_debit,,READ,,
+PROGRAM_ACCOUNTANT,Program Accountant,,,fin,voucher,,NONE,,
+PROGRAM_ACCOUNTANT,Program Accountant,,,fin,voucher_debit,,READ,,any
 PROGRAM_ACCOUNTANT,Program Accountant,,,fin,voucher_invoice,,READ|UPDATE,,
 PROGRAM_ACCOUNTANT,Program Accountant,,,fin,voucher_program,,READ,,any
 PROGRAM_ACCOUNTANT,Program Accountant,,,fin,,,READ,,
-PROGRAM_ACCOUNTANT,Program Accountant,,,,,fin_voucher_debit,READ,,
+PROGRAM_ACCOUNTANT,Program Accountant,,,,,fin_voucher,READ,,any
+PROGRAM_ACCOUNTANT,Program Accountant,,,,,fin_voucher_debit,READ,,any
 PROGRAM_ACCOUNTANT,Program Accountant,,,,,fin_voucher_invoice,READ|UPDATE,,
-PROGRAM_ACCOUNTANT,Program Accountant,,,,,fin_voucher_program,READ,,
+PROGRAM_ACCOUNTANT,Program Accountant,,,,,fin_voucher_program,READ,,any
 PROGRAM_ACCOUNTANT,Program Accountant,,,,,org_group,READ,,any
 PROGRAM_MANAGER,Program Manager,,,fin,voucher_program,,CREATE|READ|UPDATE|DELETE,,
 PROGRAM_MANAGER,Program Manager,,,fin,voucher_program,,READ,,any
@@ -78,15 +80,13 @@ PROGRAM_MANAGER,Program Manager,,,,,fin_voucher_program,CREATE|READ|UPDATE|DELET
 PROGRAM_MANAGER,Program Manager,,,,,fin_voucher_transaction,READ,,
 PROGRAM_MANAGER,Program Manager,,,,,org_group,READ,,any
 PROGRAM_MANAGER,Program Manager,,,,,project_project,READ|UPDATE,,
-PROGRAM_READER,Program Reader,,,fin,voucher_program,,READ,,any
-PROGRAM_READER,Program Reader,,,fin,,,READ,,
-PROGRAM_READER,Program Reader,,,,,fin_voucher_program,READ,,
-PROGRAM_READER,Program Reader,,,,,org_group,READ,,any
 PROVIDER_ACCOUNTANT,Provider Accountant,,,fin,voucher,,NONE,,
 PROVIDER_ACCOUNTANT,Provider Accountant,,,fin,voucher_claim,,READ|UPDATE,,
+PROVIDER_ACCOUNTANT,Provider Accountant,,,fin,voucher_claim,,READ,,any
 PROVIDER_ACCOUNTANT,Provider Accountant,,,fin,voucher_debit,,READ,,any
 PROVIDER_ACCOUNTANT,Provider Accountant,,,fin,voucher_program,,NONE,,
 PROVIDER_ACCOUNTANT,Provider Accountant,,,fin,,,READ,,
+PROVIDER_ACCOUNTANT,Provider Accountant,,,,,fin_voucher,READ,,any
 PROVIDER_ACCOUNTANT,Provider Accountant,,,,,fin_voucher_claim,READ|UPDATE,,
 PROVIDER_ACCOUNTANT,Provider Accountant,,,,,fin_voucher_debit,READ,,
 PROVIDER_ACCOUNTANT,Provider Accountant,,,,,fin_voucher_program,READ,,any

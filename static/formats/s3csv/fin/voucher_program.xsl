@@ -12,6 +12,9 @@
          Description..........string..........Description
          Issuers..............string..........Organisation Group Name
          Providers............string..........Organisation Group Name
+         Unit.................string..........Service Unit
+         Price Per Unit.......float...........Price per Service Unit
+         Currency.............string..........Currency for Unit Price
          Instructions.........text............Instructions to Voucher Bearers
 
     *********************************************************************** -->
@@ -69,6 +72,17 @@
             </data>
             <data field="description">
                 <xsl:value-of select="col[@field='Description']/text()"/>
+            </data>
+
+            <!-- Service Unit and Price Details -->
+            <data field="unit">
+                <xsl:value-of select="col[@field='Unit']/text()"/>
+            </data>
+            <data field="price_per_unit">
+                <xsl:value-of select="col[@field='Price Per Unit']/text()"/>
+            </data>
+            <data field="currency">
+                <xsl:value-of select="col[@field='Currency']/text()"/>
             </data>
 
             <!-- Link to Organisation -->

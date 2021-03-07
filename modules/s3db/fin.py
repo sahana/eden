@@ -213,6 +213,7 @@ class FinVoucherModel(S3Model):
         define_table(tablename,
                      self.org_organisation_id(
                             label = T("Administrator##fin"),
+                            comment = None,
                             empty = False,
                             ),
                      self.project_project_id(
@@ -359,6 +360,10 @@ class FinVoucherModel(S3Model):
         tablename = "fin_voucher_billing"
         define_table(tablename,
                      program_id(ondelete="RESTRICT"),
+                     self.org_organisation_id(
+                            label = T("Accountant##billing"),
+                            comment = None,
+                            ),
                      s3_date(default = "now",
                              writable = False, # Only writable while scheduled
                              ),
@@ -460,9 +465,9 @@ class FinVoucherModel(S3Model):
         # - invoice for a provider claim
         #
         invoice_status = (("NEW", T("New")),
-                          ("VERIFIED", T("Verified")),
-                          ("APPROVED", T("Approved")),
-                          ("REJECTED", T("Rejected")),
+                          #("VERIFIED", T("Verified")),
+                          ("APPROVED", T("Approved##actionable")),
+                          ("REJECTED", T("Rejected##claim")),
                           ("PAID", T("Paid")),
                           )
 
@@ -496,11 +501,17 @@ class FinVoucherModel(S3Model):
                            ),
                      Field("po_number",
                            label = T("Payment Order Number"),
+                           writable = False,
                            ),
+                     self.hrm_human_resource_id(
+                            label = T("Official in Charge"),
+                            widget = None,
+                            comment = None,
+                            ),
 
                      # Totals
                      Field("quantity_total", "integer",
-                           label = T("Total Service Quantity"),
+                           label = T("Service Quantity"),
                            writable = False,
                            ),
                      Field("price_per_unit", "float",
@@ -517,6 +528,7 @@ class FinVoucherModel(S3Model):
 
                      # Bank account details
                      Field("account_holder",
+                           label = T("Account Holder"),
                            writable = False,
                            ),
                      Field("account_number",
@@ -526,9 +538,11 @@ class FinVoucherModel(S3Model):
                            writable = False,
                            ),
                      Field("bank_name",
+                           label = T("Bank Name"),
                            writable = False,
                            ),
                      Field("bank_address",
+                           label = T("Bank Address"),
                            # Enable in template if required:
                            readable = False,
                            writable = False,
@@ -543,11 +557,13 @@ class FinVoucherModel(S3Model):
                                                 ),
                            represent = S3Represent(options=dict(invoice_status),
                                                    ),
+                           writable = False,
                            ),
                      Field("reason", "text",
-                           label = T("Reason for Dispute"),
+                           label = T("Reason for Rejection"),
                            represent = s3_text_represent,
                            widget = s3_comments_widget,
+                           writable = False,
                            ),
 
                      # Verification hash of the underlying claim
@@ -580,9 +596,22 @@ class FinVoucherModel(S3Model):
                        "status",
                        ]
 
-        # TODO filter widgets
+        # Filter widgets
+        filter_widgets = [S3TextFilter(["refno",
+                                        "po_number",
+                                        ],
+                                       label = T("Search"),
+                                       ),
+                          S3OptionsFilter("status",
+                                          options = OrderedDict(invoice_status),
+                                          sort = False,
+                                          ),
+                          S3OptionsFilter("human_resource_id",
+                                          ),
+                          ]
 
         self.configure(tablename,
+                       filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        insertable = False, # will be auto-created from claim
                        deletable = False,
@@ -723,6 +752,11 @@ class FinVoucherModel(S3Model):
 
                      s3_comments(),
                      *s3_meta_fields())
+
+        # Components
+        self.add_components(tablename,
+                            fin_voucher_debit = "claim_id",
+                            )
 
         # List fields
         list_fields = ["id",
@@ -1249,7 +1283,13 @@ class FinVoucherModel(S3Model):
 
         if billing.status == "SCHEDULED" and billing.date:
 
-            start = datetime.datetime.combine(billing.date, datetime.time(22,0,0))
+            now = datetime.datetime.utcnow()
+            start = datetime.datetime.combine(billing.date, datetime.time(0,0,0))
+            if start < now:
+                # Earliest start time 30 seconds in the future
+                # => to leave a grace period to manually abort the process
+                start = now + datetime.timedelta(seconds=30)
+
             if task:
                 # Make sure task starts at the right time
                 if task.status not in ("ASSIGNED", "RUNNING"):
@@ -1395,7 +1435,8 @@ class FinVoucherModel(S3Model):
                 if record.comments:
                     comments.append(record.comments)
                 record.update_record(comments = "\n\n".join(comments))
-
+            else:
+                current.session.information = current.T("Invoice issued")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1472,7 +1513,7 @@ class FinVoucherModel(S3Model):
                 if not change_status:
                     status = record.status
                 if status == "REJECTED":
-                    check = (("reason", T("Reason is required")),
+                    check = (("reason", T("Reason must be specified")),
                              )
                 elif status == "PAID":
                     check = (("po_number", T("Payment order number is required")),
@@ -1543,36 +1584,13 @@ class FinVoucherModel(S3Model):
                                  modified_by = table.modified_by,
                                  modified_on = table.modified_on,
                                  )
-
-            s3task = current.s3task
-            settle_async = s3task._is_alive()
-            if settle_async:
-                # Schedule task (not using run_async to allow delayed start)
-                start = datetime.datetime.utcnow() + datetime.timedelta(seconds=3)
-                application = "%s/default" % current.request.application
-                s3task.scheduler.queue_task("s3db_task",
-                                            pargs = ["fin_voucher_settle_invoice"],
-                                            pvars = {"invoice_id": record.id,
-                                                     "ptoken": ptoken,
-                                                     },
-                                            application_name = application,
-                                            start_time = start,
-                                            stop_time = None,
-                                            timeout = 600,
-                                            repeats = 1,
-                                            )
-            else:
-                # Run synchronously
-                # NB this can take a long time if there are many debits
-                try:
-                    fin_voucher_settle_invoice(invoice_id = record.id,
-                                               ptoken = ptoken,
-                                               )
-                except (TypeError, ValueError):
-                    import sys
-                    msg = sys.exc_info()[1]
-                    current.response.error = msg
-                    current.log.error(msg)
+            current.s3task.run_async("s3db_task",
+                                     args = ["fin_voucher_settle_invoice"],
+                                     vars = {"invoice_id": record.id,
+                                             "ptoken": ptoken,
+                                             },
+                                     timeout = 600,
+                                     )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2807,6 +2825,27 @@ def fin_rheader(r, tabs=None):
             rheader_fields = [["organisation_id"],
                               ]
             rheader_title = "name"
+
+        elif tablename == "fin_voucher_claim":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        (T("Accepted Vouchers"), "voucher_debit"),
+                        ]
+            rheader_fields = [["date"],
+                              ["status"],
+                              ]
+            rheader_title = "pe_id"
+
+        elif tablename == "fin_voucher_invoice":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        ]
+            rheader_fields = [["date"],
+                              ["status"],
+                              ]
+            rheader_title = "pe_id"
 
         elif tablename == "fin_payment_service":
 
@@ -4212,7 +4251,7 @@ def fin_voucher_start_billing(billing_id=None):
     return "Billing process started (%s claims generated)" % claims
 
 # =============================================================================
-def fin_voucher_settle_invoice(invoice_id=None, ptoken=None):
+def fin_voucher_settle_invoice(invoice_id=None, ptoken=None, user_id=None):
     """
         Scheduler task to settle an invoice, to be scheduled
         via s3db_task
@@ -4223,10 +4262,20 @@ def fin_voucher_settle_invoice(invoice_id=None, ptoken=None):
         @returns: success message
     """
 
-    if not invoice_id:
-        raise TypeError("Argument missing: invoice ID")
+    auth = current.auth
+    if user_id and not auth.s3_logged_in():
+        auth.s3_impersonate(user_id)
+
     if not ptoken:
         raise TypeError("Argument missing: authorization token")
+    if not invoice_id:
+        raise TypeError("Argument missing: invoice ID")
+    if not auth.s3_has_permission("update", "fin_voucher_invoice",
+                                  record_id = invoice_id,
+                                  c = "fin",
+                                  f = "voucher_invoice",
+                                  ):
+        raise auth.permission.error("Operation not permitted")
 
     quantity = fin_VoucherBilling.settle_invoice(invoice_id, ptoken)
     return "Invoice settled (%s units compensated)" % quantity

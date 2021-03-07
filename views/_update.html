@@ -21,8 +21,10 @@
  </div>
  <div id='map' class='small-12 columns'></div>
  <div class='small-12 columns'>
-  {{include "last_update.html"}}
-  {{include "key.html"}}
+  <div class='form-info'>
+   {{include "last_update.html"}}
+   {{include "key.html"}}
+  </div>
   <div class='form-container'>
    {{try:}}{{=form}}{{except:}}{{pass}}
   </div>
