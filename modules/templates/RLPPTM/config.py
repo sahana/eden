@@ -961,7 +961,7 @@ def config(settings):
         else:
             label = T("Beneficiary Date of Birth")
         field.label = label
-        if not has_role("VOUCHER_ISSUER"):
+        if not has_role("VOUCHER_PROVIDER"):
             field.readable = field.writable = False
 
         field = table.quantity
