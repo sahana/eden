@@ -846,7 +846,7 @@ class FinVoucherModel(S3Model):
             msg_record_created = T("Eligibility Type created"),
             msg_record_modified = T("Eligibility Type updated"),
             msg_record_deleted = T("Eligibility Type deleted"),
-            msg_list_empty = T("No Eligibility Types currently registered"),
+            msg_list_empty = T("No Eligibility Types currently defined"),
         )
 
         represent = S3Represent(lookup = tablename, translate = True)
