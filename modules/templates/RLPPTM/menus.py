@@ -43,10 +43,8 @@ class S3MainMenu(default.S3MainMenu):
         has_role = auth.s3_has_role
         has_roles = auth.s3_has_roles
 
-        is_org_group_admin = lambda i: not has_role("ADMIN") and \
-                                       has_role("ORG_GROUP_ADMIN")
-        report_results = lambda i: not has_role("ADMIN") and \
-                                   has_role("VOUCHER_PROVIDER") and \
+        is_org_group_admin = lambda i: has_role("ORG_GROUP_ADMIN", include_admin=False)
+        report_results = lambda i: has_role("VOUCHER_PROVIDER", include_admin=False) and \
                                    len(get_stats_projects()) > 0
 
         menu = [MM("Organizations",
@@ -164,8 +162,7 @@ class S3MainMenu(default.S3MainMenu):
                               )
         else:
             s3_has_role = auth.s3_has_role
-            is_org_admin = lambda i: not s3_has_role(ADMIN) and \
-                                     s3_has_role("ORG_ADMIN")
+            is_org_admin = lambda i: s3_has_role("ORG_ADMIN", include_admin=False)
             menu_personal = MP()(
                         MP("Administration", c="admin", f="index",
                            restrict = ADMIN,

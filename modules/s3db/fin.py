@@ -417,6 +417,7 @@ class FinVoucherModel(S3Model):
         # List fields
         list_fields = ["program_id",
                        "date",
+                       "organisation_id",
                        "quantity_total",
                        "quantity_invoiced",
                        "quantity_compensated",
@@ -1314,7 +1315,7 @@ class FinVoucherModel(S3Model):
                 if task:
                     task_id = task.id
 
-        elif task.status == "QUEUED":
+        elif task and task.status == "QUEUED":
             # Remove the task
             task.delete_record()
             task_id = None

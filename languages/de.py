@@ -2680,7 +2680,7 @@
 'Invoice issued': 'Rechnung ausgestellt',
 'Invoice updated': 'Rechnung aktualisiert',
 'Invoice': 'Rechnung',
-'Invoiced': 'Rechnung ausgestellt',
+'Invoiced': 'Rechnung gestellt',
 'Invoices': 'Rechnungen',
 'Iran (Islamic Republic of)': 'Iran (Islamische Republik von)',
 'Iraq': 'Irak',

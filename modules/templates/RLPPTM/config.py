@@ -878,59 +878,6 @@ def config(settings):
     settings.customise_fin_voucher_controller = customise_fin_voucher_controller
 
     # -------------------------------------------------------------------------
-    def customise_fin_voucher_claim_resource(r, tablename):
-
-        auth = current.auth
-        s3db = current.s3db
-
-        table = s3db.fin_voucher_claim
-
-        is_provider_accountant = auth.s3_has_role("PROVIDER_ACCOUNTANT")
-
-        if not is_provider_accountant:
-            # Hide comments
-            field = table.comments
-            field.readable = field.writable = False
-
-        # Custom list fields
-        list_fields = [#"refno",
-                       "date",
-                       "program_id",
-                       #"pe_id",
-                       "vouchers_total",
-                       "quantity_total",
-                       "amount_receivable",
-                       "currency",
-                       "status",
-                       ]
-        if is_provider_accountant:
-            list_fields.insert(0, "refno")
-            text_fields = ["refno",
-                           "comments",
-                           ]
-        else:
-            list_fields.insert(2, "pe_id")
-            text_fields = ["pe_id$pe_id:org_organisation.name",
-                           ]
-
-        # Filter widgets
-        from s3 import S3TextFilter, S3OptionsFilter, s3_get_filter_opts
-        filter_widgets = [S3TextFilter(text_fields,
-                                       label = T("Search"),
-                                       ),
-                          S3OptionsFilter("program_id",
-                                          options = lambda: s3_get_filter_opts("fin_voucher_program"),
-                                          ),
-                          ]
-
-        s3db.configure("fin_voucher_claim",
-                       filter_widgets = filter_widgets,
-                       list_fields = list_fields,
-                       )
-
-    settings.customise_fin_voucher_claim_resource = customise_fin_voucher_claim_resource
-
-    # -------------------------------------------------------------------------
     def customise_fin_voucher_debit_resource(r, tablename):
 
         auth = current.auth
@@ -1055,12 +1002,24 @@ def config(settings):
             db = current.db
             s3db = current.s3db
 
+            resource = r.resource
+
+            has_role = current.auth.s3_has_role
+            if has_role("PROGRAM_ACCOUNTANT") and not has_role("PROGRAM_MANAGER"):
+
+                # PROGRAM_ACCOUNTANT can only see debits where they are assigned
+                # for the billing process
+                from .helpers import get_role_realms
+                role_realms = get_role_realms("PROGRAM_ACCOUNTANT")
+                if role_realms is not None:
+                    query = FS("billing_id$organisation_id$pe_id").belongs(role_realms)
+                    resource.add_filter(query)
+
             # Check which programs and organisations the user can accept vouchers for
             program_ids, org_ids, pe_ids = s3db.fin_voucher_permitted_programs(
                                                         mode = "provider",
                                                         partners_only = True,
                                                         )
-            resource = r.resource
             table = resource.table
 
             if not program_ids or not org_ids:
@@ -1136,12 +1095,212 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_fin_voucher_program_controller(**attr):
 
+        s3 = current.response.s3
+
         # Enable bigtable features
         settings.base.bigtable = True
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            resource = r.resource
+
+            has_role = current.auth.s3_has_role
+            if has_role("PROGRAM_ACCOUNTANT") and not has_role("PROGRAM_MANAGER"):
+
+                # PROGRAM_ACCOUNTANT can only see programs where they are
+                # assigned for a billing process
+                from .helpers import get_role_realms
+                role_realms = get_role_realms("PROGRAM_ACCOUNTANT")
+                if role_realms is not None:
+                    query = FS("voucher_billing.organisation_id$pe_id").belongs(role_realms)
+                    resource.add_filter(query)
+
+            return result
+        s3.prep = prep
 
         return attr
 
     settings.customise_fin_voucher_program_controller = customise_fin_voucher_program_controller
+
+    # -------------------------------------------------------------------------
+    def billing_onaccept(form):
+        """
+            Custom onaccept of billing:
+            - make sure all invoices are owned by the accountant
+              organisation (as long as they are the accountants in charge)
+        """
+
+        # Get record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get the billing/program organisations
+        table = s3db.fin_voucher_billing
+        ptable = s3db.fin_voucher_program
+        left = ptable.on((ptable.id == table.program_id) & \
+                         (ptable.deleted == False))
+        query = (table.id == record_id)
+        row = db(query).select(table.id,
+                               table.organisation_id,
+                               ptable.organisation_id,
+                               left = left,
+                               limitby = (0, 1),
+                               ).first()
+        if not row:
+            return
+
+        # Identify the organisation to own the invoices under this process
+        billing = row.fin_voucher_billing
+        organisation_id = billing.organisation_id
+        if not organisation_id:
+            organisation_id = row.fin_voucher_program.organisation_id
+
+        # Update the realm entity as needed
+        if organisation_id:
+            pe_id = s3db.pr_get_pe_id("org_organisation", organisation_id)
+            itable = s3db.fin_voucher_invoice
+            query = (itable.billing_id == billing.id) & \
+                    (itable.realm_entity != pe_id) & \
+                    (itable.deleted == False)
+            current.auth.set_realm_entity(itable,
+                                          query,
+                                          entity = pe_id,
+                                          force_update = True,
+                                          )
+
+    # -------------------------------------------------------------------------
+    def customise_fin_voucher_billing_resource(r, tablename):
+
+        s3db = current.s3db
+        table = current.s3db.fin_voucher_billing
+
+        # Color-coded representation of billing process status
+        from s3 import S3PriorityRepresent
+        field = table.status
+        try:
+            status_opts = field.represent.options
+        except AttributeError:
+            pass
+        else:
+            field.represent = S3PriorityRepresent(status_opts,
+                                                  {"SCHEDULED": "lightblue",
+                                                   "IN PROGRESS": "amber",
+                                                   "ABORTED": "black",
+                                                   "COMPLETE": "green",
+                                                   }).represent
+
+        # Custom onaccept to maintain realm-assignment of invoices
+        # when accountant organisation changes
+        s3db.add_custom_callback("fin_voucher_billing",
+                                 "onaccept",
+                                 billing_onaccept,
+                                 )
+
+    settings.customise_fin_voucher_billing_resource = customise_fin_voucher_billing_resource
+
+    # -------------------------------------------------------------------------
+    def customise_fin_voucher_claim_resource(r, tablename):
+
+        auth = current.auth
+        s3db = current.s3db
+
+        table = s3db.fin_voucher_claim
+
+        is_provider_accountant = auth.s3_has_role("PROVIDER_ACCOUNTANT")
+
+        if not is_provider_accountant:
+            # Hide comments
+            field = table.comments
+            field.readable = field.writable = False
+
+        # Color-coded representation of claim status
+        from s3 import S3PriorityRepresent
+        field = table.status
+        try:
+            status_opts = field.represent.options
+        except AttributeError:
+            pass
+        else:
+            field.represent = S3PriorityRepresent(status_opts,
+                                                  {"NEW": "lightblue",
+                                                   "CONFIRMED": "blue",
+                                                   "INVOICED": "amber",
+                                                   "PAID": "green",
+                                                   }).represent
+
+        # Custom list fields
+        list_fields = [#"refno",
+                       "date",
+                       "program_id",
+                       #"pe_id",
+                       "vouchers_total",
+                       "quantity_total",
+                       "amount_receivable",
+                       "currency",
+                       "status",
+                       ]
+        if is_provider_accountant:
+            list_fields.insert(0, "refno")
+            text_fields = ["refno",
+                           "comments",
+                           ]
+        else:
+            list_fields.insert(2, "pe_id")
+            text_fields = ["pe_id$pe_id:org_organisation.name",
+                           ]
+
+        # Filter widgets
+        from s3 import S3TextFilter, S3OptionsFilter, s3_get_filter_opts
+        filter_widgets = [S3TextFilter(text_fields,
+                                       label = T("Search"),
+                                       ),
+                          S3OptionsFilter("program_id",
+                                          options = lambda: s3_get_filter_opts("fin_voucher_program"),
+                                          ),
+                          ]
+
+        s3db.configure("fin_voucher_claim",
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_fin_voucher_claim_resource = customise_fin_voucher_claim_resource
+
+    # -------------------------------------------------------------------------
+    def customise_fin_voucher_invoice_resource(r, tablename):
+
+        s3db = current.s3db
+
+        table = s3db.fin_voucher_invoice
+
+        # Color-coded representation of invoice status
+        from s3 import S3PriorityRepresent
+        field = table.status
+        try:
+            status_opts = field.represent.options
+        except AttributeError:
+            pass
+        else:
+            field.represent = S3PriorityRepresent(status_opts,
+                                                  {"NEW": "lightblue",
+                                                   "APPROVED": "blue",
+                                                   "REJECTED": "red",
+                                                   "PAID": "green",
+                                                   }).represent
+
+    settings.customise_fin_voucher_invoice_resource = customise_fin_voucher_invoice_resource
 
     # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):

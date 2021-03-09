@@ -12,6 +12,42 @@ from gluon import current, CRYPT, Field, INPUT, SQLFORM, \
 from s3 import S3Method, s3_mark_required
 
 # =============================================================================
+def get_role_realms(role):
+    """
+        Get all realms for which a role has been assigned
+
+        @param role: the role ID or role UUID
+
+        @returns: list of pe_ids the current user has the role for,
+                  None if the role is assigned site-wide, or an
+                  empty list if the user does not have the role, or
+                  no realm for the role
+    """
+
+    db = current.db
+    auth = current.auth
+    s3db = current.s3db
+
+    if isinstance(role, str):
+        gtable = auth.settings.table_group
+        query = (gtable.uuid == role) & \
+                (gtable.deleted == False)
+        row = db(query).select(gtable.id,
+                               cache = s3db.cache,
+                               limitby = (0, 1),
+                               ).first()
+        role_id = row.id if row else None
+    else:
+        role_id = role
+
+    role_realms = []
+    user = auth.user
+    if user:
+        role_realms = user.realms.get(role_id, role_realms)
+
+    return role_realms
+
+# =============================================================================
 def get_org_accounts(organisation_id):
 
     auth = current.auth

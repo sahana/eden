@@ -2005,75 +2005,93 @@ form.anonymize-form,
 /* Priority Representation */
 /* line 508, ../scss/theme/_widgets.scss */
 .prio {
-  padding: 0 4px;
-  border: 1px solid black;
+  padding: 0 0.4rem;
+  border: 1px solid #333;
   text-align: center;
   white-space: pre;
   font-weight: normal;
+  font-size: 0.8rem;
 }
 
-/* line 515, ../scss/theme/_widgets.scss */
+/* line 516, ../scss/theme/_widgets.scss */
 .prio-red {
-  color: white;
+  color: #E0E0E0;
   background-color: #d10000;
 }
 
-/* line 519, ../scss/theme/_widgets.scss */
+/* line 520, ../scss/theme/_widgets.scss */
+.prio-amber {
+  background-color: #ffaa00;
+}
+
+/* line 523, ../scss/theme/_widgets.scss */
+.prio-green {
+  color: #E0E0E0;
+  background-color: #006100;
+}
+
+/* line 527, ../scss/theme/_widgets.scss */
 .prio-blue {
   color: white;
   background-color: #10427b;
 }
 
-/* line 523, ../scss/theme/_widgets.scss */
+/* line 531, ../scss/theme/_widgets.scss */
 .prio-lightblue {
   background-color: #b7ddff;
 }
 
-/* line 526, ../scss/theme/_widgets.scss */
+/* line 534, ../scss/theme/_widgets.scss */
 .prio-grey {
   background-color: silver;
 }
 
+/* line 537, ../scss/theme/_widgets.scss */
+.prio-black {
+  color: #E0E0E0;
+  background-color: #1f1f1f;
+}
+
 /* Weekly Hours Widget */
-/* line 531, ../scss/theme/_widgets.scss */
+/* line 543, ../scss/theme/_widgets.scss */
 .wh-raster {
   margin-top: 0.3rem;
 }
-/* line 533, ../scss/theme/_widgets.scss */
+/* line 545, ../scss/theme/_widgets.scss */
 .wh-raster tr {
   border-bottom: 1px solid #ccc;
 }
-/* line 536, ../scss/theme/_widgets.scss */
+/* line 548, ../scss/theme/_widgets.scss */
 .wh-raster td {
   border-left: 1px solid #ccc;
 }
-/* line 538, ../scss/theme/_widgets.scss */
+/* line 550, ../scss/theme/_widgets.scss */
 .wh-raster td.wh-tick {
   border-left-width: 2px;
 }
-/* line 543, ../scss/theme/_widgets.scss */
+/* line 555, ../scss/theme/_widgets.scss */
 .wh-raster thead td {
   min-width: 1.8rem;
   padding-right: 0.6rem !important;
   font-size: 0.6rem;
   font-weight: normal;
 }
-/* line 552, ../scss/theme/_widgets.scss */
+/* line 564, ../scss/theme/_widgets.scss */
 .wh-raster tbody td.wh-hour {
   text-align: center;
   font-weight: normal;
 }
-/* line 555, ../scss/theme/_widgets.scss */
+/* line 567, ../scss/theme/_widgets.scss */
 .wh-raster tbody td.wh-hour.wh-on {
   color: darkgreen;
 }
-/* line 559, ../scss/theme/_widgets.scss */
+/* line 571, ../scss/theme/_widgets.scss */
 .wh-raster tbody td.wh-day {
   text-align: left;
   font-size: 0.7rem;
   padding: 0.2rem 0.4rem;
 }
-/* line 566, ../scss/theme/_widgets.scss */
+/* line 578, ../scss/theme/_widgets.scss */
 .wh-raster .wh-hour {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -2082,73 +2100,73 @@ form.anonymize-form,
   -ms-user-select: none;
   user-select: none;
 }
-/* line 574, ../scss/theme/_widgets.scss */
+/* line 586, ../scss/theme/_widgets.scss */
 .wh-raster .wh-hour.wh-on {
   background-color: lightgreen;
 }
-/* line 577, ../scss/theme/_widgets.scss */
+/* line 589, ../scss/theme/_widgets.scss */
 .wh-raster .wh-hour.wh-off {
   background-color: transparent;
 }
 
 /* Weekly Hours Representation */
-/* line 584, ../scss/theme/_widgets.scss */
+/* line 596, ../scss/theme/_widgets.scss */
 .wh-schedule {
   list-style: none;
   white-space: pre;
   margin: 0;
   font-size: 0.7rem;
 }
-/* line 589, ../scss/theme/_widgets.scss */
+/* line 601, ../scss/theme/_widgets.scss */
 .wh-schedule .wh-dayname {
   width: 1.5rem;
   display: inline-block;
 }
-/* line 593, ../scss/theme/_widgets.scss */
+/* line 605, ../scss/theme/_widgets.scss */
 .wh-schedule .wh-dayname::after {
   content: ":";
 }
 
-/* line 601, ../scss/theme/_widgets.scss */
+/* line 613, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header .ui-multiselect-filter {
   direction: rtl;
   float: right;
   margin-right: 3px;
   margin-left: 10px;
 }
-/* line 607, ../scss/theme/_widgets.scss */
+/* line 619, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header ul li {
   float: right;
   padding: 0 3px 0 10px;
 }
-/* line 611, ../scss/theme/_widgets.scss */
+/* line 623, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header li.ui-multiselect-close {
   float: left;
   text-align: left;
   padding-left: 0;
 }
-/* line 618, ../scss/theme/_widgets.scss */
+/* line 630, ../scss/theme/_widgets.scss */
 body.rtl .range-filter-widget input.date-filter-input {
   margin-right: 0;
   margin-left: 2px;
 }
-/* line 623, ../scss/theme/_widgets.scss */
+/* line 635, ../scss/theme/_widgets.scss */
 body.rtl #list-btn-add {
   float: left;
   margin-right: 0;
   margin-left: 0.35rem;
 }
-/* line 629, ../scss/theme/_widgets.scss */
+/* line 641, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0;
   margin-left: 0.3rem;
 }
-/* line 635, ../scss/theme/_widgets.scss */
+/* line 647, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 0;
   border-right: 1px solid red;
 }
-/* line 639, ../scss/theme/_widgets.scss */
+/* line 651, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 0;
   border-left: 1px solid red;

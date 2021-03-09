@@ -506,15 +506,23 @@ form.anonymize-form,
 
 /* Priority Representation */
 .prio {
-    padding: 0 4px;
-    border: 1px solid black;
+    padding: 0 0.4rem;
+    border: 1px solid #333;
     text-align: center;
     white-space: pre;
     font-weight: normal;
+    font-size: 0.8rem;
 }
 .prio-red {
-    color: white;
+    color: #E0E0E0;
     background-color: #d10000;
+}
+.prio-amber {
+    background-color: #ffaa00;
+}
+.prio-green {
+    color: #E0E0E0;
+    background-color: #006100;
 }
 .prio-blue {
     color: white;
@@ -525,6 +533,10 @@ form.anonymize-form,
 }
 .prio-grey {
     background-color: silver;
+}
+.prio-black {
+    color: #E0E0E0;
+    background-color: #1f1f1f;
 }
 
 /* Weekly Hours Widget */
