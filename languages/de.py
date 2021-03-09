@@ -5769,7 +5769,7 @@
 'Voucher Programs': 'Gutschein-Programme',
 'Voucher accepted': 'Gutschein akzeptiert',
 'Voucher can only be used once': 'Gutschein kann nur einmal verwendet werden',
-'Voucher created': 'Gutschein ergestellt',
+'Voucher created': 'Gutschein ausgestellt',
 'Voucher credit exhausted': 'Gutschein bereits verbraucht',
 'Voucher deleted': 'Gutschein gelöscht',
 'Voucher expired': 'Gutschein ist abgelaufen',

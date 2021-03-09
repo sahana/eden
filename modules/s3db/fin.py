@@ -634,8 +634,7 @@ class FinVoucherModel(S3Model):
         )
 
         # Reusable field
-        # TODO Represent
-        represent = S3Represent(lookup=tablename, fields=["refno", "date"])
+        represent = fin_VoucherInvoiceRepresent()
         invoice_id = S3ReusableField("invoice_id", "reference %s" % tablename,
                                      label = T("Invoice"),
                                      represent = represent,
@@ -2720,6 +2719,74 @@ class FinSubscriptionModel(S3Model):
                 success = adapter.register_subscription_plan(row.plan_id)
                 if not success:
                     current.response.error = "Service registration failed"
+
+# =============================================================================
+class fin_VoucherInvoiceRepresent(S3Represent):
+    """
+        Representation of invoice references (in claims)
+    """
+
+    def __init__(self, show_link=False, show_reason=True):
+        """
+            Constructor
+
+            @param show_link: show representation as clickable link
+            @param show_reason: if invoice was rejected, include the
+                                reason for rejection
+        """
+
+        super(fin_VoucherInvoiceRepresent, self).__init__(
+                                                lookup = "fin_voucher_invoice",
+                                                fields = ["date",
+                                                          "status",
+                                                          "po_number",
+                                                          "reason",
+                                                          ],
+                                                show_link = show_link,
+                                                )
+
+        self.show_reason = show_reason
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        if hasattr(row, "fin_voucher_invoice"):
+            invoice = row.fin_voucher_invoice
+        else:
+            invoice = row
+
+        table = self.table
+
+        T = current.T
+        status_repr = {"NEW": T("Issued##fin"),
+                       "APPROVED": T("Approved"),
+                       "REJECTED": T("Rejected##claim"),
+                       "PAID": T("Paid"),
+                       }
+
+        status = invoice.status
+        repr_str = "%s %s" % (table.date.represent(invoice.date),
+                              status_repr.get(status, self.default),
+                              )
+
+        if status == "PAID":
+            po_number = invoice.po_number
+            repr_str = "%s (%s %s)" % (repr_str,
+                                       table.po_number.label,
+                                       po_number if po_number else self.none,
+                                       )
+        elif status == "REJECTED" and self.show_reason:
+            reason = invoice.reason
+            if reason:
+                repr_str = DIV(repr_str,
+                               P(reason, _class="status-reason"),
+                               )
+        return repr_str
 
 # =============================================================================
 class fin_SubscriptionPlanRepresent(S3Represent):

@@ -369,4 +369,15 @@ body.rtl {
         background: #ffdeb8;
     }
 }
+
+.status-reason {
+    font-size: 0.725rem;
+    padding: 0.3rem;
+    color: #e10000;
+    border: 1px solid #e10000;
+    font-style: italic;
+    white-space: pre-wrap;
+    background: #ffe1e3;
+}
+
 // END ========================================================================

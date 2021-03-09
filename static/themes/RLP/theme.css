@@ -2597,3 +2597,14 @@ body.rtl .event-type-header {
   padding: 0.2rem 0.7rem;
   background: #ffdeb8;
 }
+
+/* line 373, ../scss/theme/_misc.scss */
+.status-reason {
+  font-size: 0.725rem;
+  padding: 0.3rem;
+  color: #e10000;
+  border: 1px solid #e10000;
+  font-style: italic;
+  white-space: pre-wrap;
+  background: #ffe1e3;
+}
