@@ -856,17 +856,12 @@ class register(S3CustomController):
 
             formvars = form.vars
 
-            # Add Organisation, if existing
             organisation = formvars.get("organisation")
-            otable = s3db.org_organisation
-            org = db(otable.name == organisation).select(otable.id,
-                                                         limitby = (0, 1)
-                                                         ).first()
-            if org:
-                organisation_id = org.id
+
+            # Check if organisation already exists
+            organisation_id = self.lookup_organisation(formvars)
+            if organisation_id:
                 formvars["organisation_id"] = organisation_id
-            else:
-                organisation_id = None
 
             # Create the user record
             user_id = utable.insert(**utable._filter_fields(formvars, id=False))
@@ -997,7 +992,7 @@ class register(S3CustomController):
         T = current.T
         request = current.request
 
-        db = current.db
+        #db = current.db
         s3db = current.s3db
 
         auth = current.auth
@@ -1161,6 +1156,81 @@ Your Activation Code: %(code)s
 
 Thank you
 """
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def lookup_organisation(formvars):
+        """
+            Identify the organisation the user attempts to register for,
+            by name, facility Lx and if necessary facility email address
+
+            @param formvars: the FORM vars
+            @returns: organisation_id if found, or None if this is a new
+                      organisation
+        """
+
+        orgname = formvars.get("organisation")
+        if not orgname:
+            return None
+
+        db = current.db
+        s3db = current.s3db
+
+        otable = s3db.org_organisation
+        ftable = s3db.org_facility
+        ltable = s3db.gis_location
+        gtable = s3db.org_group
+        mtable = s3db.org_group_membership
+
+        # Search by name among test stations
+        query = (otable.name == orgname) & \
+                (otable.deleted == False)
+        join = [mtable.on(mtable.organisation_id == otable.id),
+                gtable.on((gtable.id == mtable.group_id) & \
+                          (gtable.name == TESTSTATIONS)),
+                ftable.on(ftable.organisation_id == otable.id),
+                ]
+
+        # Do we have a selected location (should have since mandatory)
+        location = formvars.get("location")
+        if isinstance(location, str):
+            try:
+                location = json.loads(location)
+            except JSONERRORS:
+                location = None
+
+        if location:
+            # Include the Lx ancestor in the lookup
+            ancestor = None
+            for level in ("L4", "L3", "L2"):
+                ancestor = location.get(level)
+                if ancestor:
+                    break
+            if ancestor:
+                join.append(ltable.on(ltable.id == ftable.location_id))
+                query &= ((ltable.level == None) & (ltable.parent == ancestor)) | \
+                         (ltable.id == ancestor)
+
+        rows = db(query).select(otable.id, join = join)
+        organisation_id = None
+        if len(rows) > 1:
+            # Multiple matches => try using facility email to reduce
+            facility_email = formvars.get("facility_email")
+            if facility_email:
+                candidates = {row.id for row in rows}
+                query = (ftable.organisation_id.belongs(candidates)) & \
+                        (ftable.email == facility_email) & \
+                        (ftable.deleted == False)
+                match = db(query).select(ftable.organisation_id,
+                                         limitby = (0, 2),
+                                         )
+                if len(match) == 1:
+                    organisation_id = match.first().organisation_id
+        elif rows:
+            # Single match - this organisation already exists
+            organisation_id = rows.first().organisation_id
+
+        return organisation_id
 
     # -------------------------------------------------------------------------
     @staticmethod
