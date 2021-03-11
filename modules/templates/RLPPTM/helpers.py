@@ -6,10 +6,11 @@
     @license: MIT
 """
 
-from gluon import current, CRYPT, Field, INPUT, SQLFORM, \
-                  IS_EMAIL, IS_LOWER, IS_NOT_IN_DB
+from gluon import current, Field, CRYPT, IS_EMAIL, IS_LOWER, IS_NOT_IN_DB, \
+                  SQLFORM, DIV, H4, H5, INPUT, P, TABLE, TD, TH, TR
 
-from s3 import S3Method, s3_mark_required
+from s3 import IS_FLOAT_AMOUNT, S3DateTime, S3Method, \
+               s3_fullname, s3_mark_required
 
 # =============================================================================
 def get_role_realms(role):
@@ -184,7 +185,7 @@ class rlpptm_InviteUserOrg(S3Method):
         if active or disabled:
             response.error = T("There are already user accounts registered for this organization")
 
-            from gluon import UL, LI, H4, DIV
+            from gluon import UL, LI
             from s3 import s3_format_fullname
 
             fullname = lambda user: s3_format_fullname(fname = user.first_name,
@@ -366,5 +367,312 @@ class rlpptm_InviteUserOrg(S3Method):
 
         crypt = CRYPT(key=key, digest_alg="sha512", salt=None)
         return str(crypt(code.upper())[0])
+
+# =============================================================================
+class rlpptm_InvoicePDF(S3Method):
+    """
+        REST Method to generate an invoice PDF
+        - for external accounting archives
+    """
+
+    def apply_method(self, r, **attr):
+        """
+            Generate a PDF of an Invoice
+
+            @param r: the S3Request instance
+            @param attr: controller attributes
+        """
+
+        if r.representation != "pdf":
+            r.error(415, current.ERROR.BAD_FORMAT)
+        if not r.record or r.http != "GET":
+            r.error(400, current.ERROR.BAD_REQUEST)
+
+        T = current.T
+        # TODO filename to include invoice no
+
+        from s3.s3export import S3Exporter
+        exporter = S3Exporter().pdf
+        return exporter(r.resource,
+                        request = r,
+                        method = "read",
+                        pdf_title = T("Invoice"),
+                        pdf_header = self.invoice_header,
+                        pdf_callback = self.invoice,
+                        pdf_footer = self.invoice_footer,
+                        pdf_hide_comments = True,
+                        pdf_header_padding = 12,
+                        pdf_orientation = "Portrait",
+                        pdf_table_autogrow = "B",
+                        **attr
+                        )
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def invoice_header(cls, r):
+        """
+            Generate the invoice header
+
+            @param r: the S3Request
+        """
+
+        T = current.T
+
+        table = r.resource.table
+        invoice = r.record
+        pdata = cls.lookup_header_data(invoice)
+
+        place = [pdata.get(k) for k in ("addr_postcode", "addr_place")]
+
+        header = TABLE(TR(TD(DIV(H4(T("Invoice")), P(" ")),
+                             _colspan = 4,
+                             ),
+                          ),
+                       TR(TH(T("Invoicing Party")),
+                          TD(pdata.get("organisation", "-")),
+                          TH("Invoice No."),
+                          # TODO implement invoice_no
+                          TD("TBD"),
+                          ),
+                       TR(TH(T("Address")),
+                          TD(pdata.get("addr_street", "-")),
+                          TH(table.date.label),
+                          TD(table.date.represent(invoice.date)),
+                          ),
+                       TR(TH(T("Place")),
+                          TD(" ".join(v for v in place if v)),
+                          TH(T("Payers")),
+                          TD(pdata.get("payers")),
+                          ),
+                       TR(TH(T("Email")),
+                          TD(pdata.get("email", "-")),
+                          TH(T("Billing Date")),
+                          # TODO wrong, must be billing.date
+                          TD(table.date.represent(invoice.date)),
+                          ),
+                       )
+
+        return header
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def invoice(cls, r):
+        """
+            Generate the invoice body
+
+            @param r: the S3Request
+        """
+
+        T = current.T
+
+        table = r.table
+
+        invoice = r.record
+        pdata = cls.lookup_body_data(invoice)
+
+        # Lambda to format currency amounts
+        amt = lambda v: IS_FLOAT_AMOUNT.represent(v, precision=2, fixed=True)
+        currency = invoice.currency
+
+        # Specification of costs
+        costs = TABLE(TR(TH(T("No.")),
+                         TH(T("Description")),
+                         TH(T("Number##count")),
+                         TH(T("Unit")),
+                         TH(table.price_per_unit.label),
+                         TH(T("Total")),
+                         TH(table.currency.label),
+                         ),
+                      TR(TD("1"), # only one line item here
+                         TD(pdata.get("title", "-")),
+                         TD(str(invoice.quantity_total)),
+                         TD(pdata.get("unit", "-")),
+                         TD(amt(invoice.price_per_unit)),
+                         TD(amt(invoice.amount_receivable)),
+                         TD(currency),
+                         ),
+                      TR(TD(H5(T("Total")), _colspan=5),
+                         TD(H5(amt(invoice.amount_receivable))),
+                         TD(H5(currency)),
+                         ),
+                      )
+
+        # Payment Details
+        payment_details = TABLE(TR(TH(table.account_holder.label),
+                                   TD(invoice.account_holder),
+                                   ),
+                                TR(TH(table.account_number.label),
+                                   TD(invoice.account_number),
+                                   ),
+                                TR(TH(table.bank_name.label),
+                                   TD(invoice.bank_name),
+                                   ),
+                                )
+
+        return DIV(H4(" "),
+                   H5(T("Specification of Costs")),
+                   costs,
+                   H4(" "),
+                   H4(" "),
+                   H5(T("Payable within %(num)s days to") % {"num": 30}),
+                   payment_details,
+                   )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def invoice_footer(r):
+        """
+            Generate the invoice footer
+
+            @param r: the S3Request
+        """
+
+        T = current.T
+
+        invoice = r.record
+
+        # Details about who generated the document and when
+        user = current.auth.user
+        if not user:
+            username = T("anonymous user")
+        else:
+            username = s3_fullname(user)
+        now = S3DateTime.datetime_represent(current.request.utcnow, utc=True)
+        note = T("Document generated by %(user)s on %(date)s") % {"user": username,
+                                                                  "date": now,
+                                                                  }
+        # Details about the data source
+        vhash = invoice.vhash
+        try:
+            verification = vhash.split("$$")[1][:7]
+        except (AttributeError, IndexError):
+            verification = T("invalid")
+
+        settings = current.deployment_settings
+        source = TABLE(TR(TH(T("System Name")),
+                          TD(settings.get_system_name()),
+                          ),
+                       TR(TH(T("Web Address")),
+                          TD(settings.get_base_public_url()),
+                          ),
+                       TR(TH(T("Data Source")),
+                          TD("%s [%s]" % (invoice.uuid, verification)),
+                          ),
+                       )
+
+        return DIV(P(note), source)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def lookup_header_data(invoice):
+        """
+            Look up data for the invoice header
+
+            @param invoice: the invoice record
+
+            @returns: dict with header data
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        data = {}
+
+        ptable = s3db.fin_voucher_program
+        otable = s3db.org_organisation
+        ftable = s3db.org_facility
+        ltable = s3db.gis_location
+        ctable = s3db.pr_contact
+
+        # TODO look up the billing date
+
+        # Use the program admin org as "payers"
+        query = (ptable.id == invoice.program_id)
+        join = otable.on(otable.id == ptable.organisation_id)
+        admin_org = db(query).select(otable.name,
+                                     join = join,
+                                     limitby = (0, 1),
+                                     ).first()
+        if admin_org:
+            data["payers"] = admin_org.name
+
+        # Look up details of the invoicing party
+        query = (otable.pe_id == invoice.pe_id) & \
+                (otable.deleted == False)
+        organisation = db(query).select(otable.id,
+                                        otable.name,
+                                        limitby = (0, 1),
+                                        ).first()
+        if organisation:
+
+            data["organisation"] = organisation.name
+
+            # Email address
+            query = (ctable.pe_id == invoice.pe_id) & \
+                    (ctable.contact_method == "EMAIL") & \
+                    (ctable.deleted == False)
+            email = db(query).select(ctable.value,
+                                     limitby = (0, 1),
+                                     ).first()
+            if email:
+                data["email"] = email.value
+
+            # Facility address
+            query = (ftable.organisation_id == organisation.id) & \
+                    (ftable.obsolete == False) & \
+                    (ftable.deleted == False)
+            left = ltable.on(ltable.id == ftable.location_id)
+            facility = db(query).select(ftable.email,
+                                        ltable.addr_street,
+                                        ltable.addr_postcode,
+                                        ltable.L3,
+                                        ltable.L4,
+                                        left = left,
+                                        limitby = (0, 1),
+                                        orderby = ftable.created_on,
+                                        ).first()
+            if facility:
+                if data.get("email"):
+                    # Fallback
+                    data["email"] = facility.org_facility.email
+
+                location = facility.gis_location
+                data["addr_street"] = location.addr_street or "-"
+                data["addr_postcode"] = location.addr_postcode or "-"
+                data["addr_place"] = location.L4 or location.L3 or "-"
+
+        return data
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def lookup_body_data(invoice):
+        """
+            Look up additional data for invoice body
+
+            @param invoice: the invoice record
+
+            @returns: dict with invoice data
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        ptable = s3db.fin_voucher_program
+
+        query = (ptable.id == invoice.program_id) & \
+                (ptable.deleted == False)
+        program = db(query).select(ptable.id,
+                                   ptable.name,
+                                   ptable.unit,
+                                   limitby = (0, 1),
+                                   ).first()
+        if program:
+            data = {"title": program.name,
+                    "unit": program.unit,
+                    }
+        else:
+            data = {}
+
+        return data
 
 # END =========================================================================

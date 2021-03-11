@@ -6101,4 +6101,8 @@
 'xlwt module not available within the running Python - this needs installing for XLS output!': 'xlwt Modul nicht verfügbar im Rahmen der laufenden Python Umgebung - das muss installiert werden für XLS Ausgabe!',
 'yes': 'ja',
 'Åland Islands': 'Ålandinseln',
+'Payers': 'Kostenträger',
+'Invoicing Party': 'Rechnungssteller',
+'Place': 'Ort',
+'Billing Date': 'Abrechnungsdatum',
 }

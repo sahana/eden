@@ -1300,6 +1300,12 @@ def config(settings):
                                                    "PAID": "green",
                                                    }).represent
 
+        from .helpers import rlpptm_InvoicePDF
+        s3db.set_method("fin", "voucher_invoice",
+                        method = "export_pdf",
+                        action = rlpptm_InvoicePDF,
+                        )
+
     settings.customise_fin_voucher_invoice_resource = customise_fin_voucher_invoice_resource
 
     # -------------------------------------------------------------------------
