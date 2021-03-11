@@ -430,7 +430,7 @@ class rlpptm_InvoicePDF(S3Method):
                           ),
                        TR(TH(T("Invoicing Party")),
                           TD(pdata.get("organisation", "-")),
-                          TH("Invoice No."),
+                          TH(T("Invoice No.")),
                           # TODO implement invoice_no
                           TD("TBD"),
                           ),
@@ -447,8 +447,7 @@ class rlpptm_InvoicePDF(S3Method):
                        TR(TH(T("Email")),
                           TD(pdata.get("email", "-")),
                           TH(T("Billing Date")),
-                          # TODO wrong, must be billing.date
-                          TD(table.date.represent(invoice.date)),
+                          TD(table.date.represent(pdata.get("billing_date"))),
                           ),
                        )
 
@@ -578,13 +577,20 @@ class rlpptm_InvoicePDF(S3Method):
 
         data = {}
 
+        btable = s3db.fin_voucher_billing
         ptable = s3db.fin_voucher_program
         otable = s3db.org_organisation
         ftable = s3db.org_facility
         ltable = s3db.gis_location
         ctable = s3db.pr_contact
 
-        # TODO look up the billing date
+        # Look up the billing date
+        query = (btable.id == invoice.billing_id)
+        billing = db(query).select(btable.date,
+                                   limitby = (0, 1),
+                                   ).first()
+        if billing:
+            data["billing_date"] = billing.date
 
         # Use the program admin org as "payers"
         query = (ptable.id == invoice.program_id)

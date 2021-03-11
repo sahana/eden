@@ -1302,11 +1302,49 @@ def config(settings):
 
         from .helpers import rlpptm_InvoicePDF
         s3db.set_method("fin", "voucher_invoice",
-                        method = "export_pdf",
+                        method = "record",
                         action = rlpptm_InvoicePDF,
                         )
 
     settings.customise_fin_voucher_invoice_resource = customise_fin_voucher_invoice_resource
+
+    # -------------------------------------------------------------------------
+    def customise_fin_voucher_invoice_controller(**attr):
+
+        s3 = current.response.s3
+
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if not r.component and isinstance(output, dict):
+                if r.record and r.method in (None, "update", "read"):
+
+                    # Custom CRUD buttons
+                    if "buttons" not in output:
+                        buttons = output["buttons"] = {}
+                    else:
+                        buttons = output["buttons"]
+
+                    # PDF-button
+                    pdf_download = A(T("Download PDF"),
+                                     _href = "/%s/fin/voucher_invoice/%s/record.pdf" % \
+                                             (r.application, r.record.id),
+                                     _class="action-btn",
+                                     )
+
+                    # Render in place of the delete-button
+                    buttons["delete_btn"] = TAG[""](pdf_download,
+                                                    )
+            return output
+        s3.postp = custom_postp
+
+        return attr
+
+    settings.customise_fin_voucher_invoice_controller = customise_fin_voucher_invoice_controller
 
     # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
