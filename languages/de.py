@@ -5896,6 +5896,7 @@
 'You have found a dead body?': 'Sie haben eine Leiche gefunden?',
 'You must be logged in to register volunteers.': 'Sie müssen angemeldet sein, um Freiwillige zu registrieren.',
 'You must be logged in to report persons missing or found.': 'Sie müssen angemeldet sein, um fehlende oder gefundene Personen zu melden.',
+'You must change the status to "confirmed" before an invoice can be issued': 'Sie müssen den Status auf "Bestätigt" ändern damit eine Rechnung ausgestellt werden kann',
 'You must enter a minimum of %d characters': 'Mindestens %d Zeichen',
 'You must provide a series id to proceed.': 'Sie müssen eine serien-id vorweisen, um fortzufahren.',
 'You should edit Twitter settings in models/000_config.py': 'Sie sollten die Twitter Einstellungen unter models/000_config.py bearbeiten',

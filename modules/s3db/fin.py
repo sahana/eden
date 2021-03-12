@@ -1383,7 +1383,15 @@ class FinVoucherModel(S3Model):
 
         T = current.T
 
+        has_status = "status" in form_vars
+        status = form_vars.get("status")
+
         if record:
+
+            change_status = has_status and status != record.status
+            check = {"account_holder": T("Account holder is required"),
+                     "account_number": T("Account number is required"),
+                     }
             if record.invoice_id or record.status != "NEW":
                 # This claim has already been invoiced and cannot be changed
                 immutable = ("program_id", "billing_id", "pe_id",
@@ -1396,11 +1404,16 @@ class FinVoucherModel(S3Model):
                     if fn in form_vars:
                         form.errors[fn] = T("Value can no longer be changed")
 
-            elif "status" in form_vars and form_vars["status"] != "NEW":
+            elif record.status == "NEW" and \
+                 has_status and not change_status and \
+                 all(fn in form_vars and form_vars[fn] or record[fn] for fn in check):
+
+                # Warn if the user has entered bank account details, but
+                # not confirmed the claim
+                current.response.warning = T('You must change the status to "confirmed" before an invoice can be issued')
+
+            elif change_status and status != "NEW":
                 # Changing status of a NEW claim requires account details
-                check = (("account_number", T("Account number is required")),
-                         ("account_holder", T("Account holder is required")),
-                         )
                 for fn, msg in check:
                     value = form_vars[fn] if fn in form_vars else record[fn]
                     if value is None or not value.strip():
@@ -1410,7 +1423,7 @@ class FinVoucherModel(S3Model):
                             form.errors["status"] = msg
                             break
 
-        elif "status" in form_vars and form_vars["status"] != "NEW":
+        elif change_status and status != "NEW":
             # A new claim can only have status "NEW"
             form.errors["status"] = T("Invalid status")
 
