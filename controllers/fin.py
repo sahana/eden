@@ -104,8 +104,7 @@ def voucher_invoice():
         record = r.record
         if not record or record.status != "PAID":
             # Make additional fields writable in unpaid invoices
-            writable = ("po_number",
-                        "status",
+            writable = ("status",
                         "reason",
                         )
             for fn in writable:

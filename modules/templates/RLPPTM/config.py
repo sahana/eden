@@ -170,6 +170,10 @@ def config(settings):
     # -------------------------------------------------------------------------
     settings.fin.voucher_personalize = "dob"
     settings.fin.voucher_eligibility_types = True
+    settings.fin.voucher_invoice_status_labels = {"VERIFIED": None,
+                                                  "APPROVED": None,
+                                                  "PAID": "Payment Ordered",
+                                                  }
 
     # -------------------------------------------------------------------------
     # UI Settings

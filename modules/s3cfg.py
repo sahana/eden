@@ -1326,6 +1326,16 @@ class S3Config(Storage):
         """
         return self.fin.get("voucher_eligibility_types")
 
+    def get_fin_voucher_invoice_status_labels(self):
+        """
+            Customise labels for invoice statuses
+            - dict {status: label}
+            - NEW, PAID, REJECTED are mandatory, can only change labels
+            - VERIFIED and APPROVED are optional, can be set to None to
+              disable completely
+        """
+        return self.fin.get("voucher_invoice_status_labels")
+
     # -------------------------------------------------------------------------
     # GIS (Map) Settings
     #

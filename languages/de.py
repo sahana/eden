@@ -3921,6 +3921,7 @@
 'Payload Width (m)': 'Ladekapazität Breite (m)',
 'Payment Date': 'Auszahlungsdatum',
 'Payment Order Number': 'Auszahlungsreferenz-Nr.',
+'Payment Ordered': 'Zahlung angeordnet',
 'Payment Registration': 'Auszahlungsregistrierung',
 'Payment order number is required': 'Auszahlungsreferenz-Nr. ist erforderlich',
 'Payment registration not permitted': 'Auszahlungsregistrierung nicht erlaubt',

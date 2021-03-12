@@ -465,12 +465,27 @@ class FinVoucherModel(S3Model):
         # Voucher invoice
         # - invoice for a provider claim
         #
-        invoice_status = (("NEW", T("New")),
-                          #("VERIFIED", T("Verified")),
-                          ("APPROVED", T("Approved##actionable")),
-                          ("REJECTED", T("Rejected##claim")),
-                          ("PAID", T("Paid")),
-                          )
+        workflow = (("NEW", T("New")),
+                    ("VERIFIED", T("Verified")),
+                    ("APPROVED", T("Approved##actionable")),
+                    ("REJECTED", T("Rejected##claim")),
+                    ("PAID", T("Paid")),
+                    )
+        mandatory = ("NEW", "REJECTED", "PAID")
+
+        # Apply custom labels
+        custom_labels = settings.get_fin_voucher_invoice_status_labels()
+        if custom_labels:
+            invoice_status = []
+            default = lambda: None
+            for k, v in workflow:
+                custom_label = custom_labels.get(k, default)
+                if custom_label is default:
+                    invoice_status.append((k, v))
+                elif k in mandatory or custom_label:
+                    invoice_status.append((k, T(custom_label) if custom_label else v))
+        else:
+            invoice_status = workflow
 
         tablename = "fin_voucher_invoice"
         define_table(tablename,
@@ -497,12 +512,14 @@ class FinVoucherModel(S3Model):
                              ),
 
                      # Payer references
+                     Field("invoice_no",
+                           label = T("Invoice No."),
+                           represent = lambda v, row=None: v if v else "-",
+                           writable = False,
+                           ),
                      Field("refno",
                            label = T("Ref.No."),
-                           ),
-                     Field("po_number",
-                           label = T("Payment Order Number"),
-                           writable = False,
+                           represent = lambda v, row=None: v if v else "-",
                            ),
                      self.hrm_human_resource_id(
                             label = T("Official in Charge"),
@@ -588,18 +605,19 @@ class FinVoucherModel(S3Model):
                             )
 
         # List fields
-        list_fields = ["program_id",
+        list_fields = ["date",
+                       "invoice_no",
+                       "program_id",
                        "billing_id",
-                       "date",
-                       "refno",
                        "pe_id",
                        "amount_receivable",
+                       "refno",
                        "status",
                        ]
 
         # Filter widgets
-        filter_widgets = [S3TextFilter(["refno",
-                                        "po_number",
+        filter_widgets = [S3TextFilter(["invoice_no",
+                                        "refno",
                                         ],
                                        label = T("Search"),
                                        ),
@@ -618,6 +636,7 @@ class FinVoucherModel(S3Model):
                        deletable = False,
                        onvalidation = self.invoice_onvalidation,
                        onaccept = self.invoice_onaccept,
+                       orderby = "%s.date desc" % tablename,
                        )
 
         # CRUD Strings
@@ -1469,7 +1488,6 @@ class FinVoucherModel(S3Model):
             query = (table.id == record_id)
             record = db(query).select(table.id,
                                       table.status,
-                                      table.po_number,
                                       limitby = (0, 1),
                                       ).first()
         else:
@@ -1509,24 +1527,18 @@ class FinVoucherModel(S3Model):
 
             if not status_error:
                 # Check required fields
-                check = None
                 if not change_status:
                     status = record.status
                 if status == "REJECTED":
-                    check = (("reason", T("Reason must be specified")),
-                             )
-                elif status == "PAID":
-                    check = (("po_number", T("Payment order number is required")),
-                             )
-                if check:
-                    for fn, msg in check:
-                        value = form_vars[fn] if fn in form_vars else record[fn]
-                        if value is None or not value.strip():
-                            if fn in form_vars:
-                                form.errors[fn] = msg
-                            else:
-                                form.errors["status"] = msg
-                                break
+                    # Rejection requires a reason
+                    ff = fn = "reason"
+                    if fn in form_vars:
+                        value = form_vars[fn]
+                    else:
+                        value = record[fn]
+                        ff = "status"
+                    if value is None or not value.strip():
+                        form.errors[ff] = T("Reason must be specified")
 
         elif change_status and status != "NEW":
             # A new invoice can only have status "NEW"
@@ -2738,9 +2750,9 @@ class fin_VoucherInvoiceRepresent(S3Represent):
 
         super(fin_VoucherInvoiceRepresent, self).__init__(
                                                 lookup = "fin_voucher_invoice",
-                                                fields = ["date",
+                                                fields = ["invoice_no",
+                                                          "date",
                                                           "status",
-                                                          "po_number",
                                                           "reason",
                                                           ],
                                                 show_link = show_link,
@@ -2771,17 +2783,14 @@ class fin_VoucherInvoiceRepresent(S3Represent):
                        }
 
         status = invoice.status
-        repr_str = "%s %s" % (table.date.represent(invoice.date),
-                              status_repr.get(status, self.default),
-                              )
+        repr_str = "%s %s [%s] - %s" % (
+                        T("No."),
+                        table.invoice_no.represent(invoice.invoice_no),
+                        table.date.represent(invoice.date),
+                        status_repr.get(status, self.default),
+                        )
 
-        if status == "PAID":
-            po_number = invoice.po_number
-            repr_str = "%s (%s %s)" % (repr_str,
-                                       table.po_number.label,
-                                       po_number if po_number else self.none,
-                                       )
-        elif status == "REJECTED" and self.show_reason:
+        if status == "REJECTED" and self.show_reason:
             reason = invoice.reason
             if reason:
                 repr_str = DIV(repr_str,
@@ -3815,8 +3824,19 @@ class fin_VoucherBilling(object):
         # The claim details
         data = {fn: claim[fn] for fn in invoice_fields}
 
+        # Generate an invoice number
+        btable = s3db.fin_voucher_billing
+        query = (btable.id == claim.billing_id)
+        billing = db(query).select(btable.uuid, limitby=(0, 1)).first()
+        try:
+            bprefix = (billing.uuid.rsplit(":", 1)[-1][:4]).upper()
+        except (TypeError, AttributeError):
+            bprefix = ""
+        invoice_no = "B%s%02dC%04d" % (bprefix, claim.billing_id, claim.id)
+
         # Generate invoice
         idata = {"date": datetime.datetime.utcnow().date(),
+                 "invoice_no": invoice_no,
                  "status": "NEW",
                  "vhash": cls._hash(claim.uuid, claim.date, data),
                  "bank_name": claim.bank_name,

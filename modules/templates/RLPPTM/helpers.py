@@ -389,7 +389,9 @@ class rlpptm_InvoicePDF(S3Method):
             r.error(400, current.ERROR.BAD_REQUEST)
 
         T = current.T
-        # TODO filename to include invoice no
+
+        # Filename to include invoice number if available
+        invoice_no = r.record.invoice_no
 
         from s3.s3export import S3Exporter
         exporter = S3Exporter().pdf
@@ -397,6 +399,7 @@ class rlpptm_InvoicePDF(S3Method):
                         request = r,
                         method = "read",
                         pdf_title = T("Invoice"),
+                        pdf_filename = invoice_no if invoice_no else None,
                         pdf_header = self.invoice_header,
                         pdf_callback = self.invoice,
                         pdf_footer = self.invoice_footer,
@@ -431,8 +434,7 @@ class rlpptm_InvoicePDF(S3Method):
                        TR(TH(T("Invoicing Party")),
                           TD(pdata.get("organisation", "-")),
                           TH(T("Invoice No.")),
-                          # TODO implement invoice_no
-                          TD("TBD"),
+                          TD(table.invoice_no.represent(invoice.invoice_no)),
                           ),
                        TR(TH(T("Address")),
                           TD(pdata.get("addr_street", "-")),
