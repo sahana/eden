@@ -47,9 +47,11 @@ class S3MainMenu(default.S3MainMenu):
         report_results = lambda i: has_role("VOUCHER_PROVIDER", include_admin=False) and \
                                    len(get_stats_projects()) > 0
 
-        menu = [MM("Equipment", c="req", link=False)(
-                    #MM("Order##verb", f="req", vars={"type": 1}),
+        menu = [MM("Equipment", c=("req", "inv", "supply"), link=False)(
                     MM("Orders##delivery", f="req", vars={"type": 1}),
+                    MM("Shipment##process", c="inv", f="send", restrict="SUPPLY_COORDINATOR"),
+                    MM("Deliveries", c="inv", f="recv", restrict="SUPPLY_REQUESTER"),
+                    MM("Items", c="supply", f="item", restrict="SUPPLY_COORDINATOR"),
                     ),
                 MM("Test Results",
                    c="disease", f="case_diagnostics", restrict="DISEASE_TEST_READER",
@@ -356,20 +358,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ REQ / Request Management """
 
         return M()(
-                M("Requests", c="req", f="req", vars={"type": 1})(
+                M("Orders##delivery", c="req", f="req", vars={"type": 1})(
                     M("Create", m="create", vars={"type": 1}),
                     ),
-                M("Shipments", c="inv", f="send")(
-                    M("Items", f="track_item"),
-                    M("Report", f="track_item", m="report"),
-                    ),
-                M("Incoming Shipments", "inv", "recv")(
-                    ),
-                M("Warehouses", c="inv", f="warehouse",
-                    ),
+                M("Shipment##process", c="inv", f="send", restrict="SUPPLY_COORDINATOR"),
+                M("Deliveries", "inv", "recv", restrict="SUPPLY_REQUESTER"),
                 M("Items", c="supply", f="item")(
                     M("Create", m="create"),
                     ),
+                M("Warehouses", c="inv", f="warehouse", restrict="ADMIN"),
                 )
 
     # -------------------------------------------------------------------------

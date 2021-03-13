@@ -105,6 +105,7 @@ SUPPLY_COORDINATOR,Supply Coordinator,,,,,inv_send,CREATE|READ|UPDATE|DELETE,,
 SUPPLY_COORDINATOR,Supply Coordinator,,,,,org_facility,READ,,any
 SUPPLY_COORDINATOR,Supply Coordinator,,,,,org_site,READ,,any
 SUPPLY_COORDINATOR,Supply Coordinator,,,,,req_req,READ,,any
+SUPPLY_COORDINATOR,Supply Coordinator,,,,,org_organisation,READ|UPDATE,,
 SUPPLY_REQUESTER,Supply Requester,,,req,,,READ,,
 SUPPLY_REQUESTER,Supply Requester,,,req,req,,CREATE|READ|UPDATE|DELETE,,
 SUPPLY_REQUESTER,Supply Requester,,,inv,recv,,READ|UPDATE,,
