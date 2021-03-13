@@ -2092,9 +2092,9 @@ def config(settings):
         # When item status is UNLOADING, update the request
         from s3db.inv import TRACK_STATUS_UNLOADING, TRACK_STATUS_ARRIVED
         recv_quantity = record.recv_quantity
-        if record.status == TRACK_STATUS_UNLOADING and recv_quantity:
+        if record.status == TRACK_STATUS_UNLOADING:
 
-            if req_item:
+            if req_item and recv_quantity:
                 # Update the fulfilled quantity of the req item
                 req_pack_id = req_item.item_pack_id
                 rcv_pack_id = record.item_pack_id

@@ -2852,10 +2852,12 @@ $.filterOptionsS3({
     # -------------------------------------------------------------------------
     @staticmethod
     def qnty_recv_repr(value):
-        if value:
-            return value
+
+        if value is None:
+            reprstr = B(current.T("None"))
         else:
-            return B(value)
+            reprstr = value if value else B(value)
+        return reprstr
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -2949,7 +2951,7 @@ $.filterOptionsS3({
                                       limitby=(0, 1)).first()
             form_vars.track_org_id = record.organisation_id
 
-        if not form_vars.recv_quantity:
+        if not form_vars.recv_quantity and "quantity" in form_vars:
             # If we have no send_id and no recv_quantity then
             # copy the quantity sent directly into the received field
             # This is for when there is no related send record
