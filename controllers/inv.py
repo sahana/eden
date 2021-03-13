@@ -286,9 +286,9 @@ def warehouse():
     request_args = request.args
     if "viewing" in get_vars:
         viewing = get_vars.viewing
-        tn, id = viewing.split(".", 1)
+        tn, record_id = viewing.split(".", 1)
         if tn == "inv_warehouse":
-            request_args.insert(0, id)
+            request_args.insert(0, record_id)
 
     # CRUD pre-process
     def prep(r):
@@ -481,12 +481,12 @@ def inv_item():
     # If this url has a viewing track items then redirect to track_movement
     viewing = get_vars.get("viewing", None)
     if viewing:
-        tn, id = viewing.split(".", 1)
+        tn, record_id = viewing.split(".", 1)
         if tn == "inv_track_item":
             table = s3db.inv_track_item
-            record = db(table.id == id).select(table.item_id,
-                                               limitby = (0, 1)
-                                               ).first()
+            record = db(table.id == record_id).select(table.item_id,
+                                                      limitby = (0, 1)
+                                                      ).first()
             redirect(URL(c = "inv",
                          f = "track_movement",
                          args = [],
@@ -505,22 +505,22 @@ def inv_item():
 
     report = get_vars.get("report")
     if report == "mon":
-            s3.crud_strings[tablename].update({"title_list": T("Monetization Report"),
-                                               "subtitle_list": T("Monetization Details"),
-                                               #"msg_list_empty": T("No Stock currently registered"),
-                                               })
-            s3db.configure(tablename,
-                           list_fields = ["id",
-                                          (T("Donor"), "supply_org_id"),
-                                          (T("Items/Description"), "item_id"),
-                                          (T("Quantity"), "quantity"),
-                                          (T("Unit"), "item_pack_id"),
-                                          (T("Unit Value"), "pack_value"),
-                                          (T("Total Value"), "total_value"),
-                                          (T("Remarks"), "comments"),
-                                          "status",
-                                          ]
-                           )
+        s3.crud_strings[tablename].update({"title_list": T("Monetization Report"),
+                                           "subtitle_list": T("Monetization Details"),
+                                           #"msg_list_empty": T("No Stock currently registered"),
+                                           })
+        s3db.configure(tablename,
+                       list_fields = ["id",
+                                      (T("Donor"), "supply_org_id"),
+                                      (T("Items/Description"), "item_id"),
+                                      (T("Quantity"), "quantity"),
+                                      (T("Unit"), "item_pack_id"),
+                                      (T("Unit Value"), "pack_value"),
+                                      (T("Total Value"), "total_value"),
+                                      (T("Remarks"), "comments"),
+                                      "status",
+                                      ]
+                       )
     else:
         s3db.configure(tablename,
                        insertable = settings.get_inv_direct_stock_edits(),
@@ -951,14 +951,14 @@ def recv():
     # The inv_recv record might be created when the shipment is send and so it
     # might not have the recipient identified. If it is null then set it to
     # the person who is logged in (the default)
-    id = request.args(0)
-    if id and isinstance(id, int):
-        record = db(recvtable.id == id).select(recvtable.recipient_id,
-                                               limitby = (0, 1)
-                                               ).first()
+    record_id = request.args(0)
+    if record_id and isinstance(id, int):
+        record = db(recvtable.id == record_id).select(recvtable.recipient_id,
+                                                      limitby = (0, 1)
+                                                      ).first()
         try:
             if record.recipient_id is None:
-                db(recvtable.id == id).update(recipient_id = auth.s3_logged_in_person())
+                db(recvtable.id == record_id).update(recipient_id = auth.s3_logged_in_person())
         except:
             pass
 
@@ -1275,31 +1275,37 @@ def recv_process():
 
     db(rtable.id == recv_id).update(**data)
 
-    # Update the Send record & lock for editing
-    stable = db.inv_send
+    # Customise the inv_track_item so templates can customise the onaccept
     tracktable = db.inv_track_item
-    send_row = db(tracktable.recv_id == recv_id).select(tracktable.send_id,
-                                                        limitby = (0, 1)
-                                                        ).first()
-    if send_row:
-        send_id = send_row.send_id
+    r = s3_request("inv", "track_item", args=[], vars={})
+    r.customise_resource("inv_track_item")
+
+    # Lookup the send_id from a track item of this recv
+    item = db(tracktable.recv_id == recv_id).select(tracktable.send_id,
+                                                    limitby = (0, 1),
+                                                    ).first()
+    if item:
+        send_id = item.send_id
+        # Update the Send record & lock for editing
+        stable = db.inv_send
         db(stable.id == send_id).update(status = inv_ship_status["RECEIVED"],
                                         owned_by_user = None,
                                         owned_by_group = ADMIN,
                                         )
 
-    # Change the status for all track items in this shipment to Unloading
-    # the onaccept will then move the values into the site, update any request
-    # record, create any adjustment if needed and change the status to Arrived
-    db(tracktable.recv_id == recv_id).update(status = 3)
+    # Change the status for all track items in this shipment to UNLOADING
+    # - onaccept will then move the values into the site, update any request
+    #   record, create any adjustment if needed and finally change the item
+    #   status to ARRIVED
+    db(tracktable.recv_id == recv_id).update(status = 3) # UNLOADING
 
-    # Move each item to the site
+    # Call onaccept for each track item (see above why)
     track_rows = db(tracktable.recv_id == recv_id).select()
+    onaccept = s3db.get_config("inv_track_item", "onaccept")
     for track_item in track_rows:
-        row = Storage(track_item)
-        s3db.inv_track_item_onaccept(Storage(vars = Storage(id=row.id),
-                                             record = row,
-                                             ))
+        onaccept(Storage(vars = Storage(id=track_item.id),
+                         record = Storage(track_item),
+                         ))
 
     # Done => confirmation message, open the record
     session.confirmation = T("Shipment Items Received")

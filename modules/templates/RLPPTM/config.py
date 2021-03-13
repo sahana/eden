@@ -2009,6 +2009,128 @@ def config(settings):
     settings.customise_inv_send_controller = customise_inv_send_controller
 
     # -------------------------------------------------------------------------
+    def inv_track_item_onaccept(form):
+        """
+           Custom-onaccept for inv_track_item
+           - based on standard inv_track_item_onaccept, but without the
+             stock item updates and adjustments
+        """
+
+        # Get record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        # Look up the track item record if not in form
+        ttable = s3db.inv_track_item
+        try:
+            record = form.record
+        except AttributeError:
+            record = None
+        if not record:
+            record = db(ttable.id == record_id).select(ttable.id,
+                                                       ttable.status,
+                                                       ttable.req_item_id,
+                                                       ttable.recv_quantity,
+                                                       ttable.item_pack_id,
+                                                       limitby = (0, 1),
+                                                       ).first()
+        if not record:
+            return
+
+        # Set send_ref in recv_record
+        send_id = form_vars.get("send_id")
+        recv_id = form_vars.get("recv_id")
+        recv_update = {}
+
+        if send_id and recv_id:
+            # Get the send_ref
+            stable = s3db.inv_send
+            send = db(stable.id == send_id).select(stable.send_ref,
+                                                   limitby = (0, 1)
+                                                   ).first().send_ref
+            # Note the send_ref for recv-update (we do that later)
+            recv_update["send_ref"] = send.send_ref
+
+        # Update the request
+        rrtable = s3db.req_req
+        ritable = s3db.req_req_item
+        iptable = db.supply_item_pack
+
+        # If this item is linked to a request, then copy the req_ref to the send item
+        req_item_id = record.req_item_id
+        req = req_item = None
+        if req_item_id:
+
+            # Look up the request item
+            left = rrtable.on(rrtable.id == ritable.req_id)
+            row = db(ritable.id == req_item_id).select(ritable.id,
+                                                       ritable.quantity_fulfil,
+                                                       ritable.item_pack_id,
+                                                       rrtable.id,
+                                                       rrtable.req_ref,
+                                                       left = left,
+                                                       limitby = (0, 1),
+                                                       ).first()
+            if row:
+                req = row.req_req
+                req_item = row.req_req_item
+                recv_update["req_ref"] = req.req_ref
+
+        # Update the recv-record with send and req references
+        if recv_id and recv_update:
+            rtable = s3db.inv_recv
+            db(rtable.id == recv_id).update(**recv_update)
+
+        # When item status is UNLOADING, update the request
+        from s3db.inv import TRACK_STATUS_UNLOADING, TRACK_STATUS_ARRIVED
+        recv_quantity = record.recv_quantity
+        if record.status == TRACK_STATUS_UNLOADING and recv_quantity:
+
+            if req_item:
+                # Update the fulfilled quantity of the req item
+                req_pack_id = req_item.item_pack_id
+                rcv_pack_id = record.item_pack_id
+                query = iptable.id.belongs((req_pack_id, rcv_pack_id))
+                packs = db(query).select(iptable.id,
+                                         iptable.quantity,
+                                         limitby = (0, 2),
+                                         ).as_dict(key="id")
+                req_pack_quantity = packs.get(req_pack_id)
+                rcv_pack_quantity = packs.get(rcv_pack_id)
+
+                if req_pack_quantity and rcv_pack_quantity:
+                    quantity_fulfil = s3db.supply_item_add(req_item.quantity_fulfil,
+                                                           req_pack_quantity,
+                                                           recv_quantity,
+                                                           rcv_pack_quantity,
+                                                           )
+                    req_item.update_record(quantity_fulfil = quantity_fulfil)
+
+                # Update the request status
+                s3db.req_update_status(req.id)
+
+            # Update the track item status to ARRIVED
+            db(ttable.id == record_id).update(status = TRACK_STATUS_ARRIVED)
+
+    # -------------------------------------------------------------------------
+    def customise_inv_track_item_resource(r, tablename):
+
+        # Override standard-onaccept to prevent inventory updates
+        current.s3db.configure("inv_track_item",
+                               onaccept = inv_track_item_onaccept,
+                               )
+
+    settings.customise_inv_track_item_resource = customise_inv_track_item_resource
+
+    # -------------------------------------------------------------------------
     def customise_req_req_resource(r, tablename):
 
         auth = current.auth
