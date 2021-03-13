@@ -1158,6 +1158,15 @@ class S3Config(Storage):
         """
         return self.base.get("solr_url", False)
 
+    def get_xml_formats(self):
+        """
+            Locations of custom export/import transformation stylesheets
+            - settings.base.xml_formats = {"<ext>": "<TMP>"}
+              => modules/templates/<TMP>/formats/<ext>/<method>.xsl
+        """
+        return self.base.get("xml_formats")
+
+
     def get_import_callback(self, tablename, callback):
         """
             Lookup callback to use for imports in the following order:

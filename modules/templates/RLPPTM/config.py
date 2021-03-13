@@ -40,6 +40,10 @@ def config(settings):
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "RLP"
     settings.base.theme_layouts = "RLPPTM"
+
+    # Custom XSLT transformation stylesheets
+    settings.base.xml_formats = {"wws": "RLPPTM"}
+
     # Custom Logo
     #settings.ui.menu_logo = "/%s/static/themes/<templatename>/img/logo.png" % current.request.application
 

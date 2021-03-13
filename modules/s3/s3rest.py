@@ -1541,20 +1541,18 @@ class S3Request(object):
                                if the stylesheet cannot be found
         """
 
-        stylesheet = None
         representation = self.representation
-        if self.component:
-            resourcename = self.component.name
-        else:
-            resourcename = self.name
 
         # Native S3XML?
         if representation == "xml":
-            return stylesheet
+            return None
 
         # External stylesheet specified?
         if "transform" in self.vars:
             return self.vars["transform"]
+
+        component = self.component
+        resourcename = component.name if component else self.name
 
         # Stylesheet attached to the request?
         extension = self.XSLT_EXTENSION
@@ -1563,22 +1561,37 @@ class S3Request(object):
             p = self.post_vars[filename]
             import cgi
             if isinstance(p, cgi.FieldStorage) and p.filename:
-                stylesheet = p.file
-            return stylesheet
+                return p.file
 
-        # Internal stylesheet?
+        # Look for stylesheet in file system
         folder = self.folder
-        path = self.XSLT_PATH
         if method != "import":
             method = "export"
-        filename = "%s.%s" % (method, extension)
-        stylesheet = os.path.join(folder, path, representation, filename)
+        stylesheet = None
+
+        # Custom transformation stylesheet in template?
+        if not stylesheet:
+            formats = current.deployment_settings.get_xml_formats()
+            if isinstance(formats, dict) and representation in formats:
+                stylesheets = formats[representation]
+                if isinstance(stylesheets, str) and stylesheets:
+                    stylesheets = stylesheets.split("/") + ["formats"]
+                    path = os.path.join("modules", "templates", *stylesheets)
+                    filename = "%s.%s" % (method, extension)
+                    stylesheet = os.path.join(folder, path, representation, filename)
+
+        # Transformation stylesheet at standard location?
+        if not stylesheet:
+            path = self.XSLT_PATH
+            filename = "%s.%s" % (method, extension)
+            stylesheet = os.path.join(folder, path, representation, filename)
+
         if not os.path.exists(stylesheet):
             if not skip_error:
                 self.error(501, "%s: %s" % (current.ERROR.BAD_TEMPLATE,
-                                            stylesheet))
-            else:
-                stylesheet = None
+                                            stylesheet,
+                                            ))
+            stylesheet = None
 
         return stylesheet
 
