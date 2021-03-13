@@ -358,14 +358,16 @@ def req_controller(template = False):
                                        )
 
                 method = r.method
-                if method in (None, "create"):
+                if method is None:
+                    method = "update" if r.id else "create"
+                if method == "create":
                     # Hide fields which don't make sense in a Create form
                     # - includes one embedded in list_create
                     # - list_fields over-rides, so still visible within list itself
                     s3db.req_create_form_mods()
 
                     if req_type and settings.get_req_inline_forms():
-                        # Inline Forms
+                        # Use inline form
                         s3db.req_inline_form(req_type, method)
 
                     # Get the default Facility for this user
@@ -380,11 +382,12 @@ def req_controller(template = False):
                     if auth.is_logged_in() and not table.site_id.default:
                         table.site_id.default = auth.user.site_id
 
-                elif method == "update":
+                elif method in ("update", "read"):
                     if settings.get_req_inline_forms():
-                        # Inline Forms
+                        # Use inline form
                         s3db.req_inline_form(req_type, method)
-                    s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
+                    if method != "read":
+                        s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
 
                 elif method == "map":
                     # Tell the client to request per-feature markers
@@ -732,26 +735,6 @@ $.filterOptionsS3({
                                 r.next = URL(args = [form_vars.id, "req_skill"])
                     else:
                         s3_action_buttons(r, deletable =False)
-                        # Add delete button for those records which are not completed
-                        # @ToDo: Handle icons
-                        table = r.table
-                        query = (table.fulfil_status != REQ_STATUS_COMPLETE) & \
-                                (table.transit_status != REQ_STATUS_COMPLETE) & \
-                                (table.req_status != REQ_STATUS_COMPLETE) & \
-                                (table.fulfil_status != REQ_STATUS_PARTIAL) & \
-                                (table.transit_status != REQ_STATUS_PARTIAL) & \
-                                (table.req_status != REQ_STATUS_PARTIAL)
-                        rows = db(query).select(table.id)
-                        restrict = [str(row.id) for row in rows]
-                        s3.actions.append(
-                            {"label": s3_str(s3.crud_labels.DELETE),
-                             "url": URL(c = "req",
-                                        f = "req",
-                                        args = ["[id]", "delete"],
-                                        ),
-                             "_class": "delete-btn",
-                             "restrict": restrict,
-                             })
                         if not template and settings.get_req_use_commit():
                             # This is appropriate to both Items and People
                             s3.actions.append(
@@ -869,6 +852,27 @@ $.filterOptionsS3({
                                     if restrict is not None:
                                         action["restrict"] = restrict
                                     s3.actions.append(action)
+
+                        # Add delete button for those records which are not completed
+                        # @ToDo: Handle icons
+                        table = r.table
+                        query = (table.fulfil_status != REQ_STATUS_COMPLETE) & \
+                                (table.transit_status != REQ_STATUS_COMPLETE) & \
+                                (table.req_status != REQ_STATUS_COMPLETE) & \
+                                (table.fulfil_status != REQ_STATUS_PARTIAL) & \
+                                (table.transit_status != REQ_STATUS_PARTIAL) & \
+                                (table.req_status != REQ_STATUS_PARTIAL)
+                        rows = db(query).select(table.id)
+                        restrict = [str(row.id) for row in rows]
+                        s3.actions.append(
+                            {"label": s3_str(s3.crud_labels.DELETE),
+                             "url": URL(c = "req",
+                                        f = "req",
+                                        args = ["[id]", "delete"],
+                                        ),
+                             "_class": "delete-btn",
+                             "restrict": restrict,
+                             })
 
             elif r.method == "create" and r.http == "POST":
                 # Create form

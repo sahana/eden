@@ -13,7 +13,7 @@ import sys
 from s3 import s3_format_datetime
 
 from templates.RLPPTM.config import SCHOOLS
-from templates.RLPPTM.helpers import rlpptm_InviteUserOrg
+from templates.RLPPTM.helpers import InviteUserOrg
 
 # Batch limit (set to False to disable)
 BATCH_LIMIT = 250
@@ -74,7 +74,7 @@ if not failed:
             infoln("Total: %s Organisations" % total)
             infoln("")
             skipped = sent = failures = 0
-            invite_org = rlpptm_InviteUserOrg.invite_account
+            invite_org = InviteUserOrg.invite_account
             for organisation in organisations:
 
                 info("%s..." % organisation.name)

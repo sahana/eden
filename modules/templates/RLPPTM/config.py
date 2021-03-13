@@ -176,6 +176,28 @@ def config(settings):
                                                   }
 
     # -------------------------------------------------------------------------
+    settings.req.req_type = ("Stock",)
+    settings.req.type_inv_label = ("Equipment")
+
+    settings.req.copyable = False
+    settings.req.recurring = False
+
+    settings.req.req_shortname = "BANF"
+    settings.req.requester_label = "Orderer"
+    settings.req.date_editable = False
+    settings.req.status_writable = False
+
+    settings.req.pack_values = False
+    settings.req.inline_forms = True
+    settings.req.use_commit = False
+
+    settings.req.items_ask_purpose = False
+
+    # -------------------------------------------------------------------------
+    settings.inv.track_pack_value = False
+
+
+    # -------------------------------------------------------------------------
     # UI Settings
     settings.ui.calendar_clear_icon = True
 
@@ -1304,10 +1326,10 @@ def config(settings):
                                                    "PAID": "green",
                                                    }).represent
 
-        from .helpers import rlpptm_InvoicePDF
+        from .helpers import InvoicePDF
         s3db.set_method("fin", "voucher_invoice",
                         method = "record",
-                        action = rlpptm_InvoicePDF,
+                        action = InvoicePDF,
                         )
 
     settings.customise_fin_voucher_invoice_resource = customise_fin_voucher_invoice_resource
@@ -1527,10 +1549,10 @@ def config(settings):
             is_org_group_admin = auth.s3_has_role("ORG_GROUP_ADMIN")
 
             # Add invite-method for ORG_GROUP_ADMIN role
-            from .helpers import rlpptm_InviteUserOrg
+            from .helpers import InviteUserOrg
             s3db.set_method("org", "organisation",
                             method = "invite",
-                            action = rlpptm_InviteUserOrg,
+                            action = InviteUserOrg,
                             )
 
             resource = r.resource
@@ -1833,6 +1855,336 @@ def config(settings):
     settings.customise_pr_person_controller = customise_pr_person_controller
 
     # -------------------------------------------------------------------------
+    def customise_inv_recv_resource(r, tablename):
+
+        s3db = current.s3db
+
+        list_fields = ["id",
+                       "req_ref",
+                       #"recv_ref",
+                       "send_ref",
+                       #"purchase_ref",
+                       #"recipient_id",
+                       #"organisation_id",
+                       #"from_site_id",
+                       "site_id",
+                       "date",
+                       #"type",
+                       "status",
+                       #"sender_id",
+                       #"comments",
+                       ]
+
+        s3db.configure("inv_recv",
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_inv_recv_resource = customise_inv_recv_resource
+
+    # -------------------------------------------------------------------------
+    def customise_inv_recv_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            component = r.component
+            if component and component.tablename == "inv_track_item":
+
+                itable = component.table
+
+                field = itable.item_id
+                field.writable = False
+
+                # Use custom form
+                from s3 import S3SQLCustomForm
+                crud_fields = ["item_id",
+                               "item_pack_id",
+                               "quantity",
+                               "recv_quantity"
+                               ]
+
+                # Custom list fields
+                list_fields = ["item_id",
+                               "item_pack_id",
+                               "quantity",
+                               "recv_quantity",
+                               "status",
+                               ]
+
+                component.configure(crud_form = S3SQLCustomForm(*crud_fields),
+                                    list_fields = list_fields,
+                                    )
+
+
+            return result
+        s3.prep = prep
+
+        return attr
+
+    settings.customise_inv_recv_controller = customise_inv_recv_controller
+
+    # -------------------------------------------------------------------------
+    def customise_inv_send_resource(r, tablename):
+
+        s3db = current.s3db
+
+        list_fields = ["id",
+                       "req_ref",
+                       "send_ref",
+                       #"sender_id",
+                       #"site_id",
+                       #"recipient_id",
+                       #"delivery_date",
+                       "date",
+                       "to_site_id",
+                       "status",
+                       #"transport_type",
+                       #"driver_name",
+                       #"driver_phone",
+                       #"vehicle_plate_no",
+                       #"time_in",
+                       #"time_out",
+                       #"comments",
+                       ]
+
+        s3db.configure("inv_send",
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_inv_send_resource = customise_inv_send_resource
+
+    # -------------------------------------------------------------------------
+    def customise_inv_send_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            component = r.component
+            if component and component.tablename == "inv_track_item":
+
+                itable = component.table
+
+                field = itable.item_id
+                field.readable = field.writable = True
+
+                # Use custom form
+                from s3 import S3SQLCustomForm
+                crud_fields = ["item_id",
+                               "item_pack_id",
+                               "quantity",
+                               ]
+
+                # Custom list fields
+                list_fields = ["item_id",
+                               "item_pack_id",
+                               "quantity",
+                               "recv_quantity",
+                               "status",
+                               ]
+
+                component.configure(crud_form = S3SQLCustomForm(*crud_fields),
+                                    list_fields = list_fields,
+                                    )
+
+
+            return result
+        s3.prep = prep
+
+        return attr
+
+    settings.customise_inv_send_controller = customise_inv_send_controller
+
+    # -------------------------------------------------------------------------
+    def customise_req_req_resource(r, tablename):
+
+        auth = current.auth
+        s3db = current.s3db
+
+        if auth.s3_has_role("SUPPLY_COORDINATOR"):
+            from .requests import RegisterShipment
+            s3db.set_method("req", "req",
+                            method = "ship",
+                            action = RegisterShipment,
+                            )
+
+    settings.customise_req_req_resource = customise_req_req_resource
+
+    # -------------------------------------------------------------------------
+    def customise_req_req_controller(**attr):
+
+        db = current.db
+        s3db = current.s3db
+        auth = current.auth
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            if not r.component:
+                list_fields = ["id",
+                               "req_ref",
+                               "date",
+                               #"date_required",
+                               "site_id",
+                               #"requester_id",
+                               #"priority",
+                               (T("Details"), "details"),
+                               "transit_status",
+                               "fulfil_status",
+                               ]
+                r.resource.configure(list_fields = list_fields,
+                                     )
+
+            return result
+        s3.prep = prep
+
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+
+            # Call standard postp if on component tab
+            if r.component and callable(standard_postp):
+                output = standard_postp(r, output)
+
+            resource = r.resource
+
+            table = resource.table
+            from s3db.req import REQ_STATUS_COMPLETE, REQ_STATUS_CANCEL
+            request_complete = (REQ_STATUS_COMPLETE, REQ_STATUS_CANCEL)
+
+            stable = s3db.inv_send
+            from s3db.inv import SHIP_STATUS_IN_PROCESS, SHIP_STATUS_SENT
+            shipment_in_process = (SHIP_STATUS_IN_PROCESS, SHIP_STATUS_SENT)
+
+            record = r.record
+            if r.interactive and isinstance(output, dict):
+
+                # Add register-shipment action button(s)
+
+                ship_btn_label = s3_str(T("Register Shipment"))
+                inject_script = False
+                if record:
+                    # Single record view
+                    if record.fulfil_status not in request_complete:
+                        query = (stable.req_ref == record.req_ref) & \
+                                (stable.status.belongs(shipment_in_process)) & \
+                                (stable.deleted == False)
+                        shipment = db(query).select(stable.id, limitby=(0, 1)).first()
+                    else:
+                        shipment = None
+                    if not shipment:
+                        ship_btn = A(T("Register Shipment"),
+                                     _class = "action-btn ship-btn",
+                                     _db_id = str(record.id),
+                                     )
+                        inject_script = True
+                    else:
+                        ship_btn = A(T("Register Shipment"),
+                                     _class = "action-btn",
+                                     _disabled = "disabled",
+                                     _title = T("Shipment already in process"),
+                                     )
+                    if "buttons" not in output:
+                        buttons = output["buttons"] = {}
+                    else:
+                        buttons = output["buttons"]
+                    delete_btn = buttons.get("delete_btn")
+
+                    b = [delete_btn, ship_btn] if delete_btn else [ship_btn]
+                    buttons["delete_btn"] = TAG[""](*b)
+
+                elif not r.component and not r.method:
+                    # Datatable
+
+                    # Default action buttons (except delete)
+                    from s3 import S3CRUD
+                    S3CRUD.action_buttons(r, deletable =False)
+
+                    if auth.s3_has_role("SUPPLY_COORDINATOR"):
+                        # Can only register shipments for unfulfilled requests with
+                        # no shipment currently in process or in transit
+                        left = stable.on((stable.req_ref == table.req_ref) & \
+                                         (stable.status.belongs(shipment_in_process)) & \
+                                         (stable.deleted == False))
+                        query = (table.fulfil_status != REQ_STATUS_COMPLETE) & \
+                                (table.fulfil_status != REQ_STATUS_CANCEL) & \
+                                (stable.id == None)
+                        rows = db(query).select(table.id, groupby=table.id, left = left)
+                        restrict = [str(row.id) for row in rows]
+
+                        # Register-shipment button
+                        enabled = {"label": ship_btn_label,
+                                   "_class": "action-btn ship-btn",
+                                   "restrict": restrict,
+                                   }
+                        s3.actions.append(enabled)
+
+                        # Disabled shipment-button to indicate why the action
+                        # is currently disabled
+                        disabled = {"label": ship_btn_label,
+                                    "_class": "action-btn",
+                                    "_title": s3_str(T("Shipment already in progress")),
+                                    "_disabled": "disabled",
+                                    "exclude": restrict,
+                                    }
+                        s3.actions.append(disabled)
+
+                        # Do inject script
+                        inject_script = True
+
+                    if auth.s3_has_permission("delete", table):
+                        # Requests can only be deleted while no shipment for them
+                        # has been registered yet:
+                        left = stable.on((stable.req_ref == table.req_ref) & \
+                                         (stable.deleted == False))
+                        query = auth.s3_accessible_query("delete", table) & \
+                                (stable.id == None)
+                        rows = db(query).select(table.id, left=left)
+
+                        # Delete-button
+                        if rows:
+                            delete = {"label": s3_str(s3.crud_labels.DELETE),
+                                      "url": URL(c="req", f="req", args=["[id]", "delete"]),
+                                      "_class": "delete-btn",
+                                      "restrict": [str(row.id) for row in rows],
+                                      }
+                            s3.actions.append(delete)
+
+                if inject_script:
+                    # Confirmation question
+                    confirm = '''i18n.req_register_shipment="%s"''' % \
+                              T("Do you want to register a shipment for this request?")
+                    s3.js_global.append(confirm)
+
+                    # Inject script for action
+                    script = "/%s/static/themes/RLP/js/ship.js" % r.application
+                    if script not in s3.scripts:
+                        s3.scripts.append(script)
+
+            return output
+        s3.postp = custom_postp
+
+        from .rheaders import rlpptm_req_rheader
+        attr["rheader"] = rlpptm_req_rheader
+
+        return attr
+
+    settings.customise_req_req_controller = customise_req_req_controller
+
+    # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
     settings.modules = OrderedDict([
@@ -1930,6 +2282,21 @@ def config(settings):
             #description = "Helps to track cases and trace contacts in disease outbreaks",
             restricted = True,
             module_type = None,
+        )),
+        ("req", Storage(
+            name_nice = T("Requests"),
+            #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+            module_type = 10,
+        )),
+        ("inv", Storage(
+            name_nice = T("Warehouses"),
+            #description = "Receiving and Sending Items",
+            module_type = 4
+        )),
+        ("supply", Storage(
+            name_nice = T("Supply Chain Management"),
+            #description = "Used within Inventory Management, Request Management and Asset Management",
+            module_type = None, # Not displayed
         )),
     ])
 

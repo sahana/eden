@@ -128,7 +128,7 @@ def get_stats_projects():
     return [row.project_id for row in rows]
 
 # =============================================================================
-class rlpptm_InviteUserOrg(S3Method):
+class InviteUserOrg(S3Method):
     """ Custom Method Handler to invite User Organisations """
 
     # -------------------------------------------------------------------------
@@ -369,7 +369,7 @@ class rlpptm_InviteUserOrg(S3Method):
         return str(crypt(code.upper())[0])
 
 # =============================================================================
-class rlpptm_InvoicePDF(S3Method):
+class InvoicePDF(S3Method):
     """
         REST Method to generate an invoice PDF
         - for external accounting archives

@@ -47,10 +47,10 @@ class S3MainMenu(default.S3MainMenu):
         report_results = lambda i: has_role("VOUCHER_PROVIDER", include_admin=False) and \
                                    len(get_stats_projects()) > 0
 
-        menu = [MM("Organizations",
-                   c="org", f="organisation", restrict=("ORG_GROUP_ADMIN", "ORG_ADMIN"),
-                   vars = {"mine": 1} if not has_role("ORG_GROUP_ADMIN") else None,
-                   ),
+        menu = [MM("Equipment", c="req", link=False)(
+                    #MM("Order##verb", f="req", vars={"type": 1}),
+                    MM("Orders##delivery", f="req", vars={"type": 1}),
+                    ),
                 MM("Test Results",
                    c="disease", f="case_diagnostics", restrict="DISEASE_TEST_READER",
                    ),
@@ -59,6 +59,10 @@ class S3MainMenu(default.S3MainMenu):
                     MM("Report Test Result", m="create", vars={"format": "popup"}, modal=True),
                     MM("List Test Results"),
                     ),
+                MM("Organizations",
+                   c="org", f="organisation", restrict=("ORG_GROUP_ADMIN", "ORG_ADMIN"),
+                   vars = {"mine": 1} if not has_role("ORG_GROUP_ADMIN") else None,
+                   ),
                 MM("Projects",
                    c = "project", f="project",
                    restrict = "ADMIN",
@@ -345,5 +349,41 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create")
                         )
                     )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def req():
+        """ REQ / Request Management """
+
+        return M()(
+                M("Requests", c="req", f="req", vars={"type": 1})(
+                    M("Create", m="create", vars={"type": 1}),
+                    ),
+                M("Shipments", c="inv", f="send")(
+                    M("Items", f="track_item"),
+                    M("Report", f="track_item", m="report"),
+                    ),
+                M("Incoming Shipments", "inv", "recv")(
+                    ),
+                M("Warehouses", c="inv", f="warehouse",
+                    ),
+                M("Items", c="supply", f="item")(
+                    M("Create", m="create"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def supply(cls):
+        """ SUPPLY / Supply Chain Management """
+
+        return cls.req()
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def inv(cls):
+        """ INV / Inventory Management """
+
+        return cls.req()
 
 # END =========================================================================

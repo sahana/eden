@@ -866,24 +866,12 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
         postprocess = s3.req_req_postprocess
 
         if req_type == 1:
-            # Dropdown not Autocomplete
-            itable = s3db.req_req_item
-            itable.item_id.widget = None
-            jquery_ready = s3.jquery_ready
-            jquery_ready.append('''
-$.filterOptionsS3({
- 'trigger':{'alias':'req_item','name':'item_id'},
- 'target':{'alias':'req_item','name':'item_pack_id'},
- 'scope':'row',
- 'lookupPrefix':'supply',
- 'lookupResource':'item_pack',
- 'msgNoRecords':i18n.no_packs,
- 'fncPrep':S3.supply.fncPrepItem,
- 'fncRepresent':S3.supply.fncRepresentItem
-})''')
+
             # Custom Form
             settings = current.deployment_settings
-            fields = ["site_id",
+            fields = [#req_ref
+                      "site_id",
+                      #is_template
                       "requester_id",
                       "date",
                       "priority",
@@ -897,27 +885,30 @@ $.filterOptionsS3({
                                   "comments"
                                   ]
                       ),
+                      #purpose
                       "comments",
                       ]
-            if method == "update":
-                if settings.get_req_status_writable():
-                    fields.insert(7, "fulfil_status")
-                    if settings.get_req_show_quantity_transit():
-                        fields.insert(7, "transit_status")
-                    if settings.get_req_use_commit():
-                        fields.insert(7, "commit_status")
-                fields.insert(7, "date_recv")
 
+            if method in ("create", "update"):
+                # Dropdown not Autocomplete
+                itable = s3db.req_req_item
+                itable.item_id.widget = None
+
+                # Options-filter item=>pack
+                jquery_ready = s3.jquery_ready
+                jquery_ready.append('''
+$.filterOptionsS3({
+ 'trigger':{'alias':'req_item','name':'item_id'},
+ 'target':{'alias':'req_item','name':'item_pack_id'},
+ 'scope':'row',
+ 'lookupPrefix':'supply',
+ 'lookupResource':'item_pack',
+ 'msgNoRecords':i18n.no_packs,
+ 'fncPrep':S3.supply.fncPrepItem,
+ 'fncRepresent':S3.supply.fncRepresentItem
+})''')
                 if settings.get_req_requester_from_site():
                     # Filter the list of Contacts to those for the site
-                    table.requester_id.widget = None
-                    table.requester_id.comment = S3PopupLink(c = "pr",
-                                                             f = "person",
-                                                             vars = {"child": "requester_id",
-                                                                     "parent": "req",
-                                                                     },
-                                                             title = s3.crud_strings["pr_person"].label_create,
-                                                             )
                     jquery_ready.append('''
 $.filterOptionsS3({
  'trigger':'site_id',
@@ -927,20 +918,54 @@ $.filterOptionsS3({
  'msgNoRecords':'%s',
  'optional':true,
 })''' % T("No contacts yet defined for this site"))
+
+                    # Popup link to allow adding a contact (...for the site)
+                    table.requester_id.widget = None
+                    table.requester_id.comment = S3PopupLink(c = "pr",
+                                                             f = "person",
+                                                             vars = {"child": "requester_id",
+                                                                     "parent": "req",
+                                                                     },
+                                                             title = s3.crud_strings["pr_person"].label_create,
+                                                             )
+
+                    # Link to user profile to allow setting this site
+                    # as their current default site, so that they appear
+                    # in the dropdown themselves
                     table.site_id.comment = A(T("Set as default Site"),
-                                              _id="req_req_site_id_link",
-                                              _target="_blank",
-                                              _href=URL(c="default",
-                                                        f="user",
-                                                        args=["profile"]))
+                                              _id = "req_req_site_id_link",
+                                              _target = "_blank",
+                                              _href=URL(c = "default",
+                                                        f = "user",
+                                                        args = ["profile"],
+                                                        ),
+                                              )
+
+            if method in ("update", "read"):
+                # Append status details
+                status_fields = []
+                if settings.get_req_status_writable():
+                    if settings.get_req_use_commit():
+                        status_fields.append("commit_status")
+                    if settings.get_req_show_quantity_transit():
+                        status_fields.append("transit_status")
+                    status_fields.append("fulfil_status")
+                status_fields.append("date_recv")
+
+                fields.extend(status_fields)
+
+                # Show request number?
+                if settings.get_req_use_req_number():
+                    if settings.get_req_generate_req_number():
+                        table.req_ref.writable = False
+                    fields.insert(0, "req_ref")
+            else:
+                # Is-template flag can only be set during create
+                fields.insert(1, "is_template")
 
             if settings.get_req_items_ask_purpose():
-                fields.insert(6, "purpose")
-            if method != "update":
-                fields.insert(1, "is_template")
-            if settings.get_req_use_req_number() and \
-               not settings.get_req_generate_req_number():
-                fields.insert(0, "req_ref")
+                fields.insert(-1, "purpose")
+
             if postprocess:
                 crud_form = S3SQLCustomForm(*fields, postprocess=postprocess)
             else:

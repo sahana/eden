@@ -871,7 +871,7 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
 .selected-action[disabled],
 .selected-action[disabled]:hover {
   color: white;
-  background-color: rgba(192, 192, 192, 0.25);
+  background-color: rgba(112, 112, 112, 0.25);
 }
 
 /* Default action buttons */

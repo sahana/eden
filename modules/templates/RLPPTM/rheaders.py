@@ -182,6 +182,44 @@ def rlpptm_project_rheader(r, tabs=None):
     return rheader
 
 # =============================================================================
+def rlpptm_req_rheader(r, tabs=None):
+    """ REQ custom resource headers """
+
+    if r.representation != "html":
+        # Resource headers only used in interactive views
+        return None
+
+    tablename, record = s3_rheader_resource(r)
+    if tablename != r.tablename:
+        resource = current.s3db.resource(tablename, id=record.id)
+    else:
+        resource = r.resource
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+        T = current.T
+
+        if tablename == "req_req":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        (T("Items"), "req_item"),
+                        ]
+
+            rheader_title = "site_id"
+
+            rheader_fields = [["req_ref", "transit_status"],
+                              ["date", "fulfil_status"],
+                              ]
+
+        rheader = S3ResourceHeader(rheader_fields, tabs, title=rheader_title)
+        rheader = rheader(r, table = resource.table, record = record)
+
+    return rheader
+
+# =============================================================================
 def rlpptm_profile_rheader(r, tabs=None):
     """ Custom rheader for default/person """
 
