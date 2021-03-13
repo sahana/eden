@@ -2030,6 +2030,8 @@ def config(settings):
         s3db = current.s3db
         auth = current.auth
 
+        has_role = auth.s3_has_role
+
         s3 = current.response.s3
 
         # Custom prep
@@ -2052,6 +2054,13 @@ def config(settings):
                                ]
                 r.resource.configure(list_fields = list_fields,
                                      )
+
+            if r.interactive and not r.record and has_role("SUPPLY_COORDINATOR"):
+                # Configure WWS export format
+                export_formats = list(settings.get_ui_export_formats())
+                export_formats.append(("wws", "fa fa-shopping-cart", T("CoronaWWS")))
+                s3.formats["wws"] = r.url(method="")
+                settings.ui.export_formats = export_formats
 
             return result
         s3.prep = prep
@@ -2117,7 +2126,7 @@ def config(settings):
                     from s3 import S3CRUD
                     S3CRUD.action_buttons(r, deletable =False)
 
-                    if auth.s3_has_role("SUPPLY_COORDINATOR"):
+                    if has_role("SUPPLY_COORDINATOR"):
                         # Can only register shipments for unfulfilled requests with
                         # no shipment currently in process or in transit
                         left = stable.on((stable.req_ref == table.req_ref) & \
@@ -2177,6 +2186,18 @@ def config(settings):
                     script = "/%s/static/themes/RLP/js/ship.js" % r.application
                     if script not in s3.scripts:
                         s3.scripts.append(script)
+
+            elif r.representation == "wws":
+                # Deliver as attachment rather than as page content
+                from gluon.contenttype import contenttype
+
+                now = current.request.utcnow.strftime("%Y%m%d%H%M%S")
+                filename = "req%s.wws" % now
+                disposition = "attachment; filename=\"%s\"" % filename
+
+                response = current.response
+                response.headers["Content-Type"] = contenttype(".xml")
+                response.headers["Content-disposition"] = disposition
 
             return output
         s3.postp = custom_postp
