@@ -2876,8 +2876,9 @@ $.filterOptionsS3({
                     return A(value,
                              _href = URL(c = "inv",
                                          f = "send",
-                                         args = [row.id, "form"]
-                                        ),
+                                         args = [row.id, "form"],
+                                         extension = "",
+                                         ),
                             )
                 else:
                     return value
@@ -2903,7 +2904,8 @@ $.filterOptionsS3({
                 return A(value,
                          _href = URL(c = "inv",
                                      f = "recv",
-                                     args = [recv_row.id, "form"]
+                                     args = [recv_row.id, "form"],
+                                     extension = "",
                                      ),
                         )
             else:

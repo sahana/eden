@@ -9,7 +9,7 @@
 
 from collections import OrderedDict
 
-from gluon import current, URL, A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_NOT_EMPTY, TAG
+from gluon import current, URL, A, B, DIV, IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_NOT_EMPTY, TAG
 from gluon.storage import Storage
 
 from s3 import FS, IS_ONE_OF, IS_NOT_ONE_OF, S3Represent, s3_str
@@ -1869,8 +1869,13 @@ def config(settings):
 
         table = s3db.inv_recv
 
+        from .requests import ShipmentCodeRepresent
         field = table.req_ref
         field.label = T("Order No.")
+        field.represent = ShipmentCodeRepresent("req_req", "req_ref")
+
+        field = table.send_ref
+        field.represent = lambda v, row=None: B(v if v else "-")
 
         if r.tablename == "inv_recv" and not r.component:
             if r.interactive:
@@ -1988,8 +1993,16 @@ def config(settings):
 
         table = s3db.inv_send
 
+        from .requests import ShipmentCodeRepresent
+
         field = table.req_ref
         field.label = T("Order No.")
+        field.represent = ShipmentCodeRepresent("req_req", "req_ref")
+
+        field = table.send_ref
+        field.represent = ShipmentCodeRepresent("inv_send", "send_ref",
+                                                show_link = False,
+                                                )
 
         list_fields = ["id",
                        "req_ref",
@@ -2294,6 +2307,7 @@ def config(settings):
 
         field = table.req_ref
         field.label = T("Order No.")
+        #field.represent = lambda v, row=None: v if v else "-"
 
         if auth.s3_has_role("SUPPLY_COORDINATOR"):
             from .requests import RegisterShipment
@@ -2373,6 +2387,10 @@ def config(settings):
                         field = table.requester_id
                         field.default = user_person_id
                         field.writable = False
+
+                    from .requests import req_filter_widgets
+                    resource.configure(filter_widgets = req_filter_widgets(),
+                                       )
 
                 # Custom list fields
                 list_fields = ["id",
@@ -2559,6 +2577,11 @@ def config(settings):
 
         resource = r.resource
         if resource.tablename == "supply_item":
+            from .requests import ShipmentCodeRepresent
+            rtable = s3db.req_req
+            field = rtable.req_ref
+            field.represent = ShipmentCodeRepresent("req_req", "req_ref")
+
             list_fields = ["item_id",
                            "req_id$req_ref",
                            "req_id$site_id",

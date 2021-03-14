@@ -6,9 +6,11 @@
     @license: MIT
 """
 
-from gluon import current, redirect, URL
+from collections import OrderedDict
 
-from s3 import S3Method
+from gluon import current, redirect, URL, A, B
+
+from s3 import S3Method, S3Represent, s3_str
 
 # =============================================================================
 class RegisterShipment(S3Method):
@@ -110,5 +112,156 @@ class RegisterShipment(S3Method):
         redirect(URL(c="inv", f="send", args = [shipment_id]))
 
         return None
+
+# =============================================================================
+def req_filter_widgets():
+    """
+        Filter widgets for requests
+
+        @returns: list of filter widgets
+    """
+
+    T = current.T
+
+    from s3 import S3DateFilter, \
+                   S3LocationFilter, \
+                   S3OptionsFilter, \
+                   S3TextFilter, \
+                   s3_get_filter_opts
+
+    s3db = current.s3db
+
+    req_status_opts = OrderedDict(sorted(s3db.req_status_opts.items(),
+                                         key = lambda i: i[0],
+                                         ))
+
+    filter_widgets = [
+        S3TextFilter(["req_ref"],
+                     label = T("Order No."),
+                     ),
+        S3DateFilter("date"),
+        S3OptionsFilter("transit_status",
+                        cols = 3,
+                        options = req_status_opts,
+                        sort = False,
+                        ),
+        S3OptionsFilter("fulfil_status",
+                        cols = 3,
+                        hidden = True,
+                        options = req_status_opts,
+                        sort = False,
+                        ),
+        S3OptionsFilter("req_item.item_id",
+                        hidden = True,
+                        options = lambda: s3_get_filter_opts("supply_item"),
+                        ),
+        ]
+
+    if current.auth.s3_has_role("SUPPLY_COORDINATOR"):
+
+        coordinator_filters = [
+            S3LocationFilter("site_id$location_id",
+                             levels = ["L3", "L4"],
+                             ),
+            S3TextFilter("site_id$location_id$addr_postcode",
+                         label = T("Postcode"),
+                         ),
+            S3OptionsFilter("site_id",
+                            hidden = True
+                            ),
+            ]
+        filter_widgets[2:2] = coordinator_filters
+
+    return filter_widgets
+
+# =============================================================================
+class ShipmentCodeRepresent(S3Represent):
+    """
+        S3Represent variant of the shipment code representation (REQ, WB, GRN)
+
+        - TODO generalize as supply_ShipmentCodeRepresent?
+    """
+
+    def __init__(self, tablename, fieldname, show_link=True, pdf=False):
+        """
+            Constructor
+
+            @param show_link: show representation as clickable link
+        """
+
+        if not show_link:
+            lookup = key = None
+        else:
+            lookup = tablename
+            key = fieldname
+
+        super(ShipmentCodeRepresent, self).__init__(lookup = lookup,
+                                                    key = key,
+                                                    show_link = show_link,
+                                                    )
+        if not show_link:
+            # Make lookup-function a simple echo
+            self._lookup = lambda values, rows=None: \
+                           {v: B(v if v else self.none) for v in values}
+
+        c, f = tablename.split("_", 1)
+        args = ["[id]"]
+        if pdf:
+            args.append("form")
+        self.linkto = URL(c=c, f=f, args=args, extension="")
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        table = self.table
+
+        count = len(values)
+        if count == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+
+        rows = current.db(query).select(table.id,
+                                        key,
+                                        limitby = (0, count),
+                                        )
+        self.queries += 1
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+        return str(row.id)
+
+    # -------------------------------------------------------------------------
+    def link(self, k, v, row=None):
+        """
+            Represent a (key, value) as hypertext link.
+            - same as default, except with k and v reversed ;)
+
+            @param k: the key [here: the shipment code]
+            @param v: the representation of the key [here: the record ID]
+
+            @param row: the row with this key
+        """
+
+        if self.linkto:
+            k = s3_str(k)
+            return A(k, _href=self.linkto.replace("[id]", v) \
+                                         .replace("%5Bid%5D", v))
+        else:
+            return k
 
 # END =========================================================================

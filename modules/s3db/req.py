@@ -329,7 +329,9 @@ class RequestModel(S3Model):
                                 readable = not default_type,
                                 writable = not default_type,
                                 ),
-                          req_ref(readable = use_req_number,
+                          req_ref(represent = lambda v, row=None: \
+                                              self.req_ref_represent(v, show_link=False),
+                                  readable = use_req_number,
                                   writable = use_req_number,
                                   ),
                           s3_datetime(default = "now",
@@ -1158,7 +1160,8 @@ $.filterOptionsS3({
                         args = [req_row.id]
                     return A(value,
                              _href = URL(c="req", f="req",
-                                         args=args,
+                                         args = args,
+                                         extension = "",
                                          ),
                              )
             return B(value)
