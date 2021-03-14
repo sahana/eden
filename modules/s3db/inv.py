@@ -1230,7 +1230,7 @@ class S3InventoryTrackingModel(S3Model):
                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "inv_send.id",
                                                           self.inv_send_represent,
-                                                          orderby = "inv_send_id.date",
+                                                          orderby = "inv_send.date",
                                                           sort = True,
                                                           )),
                                   sortby = "date",

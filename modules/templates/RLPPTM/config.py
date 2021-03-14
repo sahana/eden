@@ -9,7 +9,7 @@
 
 from collections import OrderedDict
 
-from gluon import current, URL, A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, TAG
+from gluon import current, URL, A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_NOT_EMPTY, TAG
 from gluon.storage import Storage
 
 from s3 import FS, IS_ONE_OF, IS_NOT_ONE_OF, S3Represent, s3_str
@@ -199,8 +199,12 @@ def config(settings):
     settings.req.prompt_match = False
 
     # -------------------------------------------------------------------------
-    settings.inv.track_pack_value = False
+    settings.inv.track_pack_values = False
     settings.inv.send_show_org = False
+
+    # -------------------------------------------------------------------------
+    settings.supply.catalog_default = "Material für Teststellen"
+    settings.supply.catalog_multi = False
 
     # -------------------------------------------------------------------------
     # UI Settings
@@ -1825,7 +1829,6 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
-            from gluon import IS_NOT_EMPTY
             from s3 import S3SQLCustomForm, \
                            StringTemplateParser
 
@@ -2248,10 +2251,36 @@ def config(settings):
         field.widget = None
         field.comment = None
 
+        field = table.send_id
+        field.label = T("Shipment")
+        field.represent = S3Represent(lookup = "inv_send",
+                                      fields = ["send_ref"],
+                                      show_link = True,
+                                      )
+
+        # Custom list fields
+        resource = r.resource
+        if resource.tablename == "supply_item":
+            list_fields = ["item_id",
+                           "send_id",
+                           "send_id$date",
+                           "send_id$to_site_id",
+                           "item_pack_id",
+                           "quantity",
+                           "recv_quantity",
+                           "status",
+                           ]
+            s3db.configure("inv_track_item",
+                           list_fields = list_fields,
+                           insertable = False,
+                           editable = False,
+                           deletable = False,
+                           )
+
         # Override standard-onaccept to prevent inventory updates
-        current.s3db.configure("inv_track_item",
-                               onaccept = inv_track_item_onaccept,
-                               )
+        s3db.configure("inv_track_item",
+                       onaccept = inv_track_item_onaccept,
+                       )
 
     settings.customise_inv_track_item_resource = customise_inv_track_item_resource
 
@@ -2521,11 +2550,83 @@ def config(settings):
 
         table = s3db.req_req_item
 
+        quantities = ("quantity_transit",
+                      "quantity_fulfil",
+                      )
+        for fn in quantities:
+            field = table[fn]
+            field.represent = lambda v: v if v is not None else "-"
+
+        resource = r.resource
+        if resource.tablename == "supply_item":
+            list_fields = ["item_id",
+                           "req_id$req_ref",
+                           "req_id$site_id",
+                           "item_pack_id",
+                           "quantity",
+                           "quantity_transit",
+                           "quantity_fulfil",
+                           ]
+            s3db.configure("req_req_item",
+                           list_fields = list_fields,
+                           insertable = False,
+                           editable = False,
+                           deletable = False,
+                           )
+
         # Use drop-down for supply item, not autocomplete
         field = table.item_id
         field.widget = None
 
     settings.customise_req_req_item_resource = customise_req_req_item_resource
+
+    # -------------------------------------------------------------------------
+    def customise_supply_item_resource(r, tablename):
+
+        s3db = current.s3db
+
+        table = s3db.supply_item
+
+        unused = ("item_category_id",
+                  "brand_id",
+                  "kit",
+                  "model",
+                  "year",
+                  "weight",
+                  "length",
+                  "width",
+                  "height",
+                  "volume",
+                  )
+        for fn in unused:
+            field = table[fn]
+            field.readable = field.writable = False
+
+        # Code is required
+        field = table.code
+        field.requires = [IS_NOT_EMPTY(), field.requires]
+
+        # Use a localized default for um
+        field = table.um
+        field.default = s3_str(T("piece"))
+
+    settings.customise_supply_item_resource = customise_supply_item_resource
+
+    # -------------------------------------------------------------------------
+    def customise_supply_item_controller(**attr):
+
+        s3db = current.s3db
+
+        s3db.add_components("supply_item",
+                            inv_track_item = "item_id",
+                            )
+
+        from .rheaders import rlpptm_supply_rheader
+        attr["rheader"] = rlpptm_supply_rheader
+
+        return attr
+
+    settings.customise_supply_item_controller = customise_supply_item_controller
 
     # -------------------------------------------------------------------------
     def shipping_code(prefix, site_id, field):
