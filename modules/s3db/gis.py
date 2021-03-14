@@ -3620,7 +3620,7 @@ class S3MapModel(S3Model):
                      layer_id(),
                      name_field()(),
                      desc_field()(),
-                     Field("type", length=16,
+                     Field("type", length=24,
                            label = TYPE,
                            requires = IS_IN_SET(openweathermap_layer_types),
                            ),
