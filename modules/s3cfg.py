@@ -5948,6 +5948,13 @@ class S3Config(Storage):
         """
         return self.supply.get("use_alt_name", True)
 
+    def get_supply_shipping_code(self):
+        """
+            Custom shipping code generator (REQ, WB, GRN etc)
+            - function(prefix, site_id, field)
+        """
+        return self.supply.get("shipping_code")
+
     # -------------------------------------------------------------------------
     # Vulnerability
     #

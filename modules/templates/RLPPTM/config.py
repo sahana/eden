@@ -9,10 +9,10 @@
 
 from collections import OrderedDict
 
-from gluon import current, URL, A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, TAG
+from gluon import current, URL, A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_NOT_EMPTY, IS_LENGTH, TAG
 from gluon.storage import Storage
 
-from s3 import FS, IS_ONE_OF, S3Represent, s3_str
+from s3 import FS, IS_ONE_OF, IS_NOT_ONE_OF, S3Represent, s3_str
 from s3dal import original_tablename
 
 from .rlpgeonames import rlp_GeoNames
@@ -2047,6 +2047,9 @@ def config(settings):
                 # is still editable
                 field = table.send_ref
                 field.readable = field.writable = True
+                field.requires = IS_NOT_ONE_OF(db, "inv_send.send_ref",
+                                               error_message = T("Specify a unique reference number"),
+                                               )
 
                 # Request number, on the other hand, should not be editable
                 field = table.req_ref
@@ -2523,6 +2526,38 @@ def config(settings):
         field.widget = None
 
     settings.customise_req_req_item_resource = customise_req_req_item_resource
+
+    # -------------------------------------------------------------------------
+    def shipping_code(prefix, site_id, field):
+
+        if prefix == "WB":
+            # We do not generate waybill numbers, but ask them from the user
+            # TODO have a default anyway?
+            return None
+
+        db = current.db
+        if site_id:
+            code = "%s-%s-" % (prefix, site_id)
+        else:
+            code = "%s-#-" % prefix
+
+        number = 0
+        if field:
+            query = (field.like("%s%%" % code))
+            ref_row = db(query).select(field,
+                                       limitby = (0, 1),
+                                       orderby = ~field
+                                       ).first()
+            if ref_row:
+                ref = ref_row[field]
+                try:
+                    number = int(ref[-6:])
+                except:
+                    pass
+
+        return "%s%06d" % (code, number + 1)
+
+    settings.supply.shipping_code = shipping_code
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them

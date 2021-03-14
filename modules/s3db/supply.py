@@ -2928,6 +2928,11 @@ def supply_get_shipping_code(doctype, site_id, field):
                       (to look up the previous number for incrementing)
     """
 
+    # Custom shipping code generator?
+    custom_code = current.deployment_settings.get_supply_shipping_code()
+    if callable(custom_code):
+        return custom_code(doctype, site_id, field)
+
     db = current.db
     if site_id:
         table = current.s3db.org_site

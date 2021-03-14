@@ -5068,6 +5068,7 @@
 'Specification of Costs': 'Kostenaufstellung',
 'Specify a descriptive title for the image.': 'Geben Sie einen beschreibenden Titel für das Bild an.',
 'Specify a time unit or use HH:MM format': 'Geben Sie eine Zeiteinheit an oder verwenden sie die HH:MM Schreibweise',
+'Specify a unique reference number': 'Geben Sie eine eindeutige Referenznummer an',
 'Specify days/hours like: Monday 10-12; Tuesday 10-12 and 14-19; Friday 13-15': 'Geben Sie Wochentage/Stunden an, z.B. Montag 10-12; Dienstag 10-12 und 14-19; Freitag 13-15',
 'Specify the bed type of this unit.': 'Geben Sie den Bettentypen an für diese Einheit an.',
 'Specify the maximum number of weekly hours': 'Geben Sie die maximale Anzahl Stunden pro Woche an',
