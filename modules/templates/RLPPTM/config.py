@@ -196,6 +196,7 @@ def config(settings):
     settings.req.use_commit = False
 
     settings.req.items_ask_purpose = False
+    settings.req.prompt_match = False
 
     # -------------------------------------------------------------------------
     settings.inv.track_pack_value = False
@@ -2136,6 +2137,11 @@ def config(settings):
         auth = current.auth
         s3db = current.s3db
 
+        table = s3db.req_req
+
+        field = table.req_ref
+        field.label = T("Order No.")
+
         if auth.s3_has_role("SUPPLY_COORDINATOR"):
             from .requests import RegisterShipment
             s3db.set_method("req", "req",
@@ -2162,22 +2168,74 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
+            resource = r.resource
+            table = resource.table
+
+            record = r.record
+            if record:
+                # Check if there is any shipment for this request
+                ritable = s3db.req_req_item
+                titable = s3db.inv_track_item
+                join = titable.on((titable.req_item_id == ritable.id) & \
+                                  (titable.deleted == False))
+                query = (ritable.req_id == r.id) & \
+                        (ritable.deleted == False)
+                item = db(query).select(titable.id, join=join, limitby=(0, 1)).first()
+
+                if item:
+                    # Cannot edit the request
+                    resource.configure(editable = False, deletable = False)
+                    if r.component_name == "req_item":
+                        # ...nor its items
+                        r.component.configure(insertable = False,
+                                              editable = False,
+                                              deletable = False,
+                                              )
+
             if not r.component:
+                if r.interactive:
+                    # Hide priority, date_required and date_recv
+                    field = table.priority
+                    field.readable = field.writable = False
+                    field = table.date_required
+                    field.readable = field.writable = False
+                    field = table.date_recv
+                    field.readable = field.writable = False
+
+                    # If only one site selectable, set default and make r/o
+                    field = table.site_id
+                    requires = field.requires
+                    if isinstance(requires, (list, tuple)):
+                        requires = requires[0]
+                    if hasattr(requires, "options"):
+                        options = [opt[0] for opt in requires.options() if opt[0]]
+                        if len(options) == 1:
+                            field.default = int(options[0])
+                            field.writable = False
+
+                    # Requester is always the current user
+                    # => set as default and make r/o
+                    user_person_id = auth.s3_logged_in_person()
+                    if user_person_id:
+                        field = table.requester_id
+                        field.default = user_person_id
+                        field.writable = False
+
+                # Custom list fields
                 list_fields = ["id",
                                "req_ref",
                                "date",
-                               #"date_required",
                                "site_id",
-                               #"requester_id",
-                               #"priority",
                                (T("Details"), "details"),
                                "transit_status",
                                "fulfil_status",
                                ]
-                r.resource.configure(list_fields = list_fields,
-                                     )
 
-            if r.interactive and not r.record and has_role("SUPPLY_COORDINATOR"):
+                # Reconfigure table
+                resource.configure(list_fields = list_fields,
+                                   )
+
+            if r.interactive and not record and has_role("SUPPLY_COORDINATOR"):
                 # Configure WWS export format
                 export_formats = list(settings.get_ui_export_formats())
                 export_formats.append(("wws", "fa fa-shopping-cart", T("CoronaWWS")))
@@ -2213,33 +2271,34 @@ def config(settings):
                 inject_script = False
                 if record:
                     # Single record view
-                    if record.fulfil_status not in request_complete:
-                        query = (stable.req_ref == record.req_ref) & \
-                                (stable.status.belongs(shipment_in_process)) & \
-                                (stable.deleted == False)
-                        shipment = db(query).select(stable.id, limitby=(0, 1)).first()
-                    else:
-                        shipment = None
-                    if not shipment:
-                        ship_btn = A(T("Register Shipment"),
-                                     _class = "action-btn ship-btn",
-                                     _db_id = str(record.id),
-                                     )
-                        inject_script = True
-                    else:
-                        ship_btn = A(T("Register Shipment"),
-                                     _class = "action-btn",
-                                     _disabled = "disabled",
-                                     _title = T("Shipment already in process"),
-                                     )
-                    if "buttons" not in output:
-                        buttons = output["buttons"] = {}
-                    else:
-                        buttons = output["buttons"]
-                    delete_btn = buttons.get("delete_btn")
+                    if not r.component and has_role("SUPPLY_COORDINATOR"):
+                        if record.fulfil_status not in request_complete:
+                            query = (stable.req_ref == record.req_ref) & \
+                                    (stable.status.belongs(shipment_in_process)) & \
+                                    (stable.deleted == False)
+                            shipment = db(query).select(stable.id, limitby=(0, 1)).first()
+                        else:
+                            shipment = None
+                        if not shipment:
+                            ship_btn = A(T("Register Shipment"),
+                                         _class = "action-btn ship-btn",
+                                         _db_id = str(record.id),
+                                         )
+                            inject_script = True
+                        else:
+                            ship_btn = A(T("Register Shipment"),
+                                         _class = "action-btn",
+                                         _disabled = "disabled",
+                                         _title = T("Shipment already in process"),
+                                         )
+                        if "buttons" not in output:
+                            buttons = output["buttons"] = {}
+                        else:
+                            buttons = output["buttons"]
+                        delete_btn = buttons.get("delete_btn")
 
-                    b = [delete_btn, ship_btn] if delete_btn else [ship_btn]
-                    buttons["delete_btn"] = TAG[""](*b)
+                        b = [delete_btn, ship_btn] if delete_btn else [ship_btn]
+                        buttons["delete_btn"] = TAG[""](*b)
 
                 elif not r.component and not r.method:
                     # Datatable
@@ -2330,6 +2389,19 @@ def config(settings):
         return attr
 
     settings.customise_req_req_controller = customise_req_req_controller
+
+    # -------------------------------------------------------------------------
+    def customise_req_req_item_resource(r, tablename):
+
+        s3db = current.s3db
+
+        table = s3db.req_req_item
+
+        # Use drop-down for supply item, not autocomplete
+        field = table.item_id
+        field.widget = None
+
+    settings.customise_req_req_item_resource = customise_req_req_item_resource
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them

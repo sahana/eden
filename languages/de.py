@@ -3810,6 +3810,8 @@
 'Optional. The name of an element whose contents should be put into Popups.': 'Optional. Name eines Elements, dessen Inhalt in Dialogfenstern angezeigt wird.',
 'Optional. The name of the schema. In Geoserver this has the form http://host_name/geoserver/wfs/DescribeFeatureType?version=1.1.0&;typename=workspace_name:layer_name.': 'Optional. Name des Schemas. Bei Geoserver wird das Format http://host_name/geoserver/wfs/DescribeFeatureType?version=1.1.0&;typename=workspace_name:layer_name verwendet.',
 'Options': 'Optionen',
+'Order No.': 'Bestellung Nr.',
+'Orderer': 'Besteller',
 'Orders##delivery': 'Bestellungen',
 'Organization Details': 'Details zur Organisation',
 'Organization Domains': 'Organisationsdomains',
