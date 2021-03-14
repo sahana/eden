@@ -1,3 +1,6 @@
 Name,Description,Type,Config,Folder,Enabled,Visible
-"Current Weather",,city,,Weather,"True","False"
-"Weather Stations",,station,,Weather,"True","False"
+"Clouds",,clouds_new,,Weather,"True","False"
+"Precipitation",,precipitation_new,,Weather,"True","False"
+"Sea level pressure",,pressure_new,,Weather,"True","False"
+"Temperature",,temp_new,,Weather,"True","False"
+"Wind speed",,wind_new,,Weather,"True","False"

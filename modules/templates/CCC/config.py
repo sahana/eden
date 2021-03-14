@@ -283,7 +283,7 @@ def config(settings):
     # Now using req_need, so unused:
     #settings.req.req_type = ("People",)
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def ccc_person_anonymize():
         """ Rules to anonymise a person """
 
@@ -408,7 +408,7 @@ def config(settings):
 
         return rules
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def ccc_user_anonymize():
         """ Rules to anonymise a user """
 
@@ -693,7 +693,6 @@ def config(settings):
         T = current.T
 
         if tablename == "hrm_training_event":
-            T = current.T
             auth = current.auth
             has_role = auth.s3_has_role
             if has_role("ADMIN") or \
@@ -763,7 +762,6 @@ def config(settings):
                               rheader_tabs)
 
         elif tablename == "org_organisation":
-            T = current.T
             tabs = [(T("Basic Details"), None),
                     (T("Area Served"), "location"),
                     #(T("Offices"), "office"),
@@ -820,7 +818,6 @@ $('.copy-link').click(function(e){
                           rheader_tabs)
 
         elif tablename == "pr_group":
-            T = current.T
             tabs = [(T("Basic Details"), None),
                     # 'Person' allows native tab breakout
                     #(T("Members"), "group_membership"),
@@ -839,7 +836,6 @@ $('.copy-link').click(function(e){
                           rheader_tabs)
 
         elif tablename == "pr_person":
-            T = current.T
             controller = r.controller
             if controller == "br":
                 tabs = [(T("Basic Details"), None),
@@ -913,7 +909,6 @@ $('.copy-link').click(function(e){
                           rheader_tabs)
 
         elif tablename == "req_need":
-            T = current.T
             auth = current.auth
             db = current.db
             s3db = current.s3db

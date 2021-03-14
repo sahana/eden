@@ -3464,7 +3464,7 @@ S3.gis.yx = [
             }
         }
         // OpenWeatherMap
-        if (options.OWM) {
+        if (options.layers_openweathermap) {
             addOWMLayers(map);
         }
         // Shapefiles
@@ -4383,43 +4383,25 @@ S3.gis.yx = [
 
     // OpenWeatherMap
     var addOWMLayers = function(map) {
-        var layer
-            owm = map.s3.options.OWM;
-        if (owm.station) {
-            layer = new OpenLayers.Layer.Vector.OWMStations(
-                owm.station.name,
-                {dir: owm.station.dir,
+        var apikey = S3.gis.openweathermap,
+            layer,
+            layers = map.s3.options.layers_openweathermap;
+        for (var l in layers){
+            layer = new OpenLayers.Layer.XYZ(
+                layers[l].name,
+                'https://tile.openweathermap.org/map/' + l + '/${z}/${x}/${y}.png?appid=' + apikey,
+                {dir: layers[l].dir,
+                 isBaseLayer: false,
                  // This is used to Save State
-                 s3_layer_id: owm.station.id,
-                 s3_layer_type: 'openweathermap'
-                }
+                 s3_layer_id: layers[l].id,
+                 s3_layer_type: 'openweathermap',
+                 type: 'png'
+                 }
             );
-            layer.setVisibility(owm.station.visibility);
+            layer.setVisibility(layers[l].visibility);
             layer.events.on({
-                'featureselected': layer.onSelect,
-                'featureunselected': layer.onUnselect,
                 'loadstart': layer_loadstart,
-                'loadend': layer_loadend,
-                'visibilitychanged': layer_visibilitychanged
-            });
-            map.addLayer(layer);
-        }
-        if (owm.city) {
-            layer = new OpenLayers.Layer.Vector.OWMWeather(
-                owm.city.name,
-                {dir: owm.city.dir,
-                 // This is used to Save State
-                 s3_layer_id: owm.city.id,
-                 s3_layer_type: 'openweathermap'
-                }
-            );
-            layer.setVisibility(owm.city.visibility);
-            layer.events.on({
-                'featureselected': layer.onSelect,
-                'featureunselected': layer.onUnselect,
-                'loadstart': layer_loadstart,
-                'loadend': layer_loadend,
-                'visibilitychanged': layer_visibilitychanged
+                'loadend': layer_loadend
             });
             map.addLayer(layer);
         }

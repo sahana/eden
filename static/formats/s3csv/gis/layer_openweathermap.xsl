@@ -11,7 +11,7 @@
          Description..........string..........Layer Description
          Type.................string..........Layer Type
          Config...............string..........Configuration Name
-         Folder...............string..........Layer default Base in config? (SITE_DEFAULT if not-specified)
+         Folder...............string..........Folder
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
          Visible..............boolean.........Layer Visible in config? (SITE_DEFAULT if not-specified)
 

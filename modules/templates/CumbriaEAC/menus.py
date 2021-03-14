@@ -35,113 +35,12 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        auth = current.auth
-        if not auth.is_logged_in():
-            menu = [MM("Volunteer Your Time", c="default", f="index", args="volunteer"),
-                    #MM("Donate Items", c="default", f="index", args="donate"),
-                    ]
-            return menu
-
-        has_role = auth.s3_has_role
-        if has_role("ADMIN"):
-            menu = [MM("General Information and Advice", c="cms", f="post", m="datalist"),
-                    MM("All Documents", c="doc", f="document", m="datalist"),
-                    MM("Affected People", c="br", f="person")(
-                       MM("Import", m="import"),
-                       ),
-                    MM("Donors", c="pr", f="person", vars={"donors": 1})(
-                       MM("Donations", c="supply", f="person_item"),
-                       MM("Edit General Information", c="cms", f="post", vars={"~.name": "Donor"}, m="update"),
-                       ),
-                    MM("Organisations", c="org", f="organisation", m="summary")(
-                       MM("Import", m="import"),
-                       #MM("Message", c="org", f="organisation", args="message"),
-                       ),
-                    MM("Volunteers", c="hrm", f="human_resource")(
-                       MM("Reserves", c="pr", f="person", vars={"reserves": 1}),
-                       MM("Reserve Groups", c="pr", f="group"),
-                       MM("Inactives", c="pr", f="person", vars={"inactive": 1}),
-                       ),
-                    MM("Events", c="hrm", f="training_event"),
-                    MM("Opportunities", c="req", f="need"),
-                    MM("Messages", c="project", f="task"),
-                    ]
-        elif has_role("ORG_ADMIN"):
-            menu = [MM("General Information and Advice", c="cms", f="post", m="datalist"),
-                    MM("Organisation Documents", c="doc", f="document", m="datalist"),
-                    MM("Donors", c="pr", f="person", vars={"donors": 1})(
-                       MM("Donations", c="supply", f="person_item"),
-                       ),
-                    MM("Organisations", c="org", f="organisation", m="summary")(
-                       #MM("Message", c="org", f="organisation", args="message"),
-                       ),
-                    MM("Volunteers", c="hrm", f="human_resource")(
-                       MM("Reserves", c="pr", f="person", vars={"reserves": 1}),
-                       #MM("Reserve Groups", c="pr", f="group"),
-                       ),
-                    MM("Events", c="hrm", f="training_event"),
-                    MM("Opportunities", c="req", f="need"),
-                    MM("Messages", c="project", f="task"),
-                    ]
-        elif has_role("AGENCY"):
-            menu = [MM("General Information and Advice", c="cms", f="post", m="datalist"),
-                    MM("Documents", c="doc", f="document", m="datalist"),
-                    MM("Affected People", c="br", f="person")(
-                       MM("Import", c="br", f="person", m="import"),
-                       ),
-                    MM("Donors", c="pr", f="person", vars={"donors": 1})(
-                       MM("Donations", c="supply", f="person_item"),
-                       ),
-                    MM("Organisations", c="org", f="organisation", m="summary")(
-                       #MM("Message", c="org", f="organisation", args="message"),
-                       ),
-                    MM("Volunteers", c="hrm", f="human_resource")(
-                       MM("Reserves", c="pr", f="person", vars={"reserves": 1}),
-                       MM("Reserve Groups", c="pr", f="group"),
-                       ),
-                    MM("Events", c="hrm", f="training_event"),
-                    MM("Opportunities", c="req", f="need"),
-                    MM("Messages", c="project", f="task")(
-                       MM("Contact Organisation Admins", c="project", f="task", m="create"),
-                       ),
-                    ]
-        elif has_role("VOLUNTEER"):
-            menu = [MM("General Information and Advice", c="cms", f="post", m="datalist"),
-                    MM("Organisation Documents", c="doc", f="document", m="datalist"),
-                    MM("Events", c="hrm", f="training_event"),
-                    MM("Opportunities", c="req", f="need"),
-                    MM("Contact Organisation Admins", c="project", f="task", m="create"),
-                    ]
-        elif has_role("GROUP_ADMIN"):
-            menu = [#MM("Volunteer Your Time", c="default", f="index", args="volunteer"),
-                    #MM("Donate Items", c="default", f="index", args="donate"),
-                    MM("General Information and Advice", c="cms", f="post", m="datalist"),
-                    MM("Group", c="pr", f="group", m="update"),
-                    ]
-        elif has_role("DONOR"):
-            menu = [#MM("Volunteer Your Time", c="default", f="index", args="volunteer"),
-                    #MM("Donate Items", c="default", f="index", args="donate"),
-                    MM("General Information", c="default", f="index", m="donor"),
-                    MM("Messages", c="project", f="task"),
-                    ]
-        elif has_role("RESERVE"):
-            # Reserve Volunteer
-            menu = [#MM("Volunteer Your Time", c="default", f="index", args="volunteer"),
-                    #MM("Donate Items", c="default", f="index", args="donate"),
-                    MM("General Information and Advice", c="cms", f="post", m="datalist"),
-                    MM("Organisations", c="org", f="organisation", m="summary"),
-                    MM("Events", c="hrm", f="training_event"), # They can only see ones they're invited to
-                    MM("Opportunities", c="req", f="need"),    # They can only see ones they're invited to
-                    ]
-        else:
-            # Inactive Volunteer
-            menu = [#MM("Volunteer Your Time", c="default", f="index", args="volunteer"),
-                    #MM("Donate Items", c="default", f="index", args="donate"),
-                    #MM("General Information and Advice", c="cms", f="post", m="datalist"),
-                    MM("Organisations", c="org", f="organisation", m="summary"),
-                    #MM("Events", c="hrm", f="training_event"), # They can only see ones they're invited to
-                    #MM("Opportunities", c="req", f="need"),    # They can only see ones they're invited to
-                    ]
+        
+        menu = [MM("Shelters", c="cr", f="shelter", m="summary"),
+                MM("Affected People", c="br", f="person")(
+                   MM("Import", m="import"),
+                   ),
+                ]
 
         return menu
 
@@ -340,6 +239,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def cr():
+        """ No Side Menu """
+
+        return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def doc():
         """ No Side Menu """
 
@@ -362,27 +268,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
     # -------------------------------------------------------------------------
     @staticmethod
     def pr():
-        """ No Side Menu """
-
-        return None
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project():
-        """ No Side Menu """
-
-        return None
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def req():
-        """ No Side Menu """
-
-        return None
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def supply():
         """ No Side Menu """
 
         return None

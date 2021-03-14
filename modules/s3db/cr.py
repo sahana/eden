@@ -398,6 +398,7 @@ class CRShelterModel(S3Model):
                            ),
                      Field("status", "integer",
                            label = T("Status"),
+                           default = 2, # Open
                            represent = lambda opt: \
                                cr_shelter_opts.get(opt, messages.UNKNOWN_OPT),
                            requires = IS_EMPTY_OR(
@@ -545,13 +546,14 @@ class CRShelterModel(S3Model):
                   list_fields = list_fields,
                   onaccept = self.cr_shelter_onaccept,
                   report_options = Storage(
-                        rows=report_fields,
-                        cols=report_fields,
-                        fact=report_fields,
-                        defaults=Storage(rows = lfield, # Lowest-level of hierarchy
-                                         cols="status",
-                                         fact="count(name)",
-                                         totals=True)
+                        rows = report_fields,
+                        cols = report_fields,
+                        fact = report_fields,
+                        defaults = Storage(rows = lfield, # Lowest-level of hierarchy
+                                           cols = "status",
+                                           fact = "count(name)",
+                                           totals = True,
+                                           )
                         ),
                   super_entity = ("org_site", "doc_entity", "pr_pentity"),
                   )
@@ -936,8 +938,8 @@ class CRShelterModel(S3Model):
                                 readable = False,
                                 writable = False)
 
-        return dict(cr_shelter_id = lambda **attr: dummy("shelter_id"),
-                    )
+        return {"cr_shelter_id": lambda **attr: dummy("shelter_id"),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1525,12 +1527,14 @@ class CRShelterInspectionModel(S3Model):
                 (ltable.deleted != True) & \
                 (ftable.id == ltable.inspection_flag_id) & \
                 ((ftable.resolved == False) | (ftable.resolved == None))
-        other = db(query).select(ltable.id, limitby=(0, 1)).first()
+        other = db(query).select(ltable.id,
+                                 limitby = (0, 1)
+                                 ).first()
         if not other:
             # Set task to completed status
             closed = current.deployment_settings \
                             .get_cr_shelter_inspection_task_completed_status()
-            db(ttable.id==task_id).update(status=closed)
+            db(ttable.id == task_id).update(status = closed)
 
             # Remove task_id (to allow deletion of the link)
             link.update_record(task_id = None)
@@ -1678,6 +1682,7 @@ class CRShelterRegistrationModel(S3Model):
         registration_onaccept = self.shelter_registration_onaccept
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("person_id",
+                                                       "shelter_id",
                                                        "shelter_unit_id",
                                                        ),
                                             ),
@@ -1726,9 +1731,9 @@ class CRShelterRegistrationModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
-        return dict(cr_shelter_population_onaccept = self.shelter_population_onaccept,
-                    cr_shelter_registration_status_opts = reg_status_opts,
-                    )
+        return {"cr_shelter_population_onaccept": self.shelter_population_onaccept,
+                "cr_shelter_registration_status_opts": reg_status_opts,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1808,7 +1813,7 @@ class CRShelterRegistrationModel(S3Model):
                                        rtable.check_out_date,
                                        rtable.modified_on,
                                        rtable.person_id,
-                                       limitby = (0, 1),
+                                       limitby = (0, 1)
                                        ).first()
 
                 if reg:
@@ -1825,7 +1830,7 @@ class CRShelterRegistrationModel(S3Model):
                     row = db(query).select(htable.status,
                                            htable.date,
                                            orderby = ~htable.created_on,
-                                           limitby = (0, 1),
+                                           limitby = (0, 1)
                                            ).first()
                     if row:
                         previous_status = row.status
@@ -1921,7 +1926,8 @@ class CRShelterRegistrationModel(S3Model):
                                                 table.shelter_id,
                                                 table.deleted,
                                                 table.deleted_fk,
-                                                limitby=(0, 1)).first()
+                                                limitby = (0, 1)
+                                                ).first()
 
         if row:
             if row.deleted:
@@ -1985,7 +1991,7 @@ def cr_shelter_rheader(r, tabs=None):
                 permit = current.auth.s3_has_permission
                 if permit("update", tablename, r.id) and \
                    permit("create", "hrm_human_resource_site"):
-                    tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
+                    tabs.append((T("Assign %(staff)s") % {"staff": STAFF}, "assign"))
             if settings.get_cr_shelter_housing_unit_management():
                 tabs.append((T("Housing Units"), "shelter_unit"))
             #tabs.append((T("Events"), "event_shelter"))
@@ -2401,12 +2407,12 @@ def cr_notification_dispatcher(r, **attr):
         url = URL(c="cr", f="shelter", args=r.id)
 
         # Create the form
-        opts = dict(type="SMS",
-                    # @ToDo: deployment_setting
-                    subject = T("Deployment Request"),
-                    message = message + text,
-                    url = url,
-                    )
+        opts = {"type": "SMS",
+                # @ToDo: deployment_setting
+                "subject": T("Deployment Request"),
+                "message": message + text,
+                "url": url,
+                }
 
         output = msg.compose(**opts)
 

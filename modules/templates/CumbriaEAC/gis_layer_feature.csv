@@ -1,0 +1,2 @@
+Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Site,Points,Trackable,Style,Opacity,Folder,Visible,Enabled,Cluster Threshold,Refresh
+Shelters,All Active Shelters,cr,shelter,shelter,Campground,{name}<br />T('Occupancy'): {population}<br />T('Capacity'): {capacity_day},"name,population,capacity_day",~.status__ne=1,,True,,,,,False,,,

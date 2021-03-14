@@ -1364,6 +1364,12 @@ class S3Config(Storage):
         """
         return self.gis.get("api_google", "")
 
+    def get_gis_api_openweathermap(self):
+        """
+            API key for Open Weather Map
+        """
+        return self.gis.get("api_openweathermap", "")
+
     def get_gis_bbox_min_size(self):
         """
             Minimum size for BBOX around Features on Map

@@ -3608,7 +3608,12 @@ class S3MapModel(S3Model):
         # ---------------------------------------------------------------------
         # OpenWeatherMap
         #
-        openweathermap_layer_types = ("station", "city")
+        openweathermap_layer_types = ("clouds_new",
+                                      "precipitation_new",
+                                      "pressure_new",
+                                      "temp_new",
+                                      "wind_new",
+                                      )
 
         tablename = "gis_layer_openweathermap"
         define_table(tablename,

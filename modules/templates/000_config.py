@@ -136,14 +136,18 @@ settings.frontpage.rss = [
 # Bing API Key (for Map layers)
 # http://www.microsoft.com/maps/create-a-bing-maps-key.aspx
 #settings.gis.api_bing = ""
+# GetAddress API Key (for GetAddress.io Postcode to Address lookup)
+#settings.gis.api_getaddress = ""
 # Google API Key (for Google Maps Layers)
 #settings.gis.api_google = ""
-# Yahoo API Key (for Geocoder)
-#settings.gis.api_yahoo = ""
+# OpenWeatherMap API Key (for OpenWeatherMap Layers)
+#settings.gis.api_openweathermap = ""
 
 # GeoNames username
 #settings.gis.geonames_username = ""
 
+# Fill this in to get a Facebook Pixel for your site
+#settings.base.facebook_pixel_id = ""
 # Fill this in to get Google Analytics for your site
 #settings.base.google_analytics_tracking_id = ""
 

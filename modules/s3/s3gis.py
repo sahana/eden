@@ -9038,31 +9038,24 @@ class LayerOpenWeatherMap(Layer):
     """
 
     tablename = "gis_layer_openweathermap"
-    dictname = "OWM"
+    dictname = "layers_openweathermap"
     style = False
 
     # -------------------------------------------------------------------------
     def as_dict(self, options=None):
         sublayers = self.sublayers
         if sublayers:
-            if current.response.s3.debug:
-                self.scripts.append("gis/OWM.OpenLayers.js")
-            else:
-                self.scripts.append("gis/OWM.OpenLayers.min.js")
+            apikey = current.deployment_settings.get_gis_api_openweathermap()
+            if not apikey:
+                raise Exception("Cannot display OpenWeatherMap layers unless we have an API key\n")
+            current.response.s3.js_global.append("S3.gis.openweathermap='%s'" % apikey)
             ldict = {}
             for sublayer in sublayers:
-                if sublayer.type == "station":
-                    ldict["station"] = {"name": sublayer.name or "Weather Stations",
+                ldict[sublayer.type] = {"name": sublayer.name,
                                         "id": sublayer.layer_id,
                                         "dir": sublayer.dir,
                                         "visibility": sublayer.visible
                                         }
-                elif sublayer.type == "city":
-                    ldict["city"] = {"name": sublayer.name or "Current Weather",
-                                     "id": sublayer.layer_id,
-                                     "dir": sublayer.dir,
-                                     "visibility": sublayer.visible
-                                     }
             if options:
                 # Used by Map._setup()
                 options[self.dictname] = ldict
