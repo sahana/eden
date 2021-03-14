@@ -9,7 +9,7 @@
 
 from collections import OrderedDict
 
-from gluon import current, URL, A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_NOT_EMPTY, IS_LENGTH, TAG
+from gluon import current, URL, A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, TAG
 from gluon.storage import Storage
 
 from s3 import FS, IS_ONE_OF, IS_NOT_ONE_OF, S3Represent, s3_str
@@ -2552,7 +2552,7 @@ def config(settings):
                 ref = ref_row[field]
                 try:
                     number = int(ref[-6:])
-                except:
+                except (ValueError, TypeError):
                     pass
 
         return "%s%06d" % (code, number + 1)
