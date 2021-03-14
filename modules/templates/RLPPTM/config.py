@@ -200,7 +200,7 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     settings.inv.track_pack_value = False
-
+    settings.inv.send_show_org = False
 
     # -------------------------------------------------------------------------
     # UI Settings
@@ -1938,33 +1938,33 @@ def config(settings):
 
         s3db = current.s3db
 
+        table = s3db.inv_send
+
+        field = table.req_ref
+        field.label = T("Order No.")
+
         list_fields = ["id",
                        "req_ref",
                        "send_ref",
-                       #"sender_id",
-                       #"site_id",
-                       #"recipient_id",
-                       #"delivery_date",
                        "date",
                        "to_site_id",
                        "status",
-                       #"transport_type",
-                       #"driver_name",
-                       #"driver_phone",
-                       #"vehicle_plate_no",
-                       #"time_in",
-                       #"time_out",
-                       #"comments",
                        ]
 
         s3db.configure("inv_send",
                        list_fields = list_fields,
                        )
 
+        # Do not check for site_id (unused)
+        s3db.clear_config("inv_send", "onvalidation")
+
     settings.customise_inv_send_resource = customise_inv_send_resource
 
     # -------------------------------------------------------------------------
     def customise_inv_send_controller(**attr):
+
+        db = current.db
+        auth = current.auth
 
         s3 = current.response.s3
 
@@ -1974,13 +1974,62 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
+            resource = r.resource
+            table = resource.table
+
             component = r.component
-            if component and component.tablename == "inv_track_item":
+
+            if not component:
+                record = r.record
+
+                # Hide unused fields
+                unused = ("site_id",
+                          "organisation_id",
+                          "type",
+                          "driver_name",
+                          "driver_phone",
+                          "vehicle_plate_no",
+                          "time_out",
+                          "delivery_date",
+                          )
+                for fn in unused:
+                    field = table[fn]
+                    field.readable = field.writable = False
+
+                # Shipment reference must be editable while the shipment
+                # is still editable
+                field = table.send_ref
+                field.readable = field.writable = True
+
+                # Sender is always the current user
+                # => allow editing only if sender_id is missing
+                field = table.sender_id
+                field.widget = None
+                user_person_id = auth.s3_logged_in_person()
+                if user_person_id:
+                    field.default = user_person_id
+                    field.writable = record and not record.sender_id
+
+                # Recipient should already have been set from request
+                # => allow editing only that hasn't happened yet
+                field = table.recipient_id
+                field.writable = not record or not record.recipient_id
+
+            elif component.tablename == "inv_track_item":
 
                 itable = component.table
 
                 field = itable.item_id
                 field.readable = field.writable = True
+                if r.component_id:
+                    # If this item is linked to a request item, don't allow
+                    # to switch to another supply item
+                    query = (itable.id == r.component_id)
+                    item = db(query).select(itable.req_item_id,
+                                            limitby = (0, 1),
+                                            ).first()
+                    if item and item.req_item_id:
+                        field.writable = False
 
                 # Use custom form
                 from s3 import S3SQLCustomForm
@@ -2123,6 +2172,15 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def customise_inv_track_item_resource(r, tablename):
+
+        s3db = current.s3db
+
+        table = s3db.inv_track_item
+
+        # Item selector using dropdown not autocomplete
+        field = table.item_id
+        field.widget = None
+        field.comment = None
 
         # Override standard-onaccept to prevent inventory updates
         current.s3db.configure("inv_track_item",

@@ -51,6 +51,7 @@ class RegisterShipment(S3Method):
 
         db = current.db
         s3db = current.s3db
+        auth = current.auth
 
         stable = s3db.inv_send
         ritable = s3db.req_req_item
@@ -59,11 +60,12 @@ class RegisterShipment(S3Method):
         # Check permission
         # - user is permitted to read the request (checked by REST)
         # - user must also be permitted to create inv_send
-        if not current.auth.s3_has_permission("create", stable):
+        if not auth.s3_has_permission("create", stable):
             r.unauthorised()
+        user_person_id = auth.s3_logged_in_person
 
         # Create the shipment
-        shipment = {"sender_id": None,  # TODO current user?
+        shipment = {"sender_id": user_person_id,
                     "site_id": None,    # TODO need a default site
                     "recipient_id": req.requester_id,
                     "to_site_id": req.site_id,
