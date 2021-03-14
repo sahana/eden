@@ -1864,30 +1864,46 @@ def config(settings):
 
         s3db = current.s3db
 
-        list_fields = ["id",
-                       "req_ref",
-                       #"recv_ref",
-                       "send_ref",
-                       #"purchase_ref",
-                       #"recipient_id",
-                       #"organisation_id",
-                       #"from_site_id",
-                       "site_id",
-                       "date",
-                       #"type",
-                       "status",
-                       #"sender_id",
-                       #"comments",
-                       ]
+        table = s3db.inv_recv
 
-        s3db.configure("inv_recv",
-                       list_fields = list_fields,
-                       )
+        field = table.req_ref
+        field.label = T("Order No.")
+
+        if r.tablename == "inv_recv" and not r.component:
+            if r.interactive:
+                from s3 import S3SQLCustomForm
+                crud_fields = ["req_ref",
+                               "send_ref",
+                               "site_id",
+                               "status",
+                               "recipient_id",
+                               "date",
+                               "comments",
+                               ]
+                s3db.configure("inv_recv",
+                               crud_form = S3SQLCustomForm(*crud_fields),
+                               )
+
+            list_fields = ["req_ref",
+                           "send_ref",
+                           "site_id",
+                           "date",
+                           "status",
+                           ]
+
+            s3db.configure("inv_recv",
+                        list_fields = list_fields,
+                        )
 
     settings.customise_inv_recv_resource = customise_inv_recv_resource
 
     # -------------------------------------------------------------------------
     def customise_inv_recv_controller(**attr):
+
+        db = current.db
+
+        auth = current.auth
+        s3db = current.s3db
 
         s3 = current.response.s3
 
@@ -1897,8 +1913,39 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
+            resource = r.resource
+            table = resource.table
+
             component = r.component
-            if component and component.tablename == "inv_track_item":
+
+            if not component:
+
+                # Hide unused fields
+                unused = ("type",
+                          "organisation_id",
+                          "from_site_id",
+                          "purchase_ref",
+                          "recv_ref",
+                          )
+                for fn in unused:
+                    field = table[fn]
+                    field.readable = field.writable = False
+
+                field = table.recipient_id
+                field.widget = None
+                record = r.record
+                if record and record.recipient_id:
+                    accepted_recipients = {record.recipient_id}
+                else:
+                    accepted_recipients = set()
+                user_person_id = auth.s3_logged_in_person()
+                if user_person_id:
+                    field.default = user_person_id
+                    accepted_recipients.add(user_person_id)
+                dbset = db(s3db.pr_person.id.belongs(accepted_recipients))
+                field.requires = IS_ONE_OF(dbset, "pr_person.id", field.represent)
+
+            elif component.tablename == "inv_track_item":
 
                 itable = component.table
 
@@ -1924,8 +1971,6 @@ def config(settings):
                 component.configure(crud_form = S3SQLCustomForm(*crud_fields),
                                     list_fields = list_fields,
                                     )
-
-
             return result
         s3.prep = prep
 
@@ -1964,7 +2009,9 @@ def config(settings):
     def customise_inv_send_controller(**attr):
 
         db = current.db
+
         auth = current.auth
+        s3db = current.s3db
 
         s3 = current.response.s3
 
@@ -2001,19 +2048,35 @@ def config(settings):
                 field = table.send_ref
                 field.readable = field.writable = True
 
+                # Request number, on the other hand, should not be editable
+                field = table.req_ref
+                field.readable = bool(record)
+                field.writable = False
+
                 # Sender is always the current user
                 # => allow editing only if sender_id is missing
                 field = table.sender_id
                 field.widget = None
+                record = r.record
+                if record and record.sender_id:
+                    accepted_senders = {record.sender_id}
+                else:
+                    accepted_senders = set()
                 user_person_id = auth.s3_logged_in_person()
                 if user_person_id:
                     field.default = user_person_id
-                    field.writable = record and not record.sender_id
+                    accepted_senders.add(user_person_id)
+                dbset = db(s3db.pr_person.id.belongs(accepted_senders))
+                field.requires = IS_ONE_OF(dbset, "pr_person.id", field.represent)
 
                 # Recipient should already have been set from request
                 # => allow editing only that hasn't happened yet
                 field = table.recipient_id
-                field.writable = not record or not record.recipient_id
+                # TODO allow editing but look up acceptable recipients
+                #      from organisation of the receiving site
+                field.writable = False
+                field.readable = record and record.recipient_id
+                field.widget = None
 
             elif component.tablename == "inv_track_item":
 
