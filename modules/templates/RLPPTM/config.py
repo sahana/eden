@@ -2547,7 +2547,7 @@ def config(settings):
                         # is currently disabled
                         disabled = {"label": ship_btn_label,
                                     "_class": "action-btn",
-                                    "_title": s3_str(T("Shipment already in progress")),
+                                    "_title": s3_str(T("Shipment already in process")),
                                     "_disabled": "disabled",
                                     "exclude": restrict,
                                     }
