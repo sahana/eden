@@ -68,6 +68,7 @@
 '%(number)s payment(s) not found': '%(number)s Auszahlung(en) nicht gefunden',
 '%(number)s payment(s) registered': '%(number)s Auszahlung(en) registriert',
 '%(number)s transferable cases found': '%(number)s transferierbare Fälle gefunden',
+'%(site)s (Recipient)': '%(site)s (Empfänger)',
 '%(system_name)s - New Test Station Approval Pending': '%(system_name)s - Teststellen-Registrierung wartet auf Bestätigung',
 '%(system_name)s - New User Approval Pending': '%(system_name)s - Benutzerkonto wartet auf Bestätigung',
 '%(system_name)s - Verify Email': '%(system_name)s - Email bestätigen',

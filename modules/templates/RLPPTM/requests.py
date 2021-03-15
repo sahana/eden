@@ -40,14 +40,15 @@ class RegisterShipment(S3Method):
             if not r.record:
                 r.error(404, current.ERROR.BAD_RECORD)
             # TODO must have a form key
-            output = self.register_shipment(r, **attr)
+            self.register_shipment(r, **attr)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
 
         return output
 
     # -------------------------------------------------------------------------
-    def register_shipment(self, r, **attr):
+    @staticmethod
+    def register_shipment(r, **attr):
 
         req = r.record
 
@@ -110,8 +111,6 @@ class RegisterShipment(S3Method):
         # Redirect to the shipment
         # TODO hint to verify the shipment before actually sending it
         redirect(URL(c="inv", f="send", args = [shipment_id]))
-
-        return None
 
 # =============================================================================
 def req_filter_widgets():
@@ -233,6 +232,53 @@ def send_filter_widgets():
                          ),
             ]
         filter_widgets[3:3] = coordinator_filters
+
+    return filter_widgets
+
+# =============================================================================
+def recv_filter_widgets():
+    """
+        Filter widgets for incoming shipments
+
+        @returns: list of filter widgets
+    """
+
+    T = current.T
+
+    from s3 import S3DateFilter, \
+                   S3OptionsFilter, \
+                   S3TextFilter, \
+                   s3_get_filter_opts
+
+    s3db = current.s3db
+
+    recv_status_opts = OrderedDict(sorted(s3db.inv_shipment_status_labels.items(),
+                                          key = lambda i: i[0],
+                                          ))
+    # We don't currently use these statuses
+    from s3db.inv import SHIP_STATUS_CANCEL, SHIP_STATUS_RETURNING
+    del recv_status_opts[SHIP_STATUS_CANCEL]
+    del recv_status_opts[SHIP_STATUS_RETURNING]
+
+    filter_widgets = [
+        S3TextFilter(["req_ref",
+                      "send_ref",
+                      ],
+                     label = T("Search"),
+                     ),
+        S3OptionsFilter("status",
+                        cols = 3,
+                        options = recv_status_opts,
+                        sort = False,
+                        ),
+        S3DateFilter("date",
+                     hidden = True,
+                     ),
+        S3OptionsFilter("track_item.item_id",
+                        hidden = True,
+                        options = lambda: s3_get_filter_opts("supply_item"),
+                        ),
+        ]
 
     return filter_widgets
 

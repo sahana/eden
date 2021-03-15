@@ -1953,6 +1953,10 @@ def config(settings):
                 dbset = db(s3db.pr_person.id.belongs(accepted_recipients))
                 field.requires = IS_ONE_OF(dbset, "pr_person.id", field.represent)
 
+                if r.interactive:
+                    from .requests import recv_filter_widgets
+                    resource.configure(filter_widgets = recv_filter_widgets())
+
             elif component.tablename == "inv_track_item":
 
                 itable = component.table
@@ -2636,6 +2640,19 @@ def config(settings):
         # Use a localized default for um
         field = table.um
         field.default = s3_str(T("piece"))
+
+        # Filter widgets
+        from s3 import S3TextFilter
+        filter_widgets = [S3TextFilter(["name",
+                                        "code",
+                                        "comments",
+                                        ],
+                                       label = T("Search"),
+                                       ),
+                          ]
+        s3db.configure("supply_item",
+                       filter_widgets = filter_widgets,
+                       )
 
     settings.customise_supply_item_resource = customise_supply_item_resource
 
