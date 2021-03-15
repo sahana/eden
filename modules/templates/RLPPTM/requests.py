@@ -175,6 +175,68 @@ def req_filter_widgets():
     return filter_widgets
 
 # =============================================================================
+def send_filter_widgets():
+    """
+        Filter widgets for outgoing shipments
+
+        @returns: list of filter widgets
+    """
+
+    T = current.T
+
+    from s3 import S3DateFilter, \
+                   S3LocationFilter, \
+                   S3OptionsFilter, \
+                   S3TextFilter, \
+                   s3_get_filter_opts
+
+    s3db = current.s3db
+
+    send_status_opts = OrderedDict(sorted(s3db.inv_shipment_status_labels.items(),
+                                          key = lambda i: i[0],
+                                          ))
+    # We don't currently use these statuses
+    from s3db.inv import SHIP_STATUS_CANCEL, SHIP_STATUS_RETURNING
+    del send_status_opts[SHIP_STATUS_CANCEL]
+    del send_status_opts[SHIP_STATUS_RETURNING]
+
+    filter_widgets = [
+        S3TextFilter(["req_ref",
+                      "send_ref",
+                      ],
+                     label = T("Search"),
+                     ),
+        S3DateFilter("date"),
+        S3OptionsFilter("status",
+                        cols = 3,
+                        options = send_status_opts,
+                        sort = False,
+                        ),
+        S3OptionsFilter("track_item.item_id",
+                        hidden = True,
+                        options = lambda: s3_get_filter_opts("supply_item"),
+                        ),
+        ]
+
+    if current.auth.s3_has_role("SUPPLY_COORDINATOR"):
+
+        coordinator_filters = [
+            S3OptionsFilter("to_site_id",
+                            ),
+            S3LocationFilter("to_site_id$location_id",
+                             levels = ["L3", "L4"],
+                             hidden = True
+                             ),
+            S3TextFilter("to_site_id$location_id$addr_postcode",
+                         label = T("Postcode"),
+                         hidden = True
+                         ),
+            ]
+        filter_widgets[3:3] = coordinator_filters
+
+    return filter_widgets
+
+# =============================================================================
 class ShipmentCodeRepresent(S3Represent):
     """
         S3Represent variant of the shipment code representation (REQ, WB, GRN)

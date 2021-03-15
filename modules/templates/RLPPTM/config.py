@@ -2097,6 +2097,10 @@ def config(settings):
                 field.readable = record and record.recipient_id
                 field.widget = None
 
+                if r.interactive:
+                    from .requests import send_filter_widgets
+                    resource.configure(filter_widgets = send_filter_widgets())
+
             elif component.tablename == "inv_track_item":
 
                 itable = component.table
