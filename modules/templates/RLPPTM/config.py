@@ -2288,6 +2288,20 @@ def config(settings):
         # Custom list fields
         resource = r.resource
         if resource.tablename == "supply_item":
+
+            # Custom form for record view (read-only)
+            field = table.recv_quantity
+            field.readable = True
+            from s3 import S3SQLCustomForm
+            crud_form = S3SQLCustomForm("item_id",
+                                        "send_id",
+                                        "item_pack_id",
+                                        "quantity",
+                                        "recv_quantity",
+                                        "status",
+                                        )
+
+            # List fields
             list_fields = ["item_id",
                            "send_id",
                            "send_id$date",
@@ -2297,7 +2311,10 @@ def config(settings):
                            "recv_quantity",
                            "status",
                            ]
+
+            # Reconfigure - always r/o in this view
             s3db.configure("inv_track_item",
+                           crud_form = crud_form,
                            list_fields = list_fields,
                            insertable = False,
                            editable = False,
