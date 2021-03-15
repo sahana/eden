@@ -1676,7 +1676,8 @@ class S3ComponentTab(object):
         return True
 
     # -------------------------------------------------------------------------
-    def authorised(self, hook):
+    @staticmethod
+    def authorised(hook):
         """
             Check permissions for component tabs (in order to deactivate
             tabs the user is not permitted to access)
@@ -1810,7 +1811,7 @@ class S3ResourceHeader(object):
         self.title = title
 
     # -------------------------------------------------------------------------
-    def __call__(self, r, tabs=None, table=None, record=None, as_div=True):
+    def __call__(self, r, tabs=None, table=None, record=None, actions=None, as_div=True):
         """
             Return the HTML representation of this rheader
 
@@ -1818,6 +1819,7 @@ class S3ResourceHeader(object):
             @param tabs: the tabs (overrides the original tabs definition)
             @param table: override r.table
             @param record: override r.record
+            @param actions: any action items for the view
             @param as_div: True: will return the rheader_fields and the
                            rheader_tabs together as a DIV
                            False will return the rheader_fields and the
@@ -1871,7 +1873,12 @@ class S3ResourceHeader(object):
             else:
                 content = TABLE(trs, _class="rheader-content")
 
-            rheader = (content, rheader_tabs)
+            if actions:
+                action_items = DIV(_class="rheader-actions", *actions)
+                rheader = (content, action_items, rheader_tabs)
+            else:
+                rheader = (content, rheader_tabs)
+
             if as_div:
                 rheader = DIV(*rheader)
 
@@ -1881,7 +1888,8 @@ class S3ResourceHeader(object):
         return rheader
 
     # -------------------------------------------------------------------------
-    def render_field(self, table, record, col):
+    @staticmethod
+    def render_field(table, record, col):
         """
             Render an rheader field
 

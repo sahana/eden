@@ -6,7 +6,7 @@
     @license: MIT
 """
 
-from gluon import current
+from gluon import current, A, URL
 
 from s3 import S3ResourceHeader, s3_rheader_resource
 
@@ -256,6 +256,75 @@ def rlpptm_supply_rheader(r, tabs=None):
 
         rheader = S3ResourceHeader(rheader_fields, tabs, title=rheader_title)
         rheader = rheader(r, table = resource.table, record = record)
+
+    return rheader
+
+# =============================================================================
+def rlpptm_inv_rheader(r, tabs=None):
+    """ INV custom resource headers """
+
+    if r.representation != "html":
+        # Resource headers only used in interactive views
+        return None
+
+    tablename, record = s3_rheader_resource(r)
+    if tablename != r.tablename:
+        resource = current.s3db.resource(tablename, id=record.id)
+    else:
+        resource = r.resource
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+        T = current.T
+
+        db = current.db
+        s3 = current.response.s3
+
+        auth = current.auth
+        s3db = current.s3db
+
+        if tablename == "inv_send":
+            if not tabs:
+                tabs = [(T("Edit Details"), None),
+                        (T("Items"), "track_item"),
+                        ]
+
+            rheader_fields = [["req_ref", "send_ref"],
+                              ["status"],
+                              ["date"]
+                              ]
+            rheader_title = "to_site_id"
+
+            rheader = S3ResourceHeader(rheader_fields, tabs, title=rheader_title)
+
+            actions = []
+
+            # If the record has a send_ref and status is SHIP_STATUS_IN_PROCESS
+            # and there is at least one track item linked to it, add the send-button
+            from s3db.inv import SHIP_STATUS_IN_PROCESS
+            if record.status == SHIP_STATUS_IN_PROCESS and \
+               record.send_ref and \
+               auth.s3_has_permission("update", resource.table, record_id = record.id):
+                titable = s3db.inv_track_item
+                query = (titable.send_id == record.id) & \
+                        (titable.deleted == False)
+                row = db(query).select(titable.id, limitby=(0, 1)).first()
+                if row:
+                    actions.append(A(T("Send Shipment"),
+                                     _href = URL(c = "inv",
+                                                 f = "send_process",
+                                                 args = [record.id]
+                                                 ),
+                                     _id = "send_process",
+                                     _class = "action-btn",
+                                     ))
+
+                    s3.jquery_ready.append('''S3.confirmClick("#send_process","%s")''' \
+                                            % T("Do you want to send this shipment?"))
+
+            rheader = rheader(r, table=resource.table, record=record, actions=actions)
 
     return rheader
 
