@@ -2445,6 +2445,13 @@ def config(settings):
                 resource.configure(list_fields = list_fields,
                                    )
 
+                # Custom callback for inline items
+                s3db.add_custom_callback("req_req_item",
+                                         "onaccept",
+                                         req_req_item_create_onaccept,
+                                         method = "create",
+                                         )
+
             if r.interactive and not record and has_role("SUPPLY_COORDINATOR"):
                 # Configure WWS export format
                 export_formats = list(settings.get_ui_export_formats())
@@ -2601,6 +2608,62 @@ def config(settings):
     settings.customise_req_req_controller = customise_req_req_controller
 
     # -------------------------------------------------------------------------
+    def req_req_item_create_onaccept(form):
+        """
+            Custom callback to prevent duplicate request items:
+            - if the same request contains another req_item with the same
+              item_id and item_pack_id that is not yet referenced by a
+              shipment item, then merge the quantities and delete this
+              one
+        """
+
+        # Get record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.req_req_item
+        titable = s3db.inv_track_item
+
+        left = titable.on((titable.req_item_id == table.id) & \
+                          (titable.deleted == False))
+
+        query = (table.id == record_id)
+        record = db(query).select(table.id,
+                                  table.req_id,
+                                  table.item_id,
+                                  table.item_pack_id,
+                                  table.quantity,
+                                  titable.id,
+                                  left = left,
+                                  limitby = (0, 1),
+                                  ).first()
+        if record and not record.inv_track_item.id:
+            this = record.req_req_item
+            query = (table.req_id == this.req_id) & \
+                    (table.id != this.id) & \
+                    (table.item_id == this.item_id) & \
+                    (table.item_pack_id == this.item_pack_id) & \
+                    (titable.id == None)
+            other = db(query).select(table.id,
+                                     table.quantity,
+                                     left = left,
+                                     limitby = (0, 1),
+                                     ).first()
+            if other:
+                resource = s3db.resource("req_req_item", id=this.id)
+                deleted = resource.delete()
+                if deleted:
+                    other.update_record(quantity = other.quantity + this.quantity)
+
+    # -------------------------------------------------------------------------
     def customise_req_req_item_resource(r, tablename):
 
         s3db = current.s3db
@@ -2639,6 +2702,12 @@ def config(settings):
         # Use drop-down for supply item, not autocomplete
         field = table.item_id
         field.widget = None
+
+        s3db.add_custom_callback("req_req_item",
+                                 "onaccept",
+                                 req_req_item_create_onaccept,
+                                 method = "create",
+                                 )
 
     settings.customise_req_req_item_resource = customise_req_req_item_resource
 
