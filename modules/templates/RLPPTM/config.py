@@ -68,6 +68,8 @@ def config(settings):
                                       "PROGRAM_ACCOUNTANT": "PROGRAM_ACCOUNTANT",
                                       "PROGRAM_MANAGER": "ORG_GROUP_ADMIN",
                                       "PROVIDER_ACCOUNTANT": "PROVIDER_ACCOUNTANT",
+                                      "SUPPLY_COORDINATOR": "SUPPLY_COORDINATOR",
+                                      "SUPPLY_REQUESTER": "SUPPLY_REQUESTER",
                                       "VOUCHER_ISSUER": "VOUCHER_ISSUER",
                                       "VOUCHER_PROVIDER": "VOUCHER_PROVIDER",
                                       }
@@ -1156,6 +1158,9 @@ def config(settings):
 
             return result
         s3.prep = prep
+
+        from .rheaders import rlpptm_fin_rheader
+        attr["rheader"] = rlpptm_fin_rheader
 
         return attr
 

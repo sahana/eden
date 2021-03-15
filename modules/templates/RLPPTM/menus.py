@@ -286,10 +286,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           ),
                         M("Statistics", m="report"),
                         ),
-                    M("Billing", link=False)(
-                       M("Compensation Claims", f="voucher_claim"),
-                       M("Invoices", f="voucher_invoice"),
-                       ),
+                    #M("Billing", link=False)(
+                    #   M("Compensation Claims", f="voucher_claim"),
+                    #   M("Invoices", f="voucher_invoice"),
+                    #   ),
                     )
 
     # -------------------------------------------------------------------------

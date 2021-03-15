@@ -31,6 +31,7 @@ def rlpptm_fin_rheader(r, tabs=None):
 
     if record:
         T = current.T
+        settings = current.deployment_settings
 
         if tablename == "fin_voucher":
 
@@ -60,6 +61,20 @@ def rlpptm_fin_rheader(r, tabs=None):
                     from s3 import s3_qrcode_represent
                     img = s3_qrcode_represent(signature, show_value=False)
                     img.add_class("rheader-qrcode")
+
+        elif tablename == "fin_voucher_program":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        (T("Vouchers"), "voucher"),
+                        (T("Transactions"), "voucher_transaction"),
+                        #(T("Billing"), "voucher_billing"),
+                        ]
+                if settings.get_fin_voucher_eligibility_types():
+                    tabs.insert(1, (T("Eligibility Types"), "voucher_eligibility_type"))
+            rheader_fields = [["organisation_id"],
+                              ]
+            rheader_title = "name"
 
         rheader = S3ResourceHeader(rheader_fields, tabs, title=rheader_title)
         rheader = rheader(r, table = resource.table, record = record)
