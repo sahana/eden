@@ -2114,6 +2114,7 @@ def config(settings):
 
                 field = itable.item_id
                 field.readable = field.writable = True
+
                 if r.component_id:
                     # If this item is linked to a request item, don't allow
                     # to switch to another supply item
@@ -2123,6 +2124,13 @@ def config(settings):
                                             ).first()
                     if item and item.req_item_id:
                         field.writable = False
+
+                    # ...however, the item quantity can still be adjusted
+                    # => override IS_AVAILABLE_QUANTITY here as we don't
+                    #    have an inventory item to check against
+                    from s3 import IS_FLOAT_AMOUNT
+                    field = itable.quantity
+                    field.requires = IS_FLOAT_AMOUNT(0)
 
                 # Use custom form
                 from s3 import S3SQLCustomForm
