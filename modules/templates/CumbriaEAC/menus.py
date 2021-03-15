@@ -37,7 +37,8 @@ class S3MainMenu(default.S3MainMenu):
 
         
         menu = [MM("Shelters", c="cr", f="shelter", m="summary"),
-                MM("Affected People", c="br", f="person")(
+                MM("Staff", c="hrm", f="human_resource")(),
+                MM("Clients", c="pr", f="person", m="summary")(
                    MM("Import", m="import"),
                    ),
                 ]
@@ -183,8 +184,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #M("Goods / Services", c="supply", f="item")(),
                     #M("Qualifications", c="hrm", f="certificate")(),
                     M("Organizations", c="org", f="organisation")(
-                        M("Types", f="organisation_type"),
-                        M("Job Titles", c="hrm", f="job_title"),
+                        #M("Types", f="organisation_type"),
+                        #M("Job Titles", c="hrm", f="job_title"),
                         ),
                     #M("Time Slots", c="pr", f="slot")(),
                     #M("Volunteer Offers", c="hrm", f="skill")(),

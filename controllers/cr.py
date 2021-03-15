@@ -132,26 +132,26 @@ def shelter():
 
             profile_header = settings.get_ui_profile_header(r)
 
-            map_widget = dict(label = T("Housing Units"),
-                              type = "map",
-                              icon = "globe",
-                              colspan = 2,
-                              height = 500,
-                              #bbox = bbox,
-                              )
+            map_widget = {"label": T("Housing Units"),
+                          "type": "map",
+                          "icon": "globe",
+                          "colspan": 2,
+                          "height": 500,
+                          #"bbox": bbox,
+                          }
             ftable = s3db.gis_layer_feature
             query = (ftable.controller == "cr") & \
                     (ftable.function == "shelter_unit")
             layer = db(query).select(ftable.layer_id,
-                                     limitby=(0, 1)
+                                     limitby = (0, 1)
                                      ).first()
             try:
-                layer = dict(active = True,
-                             layer_id = layer.layer_id,
-                             filter = "~.shelter_id=%s" % shelter_id,
-                             name = T("Housing Units"),
-                             id = "profile-header-%s-%s" % (tablename, shelter_id),
-                             )
+                layer = {"active": True,
+                         "layer_id": layer.layer_id,
+                         "filter": "~.shelter_id=%s" % shelter_id,
+                         "name": T("Housing Units"),
+                         "id": "profile-header-%s-%s" % (tablename, shelter_id),
+                         }
             except:
                 # No suitable prepop found
                 layer = None
