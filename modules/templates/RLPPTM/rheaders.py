@@ -285,9 +285,11 @@ def rlpptm_inv_rheader(r, tabs=None):
         auth = current.auth
         s3db = current.s3db
 
+        from s3db.inv import SHIP_STATUS_IN_PROCESS, SHIP_STATUS_SENT
+
         if tablename == "inv_send":
             if not tabs:
-                tabs = [(T("Edit Details"), None),
+                tabs = [(T("Basic Details"), None),
                         (T("Items"), "track_item"),
                         ]
 
@@ -303,7 +305,6 @@ def rlpptm_inv_rheader(r, tabs=None):
 
             # If the record has a send_ref and status is SHIP_STATUS_IN_PROCESS
             # and there is at least one track item linked to it, add the send-button
-            from s3db.inv import SHIP_STATUS_IN_PROCESS
             if record.status == SHIP_STATUS_IN_PROCESS and \
                record.send_ref and \
                auth.s3_has_permission("update", resource.table, record_id = record.id):
@@ -323,6 +324,60 @@ def rlpptm_inv_rheader(r, tabs=None):
 
                     s3.jquery_ready.append('''S3.confirmClick("#send_process","%s")''' \
                                             % T("Do you want to send this shipment?"))
+
+            rheader = rheader(r, table=resource.table, record=record, actions=actions)
+
+        elif tablename == "inv_recv":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        (T("Items"), "track_item"),
+                        ]
+
+            # Get the number of items linked to this delivery
+            titable = s3db.inv_track_item
+            query = (titable.recv_id == record.id) & \
+                    (titable.deleted == False)
+            cnt = titable.id.count()
+            row = db(query).select(cnt).first()
+            num_items = row[cnt] if row else 0
+
+            # Representation of the number of items
+            def content(row):
+                if num_items == 1:
+                    msg = T("This shipment contains one line item")
+                elif num_items > 1:
+                    msg = T("This shipment contains %s items") % num_items
+                else:
+                    msg = "-"
+                return msg
+
+            rheader_fields = [["send_ref", "site_id"],
+                              ["status", (T("Content"), content)],
+                              ["date"]
+                              ]
+            rheader_title = "req_ref"
+
+            rheader = S3ResourceHeader(rheader_fields, tabs, title=rheader_title)
+
+            actions = []
+
+            # If the record is SHIP_STATUS_IN_PROCESS or SHIP_STATUS_SENT
+            # and there is at least one track item linked to it, add the receive-button
+            if record.status in (SHIP_STATUS_IN_PROCESS, SHIP_STATUS_SENT) and \
+               auth.s3_has_permission("update", resource.table, record_id = record.id) and \
+               num_items:
+
+                actions.append(A(T("Receive Shipment"),
+                                   _href = URL(c = "inv",
+                                               f = "recv_process",
+                                               args = [record.id]
+                                               ),
+                                   _id = "recv_process",
+                                   _class = "action-btn"
+                                   ))
+                s3.jquery_ready.append('''S3.confirmClick("#recv_process","%s")''' \
+                                        % T("Did you receive this shipment?"))
 
             rheader = rheader(r, table=resource.table, record=record, actions=actions)
 

@@ -1986,6 +1986,9 @@ def config(settings):
             return result
         s3.prep = prep
 
+        from .rheaders import rlpptm_inv_rheader
+        attr["rheader"] = rlpptm_inv_rheader
+
         return attr
 
     settings.customise_inv_recv_controller = customise_inv_recv_controller
