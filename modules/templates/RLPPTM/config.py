@@ -1410,6 +1410,7 @@ def config(settings):
                        "location_id$L2",
                        "location_id$L3",
                        "location_id$L4",
+                       "location_id$addr_postcode",
                        ]
 
         filter_widgets = [
