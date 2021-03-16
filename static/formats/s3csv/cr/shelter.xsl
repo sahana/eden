@@ -220,6 +220,11 @@
                 <xsl:when test="$Status='Open'">>
                     <data field="status">2</data>
                 </xsl:when>
+                <xsl:otherwise>
+                    <data field="status">
+                        <xsl:value-of select="$Status"/>
+                    </data>
+                </xsl:otherwise>
             </xsl:choose>
 
             <!-- Link to Location -->

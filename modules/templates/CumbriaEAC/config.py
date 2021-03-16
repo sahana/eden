@@ -17,7 +17,7 @@ def config(settings):
 
     # PrePopulate data
     settings.base.prepopulate += ("CumbriaEAC",)
-    #settings.base.prepopulate_demo += ("CumbriaEAC/Demo",)
+    settings.base.prepopulate_demo += ("CumbriaEAC/Demo",)
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "CCC"
@@ -232,12 +232,12 @@ def config(settings):
         #    restricted = True,
         #    module_type = 10
         #)),
-        ("br", Storage(
-           name_nice = T("Beneficiary Registry"),
-           #description = "Allow affected individuals & households to register to receive compensation and distributions",
-           restricted = True,
-           module_type = 10,
-        )),
+        #("br", Storage(
+        #   name_nice = T("Beneficiary Registry"),
+        #   #description = "Allow affected individuals & households to register to receive compensation and distributions",
+        #   restricted = True,
+        #   module_type = 10,
+        #)),
         #("event", Storage(
         #    name_nice = T("Events"),
         #    #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
@@ -260,15 +260,15 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Beneficiary Registry
     # Terminology to use when referring to cases (Beneficiary|Client|Case)
-    settings.br.case_terminology = "Client" # Evacuee
+    #settings.br.case_terminology = "Client" # Evacuee
     # Disable assignment of cases to staff
-    settings.br.case_manager = False
+    #settings.br.case_manager = False
     # Expose fields to track home address in case file
-    settings.br.case_address = True
+    #settings.br.case_address = True
     # Disable tracking of case activities
-    settings.br.case_activities = False
+    #settings.br.case_activities = False
     # Disable tracking of individual assistance measures
-    settings.br.manage_assistance = False
+    #settings.br.manage_assistance = False
 
     # -------------------------------------------------------------------------
     # Shelters
@@ -279,22 +279,19 @@ def config(settings):
     def eac_person_anonymize():
         """ Rules to anonymise a person """
 
-        auth = current.auth
+        #auth = current.auth
 
         ANONYMOUS = "-"
-        anonymous_email = uuid4().hex
+        #anonymous_email = uuid4().hex
 
-        if current.request.controller == "br":
-            title = "Name, Contacts, Address, Case Details"
-        else:
-            title = "Name, Contacts, Address, Additional Information, User Account"
+        title = "Name, Contacts, Address, Additional Information"
 
         rules = [{"name": "default",
                   "title": title,
                   "fields": {"first_name": ("set", ANONYMOUS),
                              "middle_name": ("set", ANONYMOUS),
                              "last_name": ("set", ANONYMOUS),
-                             #"pe_label": anonymous_id,
+                             "pe_label": "remove",
                              #"date_of_birth": current.s3db.pr_person_obscure_dob,
                              "date_of_birth": "remove",
                              "comments": "remove",
@@ -334,18 +331,18 @@ def config(settings):
                                                             },
                                                  "delete": True,
                                                  }),
-                              ("br_case", {"key": "person_id",
-                                           "match": "id",
-                                           "fields": {"comments": "remove",
-                                                      },
-                                           "cascade": [("br_note", {"key": "id",
-                                                                    "match": "case_id",
-                                                                    "fields": {"note": "remove",
-                                                                               },
-                                                                    "delete": True,
-                                                                    }),
-                                                       ],
-                                           }),
+                              #("br_case", {"key": "person_id",
+                              #             "match": "id",
+                              #             "fields": {"comments": "remove",
+                              #                        },
+                              #             "cascade": [("br_note", {"key": "id",
+                              #                                      "match": "case_id",
+                              #                                      "fields": {"note": "remove",
+                              #                                                 },
+                              #                                      "delete": True,
+                              #                                      }),
+                              #                         ],
+                              #             }),
                               ("hrm_human_resource", {"key": "person_id",
                                                       "match": "id",
                                                       "fields": {"status": ("set", 2),
@@ -361,22 +358,22 @@ def config(settings):
                                                                                               }),
                                                                   ],
                                                       }),
-                              ("pr_person_user", {"key": "pe_id",
-                                                  "match": "pe_id",
-                                                  "cascade": [("auth_user", {"key": "id",
-                                                                             "match": "user_id",
-                                                                             "fields": {"id": auth.s3_anonymise_roles,
-                                                                                        "first_name": ("set", "-"),
-                                                                                        "last_name": "remove",
-                                                                                        "email": ("set", anonymous_email),
-                                                                                        "organisation_id": "remove",
-                                                                                        "password": auth.s3_anonymise_password,
-                                                                                        "deleted": ("set", True),
-                                                                                        },
-                                                                             }),
-                                                              ],
-                                                  "delete": True,
-                                                  }),
+                              #("pr_person_user", {"key": "pe_id",
+                              #                    "match": "pe_id",
+                              #                    "cascade": [("auth_user", {"key": "id",
+                              #                                               "match": "user_id",
+                              #                                               "fields": {"id": auth.s3_anonymise_roles,
+                              #                                                          "first_name": ("set", "-"),
+                              #                                                          "last_name": "remove",
+                              #                                                          "email": ("set", anonymous_email),
+                              #                                                          "organisation_id": "remove",
+                              #                                                          "password": auth.s3_anonymise_password,
+                              #                                                          "deleted": ("set", True),
+                              #                                                          },
+                              #                                               }),
+                              #                                ],
+                              #                    "delete": True,
+                              #                    }),
                               ],
                   "delete": True,
                   },
@@ -428,25 +425,53 @@ def config(settings):
                                 ),
                           rheader_tabs)
 
+        elif tablename == "pr_person":
+
+            # @ToDo: Split into Staff vs Client
+
+            tabs = [(T("Basic Details"), None),
+                    ]
+
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            from s3 import s3_fullname
+
+            #table = r.table
+            rheader = DIV(TABLE(TR(TH("Name: "),
+                                   s3_fullname(record),
+                                   ),
+                                ),
+                          rheader_tabs)
+
         return rheader
 
     # -------------------------------------------------------------------------
     def customise_cr_shelter_resource(r, tablename):
-        """
-        """
 
-        from s3 import S3SQLCustomForm, S3LocationSelector, \
+        from gluon import IS_IN_SET
+
+        from s3 import S3Represent, S3SQLCustomForm, S3LocationSelector, \
                        S3TextFilter, S3LocationFilter, S3OptionsFilter, S3RangeFilter
 
         s3db = current.s3db
 
+        status_opts = {1 : T("Closed"),
+                       #2 : T("Open##the_shelter_is"),
+                       3 : T("Green"),
+                       4 : T("Amber"),
+                       5 : T("Red"),
+                       }
+
+
         table = s3db.cr_shelter
+        f = table.status
+        f.default = 3 # Green
+        f.requires = IS_IN_SET(status_opts)
+        f.represent = S3Represent(options = status_opts)
         table.population_day.label = T("Occupancy")
         table.location_id.widget = S3LocationSelector(levels = ("L3", "L4"),
-                                                      #levels = ("L2", "L3", "L4"),
                                                       required_levels = ("L3",),
                                                       show_address = True,
-                                                      #show_map = False,
                                                       )
 
         crud_form = S3SQLCustomForm("name",
@@ -475,11 +500,7 @@ def config(settings):
                                  ),
                 S3OptionsFilter("status",
                                 label = T("Status"),
-                                options = {1 : T("Closed"),
-                                           2 : T("Open##the_shelter_is"),
-                                           None : T("Unspecified"),
-                                           },
-                                none = True,
+                                options = status_opts,
                                 ),
                 S3RangeFilter("capacity_day",
                               label = T("Total Capacity"),
@@ -528,10 +549,372 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_cr_shelter_controller(**attr):
 
+        from s3 import s3_set_default_filter
+
+        # Exclude Closed Shelters by default
+        s3_set_default_filter("~.status", [3, 4, 5], tablename="cr_shelter")
+
         attr["rheader"] = eac_rheader
 
         return attr
 
     settings.customise_cr_shelter_controller = customise_cr_shelter_controller
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_human_resource_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm, \
+                       S3TextFilter, S3LocationFilter, S3OptionsFilter
+
+        s3db = current.s3db
+
+        s3db.hrm_human_resource.site_id.label = T("Shelter")
+
+        crud_form = S3SQLCustomForm("person_id",
+                                    "organisation_id",
+                                    # Included in AddPersonWidget
+                                    #S3SQLInlineComponent(
+                                    #    "phone",
+                                    #    name = "phone",
+                                    #    label = T("Mobile Phone"),
+                                    #    multiple = False,
+                                    #    fields = [("", "value")],
+                                    #    #filterby = {"field": "contact_method",
+                                    #    #            "options": "SMS",
+                                    #    #            },
+                                    #),
+                                    "comments",
+                                    )
+
+        filter_widgets = [
+                S3TextFilter(["person_id$first_name",
+                              "person_id$middle_name",
+                              "person_id$first_name",
+                              "comments",
+                              "organisation_id",
+                              "site_id",
+                              "location_id$L3",
+                              "location_id$L4",
+                              ],
+                             label = T("Search"),
+                             #_class = "filter-search",
+                             ),
+                S3LocationFilter("location_id",
+                                 label = T("Location"),
+                                 levels = ("L3", "L4"),
+                                 ),
+                S3OptionsFilter("organisation_id",
+                                ),
+                S3OptionsFilter("site_id",
+                                ),
+                ]
+
+        list_fields = ["person_id",
+                       "organisation_id",
+                       "site_id",
+                       "location_id$L3",
+                       "location_id$L4",
+                       (T("Mobile Phone"),"phone.value"),
+                       ]
+
+        report_fields = ["organisation_id",
+                         "site_id",
+                         "location_id$L3",
+                         "location_id$L4",
+                         ]
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       report_options = Storage(
+                        rows = report_fields,
+                        cols = report_fields,
+                        fact = report_fields,
+                        defaults = Storage(rows = "location_id$L4", # Lowest-level of hierarchy
+                                           cols = "organisation_id",
+                                           fact = "count(person_id)",
+                                           totals = True,
+                                           )
+                        ),
+                       )
+
+    settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_hrm_human_resource_controller(**attr):
+
+        settings.pr.request_dob = False
+        settings.pr.request_email = False
+        settings.pr.request_gender = False
+
+        return attr
+
+    settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
+
+    # -------------------------------------------------------------------------
+    def customise_org_organisation_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm
+
+        s3db = current.s3db
+
+        crud_form = S3SQLCustomForm("name",
+                                    "comments",
+                                    )
+
+        list_fields = ["name",
+                       ]
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       filter_widgets = None,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_org_organisation_resource = customise_org_organisation_resource
+
+    # -------------------------------------------------------------------------
+    def customise_pr_person_resource(r, tablename):
+
+        from gluon import IS_EMPTY_OR, IS_IN_SET
+
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3LocationSelector, \
+                       S3TextFilter, S3LocationFilter, S3OptionsFilter
+
+        s3db = current.s3db
+
+        f = s3db.pr_person.pe_label
+        f.label = T("Reception Centre Ref")
+        f.comment = None
+
+        s3db.pr_address.location_id.widget = S3LocationSelector(levels = ("L3", "L4"),
+                                                                required_levels = ("L3",),
+                                                                show_address = True,
+                                                                )
+
+        # Filtered components
+        s3db.add_components("pr_person",
+                            pr_person_tag = ({"name": "holmes",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "holmes"},
+                                              "multiple": False,
+                                              },
+                                             {"name": "location",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "location"},
+                                              "multiple": False,
+                                              },
+                                             {"name": "pets",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "pets"},
+                                              "multiple": False,
+                                              },
+                                             {"name": "pets_details",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "pets_details"},
+                                              "multiple": False,
+                                              },
+                                             {"name": "medical",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "medical"},
+                                              "multiple": False,
+                                              },
+                                             {"name": "disability",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "disability"},
+                                              "multiple": False,
+                                              },
+                                             {"name": "dietary",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "dietary"},
+                                              "multiple": False,
+                                              },
+                                             {"name": "gp",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "gp"},
+                                              "multiple": False,
+                                              },
+                                             ),
+                            )
+
+        # Individual settings for specific tag components
+        components_get = s3db.resource(tablename).components.get
+
+        #integer_represent = IS_INT_AMOUNT.represent
+
+        #congregations = components_get("congregations")
+        #f = congregations.table.value
+        #f.represent = integer_represent
+        #f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
+
+        pets = components_get("pets")
+        f = pets.table.value
+        f.requires = IS_EMPTY_OR(IS_IN_SET(("Y", "N")))
+        f.represent = lambda v: T("yes") if v == "Y" else T("no")
+        from s3 import S3TagCheckboxWidget
+        f.widget = S3TagCheckboxWidget(on="Y", off="N")
+        f.default = "N"
+
+        crud_form = S3SQLCustomForm("pe_label",
+                                    (T("Holmes Ref"), "holmes.value"),
+                                    "first_name",
+                                    "middle_name",
+                                    "last_name",
+                                    "gender",
+                                    "date_of_birth",
+                                    "person_details.nationality",
+                                    S3SQLInlineComponent(
+                                        "address",
+                                        name = "address",
+                                        label = T("Address"),
+                                        multiple = False,
+                                        fields = [("", "value")],
+                                        filterby = {"field": "type",
+                                                    "options": 1, # Current Home Address
+                                                    },
+                                    ),
+                                    (T("Location at Time of Incident"), "location.value"),
+                                    # Not a multiple=False component
+                                    #(T("Phone"), "phone.value"),
+                                    S3SQLInlineComponent(
+                                        "phone",
+                                        name = "phone",
+                                        label = T("Phone"),
+                                        multiple = False,
+                                        fields = [("", "value")],
+                                        #filterby = {"field": "contact_method",
+                                        #            "options": "SMS",
+                                        #            },
+                                    ),
+                                    S3SQLInlineComponent(
+                                        "email",
+                                        name = "email",
+                                        label = T("Email"),
+                                        multiple = False,
+                                        fields = [("", "value")],
+                                        #filterby = {"field": "contact_method",
+                                        #            "options": "EMAIL",
+                                        #            },
+                                    ),
+                                    (T("Pets"), "pets.value"),
+                                    (T("Details of Pets"), "pets_details.value"),
+                                    (T("Medical Details"), "medical.value"),
+                                    (T("Disability Details"), "disability.value"),
+                                    (T("Dietary Needs"), "dietary.value"),
+                                    (T("GP"), "gp.value"),
+                                    "comments",
+                                    )
+
+        import json
+
+        # Compact JSON encoding
+        SEPARATORS = (",", ":")
+
+        current.response.s3.jquery_ready.append('''S3.showHidden('%s',%s,'%s')''' % \
+            ("sub_pets_value", json.dumps(["sub_pets_details_value"], separators=SEPARATORS), "pr_person"))
+
+        filter_widgets = [
+                S3TextFilter(["first_name",
+                              "middle_name",
+                              "last_name",
+                              "pe_label",
+                              "holmes.value",
+                              ],
+                             label = T("Search"),
+                             #_class = "filter-search",
+                             ),
+                S3LocationFilter("location_id",
+                                 label = T("Location"),
+                                 levels = ("L3", "L4"),
+                                 ),
+                S3OptionsFilter("age_group",
+                                label = T("Age"),
+                                ),
+                S3OptionsFilter("gender",
+                                ),
+                S3OptionsFilter("person_details.nationality",
+                                ),
+                S3OptionsFilter("pets.value",
+                                label = T("Pets"),
+                                ),
+                ]
+
+        list_fields = ["last_name",
+                       "first_name",
+                       "pe_label",
+                       "gender",
+                       "date_of_birth",
+                       ]
+
+        report_fields = ["gender",
+                         "age_group",
+                         "person_details.nationality",
+                         "location_id$L3",
+                         "location_id$L4",
+                         ]
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       report_options = Storage(
+                        rows = report_fields,
+                        cols = report_fields,
+                        fact = report_fields,
+                        defaults = Storage(rows = "location_id$L4", # Lowest-level of hierarchy
+                                           cols = "age_group",
+                                           fact = "count(id)",
+                                           totals = True,
+                                           )
+                        ),
+                       summary = ({"name": "table",
+                                   "label": "Table",
+                                   "widgets": [{"method": "datatable"}]
+                                   },
+                                  {"name": "report",
+                                   "label": "Report",
+                                   "widgets": [{"method": "report", "ajax_init": True}],
+                                   },
+                                  ),
+                       )
+
+    settings.customise_pr_person_resource = customise_pr_person_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_pr_person_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            from s3 import FS
+
+            if r.controller == "hrm":
+                return result
+
+            resource = r.resource
+
+            # Filter out Users
+            resource.add_filter(FS("user.id") == None)
+
+            # Filter out Staff
+            resource.add_filter(FS("human_resource.id") == None)
+
+            return result
+        s3.prep = prep
+
+        attr["rheader"] = eac_rheader
+
+        return attr
+
+    settings.customise_pr_person_controller = customise_pr_person_controller
 
 # END =========================================================================

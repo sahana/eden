@@ -493,7 +493,7 @@ class HRModel(S3Model):
                                                 zero=None),
                            ),
                      # Base location + Site
-                     self.gis_location_id(label =T("Base Location"),
+                     self.gis_location_id(label = T("Base Location"),
                                           readable = False,
                                           writable = False,
                                           ),
