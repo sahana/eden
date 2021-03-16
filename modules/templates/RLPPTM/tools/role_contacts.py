@@ -33,7 +33,7 @@ def infoln(msg):
     sys.stderr.write("%s\n" % msg)
 
 # -----------------------------------------------------------------------------
-def get_role_contacts(org_group, include=None, exclude=None):
+def get_role_contacts(org_group, include=None, exclude=None, project=None):
 
     db = current.db
 
@@ -125,6 +125,7 @@ if not failed:
     emails = get_role_contacts(org_group,
                                include = include,
                                exclude = exclude,
+                               project = project,
                                )
     if emails:
         for email in emails:
