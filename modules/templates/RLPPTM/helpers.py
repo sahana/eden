@@ -89,6 +89,69 @@ def get_org_accounts(organisation_id):
     return active, disabled, invited
 
 # -----------------------------------------------------------------------------
+def get_role_contacts(role_uid, pe_id=None, organisation_id=None):
+    """
+        Look up contacts of an organisation with a certain user role
+
+        @param role_uid: the role UUID
+        @param pe_id: the pe_id of the organisation, or
+        @param organisation_id: the organisation_id
+
+        @returns: a list of email addresses
+    """
+
+    db = current.db
+
+    auth = current.auth
+    s3db = current.s3db
+
+    contacts = None
+
+    if not pe_id and organisation_id:
+        # Look up the realm pe_id from the organisation
+        otable = s3db.org_organisation
+        query = (otable.id == organisation_id) & \
+                (otable.deleted == False)
+        organisation = db(query).select(otable.pe_id,
+                                        limitby = (0, 1),
+                                        ).first()
+        pe_id = organisation.pe_id if organisation else None
+
+    # Get all users with this realm as direct OU ancestor
+    users = s3db.pr_realm_users(pe_id) if pe_id else None
+    if users:
+
+        # Look up those among the realm users who have
+        # the role for either pe_id or for their default realm
+        gtable = auth.settings.table_group
+        mtable = auth.settings.table_membership
+        ltable = s3db.pr_person_user
+        join = [mtable.on((mtable.user_id == ltable.user_id) & \
+                          ((mtable.pe_id == None) | (mtable.pe_id == pe_id)) & \
+                          (mtable.deleted == False)),
+                gtable.on((gtable.id == mtable.group_id) & \
+                          (gtable.uuid == role_uid)),
+                ]
+        query = (ltable.user_id.belongs(set(users.keys()))) & \
+                (ltable.deleted == False)
+        rows = db(query).select(ltable.pe_id, join=join)
+        user_pe_ids = set(row.pe_id for row in rows)
+
+        # Look up their email addresses
+        if user_pe_ids:
+            ctable = s3db.pr_contact
+            query = (ctable.pe_id.belongs(user_pe_ids)) & \
+                    (ctable.contact_method == "EMAIL") & \
+                    (ctable.deleted == False)
+            rows = db(query).select(ctable.pe_id,
+                                    ctable.value,
+                                    orderby = ~ctable.priority,
+                                    )
+            contacts = {row.pe_id: row.value for row in rows}
+
+    return list(set(contacts.values())) if contacts else None
+
+# -----------------------------------------------------------------------------
 def get_stats_projects():
     """
         Find all projects the current user can report test results, i.e.

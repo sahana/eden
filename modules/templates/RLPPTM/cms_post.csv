@@ -20,3 +20,5 @@ BearerDoBIntro,fin,voucher,"WICHTIG: Der Gutschein ist persönlich! Beim Einlös
 GroupDoBIntro,fin,voucher,WICHTIG: Geben Sie das Geburtsdatum eines Gruppenmitglieds an. Beim Einlösen muss dasselbe Geburtsdatum angegeben werden – stellen Sie deshalb sicher dass Gutscheine nicht gemischt oder vertauscht werden.,
 ProjectParticipationIntro,org,organisation,Wählen Sie die Programme an denen die Teststelle teilnimmt:,
 SelfRegistrationIntro,auth,user,,
+Subject ClaimNotification,fin,voucher_claim,Ihr Vergütungsanspruch zu ”{program}”,
+Message ClaimNotification,fin,voucher_claim,Im Rahmen der Abrechnung zu ”{program}” am {date} wurde ein Vergütungsanspruch für {organisation} festgestellt. Bitte melden Sie sich am Portal an und bestätigen Sie den Anspruch unter {url}.,

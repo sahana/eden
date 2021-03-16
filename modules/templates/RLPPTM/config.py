@@ -1248,6 +1248,102 @@ def config(settings):
     settings.customise_fin_voucher_billing_resource = customise_fin_voucher_billing_resource
 
     # -------------------------------------------------------------------------
+    def claim_create_onaccept(form):
+        """
+            Custom create-onaccept for claim to notify the provider
+            accountant about the new claim
+        """
+
+        # Get record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.fin_voucher_claim
+        btable = s3db.fin_voucher_billing
+        ptable = s3db.fin_voucher_program
+        join = [ptable.on(ptable.id == table.program_id),
+                btable.on(btable.id == table.billing_id),
+                ]
+        query = (table.id == record_id)
+        row = db(query).select(table.id,
+                               table.program_id,
+                               table.billing_id,
+                               table.pe_id,
+                               table.status,
+                               btable.date,
+                               btable.organisation_id,
+                               ptable.name,
+                               ptable.organisation_id,
+                               join = join,
+                               limitby = (0, 1),
+                               ).first()
+        if not row:
+            return
+        program = row.fin_voucher_program
+        billing = row.fin_voucher_billing
+        claim = row.fin_voucher_claim
+
+        if claim.status != "NEW":
+            return
+
+        error = None
+
+        # Look up the provider organisation
+        pe_id = claim.pe_id
+        otable = s3db.org_organisation
+        provider = db(otable.pe_id == pe_id).select(otable.id,
+                                                    otable.name,
+                                                    limitby = (0, 1),
+                                                    ).first()
+
+        from .helpers import get_role_contacts
+        provider_accountants = get_role_contacts("PROVIDER_ACCOUNTANT", pe_id)
+        if not provider_accountants:
+            error = "No provider accountant found"
+
+        if not error:
+            # Lookup the template variables
+            base_url = current.deployment_settings.get_base_public_url()
+            appname = current.request.application
+            data = {"program": program.name,
+                    "date": billing.date,
+                    "organisation": provider.name,
+                    "url": "%s/%s/fin/voucher_claim/%s" % (base_url, appname, claim.id),
+                    }
+
+            # Send the email notification
+            from .notifications import CMSNotifications
+            error = CMSNotifications.send(provider_accountants,
+                                          "ClaimNotification",
+                                          data,
+                                          module = "fin",
+                                          resource = "voucher_claim",
+                                          )
+        if error:
+            # Inform the program manager that the provider could not be notified
+            msg = T("%(name)s could not be notified of new compensation claim: %(error)s") % \
+                  {"name": provider.name, "error": error}
+            program_managers = get_role_contacts("PROGRAM_MANAGER",
+                                                 organisation_id = program.organisation_id,
+                                                 )
+            if program_managers:
+                current.msg.send_email(to = program_managers,
+                                       subject = T("Provider Notification Failed"),
+                                       message = msg,
+                                       )
+            current.log.error(msg)
+        else:
+            current.log.debug("Provider '%s' notified about new compensation claim" % provider.name)
+
+    # -------------------------------------------------------------------------
     def customise_fin_voucher_claim_resource(r, tablename):
 
         auth = current.auth
@@ -1311,6 +1407,7 @@ def config(settings):
         s3db.configure("fin_voucher_claim",
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
+                       onaccept = claim_create_onaccept,
                        )
 
     settings.customise_fin_voucher_claim_resource = customise_fin_voucher_claim_resource

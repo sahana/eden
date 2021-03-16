@@ -3703,6 +3703,11 @@ class fin_VoucherBilling(object):
         dtable = s3db.fin_voucher_debit
         ctable = s3db.fin_voucher_claim
 
+        # Customise claim resource
+        from s3 import S3Request
+        r = S3Request("fin", "voucher_claim", args=[], get_vars={})
+        r.customise_resource("fin_voucher_claim")
+
         # Base query
         query = (dtable.billing_id == billing.id) & \
                 (dtable.claim_id == None) & \
