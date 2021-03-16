@@ -22,3 +22,5 @@ ProjectParticipationIntro,org,organisation,Wählen Sie die Programme an denen di
 SelfRegistrationIntro,auth,user,,
 Subject ClaimNotification,fin,voucher_claim,Ihr Vergütungsanspruch zu ”{program}”,
 Message ClaimNotification,fin,voucher_claim,Im Rahmen der Abrechnung zu ”{program}” am {date} wurde ein Vergütungsanspruch für {organisation} festgestellt. Bitte melden Sie sich am Portal an und bestätigen Sie den Anspruch unter {url}.,
+Subject InvoiceSettled,fin,voucher_invoice,Vergütung zu ”{program}” wird ausgezahlt,
+Message InvoiceSettled,fin,voucher_invoice,Die Auszahlung des zu ”{program}” am {date} festgestellten Vergütungsanspruchs für {organisation} (Rechnungsnr. {invoice}) wurde veranlasst. Die Zahlung erfolgt in den nächsten Tagen auf das unter {url} angegebene Konto.,

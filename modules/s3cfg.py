@@ -1345,6 +1345,12 @@ class S3Config(Storage):
         """
         return self.fin.get("voucher_invoice_status_labels")
 
+    def get_fin_voucher_claim_paid_label(self):
+        """
+            Custom label for claim PAID-Status
+        """
+        return self.fin.get("voucher_claim_paid_label", "Paid")
+
     # -------------------------------------------------------------------------
     # GIS (Map) Settings
     #

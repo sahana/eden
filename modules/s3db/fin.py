@@ -678,7 +678,8 @@ class FinVoucherModel(S3Model):
 
         # Additional statuses that cannot be entered or imported
         status_repr["INVOICED"] = T("Invoiced")
-        status_repr["PAID"] = T("Paid")
+        paid_label = settings.get_fin_voucher_claim_paid_label()
+        status_repr["PAID"] = T(paid_label) if paid_label else T("Paid")
 
         tablename = "fin_voucher_claim"
         define_table(tablename,
@@ -702,6 +703,7 @@ class FinVoucherModel(S3Model):
                      # Claimant reference number
                      Field("refno",
                            label = T("Ref.No."),
+                           represent = lambda v, row=None: v if v else "-",
                            ),
 
                      # Totals
@@ -1160,16 +1162,15 @@ class FinVoucherModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return {"fin_voucher_invoice_status": dict(invoice_status),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        #dummy = S3ReusableField.dummy
-
-        return {#"example_example_id": dummy("example_id"),
+        return {"fin_voucher_invoice_status": {},
                 }
 
     # -------------------------------------------------------------------------
@@ -1414,7 +1415,7 @@ class FinVoucherModel(S3Model):
 
             elif change_status and status != "NEW":
                 # Changing status of a NEW claim requires account details
-                for fn, msg in check:
+                for fn, msg in check.items():
                     value = form_vars[fn] if fn in form_vars else record[fn]
                     if value is None or not value.strip():
                         if fn in form_vars:
@@ -2789,13 +2790,10 @@ class fin_VoucherInvoiceRepresent(S3Represent):
         table = self.table
 
         T = current.T
-        status_repr = {"NEW": T("Issued##fin"),
-                       "APPROVED": T("Approved"),
-                       "REJECTED": T("Rejected##claim"),
-                       "PAID": T("Paid"),
-                       }
 
         status = invoice.status
+        status_repr = current.s3db.fin_voucher_invoice_status
+
         repr_str = "%s %s [%s] - %s" % (
                         T("No."),
                         table.invoice_no.represent(invoice.invoice_no),
@@ -4018,12 +4016,11 @@ class fin_VoucherBilling(object):
                 raise ValueError("Could not compensate debit %s" % debit.id)
             total += credit
 
-        # Mark the claim as paid + call onaccept to trigger any notifications
-        claim.update_record(status="PAID",
+        # Mark the claim as paid
+        claim.update_record(status = "PAID",
                             modified_on = ctable.modified_on,
                             modified_by = ctable.modified_by,
                             )
-        s3db.onaccept(ctable, claim, method="update")
 
         # Update totals in billing
         query = (ctable.billing_id == invoice.billing_id) & \
@@ -4038,6 +4035,23 @@ class fin_VoucherBilling(object):
                          modified_by = btable.modified_by,
                          modified_on = btable.modified_on,
                          )
+
+        # Customise invoice resource
+        from s3 import S3Request
+        r = S3Request("fin", "voucher_invoice", args=[], get_vars={})
+        r.customise_resource("fin_voucher_invoice")
+
+        # Trigger onsettled-callback for invoice
+        cb = s3db.get_config("fin_voucher_invoice", "onsettled")
+        if callable(cb):
+            from gluon.tools import callback
+            try:
+                callback(cb, invoice, tablename="fin_voucher_invoice")
+            except Exception:
+                import sys
+                error = sys.exc_info()[1]
+                current.log.error("Callback %s failed: %s" %
+                                  (cb, error if error else "unknown error"))
 
         # Check if billing is complete
         cls(invoice.billing_id).check_complete()

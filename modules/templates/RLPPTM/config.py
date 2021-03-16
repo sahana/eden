@@ -180,6 +180,7 @@ def config(settings):
                                                   "APPROVED": None,
                                                   "PAID": "Payment Ordered",
                                                   }
+    settings.fin.voucher_claim_paid_label = "Payment Ordered"
 
     # -------------------------------------------------------------------------
     settings.req.req_type = ("Stock",)
@@ -1279,7 +1280,6 @@ def config(settings):
                                table.pe_id,
                                table.status,
                                btable.date,
-                               btable.organisation_id,
                                ptable.name,
                                ptable.organisation_id,
                                join = join,
@@ -1314,7 +1314,7 @@ def config(settings):
             base_url = current.deployment_settings.get_base_public_url()
             appname = current.request.application
             data = {"program": program.name,
-                    "date": billing.date,
+                    "date": btable.date.represent(billing.date),
                     "organisation": provider.name,
                     "url": "%s/%s/fin/voucher_claim/%s" % (base_url, appname, claim.id),
                     }
@@ -1407,10 +1407,95 @@ def config(settings):
         s3db.configure("fin_voucher_claim",
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
-                       onaccept = claim_create_onaccept,
                        )
+        s3db.add_custom_callback("fin_voucher_claim",
+                                 "onaccept",
+                                 claim_create_onaccept,
+                                 method = "create",
+                                 )
 
     settings.customise_fin_voucher_claim_resource = customise_fin_voucher_claim_resource
+
+    # -------------------------------------------------------------------------
+    def invoice_onsettled(invoice):
+        """
+            Callback to notify the provider that an invoice has been settled
+
+            @param invoice: the invoice (Row)
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Look up claim, invoice number, program and billing
+        btable = s3db.fin_voucher_billing
+        ctable = s3db.fin_voucher_claim
+        itable = s3db.fin_voucher_invoice
+        ptable = s3db.fin_voucher_program
+        join = [ptable.on(ptable.id == ctable.program_id),
+                btable.on(btable.id == ctable.billing_id),
+                itable.on(itable.id == ctable.invoice_id),
+                ]
+        query = (ctable.invoice_id == invoice.id) & \
+                (ctable.deleted == False)
+        row = db(query).select(ctable.id,
+                               ctable.program_id,
+                               ctable.billing_id,
+                               ctable.pe_id,
+                               btable.date,
+                               itable.invoice_no,
+                               ptable.name,
+                               ptable.organisation_id,
+                               join = join,
+                               limitby = (0, 1),
+                               ).first()
+        if not row:
+            return
+        program = row.fin_voucher_program
+        billing = row.fin_voucher_billing
+        claim = row.fin_voucher_claim
+        invoice_no = row.fin_voucher_invoice.invoice_no
+
+        error = None
+
+        # Look up the provider organisation
+        pe_id = claim.pe_id
+        otable = s3db.org_organisation
+        provider = db(otable.pe_id == pe_id).select(otable.id,
+                                                    otable.name,
+                                                    limitby = (0, 1),
+                                                    ).first()
+
+        from .helpers import get_role_contacts
+        provider_accountants = get_role_contacts("PROVIDER_ACCOUNTANT", pe_id)
+        if not provider_accountants:
+            error = "No provider accountant found"
+
+        if not error:
+            # Lookup the template variables
+            base_url = current.deployment_settings.get_base_public_url()
+            appname = current.request.application
+            data = {"program": program.name,
+                    "date": btable.date.represent(billing.date),
+                    "invoice": invoice_no,
+                    "organisation": provider.name,
+                    "url": "%s/%s/fin/voucher_claim/%s" % (base_url, appname, claim.id),
+                    }
+
+            # Send the email notification
+            from .notifications import CMSNotifications
+            error = CMSNotifications.send(provider_accountants,
+                                          "InvoiceSettled",
+                                          data,
+                                          module = "fin",
+                                          resource = "voucher_invoice",
+                                          )
+        if error:
+            msg = "%s could not be notified about invoice settlement: %s"
+            current.log.error(msg % (provider.name, error))
+        else:
+            msg = "%s notified about invoice settlement"
+            current.log.debug(msg % provider.name)
 
     # -------------------------------------------------------------------------
     def customise_fin_voucher_invoice_resource(r, tablename):
@@ -1434,11 +1519,17 @@ def config(settings):
                                                    "PAID": "green",
                                                    }).represent
 
+        # PDF export method
         from .helpers import InvoicePDF
         s3db.set_method("fin", "voucher_invoice",
                         method = "record",
                         action = InvoicePDF,
                         )
+
+        # Callback when invoice is settled
+        s3db.configure("fin_voucher_invoice",
+                       onsettled = invoice_onsettled,
+                       )
 
     settings.customise_fin_voucher_invoice_resource = customise_fin_voucher_invoice_resource
 
