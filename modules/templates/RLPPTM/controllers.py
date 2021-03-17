@@ -501,8 +501,10 @@ class approve(S3CustomController):
                         user.update_record(organisation_id = organisation_id,
                                            registration_key = None,
                                            )
-                        # Grant ORG_ADMIN
+
+                        # Grant ORG_ADMIN and PROVIDER_ACCOUNTANT
                         auth.s3_assign_role(user_id, "ORG_ADMIN", for_pe=org["pe_id"])
+                        auth.s3_assign_role(user_id, "PROVIDER_ACCOUNTANT")
                     else:
                         # Update User
                         user.update_record(registration_key = None)
