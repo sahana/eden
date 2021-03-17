@@ -669,6 +669,9 @@ class approve(S3CustomController):
                 else:
                     dt_pagination = "false"
 
+                # Disable exports
+                s3.no_formats = True
+
                 # Get the data table
                 dt, totalrows = resource.datatable(fields = list_fields,
                                                    start = start,
@@ -749,6 +752,8 @@ class approve(S3CustomController):
                              '"dataTable_id":"%s",' \
                              '"draw":%s,' \
                              '"data":[]}' % (totalrows, list_id, draw)
+            else:
+                S3Request("auth", "user").error(415, current.ERROR.BAD_FORMAT)
 
         return output
 
