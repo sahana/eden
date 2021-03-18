@@ -1642,6 +1642,10 @@
 
             // Button events
             el.on('click' + ns, '.read-row', function(e) {
+                var $this = $(this);
+                if ($this.closest('.inline-component').hasClass('readonly')) {
+                    return;
+                }
                 // Click into read-row opens the row for edit
                 // (unless the click-target is a link anchor)
                 var target = e.target;

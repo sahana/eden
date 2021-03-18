@@ -9,10 +9,11 @@
 
 from collections import OrderedDict
 
-from gluon import current, URL, A, B, DIV, IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_NOT_EMPTY, TAG
+from gluon import current, URL, A, B, DIV, TAG, \
+                  IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_NOT_EMPTY
 from gluon.storage import Storage
 
-from s3 import FS, IS_ONE_OF, IS_NOT_ONE_OF, S3Represent, s3_str
+from s3 import FS, IS_FLOAT_AMOUNT, IS_NOT_ONE_OF, IS_ONE_OF, S3Represent, s3_str
 from s3dal import original_tablename
 
 from .rlpgeonames import rlp_GeoNames
@@ -2319,7 +2320,6 @@ def config(settings):
                     # ...however, the item quantity can still be adjusted
                     # => override IS_AVAILABLE_QUANTITY here as we don't
                     #    have an inventory item to check against
-                    from s3 import IS_FLOAT_AMOUNT
                     field = itable.quantity
                     field.requires = IS_FLOAT_AMOUNT(0)
 
@@ -2530,6 +2530,8 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_req_req_resource(r, tablename):
 
+        db = current.db
+
         auth = current.auth
         s3db = current.s3db
 
@@ -2545,6 +2547,22 @@ def config(settings):
                             method = "ship",
                             action = RegisterShipment,
                             )
+
+        # Filter out obsolete items
+        ritable = s3db.req_req_item
+        sitable = s3db.supply_item
+        field = ritable.item_id
+        dbset = db((sitable.obsolete == False) | (sitable.obsolete == None))
+        field.requires = IS_ONE_OF(dbset, "supply_item.id",
+                                   field.represent,
+                                   sort = True,
+                                   )
+
+        # Customise error message for ordered quantity
+        field = ritable.quantity
+        field.requires = IS_FLOAT_AMOUNT(minimum = 1.0,
+                                         error_message = T("Minimum quantity is %(min)s"),
+                                         )
 
     settings.customise_req_req_resource = customise_req_req_resource
 
@@ -2931,6 +2949,13 @@ def config(settings):
         # Use a localized default for um
         field = table.um
         field.default = s3_str(T("piece"))
+
+        # Expose obsolete-flag
+        field = table.obsolete
+        field.label = T("Not orderable")
+        field.readable = field.writable = True
+        from s3 import ICON
+        field.represent = lambda v, row=None: ICON("remove") if v else ""
 
         # Filter widgets
         from s3 import S3TextFilter
