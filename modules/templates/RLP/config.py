@@ -2587,6 +2587,7 @@ def config(settings):
                     output["switch_btn"] = A(T("Switch to organizer"),
                                              _href = r.url(method="organize"),
                                              _class = "action-btn organizer-switch",
+                                             _title = T("Manage deployments in a calendar view"),
                                              )
 
                     # Use custom view to keep organizer-link above form
@@ -2606,6 +2607,7 @@ def config(settings):
                     output["switch"] = A(T("Switch to list view"),
                                          _href = r.url(method=""),
                                          _class = "action-btn",
+                                         _title = T("Manage deployments in a table view"),
                                          )
                     # Use custom view
                     S3CustomController._view("RLP", "organize.html")
