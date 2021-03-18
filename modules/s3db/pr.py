@@ -809,8 +809,9 @@ class PRPersonModel(S3Model):
             super_link("pe_id", "pr_pentity"),
             super_link("track_id", "sit_trackable"),
             # Base location
-            self.gis_location_id(readable=False,
-                                 writable=False),
+            self.gis_location_id(readable = False,
+                                 writable = False,
+                                 ),
             self.pr_pe_label(
                 comment = DIV(_class="tooltip",
                               _title="%s|%s" % (T("ID Tag Number"),
@@ -826,9 +827,9 @@ class PRPersonModel(S3Model):
             # - remove refs to writing this from this module
             # - update read refs in controllers/dvi.py & controllers/mpr.py
             Field("missing", "boolean",
-                  readable=False,
-                  writable=False,
-                  default=False,
+                  readable = False,
+                  writable = False,
+                  default = False,
                   represent = lambda missing: \
                               (missing and ["missing"] or [""])[0]),
             Field("first_name", notnull=True,
@@ -1055,6 +1056,7 @@ class PRPersonModel(S3Model):
                                                   "multiple": False,
                                                   },
                        cr_shelter_registration_history = "person_id",
+                       org_site_event = "person_id",
                        project_activity_person = "person_id",
                        supply_distribution_person = "person_id",
                        event_incident = {"link": "event_human_resource",
@@ -6272,7 +6274,6 @@ class PRPersonDetailsModel(S3Model):
                                 represent = nationality_repr,
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET_LAZY(nationality_opts,
-                                                           #zero = messages.SELECT_LOCATION,
                                                            zero = T("Select Country"),
                                                            )),
                                 comment = DIV(_class="tooltip",

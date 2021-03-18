@@ -258,7 +258,7 @@ def config(settings):
     ])
 
     # -------------------------------------------------------------------------
-    # Beneficiary Registry
+    # Beneficiary Registry (Not Used)
     # Terminology to use when referring to cases (Beneficiary|Client|Case)
     #settings.br.case_terminology = "Client" # Evacuee
     # Disable assignment of cases to staff
@@ -410,6 +410,7 @@ def config(settings):
                     (T("Staff"), "human_resource"),
                     (T("Clients"), "shelter_registration"),
                     #(T("Friends/Family"), "shelter_registration"),
+                    (T("Event Log"), "event"),
                     ]
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -427,20 +428,32 @@ def config(settings):
 
         elif tablename == "pr_person":
 
-            if r.controller == "hrm":
-                return None
-
             tabs = [(T("Basic Details"), None),
+                    (T("Event Log"), "site_event"),
                     ]
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
+            if r.controller == "hrm":
+                hrtable = s3db.hrm_human_resource
+                hr = current.db(hrtable.person_id = record.id).select(hrtable.organisation_id,
+                                                                      limitby = (0, 1)
+                                                                      ).first()
+                if hr:
+                    org = TR(TH("%s: " % T("Organization")),
+                             hrtable.organisation_id.represent(hr.organisation_id),
+                             )
+                 else:
+                    org = None
+            else:
+                org = None
+
             from s3 import s3_fullname
 
-            #table = r.table
-            rheader = DIV(TABLE(TR(TH("Name: "),
+            rheader = DIV(TABLE(TR(TH("%s: " % T("Name")),
                                    s3_fullname(record),
                                    ),
+                                org,
                                 ),
                           rheader_tabs)
 
