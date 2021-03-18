@@ -3621,10 +3621,6 @@ class S3SiteDetailsModel(S3Model):
         settings = current.deployment_settings
         last_contacted = settings.get_org_site_last_contacted()
 
-        messages = current.messages
-        NONE = messages["NONE"]
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
-
         facility_status_opts = {
             1: T("Normal"),
             2: T("Compromised"),
@@ -3795,7 +3791,7 @@ class S3SiteShiftModel(S3Model):
 
     def model(self):
 
-        T = current.T
+        #T = current.T
 
         # ---------------------------------------------------------------------
         # Shifts for a Site
@@ -7134,7 +7130,7 @@ def org_office_controller():
             marker_fn = s3db.get_config("org_office", "marker_fn")
             if marker_fn:
                 # Load these models now as they'll be needed when we encode
-                mtable = s3db.gis_marker
+                s3db.table("gis_marker")
 
         elif r.representation == "xls":
             list_fields = r.resource.get_config("list_fields")
@@ -7291,7 +7287,7 @@ def org_facility_controller():
 
         elif r.representation == "geojson":
             # Load these models now as they'll be needed when we encode
-            mtable = s3db.gis_marker
+            s3db.table("gis_marker")
 
         return True
     s3.prep = prep
