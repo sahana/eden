@@ -24,6 +24,7 @@
          Postcode.......................optional.....Postcode
          Lat............................optional.....Latitude
          Lon............................optional.....Longitude
+         Capacity.......................cr_shelter.capacity_day (Only one used if not separated)
          Capacity Day...................cr_shelter.capacity_day
          Capacity Night.................cr_shelter.capacity_night
          Population.....................cr_shelter.population
@@ -206,11 +207,19 @@
         <xsl:variable name="ShelterName" select="col[@field='Name']/text()"/>
         <xsl:variable name="Type" select="col[@field='Type']/text()"/>
         <xsl:variable name="Status" select="col[@field='Status']/text()"/>
+        <xsl:variable name="Capacity" select="col[@field='Capacity']/text()"/>
 
         <resource name="cr_shelter">
             <data field="name"><xsl:value-of select="$ShelterName"/></data>
-            <data field="capacity_day"><xsl:value-of select="col[@field='Capacity Day']"/></data>
-            <data field="capacity_night"><xsl:value-of select="col[@field='Capacity Night']"/></data>
+            <xsl:choose>
+                <xsl:when test="$Capacity!=''">
+                    <data field="capacity_day"><xsl:value-of select="$Capacity"/></data>
+                </xsl:when>
+                <xsl:otherwise>
+                    <data field="capacity_day"><xsl:value-of select="col[@field='Capacity Day']"/></data>
+                    <data field="capacity_night"><xsl:value-of select="col[@field='Capacity Night']"/></data>
+                </xsl:otherwise>
+            </xsl:choose>
             <data field="population"><xsl:value-of select="col[@field='Population']"/></data>
 
             <xsl:choose>

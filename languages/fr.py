@@ -4136,6 +4136,7 @@
 'See unassigned recovery requests': 'Voir les demandes de reprise sans affectation',
 'Seen': 'vu',
 'Select 2 potential locations from the dropdowns.': 'Sélectionnez 2 emplacements potentiels des listes déroulantes.',
+'Select Country': 'Sélectionnez le pays',
 'Select Items from the Request': 'Sélectionnez les éléments à partir de la requête',
 'Select Items from this Inventory': 'Sélectionnez les éléments de cet inventaire',
 'Select Language': 'Sélectionner la langue',
