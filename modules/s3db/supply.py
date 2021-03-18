@@ -453,6 +453,11 @@ $.filterOptionsS3({
                                        float_represent(v, precision=3),
                            requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
                            ),
+                     Field("obsolete", "boolean",
+                           default = False,
+                           readable = False,
+                           writable = False,
+                           ),
                      # These comments do *not* pull through to an Inventory's Items or a Request's Items
                      s3_comments(),
                      *s3_meta_fields())

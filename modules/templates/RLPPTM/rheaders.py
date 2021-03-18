@@ -35,7 +35,6 @@ def rlpptm_fin_rheader(r, tabs=None):
         if tablename == "fin_voucher":
 
             if not tabs:
-
                 tabs = [(T("Voucher"), None),
                         ]
 
@@ -60,6 +59,28 @@ def rlpptm_fin_rheader(r, tabs=None):
                     from s3 import s3_qrcode_represent
                     img = s3_qrcode_represent(signature, show_value=False)
                     img.add_class("rheader-qrcode")
+
+        elif tablename == "fin_voucher_invoice":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        ]
+
+            # Lookup the invoice header data
+            from .helpers import InvoicePDF
+            data = InvoicePDF.lookup_header_data(record)
+
+            addr_street = lambda row: data.get("addr_street", "-")
+            addr_place = lambda row: "%s %s" % (data.get("addr_postcode", ""),
+                                                data.get("addr_place", "?"),
+                                                )
+            email = lambda row: data.get("email", "-")
+
+            rheader_title = "pe_id"
+            rheader_fields = [[(T("Address"), addr_street), "invoice_no"],
+                              [(T("Place"), addr_place), "date"],
+                              [(T("Email"), email), "status"],
+                              ]
 
         rheader = S3ResourceHeader(rheader_fields, tabs, title=rheader_title)
         rheader = rheader(r, table = resource.table, record = record)

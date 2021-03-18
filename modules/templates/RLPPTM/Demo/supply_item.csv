@@ -1,23 +1,23 @@
-Catalog,Item Name,Unit of Measure
-Material für Teststellen,Antigen-Schnelltests,Stück
-Material für Teststellen,Communitymaske,Stück
-Material für Teststellen,Desinfektionsmittel,Flasche
-Material für Teststellen,Einmal-Handschuhe Gr.L,Stück
-Material für Teststellen,Einmal-Handschuhe Gr.M,Stück
-Material für Teststellen,Einmal-Handschuhe Gr.S,Stück
-Material für Teststellen,Einmal-Handschuhe Gr.XL,Stück
-Material für Teststellen,Einmal-Handschuhe Gr.XS,Stück
-Material für Teststellen,Face-Shields,Stück
-Material für Teststellen,Ganzkörper-Schutzanzug,Stück
-Material für Teststellen,Kopfhaube/OP-Hauben,Stück
-Material für Teststellen,"OP-Kittel, steril Standard",Stück
-Material für Teststellen,"OP-Kittel, steril Verstärkt",Stück
-Material für Teststellen,OP-Masken (Mundnasen-Schutz),Stück
-Material für Teststellen,PE-Überzieh-Schuhe,Stück
-Material für Teststellen,Probeentnahme Material,Paket
-Material für Teststellen,Schutzbrille,Stück
-Material für Teststellen,Schutzkittel,Stück
-Material für Teststellen,Schutzmaske FFP1,Stück
-Material für Teststellen,Schutzmaske FFP2,Stück
-Material für Teststellen,Schutzmaske FFP3,Stück
-Material für Teststellen,Vollgesichtsmaske,Stück
+Catalog,Item Name,Item Code,Unit of Measure
+Material für Teststellen,Antigen-Schnelltests,POCTST,Stück
+Material für Teststellen,Communitymaske,COMMSK,Stück
+Material für Teststellen,Desinfektionsmittel,DESINF,Flasche
+Material für Teststellen,Einmal-Handschuhe Gr.L,EHL,Stück
+Material für Teststellen,Einmal-Handschuhe Gr.M,EHM,Stück
+Material für Teststellen,Einmal-Handschuhe Gr.S,EHS,Stück
+Material für Teststellen,Einmal-Handschuhe Gr.XL,EHXL,Stück
+Material für Teststellen,Einmal-Handschuhe Gr.XS,EHXS,Stück
+Material für Teststellen,Face-Shields,FACSHL,Stück
+Material für Teststellen,Ganzkörper-Schutzanzug,SCHANZ,Stück
+Material für Teststellen,Kopfhaube/OP-Hauben,KHAUBE,Stück
+Material für Teststellen,"OP-Kittel, steril Standard",OPKSTD,Stück
+Material für Teststellen,"OP-Kittel, steril Verstärkt",OPKVST,Stück
+Material für Teststellen,OP-Masken (Mundnasen-Schutz),OPMASK,Stück
+Material für Teststellen,PE-Überzieh-Schuhe,UBZSCH,Stück
+Material für Teststellen,Probeentnahme Material,PREMAT,Paket
+Material für Teststellen,Schutzbrille,SCHBRL,Stück
+Material für Teststellen,Schutzkittel,SCHKTL,Stück
+Material für Teststellen,Schutzmaske FFP1,SMFFP1,Stück
+Material für Teststellen,Schutzmaske FFP2,SMFFP2,Stück
+Material für Teststellen,Schutzmaske FFP3,SMFFP3,Stück
+Material für Teststellen,Vollgesichtsmaske,VGMASK,Stück
