@@ -3219,6 +3219,8 @@
 'Manage Users & Roles': 'Benutzer- und Rollenverwaltung',
 'Manage Warehouses/Sites': 'Warenlager/Orte verwalten',
 'Manage Your Facilities': 'Eigene Einrichtungen verwalten',
+'Manage deployments in a calendar view': 'Einsätze in Kalenderansicht anlegen und verwalten',
+'Manage deployments in a table view': 'Einsätze in Tabelle anlegen und verwalten',
 'Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.': 'Verwaltung der Anfragen nach Vorräten, Anlagen, Mitarbeitern oder anderen Ressourcen. Vergleich mit den Beständen, wo Vorräte angefordert werden',
 'Manage requests of hospitals for assistance.': 'Verwaltung der Anfragen von Krankenhäusern nach Unterstützung.',
 'Manage volunteers by capturing their skills, availability and allocation': 'Verwaltung der Freiwilligen Helfer anhand ihrer Fähigkeiten, Verfügbarkeit und Zuordnung.',
