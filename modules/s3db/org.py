@@ -3652,6 +3652,7 @@ class S3SiteDetailsModel(S3Model):
                                       IS_IN_SET(facility_status_opts)),
                            label = T("Facility Status"),
                            represent = S3Represent(options = facility_status_opts),
+                           ),
                      s3_date("date_reopening",
                              label = T("Estimated Reopening Date"),
                              readable = False,
@@ -3663,6 +3664,7 @@ class S3SiteDetailsModel(S3Model):
                                         IS_IN_SET(power_supply_type_opts,
                                                   zero=None)),
                            represent = S3Represent(options = power_supply_type_opts),
+                           ),
                      s3_date("last_contacted",
                              label = T("Last Contacted"),
                              readable = last_contacted,
@@ -3729,17 +3731,17 @@ class S3SiteEventModel(S3Model):
         #    Staff Member who checks them in/out
         #
         tablename = "org_site_event"
-        define_table(tablename,
-                     # Component not instance
-                     super_link("site_id", "org_site"),
-                     s3_date(default = "now"),
-                     Field("event", "integer",
-                           label = T("Event"),
-                           requires = IS_IN_SET(event_opts),
-                           represent = S3Represent(options = event_opts),
-                           ),
-                     self.pr_person_id(ondelete = "SET NULL"),
-                     *s3_meta_fields())
+        self.define_table(tablename,
+                          # Component not instance
+                          self.super_link("site_id", "org_site"),
+                          s3_date(default = "now"),
+                          Field("event", "integer",
+                                label = T("Event"),
+                                requires = IS_IN_SET(event_opts),
+                                represent = S3Represent(options = event_opts),
+                                ),
+                          self.pr_person_id(ondelete = "SET NULL"),
+                          *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
         return {}

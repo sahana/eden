@@ -436,14 +436,14 @@ def config(settings):
 
             if r.controller == "hrm":
                 hrtable = s3db.hrm_human_resource
-                hr = current.db(hrtable.person_id = record.id).select(hrtable.organisation_id,
-                                                                      limitby = (0, 1)
-                                                                      ).first()
+                hr = current.db(hrtable.person_id == record.id).select(hrtable.organisation_id,
+                                                                       limitby = (0, 1)
+                                                                       ).first()
                 if hr:
                     org = TR(TH("%s: " % T("Organization")),
                              hrtable.organisation_id.represent(hr.organisation_id),
                              )
-                 else:
+                else:
                     org = None
             else:
                 org = None
