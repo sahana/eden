@@ -4908,6 +4908,7 @@
 'Seized Items': 'Beschlagnahmte Gegenstände',
 'Select %(location)s': 'Auswahl %(location)s',
 'Select All': 'Alle auswählen',
+'Select Country': 'Wählen Sie einen Land aus',
 'Select Items from the Request': 'Wählen sie Artikel aus der Anfrage',
 'Select Items from this Inventory': 'Wählen sie Artikel aus diesem Bestand',
 'Select Land': 'Land auswählen',

@@ -5894,6 +5894,7 @@
 'Select all that apply': 'Seleccione todas las aplicables',
 'Select an Organization to see a list of offices': 'Seleccione una organización para ver la lista de oficinas',
 'Select Body': 'Seleccione Cuerpo',
+'Select Country': 'Seleccionar país',
 'Select Items from the Request': 'Seleccionar los elementos de la petición',
 'Select Items from this Inventory': 'Seleccione los artículos de este inventario',
 'Select Items from this Warehouse': 'Seleccione los artículos de este almacén',

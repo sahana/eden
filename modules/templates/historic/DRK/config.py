@@ -597,7 +597,7 @@ def config(settings):
                 (rtable.deleted != True)
         registration = db(query).select(rtable.id,
                                         rtable.registration_status,
-                                        limitby=(0, 1),
+                                        limitby = (0, 1)
                                         ).first()
         if not registration:
             return
@@ -632,7 +632,7 @@ def config(settings):
                 (rtable.deleted != True)
         registration = db(query).select(rtable.id,
                                         rtable.registration_status,
-                                        limitby=(0, 1),
+                                        limitby = (0, 1)
                                         ).first()
         if not registration:
             return
@@ -664,7 +664,9 @@ def config(settings):
         query = (rtable.date == YESTERDAY) & \
                 (rtable.site_id == site_id) & \
                 (rtable.deleted != True)
-        row = current.db(query).select(rtable.id, limitby=(0, 1)).first()
+        row = current.db(query).select(rtable.id,
+                                       limitby = (0, 1)
+                                       ).first()
         if not row:
             # Create one
             report = DRKSiteActivityReport(date = YESTERDAY,
@@ -723,7 +725,7 @@ def config(settings):
                     query = (ftable.controller == "gis") & \
                             (ftable.function == "poi")
                     layer = current.db(query).select(ftable.layer_id,
-                                                     limitby=(0, 1)
+                                                     limitby = (0, 1)
                                                      ).first()
                     try:
                         layer_id = layer.layer_id
@@ -812,7 +814,7 @@ def config(settings):
                                                field.represent,
                                                filterby = "status",
                                                filter_opts = (1,),
-                                               orderby="shelter_id",
+                                               orderby = "shelter_id",
                                                ))
 
     settings.customise_cr_shelter_registration_resource = customise_cr_shelter_registration_resource

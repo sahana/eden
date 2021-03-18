@@ -5902,7 +5902,7 @@ class org_SiteCheckInMethod(S3Method):
         output = {}
         error = None
         alert = None
-        alert_type = 'success'
+        alert_type = "success"
 
         # Identify the person
         label = data.get("l")
@@ -6030,7 +6030,7 @@ class org_SiteCheckInMethod(S3Method):
 
         query = (FS("pe_label") == label)
         presource = s3db.resource("pr_person",
-                                  components=[],
+                                  components = [],
                                   filter = query,
                                   )
         rows = presource.select(fields,
@@ -6132,7 +6132,9 @@ class org_SiteCheckInMethod(S3Method):
         query = (table.pe_id == pe_id) & \
                 (table.profile == True) & \
                 (table.deleted != True)
-        row = current.db(query).select(table.image, limitby=(0, 1)).first()
+        row = current.db(query).select(table.image,
+                                       limitby = (0, 1)
+                                       ).first()
 
         if row:
             return URL(c="default", f="download", args=row.image)
