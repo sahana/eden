@@ -1568,6 +1568,10 @@ def config(settings):
             return output
         s3.postp = custom_postp
 
+        # Custom rheader
+        from .rheaders import rlpptm_fin_rheader
+        attr["rheader"] = rlpptm_fin_rheader
+
         return attr
 
     settings.customise_fin_voucher_invoice_controller = customise_fin_voucher_invoice_controller

@@ -6272,7 +6272,6 @@ class PRPersonDetailsModel(S3Model):
                                 represent = nationality_repr,
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET_LAZY(nationality_opts,
-                                                           #zero = messages.SELECT_LOCATION,
                                                            zero = T("Select Country"),
                                                            )),
                                 comment = DIV(_class="tooltip",
