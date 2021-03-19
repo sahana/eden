@@ -393,8 +393,13 @@ def config(settings):
         record = r.record
         if r.tablename == "cms_series" and \
            record and record.name == "Announcements":
+            table = s3db.cms_post
+            field = table.priority
+            field.readable = field.writable = True
+
             crud_fields = ["name",
                            "body",
+                           "priority",
                            "date",
                            "expired",
                            S3SQLInlineLink("roles",
@@ -403,11 +408,13 @@ def config(settings):
                                            ),
                            ]
             list_fields = ["date",
+                           "priority",
                            "name",
                            "body",
                            "post_role.group_id",
                            "expired",
                            ]
+            orderby = "cms_post.date desc"
         else:
             crud_fields = ["name",
                            "body",
@@ -429,10 +436,12 @@ def config(settings):
                            "date",
                            "comments",
                            ]
+            orderby = "cms_post.name"
 
         s3db.configure("cms_post",
                        crud_form = S3SQLCustomForm(*crud_fields),
                        list_fields = list_fields,
+                       orderby = orderby,
                        )
 
     settings.customise_cms_post_resource = customise_cms_post_resource

@@ -316,33 +316,65 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_cms_post_resource(r, tablename):
 
-        from s3 import S3SQLCustomForm, S3SQLInlineComponent
 
-        crud_form = S3SQLCustomForm("name",
-                                    "body",
-                                    "date",
-                                    S3SQLInlineComponent("document",
-                                                         name = "file",
-                                                         label = T("Attachments"),
-                                                         fields = ["file", "comments"],
-                                                         filterby = {"field": "file",
-                                                                     "options": "",
-                                                                     "invert": True,
-                                                                     },
-                                                         ),
-                                    "comments",
-                                    )
+        s3db = current.s3db
 
-        current.s3db.configure("cms_post",
-                               crud_form = crud_form,
-                               list_fields = ["post_module.module",
-                                              "post_module.resource",
-                                              "name",
-                                              "date",
-                                              "comments",
-                                              ],
-                               orderby = "cms_post.name",
-                               )
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+
+        record = r.record
+        if r.tablename == "cms_series" and \
+           record and record.name == "Announcements":
+
+            table = s3db.cms_post
+            field = table.priority
+            field.readable = field.writable = True
+
+            crud_fields = ["name",
+                           "body",
+                           "priority",
+                           "date",
+                           "expired",
+                           S3SQLInlineLink("roles",
+                                           label = T("Roles"),
+                                           field = "group_id",
+                                           ),
+                           ]
+            list_fields = ["date",
+                           "priority",
+                           "name",
+                           "body",
+                           "post_role.group_id",
+                           "expired",
+                           ]
+            orderby = "cms_post.date desc"
+        else:
+            crud_fields = ["name",
+                           "body",
+                           "date",
+                           S3SQLInlineComponent("document",
+                                                name = "file",
+                                                label = T("Attachments"),
+                                                fields = ["file", "comments"],
+                                                filterby = {"field": "file",
+                                                            "options": "",
+                                                            "invert": True,
+                                                            },
+                                                ),
+                           "comments",
+                           ]
+            list_fields = ["post_module.module",
+                           "post_module.resource",
+                           "name",
+                           "date",
+                           "comments",
+                           ]
+            orderby = "cms_post.name"
+
+        s3db.configure("cms_post",
+                       crud_form = S3SQLCustomForm(*crud_fields),
+                       list_fields = list_fields,
+                       orderby = orderby,
+                       )
 
     settings.customise_cms_post_resource = customise_cms_post_resource
 

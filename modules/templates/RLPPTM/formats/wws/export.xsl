@@ -64,12 +64,12 @@
     <xsl:template match="resource[@name='req_req_item']">
         <xsl:variable name="ItemUUID" select="reference[@field='item_id']/@uuid"/>
         <xsl:variable name="PackUUID" select="reference[@field='item_pack_id']/@uuid"/>
-        <xsl:variable name="Quantity" select="data[@field='quantity']/text()"/>
+        <xsl:variable name="Quantity" select="data[@field='quantity']/@value"/>
 
         <xsl:if test="$ItemUUID!='' and $PackUUID!='' and $Quantity!=''">
 
             <xsl:variable name="ItemCode" select="//resource[@name='supply_item' and @uuid=$ItemUUID]/data[@field='code']/text()"/>
-            <xsl:variable name="PackQuantity" select="//resource[@name='supply_item_pack' and @uuid=$PackUUID]/data[@field='quantity']/text()"/>
+            <xsl:variable name="PackQuantity" select="//resource[@name='supply_item_pack' and @uuid=$PackUUID]/data[@field='quantity']/@value"/>
 
             <xsl:if test="$ItemCode!='' and $PackQuantity!=''">
                 <xsl:variable name="TotalQuantity" select='$Quantity * $PackQuantity'/>

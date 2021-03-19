@@ -629,11 +629,39 @@ form.anonymize-form,
         border: 1px solid #aaa;
         overflow: hidden;
         padding: 0.7rem;
+        &.announcement-important {
+            .announcement-icon {
+                color: #0088ca;
+            }
+        }
+        &.announcement-critical {
+            border: 1px solid #ca0000;
+            background-color: #ffebea;
+            .announcement-icon {
+                color: #ca0000;
+                animation: blinker 0.7s step-start 4;
+            }
+            @keyframes blinker {
+                50% {
+                    opacity: 0;
+                }
+            }
+        }
+        .announcement-header {
+            .announcement-icon {
+                display: inline-block;
+                font-size: 1.3rem;
+                padding: 0 0.7rem 0 0;
+            }
+            h4 {
+                display: inline-block;
+            }
+        }
         .announcement-text {
             font-size: 0.9rem;
             line-height: 1.3;
             h4 {
-                font-size: 1.1rem;
+                font-size: 1.2rem;
             }
             ul {
                 list-style: disc outside none;

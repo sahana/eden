@@ -6,7 +6,7 @@ from uuid import uuid4
 from gluon import Field, HTTP, SQLFORM, URL, current, redirect, \
                   CRYPT, IS_EMAIL, IS_EMPTY_OR, IS_EXPR, IS_IN_SET, IS_LENGTH, \
                   IS_LOWER, IS_NOT_EMPTY, IS_NOT_IN_DB, \
-                  A, BR, DIV, FORM, H3, H4, INPUT, LI, TABLE, TD, TR, UL, XML
+                  A, BR, DIV, FORM, H3, H4, I, INPUT, LI, TAG, TABLE, TD, TR, UL, XML
 
 from gluon.storage import Storage
 
@@ -31,8 +31,6 @@ class index(S3CustomController):
 
         T = current.T
         s3 = current.response.s3
-
-        request = current.request
 
         auth = current.auth
         settings = current.deployment_settings
@@ -60,8 +58,27 @@ class index(S3CustomController):
             announcements = UL(_class="announcements")
             if posts:
                 announcements_title = T("Announcements")
+                priority_classes = {2: "announcement-important",
+                                    3: "announcement-critical",
+                                    }
+                priority_icons = {2: "fa-exclamation-circle",
+                                  3: "fa-exclamation-triangle",
+                                  }
                 for post in posts:
+                    # The header
                     header = H4(post.name)
+
+                    # Priority
+                    priority = post.priority
+                    # Add icon to header?
+                    icon_class = priority_icons.get(post.priority)
+                    if icon_class:
+                        header = TAG[""](I(_class="fa %s announcement-icon" % icon_class),
+                                         header,
+                                         )
+                    # Priority class for the box
+                    prio = priority_classes.get(priority, "")
+
                     row = LI(DIV(DIV(DIV(dtrepr(post.date),
                                         _class = "announcement-date",
                                         ),
@@ -75,7 +92,7 @@ class index(S3CustomController):
                                          ),
                                      _class="announcement-text",
                                     ),
-                                 _class = "announcement-box",
+                                 _class = "announcement-box %s" % prio,
                                  ),
                              )
                     announcements.append(row)
@@ -128,15 +145,19 @@ class index(S3CustomController):
             ltable = s3db.cms_post_role
             q = (ltable.group_id.belongs(roles)) & \
                 (ltable.deleted == False)
-            rows = db(q).select(ltable.post_id, groupby = ltable.post_id)
+            rows = db(q).select(ltable.post_id,
+                                cache = s3db.cache,
+                                groupby = ltable.post_id,
+                                )
             post_ids = {row.post_id for row in rows}
             query = (ptable.id.belongs(post_ids)) & query
 
         posts = db(query).select(ptable.name,
                                  ptable.body,
                                  ptable.date,
+                                 ptable.priority,
                                  join = join,
-                                 orderby = (ptable.priority, ~ptable.date),
+                                 orderby = (~ptable.priority, ~ptable.date),
                                  limitby = (0, 5),
                                  )
 

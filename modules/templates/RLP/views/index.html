@@ -17,6 +17,9 @@
     {{include "auth/_login.html"}}
    </div>
   </div>
+  {{else:}}
+   {{if announcements_title:}}<h4 class='announcements-title'>{{=announcements_title}}</h4>{{pass}}
+   {{if announcements:}}{{=announcements}}{{pass}}
   {{pass}}
  </div>
 </div>

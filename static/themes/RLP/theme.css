@@ -2157,89 +2157,118 @@ form.anonymize-form,
   overflow: hidden;
   padding: 0.7rem;
 }
-/* line 632, ../scss/theme/_widgets.scss */
+/* line 633, ../scss/theme/_widgets.scss */
+.announcements .announcement-box.announcement-important .announcement-icon {
+  color: #0088ca;
+}
+/* line 637, ../scss/theme/_widgets.scss */
+.announcements .announcement-box.announcement-critical {
+  border: 1px solid #ca0000;
+  background-color: #ffebea;
+}
+/* line 640, ../scss/theme/_widgets.scss */
+.announcements .announcement-box.announcement-critical .announcement-icon {
+  color: #ca0000;
+  animation: blinker 0.7s step-start 4;
+}
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+/* line 651, ../scss/theme/_widgets.scss */
+.announcements .announcement-box .announcement-header .announcement-icon {
+  display: inline-block;
+  font-size: 1.3rem;
+  padding: 0 0.7rem 0 0;
+}
+/* line 656, ../scss/theme/_widgets.scss */
+.announcements .announcement-box .announcement-header h4 {
+  display: inline-block;
+}
+/* line 660, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text {
   font-size: 0.9rem;
   line-height: 1.3;
 }
-/* line 635, ../scss/theme/_widgets.scss */
+/* line 663, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text h4 {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
-/* line 638, ../scss/theme/_widgets.scss */
+/* line 666, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text ul {
   list-style: disc outside none;
 }
-/* line 641, ../scss/theme/_widgets.scss */
+/* line 669, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text ol {
   list-style: decimal outside none;
 }
-/* line 644, ../scss/theme/_widgets.scss */
+/* line 672, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text li {
   padding: 0;
 }
-/* line 647, ../scss/theme/_widgets.scss */
+/* line 675, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text div {
   white-space: pre-line;
 }
-/* line 650, ../scss/theme/_widgets.scss */
+/* line 678, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text .announcement-header {
   margin: 0 0 0.8rem 0;
 }
-/* line 653, ../scss/theme/_widgets.scss */
+/* line 681, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text announcement-body {
   white-space: pre-line;
 }
-/* line 655, ../scss/theme/_widgets.scss */
+/* line 683, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text announcement-body p {
   margin-left: 1rem;
 }
-/* line 660, ../scss/theme/_widgets.scss */
+/* line 688, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-date {
   font-size: 0.7rem;
   margin-top: 0.4rem;
 }
 
-/* line 670, ../scss/theme/_widgets.scss */
+/* line 698, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header .ui-multiselect-filter {
   direction: rtl;
   float: right;
   margin-right: 3px;
   margin-left: 10px;
 }
-/* line 676, ../scss/theme/_widgets.scss */
+/* line 704, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header ul li {
   float: right;
   padding: 0 3px 0 10px;
 }
-/* line 680, ../scss/theme/_widgets.scss */
+/* line 708, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header li.ui-multiselect-close {
   float: left;
   text-align: left;
   padding-left: 0;
 }
-/* line 687, ../scss/theme/_widgets.scss */
+/* line 715, ../scss/theme/_widgets.scss */
 body.rtl .range-filter-widget input.date-filter-input {
   margin-right: 0;
   margin-left: 2px;
 }
-/* line 692, ../scss/theme/_widgets.scss */
+/* line 720, ../scss/theme/_widgets.scss */
 body.rtl #list-btn-add {
   float: left;
   margin-right: 0;
   margin-left: 0.35rem;
 }
-/* line 698, ../scss/theme/_widgets.scss */
+/* line 726, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0;
   margin-left: 0.3rem;
 }
-/* line 704, ../scss/theme/_widgets.scss */
+/* line 732, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 0;
   border-right: 1px solid red;
 }
-/* line 708, ../scss/theme/_widgets.scss */
+/* line 736, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 0;
   border-left: 1px solid red;
