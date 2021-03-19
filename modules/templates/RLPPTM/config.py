@@ -1035,6 +1035,7 @@ def config(settings):
                      (T("Remaining Compensation Claims"), "sum(balance)"),
                      )
             axes = ["program_id",
+                    "pe_id",
                     "status",
                     ]
             if current.auth.s3_has_role("PROGRAM_MANAGER"):
@@ -1091,6 +1092,9 @@ def config(settings):
                 if role_realms is not None:
                     query = FS("billing_id$organisation_id$pe_id").belongs(role_realms)
                     resource.add_filter(query)
+
+                # PROGRAM_ACCOUNTANT does not (need to) see cancelled debits
+                resource.add_filter(FS("cancelled") == False)
 
             # Check which programs and organisations the user can accept vouchers for
             program_ids, org_ids, pe_ids = s3db.fin_voucher_permitted_programs(
