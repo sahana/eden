@@ -4484,7 +4484,7 @@ class fin_VoucherCancelDebit(S3Method):
         # Verify that the debit can be cancelled
         error = program.cancellable(debit.id)[1]
         if error:
-            r.error(400, T("Debit cannot be cancelled"),
+            r.error(400, T("Voucher acceptance cannot be cancelled"),
                     next = r.url(id=r.id, method=""),
                     )
 
@@ -4494,7 +4494,7 @@ class fin_VoucherCancelDebit(S3Method):
                             requires = IS_NOT_EMPTY(error_message=T("Reason must be specified")),
                             ),
                       Field("do_cancel", "boolean",
-                            label = T("Cancel this debit"),
+                            label = T("Cancel this voucher acceptance"),
                             default = False,
                             ),
                       ]
@@ -4504,7 +4504,7 @@ class fin_VoucherCancelDebit(S3Method):
         response.s3.has_required = has_required
 
         # Form buttons
-        CANCEL = T("Cancel Debit")
+        CANCEL = T("Cancel Voucher Acceptance")
         buttons = [INPUT(_type="submit", _value=CANCEL)]
 
         # Construct the form
@@ -4528,7 +4528,7 @@ class fin_VoucherCancelDebit(S3Method):
             except AttributeError:
                 do_cancel = False
             if not do_cancel:
-                form.errors.do_cancel = T("Confirm that you want to cancel this debit")
+                form.errors.do_cancel = T("Confirm that you want to cancel this voucher acceptance")
 
         if form.accepts(request.vars,
                         session,
@@ -4539,7 +4539,7 @@ class fin_VoucherCancelDebit(S3Method):
             # Cancel the debit
             error = program.cancel(debit.id, form.vars.reason)[1]
             if error:
-                response.error = T("Debit cannot be cancelled: %s") % error
+                response.error = T("Voucher acceptance cannot be cancelled: %s") % error
             else:
                 response.confirmation = T("Cancellation successful")
 
