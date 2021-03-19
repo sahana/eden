@@ -386,32 +386,54 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_cms_post_resource(r, tablename):
 
-        from s3 import S3SQLCustomForm, S3SQLInlineComponent
+        s3db = current.s3db
 
-        crud_form = S3SQLCustomForm("name",
-                                    "body",
-                                    "date",
-                                    S3SQLInlineComponent("document",
-                                                         name = "file",
-                                                         label = T("Attachments"),
-                                                         fields = ["file", "comments"],
-                                                         filterby = {"field": "file",
-                                                                     "options": "",
-                                                                     "invert": True,
-                                                                     },
-                                                         ),
-                                    "comments",
-                                    )
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
-        current.s3db.configure("cms_post",
-                               crud_form = crud_form,
-                               list_fields = ["post_module.module",
-                                              "post_module.resource",
-                                              "name",
-                                              "date",
-                                              "comments",
-                                              ],
-                               )
+        record = r.record
+        if r.tablename == "cms_series" and \
+           record and record.name == "Announcements":
+            crud_fields = ["name",
+                           "body",
+                           "date",
+                           "expired",
+                           S3SQLInlineLink("roles",
+                                           label = T("Roles"),
+                                           field = "group_id",
+                                           ),
+                           ]
+            list_fields = ["date",
+                           "name",
+                           "body",
+                           "post_role.group_id",
+                           "expired",
+                           ]
+        else:
+            crud_fields = ["name",
+                           "body",
+                           "date",
+                           S3SQLInlineComponent("document",
+                                                name = "file",
+                                                label = T("Attachments"),
+                                                fields = ["file", "comments"],
+                                                filterby = {"field": "file",
+                                                            "options": "",
+                                                            "invert": True,
+                                                            },
+                                                ),
+                           "comments",
+                           ]
+            list_fields = ["post_module.module",
+                           "post_module.resource",
+                           "name",
+                           "date",
+                           "comments",
+                           ]
+
+        s3db.configure("cms_post",
+                       crud_form = S3SQLCustomForm(*crud_fields),
+                       list_fields = list_fields,
+                       )
 
     settings.customise_cms_post_resource = customise_cms_post_resource
 

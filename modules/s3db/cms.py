@@ -27,13 +27,14 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3ContentModel",
-           "S3ContentForumModel",
-           "S3ContentMapModel",
-           "S3ContentOrgModel",
-           "S3ContentOrgGroupModel",
-           "S3ContentTeamModel",
-           "S3ContentUserModel",
+__all__ = ("CMSContentModel",
+           "CMSContentForumModel",
+           "CMSContentMapModel",
+           "CMSContentOrgModel",
+           "CMSContentOrgGroupModel",
+           "CMSContentTeamModel",
+           "CMSContentUserModel",
+           "CMSContentRoleModel",
            "cms_index",
            "cms_documentation",
            "cms_rheader",
@@ -58,7 +59,7 @@ from s3layouts import S3PopupLink
 SEPARATORS = (",", ":")
 
 # =============================================================================
-class S3ContentModel(S3Model):
+class CMSContentModel(S3Model):
     """
         Content Management System
     """
@@ -491,6 +492,13 @@ class S3ContentModel(S3Model):
                                               "key": "incident_type_id",
                                               "actuate": "hide",
                                               },
+
+                       # Role-specific announcements
+                       auth_group = {"name": "roles",
+                                     "link": "cms_post_role",
+                                     "joinby": "post_id",
+                                     "key": "group_id",
+                                     },
                        )
 
         # Custom Methods
@@ -1054,7 +1062,7 @@ class S3ContentModel(S3Model):
         return output
 
 # =============================================================================
-class S3ContentForumModel(S3Model):
+class CMSContentForumModel(S3Model):
     """
         Link Posts to Forums to allow Users to Share posts
     """
@@ -1080,7 +1088,7 @@ class S3ContentForumModel(S3Model):
         return {}
 
 # =============================================================================
-class S3ContentMapModel(S3Model):
+class CMSContentMapModel(S3Model):
     """
         Use of the CMS to provide extra data about Map Layers
     """
@@ -1104,7 +1112,7 @@ class S3ContentMapModel(S3Model):
         return {}
 
 # =============================================================================
-class S3ContentOrgModel(S3Model):
+class CMSContentOrgModel(S3Model):
     """
         Link Posts to Organisations
     """
@@ -1132,7 +1140,7 @@ class S3ContentOrgModel(S3Model):
         return {}
 
 # =============================================================================
-class S3ContentOrgGroupModel(S3Model):
+class CMSContentOrgGroupModel(S3Model):
     """
         Link Posts to Organisation Groups (Coalitions/Networks)
     """
@@ -1156,7 +1164,7 @@ class S3ContentOrgGroupModel(S3Model):
         return {}
 
 # =============================================================================
-class S3ContentTeamModel(S3Model):
+class CMSContentTeamModel(S3Model):
     """
         Link Posts to Teams
     """
@@ -1184,7 +1192,7 @@ class S3ContentTeamModel(S3Model):
         return {}
 
 # =============================================================================
-class S3ContentUserModel(S3Model):
+class CMSContentUserModel(S3Model):
     """
         Link Posts to Users to allow Users to Bookmark posts
     """
@@ -1200,6 +1208,45 @@ class S3ContentUserModel(S3Model):
         self.define_table(tablename,
                           self.cms_post_id(empty = False),
                           Field("user_id", current.auth.settings.table_user),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class CMSContentRoleModel(S3Model):
+    """
+        Link CMS posts to user roles
+        - for role-specific announcements
+    """
+
+    names = ("cms_post_role",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        gtn = current.auth.settings.table_group_name
+        rrepresent = S3Represent(lookup=gtn, fields=["role"])
+
+        # ---------------------------------------------------------------------
+        # Post <> Role link table
+        #
+        tablename = "cms_post_role"
+        self.define_table(tablename,
+                          self.cms_post_id(empty = False),
+                          Field("group_id", "reference %s" % gtn,
+                                label = T("Roles"),
+                                represent = rrepresent,
+                                requires = IS_EMPTY_OR(IS_ONE_OF(db, "%s.id" % gtn,
+                                                                 rrepresent,
+                                                                 multiple = True,
+                                                                 )),
+                                ),
                           *s3_meta_fields())
 
         # ---------------------------------------------------------------------

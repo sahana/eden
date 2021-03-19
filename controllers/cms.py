@@ -950,7 +950,7 @@ def posts():
                 user = row[utable._tablename]
                 username = s3_fullname(person)
                 email = user.email.strip().lower()
-                hash = hashlib.md5(email).hexdigest()
+                hash = hashlib.md5(email.encode("utf-8")).hexdigest()
                 url = "http://www.gravatar.com/%s" % hash
                 author = B(A(username, _href=url, _target="top"))
         header = H4(post.name)

@@ -607,6 +607,63 @@ form.anonymize-form,
     }
 }
 
+.announcements-title {
+    font-variant: all-small-caps;
+    font-weight: bold;
+}
+.announcements {
+    margin: 0;
+    padding: 0 0 0 1rem;
+    border-left: 1px solid $primary-color;
+    list-style: none outside none;
+    ul, ol {
+        padding-left: 20px;
+        list-style: none outside none;
+    }
+    li {
+        padding: 10px 0 0;
+    }
+    .announcement-box {
+        display: block;
+        background: #fff7d9;
+        border: 1px solid #aaa;
+        overflow: hidden;
+        padding: 0.7rem;
+        .announcement-text {
+            font-size: 0.9rem;
+            line-height: 1;
+            h4 {
+                font-size: 1.1rem;
+            }
+            ul {
+                list-style: disc outside none;
+            }
+            ol {
+                list-style: decimal outside none;
+            }
+            li {
+                padding: 0;
+            }
+            div {
+                white-space: pre-line;
+            }
+            .announcement-header {
+                margin: 0 0 0.8rem 0;
+            }
+            announcement-body {
+                white-space: pre-line;
+                p {
+                    margin-left: 1rem;;
+                }
+            }
+        }
+        .announcement-date {
+            font-size: 0.7rem;
+            margin-top: 0.4rem;
+        }
+    }
+}
+
 // Overrides for right-to-left orientation
 body.rtl {
     .ui-multiselect-header {
