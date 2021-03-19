@@ -190,6 +190,55 @@ def get_stats_projects():
                                     )
     return [row.project_id for row in rows]
 
+# -----------------------------------------------------------------------------
+def can_cancel_debit(debit):
+    """
+        Check whether the current user is entitled to cancel a certain
+        voucher debit:
+        * User must have the VOUCHER_PROVIDER role for the organisation
+          that originally accepted the voucher (not even ADMIN-role can
+          override this requirement)
+
+        @param debit: the debit (Row, must contain the debit pe_id)
+
+        @returns: True|False
+    """
+
+    auth = current.auth
+    s3db = current.s3db
+
+    user = auth.user
+    if user:
+        # Look up the role ID
+        gtable = auth.settings.table_group
+        query = (gtable.uuid == "VOUCHER_PROVIDER")
+        role = current.db(query).select(gtable.id,
+                                        cache = s3db.cache,
+                                        limitby = (0, 1),
+                                        ).first()
+        if not role:
+            return False
+
+        # Get the realms they have this role for
+        realms = user.realms
+        if role.id in realms:
+            role_realms = realms.get(role.id)
+        else:
+            # They don't have the role at all
+            return False
+
+        if not role_realms:
+            # User has a site-wide VOUCHER_PROVIDER role, however
+            # for cancellation of debits they must be affiliated
+            # with the debit owner organisation
+            role_realms = s3db.pr_realm(user["pe_id"])
+
+        return debit.pe_id in role_realms
+
+    else:
+        # No user
+        return False
+
 # =============================================================================
 class InviteUserOrg(S3Method):
     """ Custom Method Handler to invite User Organisations """

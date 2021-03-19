@@ -60,6 +60,24 @@ def rlpptm_fin_rheader(r, tabs=None):
                     img = s3_qrcode_represent(signature, show_value=False)
                     img.add_class("rheader-qrcode")
 
+        elif tablename == "fin_voucher_debit":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        ]
+
+                # If user can cancel the debit and the debit can be
+                # cancelled, add the cancel-action as tab
+                from .helpers import can_cancel_debit
+                if can_cancel_debit(record):
+                    p = current.s3db.fin_VoucherProgram(record.program_id)
+                    error = p.cancellable(record.id)[1]
+                    if not error:
+                        tabs.append((T("Cancel##debit"), "cancel"))
+
+            rheader_title = "signature"
+            rheader_fields = [[(T("Status"), "status"),],
+                              ]
         elif tablename == "fin_voucher_invoice":
 
             if not tabs:

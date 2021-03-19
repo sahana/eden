@@ -1074,6 +1074,13 @@ def config(settings):
 
             resource = r.resource
 
+            # Catch inappropriate cancel-attempts
+            record = r.record
+            if record and not r.component and r.method == "cancel":
+                from .helpers import can_cancel_debit
+                if not can_cancel_debit(record):
+                    r.unauthorised()
+
             has_role = current.auth.s3_has_role
             if has_role("PROGRAM_ACCOUNTANT") and not has_role("PROGRAM_MANAGER"):
 
@@ -1125,7 +1132,7 @@ def config(settings):
                     field.readable = field.writable = False
 
                 # Always show quantity
-                if r.record:
+                if record:
                     field = table.quantity
                     field.readable = True
 

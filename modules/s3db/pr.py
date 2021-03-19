@@ -9773,11 +9773,11 @@ def pr_realm_users(realm, roles=None, role_types=OU):
                 role_types = [role_types]
             query &= (rtable.role_type.belongs(role_types))
         query &= (atable.deleted != True) & \
-                (atable.role_id == rtable.id) & \
-                (atable.pe_id == ltable.pe_id) & \
-                (ltable.deleted != True) & \
-                (ltable.user_id == utable.id) & \
-                (utable.deleted != True)
+                 (atable.role_id == rtable.id) & \
+                 (atable.pe_id == ltable.pe_id) & \
+                 (ltable.deleted != True) & \
+                 (ltable.user_id == utable.id) & \
+                 (utable.deleted != True)
     rows = current.db(query).select(utable.id, utable[userfield])
     if rows:
         return Storage([(row.id, row[userfield]) for row in rows])

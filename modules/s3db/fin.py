@@ -1007,6 +1007,7 @@ class FinVoucherModel(S3Model):
                      Field("signature", length=64,
                            label = T("Voucher ID"),
                            requires = IS_ONE_OF(db, "fin_voucher.signature"),
+                           represent = lambda v, row=None: v if v else "-",
                            widget = S3QRInput(),
                            ),
                      s3_date("bearer_dob",
@@ -1044,6 +1045,7 @@ class FinVoucherModel(S3Model):
                            ),
                      Field("cancel_reason",
                            label = T("Reason for Cancellation##fin"),
+                           represent = lambda v, row=None: v if v else "-",
                            writable = False,
                            ),
                      # Billing details (internal)
@@ -1067,6 +1069,11 @@ class FinVoucherModel(S3Model):
                        onvalidation = self.debit_onvalidation,
                        create_onaccept = self.debit_create_onaccept,
                        )
+
+        self.set_method("fin", "voucher_debit",
+                        method = "cancel",
+                        action = fin_VoucherCancelDebit,
+                        )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -4420,6 +4427,130 @@ class fin_VoucherBilling(object):
                                   modified_by = btable.modified_by,
                                   )
         db.commit()
+
+# =============================================================================
+class fin_VoucherCancelDebit(S3Method):
+    """ RESTful method to cancel a debit """
+
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request instance
+            @param attr: controller attributes
+        """
+
+        resource = r.resource
+        if resource.tablename != "fin_voucher_debit" or not r.record:
+            r.error(400, current.ERROR.BAD_RESOURCE)
+
+        output = {}
+        if r.http in ("GET", "POST"):
+            if r.interactive:
+                output = self.cancel(r, **attr)
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
+
+        current.response.view = self._view(r, "delete.html")
+        return output
+
+    # -------------------------------------------------------------------------
+    def cancel(self, r, **attr):
+        """
+            Cancel a voucher debit
+
+            @param r: the S3Request instance
+            @param attr: controller attributes
+        """
+
+        # User must be permitted to update the debit
+        if not self._permitted("update"):
+            r.unauthorised()
+
+        T = current.T
+
+        auth = current.auth
+
+        settings = current.deployment_settings
+        request = current.request
+        session = current.session
+        response = current.response
+
+        debit = r.record
+        program = fin_VoucherProgram(debit.program_id)
+
+        # Verify that the debit can be cancelled
+        error = program.cancellable(debit.id)[1]
+        if error:
+            r.error(400, T("Debit cannot be cancelled"),
+                    next = r.url(id=r.id, method=""),
+                    )
+
+        # Form fields and mark-required
+        formfields = [Field("reason",
+                            label = T("Reason for cancellation"),
+                            requires = IS_NOT_EMPTY(error_message=T("Reason must be specified")),
+                            ),
+                      Field("do_cancel", "boolean",
+                            label = T("Cancel this debit"),
+                            default = False,
+                            ),
+                      ]
+        labels, has_required = s3_mark_required(formfields,
+                                                mark_required = ["do_cancel"],
+                                                )
+        response.s3.has_required = has_required
+
+        # Form buttons
+        CANCEL = T("Cancel Debit")
+        buttons = [INPUT(_type="submit", _value=CANCEL)]
+
+        # Construct the form
+        response.form_label_separator = ""
+        form = SQLFORM.factory(table_name = "fin_voucher_debit",
+                               record = None,
+                               hidden = {"_next": r.vars._next},
+                               labels = labels,
+                               separator = "",
+                               showid = False,
+                               submit_button = CANCEL,
+                               delete_label = auth.messages.delete_label,
+                               formstyle = settings.get_ui_formstyle(),
+                               buttons = buttons,
+                               *formfields)
+
+        # Form validation
+        def validate(form):
+            try:
+                do_cancel = form.vars.do_cancel
+            except AttributeError:
+                do_cancel = False
+            if not do_cancel:
+                form.errors.do_cancel = T("Confirm that you want to cancel this debit")
+
+        if form.accepts(request.vars,
+                        session,
+                        formname = "cancel_debit",
+                        onvalidation = validate,
+                        ):
+
+            # Cancel the debit
+            error = program.cancel(debit.id, form.vars.reason)[1]
+            if error:
+                response.error = T("Debit cannot be cancelled: %s") % error
+            else:
+                response.confirmation = T("Cancellation successful")
+
+            # Redirect to the debit
+            self.next = r.url(id=r.id, method="")
+
+        return {"title": self.crud_string("fin_voucher_debit",
+                                          "title_display",
+                                          ),
+                "form": form,
+                }
 
 # =============================================================================
 def fin_voucher_eligibility_types(program_ids, organisation_ids=None):
