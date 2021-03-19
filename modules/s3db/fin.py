@@ -1036,6 +1036,16 @@ class FinVoucherModel(S3Model):
                            default = 0,
                            writable = False,
                            ),
+                     Field("cancelled", "boolean",
+                           label = T("Cancelled##fin"),
+                           default = False,
+                           represent = s3_yes_no_represent,
+                           writable = False,
+                           ),
+                     Field("cancel_reason",
+                           label = T("Reason for Cancellation##fin"),
+                           writable = False,
+                           ),
                      # Billing details (internal)
                      billing_id(readable = False,
                                 writable = False,
@@ -1051,7 +1061,7 @@ class FinVoucherModel(S3Model):
 
         # Table Configuration
         self.configure(tablename,
-                       extra_fields = ["balance"],
+                       extra_fields = ["balance", "cancelled"],
                        editable = False,
                        deletable = False,
                        onvalidation = self.debit_onvalidation,
@@ -1086,12 +1096,14 @@ class FinVoucherModel(S3Model):
         #  - ISS: credit -x => voucher +x
         #  - VOI: credit +x => voucher -x
         #  - DBT: credit +1 <= voucher -1, debit +1 <= compensation -1
+        #  - CNC: credit -1 => voucher +1, debit -1 => compensation +1
         #  - CMP: debit -1 => compensation +1
         #
         transaction_types = {"ISS": T("Issued##fin"),
                              "VOI": T("Voided##fin"),
                              "DBT": T("Redeemed##fin"),
                              "CMP": T("Compensated##fin"),
+                             "CNC": T("Cancelled##fin"),
                              }
 
         tablename = "fin_voucher_transaction"
@@ -1948,6 +1960,8 @@ class FinVoucherModel(S3Model):
         if hasattr(row, "balance") and row.balance is not None:
             if row.balance > 0:
                 return T("Compensation pending##fin")
+            elif row.cancelled:
+                return T("Cancelled##fin")
             else:
                 return T("Compensated##fin")
         else:
@@ -3248,6 +3262,179 @@ class fin_VoucherProgram(object):
                 return None
 
         return credit
+
+    # -------------------------------------------------------------------------
+    def cancel(self, debit_id, reason):
+        """
+            Cancel a debit - transfers the credit back to the voucher, and
+            adjusts the program's credit/compensation balances accordingly,
+            also reverses any voiding of single-debit vouchers
+
+            @param debit_id: the debit ID
+            @param reason: the reason for cancellation (required)
+
+            @returns: tuple (credits, error)
+                      - the number of credits returned, or None on failure
+                      - the failure reason
+
+            NB Cancelling a debit is only possible while the debit is not
+               part of any other transactions, and has not yet been included
+               in a billing or compensated
+
+            NB Implementations should ensure that debits can only be cancelled
+               by the organisation that originally created them (i.e. the provider
+               who has accepted the voucher), so as to not breach trust
+        """
+
+        program = self.program
+        if not program:
+            return None, "Program not found"
+
+        db = current.db
+        s3db = current.s3db
+
+        # Reason must not be empty
+        if not isinstance(reason, str) or not reason:
+            return None, "No reason specified"
+
+        # Get the debit and verify that it can be cancelled
+        debit, error = self.cancellable(debit_id)
+        if error:
+            return None, error
+
+        total_credit = debit.balance
+
+        # Look up all DBT-transactions for this debit (normally only one)
+        ttable = s3db.fin_voucher_transaction
+        query = (ttable.debit_id == debit.id) & \
+                (ttable.type == "DBT") & \
+                (ttable.deleted == False)
+        rows = db(query).select(ttable.id,
+                                ttable.type,
+                                ttable.credit,
+                                ttable.voucher,
+                                ttable.debit,
+                                ttable.compensation,
+                                ttable.voucher_id,
+                                ttable.debit_id,
+                                )
+        if rows:
+            # Totals must match (don't fix)
+            if sum(t.debit for t in rows) != total_credit:
+                return None, "Debit balance does not match transactions"
+
+            vtable = s3db.fin_voucher
+            for row in rows:
+                # Get the voucher
+                query = (vtable.id == row.voucher_id)
+                voucher = db(query).select(vtable.id,
+                                           vtable.balance,
+                                           vtable.credit_spent,
+                                           vtable.single_debit,
+                                           vtable.initial_credit,
+                                           limitby = (0, 1),
+                                           ).first()
+                if not voucher:
+                    continue
+
+                # Reverse the DBT transaction
+                credit = row.debit
+                transaction = {"type": "CNC",
+                               "credit": -credit,
+                               "voucher": credit,
+                               "debit": -credit,
+                               "compensation": credit,
+                               "voucher_id": row.voucher_id,
+                               "debit_id": debit.id,
+                               }
+                if self.__transaction(transaction):
+
+                    # Update the voucher balance
+                    voucher.update_record(
+                        balance = voucher.balance + transaction["voucher"],
+                        credit_spent = voucher.credit_spent + transaction["debit"],
+                        )
+
+                    if voucher.single_debit:
+                        # Restore the initial credit
+                        initial_credit = voucher.initial_credit
+                        if initial_credit and initial_credit > voucher.balance:
+                            self.issue(voucher.id, initial_credit)
+
+                    # Update the debit
+                    debit.update_record(
+                        balance = debit.balance + transaction["debit"],
+                        quantity = 0,
+                        voucher_id = None,
+                        signature = None,
+                        bearer_dob = None,
+                        cancelled = True,
+                        cancel_reason = reason,
+                        )
+
+                    # Update the program balance
+                    ptable = s3db.fin_voucher_program
+                    program.update_record(
+                        credit = program.credit + transaction["credit"],
+                        compensation = program.compensation + transaction["compensation"],
+                        modified_on = ptable.modified_on,
+                        modified_by = ptable.modified_by,
+                        )
+
+        return total_credit, None
+
+    # -------------------------------------------------------------------------
+    def cancellable(self, debit_id):
+        """
+            Verify if a debit can still be cancelled
+
+            @param debit_id: the debit ID
+            @returns: tuple (debit, error)
+                      - the debit record if cancellable
+                      - otherwise None, and the reason why not
+        """
+
+        program = self.program
+        if not program:
+            return None, "Program not found"
+        program_id = program.id
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get the debit and verify its status
+        error = None
+        dtable = s3db.fin_voucher_debit
+        query = (dtable.id == debit_id) & \
+                (dtable.program_id == program_id) & \
+                (dtable.deleted == False)
+        debit = db(query).select(dtable.id,
+                                 dtable.balance,
+                                 dtable.billing_id,
+                                 dtable.cancelled,
+                                 limitby = (0, 1),
+                                 ).first()
+        if not debit:
+            error = "Debit not found"
+        elif debit.cancelled:
+            error = "Debit already cancelled"
+        elif debit.billing_id:
+            error = "Debit already included in billing"
+
+        if error:
+            return None, error
+
+        # Check if there is any transaction other than DBT for the debit
+        ttable = s3db.fin_voucher_transaction
+        query = (ttable.debit_id == debit.id) & \
+                (ttable.type != "DBT") & \
+                (ttable.deleted == False)
+        rows = db(query).select(ttable.id, limitby=(0, 1))
+
+        if rows:
+            return None, "Debit already part of other transactions"
+
+        return debit, None
 
     # -------------------------------------------------------------------------
     def compensate(self, debit_id, credit=None):
