@@ -3739,6 +3739,12 @@ class S3SiteEventModel(S3Model):
                           self.pr_person_id(ondelete = "SET NULL"),
                           *s3_meta_fields())
 
+        self.configure(tablename,
+                       deletable = False,
+                       editable = False,
+                       insertable = False,
+                       )
+
         # Pass names back to global scope (s3.*)
         return {}
 

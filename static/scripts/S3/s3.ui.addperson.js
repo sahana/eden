@@ -137,6 +137,7 @@
          * @property {string} trigger - name of the autocomplete trigger field
          * @property {string} c - the autocomplete controller
          * @property {string} f - the autocomplete function
+         * @property {string} tags - a list of Tag fields
          * @property {number} chars - the minimum number of characters that
          *                            must be entered to trigger the autocomplete
          * @property {number} delay - the delay (in milliseconds) before the
@@ -157,6 +158,8 @@
 
             c: 'pr',
             f: 'person',
+
+            tags: [],
 
             chars: 2,
             delay: 800,
@@ -237,7 +240,8 @@
             this.nameFields = nameFields;
 
             // All other fields (in order of appearance)
-            this.personFields = [
+            var tags = opts.tags,
+                personFields = [
                 'father_name',
                 'grandfather_name',
                 'year_of_birth',
@@ -248,6 +252,10 @@
                 'home_phone',
                 'email'
             ];
+            for (var i = 0; i < tags.length; i++) {
+                personFields.push(tags[i]);
+            }
+            this.personFields = personFields;
 
             this._arrangeFormRows();
 
@@ -404,7 +412,9 @@
          */
         _fieldMap: function() {
 
-            var map = {
+            var tag,
+                tags = this.options.tags,
+                map = {
                 'pe_label': 'pe_label',
                 'email': 'email',
                 'mobile_phone': 'mphone',
@@ -422,6 +432,11 @@
                 map.middle_name = 'middle_name';
                 map.last_name = 'last_name';
             }
+            for (var i=0; i < tags.length; i++){
+                tag = tags[i];
+                map[tag] = tag;
+            }
+
             return map;
         },
 

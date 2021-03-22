@@ -1863,6 +1863,7 @@ class PRPersonModel(S3Model):
         request_dob = settings.get_pr_request_dob()
         request_gender = settings.get_pr_request_gender()
         home_phone = settings.get_pr_request_home_phone()
+        tags = settings.get_pr_request_tags()
         get_pe_label = get_vars.get("label") == "1"
 
         ptable = db.pr_person
@@ -1891,6 +1892,8 @@ class PRPersonModel(S3Model):
             fields.append(ptable.date_of_birth)
         if request_gender:
             fields.append(ptable.gender)
+        if tags:
+            fields.append(ptable.id)
         if current.request.controller == "vol":
             dtable = s3db.pr_person_details
             fields.append(dtable.occupation)
@@ -1902,7 +1905,9 @@ class PRPersonModel(S3Model):
             left = dtable.on((dtable.person_id == ptable.id) & \
                              (accessible_query("read", dtable)))
 
-        row = db(ptable.id == record_id).select(left=left, *fields).first()
+        row = db(ptable.id == record_id).select(left=left,
+                                                *fields
+                                                ).first()
 
         if left:
             details = row.pr_person_details
@@ -1933,6 +1938,17 @@ class PRPersonModel(S3Model):
             gender = row.gender
         else:
             gender = None
+
+        # Tags
+        if tags:
+            tags = [t[1] for t in tags]
+            ttable = s3db.pr_person_tag
+            query = (ttable.person_id == row.id) & \
+                    (ttable.deleted == False) & \
+                    (ttable.tag.belongs(tags))
+            tags = db(query).select(ttable.tag,
+                                    ttable.value,
+                                    )
 
         # Lookup contacts separately as we can't limitby here
         if home_phone:
@@ -1999,6 +2015,8 @@ class PRPersonModel(S3Model):
             item["grandfather_name"] = grandfather_name
         if year_of_birth:
             item["year_of_birth"] = year_of_birth
+        for row in tags:
+            item[row.tag] = row.value
         output = json.dumps(item, separators=SEPARATORS)
 
         current.response.headers["Content-Type"] = "application/json"

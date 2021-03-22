@@ -186,7 +186,7 @@ class HRModel(S3Model):
             msg_record_deleted = T("Department deleted"),
             msg_list_empty = T("Currently no entries in the catalog"))
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         department_id = S3ReusableField("department_id", "reference %s" % tablename,
             label = T("Department / Unit"),
             ondelete = "SET NULL",
@@ -194,8 +194,8 @@ class HRModel(S3Model):
             requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "hrm_department.id",
                                   represent,
-                                  filterby="organisation_id",
-                                  filter_opts=filter_opts,
+                                  filterby = "organisation_id",
+                                  filter_opts = filter_opts,
                                   )),
             sortby = "name",
             comment = S3PopupLink(c = "vol" if group == "volunteer" else "hrm",
@@ -322,17 +322,17 @@ class HRModel(S3Model):
             requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "hrm_job_title.id",
                                   represent,
-                                  filterby="organisation_id",
-                                  filter_opts=filter_opts,
-                                  not_filterby="type",
-                                  not_filter_opts=not_filter_opts,
+                                  filterby = "organisation_id",
+                                  filter_opts = filter_opts,
+                                  not_filterby = "type",
+                                  not_filter_opts = not_filter_opts,
                                   ))
         else:
             requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "hrm_job_title.id",
                                   represent,
-                                  not_filterby="type",
-                                  not_filter_opts=not_filter_opts,
+                                  not_filterby = "type",
+                                  not_filter_opts = not_filter_opts,
                                   ))
 
         job_title_id = S3ReusableField("job_title_id", "reference %s" % tablename,
@@ -1239,6 +1239,7 @@ class HRModel(S3Model):
         request_dob = settings.get_pr_request_dob()
         request_gender = settings.get_pr_request_gender()
         home_phone = settings.get_pr_request_home_phone()
+        tags = settings.get_pr_request_tags()
 
         htable = db.hrm_human_resource
         ptable = db.pr_person
@@ -1267,6 +1268,8 @@ class HRModel(S3Model):
             dtable = s3db.pr_person_details
             fields.append(dtable.occupation)
             left = dtable.on(dtable.person_id == ptable.id)
+        if tags:
+            fields.append(ptable.id)
 
         query = (htable.id == hrm_id) & \
                 (ptable.id == htable.person_id)
@@ -1298,6 +1301,17 @@ class HRModel(S3Model):
             first_name = None
             middle_name = None
             last_name = None
+
+        # Tags
+        if tags:
+            tags = [t[1] for t in tags]
+            ttable = s3db.pr_person_tag
+            query = (ttable.person_id == row.id) & \
+                    (ttable.deleted == False) & \
+                    (ttable.tag.belongs(tags))
+            tags = db(query).select(ttable.tag,
+                                    ttable.value,
+                                    )
 
         # Lookup contacts separately as we can't limitby here
         if home_phone:
@@ -1353,6 +1367,8 @@ class HRModel(S3Model):
             item["occupation"] = occupation
         if organisation_id:
             item["org_id"] = organisation_id
+        for row in tags:
+            item[row.tag] = row.value
         output = json.dumps(item, separators=SEPARATORS)
 
         current.response.headers["Content-Type"] = "application/json"

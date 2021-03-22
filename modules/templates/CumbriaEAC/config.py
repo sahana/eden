@@ -276,6 +276,10 @@ def config(settings):
     settings.cr.shelter_population_dynamic = True
 
     # -------------------------------------------------------------------------
+    # Messaging
+    settings.msg.require_international_phone_numbers = False
+
+    # -------------------------------------------------------------------------
     def eac_person_anonymize():
         """ Rules to anonymise a person """
 
@@ -406,9 +410,9 @@ def config(settings):
 
         if tablename == "cr_shelter":
 
-            tabs = [(T("Basic Details"), None),
+            tabs = [(T("Shelter Details"), None),
                     (T("Staff"), "human_resource"),
-                    (T("Clients"), "shelter_registration"),
+                    (T("Clients"), "client"),
                     #(T("Friends/Family"), "shelter_registration"),
                     (T("Event Log"), "event"),
                     ]
@@ -428,14 +432,14 @@ def config(settings):
 
         elif tablename == "pr_person":
 
-            tabs = [(T("Basic Details"), None),
+            tabs = [(T("Person Details"), None),
                     (T("Event Log"), "site_event"),
                     ]
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             if r.controller == "hrm":
-                hrtable = s3db.hrm_human_resource
+                hrtable = current.s3db.hrm_human_resource
                 hr = current.db(hrtable.person_id == record.id).select(hrtable.organisation_id,
                                                                        limitby = (0, 1)
                                                                        ).first()
@@ -444,9 +448,9 @@ def config(settings):
                              hrtable.organisation_id.represent(hr.organisation_id),
                              )
                 else:
-                    org = None
+                    org = ""
             else:
-                org = None
+                org = ""
 
             from s3 import s3_fullname
 
@@ -469,8 +473,8 @@ def config(settings):
             @param person_id: the person_id to check-in
         """
 
-        s3db = current.s3db
         db = current.db
+        s3db = current.s3db
 
         # Find the Registration
         stable = s3db.cr_shelter
@@ -505,8 +509,8 @@ def config(settings):
             @param person_id: the person_id to check-in
         """
 
-        s3db = current.s3db
         db = current.db
+        s3db = current.s3db
 
         # Find the Registration
         stable = s3db.cr_shelter
@@ -524,8 +528,8 @@ def config(settings):
 
         # Update the Shelter Registration
         registration.update_record(check_out_date = current.request.utcnow,
-                                    registration_status = 3,
-                                    )
+                                   registration_status = 3,
+                                   )
         onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
         if onaccept:
             onaccept(registration)
@@ -638,8 +642,65 @@ def config(settings):
 
         from s3 import s3_set_default_filter
 
+        s3db = current.s3db
+
         # Exclude Closed Shelters by default
         s3_set_default_filter("~.status", [3, 4, 5], tablename="cr_shelter")
+
+        s3db.add_components("cr_shelter",
+                            pr_person = {"name": "client",
+                                         "link": "cr_shelter_registration",
+                                         "joinby": "shelter_id",
+                                         "key": "person_id",
+                                         "actuate": "replace",
+                                         }
+                            )
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.component_name == "human_resource":
+
+                # Filtered components
+                s3db.add_components("pr_person",
+                                    pr_person_tag = ({"name": "car",
+                                                      "joinby": "person_id",
+                                                      "filterby": {"tag": "car"},
+                                                      "multiple": False,
+                                                      },
+                                                     ),
+                                    )
+
+                # Override the defaulting/hiding of Organisation
+                f = r.component.table.organisation_id
+                f.default = None
+                f.readable = f.writable = True
+
+                # Adding Staff here Checks them in
+                def staff_check_in(form):
+                    table = s3db.cr_shelter
+                    shelter = current.db(table.id == r.id).select(table.site_id,
+                                                                  limitby = (0, 1)
+                                                                  ).first()
+                    s3db.org_site_event.insert(site_id = shelter.site_id,
+                                               person_id = form.vars.get("person_id"),
+                                               event = 3, # Checked-In
+                                               )
+                s3db.add_custom_callback("hrm_human_resource",
+                                         "create_onaccept",
+                                         staff_check_in,
+                                         )
+
+            return result
+        s3.prep = prep
 
         attr["rheader"] = eac_rheader
 
@@ -648,40 +709,55 @@ def config(settings):
     settings.customise_cr_shelter_controller = customise_cr_shelter_controller
 
     # -------------------------------------------------------------------------
+    def customise_cr_shelter_registration_resource(r, tablename):
+
+        #from s3 import S3AddPersonWidget
+
+        table = current.s3db.cr_shelter_registration
+        #table.person_id.widget = S3AddPersonWidget(pe_label = True)
+        f = table.registration_status
+        f.default = 2 # Checked-in
+        #f.readable = f.writable = False
+        #table.check_out_date.readable = table.check_out_date.writable = False
+        #table.comments.readable = table.comments.writable = False
+
+    settings.customise_cr_shelter_registration_resource = customise_cr_shelter_registration_resource
+
+
+    # -------------------------------------------------------------------------
     def customise_hrm_human_resource_resource(r, tablename):
 
-        from s3 import S3SQLCustomForm, \
+        from s3 import S3AddPersonWidget, S3SQLCustomForm, \
                        S3TextFilter, S3LocationFilter, S3OptionsFilter
 
         s3db = current.s3db
 
-        s3db.hrm_human_resource.site_id.label = T("Shelter")
+        settings.pr.request_dob = False
+        settings.pr.request_email = False
+        settings.pr.request_gender = False
+        settings.pr.request_tags = [(T("Car Registration"), "car"),
+                                    ]
 
-        crud_form = S3SQLCustomForm("person_id",
-                                    "organisation_id",
-                                    # Included in AddPersonWidget
-                                    #S3SQLInlineComponent(
-                                    #    "phone",
-                                    #    name = "phone",
-                                    #    label = T("Mobile Phone"),
-                                    #    multiple = False,
-                                    #    fields = [("", "value")],
-                                    #    #filterby = {"field": "contact_method",
-                                    #    #            "options": "SMS",
-                                    #    #            },
-                                    #),
+        table = s3db.hrm_human_resource
+        table.person_id.widget = S3AddPersonWidget(controller = "hrm")
+        table.site_id.label = T("Shelter")
+
+        crud_form = S3SQLCustomForm("organisation_id",
+                                    "site_id",
+                                    "person_id",
                                     "comments",
                                     )
 
         filter_widgets = [
                 S3TextFilter(["person_id$first_name",
-                              "person_id$middle_name",
+                              #"person_id$middle_name",
                               "person_id$first_name",
                               "comments",
                               "organisation_id",
                               "site_id",
                               "location_id$L3",
                               "location_id$L4",
+                              "person_id$car.value",
                               ],
                              label = T("Search"),
                              #_class = "filter-search",
@@ -696,13 +772,21 @@ def config(settings):
                                 ),
                 ]
 
-        list_fields = ["person_id",
-                       "organisation_id",
-                       "site_id",
-                       "location_id$L3",
-                       "location_id$L4",
-                       (T("Mobile Phone"),"phone.value"),
-                       ]
+        if r.controller == "cr":
+            list_fields = ["person_id",
+                           "organisation_id",
+                           (T("Phone"),"phone.value"),
+                           (T("Car"),"person_id$car.value"),
+                           ]
+        else:
+            list_fields = ["person_id",
+                           "organisation_id",
+                           "site_id",
+                           "location_id$L3",
+                           "location_id$L4",
+                           (T("Phone"),"phone.value"),
+                           (T("Car"),"person_id$car.value"),
+                           ]
 
         report_fields = ["organisation_id",
                          "site_id",
@@ -731,9 +815,15 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
 
-        settings.pr.request_dob = False
-        settings.pr.request_email = False
-        settings.pr.request_gender = False
+        # Filtered components
+        current.s3db.add_components("pr_person",
+                                    pr_person_tag = ({"name": "car",
+                                                      "joinby": "person_id",
+                                                      "filterby": {"tag": "car"},
+                                                      "multiple": False,
+                                                      },
+                                                     ),
+                                    )
 
         return attr
 
@@ -774,6 +864,20 @@ def config(settings):
                        S3TextFilter, S3LocationFilter, S3OptionsFilter
 
         s3db = current.s3db
+        s3 = current.response.s3
+
+        s3.crud_strings["pr_person"] = Storage(
+            label_create = T("Register a Client"),
+            title_display = T("Client Details"),
+            title_list = T("Clients"),
+            title_update = T("Edit Client Details"),
+            label_list_button = T("List Clients"),
+            label_delete_button = T("Delete Client"),
+            msg_record_created = T("Client added"),
+            msg_record_modified = T("Client details updated"),
+            msg_record_deleted = T("Client deleted"),
+            msg_list_empty = T("No Clients currently registered")
+            )
 
         f = s3db.pr_person.pe_label
         f.label = T("Reception Centre Ref")
@@ -847,55 +951,59 @@ def config(settings):
         f.widget = S3TagCheckboxWidget(on="Y", off="N")
         f.default = "N"
 
-        crud_form = S3SQLCustomForm("pe_label",
-                                    (T("Holmes Ref"), "holmes.value"),
-                                    "first_name",
-                                    "middle_name",
-                                    "last_name",
-                                    "gender",
-                                    "date_of_birth",
-                                    "person_details.nationality",
-                                    S3SQLInlineComponent(
-                                        "address",
-                                        name = "address",
-                                        label = T("Address"),
-                                        multiple = False,
-                                        fields = [("", "value")],
-                                        filterby = {"field": "type",
-                                                    "options": 1, # Current Home Address
-                                                    },
-                                    ),
-                                    (T("Location at Time of Incident"), "location.value"),
-                                    # Not a multiple=False component
-                                    #(T("Phone"), "phone.value"),
-                                    S3SQLInlineComponent(
-                                        "phone",
-                                        name = "phone",
-                                        label = T("Mobile Phone"),
-                                        multiple = False,
-                                        fields = [("", "value")],
-                                        #filterby = {"field": "contact_method",
-                                        #            "options": "SMS",
-                                        #            },
-                                    ),
-                                    S3SQLInlineComponent(
-                                        "email",
-                                        name = "email",
-                                        label = T("Email"),
-                                        multiple = False,
-                                        fields = [("", "value")],
-                                        #filterby = {"field": "contact_method",
-                                        #            "options": "EMAIL",
-                                        #            },
-                                    ),
-                                    (T("Pets"), "pets.value"),
-                                    (T("Details of Pets"), "pets_details.value"),
-                                    (T("Medical Details"), "medical.value"),
-                                    (T("Disability Details"), "disability.value"),
-                                    (T("Dietary Needs"), "dietary.value"),
-                                    (T("GP"), "gp.value"),
-                                    "comments",
-                                    )
+        crud_fields = ["pe_label",
+                       "first_name",
+                       "middle_name",
+                       "last_name",
+                       "gender",
+                       "date_of_birth",
+                       "person_details.nationality",
+                       S3SQLInlineComponent(
+                           "address",
+                           name = "address",
+                           label = T("Address"),
+                           multiple = False,
+                           fields = [("", "location_id")],
+                           filterby = {"field": "type",
+                                       "options": 1, # Current Home Address
+                                       },
+                       ),
+                       (T("Location at Time of Incident"), "location.value"),
+                       # Not a multiple=False component
+                       #(T("Phone"), "phone.value"),
+                       S3SQLInlineComponent(
+                           "phone",
+                           name = "phone",
+                           label = T("Mobile Phone"),
+                           multiple = False,
+                           fields = [("", "value")],
+                           #filterby = {"field": "contact_method",
+                           #            "options": "SMS",
+                           #            },
+                       ),
+                       S3SQLInlineComponent(
+                           "email",
+                           name = "email",
+                           label = T("Email"),
+                           multiple = False,
+                           fields = [("", "value")],
+                           #filterby = {"field": "contact_method",
+                           #            "options": "EMAIL",
+                           #            },
+                       ),
+                       (T("Pets"), "pets.value"),
+                       (T("Details of Pets"), "pets_details.value"),
+                       (T("Medical Details"), "medical.value"),
+                       (T("Disability Details"), "disability.value"),
+                       (T("Dietary Needs"), "dietary.value"),
+                       (T("GP"), "gp.value"),
+                       "comments",
+                       ]
+
+        if r.method in ("read", "update"):
+            crud_fields.insert(1, (T("Holmes Ref"), "holmes.value"))
+
+        crud_form = S3SQLCustomForm(*crud_fields)
 
         import json
 
@@ -986,13 +1094,43 @@ def config(settings):
             else:
                 result = True
 
-            from s3 import FS
+            s3db = current.s3db
+
+            if r.component_name == "site_event":
+                f = s3db.org_site_event.site_id
+                f.label = T("Shelter")
+                f.readable = True
+                f.represent = s3db.org_SiteRepresent(show_type = False)
 
             if r.controller == "hrm":
                 
                 from s3 import S3SQLCustomForm, S3SQLInlineComponent
 
-                crud_form = S3SQLCustomForm("first_name",
+                if r.method == "lookup":
+                    settings.pr.request_dob = False
+                    settings.pr.request_email = False
+                    settings.pr.request_gender = False
+                    settings.pr.request_tags = [(T("Car Registration"), "car"),
+                                                ]
+
+                # Filtered components
+                s3db.add_components("pr_person",
+                                    pr_person_tag = ({"name": "car",
+                                                      "joinby": "person_id",
+                                                      "filterby": {"tag": "car"},
+                                                      "multiple": False,
+                                                      },
+                                                     ),
+                                    )
+
+                crud_form = S3SQLCustomForm(S3SQLInlineComponent(
+                                                "human_resource",
+                                                name = "human_resource",
+                                                label = T("Organization"),
+                                                multiple = False,
+                                                fields = [("", "organisation_id")],
+                                            ),
+                                            "first_name",
                                             #"middle_name",
                                             "last_name",
                                             # Not a multiple=False component
@@ -1007,21 +1145,17 @@ def config(settings):
                                                 #            "options": "SMS",
                                                 #            },
                                             ),
-                                            S3SQLInlineComponent(
-                                                "human_resource",
-                                                name = "human_resource",
-                                                label = T("Organization"),
-                                                multiple = False,
-                                                fields = [("", "organisation_id")],
-                                            ),
+                                            (T("Car Registration"), "car.value"),
                                             "comments",
                                             )
 
-                current.s3db.configure("pr_person",
-                                       crud_form = crud_form,
-                                       )
+                s3db.configure("pr_person",
+                               crud_form = crud_form,
+                               )
 
                 return result
+
+            from s3 import FS
 
             resource = r.resource
 
