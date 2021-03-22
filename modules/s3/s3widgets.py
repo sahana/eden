@@ -451,9 +451,12 @@ class S3AddPersonWidget(FormWidget):
         self.year_of_birth = year_of_birth
         self.first_name_only = first_name_only
         self.pe_label = pe_label
-        # Done as a deployment_setting rather than Widget option as also needs to be visible to the lookup method
-        self.tags = current.deployment_settings.get_pr_request_tags()
+
         self.hrm = False
+
+        self.fields = {}
+        self.labels = {}
+        self.required = {}
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
@@ -501,10 +504,11 @@ class S3AddPersonWidget(FormWidget):
             "home_phone": T("Home Phone"),
             }
 
+        # Tag labels (...and tags, in order as configured)
         tags = []
-        for t in self.tags:
-            tag = t[1]
-            labels[tag] = t[0]
+        for label, tag in settings.get_pr_request_tags():
+            if tag not in labels:
+                labels[tag] = label
             tags.append(tag)
 
         self.labels = labels
@@ -587,9 +591,7 @@ class S3AddPersonWidget(FormWidget):
                     fappend("middle_name")
                 else:
                     formfields.insert(-1, "middle_name")
-
         else:
-
             # Single combined name field
             fields["full_name"] = True
             fappend("full_name")
@@ -657,8 +659,14 @@ class S3AddPersonWidget(FormWidget):
 
         # Tags
         for tag in tags:
-            fields[tag] = True
-            fappend(tag)
+            if tag not in fields:
+                fields[tag] = True
+                fappend(tag)
+            elif current.response.s3.debug:
+                # This error would be very hard to diagnose because it only
+                # messes up the data without ever hitting an exception, so
+                # we raise one right here before it can do any harm:
+                raise RuntimeError("AddPersonWidget person field <-> tag name collision")
 
         self.fields = fields
 
@@ -789,7 +797,7 @@ class S3AddPersonWidget(FormWidget):
 
 
         person = row.pr_person if join or left else row
-        values = dict((k, person[k]) for k in person)
+        values = {k: person[k] for k in person}
 
         if fields.get("full_name"):
             values["full_name"] = s3_fullname(person)
@@ -803,10 +811,15 @@ class S3AddPersonWidget(FormWidget):
             human_resource = row.hrm_human_resource
             for k in human_resource:
                 values[k] = human_resource[k]
-            if tags:
-                values.update(self.get_tag_data(person.id, tags))
-        elif tags:
-            values.update(self.get_tag_data(record_id, tags))
+            person_id = person.id
+        else:
+            person_id = record_id
+
+        # Add tags
+        if tags:
+            for k, v in self.get_tag_data(person_id, tags).items():
+                if k not in values:
+                    values[k] = v
 
         values.update(self.get_contact_data(person.pe_id))
 
@@ -862,7 +875,8 @@ class S3AddPersonWidget(FormWidget):
         return values
 
     # -------------------------------------------------------------------------
-    def get_tag_data(self, person_id, tags):
+    @staticmethod
+    def get_tag_data(person_id, tags):
         """
             Extract the tag data for a person_id
 
@@ -873,22 +887,15 @@ class S3AddPersonWidget(FormWidget):
                      correspond to the tag name (field map)
         """
 
-        # Retrieve the tag data
         ttable = current.s3db.pr_person_tag
         query = (ttable.person_id == person_id) & \
-                (ttable.deleted == False) & \
-                (ttable.tag.belongs(tags))
+                (ttable.tag.belongs(tags)) & \
+                (ttable.deleted == False)
 
         rows = current.db(query).select(ttable.tag,
                                         ttable.value,
                                         )
-
-        # Extract the values
-        values = {}
-        for row in rows:
-            values[row.tag] = row.value
-
-        return values
+        return {row.tag: row.value for row in rows}
 
     # -------------------------------------------------------------------------
     def embedded_form(self, label, widget_id, formfields, values):
@@ -1031,7 +1038,8 @@ class S3AddPersonWidget(FormWidget):
         return label
 
     # -------------------------------------------------------------------------
-    def get_widget(self, fieldname, field):
+    @staticmethod
+    def get_widget(fieldname, field):
         """
             Get a widget for an embedded field; only when the field needs
             a specific widget => otherwise return None here, so the form
@@ -1097,7 +1105,8 @@ class S3AddPersonWidget(FormWidget):
             jquery_ready.append(script)
 
     # -------------------------------------------------------------------------
-    def inject_i18n(self, labels):
+    @staticmethod
+    def inject_i18n(labels):
         """
             Inject translations for screen messages rendered by the
             client-side script
@@ -1414,8 +1423,7 @@ class S3AddPersonWidget(FormWidget):
             s3db.pr_person_details.insert(**details)
 
         # Add tags as provided
-        tags = [t[1] for t in self.tags]
-        for tag in tags:
+        for _, tag in current.deployment_settings.get_pr_request_tags():
             value = data.get(tag)
             if value:
                 s3db.pr_person_tag.insert(person_id = person_id,
@@ -1423,7 +1431,6 @@ class S3AddPersonWidget(FormWidget):
                                           value = value,
                                           )
 
-        
         if hrm:
             return human_resource_id, None
         else:
@@ -9025,7 +9032,8 @@ class S3XMLContents(object):
         self.contents = contents
 
     # -------------------------------------------------------------------------
-    def link(self, match):
+    @staticmethod
+    def link(match):
         """
             Replace {{}} expressions with local URLs, with the ability to
             override controller, function and URL query variables.Called
