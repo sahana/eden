@@ -1265,9 +1265,10 @@ class S3Model(object):
     # -------------------------------------------------------------------------
     @classmethod
     def set_method(cls, prefix, name,
-                   component_name=None,
-                   method=None,
-                   action=None):
+                   component_name = None,
+                   method = None,
+                   action = None,
+                   ):
         """
             Adds a custom method for a resource or component
 

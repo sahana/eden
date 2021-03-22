@@ -640,12 +640,73 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_cr_shelter_controller(**attr):
 
+        from gluon import URL
         from s3 import s3_set_default_filter
 
         s3db = current.s3db
 
         # Exclude Closed Shelters by default
         s3_set_default_filter("~.status", [3, 4, 5], tablename="cr_shelter")
+
+        # Custom Methods
+        def staff_checkout(r, **attr):
+            db = current.db
+            shelter_id = r.id
+            stable = s3db.cr_shelter
+            shelter = db(stable.id == shelter_id).select(stable.site_id,
+                                                         limitby = (0, 1)
+                                                         ).first()
+            component_id = r.component_id
+            ltable = s3db.hrm_human_resource_site
+            htable = s3db.hrm_human_resource
+            query = (ltable.id == component_id) & \
+                    (ltable.human_resource_id == htable.id)
+            staff = db(query).select(htable.id,
+                                     htable.person_id,
+                                     limitby = (0, 1)
+                                     ).first()
+            # Remove Link
+            db(ltable.id == component_id).delete()
+            # Clear site_id
+            staff.update_record(site_id = None)
+            # Add Event Log entry
+            s3db.org_site_event.insert(site_id = shelter.site_id,
+                                       person_id = staff.person_id,
+                                       event = 4, # Checked-Out
+                                       )
+            # Redirect
+            current.session.confirmation = T("Staff checked-out succesfully!")
+            from gluon import redirect
+            redirect(URL(c="cr", f="shelter",
+                         args = [shelter_id,
+                                 "human_resource_site",
+                                 ],
+                         ))
+
+        def staff_redirect(r, **attr):
+            # Redirect to Staff record
+            ltable = s3db.hrm_human_resource_site
+            htable = s3db.hrm_human_resource
+            query = (ltable.id == r.component_id) & \
+                    (ltable.human_resource_id == htable.id)
+            staff = current.db(query).select(htable.person_id,
+                                             limitby = (0, 1)
+                                             ).first()
+            from gluon import redirect
+            redirect(URL(c="hrm", f="person",
+                         args = [staff.person_id],
+                         ))
+
+        set_method = s3db.set_method
+        set_method("cr", "shelter",
+                   component_name = "human_resource_site",
+                   method = "checkout",
+                   action = staff_checkout)
+
+        set_method("cr", "shelter",
+                   component_name = "human_resource_site",
+                   method = "redirect",
+                   action = staff_redirect)
 
         s3db.add_components("cr_shelter",
                             pr_person = {"name": "client",
@@ -681,19 +742,37 @@ def config(settings):
 
                 # Assigning Staff Checks them in
                 def staff_check_in(form):
+
+                    form_vars_get = form.vars.get
+                    human_resource_id = form_vars_get("human_resource_id")
+
                     db = current.db
                     stable = s3db.cr_shelter
                     shelter = db(stable.id == r.id).select(stable.site_id,
                                                            limitby = (0, 1)
                                                            ).first()
+                    site_id = shelter.site_id
                     htable = s3db.hrm_human_resource
-                    staff = db(htable.id == form.vars.get("human_resource_id")).select(htable.person_id,
-                                                                                       limitby = (0, 1)
-                                                                                       ).first()
-                    s3db.org_site_event.insert(site_id = shelter.site_id,
+                    staff = db(htable.id == human_resource_id).select(htable.id,
+                                                                      htable.person_id,
+                                                                      limitby = (0, 1)
+                                                                      ).first()
+
+                    # Set the site_id in the Staff record
+                    staff.update_record(site_id = site_id)
+
+                    # Delete old hrm_human_resource_site records
+                    ltable = s3db.hrm_human_resource_site
+                    query = (ltable.human_resource_id == human_resource_id) & \
+                            (ltable.id != form_vars_get("id"))
+                    db(query).delete()
+
+                    # Add Site Event Log
+                    s3db.org_site_event.insert(site_id = site_id,
                                                person_id = staff.person_id,
                                                event = 3, # Checked-In
                                                )
+
                 s3db.add_custom_callback("hrm_human_resource_site",
                                          "create_onaccept",
                                          staff_check_in,
@@ -734,6 +813,55 @@ def config(settings):
 
             return result
         s3.prep = prep
+
+        # Custom postp
+        standard_postp = s3.postp
+        def postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.component_name == "human_resource_site":
+
+                #from gluon import URL
+                from s3 import s3_str, S3CRUD
+
+                # Normal Action Buttons
+                S3CRUD.action_buttons(r,
+                                      read_url = URL(c = "cr",
+                                                     f = "shelter",
+                                                       args = [r.id,
+                                                               "human_resource_site",
+                                                               "[id]",
+                                                               "redirect",
+                                                               ],
+                                                     ),
+                                      update_url = URL(c = "cr",
+                                                       f = "shelter",
+                                                       args = [r.id,
+                                                               "human_resource_site",
+                                                               "[id]",
+                                                               "redirect",
+                                                               ],
+                                                       ),
+                                      deletable = False)
+
+                # Custom Action Buttons
+                s3.actions += [{"label": s3_str(T("Check-Out")),
+                                "url": URL(c = "cr",
+                                           f = "shelter",
+                                           args = [r.id,
+                                                   "human_resource_site",
+                                                   "[id]",
+                                                   "checkout",
+                                                   ],
+                                           ),
+                                "_class": "action-btn",
+                                },
+                               ]
+
+            return output
+        s3.postp = postp
 
         attr["rheader"] = eac_rheader
 

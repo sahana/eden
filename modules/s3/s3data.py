@@ -60,11 +60,11 @@ class S3DataTable(object):
     def __init__(self,
                  rfields,
                  data,
-                 start=0,
-                 limit=None,
-                 filterString=None,
-                 orderby=None,
-                 empty=False,
+                 start = 0,
+                 limit = None,
+                 filterString = None,
+                 orderby = None,
+                 empty = False,
                  ):
         """
             S3DataTable constructor
@@ -432,7 +432,10 @@ class S3DataTable(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def export_formats(rfields=None, permalink=None, base_url=None):
+    def export_formats(rfields = None,
+                       permalink = None,
+                       base_url = None,
+                       ):
         """
             Calculate the export formats that can be added to the table
 
@@ -816,36 +819,41 @@ class S3DataTable(object):
         form.append(html)
 
         # Add the configuration details for this dataTable
-        form.append(INPUT(_type="hidden",
-                          _id="%s_configurations" % id,
-                          _name="config",
-                          _value=jsons(config)))
+        form.append(INPUT(_type = "hidden",
+                          _id = "%s_configurations" % id,
+                          _name = "config",
+                          _value = jsons(config),
+                          ))
 
         # If we have a cache set up then pass it in
         if cache:
-            form.append(INPUT(_type="hidden",
-                              _id="%s_dataTable_cache" %id,
-                              _name="cache",
-                              _value=jsons(cache)))
+            form.append(INPUT(_type = "hidden",
+                              _id = "%s_dataTable_cache" %id,
+                              _name = "cache",
+                              _value = jsons(cache),
+                              ))
 
         # If we have bulk actions then add the hidden fields
         if bulkActions:
-            form.append(INPUT(_type="hidden",
-                              _id="%s_dataTable_bulkMode" % id,
-                              _name="mode",
-                              _value="Inclusive"))
+            form.append(INPUT(_type = "hidden",
+                              _id = "%s_dataTable_bulkMode" % id,
+                              _name = "mode",
+                              _value = "Inclusive",
+                              ))
             bulk_selected = attr_get("dt_bulk_selected", "")
             if isinstance(bulk_selected, list):
                 bulk_selected = ",".join(bulk_selected)
-            form.append(INPUT(_type="hidden",
-                              _id="%s_dataTable_bulkSelection" % id,
-                              _name="selected",
-                              _value="[%s]" % bulk_selected))
-            form.append(INPUT(_type="hidden",
-                              _id="%s_dataTable_filterURL" % id,
-                              _class="dataTable_filterURL",
-                              _name="filterURL",
-                              _value="%s" % config.ajaxUrl))
+            form.append(INPUT(_type = "hidden",
+                              _id = "%s_dataTable_bulkSelection" % id,
+                              _name = "selected",
+                              _value = "[%s]" % bulk_selected,
+                              ))
+            form.append(INPUT(_type = "hidden",
+                              _id = "%s_dataTable_filterURL" % id,
+                              _class = "dataTable_filterURL",
+                              _name = "filterURL",
+                              _value = "%s" % config.ajaxUrl,
+                              ))
 
         # Form key (CSRF protection for Ajax actions)
         formkey = attr_get("dt_formkey")
@@ -907,14 +915,17 @@ class S3DataTable(object):
                 for field in flist:
                     # Insert a checkbox for bulk select
                     if field == "BULK":
-                        tr.append(TD(INPUT(_type="checkbox",
-                                           _class="bulkcheckbox",
+                        tr.append(TD(INPUT(_type = "checkbox",
+                                           _class = "bulkcheckbox",
                                            data = {"dbid": row[flist[action_col]]},
                                            )))
                     else:
                         tr.append(TD(row[field]))
                 body.append(tr)
-        table = TABLE([header, body], _id=id, _class="dataTable display")
+        table = TABLE([header, body],
+                      _id = id,
+                      _class = "dataTable display",
+                      )
 
         if current.deployment_settings.get_ui_datatables_responsive():
             table.add_class("responsive")
@@ -927,8 +938,8 @@ class S3DataTable(object):
                id,
                draw,
                flist,
-               stringify=True,
-               action_col=None,
+               stringify = True,
+               action_col = None,
                **attr
                ):
         """
@@ -999,12 +1010,13 @@ class S3DataList(object):
                  resource,
                  list_fields,
                  records,
-                 start=None,
-                 limit=None,
-                 total=None,
-                 list_id=None,
-                 layout=None,
-                 row_layout=None):
+                 start = None,
+                 limit = None,
+                 total = None,
+                 list_id = None,
+                 layout = None,
+                 row_layout = None,
+                 ):
         """
             Constructor
 
@@ -1092,8 +1104,8 @@ class S3DataList(object):
             else:
                 items = [DIV(T("Total Records: %(numrows)s") % \
                                 {"numrows": self.total},
-                             _class="dl-header",
-                             _id="%s-header" % list_id,
+                             _class = "dl-header",
+                             _id = "%s-header" % list_id,
                              )
                          ]
 
@@ -1167,16 +1179,16 @@ class S3DataList(object):
             a_class = "dl-more"
         from gluon.serializers import json as jsons
         dl_data = jsons(dl_data)
-        dl.append(DIV(INPUT(_type="hidden",
-                            _class=input_class,
-                            _value=dl_data,
+        dl.append(DIV(INPUT(_type = "hidden",
+                            _class = input_class,
+                            _value = dl_data,
                             ),
                       A(T("more..."),
                         _href = popup_url or ajaxurl,
                         _class = a_class,
                         _title = popup_title,
                         ),
-                      _class="dl-navigation",
+                      _class = "dl-navigation",
                       ))
 
         return dl

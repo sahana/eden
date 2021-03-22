@@ -451,7 +451,7 @@ class S3AddPersonWidget(FormWidget):
         self.year_of_birth = year_of_birth
         self.first_name_only = first_name_only
         self.pe_label = pe_label
-        # Done as a deployment_setting rather than Widget option as also needs to be visible to the lookup method
+        # Done as a deployment_setting rather than Widget option as also needs to be visible to the lookup methods
         self.tags = current.deployment_settings.get_pr_request_tags()
         self.hrm = False
 
