@@ -240,8 +240,7 @@
             this.nameFields = nameFields;
 
             // All other fields (in order of appearance)
-            var tags = opts.tags,
-                personFields = [
+            var personFields = [
                 'father_name',
                 'grandfather_name',
                 'year_of_birth',
@@ -252,9 +251,11 @@
                 'home_phone',
                 'email'
             ];
-            for (var i = 0; i < tags.length; i++) {
-                personFields.push(tags[i]);
-            }
+            opts.tags.forEach(function(tag) {
+                if (personFields.indexOf(tag) == -1) {
+                    personFields.push(tag);
+                }
+            });
             this.personFields = personFields;
 
             this._arrangeFormRows();
@@ -412,9 +413,7 @@
          */
         _fieldMap: function() {
 
-            var tag,
-                tags = this.options.tags,
-                map = {
+            var map = {
                 'pe_label': 'pe_label',
                 'email': 'email',
                 'mobile_phone': 'mphone',
@@ -432,10 +431,11 @@
                 map.middle_name = 'middle_name';
                 map.last_name = 'last_name';
             }
-            for (var i=0; i < tags.length; i++){
-                tag = tags[i];
-                map[tag] = tag;
-            }
+            this.options.tags.forEach(function(tag) {
+                if (!map.hasOwnProperty(tag)) {
+                    map[tag] = tag;
+                }
+            });
 
             return map;
         },
