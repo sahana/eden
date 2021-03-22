@@ -1462,7 +1462,8 @@ class HRSiteModel(S3Model):
                                                                         #ltable.sector_id,
                                                                         ltable.human_resource_id,
                                                                         ltable.site_contact,
-                                                                        orderby=~ltable.id)
+                                                                        orderby = ~ltable.id
+                                                                        )
         first = True
         for row in rows:
             if first:

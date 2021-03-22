@@ -398,9 +398,9 @@ $(function () {
 # =============================================================================
 class S3AddPersonWidget(FormWidget):
     """
-        Widget for person_id (future also: human_resource_id) fields that
-        allows to either select an existing person (autocomplete), or to
-        create a new person record inline
+        Widget for person_id or human_resource_id fields that
+        allows to either select an existing person/hrm (autocomplete), or to
+        create a new person/hrm record inline
 
         Features:
         - embedded fields configurable in deployment settings
@@ -453,6 +453,7 @@ class S3AddPersonWidget(FormWidget):
         self.pe_label = pe_label
         # Done as a deployment_setting rather than Widget option as also needs to be visible to the lookup method
         self.tags = current.deployment_settings.get_pr_request_tags()
+        self.hrm = False
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
@@ -483,11 +484,9 @@ class S3AddPersonWidget(FormWidget):
         if reference_type == "pr_person":
             hrm = False
             fn = "person"
-        # Currently not supported + no active use-case
-        # @todo: implement in create_person()
-        #elif reference_type == "hrm_human_resource":
-        #    hrm = True
-        #    fn = "human_resource"
+        elif reference_type == "hrm_human_resource":
+            self.hrm = hrm = True
+            fn = "human_resource"
         else:
             raise TypeError("S3AddPersonWidget: unsupported field type %s" % field.type)
 
@@ -1364,6 +1363,14 @@ class S3AddPersonWidget(FormWidget):
         if not person_id:
             return (None, T("Could not add person record"))
 
+        hrm = self.hrm
+        if hrm:
+            # Create the HRM record
+            htable = s3db.hrm_human_resource
+            human_resource_id = htable.insert(person_id = person_id,
+                                              organisation_id = data.get("organisation_id"),
+                                              )
+
         # Update the super-entities
         record = {"id": person_id}
         s3db.update_super(ptable, record)
@@ -1416,7 +1423,11 @@ class S3AddPersonWidget(FormWidget):
                                           value = value,
                                           )
 
-        return person_id, None
+        
+        if hrm:
+            return human_resource_id, None
+        else:
+            return person_id, None
 
 # =============================================================================
 class S3AgeWidget(FormWidget):

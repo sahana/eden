@@ -411,7 +411,7 @@ def config(settings):
         if tablename == "cr_shelter":
 
             tabs = [(T("Shelter Details"), None),
-                    (T("Staff"), "human_resource"),
+                    (T("Staff"), "human_resource_site"),
                     (T("Clients"), "client"),
                     #(T("Friends/Family"), "shelter_registration"),
                     (T("Event Log"), "event"),
@@ -667,7 +667,40 @@ def config(settings):
             else:
                 result = True
 
-            if r.component_name == "human_resource":
+            if r.component_name == "human_resource_site":
+
+                # Filtered components
+                s3db.add_components("pr_person",
+                                    pr_person_tag = ({"name": "car",
+                                                      "joinby": "person_id",
+                                                      "filterby": {"tag": "car"},
+                                                      "multiple": False,
+                                                      },
+                                                     ),
+                                    )
+
+                # Assigning Staff Checks them in
+                def staff_check_in(form):
+                    db = current.db
+                    stable = s3db.cr_shelter
+                    shelter = db(stable.id == r.id).select(stable.site_id,
+                                                           limitby = (0, 1)
+                                                           ).first()
+                    htable = s3db.hrm_human_resource
+                    staff = db(htable.id == form.vars.get("human_resource_id")).select(htable.person_id,
+                                                                                       limitby = (0, 1)
+                                                                                       ).first()
+                    s3db.org_site_event.insert(site_id = shelter.site_id,
+                                               person_id = staff.person_id,
+                                               event = 3, # Checked-In
+                                               )
+                s3db.add_custom_callback("hrm_human_resource_site",
+                                         "create_onaccept",
+                                         staff_check_in,
+                                         )
+
+            elif r.component_name == "human_resource":
+                # UNUSED
 
                 # Filtered components
                 s3db.add_components("pr_person",
@@ -828,6 +861,39 @@ def config(settings):
         return attr
 
     settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
+
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_human_resource_site_resource(r, tablename):
+
+        from s3 import S3AddPersonWidget, S3SQLCustomForm
+
+        s3db = current.s3db
+
+        settings.pr.request_dob = False
+        settings.pr.request_email = False
+        settings.pr.request_gender = False
+        settings.pr.request_tags = [(T("Car Registration"), "car"),
+                                    ]
+
+        table = s3db.hrm_human_resource_site
+        table.human_resource_id.widget = S3AddPersonWidget(controller = "hrm")
+
+        crud_form = S3SQLCustomForm("human_resource_id",
+                                    )
+
+        list_fields = ["human_resource_id$person_id",
+                       "human_resource_id$organisation_id",
+                       (T("Phone"),"human_resource_id$phone.value"),
+                       (T("Car"),"human_resource_id$person_id$car.value"),
+                       ]
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_hrm_human_resource_site_resource = customise_hrm_human_resource_site_resource
 
     # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
