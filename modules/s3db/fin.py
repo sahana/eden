@@ -520,6 +520,11 @@ class FinVoucherModel(S3Model):
                      Field("refno",
                            label = T("Ref.No."),
                            represent = lambda v, row=None: v if v else "-",
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Ref.No."),
+                                                           T("Internal identifier to track the payment (optional), e.g. payment order number"),
+                                                           ),
+                                         ),
                            ),
                      self.hrm_human_resource_id(
                             label = T("Official in Charge"),
@@ -704,6 +709,11 @@ class FinVoucherModel(S3Model):
                      Field("refno",
                            label = T("Ref.No."),
                            represent = lambda v, row=None: v if v else "-",
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Ref.No."),
+                                                           T("A reference number for bookkeeping purposes (optional, for your own use)"),
+                                                           ),
+                                         ),
                            ),
 
                      # Totals
