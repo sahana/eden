@@ -45,6 +45,7 @@ __all__ = ("S3OrganisationModel",
            "S3SiteModel",
            "S3SiteDetailsModel",
            "S3SiteEventModel",
+           "S3SiteGroupModel",
            "S3SiteNameModel",
            "S3SiteShiftModel",
            "S3SiteTagModel",
@@ -3608,6 +3609,7 @@ class S3SiteDetailsModel(S3Model):
     """ Extra optional details for Sites """
 
     names = ("org_site_status",
+             "org_site_status_opts",
              "org_site_org_group",
              )
 
@@ -3615,13 +3617,10 @@ class S3SiteDetailsModel(S3Model):
 
         T = current.T
 
-        define_table = self.define_table
-        super_link = self.super_link
-
         settings = current.deployment_settings
         last_contacted = settings.get_org_site_last_contacted()
 
-        facility_status_opts = {
+        site_status_opts = {
             1: T("Normal"),
             2: T("Compromised"),
             3: T("Evacuating"),
@@ -3640,33 +3639,33 @@ class S3SiteDetailsModel(S3Model):
         # Site Status
         #
         tablename = "org_site_status"
-        define_table(tablename,
-                     # Component not instance
-                     super_link("site_id", "org_site"),
-                     Field("facility_status", "integer",
-                           requires = IS_EMPTY_OR(
-                                      IS_IN_SET(facility_status_opts)),
-                           label = T("Facility Status"),
-                           represent = S3Represent(options = facility_status_opts),
-                           ),
-                     s3_date("date_reopening",
-                             label = T("Estimated Reopening Date"),
-                             readable = False,
-                             writable = False,
-                             ),
-                     Field("power_supply_type", "integer",
-                           label = T("Power Supply Type"),
-                           requires = IS_EMPTY_OR(
-                                        IS_IN_SET(power_supply_type_opts,
-                                                  zero=None)),
-                           represent = S3Represent(options = power_supply_type_opts),
-                           ),
-                     s3_date("last_contacted",
-                             label = T("Last Contacted"),
-                             readable = last_contacted,
-                             writable = last_contacted,
-                             ),
-                     *s3_meta_fields())
+        self.define_table(tablename,
+                          # Component not instance
+                          self.super_link("site_id", "org_site"),
+                          Field("facility_status", "integer",
+                                requires = IS_EMPTY_OR(
+                                            IS_IN_SET(site_status_opts)),
+                                label = T("Facility Status"),
+                                represent = S3Represent(options = site_status_opts),
+                                ),
+                          s3_date("date_reopening",
+                                  label = T("Estimated Reopening Date"),
+                                  readable = False,
+                                  writable = False,
+                                  ),
+                          Field("power_supply_type", "integer",
+                                label = T("Power Supply Type"),
+                                requires = IS_EMPTY_OR(
+                                            IS_IN_SET(power_supply_type_opts,
+                                                      zero=None)),
+                                represent = S3Represent(options = power_supply_type_opts),
+                                ),
+                          s3_date("last_contacted",
+                                  label = T("Last Contacted"),
+                                  readable = last_contacted,
+                                   writable = last_contacted,
+                                  ),
+                          *s3_meta_fields())
 
         # CRUD Strings
         site_label = settings.get_org_site_label()
@@ -3682,20 +3681,9 @@ class S3SiteDetailsModel(S3Model):
             msg_list_empty = T("There is no status for this %(site_label)s yet. Add %(site_label)s Status.") % {"site_label": site_label},
             )
 
-        # ---------------------------------------------------------------------
-        # Sites <> Coalitions link table
-        #
-        tablename = "org_site_org_group"
-        define_table(tablename,
-                     # Component not instance
-                     super_link("site_id", "org_site"),
-                     self.org_group_id(empty = False,
-                                       ondelete = "CASCADE",
-                                       ),
-                     *s3_meta_fields())
-
         # Pass names back to global scope (s3.*)
-        return {}
+        return {"org_site_status_opts": site_status_opts,
+                }
 
 # =============================================================================
 class S3SiteEventModel(S3Model):
@@ -3711,32 +3699,39 @@ class S3SiteEventModel(S3Model):
 
         T = current.T
 
-        event_opts = {1: T("Opened"),
-                      2: T("Closed"),
-                      3: T("Check-in"),
-                      4: T("Check-out"),
+        event_opts = {1: T("Status Change"),
+                      2: T("Check-in"),
+                      3: T("Check-out"),
+                      4: T("Obsolete Change"),
                       }
+
+        site_status_opts = self.org_site_status_opts
 
         # ---------------------------------------------------------------------
         # Site Events
-        #   Opened/Closed
+        #   Status Change (e.g. Opened/Closed)
         #   Check-In/Check-Out
         #
         # Possible @ToDo:
-        #    Comments
         #    Staff Member who checks them in/out
         #
         tablename = "org_site_event"
         self.define_table(tablename,
                           # Component not instance
                           self.super_link("site_id", "org_site"),
-                          s3_date(default = "now"),
+                          s3_datetime(default = "now"),
                           Field("event", "integer",
                                 label = T("Event"),
                                 requires = IS_IN_SET(event_opts),
                                 represent = S3Represent(options = event_opts),
                                 ),
+                          Field("status", "integer",
+                                label = T("Status"),
+                                requires = IS_EMPTY_OR(IS_IN_SET(site_status_opts)),
+                                represent = S3Represent(options = site_status_opts),
+                                ),
                           self.pr_person_id(ondelete = "SET NULL"),
+                          s3_comments(),
                           *s3_meta_fields())
 
         self.configure(tablename,
@@ -3744,6 +3739,32 @@ class S3SiteEventModel(S3Model):
                        editable = False,
                        insertable = False,
                        )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class S3SiteGroupModel(S3Model):
+    """ Link Sites to Org Groups """
+
+    names = ("org_site_org_group",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Sites <> Org Groups link table
+        #
+        tablename = "org_site_org_group"
+        self.define_table(tablename,
+                          # Component not instance
+                          self.super_link("site_id", "org_site"),
+                          self.org_group_id(empty = False,
+                                            ondelete = "CASCADE",
+                                            ),
+                          *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
         return {}

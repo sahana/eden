@@ -275,9 +275,24 @@ def config(settings):
     # Uncomment to use a dynamic population estimation by calculations based on registrations
     settings.cr.shelter_population_dynamic = True
 
+    cr_shelter_status_opts = {1 : T("Closed"),
+                              #2 : T("Open##the_shelter_is"),
+                              3 : T("Green"),
+                              4 : T("Amber"),
+                              5 : T("Red"),
+                              }
+
+    # -------------------------------------------------------------------------
+    # Human Resources
+    settings.hrm.org_required = False
+
     # -------------------------------------------------------------------------
     # Messaging
     settings.msg.require_international_phone_numbers = False
+
+    # -------------------------------------------------------------------------
+    # Persons
+    settings.pr.hide_third_gender = False
 
     # -------------------------------------------------------------------------
     def eac_person_anonymize():
@@ -537,33 +552,32 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_cr_shelter_resource(r, tablename):
 
-        from gluon import IS_IN_SET
+        from gluon import DIV, IS_IN_SET
 
         from s3 import S3Represent, S3SQLCustomForm, S3LocationSelector, \
                        S3TextFilter, S3LocationFilter, S3OptionsFilter, S3RangeFilter
 
         s3db = current.s3db
 
-        status_opts = {1 : T("Closed"),
-                       #2 : T("Open##the_shelter_is"),
-                       3 : T("Green"),
-                       4 : T("Amber"),
-                       5 : T("Red"),
-                       }
-
-
         table = s3db.cr_shelter
+        table.shelter_type_id.label = T("Type")
         f = table.status
         f.default = 3 # Green
-        f.requires = IS_IN_SET(status_opts)
-        f.represent = S3Represent(options = status_opts)
+        f.requires = IS_IN_SET(cr_shelter_status_opts)
+        f.represent = S3Represent(options = cr_shelter_status_opts)
         table.population_day.label = T("Occupancy")
+        table.obsolete.label = T("Unavailable")
+        table.obsolete.comment = DIV(_class="tooltip",
+                                     _title="%s|%s" % (T("Unavailable"),
+                                                       T("Site is temporarily unavailable (e.g. for building works) & so should be hidden from the map"),
+                                                       ))
         table.location_id.widget = S3LocationSelector(levels = ("L3", "L4"),
                                                       required_levels = ("L3",),
                                                       show_address = True,
                                                       )
 
         crud_form = S3SQLCustomForm("name",
+                                    "shelter_type_id",
                                     "location_id",
                                     "phone",
                                     "capacity_day",
@@ -587,9 +601,11 @@ def config(settings):
                                  label = T("Location"),
                                  levels = ("L3", "L4"),
                                  ),
+                S3OptionsFilter("shelter_type_id",
+                                ),
                 S3OptionsFilter("status",
                                 label = T("Status"),
-                                options = status_opts,
+                                options = cr_shelter_status_opts,
                                 ),
                 S3RangeFilter("capacity_day",
                               label = T("Total Capacity"),
@@ -600,6 +616,7 @@ def config(settings):
                 ]
 
         list_fields = ["name",
+                       "shelter_type_id",
                        "status",
                        "capacity_day",
                        "population_day",
@@ -609,6 +626,7 @@ def config(settings):
                        ]
 
         report_fields = ["name",
+                         "shelter_type_id",
                          "status",
                          "capacity_day",
                          "population_day",
@@ -1046,6 +1064,15 @@ def config(settings):
     settings.customise_org_organisation_resource = customise_org_organisation_resource
 
     # -------------------------------------------------------------------------
+    def customise_org_site_event_resource(r, tablename):
+
+        from s3 import S3Represent
+
+        current.s3db.org_site_event.status.represent = S3Represent(options = cr_shelter_status_opts)
+
+    settings.customise_org_site_event_resource = customise_org_site_event_resource
+
+    # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
 
         if r.controller == "hrm":
@@ -1237,7 +1264,7 @@ def config(settings):
                        "first_name",
                        "pe_label",
                        "gender",
-                       "date_of_birth",
+                       (T("Age"), "age"),
                        ]
 
         report_fields = ["gender",

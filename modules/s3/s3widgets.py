@@ -515,8 +515,7 @@ class S3AddPersonWidget(FormWidget):
 
         # Fields which, if enabled, are required
         # (all other fields are assumed to not be required)
-        self.required = {
-            "organisation_id": settings.get_hrm_org_required(),
+        required = {
             "full_name": True,
             "first_name": True,
             "middle_name": settings.get_L10n_mandatory_middlename(),
@@ -545,14 +544,17 @@ class S3AddPersonWidget(FormWidget):
 
         values = {}
 
-        # Organisation ID
         if hrm:
+            # Organisation ID
             htable = s3db.hrm_human_resource
             f = htable.organisation_id
             if f.default:
                 values["organisation_id"] = s3_str(f.default)
             fields["organisation_id"] = f
             fappend("organisation_id")
+            required["organisation_id"] = settings.get_hrm_org_required()
+
+        self.required = required
 
         # ID Label
         pe_label = self.pe_label
@@ -974,23 +976,34 @@ class S3AddPersonWidget(FormWidget):
 
             widget = get_widget(fname, field)
             value = values.get(fname, "")
-            if not widget:
-                value = s3_str(value)
-                widget = INPUT(_id = field_id,
-                               _name = fname,
-                               _value = value,
-                               old_value = value,
-                               )
-            else:
+            if widget:
                 widget = widget(field,
                                 value,
                                 requires = None,
                                 _id = field_id,
                                 old_value = value,
                                 )
+                
+                if fname == "organisation_id":
+                    comment= None
+                    #comment = S3PopupLink(c = "org",
+                    #                      f = "organisation",
+                    #                      label = ADD_ORGANIZATION,
+                    #                      title = ADD_ORGANIZATION,
+                    #                      tooltip = tooltip,
+                    #                      )
+                else:
+                    comment = None
+            else:
+                value = s3_str(value)
+                widget = INPUT(_id = field_id,
+                               _name = fname,
+                               _value = value,
+                               old_value = value,
+                               )
+                comment = None
 
-
-            row = formstyle("%s__row" % field_id, label, widget, "")
+            row = formstyle("%s__row" % field_id, label, widget, comment)
             if tuple_rows:
                 row[0].add_class("box_middle")
                 row[1].add_class("box_middle")
@@ -1054,7 +1067,9 @@ class S3AddPersonWidget(FormWidget):
         # Fields which require a specific widget
         widget = None
 
-        if fieldname in ("organisation_id", "gender"):
+        if fieldname in ("organisation_id",
+                         "gender",
+                         ):
             widget = OptionsWidget.widget
 
         elif fieldname == "date_of_birth":
