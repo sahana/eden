@@ -2459,6 +2459,7 @@ class S3PivotTable(object):
                   "date": datetime.date.min,
                   "datetime": datetime.datetime.min,
                   "boolean": 1,
+                  "id": minnum,
                   }
 
         # Sorting key function

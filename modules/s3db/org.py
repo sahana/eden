@@ -7239,8 +7239,8 @@ def org_facility_controller():
                                     if e.selector == "facility_type":
                                         e.options.label = ""
 
+                table = r.table
                 if r.id:
-                    table = r.table
                     field = table.obsolete
                     field.readable = field.writable = True
                     if method == "update" and \
@@ -7253,7 +7253,6 @@ def org_facility_controller():
                         field.readable = False
 
                 elif method == "create":
-                    table = r.table
                     name = get_vars.get("name")
                     if name:
                         table.name.default = name

@@ -214,6 +214,8 @@ def rlpptm_project_rheader(r, tabs=None):
             rheader_fields = [[(T("Code"), "code")],
                               ["organisation_id"],
                               ]
+        else:
+            return None
 
         rheader = S3ResourceHeader(rheader_fields, tabs, title=rheader_title)
         rheader = rheader(r, table = resource.table, record = record)
