@@ -425,10 +425,6 @@ class FinVoucherModel(S3Model):
                        ]
 
         # Table configureation
-        # TODO onvalidation to enforce order
-        # - must be later than any active billing for the same program
-        # TODO onaccept to
-        # - schedule task to generate claims
         self.configure(tablename,
                        list_fields = list_fields,
                        deletable = False, # must cancel, not delete
@@ -437,7 +433,12 @@ class FinVoucherModel(S3Model):
                        )
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename, fields=["date"])
+        represent = S3Represent(lookup = tablename,
+                                fields = ["date"],
+                                labels = lambda row: S3DateTime.date_represent(row.date,
+                                                                               utc = True,
+                                                                               ),
+                                )
         billing_id = S3ReusableField("billing_id", "reference %s" % tablename,
                                      label = T("Billing"),
                                      represent = represent,
@@ -825,7 +826,6 @@ class FinVoucherModel(S3Model):
         )
 
         # Reusable field
-        # TODO Represent
         represent = S3Represent(lookup=tablename, fields=["refno", "date"])
         claim_id = S3ReusableField("claim_id", "reference %s" % tablename,
                                    label = T("Compensation Claim"),

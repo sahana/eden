@@ -1562,6 +1562,31 @@ def config(settings):
                                                    "PAID": "green",
                                                    }).represent
 
+        # Filter widgets
+        from s3 import S3OptionsFilter, S3TextFilter
+        if r.interactive:
+            filter_widgets = [S3TextFilter(["invoice_no",
+                                            "refno",
+                                            ],
+                                           label = T("Search"),
+                                           ),
+                              S3OptionsFilter("status",
+                                              options = OrderedDict(status_opts),
+                                              sort = False,
+                                              ),
+                              S3OptionsFilter("human_resource_id",
+                                             ),
+                              S3OptionsFilter("pe_id",
+                                              hidden = True,
+                                              ),
+                              S3OptionsFilter("pe_id$pe_id:org_organisation.facility.location_id$L2",
+                                              hidden = True,
+                                              ),
+                              ]
+            s3db.configure("fin_voucher_invoice",
+                           filter_widgets = filter_widgets,
+                           )
+
         # PDF export method
         from .helpers import InvoicePDF
         s3db.set_method("fin", "voucher_invoice",
