@@ -611,11 +611,13 @@ class InvoicePDF(S3Method):
                       )
 
         # Payment Details
+        an_field = table.account_number
+        an = an_field.represent(invoice.account_number)
         payment_details = TABLE(TR(TH(table.account_holder.label),
                                    TD(invoice.account_holder),
                                    ),
-                                TR(TH(table.account_number.label),
-                                   TD(invoice.account_number),
+                                TR(TH(an_field.label),
+                                   TD(an),
                                    ),
                                 TR(TH(table.bank_name.label),
                                    TD(invoice.bank_name),
