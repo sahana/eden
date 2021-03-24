@@ -1563,7 +1563,7 @@ def config(settings):
                                                    }).represent
 
         # Filter widgets
-        from s3 import S3OptionsFilter, S3TextFilter
+        from s3 import S3DateFilter, S3OptionsFilter, S3TextFilter
         if r.interactive:
             filter_widgets = [S3TextFilter(["invoice_no",
                                             "refno",
@@ -1576,6 +1576,9 @@ def config(settings):
                                               ),
                               S3OptionsFilter("human_resource_id",
                                              ),
+                              S3DateFilter("date",
+                                           hidden = True,
+                                           ),
                               S3OptionsFilter("pe_id",
                                               hidden = True,
                                               ),
