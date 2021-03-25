@@ -3752,8 +3752,6 @@ class S3SiteGroupModel(S3Model):
 
     def model(self):
 
-        T = current.T
-
         # ---------------------------------------------------------------------
         # Sites <> Org Groups link table
         #

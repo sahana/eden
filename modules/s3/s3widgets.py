@@ -983,7 +983,7 @@ class S3AddPersonWidget(FormWidget):
                                 _id = field_id,
                                 old_value = value,
                                 )
-                
+
                 if fname == "organisation_id":
                     comment= None
                     #comment = S3PopupLink(c = "org",
@@ -1199,7 +1199,8 @@ class S3AddPersonWidget(FormWidget):
         return self.create_person(data)
 
     # -------------------------------------------------------------------------
-    def parse(self, value):
+    @staticmethod
+    def parse(value):
         """
             Parse the main input JSON when the form gets submitted
 
