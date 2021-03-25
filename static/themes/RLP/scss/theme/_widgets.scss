@@ -18,6 +18,13 @@ $anonymize_button_bgcolor_hover: $alert-button-bg-hover !default;
 // ============================================================================
 // STYLES
 
+/* Blinker configuration */
+@keyframes blinker {
+    50% {
+        opacity: 0;
+    }
+}
+
 /* jQuery UI widgets */
 .ui-widget-header {
     background: none;
@@ -640,11 +647,6 @@ form.anonymize-form,
             .announcement-icon {
                 color: #ca0000;
                 animation: blinker 0.7s step-start 4;
-            }
-            @keyframes blinker {
-                50% {
-                    opacity: 0;
-                }
             }
         }
         .announcement-header {

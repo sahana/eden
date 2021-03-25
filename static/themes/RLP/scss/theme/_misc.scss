@@ -388,6 +388,7 @@ body.rtl {
 }
 .record-integrity-broken {
     color: #aa0000;
+    animation: blinker 0.7s step-start 4;
     i {
         padding: 0 0.2rem;
     }
