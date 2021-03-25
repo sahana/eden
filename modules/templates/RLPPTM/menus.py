@@ -258,9 +258,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def fin():
         """ FIN / Finance """
 
+        auth = current.auth
         s3db = current.s3db
+
         voucher_create = lambda i: s3db.get_config("fin_voucher", "insertable", True)
         voucher_accept = lambda i: s3db.get_config("fin_voucher_debit", "insertable", True)
+
+        is_program_accountant = lambda i: auth.s3_has_role("PROGRAM_ACCOUNTANT",
+                                                           include_admin = False,
+                                                           )
 
         return M(c="fin")(
                     M("Voucher Programs", f="voucher_program")(
@@ -289,6 +295,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Billing", link=False)(
                        M("Compensation Claims", f="voucher_claim"),
                        M("Invoices", f="voucher_invoice"),
+                       M("My Work List", f="voucher_invoice", vars={"mine": "1"},
+                         check = is_program_accountant,
+                         ),
                        ),
                     )
 

@@ -1579,6 +1579,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_fin_voucher_invoice_resource(r, tablename):
 
+        auth = current.auth
         s3db = current.s3db
 
         table = s3db.fin_voucher_invoice
@@ -1598,6 +1599,28 @@ def config(settings):
                                                    "PAID": "green",
                                                    }).represent
 
+        is_accountant = auth.s3_has_role("PROGRAM_ACCOUNTANT")
+
+        # Personal work list?
+        if is_accountant and r.get_vars.get("mine") == "1":
+            title_list = T("My Work List")
+            default_status = ["NEW", "REJECTED"]
+            default_hr = current.auth.s3_logged_in_human_resource()
+        else:
+            title_list = T("All Invoices")
+            default_status = default_hr = None
+        current.response.s3.crud_strings["fin_voucher_invoice"].title_list = title_list
+
+        # Lookup method for HR filter options
+        if is_accountant:
+            def hr_filter_opts():
+                hresource = s3db.resource("hrm_human_resource")
+                rows = hresource.select(["id", "person_id"], represent=True).rows
+                return {row["hrm_human_resource.id"]:
+                        row["hrm_human_resource.person_id"] for row in rows}
+        else:
+            hr_filter_opts = None
+
         # Filter widgets
         from s3 import S3DateFilter, S3OptionsFilter, S3TextFilter
         if r.interactive:
@@ -1607,11 +1630,14 @@ def config(settings):
                                            label = T("Search"),
                                            ),
                               S3OptionsFilter("status",
+                                              default = default_status,
                                               options = OrderedDict(status_opts),
                                               sort = False,
                                               ),
                               S3OptionsFilter("human_resource_id",
-                                             ),
+                                              default = default_hr,
+                                              options = hr_filter_opts,
+                                              ),
                               S3DateFilter("date",
                                            hidden = True,
                                            ),

@@ -73,6 +73,7 @@ PROGRAM_ACCOUNTANT,Program Accountant,,,,,fin_voucher,READ,,any
 PROGRAM_ACCOUNTANT,Program Accountant,,,,,fin_voucher_debit,READ,,any
 PROGRAM_ACCOUNTANT,Program Accountant,,,,,fin_voucher_invoice,READ|UPDATE,,
 PROGRAM_ACCOUNTANT,Program Accountant,,,,,fin_voucher_program,READ,,any
+PROGRAM_ACCOUNTANT,Program Accountant,,,,,hrm_human_resource,READ,,
 PROGRAM_ACCOUNTANT,Program Accountant,,,,,org_group,READ,,any
 PROGRAM_MANAGER,Program Manager,,,fin,voucher_program,,CREATE|READ|UPDATE|DELETE,,
 PROGRAM_MANAGER,Program Manager,,,fin,voucher_program,,READ,,any
