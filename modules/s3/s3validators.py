@@ -1225,7 +1225,7 @@ class IS_NOT_ONE_OF(IS_NOT_IN_DB):
                  dbset,
                  field,
                  error_message = "Value already in database or empty",
-                 allowed_override = [],
+                 allowed_override = None,
                  ignore_common_filters = False,
                  skip_imports = False,
                  ):
@@ -1266,7 +1266,8 @@ class IS_NOT_ONE_OF(IS_NOT_IN_DB):
             # Empty => error
             raise ValidationError(translate(self.error_message))
 
-        if value in self.allowed_override:
+        allowed_override = self.allowed_override
+        if allowed_override and value in allowed_override:
             # Uniqueness-requirement overridden
             return value
 
