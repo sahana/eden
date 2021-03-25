@@ -90,11 +90,12 @@ class CRShelterModel(S3Model):
         # e.g. NGO-operated, Government evacuation center, School, Hospital -- see Agasti opt_camp_type.)
         tablename = "cr_shelter_type"
         define_table(tablename,
-                     Field("name", notnull=True, unique=True,
+                     Field("name", notnull=True,
                            label = NAME,
                            requires = [IS_NOT_EMPTY(),
                                        IS_NOT_ONE_OF(db,
                                                      "%s.name" % tablename,
+                                                     skip_imports = True,
                                                      ),
                                        ],
                            ),
@@ -956,7 +957,7 @@ class CRShelterModel(S3Model):
             cr_update_shelter_population(shelter_id)
 
         # @ToDo: Create a cr_shelter_status record
-        
+
 
         # Create an org_site_event record
         stable = s3db.cr_shelter

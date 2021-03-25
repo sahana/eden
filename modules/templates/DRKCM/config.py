@@ -3410,26 +3410,6 @@ def config(settings):
 
         s3 = current.response.s3
 
-        # Disable name-validation of cr_shelter_type
-        import_prep = s3.import_prep
-        def custom_import_prep(data):
-
-            # Call standard import_prep
-            if import_prep:
-                from gluon.tools import callback
-                callback(import_prep, data, tablename="cr_shelter")
-
-            # Disable uniqueness validation for shelter type names,
-            # otherwise imports will fail before reaching de-duplicate
-            ttable = s3db.cr_shelter_type
-            field = ttable.name
-            field.requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)]
-
-            # Reset to standard (no need to repeat it)
-            s3.import_prep = import_prep
-
-        s3.import_prep = custom_import_prep
-
         from s3 import S3LocationSelector, \
                        S3SQLCustomForm
 
