@@ -1271,16 +1271,16 @@ class IS_NOT_ONE_OF(IS_NOT_IN_DB):
             # Uniqueness-requirement overridden
             return value
 
-        if self.skip_imports and current.response.s3.bulk:
-            # Uniqueness-requirement to be enforced by deduplicate
-            # (which can't take effect if we reject the value here)
-            return value
-
         # Establish table and field
         tablename, fieldname = str(self.field).split(".")
         dbset = self.dbset
         table = dbset.db[tablename]
         field = table[fieldname]
+
+        if self.skip_imports and current.response.s3.bulk and not field.unique:
+            # Uniqueness-requirement to be enforced by deduplicate
+            # (which can't take effect if we reject the value here)
+            return value
 
         # Does the table allow archiving ("soft-delete")?
         archived = "deleted" in table
