@@ -1470,9 +1470,6 @@ def config(settings):
 
         s3 = current.response.s3
 
-        # Enable bigtable features
-        settings.base.bigtable = True
-
         # Custom prep
         standard_prep = s3.prep
         def prep(r):
@@ -1703,6 +1700,9 @@ def config(settings):
     def customise_fin_voucher_invoice_controller(**attr):
 
         s3 = current.response.s3
+
+        # Enable bigtable features
+        settings.base.bigtable = True
 
         standard_postp = s3.postp
         def custom_postp(r, output):
