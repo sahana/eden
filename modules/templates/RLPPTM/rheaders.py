@@ -78,24 +78,28 @@ def rlpptm_fin_rheader(r, tabs=None):
             rheader_title = "signature"
             rheader_fields = [[(T("Status"), "status"),],
                               ]
+
         elif tablename == "fin_voucher_invoice":
 
             if not tabs:
                 tabs = [(T("Basic Details"), None),
                         ]
 
-            # Lookup the invoice header data
-            from .helpers import InvoicePDF
-            data = InvoicePDF.lookup_header_data(record)
+            from .helpers import InvoicePDF, check_invoice_integrity
 
+            # Lookup the invoice header data
+            data = InvoicePDF.lookup_header_data(record)
             addr_street = lambda row: data.get("addr_street", "-")
             addr_place = lambda row: "%s %s" % (data.get("addr_postcode", ""),
                                                 data.get("addr_place", "?"),
                                                 )
-            email = lambda row: data.get("email", "-")
+            email = lambda row: data.get("email") or "-"
 
             rheader_title = "pe_id"
-            rheader_fields = [[(T("Address"), addr_street), "invoice_no"],
+            rheader_fields = [[(T("Address"), addr_street),
+                               "invoice_no",
+                               (T("Integrity Check"), check_invoice_integrity),
+                               ],
                               [(T("Place"), addr_place), "date"],
                               [(T("Email"), email), "status"],
                               ]

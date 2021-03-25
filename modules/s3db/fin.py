@@ -33,6 +33,7 @@ __all__ = ("FinExpensesModel",
            "FinProductModel",
            "FinSubscriptionModel",
            "fin_VoucherProgram",
+           "fin_VoucherBilling",
            "fin_rheader",
            "fin_voucher_permitted_programs",
            "fin_voucher_eligibility_types",
@@ -4054,6 +4055,11 @@ class fin_VoucherBilling(object):
             bprefix = ""
         invoice_no = "B%s%02dC%04d" % (bprefix, claim.billing_id, claim.id)
 
+        # Customise invoice resource
+        from s3 import S3Request
+        r = S3Request("fin", "voucher_invoice", args=[], get_vars={})
+        r.customise_resource("fin_voucher_invoice")
+
         # Generate invoice
         idata = {"date": datetime.datetime.utcnow().date(),
                  "invoice_no": invoice_no,
@@ -4500,7 +4506,7 @@ class fin_VoucherCancelDebit(S3Method):
 
         # Form fields and mark-required
         formfields = [Field("reason",
-                            label = T("Reason for cancellation"),
+                            label = T("Reason for Cancellation##fin"),
                             requires = IS_NOT_EMPTY(error_message=T("Reason must be specified")),
                             ),
                       Field("do_cancel", "boolean",

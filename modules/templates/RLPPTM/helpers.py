@@ -7,7 +7,7 @@
 """
 
 from gluon import current, Field, CRYPT, IS_EMAIL, IS_LOWER, IS_NOT_IN_DB, \
-                  SQLFORM, DIV, H4, H5, INPUT, P, TABLE, TD, TH, TR
+                  SQLFORM, DIV, H4, H5, I, INPUT, P, SPAN, TABLE, TD, TH, TR
 
 from s3 import IS_FLOAT_AMOUNT, S3DateTime, S3Method, \
                s3_fullname, s3_mark_required
@@ -50,11 +50,18 @@ def get_role_realms(role):
 
 # =============================================================================
 def get_org_accounts(organisation_id):
+    """
+        Get all user accounts linked to an organisation
+
+        @param organisation_id: the organisation ID
+
+        @returns: tuple (active, disabled, invited), each being
+                  a list of user accounts (auth_user Rows)
+    """
 
     auth = current.auth
     s3db = current.s3db
 
-    # Get all accounts that are linked to this org
     utable = auth.settings.table_user
     oltable = s3db.org_organisation_user
     pltable = s3db.pr_person_user
@@ -89,23 +96,22 @@ def get_org_accounts(organisation_id):
     return active, disabled, invited
 
 # -----------------------------------------------------------------------------
-def get_role_contacts(role_uid, pe_id=None, organisation_id=None):
+def get_role_users(role_uid, pe_id=None, organisation_id=None):
     """
-        Look up contacts of an organisation with a certain user role
+        Look up users with a certain user role for a certain organisation
 
         @param role_uid: the role UUID
         @param pe_id: the pe_id of the organisation, or
         @param organisation_id: the organisation_id
 
-        @returns: a list of email addresses
+        @returns: a dict {user_id: pe_id} of all active users with this
+                  role for the organisation
     """
 
     db = current.db
 
     auth = current.auth
     s3db = current.s3db
-
-    contacts = None
 
     if not pe_id and organisation_id:
         # Look up the realm pe_id from the organisation
@@ -120,36 +126,208 @@ def get_role_contacts(role_uid, pe_id=None, organisation_id=None):
     # Get all users with this realm as direct OU ancestor
     users = s3db.pr_realm_users(pe_id) if pe_id else None
     if users:
-
         # Look up those among the realm users who have
         # the role for either pe_id or for their default realm
         gtable = auth.settings.table_group
         mtable = auth.settings.table_membership
         ltable = s3db.pr_person_user
+        utable = auth.settings.table_user
         join = [mtable.on((mtable.user_id == ltable.user_id) & \
                           ((mtable.pe_id == None) | (mtable.pe_id == pe_id)) & \
                           (mtable.deleted == False)),
                 gtable.on((gtable.id == mtable.group_id) & \
                           (gtable.uuid == role_uid)),
+                # Only verified+active accounts:
+                utable.on((utable.id == mtable.user_id) & \
+                          ((utable.registration_key == None) | \
+                           (utable.registration_key == "")))
                 ]
         query = (ltable.user_id.belongs(set(users.keys()))) & \
                 (ltable.deleted == False)
-        rows = db(query).select(ltable.pe_id, join=join)
-        user_pe_ids = set(row.pe_id for row in rows)
+        rows = db(query).select(ltable.user_id,
+                                ltable.pe_id,
+                                join = join,
+                                )
+        users = {row.user_id: row.pe_id for row in rows}
 
+    return users if users else None
+
+# -----------------------------------------------------------------------------
+def get_role_emails(role_uid, pe_id=None, organisation_id=None):
+    """
+        Look up the emails addresses of users with a certain user role
+        for a certain organisation
+
+        @param role_uid: the role UUID
+        @param pe_id: the pe_id of the organisation, or
+        @param organisation_id: the organisation_id
+
+        @returns: a list of email addresses
+    """
+
+    contacts = None
+
+    users = get_role_users(role_uid,
+                           pe_id = pe_id,
+                           organisation_id = organisation_id,
+                           )
+
+    if users:
         # Look up their email addresses
-        if user_pe_ids:
-            ctable = s3db.pr_contact
-            query = (ctable.pe_id.belongs(user_pe_ids)) & \
-                    (ctable.contact_method == "EMAIL") & \
-                    (ctable.deleted == False)
-            rows = db(query).select(ctable.pe_id,
-                                    ctable.value,
-                                    orderby = ~ctable.priority,
-                                    )
-            contacts = {row.pe_id: row.value for row in rows}
+        ctable = current.s3db.pr_contact
+        query = (ctable.pe_id.belongs(set(users.values()))) & \
+                (ctable.contact_method == "EMAIL") & \
+                (ctable.deleted == False)
+        rows = current.db(query).select(ctable.value,
+                                        orderby = ~ctable.priority,
+                                        )
+        contacts = list(set(row.value for row in rows))
 
-    return list(set(contacts.values())) if contacts else None
+    return contacts if contacts else None
+
+# -----------------------------------------------------------------------------
+def get_role_hrs(role_uid, pe_id=None, organisation_id=None):
+    """
+        Look up the HR records of users with a certain user role
+        for a certain organisation
+
+        @param role_uid: the role UUID
+        @param pe_id: the pe_id of the organisation, or
+        @param organisation_id: the organisation_id
+
+        @returns: a list of hrm_human_resource IDs
+    """
+
+    hr_ids = None
+
+    users = get_role_users(role_uid,
+                           pe_id = pe_id,
+                           organisation_id = organisation_id,
+                           )
+
+    if users:
+        # Look up their HR records
+        s3db = current.s3db
+        ptable = s3db.pr_person
+        htable = s3db.hrm_human_resource
+        join = htable.on((htable.person_id == ptable.id) & \
+                         (htable.deleted == False))
+        query = (ptable.pe_id.belongs(set(users.values()))) & \
+                (ptable.deleted == False)
+        rows = current.db(query).select(htable.id,
+                                        join = join,
+                                        )
+        hr_ids = list(set(row.id for row in rows))
+
+    return hr_ids if hr_ids else None
+
+# -----------------------------------------------------------------------------
+def assign_pending_invoices(billing_id, organisation_id=None, invoice_id=None):
+    """
+        Auto-assign pending invoices in a billing to accountants,
+        taking into account their current workload
+
+        @param billing_id: the billing ID
+        @param organisation_id: the ID of the accountant organisation
+        @param invoice_id: assign only this invoice
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    if not organisation_id:
+        # Look up the accounting organisation for the billing
+        btable = s3db.fin_voucher_billing
+        query = (btable.id == billing_id)
+        billing = db(query).select(btable.organisation_id,
+                                   limitby = (0, 1),
+                                   ).first()
+        if not billing:
+            return
+        organisation_id = billing.organisation_id
+
+    if organisation_id:
+        # Look up the active accountants of the accountant org
+        accountants = get_role_hrs("PROGRAM_ACCOUNTANT",
+                                   organisation_id = organisation_id,
+                                   )
+    else:
+        accountants = None
+
+    # Query for any pending invoices of this billing cycle
+    itable = s3db.fin_voucher_invoice
+    if invoice_id:
+        query = (itable.id == invoice_id)
+    else:
+        query = (itable.billing_id == billing_id)
+    query &= (itable.status != "PAID") & (itable.deleted == False)
+
+    if accountants:
+        # Limit to invoices that have not yet been assigned to any
+        # of the accountants in charge:
+        query &= ((itable.human_resource_id == None) | \
+                  (~(itable.human_resource_id.belongs(accountants))))
+
+        # Get the invoices
+        invoices = db(query).select(itable.id,
+                                    itable.human_resource_id,
+                                    )
+        if not invoices:
+            return
+
+        # Look up the number of pending invoices assigned to each
+        # accountant, to get a measure for their current workload
+        workload = {hr_id: 0 for hr_id in accountants}
+        query = (itable.status != "PAID") & \
+                (itable.human_resource_id.belongs(accountants)) & \
+                (itable.deleted == False)
+        num_assigned = itable.id.count()
+        rows = db(query).select(itable.human_resource_id,
+                                num_assigned,
+                                groupby = itable.human_resource_id,
+                                )
+        for row in rows:
+            workload[row[itable.human_resource_id]] = row[num_assigned]
+
+        # Re-assign invoices
+        # - try to distribute workload evenly among the accountants
+        for invoice in invoices:
+            hr_id, num = min(workload.items(), key=lambda item: item[1])
+            invoice.update_record(human_resource_id = hr_id)
+            workload[hr_id] = num + 1
+
+    elif not invoice_id:
+        # Unassign all pending invoices
+        db(query).update(human_resource_id = None)
+
+# -----------------------------------------------------------------------------
+def check_invoice_integrity(row):
+    """
+        Rheader-helper to check and report invoice integrity
+
+        @param row: the invoice record
+
+        @returns: integrity check result
+    """
+
+    billing = current.s3db.fin_VoucherBilling(row.billing_id)
+    try:
+        checked = billing.check_invoice(row.id)
+    except ValueError:
+        checked = False
+
+    T = current.T
+    if checked:
+        return SPAN(T("Ok"),
+                    I(_class="fa fa-check"),
+                    _class="record-integrity-ok",
+                    )
+    else:
+        current.response.error = T("This invoice may be invalid - please contact the administrator")
+        return SPAN(T("Failed"),
+                    I(_class="fa fa-exclamation-triangle"),
+                    _class="record-integrity-broken",
+                    )
 
 # -----------------------------------------------------------------------------
 def get_stats_projects():

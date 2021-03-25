@@ -2728,3 +2728,21 @@ body.rtl .event-type-header {
   white-space: pre-wrap;
   background: #ffe1e3;
 }
+
+/* line 383, ../scss/theme/_misc.scss */
+.record-integrity-ok {
+  color: #008600;
+}
+/* line 385, ../scss/theme/_misc.scss */
+.record-integrity-ok i {
+  padding: 0 0.2rem;
+}
+
+/* line 389, ../scss/theme/_misc.scss */
+.record-integrity-broken {
+  color: #aa0000;
+}
+/* line 391, ../scss/theme/_misc.scss */
+.record-integrity-broken i {
+  padding: 0 0.2rem;
+}

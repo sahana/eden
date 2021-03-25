@@ -380,4 +380,16 @@ body.rtl {
     background: #ffe1e3;
 }
 
+.record-integrity-ok {
+    color: #008600;
+    i {
+        padding: 0 0.2rem;
+    }
+}
+.record-integrity-broken {
+    color: #aa0000;
+    i {
+        padding: 0 0.2rem;
+    }
+}
 // END ========================================================================

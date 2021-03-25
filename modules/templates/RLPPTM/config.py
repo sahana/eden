@@ -1261,6 +1261,12 @@ def config(settings):
                                           force_update = True,
                                           )
 
+            # Re-assign pending invoices
+            from .helpers import assign_pending_invoices
+            assign_pending_invoices(billing.id,
+                                    organisation_id = organisation_id,
+                                    )
+
     # -------------------------------------------------------------------------
     def customise_fin_voucher_billing_resource(r, tablename):
 
@@ -1347,8 +1353,8 @@ def config(settings):
                                                     limitby = (0, 1),
                                                     ).first()
 
-        from .helpers import get_role_contacts
-        provider_accountants = get_role_contacts("PROVIDER_ACCOUNTANT", pe_id)
+        from .helpers import get_role_emails
+        provider_accountants = get_role_emails("PROVIDER_ACCOUNTANT", pe_id)
         if not provider_accountants:
             error = "No provider accountant found"
 
@@ -1374,9 +1380,9 @@ def config(settings):
             # Inform the program manager that the provider could not be notified
             msg = T("%(name)s could not be notified of new compensation claim: %(error)s") % \
                   {"name": provider.name, "error": error}
-            program_managers = get_role_contacts("PROGRAM_MANAGER",
-                                                 organisation_id = program.organisation_id,
-                                                 )
+            program_managers = get_role_emails("PROGRAM_MANAGER",
+                                               organisation_id = program.organisation_id,
+                                               )
             if program_managers:
                 current.msg.send_email(to = program_managers,
                                        subject = T("Provider Notification Failed"),
@@ -1509,8 +1515,8 @@ def config(settings):
                                                     limitby = (0, 1),
                                                     ).first()
 
-        from .helpers import get_role_contacts
-        provider_accountants = get_role_contacts("PROVIDER_ACCOUNTANT", pe_id)
+        from .helpers import get_role_emails
+        provider_accountants = get_role_emails("PROVIDER_ACCOUNTANT", pe_id)
         if not provider_accountants:
             error = "No provider accountant found"
 
@@ -1539,6 +1545,36 @@ def config(settings):
         else:
             msg = "%s notified about invoice settlement"
             current.log.debug(msg % provider.name)
+
+    # -------------------------------------------------------------------------
+    def invoice_create_onaccept(form):
+        """
+            Custom create-onaccept to assign a new invoice to an
+            accountant
+        """
+
+        # Get record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        # Look up the billing ID
+        table = current.s3db.fin_voucher_invoice
+        query = (table.id == record_id)
+        invoice = current.db(query).select(table.billing_id,
+                                           limitby = (0, 1),
+                                           ).first()
+
+        if invoice:
+            # Assign the invoice
+            from .helpers import assign_pending_invoices
+            assign_pending_invoices(invoice.billing_id,
+                                    invoice_id = record_id,
+                                    )
 
     # -------------------------------------------------------------------------
     def customise_fin_voucher_invoice_resource(r, tablename):
@@ -1589,6 +1625,13 @@ def config(settings):
             s3db.configure("fin_voucher_invoice",
                            filter_widgets = filter_widgets,
                            )
+
+        # Custom create-onaccept to assign the invoice
+        s3db.add_custom_callback("fin_voucher_invoice",
+                                 "onaccept",
+                                 invoice_create_onaccept,
+                                 method = "create",
+                                 )
 
         # PDF export method
         from .helpers import InvoicePDF
