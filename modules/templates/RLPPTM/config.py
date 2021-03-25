@@ -1466,6 +1466,32 @@ def config(settings):
     settings.customise_fin_voucher_claim_resource = customise_fin_voucher_claim_resource
 
     # -------------------------------------------------------------------------
+    def customise_fin_voucher_claim_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Enable bigtable features
+        settings.base.bigtable = True
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+
+            # Block all non-interactive update attempts
+            if not r.interactive and r.http != "GET":
+                r.error(403, current.ERROR.NOT_PERMITTED)
+
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            return result
+        s3.prep = prep
+
+        return attr
+
+    settings.customise_fin_voucher_claim_controller = customise_fin_voucher_claim_controller
+
+    # -------------------------------------------------------------------------
     def invoice_onsettled(invoice):
         """
             Callback to notify the provider that an invoice has been settled
