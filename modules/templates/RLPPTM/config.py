@@ -2795,11 +2795,17 @@ def config(settings):
         standard_prep = s3.prep
         def prep(r):
 
+            is_supply_coordinator = has_role("SUPPLY_COORDINATOR")
+
             # User must be either SUPPLY_COORDINATOR or ORG_ADMIN of a
             # requester organisation to access this controller
-            from .helpers import get_managed_requester_orgs
-            if not has_role("SUPPLY_COORDINATOR") and not get_managed_requester_orgs():
-                r.unauthorised()
+            if not is_supply_coordinator:
+                from .helpers import get_managed_requester_orgs
+                requester_orgs = get_managed_requester_orgs(cache=False)
+                if not requester_orgs:
+                    r.unauthorised()
+            else:
+                requester_orgs = None
 
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
@@ -2838,16 +2844,21 @@ def config(settings):
                     field = table.date_recv
                     field.readable = field.writable = False
 
-                    # If only one site selectable, set default and make r/o
-                    field = table.site_id
-                    requires = field.requires
-                    if isinstance(requires, (list, tuple)):
-                        requires = requires[0]
-                    if hasattr(requires, "options"):
-                        options = [opt[0] for opt in requires.options() if opt[0]]
-                        if len(options) == 1:
-                            field.default = int(options[0])
+                    if not is_supply_coordinator:
+                        # Limit to sites of managed requester organisations
+                        stable = s3db.org_site
+                        dbset = db(stable.organisation_id.belongs(requester_orgs))
+                        field = table.site_id
+                        field.requires = IS_ONE_OF(dbset, "org_site.site_id",
+                                                   field.represent,
+                                                   )
+                        # If only one site selectable, set default and make r/o
+                        sites = dbset.select(stable.site_id, limitby=(0, 2))
+                        if len(sites) == 1:
+                            field.default = sites.first().site_id
                             field.writable = False
+                        elif not sites:
+                            resource.configure(insertable = False)
 
                     # Requester is always the current user
                     # => set as default and make r/o

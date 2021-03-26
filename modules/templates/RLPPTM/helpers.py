@@ -373,10 +373,12 @@ def get_stats_projects():
     return [row.project_id for row in rows]
 
 # -----------------------------------------------------------------------------
-def get_managed_requester_orgs():
+def get_managed_requester_orgs(cache=True):
     """
         Get a list of organisations managed by the current user (as ORG_ADMIN)
         that have the REQUESTER-tag, i.e. can order equipment
+
+        @param cache: cache the result
 
         @returns: list of organisation IDs
     """
@@ -401,7 +403,7 @@ def get_managed_requester_orgs():
                                 (ttable.deleted == False))
             query = otable.pe_id.belongs(realms)
             rows = db(query).select(otable.id,
-                                    cache = s3db.cache,
+                                    cache = s3db.cache if cache else None,
                                     join = join,
                                     )
             if rows:
