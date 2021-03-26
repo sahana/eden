@@ -852,6 +852,36 @@ def config(settings):
             elif r.component_name == "client":
                 s3.crud_strings["cr_shelter"].title_display = T("Register Client to %(shelter)s") % \
                                                                             {"shelter": r.record.name}
+
+                # Registering Client Checks them in
+                def client_check_in(form):
+
+                    form_vars_get = form.vars.get
+                    person_id = form_vars_get("person_id")
+
+                    db = current.db
+                    stable = s3db.cr_shelter
+                    shelter = db(stable.id == r.id).select(stable.site_id,
+                                                           limitby = (0, 1)
+                                                           ).first()
+                    site_id = shelter.site_id
+
+                    # Delete old cr_shelter_registration records
+                    ltable = s3db.cr_shelter_registration
+                    query = (ltable.person_id == person_id) & \
+                            (ltable.id != form_vars_get("id"))
+                    db(query).delete()
+
+                    # Add Site Event Log
+                    s3db.org_site_event.insert(site_id = site_id,
+                                               person_id = person_id,
+                                               event = 3, # Checked-In
+                                               )
+
+                s3db.add_custom_callback("cr_shelter_registration",
+                                         "create_onaccept",
+                                         client_check_in,
+                                         )
             else:
                 s3.crud_strings["cr_shelter"].title_update = T("Manage Shelter")
 
@@ -1108,7 +1138,7 @@ def config(settings):
         from gluon import IS_EMPTY_OR, IS_IN_SET
 
         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3LocationSelector, \
-                       S3TextFilter, S3LocationFilter, S3OptionsFilter
+                       S3TextFilter, S3DateFilter, S3LocationFilter, S3OptionsFilter
 
         s3db = current.s3db
         s3 = current.response.s3
@@ -1274,6 +1304,8 @@ def config(settings):
                                  label = T("Location"),
                                  levels = ("L3", "L4"),
                                  ),
+                S3OptionsFilter("shelter_registration.shelter_id",
+                                ),
                 S3OptionsFilter("age_group",
                                 label = T("Age"),
                                 ),
@@ -1284,18 +1316,26 @@ def config(settings):
                 S3OptionsFilter("pets.value",
                                 label = T("Pets"),
                                 ),
+                S3DateFilter("shelter_registration.check_in_date",
+                             #hide_time = True,
+                             #hidden = True,
+                             )
                 ]
 
         list_fields = ["last_name",
                        "first_name",
+                       "shelter_registration.check_in_date",
                        "pe_label",
                        "gender",
                        (T("Age"), "age"),
                        ]
+        if r.controller == "pr":
+            list_fields.insert(2, "shelter_registration.shelter_id")
 
         report_fields = ["gender",
                          "age_group",
                          "person_details.nationality",
+                         "shelter_registration.shelter_id",
                          "location_id$L3",
                          "location_id$L4",
                          ]
