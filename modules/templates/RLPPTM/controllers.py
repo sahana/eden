@@ -529,6 +529,13 @@ class approve(S3CustomController):
                                 set_record_owner(ltable, link)
                                 s3db_onaccept(ltable, link, method="create")
 
+                        # Add REQUESTER-tag ("No" by default)
+                        ttable = s3db.org_organisation_tag
+                        ttable.insert(organisation_id = organisation_id,
+                                      tag = "REQUESTER",
+                                      value = "N",
+                                      )
+
                         # Update User
                         user.update_record(organisation_id = organisation_id,
                                            registration_key = None,

@@ -6,4 +6,4 @@ LSJV,OrgGroupAdmin,lsjv_ogadmin@example.com,eden,"ORG_GROUP_ADMIN/0,ORG_ADMIN","
 LSJV,SupplyCoordinator,lsjv_supply@example.com,eden,SUPPLY_COORDINATOR,"Landesamt für Soziales, Jugend und Versorgung",de
 Praxis Beyer,Admin,beyer_admin@example.com,eden,"VOUCHER_PROVIDER,ORG_ADMIN",Praxis Dr. Beyer,de
 TZ Linz,Accountant,tz_linz_accountant@example.com,eden,PROVIDER_ACCOUNTANT,Testzentrum Linz,de
-TZ Linz,Admin,tz_linz_admin@example.com,eden,"VOUCHER_PROVIDER,ORG_ADMIN,PROVIDER_ACCOUNTANT,SUPPLY_REQUESTER",Testzentrum Linz,de
+TZ Linz,Admin,tz_linz_admin@example.com,eden,"VOUCHER_PROVIDER,ORG_ADMIN,PROVIDER_ACCOUNTANT",Testzentrum Linz,de

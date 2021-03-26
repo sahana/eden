@@ -18,7 +18,7 @@ from templates.RLPPTM.config import SCHOOLS, TESTSTATIONS
 org_group = TESTSTATIONS
 project = "COVID-19 Tests für Alle"
 include = "ORG_ADMIN"
-exclude = "SUPPLY_REQUESTER"
+exclude = "VOUCHER_ISSUER"
 
 # Override auth (disables all permission checks)
 auth.override = True

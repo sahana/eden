@@ -70,7 +70,6 @@ def config(settings):
                                       "PROGRAM_MANAGER": "ORG_GROUP_ADMIN",
                                       "PROVIDER_ACCOUNTANT": "PROVIDER_ACCOUNTANT",
                                       "SUPPLY_COORDINATOR": "SUPPLY_COORDINATOR",
-                                      "SUPPLY_REQUESTER": "SUPPLY_REQUESTER",
                                       "VOUCHER_ISSUER": "VOUCHER_ISSUER",
                                       "VOUCHER_PROVIDER": "VOUCHER_PROVIDER",
                                       }
@@ -1900,6 +1899,23 @@ def config(settings):
     settings.customise_org_facility_controller = customise_org_facility_controller
 
     # -------------------------------------------------------------------------
+    def customise_org_organisation_resource(r, tablename):
+
+        s3db = current.s3db
+
+        # Tags as filtered components (for embedding in form)
+        s3db.add_components("org_organisation",
+                            org_organisation_tag = ({"name": "requester",
+                                                     "joinby": "organisation_id",
+                                                     "filterby": {"tag": "REQUESTER"},
+                                                     "multiple": False,
+                                                     },
+                                                    ),
+                            )
+
+    settings.customise_org_organisation_resource = customise_org_organisation_resource
+
+    # -------------------------------------------------------------------------
     def customise_org_organisation_controller(**attr):
 
         s3 = current.response.s3
@@ -1916,7 +1932,21 @@ def config(settings):
             auth = current.auth
             s3db = current.s3db
 
+            resource = r.resource
+
             is_org_group_admin = auth.s3_has_role("ORG_GROUP_ADMIN")
+
+            # Configure binary tags
+            binary_tag_opts = {"Y": T("Yes"), "N": T("No")}
+            for cname in ("requester",):
+                component = resource.components.get(cname)
+                table = component.table
+                field = table.value
+                field.default = "N"
+                field.requires = IS_IN_SET(binary_tag_opts,
+                                           zero = None,
+                                           )
+                field.represent = lambda v, row=None: binary_tag_opts.get(v, "-")
 
             # Add invite-method for ORG_GROUP_ADMIN role
             from .helpers import InviteUserOrg
@@ -1925,7 +1955,6 @@ def config(settings):
                             action = InviteUserOrg,
                             )
 
-            resource = r.resource
             get_vars = r.get_vars
             mine = get_vars.get("mine")
             if mine == "1":
@@ -1986,6 +2015,7 @@ def config(settings):
                                                    label = T("Project Partner for"),
                                                    cols = 1,
                                                    )
+                        requester = (T("Can order equipment"), "requester.value")
                         types = S3SQLInlineLink("organisation_type",
                                                 field = "organisation_type_id",
                                                 search = False,
@@ -1994,10 +2024,11 @@ def config(settings):
                                                 widget = "multiselect",
                                                 )
                     else:
-                        groups = projects = types = None
+                        groups = projects = requester = types = None
 
                     crud_fields = [groups,
                                    projects,
+                                   requester,
                                    "name",
                                    "acronym",
                                    types,
@@ -2154,6 +2185,7 @@ def config(settings):
                 component = resource.components.get(cname)
                 table = component.table
                 field = table.value
+                field.default = "N"
                 field.requires = IS_IN_SET(binary_tag_opts,
                                         zero = None,
                                         )
@@ -2749,6 +2781,13 @@ def config(settings):
         # Custom prep
         standard_prep = s3.prep
         def prep(r):
+
+            # User must be either SUPPLY_COORDINATOR or ORG_ADMIN of a
+            # requester organisation to access this controller
+            from .helpers import get_managed_requester_orgs
+            if not has_role("SUPPLY_COORDINATOR") and not get_managed_requester_orgs():
+                r.unauthorised()
+
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
