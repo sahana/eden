@@ -76,9 +76,10 @@ class index(S3CustomController):
         if system_roles.AUTHENTICATED not in roles:
 
             login_buttons = DIV(A(T("Login"),
-                                  _id="show-login",
-                                  _class="tiny secondary button"),
-                                _id="login-buttons"
+                                  _id = "show-login",
+                                  _class = "tiny secondary button",
+                                  ),
+                                _id = "login-buttons",
                                 )
             # @ToDo: Move JS to static
             script = '''
@@ -105,10 +106,11 @@ $('#show-login').click(function(e){
             if self_registration is True:
                 # Provide a Registration box on front page
                 login_buttons.append(A(T("Register"),
-                                       _id="show-register",
-                                       _class="tiny secondary button",
+                                       _id = "show-register",
+                                       _class = "tiny secondary button",
                                        # @ToDo: Move to CSS
-                                       _style="margin-left:5px"))
+                                       _style = "margin-left:5px",
+                                       ))
                 script = '''
 $('#show-register').click(function(e){
  e.preventDefault()
@@ -122,7 +124,7 @@ $('#show-register').click(function(e){
                 register_form = auth.register()
                 register_div = DIV(H3(T("Register")),
                                    P(XML(T("If you would like to help, then please %(sign_up_now)s") % \
-                                            dict(sign_up_now=B(T("sign-up now"))))))
+                                            {"sign_up_now": B(T("sign-up now"))})))
 
                 register_script = '''
 $('#register-btn').click(function(e){
@@ -142,7 +144,7 @@ $('#login-btn').click(function(e){
             login_form = auth.login(inline=True)
             login_div = DIV(H3(T("Login")),
                             P(XML(T("Registered users can %(login)s to access the system") % \
-                                  dict(login=B(T("login"))))))
+                                  {"login": B(T("login"))})))
 
         else:
             login_buttons = ""

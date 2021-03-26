@@ -35,13 +35,32 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        
-        menu = [MM("Shelters", c="cr", f="shelter", m="summary"),
-                MM("Staff", c="hrm", f="human_resource")(),
-                MM("Clients", c="pr", f="person", m="summary")(
-                   MM("Import", m="import"),
-                   ),
-                ]
+        if not current.auth.is_logged_in():
+            return None
+
+        shelter_id = current.session.s3.shelter_id
+
+        if shelter_id:
+            menu = [MM("My Shelter", c="cr", f="shelter", args=[shelter_id])(
+                       MM("All Shelters", c="cr", f="shelter", m="summary"),
+                       ),
+                    MM("My Staff", c="cr", f="shelter", args=[shelter_id, "human_resource_site"])(
+                       MM("Check-In", c="cr", f="shelter", args=[shelter_id, "human_resource_site", "create"]),
+                       MM("All Staff", c="hrm", f="human_resource"),
+                       ),
+                    MM("My Clients", c="cr", f="shelter", args=[shelter_id, "client"])(
+                       MM("Check-In", c="cr", f="shelter", args=[shelter_id, "client", "create"]),
+                       MM("All Clients", c="pr", f="person", m="summary"),
+                       MM("Import", m="import"),
+                       ),
+                    ]
+        else:
+            menu = [MM("Shelters", c="cr", f="shelter", m="summary"),
+                    MM("Staff", c="hrm", f="human_resource")(),
+                    MM("Clients", c="pr", f="person", m="summary")(
+                       MM("Import", m="import"),
+                       ),
+                    ]
 
         return menu
 

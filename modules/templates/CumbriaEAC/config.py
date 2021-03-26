@@ -26,7 +26,7 @@ def config(settings):
 
     # Authentication settings
     # Should users be allowed to register themselves?
-    #settings.security.self_registration = False
+    settings.security.self_registration = False
     # Do new users need to verify their email address?
     #settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
@@ -425,6 +425,10 @@ def config(settings):
 
         if tablename == "cr_shelter":
 
+            if r.method== "create":
+                # The dedicated check-in pages shouldn't have an rheader to clutter things up
+                return None
+
             tabs = [(T("Shelter Details"), None),
                     (T("Staff"), "human_resource_site"),
                     (T("Clients"), "client"),
@@ -715,11 +719,24 @@ def config(settings):
                          args = [staff.person_id],
                          ))
 
+        def shelter_manage(r, **attr):
+            shelter_id = r.id
+            # Set this shelter into the session
+            current.session.s3.shelter_id = shelter_id
+            # Redirect to Normal page
+            from gluon import redirect
+            redirect(URL(args = [shelter_id]))
+
         set_method = s3db.set_method
+
         set_method("cr", "shelter",
                    component_name = "human_resource_site",
                    method = "checkout",
                    action = staff_checkout)
+
+        set_method("cr", "shelter",
+                   method = "manage",
+                   action = shelter_manage)
 
         set_method("cr", "shelter",
                    component_name = "human_resource_site",
@@ -747,6 +764,10 @@ def config(settings):
                 result = True
 
             if r.component_name == "human_resource_site":
+
+                if r.method == "create":
+                    s3.crud_strings["cr_shelter"].title_display = T("Check-in Staff to %(shelter)s") % \
+                                                                            {"shelter": r.record.name}
 
                 # Filtered components
                 s3db.add_components("pr_person",
@@ -828,6 +849,11 @@ def config(settings):
                                          "create_onaccept",
                                          staff_check_in,
                                          )
+            elif r.component_name == "client":
+                s3.crud_strings["cr_shelter"].title_display = T("Register Client to %(shelter)s") % \
+                                                                            {"shelter": r.record.name}
+            else:
+                s3.crud_strings["cr_shelter"].title_update = T("Manage Shelter")
 
             return result
         s3.prep = prep
