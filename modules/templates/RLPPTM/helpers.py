@@ -338,7 +338,11 @@ def get_stats_projects():
     """
 
     permitted_realms = current.auth.permission.permitted_realms
-    realms = permitted_realms("disease_case_diagnostics", "create")
+    realms = permitted_realms("disease_case_diagnostics",
+                              method = "create",
+                              c = "disease",
+                              f = "case_diagnostics",
+                              )
 
     if realms is not None and not realms:
         return []

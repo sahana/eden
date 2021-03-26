@@ -1469,6 +1469,8 @@ def config(settings):
 
         s3 = current.response.s3
 
+        s3db = current.s3db
+
         # Custom prep
         standard_prep = s3.prep
         def prep(r):
@@ -1479,6 +1481,17 @@ def config(settings):
 
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
+
+            # Check which programs and organisations the user can accept vouchers for
+            program_ids, org_ids = s3db.fin_voucher_permitted_programs(mode = "provider",
+                                                                       partners_only = True,
+                                                                       c = "fin",
+                                                                       f = "voucher_debit",
+                                                                       )[:2]
+            if not program_ids or not org_ids:
+                s3db.configure("fin_voucher_debit",
+                               insertable = False,
+                               )
 
             return result
         s3.prep = prep

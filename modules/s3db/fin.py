@@ -4618,7 +4618,11 @@ def fin_voucher_eligibility_types(program_ids, organisation_ids=None):
     return eligibility_types
 
 # =============================================================================
-def fin_voucher_permitted_programs(mode="issuer", partners_only=False):
+def fin_voucher_permitted_programs(mode = "issuer",
+                                   partners_only = False,
+                                   c = None,
+                                   f = None,
+                                   ):
     """
         Get a list of programs and organisations the current user
         is permitted to issue/accept vouchers for
@@ -4628,6 +4632,10 @@ def fin_voucher_permitted_programs(mode="issuer", partners_only=False):
                               for the project under which a voucher program
                               runs, in order to issue/accept vouchers under
                               that program
+        @param c: override request.controller to look up for a
+                  different controller context
+        @param f: override request.function to look up for a
+                  different controller context
 
         @returns: tuple of lists (program_ids, org_ids, pe_ids)
     """
@@ -4641,10 +4649,18 @@ def fin_voucher_permitted_programs(mode="issuer", partners_only=False):
     permitted_realms = current.auth.permission.permitted_realms
     if mode == "issuer":
         fn = "issuers_id"
-        realms = permitted_realms("fin_voucher", "create")
+        realms = permitted_realms("fin_voucher",
+                                  method = "create",
+                                  c = c,
+                                  f = f,
+                                  )
     else:
         fn = "providers_id"
-        realms = permitted_realms("fin_voucher_debit", "create")
+        realms = permitted_realms("fin_voucher_debit",
+                                  method = "create",
+                                  c = c,
+                                  f = f,
+                                  )
 
     if realms is not None and not realms:
         # No access to any programs for any orgs

@@ -6565,13 +6565,18 @@ class S3Permission(object):
         return query
 
     # -------------------------------------------------------------------------
-    def permitted_realms(self, tablename, method="read"):
+    def permitted_realms(self, tablename, method="read", c=None, f=None):
         """
             Returns a list of the realm entities which a user can access for
             the given table.
 
             @param tablename: the tablename
             @param method: the method
+            @param c: override request.controller to look up for
+                      a different controller context
+            @param f: override request.function to look up for
+                      a different controller context
+
             @return: a list of pe_ids or None (for no restriction)
         """
 
@@ -6595,11 +6600,12 @@ class S3Permission(object):
         racl = self.required_acl([method])
         request = current.request
         acls = self.applicable_acls(racl,
-                                    realms=realms,
-                                    delegations=delegations,
-                                    c=request.controller,
-                                    f=request.function,
-                                    t=tablename)
+                                    realms = realms,
+                                    delegations = delegations,
+                                    c = c if c else request.controller,
+                                    f = f if f else request.function,
+                                    t = tablename,
+                                    )
         if "ANY" in acls:
             # User is permitted access for all Realms
             return None
