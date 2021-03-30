@@ -2039,4 +2039,268 @@ class geocode(S3CustomController):
         current.response.headers["Content-Type"] = "application/json"
         return output
 
+# =============================================================================
+class ocert(S3CustomController):
+    """
+        Custom controller to certify the eligibility of an organisation
+        to perform certain actions in an external application
+
+        Process similar to OAuth:
+            - external app presents the user with a link to Sahana
+              containing a purpose key and a session token, e.g.
+              /default/index/ocert?p=XY&t=0123456789ABCDEF
+            - user follows the link, and is asked by Sahana to login
+            - once logged-in, Sahana verifies that the user is OrgAdmin
+              for an organisation that qualifies for the specified purpose,
+              and if it does, redirects the user back to a URL in the
+              external app, with a verification hash as URL parameter
+            - the external app requests the OrgID from the user, and
+              generates a hash of the session token with that ID, and
+              if both hashes match, access to the intended function is
+              granted
+    """
+
+    def __call__(self):
+
+        db = current.db
+        s3db = current.s3db
+        auth = current.auth
+
+        session = current.session
+
+        # Handle purpose key and token in URL
+        get_vars = current.request.get_vars
+        purpose = get_vars.get("p")
+        token = get_vars.get("t")
+        if purpose or token:
+            if not purpose or not token:
+                self._error("Invalid Request - Missing Parameter")
+            session.s3.ocert_key = {"p": purpose, "t": token}
+            redirect(URL(args=["ocert"], vars={}))
+
+        # Check that function is configured
+        purposes = current.deployment_settings.get_custom(key="ocert")
+        if not isinstance(purposes, dict):
+            self._error("Function not available")
+
+        # Read key from session, extract purpose and token
+        key = session.s3.get("ocert_key")
+        try:
+            purpose, token = key.get("p"), key.get("t")
+        except (TypeError, AttributeError):
+            self._error("Invalid Request - Missing Parameter")
+
+        # Verify purpose key
+        redirect_uri = purposes.get(purpose)
+        if not redirect_uri:
+            self._error("Invalid Parameter")
+
+        # Validate token
+        # - must be a 64 to 256 bit hex-encoded number
+        token_value = None
+        if 16 <= len(token) <= 64:
+            try:
+                token_value = int(token, 16)
+            except (TypeError, ValueError):
+                pass
+        if not token_value:
+            self._error("Invalid Parameter")
+
+        # Determine the organisation to check
+        organisation_id = None
+        if auth.s3_logged_in():
+
+            # Must be ORG_ADMIN
+            if not auth.s3_has_role("ORG_ADMIN"):
+                self._error("Insufficient Permissions")
+
+            # Must manage at least one organisation
+            managed_orgs = None
+
+            user = auth.user
+            sr = auth.get_system_roles()
+            realms = user.realms[sr.ORG_ADMIN]
+            if not realms:
+                realms = s3db.pr_realm(user.pe_id)
+            if realms:
+                # Look up managed organisations
+                otable = s3db.org_organisation
+                query = (otable.pe_id.belongs(realms)) & \
+                        (otable.deleted == False)
+                managed_orgs = db(query).select(otable.id,
+                                                otable.name,
+                                                )
+            if not managed_orgs:
+                self._error("No Managed Organizations")
+            elif len(managed_orgs) == 1:
+                # Only one managed org
+                organisation_id = managed_orgs.first().id
+            else:
+                # Let user select the organisation
+                form = self._org_select(managed_orgs)
+                if form.accepts(current.request.vars,
+                                session,
+                                formname = "org_select",
+                                ):
+                    organisation_id = form.vars.organisation_id
+                else:
+                    self._view(THEME, "register.html")
+                    output = {"title": current.T("Select Organization"),
+                              "intro": None,
+                              "form": form,
+                              }
+        else:
+            # Go to login, then return here
+            redirect(URL(c = "default",
+                         f = "user",
+                         args = ["login"],
+                         vars = {"_next": URL(args=["ocert"], vars={})},
+                         ))
+
+        if organisation_id:
+            # Remove ocert key from session
+            del session.s3.ocert_key
+
+            # Generate verification hash
+            vhash = self._vhash(organisation_id,
+                                purpose = purpose,
+                                token = token,
+                                )
+            if vhash:
+                from s3compat import urllib_quote
+                url = redirect_uri % {"token": urllib_quote(token),
+                                      "vhash": urllib_quote(vhash),
+                                      }
+                redirect(url)
+            else:
+                # Organisation is not authorized for the purpose
+                self._error("Organization not authorized")
+
+        return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _vhash(organisation_id, purpose=None, token=None):
+        """
+            Verify the qualification of the organisation for the purpose,
+            and generate a verification hash (=encrypt the token with the
+            organisation's OrgID tag) if successful
+
+            @param organisation_id: the organisation_id
+            @param purpose: the purpose key
+            @param token: the token
+
+            @returns: the encrypted token
+        """
+
+        if not token:
+            return None
+
+        db = current.db
+        s3db = current.s3db
+
+        # Look up the organisation ID tag
+        ttable = s3db.org_organisation_tag
+        query = (ttable.organisation_id == organisation_id) & \
+                (ttable.tag == "OrgID") & \
+                (ttable.deleted == False)
+        orgid = db(query).select(ttable.value,
+                                 limitby = (0, 1),
+                                 ).first()
+        if not orgid or not orgid.value:
+            return None
+
+        if purpose == "KVREG":
+
+            # Must be a TESTSTATIONS organisation
+            gtable = s3db.org_group
+            mtable = s3db.org_group_membership
+            query = (mtable.organisation_id == organisation_id) & \
+                    (mtable.deleted == False) & \
+                    (gtable.id == mtable.group_id) & \
+                    (gtable.name == TESTSTATIONS)
+            row = db(query).select(mtable.id, limitby=(0, 1)).first()
+            if not row:
+                return None
+
+            # Must be partner in the TESTS-PUBLIC project
+            ptable = s3db.project_project
+            ltable = s3db.project_organisation
+            query = (ltable.organisation_id == organisation_id) & \
+                    (ltable.deleted == False) & \
+                    (ptable.id == ltable.project_id) & \
+                    (ptable.code == "TESTS-PUBLIC")
+            row = db(query).select(ltable.id, limitby=(0, 1)).first()
+            if not row:
+                return None
+
+        # Generate vhash
+        crypt = CRYPT(key = orgid.value,
+                      digest_alg = "sha512",
+                      salt = False,
+                      )
+        return str(crypt(token)[0])
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _org_select(organisations):
+        """
+            Render a form for the user to select one of their managed
+            organisations
+
+            @param organisations: the managed organisations, Rows {id, name}
+
+            @returns: a FORM
+        """
+
+        T = current.T
+
+        response = current.response
+        settings = current.deployment_settings
+
+        options = {row.id: row.name for row in organisations}
+
+        formfields = [Field("organisation_id",
+                            label = T("Organization"),
+                            requires = IS_IN_SET(options),
+                            ),
+                      ]
+
+        # Generate labels (and mark required fields in the process)
+        labels = s3_mark_required(formfields)[0]
+        response.s3.has_required = False
+
+        # Form buttons
+        SUBMIT = T("Continue")
+        buttons = [INPUT(_type = "submit",
+                         _value = SUBMIT,
+                         ),
+                   ]
+
+        # Construct the form
+        response.form_label_separator = ""
+        form = SQLFORM.factory(table_name = "organisation",
+                               record = None,
+                               labels = labels,
+                               separator = "",
+                               showid = False,
+                               submit_button = SUBMIT,
+                               formstyle = settings.get_ui_formstyle(),
+                               buttons = buttons,
+                               *formfields)
+
+        return form
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _error(message):
+        """
+            Redirect to home page with error message
+
+            @param message: the error message
+        """
+
+        current.session.error = current.T(message)
+        redirect(URL(c="default", f="index"))
+
 # END =========================================================================

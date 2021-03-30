@@ -116,7 +116,7 @@ def config(settings):
     # Decimal separator for numbers (defaults to ,)
     settings.L10n.decimal_separator = "."
     # Thousands separator for numbers (defaults to space)
-    settings.L10n.thousands_separator = ","
+    settings.L10n.thousands_separator = " "
     # Uncomment this to Translate Layer Names
     #settings.L10n.translate_gis_layer = True
     # Uncomment this to Translate Location Names

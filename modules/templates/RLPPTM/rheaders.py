@@ -137,13 +137,14 @@ def rlpptm_org_rheader(r, tabs=None):
             auth = current.auth
             is_org_group_admin = auth.s3_has_role("ORG_GROUP_ADMIN")
 
+            db = current.db
+            s3db = current.s3db
+
             if not tabs:
 
                 invite_tab = None
                 sites_tab = None
 
-                db = current.db
-                s3db = current.s3db
                 gtable = s3db.org_group
                 mtable = s3db.org_group_membership
                 query = (mtable.organisation_id == record.id) & \
@@ -166,17 +167,24 @@ def rlpptm_org_rheader(r, tabs=None):
                         (T("Staff"), "human_resource"),
                         ]
 
+            # Look up the OrgID
+            def org_id(row):
+                ttable = s3db.org_organisation_tag
+                query = (ttable.organisation_id == row.id) & \
+                        (ttable.tag == "OrgID") & \
+                        (ttable.deleted == False)
+                tag = db(query).select(ttable.value, limitby=(0, 1)).first()
+                return tag.value if tag else "-"
+
             # Check for active user accounts:
+            rheader_fields = [[(T("Organization ID"), org_id)]]
             if is_org_group_admin:
 
                 from .helpers import get_org_accounts
                 active = get_org_accounts(record.id)[0]
 
                 active_accounts = lambda row: len(active)
-                rheader_fields = [[(T("Active Accounts"), active_accounts)],
-                                  ]
-            else:
-                rheader_fields = []
+                rheader_fields.append([(T("Active Accounts"), active_accounts)])
 
             rheader_title = "name"
 
