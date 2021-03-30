@@ -2280,14 +2280,15 @@ def config(settings):
         field.label = T("Order No.")
         field.represent = ShipmentCodeRepresent("req_req", "req_ref")
 
-        field = table.send_ref
-        field.represent = lambda v, row=None: B(v if v else "-")
+        # We don't use send_ref
+        #field = table.send_ref
+        #field.represent = lambda v, row=None: B(v if v else "-")
 
         if r.tablename == "inv_recv" and not r.component:
             if r.interactive:
                 from s3 import S3SQLCustomForm
                 crud_fields = ["req_ref",
-                               "send_ref",
+                               #"send_ref",
                                "site_id",
                                "status",
                                "recipient_id",
@@ -2299,7 +2300,7 @@ def config(settings):
                                )
 
             list_fields = ["req_ref",
-                           "send_ref",
+                           #"send_ref",
                            "site_id",
                            "date",
                            "status",
@@ -2412,14 +2413,16 @@ def config(settings):
         field.label = T("Order No.")
         field.represent = ShipmentCodeRepresent("req_req", "req_ref")
 
+        # We don't use send_ref
         field = table.send_ref
-        field.represent = ShipmentCodeRepresent("inv_send", "send_ref",
-                                                show_link = False,
-                                                )
+        field.readable = field.writable = False
+        #field.represent = ShipmentCodeRepresent("inv_send", "send_ref",
+        #                                        show_link = False,
+        #                                        )
 
         list_fields = ["id",
                        "req_ref",
-                       "send_ref",
+                       #"send_ref",
                        "date",
                        "to_site_id",
                        "status",
@@ -2473,12 +2476,13 @@ def config(settings):
                     field.readable = field.writable = False
 
                 # Shipment reference must be editable while the shipment
-                # is still editable
-                field = table.send_ref
-                field.readable = field.writable = True
-                field.requires = IS_NOT_ONE_OF(db, "inv_send.send_ref",
-                                               error_message = T("Specify a unique reference number"),
-                                               )
+                # is still editable (but we don't use send_ref at all currently)
+                field.readable = field.writable = False
+                #field = table.send_ref
+                #field.readable = field.writable = True
+                #field.requires = IS_NOT_ONE_OF(db, "inv_send.send_ref",
+                #                               error_message = T("Specify a unique reference number"),
+                #                               )
 
                 # Request number, on the other hand, should not be editable
                 field = table.req_ref
@@ -2694,7 +2698,8 @@ def config(settings):
         field = table.send_id
         field.label = T("Shipment")
         field.represent = S3Represent(lookup = "inv_send",
-                                      fields = ["send_ref"],
+                                      fields = ["req_ref"],
+                                      #fields = ["send_ref"], # we don't use send_ref
                                       show_link = True,
                                       )
 
@@ -3223,10 +3228,10 @@ def config(settings):
     # -------------------------------------------------------------------------
     def shipping_code(prefix, site_id, field):
 
-        if prefix == "WB":
-            # We do not generate waybill numbers, but ask them from the user
-            # TODO have a default anyway?
-            return None
+        # We hide the send_ref from the user, but still auto-generate one
+        #if prefix == "WB":
+        #    # Do not generate waybill numbers, but ask them from the user
+        #    return None
 
         db = current.db
         if site_id:

@@ -346,7 +346,7 @@ def rlpptm_inv_rheader(r, tabs=None):
                         (T("Items"), "track_item"),
                         ]
 
-            rheader_fields = [["req_ref", "send_ref"],
+            rheader_fields = [["req_ref"], # , "send_ref"],
                               ["status"],
                               ["date"]
                               ]
@@ -405,9 +405,9 @@ def rlpptm_inv_rheader(r, tabs=None):
                     msg = "-"
                 return msg
 
-            rheader_fields = [["send_ref", "site_id"],
-                              ["status", (T("Content"), content)],
-                              ["date"]
+            rheader_fields = [#["send_ref", "site_id"],
+                              ["status", "site_id"],
+                              ["date", (T("Content"), content)],
                               ]
             rheader_title = "req_ref"
 

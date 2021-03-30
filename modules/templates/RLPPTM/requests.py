@@ -201,7 +201,7 @@ def send_filter_widgets():
 
     filter_widgets = [
         S3TextFilter(["req_ref",
-                      "send_ref",
+                      #"send_ref",
                       ],
                      label = T("Search"),
                      ),
@@ -262,7 +262,7 @@ def recv_filter_widgets():
 
     filter_widgets = [
         S3TextFilter(["req_ref",
-                      "send_ref",
+                      #"send_ref",
                       ],
                      label = T("Search"),
                      ),
