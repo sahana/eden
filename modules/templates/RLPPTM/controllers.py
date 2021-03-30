@@ -2075,24 +2075,27 @@ class ocert(S3CustomController):
         if purpose or token:
             if not purpose or not token:
                 self._error("Invalid Request - Missing Parameter")
-            session.s3.ocert_key = {"p": purpose, "t": token}
+            session.s3.ocert = {"p": purpose, "t": token}
             redirect(URL(args=["ocert"], vars={}))
 
         # Check that function is configured
-        purposes = current.deployment_settings.get_custom(key="ocert")
-        if not isinstance(purposes, dict):
+        ocert = current.deployment_settings.get_custom(key="ocert")
+        if not isinstance(ocert, dict):
             self._error("Function not available")
 
         # Read key from session, extract purpose and token
-        key = session.s3.get("ocert_key")
+        keys = session.s3.get("ocert")
         try:
-            purpose, token = key.get("p"), key.get("t")
+            purpose, token = keys.get("p"), keys.get("t")
         except (TypeError, AttributeError):
             self._error("Invalid Request - Missing Parameter")
 
-        # Verify purpose key
-        redirect_uri = purposes.get(purpose)
-        if not redirect_uri:
+        # Verify purpose
+        try:
+            appkey, redirect_uri = ocert.get(purpose)
+        except (TypeError, ValueError):
+            appkey, redirect_uri = None, None
+        if not appkey or not redirect_uri:
             self._error("Invalid Parameter")
 
         # Validate token
@@ -2159,13 +2162,10 @@ class ocert(S3CustomController):
 
         if organisation_id:
             # Remove ocert key from session
-            del session.s3.ocert_key
+            del session.s3.ocert
 
             # Generate verification hash
-            vhash = self._vhash(organisation_id,
-                                purpose = purpose,
-                                token = token,
-                                )
+            vhash = self._vhash(organisation_id, purpose, token, appkey)
             if vhash:
                 from s3compat import urllib_quote
                 url = redirect_uri % {"token": urllib_quote(token),
@@ -2180,7 +2180,7 @@ class ocert(S3CustomController):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _vhash(organisation_id, purpose=None, token=None):
+    def _vhash(organisation_id, purpose, token, appkey):
         """
             Verify the qualification of the organisation for the purpose,
             and generate a verification hash (=encrypt the token with the
@@ -2193,7 +2193,7 @@ class ocert(S3CustomController):
             @returns: the encrypted token
         """
 
-        if not token:
+        if not all((purpose, token, appkey)):
             return None
 
         db = current.db
@@ -2235,11 +2235,11 @@ class ocert(S3CustomController):
                 return None
 
         # Generate vhash
-        crypt = CRYPT(key = orgid.value,
+        crypt = CRYPT(key = appkey,
                       digest_alg = "sha512",
-                      salt = False,
+                      salt = token,
                       )
-        return str(crypt(token)[0])
+        return str(crypt(orgid.value)[0]).rsplit("$")[-1]
 
     # -------------------------------------------------------------------------
     @staticmethod
