@@ -328,6 +328,42 @@ class RLPAvailabilitySiteFilter(S3OptionsFilter):
             resource.add_filter(query)
 
 # =============================================================================
+class RLPWeeklyAvailabilityFilter(S3OptionsFilter):
+    """
+        Options filter with custom variable
+        - without this then we parse as a vfilter which clutters error console
+          & is inefficient (including preventing a bigtable optimisation)
+    """
+
+    @classmethod
+    def _variable(cls, selector, operator):
+
+        return super()._variable("$$weekly", operator)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def apply_filter(resource, get_vars):
+        """
+            Include volunteers who have marked themselves available on
+            the selected days of week, or have not chosen any days
+        """
+
+        days, matchall = get_vars.get("$$weekly__anyof"), False
+        if not days:
+            days, matchall = get_vars.get("$$weekly__contains"), True
+
+        if days:
+            days = [int(d) for d in days.split(",") if d.isdigit()]
+            weekly = sum(2**d for d in days) if days else 0b1111111
+            if matchall:
+                subset = [i for i in range(weekly, 128) if (i & weekly) == weekly]
+                query = FS("availability.weekly").belongs(subset)
+            else:
+                subset = [i for i in range(128) if not (i & weekly)]
+                query = ~(FS("availability.weekly").belongs(subset))
+            resource.add_filter(query)
+
+# =============================================================================
 class RLPDelegatedPersonRepresent(S3Represent):
 
     def __init__(self, show_link=True, linkto=None):

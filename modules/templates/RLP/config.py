@@ -1464,12 +1464,14 @@ def config(settings):
 
                 list_title = T("Volunteers")
                 from .helpers import RLPAvailabilityFilter, \
-                                        RLPAvailabilitySiteFilter, \
-                                        rlp_deployment_sites
+                                     RLPAvailabilitySiteFilter, \
+                                     RLPWeeklyAvailabilityFilter, \
+                                     rlp_deployment_sites
                 if not record:
                     # Apply custom filters
                     RLPAvailabilityFilter.apply_filter(resource, get_vars)
                     RLPAvailabilitySiteFilter.apply_filter(resource, get_vars)
+                    RLPWeeklyAvailabilityFilter.apply_filter(resource, get_vars)
 
                     # Ongoing deployments as component
                     s3db.add_components("pr_person",
@@ -1577,25 +1579,28 @@ def config(settings):
                         S3LocationFilter("current_address.location_id",
                                          label = T("Place of Residence"),
                                          levels = ("L2", "L3"),
+                                         bigtable = True,
+                                         translate = False,
                                          ),
                         RLPAvailabilityFilter("delegation.date",
                                               label = T("Available"),
                                               #hide_time = True,
                                               ),
-                        S3OptionsFilter("availability.days_of_week",
-                                        label = T("On Weekdays"),
-                                        options = OrderedDict((
-                                                    (1, T("Mon##weekday")),
-                                                    (2, T("Tue##weekday")),
-                                                    (3, T("Wed##weekday")),
-                                                    (4, T("Thu##weekday")),
-                                                    (5, T("Fri##weekday")),
-                                                    (6, T("Sat##weekday")),
-                                                    (0, T("Sun##weekday")),
-                                                    )),
-                                        cols = 7,
-                                        sort = False,
-                                        ),
+                        RLPWeeklyAvailabilityFilter("availability.weekly",
+                                                    label = T("On Weekdays"),
+                                                    options = OrderedDict((
+                                                                (1, T("Mon##weekday")),
+                                                                (2, T("Tue##weekday")),
+                                                                (3, T("Wed##weekday")),
+                                                                (4, T("Thu##weekday")),
+                                                                (5, T("Fri##weekday")),
+                                                                (6, T("Sat##weekday")),
+                                                                (0, T("Sun##weekday")),
+                                                                )),
+                                                    cols = 7,
+                                                    anyall = True,
+                                                    sort = False,
+                                                    ),
                         RLPAvailabilitySiteFilter("availability_site.site_id",
                                                   label = T("Possible Deployment Sites"),
                                                   options = lambda: rlp_deployment_sites(managed_orgs=True),

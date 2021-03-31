@@ -2348,6 +2348,11 @@ class S3OptionsFilter(S3FilterWidget):
         @keyword size: maximum size of multi-letter options groups
         @keyword help_field: field in the referenced table to display on
                              hovering over a foreign key option
+
+        ** special purpose / custom filters:
+
+        @keyword anyall: use user-selectable any/all alternatives even
+                         if field is not a list-type
     """
 
     _class = "options-filter"
@@ -2383,7 +2388,7 @@ class S3OptionsFilter(S3FilterWidget):
         # Any-All-Option : for many-to-many fields the user can
         # search for records containing all the options or any
         # of the options:
-        if len(options) > 1 and ftype[:4] == "list":
+        if len(options) > 1 and (ftype[:4] == "list" or opts_get("anyall")):
             operator = opts_get("operator", None)
             if operator:
                 # Fixed operator

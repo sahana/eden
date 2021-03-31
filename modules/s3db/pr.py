@@ -5041,6 +5041,13 @@ class PRAvailabilityModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
+                     # Bitmap alternative for the former
+                     # - better scalability with filters, but
+                     # - currently no standard widget or filter widget
+                     Field("weekly", "integer",
+                           readable = False,
+                           writable = False,
+                           ),
                      #s3_date("start_date",
                      #        label = T("Start Date"),
                      #        ),
@@ -5249,7 +5256,9 @@ class PRAvailabilityModel(S3Model):
                 # Without rules, the person is available on all days
                 dow = all_week
 
-            data = {"days_of_week": sorted(list(dow))}
+            data = {"days_of_week": sorted(list(dow)),
+                    "weekly": sum(2**d for d in dow),
+                    }
 
             # If the person has a user account, make that account the record owner
             user_id = current.auth.s3_get_user_id(person_id = availability["person_id"])
