@@ -9,11 +9,11 @@
 
 from collections import OrderedDict
 
-from gluon import current, URL, A, B, DIV, TAG, \
+from gluon import current, URL, A, DIV, TAG, \
                   IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_NOT_EMPTY
 from gluon.storage import Storage
 
-from s3 import FS, IS_FLOAT_AMOUNT, IS_NOT_ONE_OF, IS_ONE_OF, S3Represent, s3_str
+from s3 import FS, IS_FLOAT_AMOUNT, IS_ONE_OF, S3Represent, s3_str
 from s3dal import original_tablename
 
 from .rlpgeonames import rlp_GeoNames
@@ -2805,7 +2805,7 @@ def config(settings):
             # User must be either SUPPLY_COORDINATOR or ORG_ADMIN of a
             # requester organisation to access this controller
             if not is_supply_coordinator:
-                from .helpers import get_managed_requester_orgs
+                from .requests import get_managed_requester_orgs
                 requester_orgs = get_managed_requester_orgs(cache=False)
                 if not requester_orgs:
                     r.unauthorised()
@@ -2864,6 +2864,8 @@ def config(settings):
                             field.writable = False
                         elif not sites:
                             resource.configure(insertable = False)
+                    else:
+                        resource.configure(insertable = False)
 
                     # Requester is always the current user
                     # => set as default and make r/o

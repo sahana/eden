@@ -9,7 +9,8 @@ except ImportError:
     pass
 import s3menus as default
 
-from .helpers import get_stats_projects, get_managed_requester_orgs
+from .helpers import get_stats_projects
+from .requests import get_managed_requester_orgs
 
 # =============================================================================
 class S3MainMenu(default.S3MainMenu):
@@ -375,7 +376,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         return M()(
                 M("Orders##delivery", c="req", f="req", vars={"type": 1})(
-                    M("Create", m="create", vars={"type": 1}),
+                    M("Create", m="create", vars={"type": 1}, check=is_supply_requester),
                     ),
                 M("Shipment##process", c="inv", f="send", restrict="SUPPLY_COORDINATOR"),
                 M("Deliveries", "inv", "recv", check=is_supply_requester),

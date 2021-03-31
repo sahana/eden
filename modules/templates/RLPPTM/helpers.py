@@ -373,45 +373,6 @@ def get_stats_projects():
     return [row.project_id for row in rows]
 
 # -----------------------------------------------------------------------------
-def get_managed_requester_orgs(cache=True):
-    """
-        Get a list of organisations managed by the current user (as ORG_ADMIN)
-        that have the REQUESTER-tag, i.e. can order equipment
-
-        @param cache: cache the result
-
-        @returns: list of organisation IDs
-    """
-
-    db = current.db
-
-    auth = current.auth
-    s3db = current.s3db
-
-    organisation_ids = None
-
-    user = auth.user
-    ORG_ADMIN = auth.get_system_roles().ORG_ADMIN
-    if user and ORG_ADMIN in user.realms:
-        realms = user.realms.get(ORG_ADMIN)
-        if realms:
-            otable = s3db.org_organisation
-            ttable = s3db.org_organisation_tag
-            join = ttable.on((ttable.organisation_id == otable.id) & \
-                                (ttable.tag == "REQUESTER") & \
-                                (ttable.value == "Y") & \
-                                (ttable.deleted == False))
-            query = otable.pe_id.belongs(realms)
-            rows = db(query).select(otable.id,
-                                    cache = s3db.cache if cache else None,
-                                    join = join,
-                                    )
-            if rows:
-                organisation_ids = list(set(row.id for row in rows))
-
-    return organisation_ids
-
-# -----------------------------------------------------------------------------
 def can_cancel_debit(debit):
     """
         Check whether the current user is entitled to cancel a certain

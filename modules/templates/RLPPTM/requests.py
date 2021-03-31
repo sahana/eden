@@ -13,6 +13,223 @@ from gluon import current, redirect, URL, A, B
 from s3 import S3Method, S3Represent, s3_str
 
 # =============================================================================
+def req_filter_widgets():
+    """
+        Filter widgets for requests
+
+        @returns: list of filter widgets
+    """
+
+    T = current.T
+
+    from s3 import S3DateFilter, \
+                   S3LocationFilter, \
+                   S3OptionsFilter, \
+                   S3TextFilter, \
+                   s3_get_filter_opts
+
+    s3db = current.s3db
+
+    req_status_opts = OrderedDict(sorted(s3db.req_status_opts.items(),
+                                         key = lambda i: i[0],
+                                         ))
+
+    filter_widgets = [
+        S3TextFilter(["req_ref"],
+                     label = T("Order No."),
+                     ),
+        S3DateFilter("date"),
+        S3OptionsFilter("transit_status",
+                        cols = 3,
+                        options = req_status_opts,
+                        sort = False,
+                        ),
+        S3OptionsFilter("fulfil_status",
+                        cols = 3,
+                        hidden = True,
+                        options = req_status_opts,
+                        sort = False,
+                        ),
+        S3OptionsFilter("req_item.item_id",
+                        hidden = True,
+                        options = lambda: s3_get_filter_opts("supply_item"),
+                        ),
+        ]
+
+    if current.auth.s3_has_role("SUPPLY_COORDINATOR"):
+
+        coordinator_filters = [
+            S3LocationFilter("site_id$location_id",
+                             levels = ["L3", "L4"],
+                             ),
+            S3TextFilter("site_id$location_id$addr_postcode",
+                         label = T("Postcode"),
+                         ),
+            S3OptionsFilter("site_id",
+                            hidden = True
+                            ),
+            ]
+        filter_widgets[2:2] = coordinator_filters
+
+    return filter_widgets
+
+# -----------------------------------------------------------------------------
+def send_filter_widgets():
+    """
+        Filter widgets for outgoing shipments
+
+        @returns: list of filter widgets
+    """
+
+    T = current.T
+
+    from s3 import S3DateFilter, \
+                   S3LocationFilter, \
+                   S3OptionsFilter, \
+                   S3TextFilter, \
+                   s3_get_filter_opts
+
+    s3db = current.s3db
+
+    send_status_opts = OrderedDict(sorted(s3db.inv_shipment_status_labels.items(),
+                                          key = lambda i: i[0],
+                                          ))
+    # We don't currently use these statuses
+    from s3db.inv import SHIP_STATUS_CANCEL, SHIP_STATUS_RETURNING
+    del send_status_opts[SHIP_STATUS_CANCEL]
+    del send_status_opts[SHIP_STATUS_RETURNING]
+
+    filter_widgets = [
+        S3TextFilter(["req_ref",
+                      #"send_ref",
+                      ],
+                     label = T("Search"),
+                     ),
+        S3DateFilter("date"),
+        S3OptionsFilter("status",
+                        cols = 3,
+                        options = send_status_opts,
+                        sort = False,
+                        ),
+        S3OptionsFilter("track_item.item_id",
+                        hidden = True,
+                        options = lambda: s3_get_filter_opts("supply_item"),
+                        ),
+        ]
+
+    if current.auth.s3_has_role("SUPPLY_COORDINATOR"):
+
+        coordinator_filters = [
+            S3OptionsFilter("to_site_id",
+                            ),
+            S3LocationFilter("to_site_id$location_id",
+                             levels = ["L3", "L4"],
+                             hidden = True
+                             ),
+            S3TextFilter("to_site_id$location_id$addr_postcode",
+                         label = T("Postcode"),
+                         hidden = True
+                         ),
+            ]
+        filter_widgets[3:3] = coordinator_filters
+
+    return filter_widgets
+
+# -----------------------------------------------------------------------------
+def recv_filter_widgets():
+    """
+        Filter widgets for incoming shipments
+
+        @returns: list of filter widgets
+    """
+
+    T = current.T
+
+    from s3 import S3DateFilter, \
+                   S3OptionsFilter, \
+                   S3TextFilter, \
+                   s3_get_filter_opts
+
+    s3db = current.s3db
+
+    recv_status_opts = OrderedDict(sorted(s3db.inv_shipment_status_labels.items(),
+                                          key = lambda i: i[0],
+                                          ))
+    # We don't currently use these statuses
+    from s3db.inv import SHIP_STATUS_CANCEL, SHIP_STATUS_RETURNING
+    del recv_status_opts[SHIP_STATUS_CANCEL]
+    del recv_status_opts[SHIP_STATUS_RETURNING]
+
+    filter_widgets = [
+        S3TextFilter(["req_ref",
+                      #"send_ref",
+                      ],
+                     label = T("Search"),
+                     ),
+        S3OptionsFilter("status",
+                        cols = 3,
+                        options = recv_status_opts,
+                        sort = False,
+                        ),
+        S3DateFilter("date",
+                     hidden = True,
+                     ),
+        S3OptionsFilter("track_item.item_id",
+                        hidden = True,
+                        options = lambda: s3_get_filter_opts("supply_item"),
+                        ),
+        ]
+
+    return filter_widgets
+
+# -----------------------------------------------------------------------------
+def get_managed_requester_orgs(cache=True):
+    """
+        Get a list of organisations managed by the current user (as ORG_ADMIN)
+        that have the REQUESTER-tag, i.e. can order equipment
+
+        @param cache: cache the result
+
+        @returns: list of organisation IDs
+    """
+
+    db = current.db
+
+    auth = current.auth
+    s3db = current.s3db
+
+    organisation_ids = None
+
+    user = auth.user
+    ORG_ADMIN = auth.get_system_roles().ORG_ADMIN
+    if user and ORG_ADMIN in user.realms:
+        realms = user.realms.get(ORG_ADMIN)
+        if realms:
+            from .config import TESTSTATIONS
+            gtable = s3db.org_group
+            mtable = s3db.org_group_membership
+            otable = s3db.org_organisation
+            ttable = s3db.org_organisation_tag
+            join = [mtable.on((mtable.organisation_id == otable.id) & \
+                              (mtable.deleted == False) & \
+                              (gtable.id == mtable.group_id) & \
+                              (gtable.name == TESTSTATIONS)),
+                    ttable.on((ttable.organisation_id == otable.id) & \
+                              (ttable.tag == "REQUESTER") & \
+                              (ttable.value == "Y") & \
+                              (ttable.deleted == False))
+                    ]
+            query = otable.pe_id.belongs(realms)
+            rows = db(query).select(otable.id,
+                                    cache = s3db.cache if cache else None,
+                                    join = join,
+                                    )
+            if rows:
+                organisation_ids = list(set(row.id for row in rows))
+
+    return organisation_ids
+
+# =============================================================================
 class RegisterShipment(S3Method):
     """
         RESTful method to register a shipment for a request
@@ -111,176 +328,6 @@ class RegisterShipment(S3Method):
         # Redirect to the shipment
         # TODO hint to verify the shipment before actually sending it
         redirect(URL(c="inv", f="send", args = [shipment_id]))
-
-# =============================================================================
-def req_filter_widgets():
-    """
-        Filter widgets for requests
-
-        @returns: list of filter widgets
-    """
-
-    T = current.T
-
-    from s3 import S3DateFilter, \
-                   S3LocationFilter, \
-                   S3OptionsFilter, \
-                   S3TextFilter, \
-                   s3_get_filter_opts
-
-    s3db = current.s3db
-
-    req_status_opts = OrderedDict(sorted(s3db.req_status_opts.items(),
-                                         key = lambda i: i[0],
-                                         ))
-
-    filter_widgets = [
-        S3TextFilter(["req_ref"],
-                     label = T("Order No."),
-                     ),
-        S3DateFilter("date"),
-        S3OptionsFilter("transit_status",
-                        cols = 3,
-                        options = req_status_opts,
-                        sort = False,
-                        ),
-        S3OptionsFilter("fulfil_status",
-                        cols = 3,
-                        hidden = True,
-                        options = req_status_opts,
-                        sort = False,
-                        ),
-        S3OptionsFilter("req_item.item_id",
-                        hidden = True,
-                        options = lambda: s3_get_filter_opts("supply_item"),
-                        ),
-        ]
-
-    if current.auth.s3_has_role("SUPPLY_COORDINATOR"):
-
-        coordinator_filters = [
-            S3LocationFilter("site_id$location_id",
-                             levels = ["L3", "L4"],
-                             ),
-            S3TextFilter("site_id$location_id$addr_postcode",
-                         label = T("Postcode"),
-                         ),
-            S3OptionsFilter("site_id",
-                            hidden = True
-                            ),
-            ]
-        filter_widgets[2:2] = coordinator_filters
-
-    return filter_widgets
-
-# =============================================================================
-def send_filter_widgets():
-    """
-        Filter widgets for outgoing shipments
-
-        @returns: list of filter widgets
-    """
-
-    T = current.T
-
-    from s3 import S3DateFilter, \
-                   S3LocationFilter, \
-                   S3OptionsFilter, \
-                   S3TextFilter, \
-                   s3_get_filter_opts
-
-    s3db = current.s3db
-
-    send_status_opts = OrderedDict(sorted(s3db.inv_shipment_status_labels.items(),
-                                          key = lambda i: i[0],
-                                          ))
-    # We don't currently use these statuses
-    from s3db.inv import SHIP_STATUS_CANCEL, SHIP_STATUS_RETURNING
-    del send_status_opts[SHIP_STATUS_CANCEL]
-    del send_status_opts[SHIP_STATUS_RETURNING]
-
-    filter_widgets = [
-        S3TextFilter(["req_ref",
-                      #"send_ref",
-                      ],
-                     label = T("Search"),
-                     ),
-        S3DateFilter("date"),
-        S3OptionsFilter("status",
-                        cols = 3,
-                        options = send_status_opts,
-                        sort = False,
-                        ),
-        S3OptionsFilter("track_item.item_id",
-                        hidden = True,
-                        options = lambda: s3_get_filter_opts("supply_item"),
-                        ),
-        ]
-
-    if current.auth.s3_has_role("SUPPLY_COORDINATOR"):
-
-        coordinator_filters = [
-            S3OptionsFilter("to_site_id",
-                            ),
-            S3LocationFilter("to_site_id$location_id",
-                             levels = ["L3", "L4"],
-                             hidden = True
-                             ),
-            S3TextFilter("to_site_id$location_id$addr_postcode",
-                         label = T("Postcode"),
-                         hidden = True
-                         ),
-            ]
-        filter_widgets[3:3] = coordinator_filters
-
-    return filter_widgets
-
-# =============================================================================
-def recv_filter_widgets():
-    """
-        Filter widgets for incoming shipments
-
-        @returns: list of filter widgets
-    """
-
-    T = current.T
-
-    from s3 import S3DateFilter, \
-                   S3OptionsFilter, \
-                   S3TextFilter, \
-                   s3_get_filter_opts
-
-    s3db = current.s3db
-
-    recv_status_opts = OrderedDict(sorted(s3db.inv_shipment_status_labels.items(),
-                                          key = lambda i: i[0],
-                                          ))
-    # We don't currently use these statuses
-    from s3db.inv import SHIP_STATUS_CANCEL, SHIP_STATUS_RETURNING
-    del recv_status_opts[SHIP_STATUS_CANCEL]
-    del recv_status_opts[SHIP_STATUS_RETURNING]
-
-    filter_widgets = [
-        S3TextFilter(["req_ref",
-                      #"send_ref",
-                      ],
-                     label = T("Search"),
-                     ),
-        S3OptionsFilter("status",
-                        cols = 3,
-                        options = recv_status_opts,
-                        sort = False,
-                        ),
-        S3DateFilter("date",
-                     hidden = True,
-                     ),
-        S3OptionsFilter("track_item.item_id",
-                        hidden = True,
-                        options = lambda: s3_get_filter_opts("supply_item"),
-                        ),
-        ]
-
-    return filter_widgets
 
 # =============================================================================
 class ShipmentCodeRepresent(S3Represent):
