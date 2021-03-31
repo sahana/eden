@@ -2046,18 +2046,19 @@ class ocert(S3CustomController):
         to perform certain actions in an external application
 
         Process similar to OAuth:
-            - external app presents the user with a link to Sahana
-              containing a purpose key and a session token, e.g.
+            - external app presents the user a link/redirect to a
+              Sahana URL containing a purpose code and a one-off token, e.g.
               /default/index/ocert?p=XY&t=0123456789ABCDEF
             - user follows the link, and is asked by Sahana to login
             - once logged-in, Sahana verifies that the user is OrgAdmin
               for an organisation that qualifies for the specified purpose,
               and if it does, redirects the user back to a URL in the
-              external app, with a verification hash as URL parameter
+              external app, with a verification hash ("certificate") as
+              a URL parameter
             - the external app requests the OrgID from the user, and
-              generates a hash of the session token with that ID, and
-              if both hashes match, access to the intended function is
-              granted
+              generates a hash of the that OrgID with an appkey and the
+              session token, and if both hashes match, access to the
+              intended function is granted
     """
 
     def __call__(self):
@@ -2068,7 +2069,7 @@ class ocert(S3CustomController):
 
         session = current.session
 
-        # Handle purpose key and token in URL
+        # Handle purpose code and token in URL
         get_vars = current.request.get_vars
         purpose = get_vars.get("p")
         token = get_vars.get("t")
@@ -2083,7 +2084,7 @@ class ocert(S3CustomController):
         if not isinstance(ocert, dict):
             self._error("Function not available")
 
-        # Read key from session, extract purpose and token
+        # Read key from session, extract purpose code and token
         keys = session.s3.get("ocert")
         try:
             purpose, token = keys.get("p"), keys.get("t")
@@ -2115,7 +2116,7 @@ class ocert(S3CustomController):
 
             # Must be ORG_ADMIN
             if not auth.s3_has_role("ORG_ADMIN"):
-                self._error("Insufficient Permissions")
+                self._error("Insufficient Privileges")
 
             # Must manage at least one organisation
             managed_orgs = None
@@ -2183,14 +2184,16 @@ class ocert(S3CustomController):
     def _vhash(organisation_id, purpose, token, appkey):
         """
             Verify the qualification of the organisation for the purpose,
-            and generate a verification hash (=encrypt the token with the
-            organisation's OrgID tag) if successful
+            and generate a verification hash (=encrypt the OrgID with the
+            appkey, salted with the token) if successful
 
             @param organisation_id: the organisation_id
-            @param purpose: the purpose key
+            @param purpose: the purpose code
             @param token: the token
+            @param appkey: the appkey
 
-            @returns: the encrypted token
+            @returns: the encrypted certificate if the organisation
+                      qualifies, otherwise None
         """
 
         if not all((purpose, token, appkey)):
