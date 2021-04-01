@@ -1791,6 +1791,8 @@ def config(settings):
             S3LocationFilter("location_id",
                              #label = T("Location"),
                              levels = ("L1", "L2", "L3", "L4"),
+                             bigtable = True,
+                             translate = False,
                              ),
             ]
 

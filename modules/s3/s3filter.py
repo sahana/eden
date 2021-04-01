@@ -1752,12 +1752,24 @@ class S3LocationFilter(S3FilterWidget):
     @staticmethod
     def get_lx_ancestors(levels, resource, selector=None, location_ids=None, path=False):
         """
-            Look up the immediate Lx ancestors of relevant levels
-            for all locations referenced by selector
+            Look up the immediate Lx ancestors for all locations referenced
+            by selector
 
             @param levels: the relevant Lx levels, tuple of "L1", "L2" etc
             @param resource: the master resource
             @param selector: the selector for the location reference
+            @param location_ids: use these location_ids rather than looking them
+                                 up from the resource
+            @param path: include the Lx path in the result rows, to lookup
+                         local names for options (which is done via IDs in
+                         the path)
+
+            NB: path=True potentially requires additional iterations in order
+                to reduce the paths to only relevant Lx levels (so that fewer
+                local names would be extracted) - which though limits the
+                performance gain if there actually are only few or no translations.
+                If that becomes a problem somewhere, we can make the iteration
+                mode controllable by a separate parameter.
 
             @returns: gis_location Rows, or empty list
         """
@@ -1804,9 +1816,13 @@ class S3LocationFilter(S3FilterWidget):
                 query = ltable.id.belongs(location_ids)
                 join = None
 
-            # Extract all target locations resp. parents which
-            # are Lx of relevant levels
-            relevant_lx = (ltable.level.belongs(levels))
+            # Extract all target locations resp. parents which are Lx
+            if path:
+                #...of relevant levels
+                relevant_lx = (ltable.level.belongs(levels))
+            else:
+                #...of any level
+                relevant_lx = (ltable.level != None)
             lx = db(query & relevant_lx).select(join = join,
                                                 groupby = ltable.id,
                                                 *fields
@@ -1826,8 +1842,12 @@ class S3LocationFilter(S3FilterWidget):
                     # No more parents to look up
                     break
             else:
-                # ...all locations which are not Lx or not of relevant levels
-                query &= ((ltable.level == None) | (~(ltable.level.belongs(levels))))
+                # ...all locations which are not Lx
+                if path:
+                    # ...or not of relevant levels
+                    query &= ((ltable.level == None) | (~(ltable.level.belongs(levels))))
+                else:
+                    query &= (ltable.level == None)
 
             # From subset, just extract the parent ID
             query &= (ltable.parent != None)
