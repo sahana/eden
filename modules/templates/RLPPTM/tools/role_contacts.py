@@ -17,8 +17,9 @@ from templates.RLPPTM.config import SCHOOLS, TESTSTATIONS
 
 org_group = TESTSTATIONS
 project = "COVID-19 Tests für Alle"
+tag = ("REQUESTER", "Y")
 include = "ORG_ADMIN"
-exclude = "VOUCHER_ISSUER"
+exclude = None
 
 # Override auth (disables all permission checks)
 auth.override = True
@@ -46,6 +47,7 @@ def get_role_contacts(org_group, include=None, exclude=None, project=None):
     otable = s3db.org_organisation
     ptable = s3db.project_project
     ltable = s3db.project_organisation
+    ttable = s3db.org_organisation_tag
     ogtable = s3db.org_group
     gmtable = s3db.org_group_membership
 
@@ -57,9 +59,15 @@ def get_role_contacts(org_group, include=None, exclude=None, project=None):
     if project:
         join.extend([ltable.on((ltable.organisation_id == otable.id) & \
                                (ltable.deleted == False)),
-                    ptable.on((ptable.id == ltable.project_id) & \
-                              (ptable.name == project)),
-                    ])
+                     ptable.on((ptable.id == ltable.project_id) & \
+                               (ptable.name == project)),
+                     ])
+    if tag:
+        join.extend([ttable.on((ttable.organisation_id == otable.id) & \
+                               (ttable.tag == tag[0]) & \
+                               (ttable.value == tag[1]) & \
+                               (ttable.deleted == False))
+                     ])
     query = (otable.deleted == False)
     rows = db(query).select(otable.name,
                             otable.pe_id,
