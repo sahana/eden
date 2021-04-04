@@ -108,11 +108,11 @@ def person():
 
     # Organisation Dependent Fields
     # @ToDo: Deprecate (only used by IFRC template)
-    set_org_dependent_field = settings.set_org_dependent_field
-    set_org_dependent_field("pr_person_details", "father_name")
-    set_org_dependent_field("pr_person_details", "mother_name")
-    set_org_dependent_field("pr_person_details", "affiliations")
-    set_org_dependent_field("pr_person_details", "company")
+    #set_org_dependent_field = settings.set_org_dependent_field
+    #set_org_dependent_field("pr_person_details", "father_name")
+    #set_org_dependent_field("pr_person_details", "mother_name")
+    #set_org_dependent_field("pr_person_details", "affiliations")
+    #set_org_dependent_field("pr_person_details", "company")
 
     def prep(r):
         if r.representation == "json" and \

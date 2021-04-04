@@ -62,7 +62,7 @@ def shelter_unit():
             record_id = r.id
             table = s3db.cr_shelter_unit
             row = db(table.id == record_id).select(table.shelter_id,
-                                                   limitby=(0, 1)
+                                                   limitby = (0, 1)
                                                    ).first()
             shelter_id = row.shelter_id
             s3db.configure("cr_shelter_unit",

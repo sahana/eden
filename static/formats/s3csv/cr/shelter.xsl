@@ -12,7 +12,7 @@
          Organisation...................org_organisation
          Branch.........................org_organisation[_branch]
          Type...........................shelter_type_id.name
-         #Service........................shelter_service_id.name
+         Service........................shelter_service_id.name (currently just supports 1)
          Country........................optional.....country
          L1.............................optional.....L1
          L2.............................optional.....L2
@@ -108,6 +108,7 @@
     <xsl:key name="branch" match="row"
              use="concat(col[@field='Organisation'], '/', col[@field='Branch'])"/>
     <xsl:key name="type" match="row" use="col[@field='Type']"/>
+    <xsl:key name="service" match="row" use="col[@field='Service']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -193,6 +194,11 @@
                 <xsl:call-template name="Type"/>
             </xsl:for-each>
 
+            <!-- Services -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('service', col[@field='Service'])[1])]">
+                <xsl:call-template name="Service"/>
+            </xsl:for-each>
+
             <!-- Process all table rows for shelter records -->
             <xsl:apply-templates select="table/row"/>
         </s3xml>
@@ -206,6 +212,7 @@
         <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
         <xsl:variable name="ShelterName" select="col[@field='Name']/text()"/>
         <xsl:variable name="Type" select="col[@field='Type']/text()"/>
+        <xsl:variable name="Service" select="col[@field='Service']/text()"/>
         <xsl:variable name="Status" select="col[@field='Status']/text()"/>
         <xsl:variable name="Capacity" select="col[@field='Capacity']/text()"/>
 
@@ -263,6 +270,17 @@
                     <xsl:value-of select="$Type"/>
                 </xsl:attribute>
             </reference>
+
+            <!-- Link to Shelter Service -->
+            <xsl:if test="$Service!=''">
+                <resource name="cr_shelter_service_shelter">
+                    <reference field="service_id" resource="cr_shelter_service">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$Service"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
 
             <!-- L10n -->
             <xsl:for-each select="col[starts-with(@field, 'Name L10n')]">
@@ -339,6 +357,19 @@
                 <xsl:value-of select="$type"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$type"/></data>
+       </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Service">
+        <xsl:variable name="service" select="col[@field='Service']/text()"/>
+
+        <resource name="cr_shelter_service">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$service"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$service"/></data>
        </resource>
 
     </xsl:template>

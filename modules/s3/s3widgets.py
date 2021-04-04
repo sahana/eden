@@ -5076,6 +5076,8 @@ class S3LocationSelector(S3Selector):
         self.error_message = error_message
         self._represent = represent
 
+        self.field = Storage() # validate in inline forms doesn't go through call() 1st
+
     # -------------------------------------------------------------------------
     @property
     def levels(self):
