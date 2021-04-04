@@ -1359,7 +1359,7 @@ class FinVoucherModel(S3Model):
                                             application_name = application,
                                             start_time = start,
                                             stop_time = None,
-                                            timeout = 600,
+                                            timeout = 1800,
                                             repeats = 1,
                                             )
                 if task:
