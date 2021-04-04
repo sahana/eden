@@ -1156,12 +1156,12 @@ class PRPersonModel(S3Model):
                                              "autodelete": False,
                                              },
 
-                       #pr_person_person = "parent_id",
-                       pr_person = {"link": "pr_person_person",
-                                    "joinby": "parent_id",
-                                    "key": "person_id",
-                                    "actuate": "replace",
-                                    },
+                       pr_person_person = "parent_id",
+                       #pr_person = {"link": "pr_person_person",
+                       #             "joinby": "parent_id",
+                       #             "key": "person_id",
+                       #             "actuate": "replace",
+                       #             },
 
                        # Group Memberships
                        pr_group_membership = "person_id",
