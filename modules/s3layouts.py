@@ -475,16 +475,16 @@ class S3PopupLink(S3NavigationItem):
     """
 
     def __init__(self,
-                 label=None,
-                 c=None,
-                 f=None,
-                 t=None,
-                 m="create",
-                 args=None,
-                 vars=None,
-                 info=None,
-                 title=None,
-                 tooltip=None,
+                 label = None,
+                 c = None,
+                 f = None,
+                 t = None,
+                 m = "create",
+                 args = None,
+                 vars = None,
+                 info = None,
+                 title = None,
+                 tooltip = None,
                  ):
         """
             Constructor
@@ -544,17 +544,17 @@ class S3PopupLink(S3NavigationItem):
             label = item.label
 
         popup_link = A(label,
-                       _href=item.url(format="popup"),
-                       _class="s3_add_resource_link",
-                       _id="%s_add" % item.function,
-                       _target="top",
-                       _title=item.opts.info,
+                       _href = item.url(format="popup"),
+                       _class = "s3_add_resource_link",
+                       _id = "%s_add" % item.function,
+                       _target = "top",
+                       _title = item.opts.info,
                        )
 
         tooltip = item.opts.tooltip
         if tooltip is not None:
-            ttip = DIV(_class="tooltip",
-                       _title="%s|%s" % (item.opts.title, tooltip))
+            ttip = DIV(_class = "tooltip",
+                       _title = "%s|%s" % (item.opts.title, tooltip))
         else:
             ttip = ""
 
@@ -569,11 +569,11 @@ class S3PopupLink(S3NavigationItem):
             return None
 
         popup_link = A(item.label,
-                       _href=item.url(format="popup"),
-                       _class="s3_add_resource_link action-lnk",
-                       _id="%s_%s_add" % (item.vars["caller"], item.function),
-                       _target="top",
-                       _title=item.opts.info,
+                       _href = item.url(format="popup"),
+                       _class = "s3_add_resource_link action-lnk",
+                       _id = "%s_%s_add" % (item.vars["caller"], item.function),
+                       _target = "top",
+                       _title = item.opts.info,
                        )
 
         return DIV(popup_link, _class="s3_inline_add_resource_link")

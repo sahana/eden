@@ -42,8 +42,9 @@
             }
         };
 
-        var urlParts = url.split('?');
-        urlParts = [urlParts[0]].concat(urlParts[1].split('#'));
+        var urlParts = url.split('?'),
+            postQuestion = urlParts[1] || '';
+        urlParts = [urlParts[0]].concat(postQuestion.split('#'));
 
         var query = urlParts[1],
             key,

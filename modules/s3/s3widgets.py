@@ -985,13 +985,14 @@ class S3AddPersonWidget(FormWidget):
                                 )
 
                 if fname == "organisation_id":
-                    comment= None
-                    #comment = S3PopupLink(c = "org",
-                    #                      f = "organisation",
-                    #                      label = ADD_ORGANIZATION,
-                    #                      title = ADD_ORGANIZATION,
-                    #                      tooltip = tooltip,
-                    #                      )
+                    from s3layouts import S3PopupLink
+                    comment = S3PopupLink(c = "org",
+                                          f = "organisation",
+                                          vars = {"prefix": "hrm",
+                                                  "parent": "human_resource",
+                                                  "child": "organisation_id",
+                                                  },
+                                          )
                 else:
                     comment = None
             else:

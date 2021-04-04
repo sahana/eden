@@ -1535,7 +1535,7 @@ def config(settings):
         # Redefine as multiple=False
         s3db.add_components("pr_person",
                             pr_person = {"name": "nok",
-                                         "link": "pr_person_person",
+                                         "link": "pr_person_relation",
                                          "joinby": "parent_id",
                                          "key": "person_id",
                                          "actuate": "replace",

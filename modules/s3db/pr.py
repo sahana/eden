@@ -30,7 +30,7 @@
 __all__ = (# PR Base Entities
            "PRPersonEntityModel",
            "PRPersonModel",
-           "PRPersonPersonModel",
+           "PRPersonRelationModel",
            "PRGroupModel",
            "PRForumModel",
 
@@ -1156,8 +1156,8 @@ class PRPersonModel(S3Model):
                                              "autodelete": False,
                                              },
 
-                       pr_person_person = "parent_id",
-                       #pr_person = {"link": "pr_person_person",
+                       pr_person_relation = "parent_id",
+                       #pr_person = {"link": "pr_person_relation",
                        #             "joinby": "parent_id",
                        #             "key": "person_id",
                        #             "actuate": "replace",
@@ -2387,14 +2387,14 @@ class PRPersonModel(S3Model):
         return output
 
 # =============================================================================
-class PRPersonPersonModel(S3Model):
+class PRPersonRelationModel(S3Model):
     """
         Link table between Persons & Persons
         - can be used to provide non-hierarchical relationships
         e.g. "Next of Kin" (as used by CumbriaEAC)
     """
 
-    names = ("pr_person_person",)
+    names = ("pr_person_relation",)
 
     def model(self):
 
@@ -2404,7 +2404,7 @@ class PRPersonPersonModel(S3Model):
         # ---------------------------------------------------------------------
         # Link table between Persons & Persons
         #
-        tablename = "pr_person_person"
+        tablename = "pr_person_relation"
         self.define_table(tablename,
                           person_id("parent_id",
                                     empty = False,
