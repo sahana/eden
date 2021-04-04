@@ -206,6 +206,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #M("Types", f="organisation_type"),
                         #M("Job Titles", c="hrm", f="job_title"),
                         ),
+                    M("Shelters", c="cr", f="shelter")(
+                        M("Types", f="shelter_type"),
+                        M("Services", f="shelter_service"),
+                        ),
                     #M("Time Slots", c="pr", f="slot")(),
                     #M("Volunteer Offers", c="hrm", f="skill")(),
                     #M("CMS", c="cms", f="post")(
