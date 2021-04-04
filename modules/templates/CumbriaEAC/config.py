@@ -594,7 +594,7 @@ def config(settings):
         shelter_status_opts = dict(cr_shelter_status_opts)
         if r.record and r.record.status == 6:
             del shelter_status_opts[1]
-        else:
+        elif r.interactive and not current.auth.override:
             del shelter_status_opts[6]
 
         table = s3db.cr_shelter
