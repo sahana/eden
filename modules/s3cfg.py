@@ -5270,6 +5270,12 @@ class S3Config(Storage):
         """
         return self.pr.get("availability_json_rules", False)
 
+    def get_pr_editable_fields(self):
+        """
+            Fields which are editable in the AddPersonWidget
+        """
+        return self.pr.get("editable_fields", [])
+
     def get_pr_hide_third_gender(self):
         """
             Whether to hide the third gender ("Other")
@@ -5293,15 +5299,13 @@ class S3Config(Storage):
 
     def get_pr_label_fullname(self):
         """
-            Label for the AddPersonWidget2's 'Name' field
+            Label for the AddPersonWidget's 'Name' field
         """
         return self.__lazy("pr", "label_fullname", default="Name")
 
     def get_pr_lookup_duplicates(self):
         """
-            Whether the AddPersonWidget2 does a fuzzy search for duplicates
-
-            NB This setting has no effect with the old AddPersonWidget
+            Whether the AddPersonWidget does a fuzzy search for duplicates
         """
         return self.pr.get("lookup_duplicates", False)
 
@@ -5352,7 +5356,7 @@ class S3Config(Storage):
         """
             Format with which to represent Person Names
 
-            Generally want an option in AddPersonWidget2 to handle the input like this too
+            Generally want an option in AddPersonWidget to handle the input like this too
         """
         return self.__lazy("pr", "name_format", default="%(first_name)s %(middle_name)s %(last_name)s")
 
@@ -5362,19 +5366,9 @@ class S3Config(Storage):
         """
         return self.pr.get("search_shows_hr_details", True)
 
-    def get_pr_select_existing(self):
-        """
-            Whether the AddPersonWidget allows selecting existing PRs
-            - set to True if Persons can be found in multiple contexts
-            - set to False if just a single context
-
-            NB This setting has no effect with the new AddPersonWidget2
-        """
-        return self.pr.get("select_existing", True)
-
     def get_pr_separate_name_fields(self):
         """
-            Whether the AddPersonWidget2 provides separate name fields or not
+            Whether the AddPersonWidget provides separate name fields or not
             Options:
                 False (single field)
                 2 (first/last)

@@ -296,6 +296,9 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Persons
     settings.pr.hide_third_gender = False
+    settings.pr.editable_fields = ["mobile_phone",
+                                   "car",
+                                   ]
 
     # -------------------------------------------------------------------------
     def eac_person_anonymize():
