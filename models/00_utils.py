@@ -241,6 +241,15 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     # Plugin OrgRoleManager when appropriate
     s3base.S3OrgRoleManager.set_method(r)
 
+    # List of methods which can have custom action buttons
+    # (defining here allows postp to add a custom method to the list)
+    s3.action_methods = ("import",
+                         "review",
+                         "approve",
+                         "reject",
+                         "deduplicate",
+                         )
+
     # Execute the request
     output = r(**attr)
 
@@ -326,11 +335,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                             )
                 output.update(add_btn = add_btn)
 
-    elif method not in ("import",
-                        "review",
-                        "approve",
-                        "reject",
-                        "deduplicate"):
+    elif method not in s3.action_methods:
         s3.actions = None
 
     if get_vars.tour:

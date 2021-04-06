@@ -91,27 +91,27 @@ class S3NavigationItem(object):
     # Construction
     #
     def __init__(self,
-                 label=None,
-                 c=None,
-                 f=None,
-                 args=None,
-                 vars=None,
-                 extension=None,
-                 a=None,
-                 r=None,
-                 m=None,
-                 p=None,
-                 t=None,
-                 url=None,
-                 tags=None,
-                 parent=None,
-                 translate=True,
-                 layout=None,
-                 check=None,
-                 restrict=None,
-                 link=True,
-                 mandatory=False,
-                 ltr=False,
+                 label = None,
+                 c = None,
+                 f = None,
+                 args = None,
+                 vars = None,
+                 extension = None,
+                 a = None,
+                 r = None,
+                 m = None,
+                 p = None,
+                 t = None,
+                 url = None,
+                 tags = None,
+                 parent = None,
+                 translate = True,
+                 layout = None,
+                 check = None,
+                 restrict = None,
+                 link = True,
+                 mandatory = False,
+                 ltr = False,
                  **attributes):
         """
             Constructor
@@ -1415,7 +1415,8 @@ class S3ComponentTabs(object):
         if r.component is None:
             # Check whether there is a tab for the current URL method
             for t in tabs:
-                if t.component == r.method:
+                if t.component == r.method or \
+                   t.method == r.method:
                     mtab = True
                     break
 
@@ -1463,6 +1464,11 @@ class S3ComponentTabs(object):
             else:
                 if r.component or not vars_match:
                     here = False
+                if tab.method:
+                    if r.method == tab.method:
+                        here = True
+                    else:
+                        here = False
 
             # HTML class for the tab position
             if here:
@@ -1493,6 +1499,8 @@ class S3ComponentTabs(object):
                 else:
                     if "viewing" not in _vars and record_id:
                         args = [record_id]
+                if tab.method:
+                    args.append(tab.method)
                 _href = URL(function, args=args, vars=_vars)
                 _id = "rheader_tab_%s" % function
 
