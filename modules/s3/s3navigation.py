@@ -1388,7 +1388,9 @@ class S3ComponentTabs(object):
             Constructor
 
             @param tabs: the tabs configuration as list of names or tuples
-                         (label, name)
+                         (label, component or method or function/)
+                         (label, component or method, vars)
+                         (label, component, vars, method)
         """
 
         if not tabs:
@@ -1415,8 +1417,8 @@ class S3ComponentTabs(object):
         if r.component is None:
             # Check whether there is a tab for the current URL method
             for t in tabs:
-                if t.component == r.method or \
-                   t.method == r.method:
+                if t.component == r.method:
+                    # t.component is a method not a component
                     mtab = True
                     break
 
@@ -1464,11 +1466,6 @@ class S3ComponentTabs(object):
             else:
                 if r.component or not vars_match:
                     here = False
-                if tab.method:
-                    if r.method == tab.method:
-                        here = True
-                    else:
-                        here = False
 
             # HTML class for the tab position
             if here:
@@ -1499,8 +1496,6 @@ class S3ComponentTabs(object):
                 else:
                     if "viewing" not in _vars and record_id:
                         args = [record_id]
-                if tab.method:
-                    args.append(tab.method)
                 _href = URL(function, args=args, vars=_vars)
                 _id = "rheader_tab_%s" % function
 
@@ -1593,14 +1588,15 @@ class S3ComponentTab(object):
         """
             Constructor
 
-            @param tab: the component tab configuration as tuple
-                        (label, component_alias, {get_vars}), where the
-                        get_vars dict is optional.
+            @param tab: the component tab configuration as tuple:
+                        (label, component or method or function/)
+                        (label, component or method, vars)
+                        (label, component, vars, method)
         """
 
         # @todo: use component hook label/plural as fallback for title
         #        (see S3Model.add_components)
-        title, component = tab[:2]
+        title, component = tab[:2] # 'component' can be method
 
         self.title = title
 
@@ -1615,6 +1611,7 @@ class S3ComponentTab(object):
             self.function = None
 
         if component:
+            # NB 'component' can be a method
             self.component = component
         else:
             self.component = None
@@ -1628,6 +1625,7 @@ class S3ComponentTab(object):
                 self.native = True if tab_vars["native"] else False
                 del tab_vars["native"]
             if len(tab) > 3:
+                # Component Method
                 self.method = tab[3]
         else:
             self.vars = None

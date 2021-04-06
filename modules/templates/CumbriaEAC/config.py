@@ -475,7 +475,8 @@ def config(settings):
             else:
                 org = ""
                 tabs.insert(1, (T("Next of Kin"), "nok"))
-                tabs.insert(2, (T("Household"), None, {}, "household"))
+                #tabs.insert(2, (T("Household"), None, {}, "household"))
+                tabs.insert(2, (T("Household"), "household"))
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
