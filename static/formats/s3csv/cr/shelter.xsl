@@ -29,6 +29,8 @@
          Capacity Night.................cr_shelter.capacity_night
          Population.....................cr_shelter.population
          Status.........................cr_shelter.status (@ToDo: Populate cr_shelter_status for historical data)
+         Obsolete.......................cr_shelter.obsolete
+         Comments.......................cr_shelter.comments
          KV:XX..........................Key,Value (Key = XX in column name, value = cell in row)
 
     *********************************************************************** -->
@@ -227,7 +229,15 @@
                     <data field="capacity_night"><xsl:value-of select="col[@field='Capacity Night']"/></data>
                 </xsl:otherwise>
             </xsl:choose>
-            <data field="population"><xsl:value-of select="col[@field='Population']"/></data>
+            <xsl:if test="col[@field='Population']!=''">
+                <data field="population"><xsl:value-of select="col[@field='Population']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Obsolete']!=''">
+                <data field="obsolete"><xsl:value-of select="col[@field='Obsolete']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Comments']!=''">
+                <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            </xsl:if>
 
             <xsl:choose>
                 <xsl:when test="$Status='Closed'">

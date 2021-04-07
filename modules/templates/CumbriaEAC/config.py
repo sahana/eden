@@ -590,7 +590,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_cr_shelter_resource(r, tablename):
 
-        from gluon import DIV, IS_IN_SET
+        from gluon import DIV, IS_EMPTY_OR, IS_IN_SET
 
         from s3 import S3Represent, S3SQLCustomForm, S3LocationSelector, \
                        S3TextFilter, S3LocationFilter, S3OptionsFilter, S3RangeFilter
@@ -610,6 +610,7 @@ def config(settings):
         f.comment = None # No inline Create
         f = s3db.cr_shelter_service_shelter.service_id
         f.label = T("Service")
+        f.requires = IS_EMPTY_OR(f.requires)
         f.comment = None # No inline Create
         f = table.status
         f.default = 3 # Green
@@ -637,6 +638,41 @@ def config(settings):
                                                           }
                             )
 
+        # Filtered components
+        s3db.add_components("org_site",
+                            org_site_tag = ({"name": "red_bag",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "red_bag"},
+                                             "multiple": False,
+                                             },
+                                            {"name": "wifi",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "wifi"},
+                                             "multiple": False,
+                                             },
+                                            {"name": "catering",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "catering"},
+                                             "multiple": False,
+                                             },
+                                            ),
+                            )
+
+        from s3 import S3TagCheckboxWidget
+
+        # Individual settings for specific tag components
+        components_get = s3db.resource(tablename).components.get
+
+        red_bag = components_get("red_bag")
+        f = red_bag.table.value
+        f.requires = IS_IN_SET(("Yes", "No", "Unknown"))
+        f.default = "Unknown"
+
+        wifi = components_get("wifi")
+        f = wifi.table.value
+        f.requires = IS_IN_SET(("Yes", "No", "Unknown"))
+        f.default = "Unknown"
+
         crud_form = S3SQLCustomForm("name",
                                     "shelter_type_id",
                                     "shelter_service_shelter.service_id",
@@ -644,6 +680,9 @@ def config(settings):
                                     "phone",
                                     "capacity_day",
                                     "status",
+                                    (T("Red Bag Lite"), "red_bag.value"),
+                                    (T("WiFi available"), "wifi.value"),
+                                    (T("Catering"), "catering.value"),
                                     "comments",
                                     "obsolete",
                                     )
@@ -690,6 +729,9 @@ def config(settings):
                        "location_id$L3",
                        "location_id$L4",
                        "location_id$addr_street",
+                       (T("Red Bag Lite"), "red_bag.value"),
+                       (T("WiFi available"), "wifi.value"),
+                       (T("Catering"), "catering.value"),
                        ]
 
         report_fields = ["name",
@@ -700,6 +742,9 @@ def config(settings):
                          "population_day",
                          "location_id$L3",
                          "location_id$L4",
+                         (T("Red Bag Lite"), "red_bag.value"),
+                         (T("WiFi available"), "wifi.value"),
+                         (T("Catering"), "catering.value"),
                          ]
 
         s3db.configure(tablename,
