@@ -147,6 +147,10 @@ def config(settings):
 
     #settings.ui.organizer_snap_duration = "00:10:00"
 
+    settings.ui.custom_icons = {"eraser": "fa-remove",
+                                "_base": "fa",
+                                }
+
     # -------------------------------------------------------------------------
     # Document settings
     #
