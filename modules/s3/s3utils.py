@@ -1970,11 +1970,13 @@ class S3PriorityRepresent(object):
         self.options = dict(options)
         self.classes = classes
 
-    def represent(self, value, row=None):
+    # -------------------------------------------------------------------------
+    def __call__(self, value, row=None):
         """
             Representation function
 
             @param value: the value to represent
+            @param row: the Row (unused, for API compatibility)
         """
 
         css_class = base_class = "prio"
@@ -1988,6 +1990,14 @@ class S3PriorityRepresent(object):
         label = self.options.get(value)
 
         return DIV(label, _class=css_class)
+
+    # -------------------------------------------------------------------------
+    def represent(self, value, row=None):
+        """
+            Wrapper for self.__call__, for backwards-compatibility
+        """
+
+        return self(value, row=row)
 
 # =============================================================================
 class Traceback(object):

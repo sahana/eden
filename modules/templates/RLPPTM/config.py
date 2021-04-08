@@ -1623,7 +1623,7 @@ def config(settings):
         from s3 import S3PriorityRepresent
         field = table.status
         try:
-            status_opts = field.represent.options
+            status_opts = field.requires.options()
         except AttributeError:
             pass
         else:
@@ -1632,7 +1632,7 @@ def config(settings):
                                                    "APPROVED": "blue",
                                                    "REJECTED": "red",
                                                    "PAID": "green",
-                                                   }).represent
+                                                   })
 
         is_accountant = auth.s3_has_role("PROGRAM_ACCOUNTANT")
 
