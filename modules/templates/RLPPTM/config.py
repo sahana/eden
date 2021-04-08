@@ -1756,21 +1756,48 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
 
+        s3db = current.s3db
+
+        # Tags as filtered components (for embedding in form)
+        s3db.add_components("org_site",
+                            org_site_tag = ({"name": "public",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "PUBLIC"},
+                                             "multiple": False,
+                                             },
+                                            ),
+                            )
+
         from s3 import S3SQLCustomForm, S3SQLInlineLink, \
                        S3LocationSelector, S3LocationFilter, S3TextFilter
 
-        s3db = current.s3db
-
+        # Configure location selector incl. Geocoder
         s3db.org_facility.location_id.widget = S3LocationSelector(levels = ("L1", "L2", "L3", "L4"),
                                                                   required_levels = ("L1", "L2", "L3"),
                                                                   show_address = True,
                                                                   show_postcode = True,
                                                                   show_map = True,
                                                                   )
-
-        # Geocoder
         current.response.s3.scripts.append("/%s/static/themes/RLP/js/geocoderPlugin.js" % r.application)
 
+        # Custom list fields
+        list_fields = ["name",
+                       #"site_facility_type.facility_type_id",
+                       (T("Telephone"), "phone1"),
+                       "email",
+                       (T("Opening Hours"), "opening_times"),
+                       "location_id$addr_street",
+                       "location_id$addr_postcode",
+                       "location_id$L4",
+                       "location_id$L3",
+                       "location_id$L2",
+                       #"location_id$L1",
+                       #"organisation_id",
+                       #"obsolete",
+                       #"comments",
+                       ]
+
+        # Custom filter widgets
         text_fields = ["name",
                        #"code",
                        #"comments",
@@ -1796,6 +1823,7 @@ def config(settings):
                              ),
             ]
 
+        # Custom CRUD form
         crud_fields = ["name",
                        S3SQLInlineLink(
                               "facility_type",
@@ -1813,21 +1841,27 @@ def config(settings):
                        "comments",
                        ]
 
-        list_fields = ["name",
-                       #"site_facility_type.facility_type_id",
-                       (T("Telephone"), "phone1"),
-                       "email",
-                       (T("Opening Hours"), "opening_times"),
-                       "location_id$addr_street",
-                       "location_id$addr_postcode",
-                       "location_id$L4",
-                       "location_id$L3",
-                       "location_id$L2",
-                       #"location_id$L1",
-                       #"organisation_id",
-                       #"obsolete",
-                       #"comments",
-                       ]
+        resource = r.resource
+        if r.tablename == "org_facility":
+            fresource = resource
+        elif r.tablename == "org_organisation":
+            fresource = resource.components.get("facility")
+        else:
+            fresource = None
+
+        if fresource and current.auth.s3_has_role("ORG_GROUP_ADMIN"):
+            # Configure binary tag representation
+            binary_tag_opts = {"Y": T("Yes"), "N": T("No")}
+            for cname in ("public",):
+                component = fresource.components.get(cname)
+                if component:
+                    table = component.table
+                    field = table.value
+                    field.default = "N"
+                    field.requires = IS_IN_SET(binary_tag_opts, zero=None)
+                    field.represent = lambda v, row=None: binary_tag_opts.get(v, "-")
+            # Add binary tags to form
+            crud_fields.insert(1, (T("In Public Registry"), "public.value"))
 
         s3db.configure(tablename,
                        crud_form = S3SQLCustomForm(*crud_fields),
@@ -2104,7 +2138,6 @@ def config(settings):
                     list_fields.append((T("Email"), "email.value"))
                 r.resource.configure(list_fields = list_fields,
                                      )
-
             return result
         s3.prep = prep
 

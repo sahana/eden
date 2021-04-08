@@ -2614,6 +2614,7 @@
 'In Inventories': 'In den Beständen',
 'In Process': 'In Bearbeitung',
 'In Progress': 'In Bearbeitung',
+'In Public Registry': 'Im öffentlichen Register',
 'In Requests': 'In Anfragen',
 'In Shipments': 'In Lieferungen',
 'In Stock': 'Auf Lager',
