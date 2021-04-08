@@ -3123,7 +3123,7 @@ class fin_VoucherProgram(object):
                     )
                 ptable = s3db.fin_voucher_program
                 program.update_record(
-                    credit = program.credit + transaction["credit"],
+                    credit = ptable.credit + transaction["credit"],
                     modified_on = ptable.modified_on,
                     modified_by = ptable.modified_by,
                     )
@@ -3173,7 +3173,7 @@ class fin_VoucherProgram(object):
                     )
                 ptable = s3db.fin_voucher_program
                 program.update_record(
-                    credit = program.credit + transaction["credit"],
+                    credit = ptable.credit + transaction["credit"],
                     modified_on = ptable.modified_on,
                     modified_by = ptable.modified_by,
                     )
@@ -3268,8 +3268,8 @@ class fin_VoucherProgram(object):
                     )
                 ptable = s3db.fin_voucher_program
                 program.update_record(
-                    credit = program.credit + transaction["credit"],
-                    compensation = program.compensation + transaction["compensation"],
+                    credit = ptable.credit + transaction["credit"],
+                    compensation = ptable.compensation + transaction["compensation"],
                     modified_on = ptable.modified_on,
                     modified_by = ptable.modified_by,
                     )
@@ -3393,8 +3393,8 @@ class fin_VoucherProgram(object):
                     # Update the program balance
                     ptable = s3db.fin_voucher_program
                     program.update_record(
-                        credit = program.credit + transaction["credit"],
-                        compensation = program.compensation + transaction["compensation"],
+                        credit = ptable.credit + transaction["credit"],
+                        compensation = ptable.compensation + transaction["compensation"],
                         modified_on = ptable.modified_on,
                         modified_by = ptable.modified_by,
                         )
@@ -3499,7 +3499,7 @@ class fin_VoucherProgram(object):
                     )
                 ptable = s3db.fin_voucher_program
                 program.update_record(
-                    compensation = program.compensation + transaction["compensation"],
+                    compensation = ptable.compensation + transaction["compensation"],
                     modified_on = ptable.modified_on,
                     modified_by = ptable.modified_by,
                     )
