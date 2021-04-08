@@ -3611,7 +3611,8 @@ class fin_VoucherProgram(object):
         earliest = row.date + datetime.timedelta(days=1) if row else None
 
         if earliest and configure:
-            configure.default = earliest
+            default = configure.default
+            configure.default = max(earliest, default) if default else earliest
             configure.requires = IS_EMPTY_OR(IS_UTC_DATE(minimum=earliest))
             configure.widget = S3CalendarWidget(minimum=earliest)
 
