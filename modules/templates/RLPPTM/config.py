@@ -1765,31 +1765,8 @@ def config(settings):
         else:
             return
 
-        db = current.db
-        s3db = current.s3db
-
-        # Add default tag
-        ftable = s3db.org_facility
-        ttable = s3db.org_site_tag
-
-        left = ttable.on((ttable.site_id == ftable.site_id) & \
-                         (ttable.tag == "PUBLIC") & \
-                         (ttable.deleted == False))
-        query = (ftable.id == record_id)
-        row = db(query).select(ftable.id,
-                               ftable.site_id,
-                               ttable.id,
-                               left = left,
-                               limitby = (0, 1),
-                               ).first()
-        if row:
-            facility = row.org_facility
-            tag = row.org_site_tag
-            if not tag.id:
-                ttable.insert(site_id = facility.site_id,
-                              tag = "PUBLIC",
-                              value = "N",
-                              )
+        from .helpers import add_facility_default_tags
+        add_facility_default_tags(record_id)
 
     # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
@@ -2005,52 +1982,8 @@ def config(settings):
         else:
             return
 
-        db = current.db
-        s3db = current.s3db
-
-        # Add default tags
-        otable = s3db.org_organisation
-        ttable = s3db.org_organisation_tag
-        rttable = ttable.with_alias("requester")
-        ittable = ttable.with_alias("orgid")
-
-        left = [rttable.on((rttable.organisation_id == otable.id) & \
-                           (rttable.tag == "REQUESTER") & \
-                           (rttable.deleted == False)),
-                ittable.on((ittable.organisation_id == otable.id) & \
-                           (ittable.tag == "OrgID") & \
-                           (ittable.deleted == False)),
-                ]
-        query = (otable.id == record_id)
-        row = db(query).select(otable.id,
-                               otable.uuid,
-                               rttable.id,
-                               ittable.id,
-                               left = left,
-                               limitby = (0, 1),
-                               ).first()
-        if row:
-            org = row.org_organisation
-
-            rtag = row.requester
-            if not rtag.id:
-                ttable.insert(organisation_id = org.id,
-                              tag = "REQUESTER",
-                              value = "N",
-                              )
-
-            itag = row.orgid
-            if not itag.id:
-                try:
-                    uid = int(org.uuid[9:14], 16)
-                except (TypeError, ValueError):
-                    import uuid
-                    uid = int(uuid.uuid4().urn[9:14], 16)
-                value = "%06d%04d" % (uid, org.id)
-                ttable.insert(organisation_id = org.id,
-                              tag = "OrgID",
-                              value = value,
-                              )
+        from .helpers import add_organisation_default_tags
+        add_organisation_default_tags(record_id)
 
     # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):

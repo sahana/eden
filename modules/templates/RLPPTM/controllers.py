@@ -529,12 +529,9 @@ class approve(S3CustomController):
                                 set_record_owner(ltable, link)
                                 s3db_onaccept(ltable, link, method="create")
 
-                        # Add REQUESTER-tag ("No" by default)
-                        ttable = s3db.org_organisation_tag
-                        ttable.insert(organisation_id = organisation_id,
-                                      tag = "REQUESTER",
-                                      value = "N",
-                                      )
+                        # Add default tags
+                        from .helpers import add_organisation_default_tags
+                        add_organisation_default_tags(organisation_id)
 
                         # Update User
                         user.update_record(organisation_id = organisation_id,
@@ -571,7 +568,7 @@ class approve(S3CustomController):
                                 "opening_times": opening_times,
                                 "comments": comments,
                                 }
-                    facility["id"] = ftable.insert(**facility)
+                    facility_id = facility["id"] = ftable.insert(**facility)
                     update_super(ftable, facility)
                     set_record_owner(ftable, facility, owned_by_user=user_id)
                     s3db_onaccept(ftable, facility, method="create")
@@ -585,6 +582,10 @@ class approve(S3CustomController):
                         s3db.org_site_facility_type.insert(site_id = facility["site_id"],
                                                            facility_type_id = facility_type.id,
                                                            )
+
+                    # Add default tags
+                    from .helpers import add_facility_default_tags
+                    add_facility_default_tags(facility_id, approve=True)
 
                     # Approve user
                     auth.s3_approve_user(user)
