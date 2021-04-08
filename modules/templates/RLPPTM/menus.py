@@ -82,6 +82,9 @@ class S3MainMenu(default.S3MainMenu):
                     MM("Test Stations for School and Child Care Staff",
                        c = "org", f = "facility", m = "summary", vars={"$$code": "TESTS-SCHOOLS"},
                        ),
+                    MM("Unapproved Test Stations",
+                       c = "org", f = "facility", vars={"$$pending": "1"}, restrict="ORG_GROUP_ADMIN",
+                       ),
                     ),
                 MM("Pending Approvals", c="default", f="index", args=["approve"],
                    check = is_org_group_admin,
@@ -349,11 +352,18 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         return M(c="org")(
                     org_menu,
+                    M("Facilities", f="facility", link=False)(
+                        M("Unapproved Test Stations",
+                          vars = {"$$pending": "1"},
+                          restrict = "ORG_GROUP_ADMIN",
+                          ),
+                        M("Public Registry"),
+                        ),
                     M("Administration", restrict=("ADMIN"))(
                         M("Facility Types", f="facility_type"),
                         M("Organization Types", f="organisation_type"),
                     #    M("Sectors", f="sector"),
-                        )
+                        ),
                     )
 
     # -------------------------------------------------------------------------
