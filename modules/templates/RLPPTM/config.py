@@ -1754,6 +1754,44 @@ def config(settings):
     settings.customise_fin_voucher_invoice_controller = customise_fin_voucher_invoice_controller
 
     # -------------------------------------------------------------------------
+    def facility_create_onaccept(form):
+
+        # Get record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        # Add default tag
+        ftable = s3db.org_facility
+        ttable = s3db.org_site_tag
+
+        left = ttable.on((ttable.site_id == ftable.site_id) & \
+                         (ttable.tag == "PUBLIC") & \
+                         (ttable.deleted == False))
+        query = (ftable.id == record_id)
+        row = db(query).select(ftable.id,
+                               ftable.site_id,
+                               ttable.id,
+                               left = left,
+                               limitby = (0, 1),
+                               ).first()
+        if row:
+            facility = row.org_facility
+            tag = row.org_site_tag
+            if not tag.id:
+                ttable.insert(site_id = facility.site_id,
+                              tag = "PUBLIC",
+                              value = "N",
+                              )
+
+    # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
 
         s3db = current.s3db
@@ -1766,7 +1804,15 @@ def config(settings):
                                              "multiple": False,
                                              },
                                             ),
+
                             )
+
+        # Custom onaccept to add default tags
+        s3db.add_custom_callback("org_facility",
+                                 "onaccept",
+                                 facility_create_onaccept,
+                                 method = "create",
+                                 )
 
         from s3 import S3SQLCustomForm, S3SQLInlineLink, \
                        S3LocationSelector, S3LocationFilter, S3TextFilter
@@ -1948,6 +1994,65 @@ def config(settings):
     settings.customise_org_facility_controller = customise_org_facility_controller
 
     # -------------------------------------------------------------------------
+    def organisation_create_onaccept(form):
+
+        # Get record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        # Add default tags
+        otable = s3db.org_organisation
+        ttable = s3db.org_organisation_tag
+        rttable = ttable.with_alias("requester")
+        ittable = ttable.with_alias("orgid")
+
+        left = [rttable.on((rttable.organisation_id == otable.id) & \
+                           (rttable.tag == "REQUESTER") & \
+                           (rttable.deleted == False)),
+                ittable.on((ittable.organisation_id == otable.id) & \
+                           (ittable.tag == "OrgID") & \
+                           (ittable.deleted == False)),
+                ]
+        query = (otable.id == record_id)
+        row = db(query).select(otable.id,
+                               otable.uuid,
+                               rttable.id,
+                               ittable.id,
+                               left = left,
+                               limitby = (0, 1),
+                               ).first()
+        if row:
+            org = row.org_organisation
+
+            rtag = row.requester
+            if not rtag.id:
+                ttable.insert(organisation_id = org.id,
+                              tag = "REQUESTER",
+                              value = "N",
+                              )
+
+            itag = row.orgid
+            if not itag.id:
+                try:
+                    uid = int(org.uuid[9:14], 16)
+                except (TypeError, ValueError):
+                    import uuid
+                    uid = int(uuid.uuid4().urn[9:14], 16)
+                value = "%06d%04d" % (uid, org.id)
+                ttable.insert(organisation_id = org.id,
+                              tag = "OrgID",
+                              value = value,
+                              )
+
+    # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
 
         s3db = current.s3db
@@ -1961,6 +2066,13 @@ def config(settings):
                                                      },
                                                     ),
                             )
+
+        # Custom onaccept to create default tags
+        s3db.add_custom_callback("org_organisation",
+                                 "onaccept",
+                                 organisation_create_onaccept,
+                                 method = "create",
+                                 )
 
     settings.customise_org_organisation_resource = customise_org_organisation_resource
 
