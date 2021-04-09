@@ -6,7 +6,8 @@
     @license: MIT
 """
 
-from gluon import current, Field, CRYPT, IS_EMAIL, IS_LOWER, IS_NOT_IN_DB, \
+from gluon import current, Field, \
+                  CRYPT, IS_EMAIL, IS_IN_SET, IS_LOWER, IS_NOT_IN_DB, \
                   SQLFORM, DIV, H4, H5, I, INPUT, P, SPAN, TABLE, TD, TH, TR
 
 from s3 import IS_FLOAT_AMOUNT, S3DateTime, S3Method, \
@@ -420,6 +421,28 @@ def can_cancel_debit(debit):
     else:
         # No user
         return False
+
+# -----------------------------------------------------------------------------
+def configure_binary_tags(resource, tag_components):
+    """
+        Configure representation of binary tags
+
+        @param resource: the S3Resource
+        @param tag_components: tuple|list of filtered tag component aliases
+    """
+
+    T = current.T
+
+    binary_tag_opts = {"Y": T("Yes"), "N": T("No")}
+
+    for cname in tag_components:
+        component = resource.components.get(cname)
+        if component:
+            ctable = component.table
+            field = ctable.value
+            field.default = "N"
+            field.requires = IS_IN_SET(binary_tag_opts, zero=None)
+            field.represent = lambda v, row=None: binary_tag_opts.get(v, "-")
 
 # -----------------------------------------------------------------------------
 def add_organisation_default_tags(organisation_id):

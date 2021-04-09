@@ -1625,7 +1625,7 @@ def config(settings):
         try:
             status_opts = field.requires.options()
         except AttributeError:
-            pass
+            status_opts = []
         else:
             field.represent = S3PriorityRepresent(status_opts,
                                                   {"NEW": "lightblue",
@@ -1877,15 +1877,9 @@ def config(settings):
                 crud_fields.insert(0, "organisation_id")
 
                 # Configure binary tag representation
-                binary_tag_opts = {"Y": T("Yes"), "N": T("No")}
-                for cname in ("public",):
-                    component = fresource.components.get(cname)
-                    if component:
-                        ctable = component.table
-                        field = ctable.value
-                        field.default = "N"
-                        field.requires = IS_IN_SET(binary_tag_opts, zero=None)
-                        field.represent = lambda v, row=None: binary_tag_opts.get(v, "-")
+                from .helpers import configure_binary_tags
+                configure_binary_tags(fresource, ("public",))
+
                 # Add binary tags to form
                 crud_fields.insert(2, (T("In Public Registry"), "public.value"))
 
@@ -2057,16 +2051,8 @@ def config(settings):
             is_org_group_admin = auth.s3_has_role("ORG_GROUP_ADMIN")
 
             # Configure binary tags
-            binary_tag_opts = {"Y": T("Yes"), "N": T("No")}
-            for cname in ("requester",):
-                component = resource.components.get(cname)
-                table = component.table
-                field = table.value
-                field.default = "N"
-                field.requires = IS_IN_SET(binary_tag_opts,
-                                           zero = None,
-                                           )
-                field.represent = lambda v, row=None: binary_tag_opts.get(v, "-")
+            from .helpers import configure_binary_tags
+            configure_binary_tags(resource, ("requester",))
 
             # Add invite-method for ORG_GROUP_ADMIN role
             from .helpers import InviteUserOrg
@@ -2299,16 +2285,8 @@ def config(settings):
             resource = r.resource
 
             # Configure binary tags
-            binary_tag_opts = {"Y": T("Yes"), "N": T("No")}
-            for cname in ("apply", "stats"):
-                component = resource.components.get(cname)
-                table = component.table
-                field = table.value
-                field.default = "N"
-                field.requires = IS_IN_SET(binary_tag_opts,
-                                        zero = None,
-                                        )
-                field.represent = lambda v, row=None: binary_tag_opts.get(v, "-")
+            from .helpers import configure_binary_tags
+            configure_binary_tags(resource, ("apply", "stats"))
 
             if r.component_name == "organisation":
 
