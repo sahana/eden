@@ -3989,6 +3989,12 @@ class fin_VoucherBilling(object):
                               modified_by = btable.modified_by,
                               modified_on = btable.modified_on,
                               )
+
+        # If no claims have been generated, conclude the billing
+        # right away (as there will be no later trigger)
+        if total_claims == 0:
+            self.check_complete(claims_complete=True)
+
         return total_claims
 
     # -------------------------------------------------------------------------
@@ -4270,10 +4276,12 @@ class fin_VoucherBilling(object):
         return total
 
     # -------------------------------------------------------------------------
-    def check_complete(self):
+    def check_complete(self, claims_complete=False):
         """
             Check whether this billing process is complete (+update status
             if so)
+
+            @param claims_complete: confirm that claim generation is complete
 
             @returns: True|False
         """
@@ -4292,8 +4300,8 @@ class fin_VoucherBilling(object):
             query &= (ctable.status != "PAID")
             pending = db(query).select(ctable.id, limitby=(0, 1)).first()
         else:
-            # No claims generated yet
-            pending = True
+            # No claims generated yet?
+            pending = not claims_complete
 
         if pending:
             return False
