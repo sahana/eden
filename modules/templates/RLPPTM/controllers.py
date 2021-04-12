@@ -498,21 +498,24 @@ class approve(S3CustomController):
                     update_super = s3db.update_super
 
                     if not organisation_id:
-                        # Create Organisation
+
+                        # Create organisation
                         org = {"name": organisation}
                         org["id"] = organisation_id = otable.insert(**org)
-
-                        # Post-process Organisation
                         update_super(otable, org)
                         set_record_owner(otable, org, owned_by_user=user_id)
                         s3db_onaccept(otable, org, method="create")
 
-                        # Link to Org_Group TESTSTATIONS
-                        s3db.org_group_membership.insert(group_id = org_group_id,
-                                                         organisation_id = organisation_id,
-                                                         )
+                        # Link organisation to TESTSTATIONS group
+                        mtable = s3db.org_group_membership
+                        membership = {"group_id": org_group_id,
+                                      "organisation_id": organisation_id,
+                                      }
+                        membership["id"] = mtable.insert(**membership)
+                        set_record_owner(mtable, membership)
+                        s3db_onaccept(mtable, membership, method="create")
 
-                        # Link Organisation to selected projects
+                        # Link organisation to selected projects
                         selected = form_vars.get("projects")
                         if isinstance(selected, (tuple, list)):
                             ltable = s3db.project_organisation
@@ -533,7 +536,7 @@ class approve(S3CustomController):
                         from .helpers import add_organisation_default_tags
                         add_organisation_default_tags(organisation_id)
 
-                        # Update User
+                        # Update user
                         user.update_record(organisation_id = organisation_id,
                                            registration_key = None,
                                            )
@@ -542,7 +545,7 @@ class approve(S3CustomController):
                         auth.s3_assign_role(user_id, "ORG_ADMIN", for_pe=org["pe_id"])
                         auth.s3_assign_role(user_id, "PROVIDER_ACCOUNTANT")
                     else:
-                        # Update User
+                        # Update user
                         user.update_record(registration_key = None)
 
                     # Grant VOUCHER_PROVIDER
@@ -550,14 +553,14 @@ class approve(S3CustomController):
 
                     location_id = location_get("id")
                     if not location_id:
-                        # Create Location
+                        # Create location
                         ltable = s3db.gis_location
                         del location["wkt"] # Will get created during onaccept & we don't want the 'Source WKT has been cleaned by Shapely" warning
                         location["id"] = location_id = ltable.insert(**location)
                         set_record_owner(ltable, location, owned_by_user=user_id)
                         s3db_onaccept(ltable, location, method="create")
 
-                    # Create Facility
+                    # Create facility
                     ftable = s3db.org_facility
                     facility_name = organisation if organisation else org.name
                     facility = {"name": s3_truncate(facility_name),
@@ -573,7 +576,7 @@ class approve(S3CustomController):
                     set_record_owner(ftable, facility, owned_by_user=user_id)
                     s3db_onaccept(ftable, facility, method="create")
 
-                    # Link to Facility Type
+                    # Link facility to facility type
                     fttable = s3db.org_facility_type
                     facility_type = db(fttable.name == "Infection Test Station").select(fttable.id,
                                                                                         limitby = (0, 1),
