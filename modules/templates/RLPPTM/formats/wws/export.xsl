@@ -1,7 +1,20 @@
 <?xml version="1.0"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0"
+                xmlns:s3="http://eden.sahanafoundation.org/wiki/S3">
 
     <xsl:output method="xml"/>
+
+    <s3:fields tables="req_req" select="req_ref,date,site_id,comments,requester_id"/>
+    <s3:fields tables="req_req_item" select="item_id,item_pack_id,quantity"/>
+
+    <s3:fields tables="supply_item" select="code"/>
+    <s3:fields tables="supply_item_pack" select="quantity"/>
+    <s3:fields tables="pr_person" select="first_name,last_name"/>
+
+    <s3:fields tables="org_facility" select="name,phone1,email,location_id"/>
+    <s3:fields tables="gis_location" select="L3,L4,addr_street,addr_postcode"/>
+
+    <s3:fields tables="ANY" select="*"/>
 
     <!-- ****************************************************************** -->
     <!-- Document node -->

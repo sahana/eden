@@ -2988,7 +2988,7 @@ def config(settings):
                 # Configure WWS export format
                 export_formats = list(settings.get_ui_export_formats())
                 export_formats.append(("wws", "fa fa-shopping-cart", T("CoronaWWS")))
-                s3.formats["wws"] = r.url(method="")
+                s3.formats["wws"] = r.url(method="", vars={"mcomponents": "req_item"})
                 settings.ui.export_formats = export_formats
 
             return result

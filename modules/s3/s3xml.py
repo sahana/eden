@@ -533,6 +533,7 @@ class S3XML(S3Codec):
             return reference_map
 
         db = current.db
+        s3db_cache = current.s3db.cache
 
         UID = self.UID
         MCI = self.MCI
@@ -605,7 +606,9 @@ class S3XML(S3Codec):
                 # Get the super-record
                 srecord = db(query).select(ogetattr(ktable, UID),
                                            ktable.instance_type,
-                                           limitby=(0, 1)).first()
+                                           cache = s3db_cache,
+                                           limitby = (0, 1),
+                                           ).first()
                 if not srecord:
                     continue
 
@@ -623,9 +626,12 @@ class S3XML(S3Codec):
                     continue
 
                 # Make sure the referenced record is accessible:
-                query = current.auth.s3_accessible_query("read", ktable) & \
-                        (ktable[UID] == uid)
-                krecord = db(query).select(ktable._id, limitby=(0, 1)).first()
+                query = (ktable[UID] == uid) & \
+                        current.auth.s3_accessible_query("read", ktable)
+                krecord = db(query).select(ktable._id,
+                                           cache = s3db_cache,
+                                           limitby = (0, 1),
+                                           ).first()
 
                 if not krecord:
                     continue
@@ -638,21 +644,22 @@ class S3XML(S3Codec):
                 # Make sure the referenced records are accessible:
                 query = current.auth.s3_accessible_query("read", ktable)
                 if multiple:
-                    query &= (k_id.belongs(ids))
+                    query = (k_id.belongs(ids)) & query
                     limitby = None
                 else:
-                    query &= (k_id == ids)
+                    query = (k_id == ids) & query
                     limitby = (0, 1)
 
                 if DELETED in ktable_fields:
-                    query = (ktable.deleted != True) & query
+                    query = query & (ktable.deleted == False)
                 if filter_mci and MCI in ktable_fields:
-                    query = (ktable.mci >= 0) & query
+                    query = query & (ktable.mci >= 0)
 
                 if UID in ktable_fields:
-
                     krecords = db(query).select(ogetattr(ktable, UID),
-                                                limitby=limitby)
+                                                cache = s3db_cache,
+                                                limitby = limitby,
+                                                )
                     if krecords:
                         uids = [r[UID] for r in krecords if r[UID]]
                         if ktablename != gtablename:
@@ -660,8 +667,10 @@ class S3XML(S3Codec):
                     else:
                         continue
                 else:
-
-                    krecord = db(query).select(k_id, limitby=(0, 1)).first()
+                    krecord = db(query).select(k_id,
+                                               cache = s3db_cache,
+                                               limitby = (0, 1),
+                                               ).first()
                     if not krecord:
                         continue
 
