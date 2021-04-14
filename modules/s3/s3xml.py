@@ -533,7 +533,7 @@ class S3XML(S3Codec):
             return reference_map
 
         db = current.db
-        s3db_cache = current.s3db.cache
+        s3db = current.s3db
 
         UID = self.UID
         MCI = self.MCI
@@ -545,7 +545,14 @@ class S3XML(S3Codec):
         gtablename = current.auth.settings.table_group_name
         load_table = current.s3db.table
 
+        s3db_cache = s3db.cache
+        super_keys = set(s3db.get_super_keys(table))
+
         for f in fields:
+
+            if f in super_keys and not self.show_ids:
+                # Do not export superkeys
+                continue
 
             if f == REPLACEDBY:
                 val = ogetattr(record, f)

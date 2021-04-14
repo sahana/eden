@@ -12,6 +12,7 @@
     <s3:fields tables="pr_person" select="first_name,last_name"/>
 
     <s3:fields tables="org_facility" select="name,phone1,email,location_id"/>
+    <s3:fields tables="inv_warehouse" select="name"/>
     <s3:fields tables="gis_location" select="L3,L4,addr_street,addr_postcode"/>
 
     <s3:fields tables="ANY" select="*"/>

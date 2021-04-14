@@ -47,6 +47,9 @@ import sys
 import timeit
 import unittest
 
+from gluon import current
+from gluon.storage import Storage
+
 from unit_tests import run_suite
 
 def info(msg):
