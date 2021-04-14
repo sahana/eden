@@ -1665,9 +1665,9 @@ class S3Model(object):
 
             # Delete the super record
             sresource = define_resource(sname, id=value)
-            sresource.delete(cascade=True, log_errors=True)
+            deleted = sresource.delete(cascade=True, log_errors=True)
 
-            if sresource.error:
+            if not deleted or sresource.error:
                 # Restore the super key
                 # @todo: is this really necessary? => caller must roll back
                 #        anyway in this case, which would automatically restore
