@@ -2127,7 +2127,7 @@ class ocert(S3CustomController):
 
             user = auth.user
             sr = auth.get_system_roles()
-            realms = user.realms[sr.ORG_ADMIN]
+            realms = user.realms.get(sr.ORG_ADMIN)
             if not realms:
                 realms = s3db.pr_realm(user.pe_id)
             if realms:

@@ -788,11 +788,13 @@ class S3XML(S3Codec):
                 else:
                     locations[location_id].append(reference)
         if locations:
+            location_ids = set(locations.keys())
             ltable = current.s3db.gis_location
-            rows = current.db(ltable._id.belongs(set(locations.keys()))) \
+            rows = current.db(ltable._id.belongs(location_ids)) \
                              .select(ltable.id,
                                      ltable.lat,
                                      ltable.lon,
+                                     limitby = (0, len(location_ids)),
                                      ).as_dict()
 
             for location_id, row in rows.items():
