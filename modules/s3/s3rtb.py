@@ -257,20 +257,15 @@ class S3ResourceTree(object):
     # -------------------------------------------------------------------------
     def export_resource(self,
                         resource,
-
                         start = 0,
                         limit = None,
-
                         msince = None,
                         sync_filters = None,
-
                         xmlformat = None,
-
                         fields = None,
                         references = None,
                         components = None,
                         target = None,
-
                         mdata = None,
                         location_data = DEFAULT,
                         ):
@@ -326,23 +321,11 @@ class S3ResourceTree(object):
         resource_url = "%s/%s/%s" % (base_url, prefix, name) if base_url else None
 
         # Establish dfields, rfields, and llrepr for master resource
-        # TODO make this a function?
-        llrepr = None
-        if mdata:
-            from .s3mobile import S3MobileSchema
-            ms = S3MobileSchema(resource)
-            if ms.lookup_only:
-                # Override fields/references (only meta fields)
-                llrepr = ms.llrepr
-                fields, references = [], []
-            else:
-                # Determine fields/references from mobile schema
-                fields = references = [f.name for f in ms.fields()]
-
-        # Separate references and data fields
-        rfields, dfields = resource.split_fields(data = fields,
-                                                 references = references,
-                                                 )
+        rfields, dfields, llrepr = self.fields_to_export(resource,
+                                                         fields = fields,
+                                                         references = references,
+                                                         mdata = mdata,
+                                                         )
 
         # Determine components to export
         if llrepr is None:
@@ -385,7 +368,6 @@ class S3ResourceTree(object):
                                     superkeys = superkeys,
                                     url = resource_url,
                                     master = not target,
-                                    alias = None, # TODO this is the default
                                     llrepr = llrepr,
                                     location_data = location_data,
                                     )
@@ -603,6 +585,42 @@ class S3ResourceTree(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def fields_to_export(resource, fields=None, references=None, mdata=False):
+        """
+            Establish fields to export for a resource
+
+            @param resource: the S3Resource
+            @param fields: the requested data fields
+            @param references: the requested references
+            @param mdata: look up fields/references from mobile schema
+
+            @returns: tuple (rfields, dfields, llrepr), with
+                      rfields = list of reference field names to include
+                      dfields = list of data field names to include
+                      llrepr = lookup-list representation method (mobile schema)
+        """
+
+        llrepr = None
+        if mdata:
+            from .s3mobile import S3MobileSchema
+            ms = S3MobileSchema(resource)
+            if ms.lookup_only:
+                # Override fields/references (only meta fields)
+                llrepr = ms.llrepr
+                fields, references = [], []
+            else:
+                # Determine fields/references from mobile schema
+                fields = references = [f.name for f in ms.fields()]
+
+        # Separate references and data fields
+        rfields, dfields = resource.split_fields(data = fields,
+                                                 references = references,
+                                                 )
+
+        return rfields, dfields, llrepr
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def components_to_export(tablename, aliases):
         """
             Get a list of aliases of components that shall be exported
@@ -756,45 +774,6 @@ class S3ResourceTree(object):
         return resolved
 
     # -------------------------------------------------------------------------
-    def resolve_reference(self, tablename, ids):
-        """
-            Resolve a reference against the map of exported records
-
-            @param tablename: the referenced table (or super-entity)
-            @param ids: the referenced record IDs
-
-            @returns: tuple (target, target_ids, target_uids), where:
-                      target = name of the (instance) table
-                      target_ids = list of referenced (instance) record ids
-                      target_uids = list of the corresponding record UIDs
-        """
-
-        if not isinstance(ids, list):
-            ids = [ids]
-
-        default = None, None, None
-
-        resolved = self.exported
-
-        if not resolved:
-            return default
-
-        target = None
-        target_ids = []
-        target_uids = []
-        for ref in ids:
-            referenced = resolved.get((tablename, ref))
-            if referenced:
-                t, tid, tuid = referenced
-                if target and target != t:
-                    return default
-                target = t
-                target_ids.append(tid)
-                target_uids.append(tuid)
-
-        return target, target_ids, target_uids
-
-    # -------------------------------------------------------------------------
     def export_identities(self, dependencies):
         """
             Resolve the record identities of dependencies and add them
@@ -883,6 +862,45 @@ class S3ResourceTree(object):
                                                         record_id,
                                                         row[UID],
                                                         )
+
+    # -------------------------------------------------------------------------
+    def resolve_reference(self, tablename, ids):
+        """
+            Resolve a reference against the map of exported records
+
+            @param tablename: the referenced table (or super-entity)
+            @param ids: the referenced record IDs
+
+            @returns: tuple (target, target_ids, target_uids), where:
+                      target = name of the (instance) table
+                      target_ids = list of referenced (instance) record ids
+                      target_uids = list of the corresponding record UIDs
+        """
+
+        if not isinstance(ids, list):
+            ids = [ids]
+
+        default = None, None, None
+
+        resolved = self.exported
+
+        if not resolved:
+            return default
+
+        target = None
+        target_ids = []
+        target_uids = []
+        for ref in ids:
+            referenced = resolved.get((tablename, ref))
+            if referenced:
+                t, tid, tuid = referenced
+                if target and target != t:
+                    return default
+                target = t
+                target_ids.append(tid)
+                target_uids.append(tuid)
+
+        return target, target_ids, target_uids
 
 # =============================================================================
 class S3ResourceReference(object):
@@ -1114,20 +1132,18 @@ class S3ResourceNode(object):
             record = self.record
 
             xml = current.xml
-
             DELETED = xml.DELETED
             REPLACEDBY = xml.REPLACEDBY
+
             if DELETED in record and record[DELETED] and \
                REPLACEDBY in record and record[REPLACEDBY]:
                 fields = [REPLACEDBY]
             else:
                 fields = self.rfields
-
             if not fields:
                 return references
 
             for fn in fields:
-
                 # Skip super-keys
                 if fn in self.superkeys:
                     continue
@@ -1137,17 +1153,25 @@ class S3ResourceNode(object):
                 if not value:
                     continue
 
-                # Inspect the DB field
-                try:
-                    dbfield = getattr(table, fn)
-                except AttributeError:
-                    continue
-                tn, key, multiple = s3_get_foreign_key(dbfield)
-                if not tn:
-                    continue
+                if fn == REPLACEDBY:
+                    # Special handling since not a foreign key
+                    tn = original_tablename(table)
+                    key = table._id.name
+                    multiple = False
+                else:
+                    # Inspect the DB field
+                    try:
+                        dbfield = getattr(table, fn)
+                    except AttributeError:
+                        continue
+                    tn, key, multiple = s3_get_foreign_key(dbfield)
+                    if not tn:
+                        continue
 
-                # Generate the reference
-                reference = S3ResourceReference(table, fn, tn, key, value, multiple=multiple)
+                # Add the reference
+                reference = S3ResourceReference(table, fn, tn, key, value,
+                                                multiple = multiple,
+                                                )
                 references.append(reference)
 
         return references
