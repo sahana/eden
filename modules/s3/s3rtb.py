@@ -371,6 +371,8 @@ class S3ResourceTree(object):
                                     llrepr = llrepr,
                                     location_data = location_data,
                                     )
+            master_id = record[resource._id]
+            master_url = "%s/%s" % (resource_url, master_id) if resource_url else None
 
             # Export all related component records
             for alias in components:
@@ -401,7 +403,6 @@ class S3ResourceTree(object):
 
                 # Load the component records
                 # - load once for all master records, then use resource.get() to separate them
-                cpkey, cfkey = component.pkey, component.fkey
                 if component._rows is None:
                     self.load_records(component,
                                       start = 0,
@@ -414,32 +415,21 @@ class S3ResourceTree(object):
                                       target = target,
                                       )
 
-                    # Sort the component records by master key
-                    # TODO make this a function
-                    row_dict = crow_dict[alias] = {}
-                    for crow in component._rows:
-                        k = crow[cfkey]
-                        if k in row_dict:
-                            row_dict[k].append(crow)
-                        else:
-                            row_dict[k] = [crow]
-                else:
-                    row_dict = crow_dict.get(alias)
-
                 # Get the component records
-                if row_dict:
-                    crecords = row_dict.get(record[cpkey])
-                else:
-                    continue
+                crecords = self.get_component_records(crow_dict,
+                                                      alias,
+                                                      record[component.pkey],
+                                                      component
+                                                      )
                 if not crecords:
                     continue
                 if not component.multiple and len(crecords):
                     crecords = [crecords[0]]
 
-                # TODO Establish component_url (currently lacking master id)
+                # Establish component_url
                 if resource_url:
                     cname = component.name if component.linked else component.alias
-                    component_url = "%s/%s" % (resource_url, cname)
+                    component_url = "%s/%s" % (master_url, cname)
                 else:
                     component_url = None
 
@@ -462,8 +452,6 @@ class S3ResourceTree(object):
 
                 # Separate references and data fields
                 crfields, cdfields = component.split_fields(skip=[component.fkey])
-                # TODO move super-keys from rfields to dfields if show_ids,
-                #      or drop them altogether otherwise
 
                 ctable = component.table
                 csuperkeys = s3db.get_super_keys(ctable)
@@ -582,6 +570,30 @@ class S3ResourceTree(object):
                       virtual = False,
                       cacheable = True,
                       )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_component_records(data, alias, master_id, component):
+
+        if alias not in data:
+
+            rows = component._rows
+            if rows is None:
+                raise RuntimeError("Component not loaded")
+
+            row_dict = data[alias] = {}
+
+            fkey = component.fkey
+            for row in component._rows:
+                k = row[fkey]
+                if k in row_dict:
+                    row_dict[k].append(row)
+                else:
+                    row_dict[k] = [row]
+        else:
+            row_dict = data.get(alias)
+
+        return row_dict.get(master_id)
 
     # -------------------------------------------------------------------------
     @staticmethod

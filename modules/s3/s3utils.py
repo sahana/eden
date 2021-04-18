@@ -248,10 +248,10 @@ def s3_represent_value(field,
                              lambda: field.represent(val),
                              time_expire = 60,
                              )
-            if isinstance(text, DIV):
-                text = str(text)
-            elif not isinstance(text, basestring):
-                text = s3_unicode(text)
+        if isinstance(text, DIV):
+            text = str(text)
+        elif not isinstance(text, basestring):
+            text = s3_unicode(text)
     else:
         if val is None:
             text = NONE
@@ -285,10 +285,10 @@ def s3_represent_value(field,
     elif xml_escape:
         text = xml_encode(text)
 
-    try:
-        text = text.decode("utf-8")
-    except:
-        pass
+    #try:
+    #    text = text.decode("utf-8")
+    #except:
+    #    pass
 
     return text
 
