@@ -44,6 +44,7 @@ from .s3datetime import s3_parse_datetime
 from .s3forms import S3SQLCustomForm, S3SQLDummyField, S3SQLField, \
                      S3SQLForm, S3SQLInlineInstruction, S3SQLSectionBreak
 from .s3rest import S3Method
+from .s3rtb import S3ResourceTree
 from .s3utils import s3_get_foreign_key, s3_str
 from .s3validators import SEPARATORS
 
@@ -1061,10 +1062,10 @@ class S3MobileForm(object):
             kresource = s3db.resource(tn, id=list(record_ids))
             spec = provided[tn][1]
             fields = list(spec["schema"].keys())
-            tree = kresource.export_tree(fields = fields,
-                                         references = fields,
-                                         msince = msince,
-                                         )
+            tree = S3ResourceTree(kresource).build(fields = fields,
+                                                   references = fields,
+                                                   msince = msince,
+                                                   )
             if len(tree.getroot()):
                 data = current.xml.tree2json(tree, as_dict=True)
                 spec["data"] = data

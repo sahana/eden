@@ -70,6 +70,7 @@ from s3dal import Rows
 from .s3datetime import s3_format_datetime, s3_parse_datetime
 from .s3fields import s3_all_meta_field_names
 from .s3rest import S3Method
+from .s3rtb import S3ResourceTree
 from .s3track import S3Trackable
 from .s3utils import s3_include_ext, s3_include_underscore, s3_str
 
@@ -2412,7 +2413,7 @@ class GIS(object):
             e.g. Feature Layers or Search results (Feature Resources)
             e.g. Exports in KML, GeoRSS or GPX format
 
-            Called by S3REST: S3Resource.export_tree()
+            Called by S3ResourceTree
             @param: resource - S3Resource instance (required)
             @param: attr_fields - list of attr_fields to use instead of reading
                                   from get_vars or looking up in gis_layer_feature
@@ -3051,7 +3052,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
         """
             Lookup Shapefile Layer polygons once per layer and not per-record
 
-            Called by S3REST: S3Resource.export_tree()
+            Called by S3ResourceTree
 
             @ToDo: Vary simplification level & precision by Zoom level
                    - store this in the style?
@@ -3121,7 +3122,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
         """
             Lookup Theme Layer polygons once per layer and not per-record
 
-            Called by S3REST: S3Resource.export_tree()
+            Called by S3ResourceTree
 
             @ToDo: Vary precision by Lx
                    - store this (& tolerance map) in the style?
@@ -9047,7 +9048,11 @@ class LayerOpenWeatherMap(Layer):
         if sublayers:
             apikey = current.deployment_settings.get_gis_api_openweathermap()
             if not apikey:
-                raise Exception("Cannot display OpenWeatherMap layers unless we have an API key\n")
+                # Raising exception prevents gis/index view from loading
+                # - logging the error should suffice?
+                #raise Exception("Cannot display OpenWeatherMap layers unless we have an API key\n")
+                current.log.error("Cannot display OpenWeatherMap layers unless we have an API key")
+                return {}
             current.response.s3.js_global.append("S3.gis.openweathermap='%s'" % apikey)
             ldict = {}
             for sublayer in sublayers:
@@ -9975,8 +9980,9 @@ class S3ExportPOI(S3Method):
                 _msince = msince
 
             # Export the tree and append its element to the element list
-            tree = resource.export_tree(msince=_msince,
-                                        references=["location_id"])
+            tree = S3ResourceTree(resource).build(msince = msince,
+                                                  references = ["location_id"],
+                                                  )
 
             # Update the feed data
             if update_feed:
