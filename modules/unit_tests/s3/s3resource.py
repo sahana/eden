@@ -349,7 +349,7 @@ class ResourceExportTests(unittest.TestCase):
             resource.import_xml(xmltree)
 
             resource = current.s3db.resource("org_office", uid="ETO1")
-            tree = resource.export_tree(start=0, limit=1, dereference=False)
+            tree = S3ResourceTree(resource).build(start=0, limit=1, dereference=False)
 
             root = tree.getroot()
             assertEqual(root.tag, xml.TAG.root)
@@ -394,10 +394,11 @@ class ResourceExportTests(unittest.TestCase):
             resource.import_xml(xmltree)
 
             resource = current.s3db.resource("org_office", uid="ETO2")
-            tree = resource.export_tree(start=0,
-                                        limit=1,
-                                        dereference=False,
-                                        maxbounds=True)
+            tree = S3ResourceTree(resource).build(start = 0,
+                                                  limit = 1,
+                                                  dereference = False,
+                                                  maxbounds = True,
+                                                  )
             root = tree.getroot()
             attrib = root.attrib
             assertEqual(len(attrib), 9)
@@ -454,9 +455,10 @@ class ResourceExportTests(unittest.TestCase):
 
         # Without msince, elements should have same order as in load
         msince = msince=datetime.datetime.utcnow() - datetime.timedelta(days=1)
-        tree = resource.export_tree(start=0,
-                                    limit=1,
-                                    dereference=False)
+        tree = S3ResourceTree(resource).build(start = 0,
+                                              limit = 1,
+                                              dereference = False,
+                                              )
         root = tree.getroot()
         assertEqual(len(root), 1)
 
@@ -465,10 +467,11 @@ class ResourceExportTests(unittest.TestCase):
         assertEqual(uuid, first)
 
         # With msince, elements should be ordered by age
-        tree = resource.export_tree(start=0,
-                                    limit=1,
-                                    msince=msince,
-                                    dereference=False)
+        tree = S3ResourceTree(resource).build(start = 0,
+                                              limit = 1,
+                                              msince = msince,
+                                              dereference = False,
+                                              )
         root = tree.getroot()
         assertEqual(len(root), 1)
 

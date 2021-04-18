@@ -8,6 +8,7 @@
 import unittest
 from gluon.languages import lazyT
 
+from s3 import S3ResourceTree
 from s3.s3fields import *
 from s3compat import basestring
 
@@ -989,7 +990,7 @@ class S3ExportLazyFKRepresentationTests(unittest.TestCase):
 
         # Export with IDs
         current.xml.show_ids = True
-        tree = resource.export_tree(dereference=False)
+        tree = S3ResourceTree(resource).build(dereference=False)
         root = tree.getroot()
 
         locations = self.locations

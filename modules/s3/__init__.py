@@ -53,6 +53,7 @@ from .s3datetime import *
 # Codecs for data export/import
 from .s3codec import *
 from .s3xml import *
+from .s3rtb import *
 
 # Common field definitions
 from .s3fields import *

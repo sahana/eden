@@ -27,6 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = ("S3ResourceTree",
+           )
+
 import json
 from lxml import etree
 
@@ -168,10 +171,10 @@ class S3ResourceTree(object):
             self.masters.extend(masters)
             self.nodes.extend(nodes)
 
+        depth = maxdepth if dereference else 0
+
         # Export dependencies
         dependencies = self.pending_dependencies
-
-        depth = maxdepth if dereference else 0
         while dependencies and depth:
 
             self.pending_dependencies = {}
@@ -200,6 +203,11 @@ class S3ResourceTree(object):
                     self.nodes.extend(nodes)
 
             dependencies = self.pending_dependencies
+
+        # Export identities of remaining dependencies, so references
+        # can be resolved
+        if dependencies:
+            self.export_identities(dependencies)
 
         # Create root element
         root = etree.Element(xml.TAG.root)
@@ -785,6 +793,96 @@ class S3ResourceTree(object):
                 target_uids.append(tuid)
 
         return target, target_ids, target_uids
+
+    # -------------------------------------------------------------------------
+    def export_identities(self, dependencies):
+        """
+            Resolve the record identities of dependencies and add them
+            to the exported-map (rather than exporting the referenced
+            records)
+
+            @param dependencies: dict of dependencies,
+                                 {tablename: {record_ids}}
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        UID = current.xml.UID
+        accessible_query = current.auth.s3_accessible_query
+
+        exported = self.exported
+        for tablename, record_ids in dependencies.items():
+
+            table = s3db.table(tablename)
+            if not table:
+                continue
+
+            # Check which identities are missing
+            ids = {i for i in record_ids if (tablename, i) not in exported}
+
+            pkey = table._id.name
+            if pkey != "id" and "instance_type" in table.fields:
+
+                # Lookup the instance type per super-ID
+                query = table._id.belongs(ids)
+                srows = db(query).select(table._id,
+                                         table.instance_type,
+                                         limitby = (0, len(ids)),
+                                         )
+
+                # Group the super-IDs by instance type
+                loadmap = {}
+                for srow in srows:
+                    instance_type = srow.instance_type
+                    if instance_type not in loadmap:
+                        loadmap[instance_type] = {srow[pkey]}
+                    else:
+                        loadmap[instance_type].add(srow[pkey])
+
+                for tn, super_ids in loadmap.items():
+
+                    # Get the instance table
+                    itable = s3db.table(tn)
+                    if not itable or \
+                       any (fn not in itable.fields for fn in (pkey, UID)):
+                        continue
+
+                    # Look up the instance record identities
+                    query = itable[pkey].belongs(super_ids) & \
+                            accessible_query("read", itable)
+                    rows = db(query).select(itable._id,
+                                            itable[UID],
+                                            itable[pkey],
+                                            limitby = (0, len(super_ids)),
+                                            )
+
+                    # Add identities to exported
+                    for row in rows:
+                        super_id = row[pkey]
+                        record_id = row[itable._id]
+                        exported[(tablename, super_id)] = (instance_type,
+                                                           record_id,
+                                                           row[UID],
+                                                           )
+
+            elif UID in table.fields:
+
+                # Look up the UID for each accessible record
+                query = table._id.belongs(ids) & \
+                        accessible_query("read", table)
+                rows = db(query).select(table._id,
+                                        table[UID],
+                                        limitby = (0, len(ids)),
+                                        )
+
+                # Add identities to exported
+                for row in rows:
+                    record_id = row[pkey]
+                    exported[(tablename, record_id)] = (tablename,
+                                                        record_id,
+                                                        row[UID],
+                                                        )
 
 # =============================================================================
 class S3ResourceReference(object):
