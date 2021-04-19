@@ -4,6 +4,12 @@
 
     <xsl:output method="xml"/>
 
+    <xsl:key name="sites" match="resource[@name='org_facility' or @name='inv_warehouse']" use="@uuid"/>
+    <xsl:key name="items" match="resource[@name='supply_item']" use="@uuid"/>
+    <xsl:key name="packs" match="resource[@name='supply_item_pack']" use="@uuid"/>
+    <xsl:key name="requesters" match="resource[@name='pr_person']" use="@uuid"/>
+    <xsl:key name="locations" match="resource[@name='gis_location']" use="@uuid"/>
+
     <s3:fields tables="req_req" select="req_ref,date,site_id,comments,requester_id"/>
     <s3:fields tables="req_req_item" select="item_id,item_pack_id,quantity"/>
 
@@ -12,7 +18,7 @@
     <s3:fields tables="pr_person" select="first_name,last_name"/>
 
     <s3:fields tables="org_facility" select="name,phone1,email,location_id"/>
-    <s3:fields tables="inv_warehouse" select="name"/>
+    <s3:fields tables="inv_warehouse" select="name,location_id"/>
     <s3:fields tables="gis_location" select="L3,L4,addr_street,addr_postcode"/>
 
     <s3:fields tables="ANY" select="*"/>
@@ -36,8 +42,7 @@
     <xsl:template match="resource[@name='req_req']">
 
         <xsl:variable name="SiteUUID" select="reference[@field='site_id']/@uuid"/>
-        <xsl:variable name="SiteType" select="reference[@field='site_id']/@resource"/>
-        <xsl:variable name="Site" select="//resource[@name=$SiteType and @uuid=$SiteUUID]"/>
+        <xsl:variable name="Site" select='key("sites", $SiteUUID)[1]'/>
 
         <xsl:if test="$Site">
             <Bestellung>
@@ -82,8 +87,8 @@
 
         <xsl:if test="$ItemUUID!='' and $PackUUID!='' and $Quantity!=''">
 
-            <xsl:variable name="ItemCode" select="//resource[@name='supply_item' and @uuid=$ItemUUID]/data[@field='code']/text()"/>
-            <xsl:variable name="PackQuantity" select="//resource[@name='supply_item_pack' and @uuid=$PackUUID]/data[@field='quantity']/@value"/>
+            <xsl:variable name="ItemCode" select="key('items', $ItemUUID)[1]/data[@field='code']/text()"/>
+            <xsl:variable name="PackQuantity" select="key('packs', $PackUUID)[1]/data[@field='quantity']/@value"/>
 
             <xsl:if test="$ItemCode!='' and $PackQuantity!=''">
                 <xsl:variable name="TotalQuantity" select='$Quantity * $PackQuantity'/>
@@ -117,7 +122,7 @@
 
                 <!-- Location details for the requesting facility -->
                 <xsl:variable name="LocationUUID" select="$Site/reference[@field='location_id']/@uuid"/>
-                <xsl:variable name="Location" select="//resource[@name='gis_location' and @uuid=$LocationUUID]"/>
+                <xsl:variable name="Location" select="key('locations', $LocationUUID)[1]"/>
                 <xsl:if test="$Location">
                     <xsl:variable name="L4" select="$Location/data[@field='L4']/text()"/>
                     <xsl:variable name="L3" select="$Location/data[@field='L4']/text()"/>
@@ -150,11 +155,16 @@
                 <!-- The requesting user -->
                 <Ansprechpartner>
                     <xsl:variable name="RequesterUUID" select="reference[@field='requester_id']/@uuid"/>
-                    <xsl:variable name="Requester" select="//resource[@name='pr_person' and @uuid=$RequesterUUID]"/>
-                    <xsl:if test="$Requester">
-                        <xsl:value-of select="concat($Requester/data[@field='first_name']/text(), ' ',
-                                                     $Requester/data[@field='last_name']/text())"/>
-                    </xsl:if>
+                    <xsl:variable name="Requester" select="key('requesters', $RequesterUUID)[1]"/>
+                    <xsl:choose>
+                        <xsl:when test="$Requester">
+                            <xsl:value-of select="concat($Requester/data[@field='first_name']/text(), ' ',
+                                                         $Requester/data[@field='last_name']/text())"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="reference[@field='requester_id']/text()"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
                 </Ansprechpartner>
             </Besteller>
         </xsl:if>
