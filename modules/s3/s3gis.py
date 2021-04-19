@@ -7953,7 +7953,7 @@ def addFeatureResources(feature_resources):
                 # Use gis/location controller in all reports
                 url_format = "%s/{id}.plain" % URL(c="gis", f="location")
             else:
-                params.update({"components": "None",
+                params.update({"mcomponents": "None",
                                "maxdepth": maxdepth,
                                })
                 url = URL(c = row.controller,
@@ -8006,7 +8006,7 @@ def addFeatureResources(feature_resources):
                 # Not much we can do!
                 # @ToDo: Use Context
                 continue
-            options = "components=None&maxdepth=%s&show_ids=true" % maxdepth
+            options = "mcomponents=None&maxdepth=%s&show_ids=true" % maxdepth
             if "?" in url:
                 url = "%s&%s" % (url, options)
             else:
@@ -8484,7 +8484,7 @@ class LayerFeature(Layer):
                     maxdepth = 0
                 _url = URL(self.controller, self.function)
                 # id is used for url_format
-                url = "%s.geojson?layer=%i&components=None&maxdepth=%s&show_ids=true" % \
+                url = "%s.geojson?layer=%i&mcomponents=None&maxdepth=%s&show_ids=true" % \
                     (_url,
                      self.layer_id,
                      maxdepth)
