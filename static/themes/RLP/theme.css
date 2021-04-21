@@ -2748,3 +2748,12 @@ body.rtl .event-type-header {
 .record-integrity-broken i {
   padding: 0 0.2rem;
 }
+
+/* line 397, ../scss/theme/_misc.scss */
+.service-list {
+  font-size: 0.8rem;
+  list-style-type: disc;
+  list-style-position: inside;
+  padding: 0;
+  margin: 0;
+}

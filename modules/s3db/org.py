@@ -2513,6 +2513,7 @@ class S3OrganisationServiceModel(S3Model):
     names = ("org_service",
              "org_service_id",
              "org_service_organisation",
+             "org_service_site",
              "org_service_location",
              #"org_service_location_service",
              )
@@ -2529,6 +2530,8 @@ class S3OrganisationServiceModel(S3Model):
         super_link = self.super_link
 
         organisation_id = self.org_organisation_id
+
+        SITE = settings.get_org_site_label()
 
         hierarchical_service_types = settings.get_org_services_hierarchical()
 
@@ -2662,6 +2665,29 @@ class S3OrganisationServiceModel(S3Model):
                   )
 
         # ---------------------------------------------------------------------
+        # Service <> Site Link Table
+        # - normally use org_service_location instead, but can use this simpler
+        #   variant if-required
+        #
+        tablename = "org_service_site"
+        define_table(tablename,
+                     service_id(),
+                     super_link("site_id", "org_site",
+                                label = SITE,
+                                readable = True,
+                                writable = True,
+                                represent = self.org_site_represent,
+                                ),
+                     )
+
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("site_id",
+                                                       "service_id",
+                                                       ),
+                                            ),
+                  )
+
+        # ---------------------------------------------------------------------
         # Service status options
         #
         service_status_opts = (("PLANNED", T("Planned")),
@@ -2673,8 +2699,6 @@ class S3OrganisationServiceModel(S3Model):
         # ---------------------------------------------------------------------
         # Organizations <> Services <> Locations Link Table
         #
-        SITE = settings.get_org_site_label()
-
         tablename = "org_service_location"
         define_table(tablename,
                      super_link("doc_id", "doc_entity"),
@@ -3275,6 +3299,13 @@ class S3SiteModel(S3Model):
                                           "joinby": "site_id",
                                           "multiple": False,
                                           },
+
+                       # Services
+                       org_service = {"link": "org_service_site",
+                                      "joinby": "site_id",
+                                      "key": "service_id",
+                                      "actuate": "hide",
+                                      },
 
                        # Events (Check-In/Check-Out)
                        org_site_event = {"name": "event",

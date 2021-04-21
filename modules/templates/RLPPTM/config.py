@@ -13,7 +13,7 @@ from gluon import current, URL, A, DIV, TAG, \
                   IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_NOT_EMPTY
 from gluon.storage import Storage
 
-from s3 import FS, IS_FLOAT_AMOUNT, IS_ONE_OF, S3Represent, s3_str
+from s3 import FS, IS_FLOAT_AMOUNT, ICON, IS_ONE_OF, S3Represent, s3_str
 from s3dal import original_tablename
 
 from .rlpgeonames import rlp_GeoNames
@@ -1754,241 +1754,22 @@ def config(settings):
     settings.customise_fin_voucher_invoice_controller = customise_fin_voucher_invoice_controller
 
     # -------------------------------------------------------------------------
-    def facility_create_onaccept(form):
-
-        # Get record ID
-        form_vars = form.vars
-        if "id" in form_vars:
-            record_id = form_vars.id
-        elif hasattr(form, "record_id"):
-            record_id = form.record_id
-        else:
-            return
-
-        from .helpers import add_facility_default_tags
-        add_facility_default_tags(record_id)
-
-    # -------------------------------------------------------------------------
-    def customise_org_facility_resource(r, tablename):
+    def add_org_tags():
+        """
+            Add organisation tags as filtered components,
+            for embedding in form, filtering and as report axis
+        """
 
         s3db = current.s3db
 
-        is_org_group_admin = current.auth.s3_has_role("ORG_GROUP_ADMIN")
-
-        # Tags as filtered components (for embedding in form)
-        s3db.add_components("org_site",
-                            org_site_tag = ({"name": "public",
-                                             "joinby": "site_id",
-                                             "filterby": {"tag": "PUBLIC"},
-                                             "multiple": False,
-                                             },
-                                            ),
-
+        s3db.add_components("org_organisation",
+                            org_organisation_tag = ({"name": "requester",
+                                                     "joinby": "organisation_id",
+                                                     "filterby": {"tag": "REQUESTER"},
+                                                     "multiple": False,
+                                                     },
+                                                    ),
                             )
-
-        # Custom onaccept to add default tags
-        s3db.add_custom_callback("org_facility",
-                                 "onaccept",
-                                 facility_create_onaccept,
-                                 method = "create",
-                                 )
-
-        from s3 import S3SQLCustomForm, S3SQLInlineLink, \
-                       S3LocationSelector, S3LocationFilter, S3TextFilter
-
-        # Configure location selector incl. Geocoder
-        s3db.org_facility.location_id.widget = S3LocationSelector(levels = ("L1", "L2", "L3", "L4"),
-                                                                  required_levels = ("L1", "L2", "L3"),
-                                                                  show_address = True,
-                                                                  show_postcode = True,
-                                                                  show_map = True,
-                                                                  )
-        current.response.s3.scripts.append("/%s/static/themes/RLP/js/geocoderPlugin.js" % r.application)
-
-        # Custom list fields
-        list_fields = ["name",
-                       #"organisation_id",
-                       (T("Telephone"), "phone1"),
-                       "email",
-                       (T("Opening Hours"), "opening_times"),
-                       "location_id$addr_street",
-                       "location_id$addr_postcode",
-                       "location_id$L4",
-                       "location_id$L3",
-                       "location_id$L2",
-                       ]
-        if is_org_group_admin and r.get_vars.get("$$pending") == "1":
-            list_fields.insert(1, "organisation_id")
-
-        # Custom filter widgets
-        text_fields = ["name",
-                       "location_id$L2",
-                       "location_id$L3",
-                       "location_id$L4",
-                       "location_id$addr_postcode",
-                       ]
-
-        filter_widgets = [
-            S3TextFilter(text_fields,
-                         label = T("Search"),
-                         ),
-            S3LocationFilter("location_id",
-                             levels = ("L1", "L2", "L3", "L4"),
-                             bigtable = True,
-                             translate = False,
-                             ),
-            ]
-
-        # Custom CRUD form
-        crud_fields = [#"organisation_id",
-                       "name",
-                       #"public.value",
-                       S3SQLInlineLink(
-                              "facility_type",
-                              label = T("Facility Type"),
-                              field = "facility_type_id",
-                              widget = "groupedopts",
-                              cols = 3,
-                        ),
-                       "location_id",
-                       (T("Telephone"), "phone1"),
-                       "email",
-                       (T("Opening Hours"), "opening_times"),
-                       #"obsolete",
-                       "comments",
-                       ]
-
-        resource = r.resource
-        if r.tablename == "org_facility":
-            fresource = resource
-        elif r.tablename == "org_organisation":
-            fresource = resource.components.get("facility")
-        else:
-            fresource = None
-
-        if fresource:
-            table = fresource.table
-
-            # No Add-Organisation link
-            field = table.organisation_id
-            field.comment = None
-
-            if is_org_group_admin:
-                crud_fields.insert(0, "organisation_id")
-
-                # Configure binary tag representation
-                from .helpers import configure_binary_tags
-                configure_binary_tags(fresource, ("public",))
-
-                # Add binary tags to form
-                crud_fields.insert(2, (T("In Public Registry"), "public.value"))
-
-        s3db.configure(tablename,
-                       crud_form = S3SQLCustomForm(*crud_fields),
-                       filter_widgets = filter_widgets,
-                       list_fields = list_fields,
-                       )
-
-    settings.customise_org_facility_resource = customise_org_facility_resource
-
-    # -------------------------------------------------------------------------
-    def customise_org_facility_controller(**attr):
-
-        s3 = current.response.s3
-
-        auth = current.auth
-        is_org_group_admin = auth.s3_has_role("ORG_GROUP_ADMIN")
-
-        # Load model for default CRUD strings
-        current.s3db.table("org_facility")
-
-        # Custom prep
-        standard_prep = s3.prep
-        def prep(r):
-            # Call standard prep
-            result = standard_prep(r) if callable(standard_prep) else True
-
-            s3db = current.s3db
-
-            resource = r.resource
-            record = r.record
-            if not record:
-                # Open read-view first, even if permitted to edit
-                settings.ui.open_read_first = True
-
-                # Filter by public-tag
-                get_vars = r.get_vars
-                pending = get_vars.get("$$pending")
-                if is_org_group_admin and pending == "1":
-                    resource.add_filter(FS("public.value") == "N")
-                    s3.crud_strings.org_facility.title_list = T("Unapproved Test Stations")
-                else:
-                    resource.add_filter(FS("public.value") == "Y")
-                    s3.crud_strings.org_facility.title_list = T("Find Test Station")
-
-                    # No Side Menu
-                    current.menu.options = None
-
-                    # Filter list by project code
-                    # - re-use last used $$code filter of this session
-                    # - default to original subset for consistency in bookmarks/links
-                    session_s3 = current.session.s3
-                    default_filter = session_s3.get("rlp_facility_filter", "TESTS-SCHOOLS")
-                    code = r.get_vars.get("$$code", default_filter)
-                    if code:
-                        session_s3.rlp_facility_filter = code
-                        query = FS("~.organisation_id$project.code") == code
-                        resource.add_filter(query)
-                        if code == "TESTS-SCHOOLS":
-                            s3.crud_strings.org_facility.title_list = T("Test Stations for School and Child Care Staff")
-                        elif code == "TESTS-PUBLIC":
-                            s3.crud_strings.org_facility.title_list = T("Test Stations for Everybody")
-
-            else:
-                table = resource.table
-
-                # No facility details editable here except comments
-                for fn in table.fields:
-                    if fn != "comments":
-                        table[fn].writable = False
-
-                # No side menu except for OrgGroupAdmin
-                if not is_org_group_admin:
-                    current.menu.options = None
-
-                if not is_org_group_admin and \
-                   not auth.s3_has_role("ORG_ADMIN", for_pe=record.pe_id):
-
-                    s3.hide_last_update = True
-
-                    field = table.obsolete
-                    field.readable = field.writable = False
-
-                    field = table.organisation_id
-                    field.represent = s3db.org_OrganisationRepresent(show_link=False)
-
-            resource.configure(summary = ({"name": "table",
-                                           "label": "Table",
-                                           "widgets": [{"method": "datatable"}]
-                                           },
-                                          {"name": "map",
-                                           "label": "Map",
-                                           "widgets": [{"method": "map", "ajax_init": True}],
-                                           },
-                                          ),
-                               insertable = False,
-                               deletable = False,
-                               )
-
-            return result
-        s3.prep = prep
-
-        # No rheader
-        attr["rheader"] = None
-
-        return attr
-
-    settings.customise_org_facility_controller = customise_org_facility_controller
 
     # -------------------------------------------------------------------------
     def organisation_create_onaccept(form):
@@ -2010,15 +1791,35 @@ def config(settings):
 
         s3db = current.s3db
 
-        # Tags as filtered components (for embedding in form)
-        s3db.add_components("org_organisation",
-                            org_organisation_tag = ({"name": "requester",
-                                                     "joinby": "organisation_id",
-                                                     "filterby": {"tag": "REQUESTER"},
-                                                     "multiple": False,
-                                                     },
-                                                    ),
-                            )
+        # Add binary organisation tags
+        add_org_tags()
+
+        # Reports configuration
+        if r.method == "report":
+            axes = ["facility.location_id$L3",
+                    "facility.location_id$L2",
+                    "facility.location_id$L1",
+                    "facility.service_site.service_id",
+                    (T("Project"), "project.name"),
+                    (T("Organization Group"), "group_membership.group_id"),
+                    ]
+
+            report_options = {
+                "rows": axes,
+                "cols": axes,
+                "fact": [(T("Number of Organizations"), "count(id)"),
+                         (T("Number of Facilities"), "count(facility.id)"),
+                        ],
+                "defaults": {"rows": "facility.location_id$L2",
+                             "cols": None,
+                             "fact": "count(id)",
+                             "totals": True,
+                             },
+                }
+
+            s3db.configure(tablename,
+                           report_options = report_options,
+                           )
 
         # Custom onaccept to create default tags
         s3db.add_custom_callback("org_organisation",
@@ -2084,6 +1885,7 @@ def config(settings):
                         query = FS("group.id") == org_group_id
                     resource.add_filter(query)
 
+            record = r.record
             if not r.component:
                 if r.interactive:
 
@@ -2100,7 +1902,6 @@ def config(settings):
 
                     # Custom form
                     if is_org_group_admin:
-                        record = r.record
                         user = auth.user
                         if record and user:
                             # Only OrgGroupAdmins managing this organisation can change
@@ -2195,6 +1996,15 @@ def config(settings):
                     list_fields.append((T("Email"), "email.value"))
                 r.resource.configure(list_fields = list_fields,
                                      )
+
+            #elif r.component_name == "facility":
+            #    ctable = r.component.table
+            #    if is_org_group_admin or \
+            #       record and auth.s3_has_role("ORG_ADMIN", for_pe=record.pe_id):
+            #        # Expose obsolete-flag
+            #        field = ctable.obsolete
+            #        field.readable = field.writable = True
+
             return result
         s3.prep = prep
 
@@ -2206,6 +2016,337 @@ def config(settings):
         return attr
 
     settings.customise_org_organisation_controller = customise_org_organisation_controller
+
+    # -------------------------------------------------------------------------
+    def facility_create_onaccept(form):
+
+        # Get record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        from .helpers import add_facility_default_tags
+        add_facility_default_tags(record_id)
+
+    # -------------------------------------------------------------------------
+    def customise_org_facility_resource(r, tablename):
+
+        s3db = current.s3db
+
+        is_org_group_admin = current.auth.s3_has_role("ORG_GROUP_ADMIN")
+
+        # Tags as filtered components (for embedding in form)
+        add_org_tags()
+        s3db.add_components("org_site",
+                            org_site_tag = ({"name": "public",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "PUBLIC"},
+                                             "multiple": False,
+                                             },
+                                            ),
+
+                            )
+
+        # Custom onaccept to add default tags
+        s3db.add_custom_callback("org_facility",
+                                 "onaccept",
+                                 facility_create_onaccept,
+                                 method = "create",
+                                 )
+
+        from s3 import (S3SQLCustomForm,
+                        S3SQLInlineLink,
+                        S3LocationSelector,
+                        S3LocationFilter,
+                        S3OptionsFilter,
+                        S3TextFilter,
+                        s3_get_filter_opts,
+                        )
+
+        table = s3db.org_facility
+
+        # Configure location selector incl. Geocoder
+        field = table.location_id
+        field.widget = S3LocationSelector(levels = ("L1", "L2", "L3", "L4"),
+                                          required_levels = ("L1", "L2", "L3"),
+                                          show_address = True,
+                                          show_postcode = True,
+                                          show_map = True,
+                                          )
+        current.response.s3.scripts.append("/%s/static/themes/RLP/js/geocoderPlugin.js" % r.application)
+
+        # Custom label for obsolete-Flag
+        field = table.obsolete
+        field.label = T("Defunct")
+        field.represent = lambda v, row=None: ICON("remove") if v else ""
+
+        stable = s3db.org_service_site
+        field = stable.service_id
+        from .helpers import ServiceListRepresent
+        field.represent = ServiceListRepresent(lookup = "org_service",
+                                               show_link = False,
+                                               )
+
+        # Custom list fields
+        list_fields = ["name",
+                       #"organisation_id",
+                       (T("Telephone"), "phone1"),
+                       "email",
+                       (T("Opening Hours"), "opening_times"),
+                       "service_site.service_id",
+                       "location_id$addr_street",
+                       "location_id$addr_postcode",
+                       "location_id$L4",
+                       "location_id$L3",
+                       "location_id$L2",
+                       ]
+        if is_org_group_admin and r.get_vars.get("$$pending") == "1":
+            list_fields.insert(1, "organisation_id")
+        #    list_fields.append("obsolete")
+        #elif r.tablename == "org_organisation":
+        #    list_fields.append("obsolete")
+
+        # Custom filter widgets
+        text_fields = ["name",
+                       "location_id$L2",
+                       "location_id$L3",
+                       "location_id$L4",
+                       "location_id$addr_postcode",
+                       ]
+
+        filter_widgets = [
+            S3TextFilter(text_fields,
+                         label = T("Search"),
+                         ),
+            S3LocationFilter("location_id",
+                             levels = ("L1", "L2", "L3", "L4"),
+                             bigtable = True,
+                             translate = False,
+                             ),
+            S3OptionsFilter("service_site.service_id",
+                            label = T("Services"),
+                            options = lambda: s3_get_filter_opts("org_service"),
+                            cols = 1,
+                            hidden = True,
+                            ),
+            ]
+        if is_org_group_admin:
+            binary_tag_opts = OrderedDict([("Y", T("Yes")), ("N", T("No"))])
+            filter_widgets.extend([
+                S3OptionsFilter("organisation_id$requester.value",
+                                label = T("Can order equipment"),
+                                options = binary_tag_opts,
+                                hidden = True,
+                                ),
+                ])
+            if r.method == "report":
+                filter_widgets.extend([
+                    S3OptionsFilter("organisation_id$project_organisation.project_id",
+                                    options = lambda: s3_get_filter_opts("project_project"),
+                                    hidden = True,
+                                    ),
+                    S3OptionsFilter("public.value",
+                                    label = T("In Public Registry"),
+                                    options = binary_tag_opts,
+                                    hidden = True,
+                                    ),
+                    ])
+
+        # Custom CRUD form
+        crud_fields = [#"organisation_id",
+                       "name",
+                       #"public.value",
+                       S3SQLInlineLink(
+                              "facility_type",
+                              label = T("Facility Type"),
+                              field = "facility_type_id",
+                              widget = "groupedopts",
+                              cols = 3,
+                        ),
+                       "location_id",
+                       (T("Telephone"), "phone1"),
+                       "email",
+                       (T("Opening Hours"), "opening_times"),
+                       S3SQLInlineLink(
+                           "service",
+                           label = T("Services"),
+                           field = "service_id",
+                           widget = "groupedopts",
+                           cols = 1,
+                           ),
+                       #"obsolete",
+                       "comments",
+                       ]
+
+        resource = r.resource
+        if r.tablename == "org_facility":
+            fresource = resource
+        elif r.tablename == "org_organisation":
+            fresource = resource.components.get("facility")
+        else:
+            fresource = None
+
+        if fresource:
+            table = fresource.table
+
+            # No Add-Organisation link
+            field = table.organisation_id
+            field.comment = None
+
+            if is_org_group_admin:
+                crud_fields.insert(0, "organisation_id")
+
+                # Configure binary tag representation
+                from .helpers import configure_binary_tags
+                configure_binary_tags(fresource, ("public",))
+
+                # Add binary tags to form
+                crud_fields.insert(2, (T("In Public Registry"), "public.value"))
+
+        s3db.configure(tablename,
+                       crud_form = S3SQLCustomForm(*crud_fields),
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
+        if r.method == "report":
+            axes = ["organisation_id",
+                    "location_id$L3",
+                    "location_id$L2",
+                    "location_id$L1",
+                    "service_site.service_id",
+                    (T("Project"), "organisation_id$project.name"),
+                    (T("Organization Group"), "organisation_id$group_membership.group_id"),
+                    (T("Requested Items"), "req.req_item.item_id"),
+                    ]
+
+            report_options = {
+                "rows": axes,
+                "cols": axes,
+                "fact": [(T("Number of Facilities"), "count(id)"),
+                         (T("List of Facilities"), "list(name)"),
+                        ],
+                "defaults": {"rows": "location_id$L2",
+                             "cols": None,
+                             "fact": "count(id)",
+                             "totals": True,
+                             },
+                }
+
+            s3db.configure(tablename,
+                           report_options = report_options,
+                           )
+
+    settings.customise_org_facility_resource = customise_org_facility_resource
+
+    # -------------------------------------------------------------------------
+    def customise_org_facility_controller(**attr):
+
+        s3 = current.response.s3
+
+        auth = current.auth
+        is_org_group_admin = auth.s3_has_role("ORG_GROUP_ADMIN")
+
+        # Load model for default CRUD strings
+        current.s3db.table("org_facility")
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            s3db = current.s3db
+
+            resource = r.resource
+            record = r.record
+            if not record:
+                # Open read-view first, even if permitted to edit
+                settings.ui.open_read_first = True
+
+                if is_org_group_admin and r.method == "report":
+
+                    s3.crud_strings.org_facility.title_report = T("Facilities Statistics")
+
+                else:
+
+                    # Filter by public-tag
+                    get_vars = r.get_vars
+                    pending = get_vars.get("$$pending")
+                    if is_org_group_admin and pending == "1":
+                        resource.add_filter(FS("public.value") == "N")
+                        s3.crud_strings.org_facility.title_list = T("Unapproved Test Stations")
+
+                    else:
+                        resource.add_filter(FS("public.value") == "Y")
+                        s3.crud_strings.org_facility.title_list = T("Find Test Station")
+
+                        # No Side Menu
+                        current.menu.options = None
+
+                        # Filter list by project code
+                        # - re-use last used $$code filter of this session
+                        # - default to original subset for consistency in bookmarks/links
+                        session_s3 = current.session.s3
+                        default_filter = session_s3.get("rlp_facility_filter", "TESTS-SCHOOLS")
+                        code = r.get_vars.get("$$code", default_filter)
+                        if code:
+                            session_s3.rlp_facility_filter = code
+                            query = FS("~.organisation_id$project.code") == code
+                            resource.add_filter(query)
+                            if code == "TESTS-SCHOOLS":
+                                s3.crud_strings.org_facility.title_list = T("Test Stations for School and Child Care Staff")
+                            elif code == "TESTS-PUBLIC":
+                                s3.crud_strings.org_facility.title_list = T("Test Stations for Everybody")
+            else:
+                table = resource.table
+
+                # No facility details editable here except comments
+                for fn in table.fields:
+                    if fn != "comments":
+                        table[fn].writable = False
+
+                # No side menu except for OrgGroupAdmin
+                if not is_org_group_admin:
+                    current.menu.options = None
+
+                if not is_org_group_admin and \
+                   not auth.s3_has_role("ORG_ADMIN", for_pe=record.pe_id):
+
+                    s3.hide_last_update = True
+
+                    field = table.obsolete
+                    field.readable = field.writable = False
+
+                    field = table.organisation_id
+                    field.represent = s3db.org_OrganisationRepresent(show_link=False)
+
+            resource.configure(summary = ({"name": "table",
+                                           "label": "Table",
+                                           "widgets": [{"method": "datatable"}]
+                                           },
+                                          {"name": "map",
+                                           "label": "Map",
+                                           "widgets": [{"method": "map", "ajax_init": True}],
+                                           },
+                                          ),
+                               insertable = False,
+                               deletable = False,
+                               )
+
+            return result
+        s3.prep = prep
+
+        # No rheader
+        attr["rheader"] = None
+
+        return attr
+
+    settings.customise_org_facility_controller = customise_org_facility_controller
 
     # -------------------------------------------------------------------------
     def customise_project_project_resource(r, tablename):
@@ -2519,6 +2660,33 @@ def config(settings):
         # Do not check for site_id (unused)
         s3db.clear_config("inv_send", "onvalidation")
 
+        if r.method == "report":
+            axes = [(T("Orderer"), "to_site_id"),
+                    "to_site_id$location_id$L3",
+                    "to_site_id$location_id$L2",
+                    "to_site_id$location_id$L1",
+                    (T("Shipment Items"), "track_item.item_id"),
+                    "status",
+                    ]
+
+            report_options = {
+                "rows": axes,
+                "cols": axes,
+                "fact": [(T("Number of Shipments"), "count(id)"),
+                         (T("Number of Items"), "count(track_item.id)"),
+                         (T("Sent Quantity"), "sum(track_item.quantity)"),
+                        ],
+                "defaults": {"rows": "track_item.item_id",
+                             "cols": "status",
+                             "fact": "sum(track_item.quantity)",
+                             "totals": True,
+                             },
+                }
+
+            s3db.configure(tablename,
+                           report_options = report_options,
+                           )
+
     settings.customise_inv_send_resource = customise_inv_send_resource
 
     # -------------------------------------------------------------------------
@@ -2541,6 +2709,9 @@ def config(settings):
             table = resource.table
 
             component = r.component
+
+            if r.method == "report":
+                s3.crud_strings[resource.tablename].title_report = T("Shipments Statistics")
 
             if not component:
                 record = r.record
@@ -2867,6 +3038,34 @@ def config(settings):
                                          error_message = T("Minimum quantity is %(min)s"),
                                          )
 
+        if r.method == "report":
+            axes = [(T("Orderer"), "site_id"),
+                    "site_id$location_id$L3",
+                    "site_id$location_id$L2",
+                    "site_id$location_id$L1",
+                    (T("Requested Items"), "req_item.item_id"),
+                    "transit_status",
+                    "fulfil_status",
+                    ]
+
+            report_options = {
+                "rows": axes,
+                "cols": axes,
+                "fact": [(T("Number of Requests"), "count(id)"),
+                         (T("Number of Items"), "count(req_item.id)"),
+                         (T("Requested Quantity"), "sum(req_item.quantity)"),
+                        ],
+                "defaults": {"rows": "site_id$location_id$L2",
+                             "cols": None,
+                             "fact": "count(id)",
+                             "totals": True,
+                             },
+                }
+
+            s3db.configure(tablename,
+                           report_options = report_options,
+                           )
+
     settings.customise_req_req_resource = customise_req_req_resource
 
     # -------------------------------------------------------------------------
@@ -2883,6 +3082,8 @@ def config(settings):
         # Custom prep
         standard_prep = s3.prep
         def prep(r):
+
+            r.get_vars["type"] = "1"
 
             is_supply_coordinator = has_role("SUPPLY_COORDINATOR")
 
@@ -3277,7 +3478,6 @@ def config(settings):
         field = table.obsolete
         field.label = T("Not orderable")
         field.readable = field.writable = True
-        from s3 import ICON
         field.represent = lambda v, row=None: ICON("remove") if v else ""
 
         # Filter widgets

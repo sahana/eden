@@ -359,10 +359,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           ),
                         M("Public Registry"),
                         ),
+                    M("Statistics", link=False)(
+                        M("Organizations", f="organisation", m="report"),
+                        M("Facilities", f="facility", m="report"),
+                        ),
                     M("Administration", restrict=("ADMIN"))(
                         M("Facility Types", f="facility_type"),
                         M("Organization Types", f="organisation_type"),
-                    #    M("Sectors", f="sector"),
+                        M("Services", f="service"),
                         ),
                     )
 
@@ -390,6 +394,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ),
                 M("Shipment##process", c="inv", f="send", restrict="SUPPLY_COORDINATOR"),
                 M("Deliveries", "inv", "recv", check=is_supply_requester),
+                M("Statistics", link=False, restrict="SUPPLY_COORDINATOR")(
+                    M("Orders##delivery", c="req", f="req", m="report"),
+                    M("Shipments", c="inv", f="send", m="report"),
+                    ),
                 M("Items", c="supply", f="item")(
                     M("Create", m="create"),
                     ),

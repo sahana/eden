@@ -57,7 +57,7 @@ from s3compat import StringIO, basestring, reduce, xrange
 from s3dal import Expression, Field, Row, Rows, Table, S3DAL, VirtualCommand
 from .s3data import S3DataTable, S3DataList
 from .s3datetime import s3_format_datetime
-from .s3fields import S3Represent, s3_all_meta_field_names
+from .s3fields import s3_all_meta_field_names
 from .s3query import FS, S3ResourceField, S3ResourceQuery, S3Joins, S3URLQuery
 from .s3utils import s3_get_foreign_key, s3_get_last_record_id, s3_has_foreign_key, s3_remove_last_record_id, s3_str, s3_unicode
 from .s3validators import IS_ONE_OF
@@ -5676,6 +5676,10 @@ class S3ResourceData(object):
         per_row_lookup = list_type and \
                          self.effort[colname] < len(fvalues) * 30
 
+        # Treat even single values as lists?
+        # - can be set as class attribute of custom S3Represents
+        always_list = hasattr(renderer, "always_list") and renderer.always_list
+
         # Render all unique values
         if hasattr(renderer, "bulk") and not list_type:
             per_row_lookup = False
@@ -5713,7 +5717,7 @@ class S3ResourceData(object):
                     result["_row"][colname] = value
 
             # Single value (master record)
-            elif len(record) == 1 or \
+            elif len(record) == 1 and not always_list or \
                 not joined and not list_type:
                 value = list(record.keys())[0]
                 result[colname] = fvalues[value] \
@@ -5722,7 +5726,7 @@ class S3ResourceData(object):
                     result["_row"][colname] = value
                 continue
 
-            # Multiple values (joined or list-type)
+            # Multiple values (joined or list-type, or explicit always_list)
             else:
                 if hasattr(renderer, "render_list"):
                     # Prefer S3Represent's render_list (so it can be customized)

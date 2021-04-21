@@ -8,10 +8,10 @@
 
 from gluon import current, Field, \
                   CRYPT, IS_EMAIL, IS_IN_SET, IS_LOWER, IS_NOT_IN_DB, \
-                  SQLFORM, DIV, H4, H5, I, INPUT, P, SPAN, TABLE, TD, TH, TR
+                  SQLFORM, DIV, H4, H5, I, INPUT, LI, P, SPAN, TABLE, TD, TH, TR, UL
 
-from s3 import IS_FLOAT_AMOUNT, S3DateTime, S3Method, \
-               s3_fullname, s3_mark_required
+from s3 import IS_FLOAT_AMOUNT, S3DateTime, S3Method, S3Represent, \
+               s3_fullname, s3_mark_required, s3_str
 
 # =============================================================================
 def get_role_realms(role):
@@ -539,6 +539,39 @@ def add_facility_default_tags(facility_id, approve=False):
                           )
 
 # =============================================================================
+class ServiceListRepresent(S3Represent):
+
+    always_list = True
+
+    def render_list(self, value, labels, show_link=True):
+        """
+            Helper method to render list-type representations from
+            bulk()-results.
+
+            @param value: the list
+            @param labels: the labels as returned from bulk()
+            @param show_link: render references as links, should
+                              be the same as used with bulk()
+        """
+
+        show_link = show_link and self.show_link
+
+        values = [v for v in value if v is not None]
+        if not len(values):
+            return ""
+
+        if show_link:
+            labels_ = (labels[v] if v in labels else self.default for v in values)
+        else:
+            labels_ = sorted(s3_str(labels[v]) if v in labels else self.default for v in values)
+
+        html = UL(_class="service-list")
+        for label in labels_:
+            html.append(LI(label))
+
+        return html
+
+# =============================================================================
 class InviteUserOrg(S3Method):
     """ Custom Method Handler to invite User Organisations """
 
@@ -596,7 +629,6 @@ class InviteUserOrg(S3Method):
         if active or disabled:
             response.error = T("There are already user accounts registered for this organization")
 
-            from gluon import UL, LI
             from s3 import s3_format_fullname
 
             fullname = lambda user: s3_format_fullname(fname = user.first_name,
