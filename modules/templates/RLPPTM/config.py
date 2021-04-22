@@ -2065,6 +2065,7 @@ def config(settings):
                         S3LocationFilter,
                         S3OptionsFilter,
                         S3TextFilter,
+                        S3WithIntro,
                         s3_get_filter_opts,
                         )
 
@@ -2172,13 +2173,19 @@ def config(settings):
                        (T("Telephone"), "phone1"),
                        "email",
                        (T("Opening Hours"), "opening_times"),
-                       S3SQLInlineLink(
-                           "service",
-                           label = T("Services"),
-                           field = "service_id",
-                           widget = "groupedopts",
-                           cols = 1,
-                           ),
+                       S3WithIntro(
+                            S3SQLInlineLink(
+                                "service",
+                                label = T("Services"),
+                                field = "service_id",
+                                widget = "groupedopts",
+                                cols = 1,
+                                ),
+                            intro = ("org",
+                                     "facility",
+                                     "SiteServiceIntro",
+                                     ),
+                       ),
                        #"obsolete",
                        "comments",
                        ]
