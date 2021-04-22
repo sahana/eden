@@ -415,9 +415,8 @@ class approve(S3CustomController):
                     project_id = int(v)
                 except (ValueError, TypeError):
                     continue
-                else:
-                    if project_id in selectable_projects:
-                        projects.append(project_id)
+                if project_id in selectable_projects:
+                    projects.append(project_id)
 
             # Add project selector
             field = Field("projects", "list:integer",
@@ -431,6 +430,22 @@ class approve(S3CustomController):
                           )
             field.tablename = "approve" # Dummy to make widget work
             projects_selector = S3GroupedOptionsWidget(cols=1)(field, projects)
+
+            # Map selected services to the services selectable at time of approval
+            selectable_services = register.selectable_services()
+            service_ids, service_names = [], []
+            selected = custom_get("services")
+            if not isinstance(selected, list):
+                selected = [selected]
+            for v in selected:
+                try:
+                    service_id = int(v)
+                except (ValueError, TypeError):
+                    continue
+                if service_id in selectable_services:
+                    service_ids.append(service_id)
+                    service_names.append(selectable_services[service_id])
+            services = ", ".join(service_names)
 
             comments = custom_get("comments")
 
@@ -477,6 +492,9 @@ class approve(S3CustomController):
                                  ),
                               TR(TD("%s:" % T("Projects")),
                                  TD(projects_selector),
+                                 ),
+                              TR(TD("%s:" % T("Services")),
+                                 TD(strrepr(services)),
                                  ),
                               TR(TD("%s:" % T("Comments")),
                                  TD(s3_text_represent(strrepr(comments))),
@@ -576,17 +594,30 @@ class approve(S3CustomController):
                     set_record_owner(ftable, facility, owned_by_user=user_id)
                     s3db_onaccept(ftable, facility, method="create")
 
+                    site_id = facility["site_id"]
+
                     # Link facility to facility type
                     fttable = s3db.org_facility_type
-                    facility_type = db(fttable.name == "Infection Test Station").select(fttable.id,
-                                                                                        limitby = (0, 1),
-                                                                                        ).first()
+                    tltable = s3db.org_site_facility_type
+                    facility_type = db(fttable.name == "Infection Test Station") \
+                                      .select(fttable.id, limitby=(0, 1)).first()
                     if facility_type:
-                        s3db.org_site_facility_type.insert(site_id = facility["site_id"],
-                                                           facility_type_id = facility_type.id,
-                                                           )
+                        tltable.insert(site_id = site_id,
+                                       facility_type_id = facility_type.id,
+                                       )
 
-                    # Add default tags
+                    # Link facility to services
+                    if service_ids:
+                        sltable = s3db.org_service_site
+                        for service_id in service_ids:
+                            link = {"service_id": service_id,
+                                    "site_id": site_id,
+                                    }
+                            link["id"] = sltable.insert(**link)
+                            set_record_owner(sltable, link, owned_by_user=user_id)
+                            s3db_onaccept(sltable, link, method="create")
+
+                    # Add default tags for facility
                     from .helpers import add_facility_default_tags
                     add_facility_default_tags(facility_id, approve=True)
 
@@ -615,9 +646,7 @@ class approve(S3CustomController):
                                  ))
 
                 elif rejected:
-
                     user.update_record(registration_key = "rejected")
-                    # @ToDo: Delete Org & Fac, if created previously
                     session.confirmation = T("Registration rejected")
                     redirect(URL(c = "default",
                                  f = "index",
@@ -837,9 +866,9 @@ class register(S3CustomController):
         ctable = s3db.cms_post
         ltable = s3db.cms_post_module
         join = ltable.on((ltable.post_id == ctable.id) & \
-                        (ltable.module == "auth") & \
-                        (ltable.resource == "user") & \
-                        (ltable.deleted == False))
+                         (ltable.module == "auth") & \
+                         (ltable.resource == "user") & \
+                         (ltable.deleted == False))
 
         query = (ctable.name == "SelfRegistrationIntro") & \
                 (ctable.deleted == False)
@@ -940,6 +969,7 @@ class register(S3CustomController):
                       "facility_email": formvars.facility_email,
                       "opening_times": formvars.opening_times,
                       "projects": formvars.projects,
+                      "services": formvars.services,
                       "comments": formvars.comments,
                       }
             if not organisation_id:
@@ -1063,6 +1093,9 @@ class register(S3CustomController):
         # Lookup projects with provider self-registration
         projects = cls.selectable_projects()
 
+        # Lookup site services
+        services = cls.selectable_services()
+
         # Form fields
         formfields = [utable.first_name,
                       utable.last_name,
@@ -1101,14 +1134,6 @@ class register(S3CustomController):
                                         show_map = True,
                                         ),
                             ),
-                      #Field("addr_street",
-                      #      label = ltable.addr_street.label,
-                      #      ),
-                      #Field("addr_postcode",
-                      #      label = ltable.addr_postcode.label,
-                      #      requires = IS_NOT_EMPTY(),
-                      #      ),
-
                       Field("facility_phone",
                             label = T("Telephone"),
                             requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI()),
@@ -1135,7 +1160,21 @@ class register(S3CustomController):
                                                           "organisation",
                                                           "ProjectParticipationIntro",
                                                           ),
-                                                 )
+                                                 ),
+                            ),
+                      Field("services", "list:integer",
+                            label = T("Services"),
+                            requires = IS_IN_SET(services,
+                                                 multiple = True,
+                                                 zero = None,
+                                                 ),
+                            widget = S3WithIntro(S3GroupedOptionsWidget(cols=1),
+                                                 # Widget intro from CMS
+                                                 intro = ("org",
+                                                          "facility",
+                                                          "SiteServiceIntro",
+                                                          ),
+                                                 ),
                             ),
                       Field("comments", "text",
                             label = T("Comments"),
@@ -1157,7 +1196,7 @@ class register(S3CustomController):
         # Subheadings
         subheadings = ((0, T("User Account")),
                        (5, T("Test Station")),
-                       (12, T("Privacy")),
+                       (13, T("Privacy")),
                        )
 
         # Geocoder
@@ -1309,6 +1348,27 @@ Thank you
                                 )
         projects = {row.id: row.name for row in rows}
         return projects
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def selectable_services():
+        """
+            Services the user can select during test station registration
+
+            @returns: list of service_ids
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Lookup projects with provider self-registration
+        stable = s3db.org_service
+        query = (stable.deleted == False)
+        rows = db(query).select(stable.id,
+                                stable.name,
+                                )
+        services = {row.id: row.name for row in rows}
+        return services
 
 # =============================================================================
 class verify_email(S3CustomController):
