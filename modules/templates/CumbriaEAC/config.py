@@ -22,7 +22,7 @@ def config(settings):
     settings.base.prepopulate_demo += ("CumbriaEAC/Demo",)
 
     # Theme (folder to use for views/layout.html)
-    settings.base.theme = "CCC"
+    settings.base.theme = "CumbriaEAC"
     # Custom Logo
     #settings.ui.menu_logo = "/%s/static/themes/CumbriaEAC/img/logo.png" % current.request.application
 
@@ -296,6 +296,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Persons
     settings.pr.hide_third_gender = False
+    settings.L10n.mandatory_lastname = True
     settings.pr.editable_fields = ["mobile_phone",
                                    "car",
                                    ]
@@ -665,21 +666,19 @@ def config(settings):
 
         red_bag = components_get("red_bag")
         f = red_bag.table.value
-        f.requires = IS_IN_SET(("Yes", "No", "Unknown"))
-        f.default = "Unknown"
+        f.requires = IS_EMPTY_OR(IS_IN_SET(("Yes", "No"), zero= T("Unknown")))
 
         wifi = components_get("wifi")
         f = wifi.table.value
-        f.requires = IS_IN_SET(("Yes", "No", "Unknown"))
-        f.default = "Unknown"
+        f.requires = IS_EMPTY_OR(IS_IN_SET(("Yes", "No"), zero= T("Unknown")))
 
         crud_form = S3SQLCustomForm("name",
-                                    "shelter_type_id",
+                                    "status",
                                     "shelter_service_shelter.service_id",
+                                    "shelter_type_id",
                                     "location_id",
                                     "phone",
                                     "capacity_day",
-                                    "status",
                                     (T("Red Bag Lite"), "red_bag.value"),
                                     (T("WiFi available"), "wifi.value"),
                                     (T("Catering"), "catering.value"),
@@ -1763,6 +1762,48 @@ def config(settings):
                                )
 
                 return result
+
+            if r.method == "household" and r.http == "POST":
+                # Is Person checked-in?
+                person_id = r.id
+                db = current.db
+                ltable = s3db.cr_shelter_registration
+                query = (ltable.person_id == person_id) & \
+                        (ltable.deleted != True)
+                registration = db(query).select(ltable.shelter_id,
+                                                limitby = (0, 1)
+                                                ).first()
+                if registration:
+                    # Registering Client Checks them in
+                    def household_check_in(form):
+
+                        shelter_id = registration.shelter_id
+                        person_id = form.vars.id
+
+                        stable = s3db.cr_shelter
+                        shelter = db(stable.id == shelter_id).select(stable.site_id,
+                                                                     limitby = (0, 1)
+                                                                     ).first()
+                        site_id = shelter.site_id
+
+                        # Add cr_shelter_registration record
+                        ltable.insert(person_id = person_id,
+                                      shelter_id = shelter_id,
+                                      check_in_date = current.request.utcnow,
+                                      registration_status = 2,
+                                      )
+
+                        # Add Site Event Log
+                        s3db.org_site_event.insert(site_id = site_id,
+                                                   person_id = person_id,
+                                                   event = 2, # Checked-In
+                                                   comments = "Client",
+                                                   )
+
+                    s3db.add_custom_callback("pr_person",
+                                             "create_onaccept",
+                                             household_check_in,
+                                             )
 
             from s3 import FS
 

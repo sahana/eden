@@ -1,0 +1,31 @@
+// ============================================================================
+// Styles for Theme-specific Elements and Layouts
+// ============================================================================
+// VARIABLES
+
+// -- variables and their defaults go here --
+
+// ============================================================================
+// STYLES
+
+.service-link {
+    margin-left: 1.25rem;
+    font-size: 1.2rem;
+}
+
+@font-face {
+    /* https://www.download-free-fonts.com/details/88194/century-schoolbook-bold-italic */
+    font-family: "font88194";
+    src: url("century-schoolbook-grassetto-corsivo.woff") format("woff");
+    font-weight: normal;
+    font-style: normal;
+}
+
+#strapline {
+    text-align: right;
+    font-family: "font88194";
+    font-size: 1.1rem;
+    color: $primary-color;
+}
+
+// END ========================================================================

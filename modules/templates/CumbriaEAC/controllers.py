@@ -76,25 +76,28 @@ class index(S3CustomController):
             shelters = db(query).select(stable.id,
                                         stable.name,
                                         )
-            facility_list = [(row.id, row.name) for row in shelters]
-            facility_list = sorted(facility_list, key=lambda fac: fac[1])
-            facility_opts = [OPTION(fac[1], _value=fac[0])
-                             for fac in facility_list]
-
-            manage_facility_box = DIV(H3(T("Manage your Shelter")),
-                                      SELECT(_id = "manage-facility-select",
-                                             *facility_opts
-                                             ),
-                                      A(T("Go"),
-                                        _href = URL(c="cr", f="shelter",
-                                                    args = [facility_list[0][0], "manage"],
-                                                    ),
-                                        _id = "manage-facility-btn",
-                                        _class = "action-btn"
-                                        ),
-                                      _id = "manage-facility-box",
-                                      _class = "menu-box",
-                                      )
+            if len(shelters) > 0:
+                facility_list = [(row.id, row.name) for row in shelters]
+                facility_list = sorted(facility_list, key=lambda fac: fac[1])
+                facility_opts = [OPTION(fac[1], _value=fac[0])
+                                 for fac in facility_list]
+                shelter_id = facility_list[0][0]
+                manage_facility_box = DIV(H3(T("Manage your Shelter")),
+                                          SELECT(_id = "manage-facility-select",
+                                                 *facility_opts
+                                                 ),
+                                          A(T("Go"),
+                                            _href = URL(c="cr", f="shelter",
+                                                        args = [shelter_id, "manage"],
+                                                        ),
+                                            _id = "manage-facility-btn",
+                                            _class = "action-btn"
+                                            ),
+                                          _id = "manage-facility-box",
+                                          _class = "menu-box",
+                                          )
+            else:
+                manage_facility_box = DIV(T("No Open Shelters"))
             output["manage_facility_box"] = manage_facility_box
 
             s3.jquery_ready.append('''$('#manage-facility-select').change(function(){

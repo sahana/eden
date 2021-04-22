@@ -55,7 +55,9 @@ class S3MainMenu(default.S3MainMenu):
                        ),
                     ]
         else:
-            menu = [MM("Shelters", c="cr", f="shelter", m="summary"),
+            menu = [MM("Shelters", c="cr", f="shelter", m="summary")(
+                       MM("New Shelter", c="cr", f="shelter", m="create"),
+                       ),
                     MM("Staff", c="hrm", f="human_resource")(),
                     MM("Clients", c="pr", f="person", m="summary")(
                        MM("Import", m="import"),
