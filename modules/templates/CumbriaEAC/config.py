@@ -15,7 +15,7 @@ def config(settings):
     T = current.T
 
     settings.base.system_name = T("Cumbria Emergency Assistance Centres")
-    settings.base.system_name_short = T("EAC")
+    settings.base.system_name_short = T("Cumbria EACs")
 
     # PrePopulate data
     settings.base.prepopulate += ("CumbriaEAC",)
