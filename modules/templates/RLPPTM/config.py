@@ -11,6 +11,7 @@ from collections import OrderedDict
 
 from gluon import current, URL, A, DIV, TAG, \
                   IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_NOT_EMPTY
+
 from gluon.storage import Storage
 
 from s3 import FS, IS_FLOAT_AMOUNT, ICON, IS_ONE_OF, S3Represent, s3_str
@@ -2263,7 +2264,9 @@ def config(settings):
             s3db = current.s3db
 
             resource = r.resource
+            table = resource.table
             record = r.record
+
             if not record:
                 # Open read-view first, even if permitted to edit
                 settings.ui.open_read_first = True
@@ -2302,8 +2305,15 @@ def config(settings):
                                 s3.crud_strings.org_facility.title_list = T("Test Stations for School and Child Care Staff")
                             elif code == "TESTS-PUBLIC":
                                 s3.crud_strings.org_facility.title_list = T("Test Stations for Everybody")
+
+            elif r.representation == "plain":
+                # Bypass REST method, return map popup directly
+                from .helpers import facility_map_popup
+                result = {"bypass": True,
+                          "output": facility_map_popup(record),
+                          }
             else:
-                table = resource.table
+                # Read view
 
                 # No facility details editable here except comments
                 for fn in table.fields:
@@ -2340,6 +2350,18 @@ def config(settings):
 
             return result
         s3.prep = prep
+
+        standard_postp = s3.postp
+        def postp(r, output):
+
+            if r.representation == "plain" and r.record:
+                # Prevent standard postp rewriting output
+                pass
+            elif callable(standard_postp):
+                output = standard_postp(r, output)
+
+            return output
+        s3.postp = postp
 
         # No rheader
         attr["rheader"] = None

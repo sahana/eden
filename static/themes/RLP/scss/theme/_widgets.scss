@@ -744,4 +744,23 @@ body.rtl {
     }
 }
 
+.map-popup {
+    min-width: 20rem;
+    h4 {
+        font-size: 1rem;
+    }
+    .map-popup-details {
+        font-size: 0.8rem;
+        td {
+            padding: 0.1rem 0.3rem 0 0;
+            &.map-popup-label {
+                font-weight: bold;
+            }
+        }
+    }
+}
+.olPopupCloseBox {
+    margin-right: 20px;
+}
+
 // END ========================================================================

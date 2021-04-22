@@ -8,7 +8,7 @@
 
 from gluon import current, Field, \
                   CRYPT, IS_EMAIL, IS_IN_SET, IS_LOWER, IS_NOT_IN_DB, \
-                  SQLFORM, DIV, H4, H5, I, INPUT, LI, P, SPAN, TABLE, TD, TH, TR, UL
+                  SQLFORM, A, DIV, H4, H5, I, INPUT, LI, P, SPAN, TABLE, TD, TH, TR, UL
 
 from s3 import IS_FLOAT_AMOUNT, S3DateTime, S3Method, S3Represent, \
                s3_fullname, s3_mark_required, s3_str
@@ -537,6 +537,86 @@ def add_facility_default_tags(facility_id, approve=False):
                           tag = "PUBLIC",
                           value = "Y" if approve else "N",
                           )
+
+# =============================================================================
+def facility_map_popup(record):
+    """
+        Custom map popup for facilities
+
+        @param record: the facility record (Row)
+
+        @returns: the map popup contents as DIV
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    T = current.T
+
+    table = s3db.org_facility
+
+    # Custom Map Popup
+    title = H4(record.name, _class="map-popup-title")
+
+    details = TABLE(_class="map-popup-details")
+    append = details.append
+
+    def formrow(label, value, represent=None):
+        return TR(TD("%s:" % label, _class="map-popup-label"),
+                  TD(represent(value) if represent else value),
+                  )
+
+    # Address
+    gtable = s3db.gis_location
+    query = (gtable.id == table.location_id)
+    location = db(query).select(gtable.addr_street,
+                                gtable.addr_postcode,
+                                gtable.L4,
+                                gtable.L3,
+                                limitby = (0, 1),
+                                ).first()
+
+    if location.addr_street:
+        append(formrow(gtable.addr_street.label, location.addr_street))
+    place = location.L4 or location.L3 or "?"
+    if location.addr_postcode:
+        place = "%s %s" % (location.addr_postcode, place)
+    append(formrow(T("Place"), place))
+
+    # Phone number
+    phone = record.phone1
+    if phone:
+        append(formrow(T("Phone"), phone))
+
+    # Email address (as hyperlink)
+    email = record.email
+    if email:
+        append(formrow(table.email.label, A(email, _href="mailto:%s" % email)))
+
+    # Opening Times
+    opening_times = record.opening_times
+    if opening_times:
+        append(formrow(table.opening_times.label, opening_times))
+
+    # Site services
+    stable = s3db.org_service
+    ltable = s3db.org_service_site
+    join = stable.on(stable.id == ltable.service_id)
+    query = (ltable.site_id == record.site_id) & \
+            (ltable.deleted == False)
+    rows = db(query).select(stable.name, join=join)
+    services = [row.name for row in rows]
+    if services:
+        append(formrow(T("Services"), ", ".join(services)))
+
+    # Comments
+    if record.comments:
+        append(formrow(table.comments.label,
+                        record.comments,
+                        represent = table.comments.represent,
+                        ))
+
+    return DIV(title, details, _class="map-popup")
 
 # =============================================================================
 class ServiceListRepresent(S3Represent):

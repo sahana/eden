@@ -2275,6 +2275,32 @@ body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   border-left: 1px solid red;
 }
 
+/* line 747, ../scss/theme/_widgets.scss */
+.map-popup {
+  min-width: 20rem;
+}
+/* line 749, ../scss/theme/_widgets.scss */
+.map-popup h4 {
+  font-size: 1rem;
+}
+/* line 752, ../scss/theme/_widgets.scss */
+.map-popup .map-popup-details {
+  font-size: 0.8rem;
+}
+/* line 754, ../scss/theme/_widgets.scss */
+.map-popup .map-popup-details td {
+  padding: 0.1rem 0.3rem 0 0;
+}
+/* line 756, ../scss/theme/_widgets.scss */
+.map-popup .map-popup-details td.map-popup-label {
+  font-weight: bold;
+}
+
+/* line 762, ../scss/theme/_widgets.scss */
+.olPopupCloseBox {
+  margin-right: 20px;
+}
+
 /* Case Rheader Flags */
 /* line 12, ../scss/theme/_misc.scss */
 .overdue {

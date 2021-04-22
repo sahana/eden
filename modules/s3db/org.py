@@ -2678,7 +2678,7 @@ class S3OrganisationServiceModel(S3Model):
                                 writable = True,
                                 represent = self.org_site_represent,
                                 ),
-                     )
+                     *s3_meta_fields())
 
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("site_id",
