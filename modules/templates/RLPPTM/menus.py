@@ -357,7 +357,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           vars = {"$$pending": "1"},
                           restrict = "ORG_GROUP_ADMIN",
                           ),
-                        M("Public Registry"),
+                        M("Public Registry", m="summary"),
                         ),
                     M("Statistics", link=False)(
                         M("Organizations", f="organisation", m="report"),

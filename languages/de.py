@@ -4157,6 +4157,7 @@
 'Please enter the recipient': 'Bitte geben sie den Empfänger ein',
 'Please enter your Activation Code': 'Bitte geben Sie Ihren Aktivierungscode an',
 'Please fill this!': 'Bitte hier einfüllen!',
+'Please mark this field when the facility is no longer in operation': 'Bitte markieren Sie dieses Feld wenn die Einrichtung nicht mehr in Betrieb ist',
 'Please provide the URL of the page you are referring to, a description of what you expected to happen & what actually happened.': 'Bitte geben Sie die URL der Seite auf die sie sich beziehen, eine Beschreibung dessen, was sie erwartet haben & was wirklich passiert ist.',
 'Please report here where you are:': 'Bitte hier angeben, wo sie sich befinden:',
 'Please select a valid image!': 'Bitte ein gültiges Bild auswählen!',

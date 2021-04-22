@@ -602,13 +602,6 @@ body.rtl #markDuplicate {
 }
 
 /* Filter Forms & Report Options */
-/* line 312, ../scss/theme/_forms.scss */
-.filter-form,
-.report-options {
-  /*    .inline-tooltip {
-          padding-top: 0.2rem;
-      }*/
-}
 /* line 315, ../scss/theme/_forms.scss */
 .filter-form table tr,
 .filter-form .ui-multiselect,
@@ -621,7 +614,7 @@ body.rtl #markDuplicate {
 .report-options table.s3-groupedopts-widget {
   display: inline-block;
 }
-/* line 325, ../scss/theme/_forms.scss */
+/* line 322, ../scss/theme/_forms.scss */
 .filter-form label.inline,
 .report-options label.inline {
   line-height: normal;
@@ -629,7 +622,7 @@ body.rtl #markDuplicate {
 }
 
 /* Login/Registration box */
-/* line 332, ../scss/theme/_forms.scss */
+/* line 329, ../scss/theme/_forms.scss */
 #login_form,
 #register_form,
 #login_box {
@@ -637,20 +630,20 @@ body.rtl #markDuplicate {
 }
 
 /* Help Popup */
-/* line 339, ../scss/theme/_forms.scss */
+/* line 336, ../scss/theme/_forms.scss */
 .inline-tooltip {
   display: inline-block;
-  vertical-align: middle;
+  vertical-align: top;
   padding-left: 0.75rem;
 }
-/* line 343, ../scss/theme/_forms.scss */
+/* line 340, ../scss/theme/_forms.scss */
 .inline-tooltip .s3_add_resource_link {
   display: inline-block;
   margin: -3px 0 -3px 0.7rem;
   padding-right: 0.3rem;
 }
 
-/* line 349, ../scss/theme/_forms.scss */
+/* line 346, ../scss/theme/_forms.scss */
 .tooltip,
 .tooltipbody,
 .stickytip,
@@ -663,7 +656,7 @@ body.rtl #markDuplicate {
   height: 20px;
   background: none;
 }
-/* line 356, ../scss/theme/_forms.scss */
+/* line 353, ../scss/theme/_forms.scss */
 .tooltip.inline-tooltip,
 .tooltipbody.inline-tooltip,
 .stickytip.inline-tooltip,
@@ -671,7 +664,7 @@ body.rtl #markDuplicate {
 .htmltip.inline-tooltip {
   margin-left: 1rem;
 }
-/* line 363, ../scss/theme/_forms.scss */
+/* line 360, ../scss/theme/_forms.scss */
 .tooltip:before,
 .tooltipbody:before,
 .stickytip:before,
@@ -685,7 +678,7 @@ body.rtl #markDuplicate {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-/* line 372, ../scss/theme/_forms.scss */
+/* line 369, ../scss/theme/_forms.scss */
 .tooltip:hover,
 .tooltipbody:hover,
 .stickytip:hover,

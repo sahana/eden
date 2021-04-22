@@ -319,9 +319,6 @@ body.rtl {
     table.s3-groupedopts-widget {
         display: inline-block;
     }
-/*    .inline-tooltip {
-        padding-top: 0.2rem;
-    }*/
     label.inline {
         line-height: normal;
         padding-top: 0.2rem;
@@ -338,7 +335,7 @@ body.rtl {
 /* Help Popup */
 .inline-tooltip {
     display: inline-block;
-    vertical-align: middle;
+    vertical-align: top;
     padding-left: 0.75rem;
     .s3_add_resource_link {
         display: inline-block;

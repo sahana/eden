@@ -1998,13 +1998,13 @@ def config(settings):
                 r.resource.configure(list_fields = list_fields,
                                      )
 
-            #elif r.component_name == "facility":
-            #    ctable = r.component.table
-            #    if is_org_group_admin or \
-            #       record and auth.s3_has_role("ORG_ADMIN", for_pe=record.pe_id):
-            #        # Expose obsolete-flag
-            #        field = ctable.obsolete
-            #        field.readable = field.writable = True
+            elif r.component_name == "facility":
+                ctable = r.component.table
+                if is_org_group_admin or \
+                   record and auth.s3_has_role("ORG_ADMIN", for_pe=record.pe_id):
+                    # Expose obsolete-flag
+                    field = ctable.obsolete
+                    field.readable = field.writable = True
 
             return result
         s3.prep = prep
@@ -2085,6 +2085,11 @@ def config(settings):
         field = table.obsolete
         field.label = T("Defunct")
         field.represent = lambda v, row=None: ICON("remove") if v else ""
+        field.comment = DIV(_class="tooltip",
+                            _title="%s|%s" % (T("Defunct"),
+                                              T("Please mark this field when the facility is no longer in operation"),
+                                              ),
+                            )
 
         stable = s3db.org_service_site
         field = stable.service_id
@@ -2108,9 +2113,8 @@ def config(settings):
                        ]
         if is_org_group_admin and r.get_vars.get("$$pending") == "1":
             list_fields.insert(1, "organisation_id")
-        #    list_fields.append("obsolete")
-        #elif r.tablename == "org_organisation":
-        #    list_fields.append("obsolete")
+        elif r.tablename == "org_organisation":
+            list_fields.append("obsolete")
 
         # Custom filter widgets
         text_fields = ["name",
@@ -2186,8 +2190,8 @@ def config(settings):
                                      "SiteServiceIntro",
                                      ),
                        ),
-                       #"obsolete",
                        "comments",
+                       #"obsolete",
                        ]
 
         resource = r.resource
@@ -2195,6 +2199,7 @@ def config(settings):
             fresource = resource
         elif r.tablename == "org_organisation":
             fresource = resource.components.get("facility")
+            crud_fields.append("obsolete")
         else:
             fresource = None
 
@@ -2275,6 +2280,9 @@ def config(settings):
             record = r.record
 
             if not record:
+                # Filter out defunct facilities
+                resource.add_filter(FS("obsolete") == False)
+
                 # Open read-view first, even if permitted to edit
                 settings.ui.open_read_first = True
 
