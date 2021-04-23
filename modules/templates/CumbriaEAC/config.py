@@ -288,6 +288,15 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Human Resources
     settings.hrm.org_required = False
+    # Minimise Profile (not needed as we override Tabs in eac_rheader)
+    #settings.hrm.staff_experience = False
+    #settings.hrm.use_certificates = False
+    #settings.hrm.use_credentials = False
+    #settings.hrm.use_description = None
+    #settings.hrm.use_id = None
+    #settings.hrm.use_skills = None
+    #settings.hrm.teams = None
+    #settings.hrm.use_trainings = False
 
     # -------------------------------------------------------------------------
     # Messaging
@@ -462,7 +471,7 @@ def config(settings):
                     (T("Event Log"), "site_event"),
                     ]
 
-            if r.controller == "hrm":
+            if r.controller in ("hrm", "default"):
                 hrtable = current.s3db.hrm_human_resource
                 hr = current.db(hrtable.person_id == record.id).select(hrtable.organisation_id,
                                                                        limitby = (0, 1)
@@ -1710,7 +1719,7 @@ def config(settings):
 
                 return result
 
-            elif r.controller == "hrm":
+            elif r.controller in ("hrm", "default"):
                 
                 from s3 import S3SQLCustomForm, S3SQLInlineComponent
 
