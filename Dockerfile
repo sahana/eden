@@ -1,4 +1,6 @@
-FROM ubuntu:14.10
+FROM ubuntu:18.04
+
+ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y build-essential unzip curl python-pip python-dev python-matplotlib python-lxml \
 	python-numpy python-dateutil python-gdal python-yaml python-serial python-xlwt python-shapely python-pil python-gdal \
