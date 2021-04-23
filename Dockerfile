@@ -11,6 +11,6 @@ RUN curl -o web2py.zip https://codeload.github.com/web2py/web2py/zip/R-2.9.11 &&
 
 ADD . /home/web2py/applications/eden
 
-RUN cp /home/web2py/applications/eden/private/templates/000_config.py /home/web2py/applications/eden/models/000_config.py && sed -i 's|EDITING_CONFIG_FILE = False|EDITING_CONFIG_FILE = True|' /home/web2py/applications/eden/models/000_config.py
+RUN cp /home/web2py/applications/eden/modules/templates/000_config.py /home/web2py/applications/eden/models/000_config.py && sed -i 's|EDITING_CONFIG_FILE = False|EDITING_CONFIG_FILE = True|' /home/web2py/applications/eden/models/000_config.py
 
 CMD python /home/web2py/web2py.py -i 0.0.0.0 -p 8000 -a eden 
