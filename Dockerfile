@@ -2,7 +2,8 @@ FROM ubuntu:14.10
 
 RUN apt-get update && apt-get install -y build-essential unzip curl python-pip python-dev python-matplotlib python-lxml \
 	python-numpy python-dateutil python-gdal python-yaml python-serial python-xlwt python-shapely python-pil python-gdal \
-	python-reportlab python-reportlab-accel python-tweepy python-xlrd python-pyth python-boto ansible 
+	python-reportlab python-reportlab-accel python-tweepy python-xlrd python-pyth python-boto ansible \
+	&& rm -rf /var/lib/apt/lists/*
 
 RUN pip install selenium\>=2.23.0 sunburnt\>=0.6 TwitterSearch\>=1.0 requests\>=2.3.0
 
