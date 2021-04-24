@@ -190,13 +190,14 @@ class S3XLS(S3Codec):
         COL_WIDTH_MULTIPLIER = self.COL_WIDTH_MULTIPLIER
 
         # Get the attributes
-        title = attr.get("title")
+        attr_get = attr.get
+        title = attr_get("title")
         if title is None:
             title = current.T("Report")
-        list_fields = attr.get("list_fields")
-        group = attr.get("dt_group")
-        use_colour = attr.get("use_colour", False)
-        evenodd = attr.get("evenodd", True)
+        list_fields = attr_get("list_fields")
+        group = attr_get("dt_group")
+        use_colour = attr_get("use_colour", False)
+        evenodd = attr_get("evenodd", True)
 
         # Extract the data from the resource
         if isinstance(resource, dict):
@@ -517,7 +518,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
         book.save(output)
         output.seek(0)
 
-        if attr.get("as_stream", False):
+        if attr_get("as_stream", False):
             return output
 
         # Response headers
