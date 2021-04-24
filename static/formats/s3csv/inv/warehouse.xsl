@@ -34,7 +34,7 @@
     <xsl:include href="../../xml/countries.xsl"/>
 
     <xsl:variable name="LocationPrefix" select="'Location:'"/>
-    
+
     <!-- ****************************************************************** -->
     <!-- Lookup column names -->
     <xsl:variable name="Country">
@@ -239,11 +239,18 @@
 
             <!-- Warehouse data -->
             <data field="name"><xsl:value-of select="$WarehouseName"/></data>
-            <data field="phone1"><xsl:value-of select="col[@field='Phone1']"/></data>
-            <data field="phone2"><xsl:value-of select="col[@field='Phone2']"/></data>
-            <data field="email"><xsl:value-of select="col[@field='Email']"/></data>
-            <data field="fax"><xsl:value-of select="col[@field='Fax']"/></data>
-            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+
+            <xsl:variable name="Code" select="col[@field='Code']/text()"/>
+            <xsl:if test="$Code!=''">
+                <data field="code"><xsl:value-of select="$Code"/></data>
+            </xsl:if>
+
+            <data field="phone1"><xsl:value-of select="col[@field='Phone1']/text()"/></data>
+            <data field="phone2"><xsl:value-of select="col[@field='Phone2']/text()"/></data>
+            <data field="email"><xsl:value-of select="col[@field='Email']/text()"/></data>
+            <data field="fax"><xsl:value-of select="col[@field='Fax']/text()"/></data>
+            <data field="comments"><xsl:value-of select="col[@field='Comments']/text()"/></data>
+
         </resource>
 
         <xsl:call-template name="Locations"/>
