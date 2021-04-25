@@ -1097,6 +1097,9 @@ class S3Resource(object):
             else:
                 meta_fields = s3.all_meta_fields = s3_all_meta_field_names()
             s3db = current.s3db
+            superkeys = s3db.get_super_keys(table)
+        else:
+            meta_fields = superkeys = None
 
         # Field selection
         qfields = ([table._id.name, UID])
@@ -1136,12 +1139,9 @@ class S3Resource(object):
                     continue
 
                 # Must include all super-keys
-                ktablename = s3_get_foreign_key(table[f], m2m=False)[0]
-                if ktablename:
-                    ktable = s3db.table(ktablename)
-                    if ktable and hasattr(ktable, "instance_type"):
-                        append(f)
-                        continue
+                if f in superkeys:
+                    append(f)
+                    continue
 
             if f in skip:
                 continue

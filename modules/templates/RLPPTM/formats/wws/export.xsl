@@ -9,16 +9,20 @@
     <xsl:key name="packs" match="resource[@name='supply_item_pack']" use="@uuid"/>
     <xsl:key name="requesters" match="resource[@name='pr_person']" use="@uuid"/>
     <xsl:key name="locations" match="resource[@name='gis_location']" use="@uuid"/>
+    <xsl:key name="requests" match="resource[@name='req_req']" use="data[@field='req_ref']/text()"/>
 
-    <s3:fields tables="req_req" select="req_ref,date,site_id,comments,requester_id"/>
-    <s3:fields tables="req_req_item" select="item_id,item_pack_id,quantity"/>
+    <s3:fields tables="inv_send" select="req_ref,site_id,to_site_id"/>
+    <s3:fields tables="inv_track_item" select="item_id,item_pack_id,quantity,req_item_id"/>
+
+    <s3:fields tables="req_req_item" select="req_id"/>
+    <s3:fields tables="req_req" select="req_ref,date,comments,requester_id"/>
 
     <s3:fields tables="supply_item" select="code"/>
     <s3:fields tables="supply_item_pack" select="quantity"/>
     <s3:fields tables="pr_person" select="first_name,last_name"/>
 
     <s3:fields tables="org_facility" select="name,phone1,email,location_id"/>
-    <s3:fields tables="inv_warehouse" select="name,location_id"/>
+    <s3:fields tables="inv_warehouse" select="name,code,location_id"/>
     <s3:fields tables="gis_location" select="L3,L4,addr_street,addr_postcode"/>
 
     <s3:fields tables="ANY" select="*"/>
@@ -33,46 +37,61 @@
     <!-- Root element -->
     <xsl:template match="s3xml">
         <CoronaWWS>
-            <xsl:apply-templates select="resource[@name='req_req']"/>
+            <xsl:apply-templates select="resource[@name='inv_send']"/>
         </CoronaWWS>
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!-- Request -->
-    <xsl:template match="resource[@name='req_req']">
+    <!-- Shipment -->
+    <xsl:template match="resource[@name='inv_send']">
 
-        <xsl:variable name="SiteUUID" select="reference[@field='site_id']/@uuid"/>
-        <xsl:variable name="Site" select='key("sites", $SiteUUID)[1]'/>
+        <!-- Lookup the request -->
+        <xsl:variable name="ReqRef" select="data[@field='req_ref']/text()"/>
+        <xsl:variable name="Request" select='key("requests", $ReqRef)[1]'/>
 
-        <xsl:if test="$Site">
+        <!-- Lookup the Sending Site -->
+        <xsl:variable name="FromSiteUUID" select="reference[@field='site_id']/@uuid"/>
+        <xsl:variable name="FromSite" select='key("sites", $FromSiteUUID)[1]'/>
+
+        <!-- Lookup the Receiving Site -->
+        <xsl:variable name="ToSiteUUID" select="reference[@field='to_site_id']/@uuid"/>
+        <xsl:variable name="ToSite" select='key("sites", $ToSiteUUID)[1]'/>
+
+        <xsl:if test="$ToSite">
             <Bestellung>
+                <!-- Sending Site Code -->
+                <Gemeindeschluessel>
+                    <xsl:value-of select="$FromSite/data[@field='code']/text()"/>
+                </Gemeindeschluessel>
+
                 <!-- Requester Information -->
                 <xsl:call-template name="Requester">
-                    <xsl:with-param name="Site" select="$Site"/>
+                    <xsl:with-param name="Site" select="$ToSite"/>
+                    <xsl:with-param name="RequesterRef" select="$Request/reference[@field='requester_id']"/>
                 </xsl:call-template>
 
-                <!-- Request Reference (not yet specified) -->
+                <!-- Request Reference -->
                 <ReferenzNr>
-                    <xsl:value-of select="data[@field='req_ref']/text()"/>
+                    <xsl:value-of select="$ReqRef"/>
                 </ReferenzNr>
 
                 <!-- Request date, using local format DD.MM.YYYY rather than ISO-Format -->
                 <Bestelldatum>
-                    <xsl:value-of select="substring-before(data[@field='date']/text(), ' ')"/>
+                    <xsl:value-of select="substring-before($Request/data[@field='date']/text(), ' ')"/>
                 </Bestelldatum>
 
                 <!-- Request comments -->
                 <Anmerkungen>
-                    <xsl:value-of select="data[@field='comments']/text()"/>
+                    <xsl:value-of select="$Request/data[@field='comments']/text()"/>
                 </Anmerkungen>
 
                 <!-- This is repeated in the <Besteller> element -->
                 <Email>
-                    <xsl:value-of select="$Site/data[@field='email']/text()"/>
+                    <xsl:value-of select="$ToSite/data[@field='email']/text()"/>
                 </Email>
 
                 <!-- The requested items -->
-                <xsl:apply-templates select="resource[@name='req_req_item']"/>
+                <xsl:apply-templates select="resource[@name='inv_track_item']"/>
 
             </Bestellung>
         </xsl:if>
@@ -80,7 +99,7 @@
 
     <!-- ****************************************************************** -->
     <!-- Request Item -->
-    <xsl:template match="resource[@name='req_req_item']">
+    <xsl:template match="resource[@name='inv_track_item']">
         <xsl:variable name="ItemUUID" select="reference[@field='item_id']/@uuid"/>
         <xsl:variable name="PackUUID" select="reference[@field='item_pack_id']/@uuid"/>
         <xsl:variable name="Quantity" select="data[@field='quantity']/@value"/>
@@ -111,6 +130,7 @@
     <xsl:template name="Requester">
 
         <xsl:param name="Site"/>
+        <xsl:param name="RequesterRef"/>
 
         <xsl:if test="$Site">
             <Besteller>
@@ -154,7 +174,7 @@
 
                 <!-- The requesting user -->
                 <Ansprechpartner>
-                    <xsl:variable name="RequesterUUID" select="reference[@field='requester_id']/@uuid"/>
+                    <xsl:variable name="RequesterUUID" select="$RequesterRef/@uuid"/>
                     <xsl:variable name="Requester" select="key('requesters', $RequesterUUID)[1]"/>
                     <xsl:choose>
                         <xsl:when test="$Requester">
@@ -162,7 +182,7 @@
                                                          $Requester/data[@field='last_name']/text())"/>
                         </xsl:when>
                         <xsl:otherwise>
-                            <xsl:value-of select="reference[@field='requester_id']/text()"/>
+                            <xsl:value-of select="$RequesterRef/text()"/>
                         </xsl:otherwise>
                     </xsl:choose>
                 </Ansprechpartner>

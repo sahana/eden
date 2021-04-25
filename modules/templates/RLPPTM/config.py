@@ -2685,7 +2685,10 @@ def config(settings):
 
         field = table.req_ref
         field.label = T("Order No.")
-        field.represent = ShipmentCodeRepresent("req_req", "req_ref")
+        if r.representation == "wws":
+            field.represent = lambda v, row=None: v if v else "-"
+        else:
+            field.represent = ShipmentCodeRepresent("req_req", "req_ref")
 
         field = table.site_id
         field.requires = IS_ONE_OF(current.db, "org_site.site_id",
@@ -2870,9 +2873,37 @@ def config(settings):
                                     list_fields = list_fields,
                                     )
 
+            if r.interactive and not record and auth.s3_has_role("SUPPLY_COORDINATOR"):
+                # Configure WWS export format
+                export_formats = list(settings.get_ui_export_formats())
+                export_formats.append(("wws", "fa fa-shopping-cart", T("CoronaWWS")))
+                s3.formats["wws"] = r.url(method="", vars={"mcomponents": "track_item"})
+                settings.ui.export_formats = export_formats
 
             return result
         s3.prep = prep
+
+        standard_postp = s3.postp
+        def postp(r, output):
+
+            # Call standard postp if on component tab
+            if r.component and callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.representation == "wws":
+                # Deliver as attachment rather than as page content
+                from gluon.contenttype import contenttype
+
+                now = current.request.utcnow.strftime("%Y%m%d%H%M%S")
+                filename = "ship%s.wws" % now
+                disposition = "attachment; filename=\"%s\"" % filename
+
+                response = current.response
+                response.headers["Content-Type"] = contenttype(".xml")
+                response.headers["Content-disposition"] = disposition
+
+            return output
+        s3.postp = postp
 
         from .rheaders import rlpptm_inv_rheader
         attr["rheader"] = rlpptm_inv_rheader
@@ -3239,19 +3270,11 @@ def config(settings):
                                          req_req_item_create_onaccept,
                                          method = "create",
                                          )
-
-            if r.interactive and not record and has_role("SUPPLY_COORDINATOR"):
-                # Configure WWS export format
-                export_formats = list(settings.get_ui_export_formats())
-                export_formats.append(("wws", "fa fa-shopping-cart", T("CoronaWWS")))
-                s3.formats["wws"] = r.url(method="", vars={"mcomponents": "req_item"})
-                settings.ui.export_formats = export_formats
-
             return result
         s3.prep = prep
 
         standard_postp = s3.postp
-        def custom_postp(r, output):
+        def postp(r, output):
 
             # Call standard postp if on component tab
             if r.component and callable(standard_postp):
@@ -3373,20 +3396,8 @@ def config(settings):
                     if script not in s3.scripts:
                         s3.scripts.append(script)
 
-            elif r.representation == "wws":
-                # Deliver as attachment rather than as page content
-                from gluon.contenttype import contenttype
-
-                now = current.request.utcnow.strftime("%Y%m%d%H%M%S")
-                filename = "req%s.wws" % now
-                disposition = "attachment; filename=\"%s\"" % filename
-
-                response = current.response
-                response.headers["Content-Type"] = contenttype(".xml")
-                response.headers["Content-disposition"] = disposition
-
             return output
-        s3.postp = custom_postp
+        s3.postp = postp
 
         from .rheaders import rlpptm_req_rheader
         attr["rheader"] = rlpptm_req_rheader
