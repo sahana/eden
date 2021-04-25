@@ -359,7 +359,7 @@ def rlpptm_inv_rheader(r, tabs=None):
             # If the record has a send_ref and status is SHIP_STATUS_IN_PROCESS
             # and there is at least one track item linked to it, add the send-button
             if record.status == SHIP_STATUS_IN_PROCESS and \
-               record.send_ref and \
+               record.site_id and record.send_ref and \
                auth.s3_has_permission("update", resource.table, record_id = record.id):
                 titable = s3db.inv_track_item
                 query = (titable.send_id == record.id) & \

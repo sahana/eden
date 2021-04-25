@@ -2590,8 +2590,7 @@ $.filterOptionsS3({
                      }
         recv_id = rtable.insert(**recv_item)
         recv_item["id"] = recv_id
-        realm_entity = auth.get_realm_entity(rtable, recv_item)
-        db(rtable.id == recv_id).update(realm_entity = realm_entity)
+        auth.s3_set_record_owner(rtable, recv_id)
 
         # Change the status for all track items in this shipment to In transit
         # and link to the receive record

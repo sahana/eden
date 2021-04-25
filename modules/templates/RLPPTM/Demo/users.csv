@@ -5,6 +5,6 @@ LSJV,Admin,lsjv_admin@example.com,eden,"ORG_GROUP_ADMIN/0,ORG_ADMIN,PROGRAM_MANA
 LSJV,SupplyCoordinator,lsjv_supply@example.com,eden,SUPPLY_COORDINATOR,"Landesamt für Soziales, Jugend und Versorgung",de
 Praxis Beyer,Admin,beyer_admin@example.com,eden,"VOUCHER_PROVIDER,ORG_ADMIN,PROVIDER_ACCOUNTANT",Praxis Dr. Beyer,de
 TZ Linz,Admin,tz_linz_admin@example.com,eden,"VOUCHER_PROVIDER,ORG_ADMIN,PROVIDER_ACCOUNTANT",Testzentrum Linz,de
-KV Ahrweiler,Admin,kv_aw@example.com,eden,ORG_ADMIN,Kreisverwaltung Ahrweiler,de
-KV Altenkirchen,Admin,kv_ak@example.com,eden,ORG_ADMIN,Kreisverwaltung Altenkirchen,de
-KV Alzey-Worms,Admin,kv_az@example.com,eden,ORG_ADMIN,Kreisverwaltung Alzey-Worms,de
+KV Ahrweiler,Admin,kv_aw@example.com,eden,"ORG_ADMIN,SUPPLY_DISTRIBUTOR",Kreisverwaltung Ahrweiler,de
+KV Altenkirchen,Admin,kv_ak@example.com,eden,"ORG_ADMIN,SUPPLY_DISTRIBUTOR",Kreisverwaltung Altenkirchen,de
+KV Alzey-Worms,Admin,kv_az@example.com,eden,"ORG_ADMIN,SUPPLY_DISTRIBUTOR",Kreisverwaltung Alzey-Worms,de

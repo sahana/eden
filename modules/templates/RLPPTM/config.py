@@ -311,6 +311,18 @@ def config(settings):
             if program:
                 realm_entity = program.realm_entity
 
+        elif tablename in ("inv_send", "inv_recv"):
+            # Shipments inherit realm-entity from the sending/receiving site
+            table = s3db.table(tablename)
+            stable = s3db.org_site
+            query = (table._id == row.id) & \
+                    (stable.site_id == table.site_id)
+            site = db(query).select(stable.realm_entity,
+                                    limitby = (0, 1),
+                                    ).first()
+            if site:
+                realm_entity = site.realm_entity
+
         return realm_entity
 
     settings.auth.realm_entity = rlpptm_realm_entity
@@ -2675,6 +2687,12 @@ def config(settings):
         field.label = T("Order No.")
         field.represent = ShipmentCodeRepresent("req_req", "req_ref")
 
+        field = table.site_id
+        field.requires = IS_ONE_OF(current.db, "org_site.site_id",
+                                   field.represent,
+                                   instance_types = ("inv_warehouse",),
+                                   )
+
         # We don't use send_ref
         field = table.send_ref
         field.readable = field.writable = False
@@ -2754,7 +2772,7 @@ def config(settings):
                 record = r.record
 
                 # Hide unused fields
-                unused = ("site_id",
+                unused = (#"site_id",
                           "organisation_id",
                           "type",
                           "driver_name",

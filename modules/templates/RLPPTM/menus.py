@@ -48,15 +48,20 @@ class S3MainMenu(default.S3MainMenu):
         report_results = lambda i: has_role("VOUCHER_PROVIDER", include_admin=False) and \
                                    len(get_stats_projects()) > 0
 
-        is_supply_coordinator = lambda i: has_role("SUPPLY_COORDINATOR")
-        is_supply_requester = lambda i: get_managed_requester_orgs()
-        has_supply_access = lambda i: is_supply_coordinator(i) or \
-                                      is_supply_requester(i)
+        managed_requester_orgs = get_managed_requester_orgs()
 
-        menu = [MM("Equipment", c=("req", "inv", "supply"), link=False, check=has_supply_access)(
-                    MM("Orders##delivery", f="req", vars={"type": 1}),
+        supply_coordinator = lambda i: has_role("SUPPLY_COORDINATOR")
+        supply_distributor = lambda i: has_role("SUPPLY_DISTRIBUTOR", include_admin=False)
+        supply_requester = lambda i: bool(managed_requester_orgs)
+
+        order_access = lambda i: supply_coordinator(i) or supply_requester(i)
+        supply_access = lambda i: order_access(i) or supply_distributor(i)
+
+        menu = [MM("Equipment", c=("req", "inv", "supply"), link=False, check=supply_access)(
+                    MM("Orders##delivery", f="req", vars={"type": 1}, check=order_access),
                     MM("Shipment##process", c="inv", f="send", restrict="SUPPLY_COORDINATOR"),
-                    MM("Deliveries", c="inv", f="recv", check=is_supply_requester),
+                    MM("Shipments", c="inv", f="send", check=supply_distributor),
+                    MM("Deliveries", c="inv", f="recv", check=supply_requester),
                     MM("Items", c="supply", f="item", restrict="SUPPLY_COORDINATOR"),
                     ),
                 MM("Test Results",
@@ -386,14 +391,24 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def req():
         """ REQ / Request Management """
 
-        is_supply_requester = lambda i: get_managed_requester_orgs()
+        has_role = current.auth.s3_has_role
+
+        supply_coordinator = lambda i: has_role("SUPPLY_COORDINATOR")
+        supply_distributor = lambda i: has_role("SUPPLY_DISTRIBUTOR",
+                                                include_admin = False,
+                                                )
+        supply_requester = lambda i: bool(get_managed_requester_orgs())
+
+        order_access = lambda i: supply_coordinator(i) or \
+                                 supply_requester(i)
 
         return M()(
-                M("Orders##delivery", c="req", f="req", vars={"type": 1})(
-                    M("Create", m="create", vars={"type": 1}, check=is_supply_requester),
+                M("Orders##delivery", c="req", f="req", vars={"type": 1}, check=order_access)(
+                    M("Create", m="create", vars={"type": 1}, check=supply_requester),
                     ),
                 M("Shipment##process", c="inv", f="send", restrict="SUPPLY_COORDINATOR"),
-                M("Deliveries", "inv", "recv", check=is_supply_requester),
+                M("Shipments", c="inv", f="send", check=supply_distributor),
+                M("Deliveries", "inv", "recv", check=supply_requester),
                 M("Statistics", link=False, restrict="SUPPLY_COORDINATOR")(
                     M("Orders##delivery", c="req", f="req", m="report"),
                     M("Shipments", c="inv", f="send", m="report"),
