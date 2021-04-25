@@ -568,7 +568,7 @@ def facility_map_popup(record):
 
     # Address
     gtable = s3db.gis_location
-    query = (gtable.id == table.location_id)
+    query = (gtable.id == record.location_id)
     location = db(query).select(gtable.addr_street,
                                 gtable.addr_postcode,
                                 gtable.L4,
