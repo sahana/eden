@@ -1397,6 +1397,114 @@ def config(settings):
 
         return length
 
+    
+
+    # -------------------------------------------------------------------------
+    def postprocess_select(records, rfields=None, represent=False, as_rows=False):
+        """
+            Post-process resource.select of pr_person to populate fields which
+            cannot be expressed as components due to conflict between the master
+            pr_person & the nok pr_person
+
+            @param records: list of selected data
+            @param rfields: list of S3ResourceFields in the records
+            @param represent: records contain represented data
+            @param as_rows: records are bare Rows rather than extracted
+                            Storage
+        """
+
+        db = current.db
+        s3db = current.s3db
+        ptable = s3db.pr_person
+
+        person_ids = set(records.keys())
+
+        # Lookup Next of Kin
+        table = s3db.pr_person_relation
+        query = (table.parent_id.belongs(person_ids))
+        rows = db(query).select(table.parent_id,
+                                table.person_id,
+                                )
+        noks = [row.person_id for row in rows]
+        nok_lookup = {row.parent_id: row.person_id for row in rows}
+        nok_lookup_get = nok_lookup.get
+
+        # Lookup NoK Relationships
+        table = s3db.pr_person_tag
+        query = (table.person_id.belongs(noks)) & \
+                (table.tag == "relationship")
+        rows = db(query).select(table.person_id,
+                                table.value,
+                                )
+        relationships = {row.person_id: row.value for row in rows}
+        relationships_get = relationships.get
+
+        # Lookup NoK Phones
+        table = s3db.pr_contact
+        query = (ptable.id.belongs(noks)) & \
+                (ptable.pe_id == table.pe_id) & \
+                (table.contact_method == "SMS")
+        rows = db(query).select(ptable.id,
+                                table.value,
+                                )
+        phones = {row["pr_person.id"]: row["pr_contact.value"] for row in rows}
+        phones_get = phones.get
+
+        # Lookup NoK Addresses
+        table = s3db.pr_address
+        query = (ptable.id.belongs(noks)) & \
+                (ptable.pe_id == table.pe_id)
+        rows = db(query).select(ptable.id,
+                                table.location_id,
+                                )
+        if represent:
+            address_location_ids = {}
+            address_locations = {}
+            address_locations_get = address_locations.get
+            location_ids = [row["pr_address.location_id"] for row in rows]
+            locations = table.location_id.represent.bulk(location_ids, show_link=False)
+            locations_get = locations.get
+            for row in rows:
+                location_id = row["pr_address.location_id"]
+                person_id = row["pr_person.id"]
+                address_location_ids[person_id] = location_id
+                address_locations[person_id] = locations_get(location_id)
+        else:
+            address_location_ids = {row["pr_person.id"]: row["pr_address.location_id"] for row in rows}
+        address_location_ids_get = address_location_ids.get
+
+        NONE = current.messages["NONE"]
+
+        for person_id in person_ids:
+
+            row = records[person_id]
+            
+            nok = nok_lookup_get(person_id)
+
+            colname = "pr_person.nok_relationship"
+            value = relationships_get(nok, NONE)
+            if colname in row:
+                row[colname] = value
+            raw = row.get("_row")
+            if raw:
+                raw[colname] = value
+
+            colname = "pr_person.nok_phone"
+            value = phones_get(nok, NONE)
+            if colname in row:
+                row[colname] = value
+            raw = row.get("_row")
+            if raw:
+                raw[colname] = value
+
+            colname = "pr_person.nok_address"
+            value = address_location_ids_get(nok, NONE)
+            if colname in row:
+                row[colname] = address_locations_get(nok, NONE) if represent else value
+            raw = row.get("_row")
+            if raw:
+                raw[colname] = value
+
     # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
 
@@ -1483,14 +1591,14 @@ def config(settings):
                            "shelter_registration.check_in_date",
                            "nok.last_name",
                            "nok.first_name",
-                           (T("Relationship"), "nok.relationship.value"),
-                           #(T("Relationship"), "nok__link$person_id.relationship.value"),
-                           (T("Phone"), "nok.phone.value"),
-                           (T("Address"), "nok.address.location_id"),
+                           (T("Relationship"), "nok_relationship"),
+                           (T("Phone"), "nok_phone"),
+                           (T("Address"), "nok_address"),
                            ]
 
             s3db.configure(tablename,
                            list_fields = list_fields,
+                           postprocess_select = postprocess_select,
                            )
 
         else:
