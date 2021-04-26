@@ -513,6 +513,10 @@ def config(settings):
             return result
         s3.prep = custom_prep
 
+        attr["dtargs"] = {"dt_text_maximum_len": 40,
+                          "dt_text_condense_len": 36,
+                          }
+
         return attr
 
     settings.customise_doc_document_controller = customise_doc_document_controller
@@ -2072,13 +2076,18 @@ def config(settings):
                                             explicit_add = T("Add Action"),
                                             )
 
-            # Inline-updates
+            # Inline updates
             utable = current.s3db.dvr_case_activity_update
 
             field = utable.human_resource_id
             field.default = human_resource_id
             field.represent = hr_represent
             field.widget = field.comment = None
+
+            # Inline attachments
+            dtable = s3db.doc_document
+            field = dtable.date
+            field.default = r.utcnow.date()
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm(
