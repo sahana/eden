@@ -2173,6 +2173,21 @@ def config(settings):
                                     hidden = True,
                                     ),
                     ])
+            site_services = S3WithIntro(
+                                S3SQLInlineLink(
+                                    "service",
+                                    label = T("Services"),
+                                    field = "service_id",
+                                    widget = "groupedopts",
+                                    cols = 1,
+                                    ),
+                                intro = ("org",
+                                         "facility",
+                                         "SiteServiceIntro",
+                                         ),
+                                )
+        else:
+            site_services = None
 
         # Custom CRUD form
         crud_fields = [#"organisation_id",
@@ -2189,19 +2204,7 @@ def config(settings):
                        (T("Telephone"), "phone1"),
                        "email",
                        (T("Opening Hours"), "opening_times"),
-                       S3WithIntro(
-                            S3SQLInlineLink(
-                                "service",
-                                label = T("Services"),
-                                field = "service_id",
-                                widget = "groupedopts",
-                                cols = 1,
-                                ),
-                            intro = ("org",
-                                     "facility",
-                                     "SiteServiceIntro",
-                                     ),
-                       ),
+                       site_services,
                        "comments",
                        #"obsolete",
                        ]

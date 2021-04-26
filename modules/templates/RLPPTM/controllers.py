@@ -435,17 +435,18 @@ class approve(S3CustomController):
             selectable_services = register.selectable_services()
             service_ids, service_names = [], []
             selected = custom_get("services")
-            if not isinstance(selected, list):
-                selected = [selected]
-            for v in selected:
-                try:
-                    service_id = int(v)
-                except (ValueError, TypeError):
-                    continue
-                if service_id in selectable_services:
-                    service_ids.append(service_id)
-                    service_names.append(selectable_services[service_id])
-            services = ", ".join(service_names)
+            if selected:
+                if not isinstance(selected, list):
+                    selected = [selected]
+                for v in selected:
+                    try:
+                        service_id = int(v)
+                    except (ValueError, TypeError):
+                        continue
+                    if service_id in selectable_services:
+                        service_ids.append(service_id)
+                        service_names.append(selectable_services[service_id])
+                services = ", ".join(service_names)
 
             comments = custom_get("comments")
 
@@ -493,9 +494,9 @@ class approve(S3CustomController):
                               TR(TD("%s:" % T("Projects")),
                                  TD(projects_selector),
                                  ),
-                              TR(TD("%s:" % T("Services")),
-                                 TD(strrepr(services)),
-                                 ),
+                              #TR(TD("%s:" % T("Services")),
+                              #   TD(strrepr(services)),
+                              #   ),
                               TR(TD("%s:" % T("Comments")),
                                  TD(s3_text_represent(strrepr(comments))),
                                  ),
@@ -969,7 +970,7 @@ class register(S3CustomController):
                       "facility_email": formvars.facility_email,
                       "opening_times": formvars.opening_times,
                       "projects": formvars.projects,
-                      "services": formvars.services,
+                      #"services": formvars.services,
                       "comments": formvars.comments,
                       }
             if not organisation_id:
@@ -1162,20 +1163,20 @@ class register(S3CustomController):
                                                           ),
                                                  ),
                             ),
-                      Field("services", "list:integer",
-                            label = T("Services"),
-                            requires = IS_IN_SET(services,
-                                                 multiple = True,
-                                                 zero = None,
-                                                 ),
-                            widget = S3WithIntro(S3GroupedOptionsWidget(cols=1),
-                                                 # Widget intro from CMS
-                                                 intro = ("org",
-                                                          "facility",
-                                                          "SiteServiceIntro",
-                                                          ),
-                                                 ),
-                            ),
+                      #Field("services", "list:integer",
+                      #      label = T("Services"),
+                      #      requires = IS_IN_SET(services,
+                      #                           multiple = True,
+                      #                           zero = None,
+                      #                           ),
+                      #      widget = S3WithIntro(S3GroupedOptionsWidget(cols=1),
+                      #                           # Widget intro from CMS
+                      #                           intro = ("org",
+                      #                                    "facility",
+                      #                                    "SiteServiceIntro",
+                      #                                    ),
+                      #                           ),
+                      #      ),
                       Field("comments", "text",
                             label = T("Comments"),
                             widget = s3_comments_widget,
@@ -1196,7 +1197,7 @@ class register(S3CustomController):
         # Subheadings
         subheadings = ((0, T("User Account")),
                        (5, T("Test Station")),
-                       (13, T("Privacy")),
+                       (12, T("Privacy")),
                        )
 
         # Geocoder
