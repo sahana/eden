@@ -22,6 +22,7 @@ from .rlpgeonames import rlp_GeoNames
 LSJV = "Landesamt für Soziales, Jugend und Versorgung"
 SCHOOLS = "Schulen"
 TESTSTATIONS = "COVID-19 Teststellen"
+GOVERNMENT = "Regierungsstellen"
 
 ISSUER_ORG_TYPE = "pe_id$pe_id:org_organisation.org_organisation_organisation_type.organisation_type_id"
 
@@ -2694,10 +2695,16 @@ def config(settings):
             field.represent = ShipmentCodeRepresent("req_req", "req_ref")
 
         field = table.site_id
-        field.requires = IS_ONE_OF(current.db, "org_site.site_id",
+        field.label = T("Distribution Center")
+        stable = s3db.org_site
+        wtable = s3db.inv_warehouse
+        dbset = current.db((stable.site_id == wtable.site_id) & \
+                           (wtable.obsolete == False))
+        field.requires = IS_ONE_OF(dbset, "org_site.site_id",
                                    field.represent,
                                    instance_types = ("inv_warehouse",),
                                    )
+        field.represent = s3db.org_SiteRepresent(show_link=False)
 
         # We don't use send_ref
         field = table.send_ref
@@ -2710,6 +2717,7 @@ def config(settings):
                        "req_ref",
                        #"send_ref",
                        "date",
+                       "site_id",
                        "to_site_id",
                        "status",
                        ]
@@ -2727,6 +2735,7 @@ def config(settings):
                     "to_site_id$location_id$L2",
                     "to_site_id$location_id$L1",
                     (T("Shipment Items"), "track_item.item_id"),
+                    (T("Distribution Center"), "site_id"),
                     "status",
                     ]
 
@@ -2769,13 +2778,13 @@ def config(settings):
             resource = r.resource
             table = resource.table
 
+            record = r.record
             component = r.component
 
             if r.method == "report":
                 s3.crud_strings[resource.tablename].title_report = T("Shipments Statistics")
 
             if not component:
-                record = r.record
 
                 # Hide unused fields
                 unused = (#"site_id",
@@ -3089,6 +3098,102 @@ def config(settings):
                        )
 
     settings.customise_inv_track_item_resource = customise_inv_track_item_resource
+
+    # -------------------------------------------------------------------------
+    def customise_inv_warehouse_resource(r, tablename):
+
+        T = current.T
+
+        s3db = current.s3db
+
+        table = s3db.inv_warehouse
+
+        # Remove Add-links for organisation and warehouse type
+        field = table.organisation_id
+        field.comment = None
+        field = table.warehouse_type_id
+        field.comment = None
+
+        # Custom label, represent and tooltip for obsolete-flag
+        field = table.obsolete
+        field.readable = field.writable = True
+        field.label = T("Defunct")
+        field.represent = lambda v, row=None: ICON("remove") if v else ""
+        field.comment = DIV(_class="tooltip",
+                            _title="%s|%s" % (T("Defunct"),
+                                              T("Please mark this field when the facility is no longer in operation"),
+                                              ),
+                            )
+
+        if r.interactive:
+
+            # Configure location selector and geocoder
+            from s3 import S3LocationSelector
+            field = table.location_id
+            field.widget = S3LocationSelector(levels = ("L1", "L2", "L3", "L4"),
+                                              required_levels = ("L1", "L2", "L3"),
+                                              show_address = True,
+                                              show_postcode = True,
+                                              show_map = True,
+                                              )
+            current.response.s3.scripts.append("/%s/static/themes/RLP/js/geocoderPlugin.js" % r.application)
+
+            # Custom CRUD-Form
+            from s3 import S3SQLCustomForm
+            crud_fields = ["organisation_id",
+                           "name",
+                           "code",
+                           "warehouse_type_id",
+                           "location_id",
+                           "email",
+                           "phone1",
+                           "phone2",
+                           "comments",
+                           "obsolete",
+                           ]
+
+            s3db.configure("inv_warehouse",
+                           crud_form = S3SQLCustomForm(*crud_fields),
+                           )
+
+        # Custom list fields
+        list_fields = ["organisation_id",
+                       "name",
+                       "code",
+                       "warehouse_type_id",
+                       "location_id",
+                       "email",
+                       "phone1",
+                       "obsolete",
+                       ]
+        s3db.configure("inv_warehouse",
+                       list_fields = list_fields,
+                       deletable = False,
+                       )
+
+    settings.customise_inv_warehouse_resource = customise_inv_warehouse_resource
+
+    # -------------------------------------------------------------------------
+    def customise_inv_warehouse_controller(**attr):
+
+        s3 = current.response.s3
+
+        #standard_postp = s3.postp
+        #def postp(r, output):
+        #    if callable(standard_postp):
+        #        output = standard_postp(r, output)
+        #    return output
+        #s3.postp = postp
+
+        # Override standard postp
+        s3.postp = None
+
+        from .rheaders import rlpptm_inv_rheader
+        attr["rheader"] = rlpptm_inv_rheader
+
+        return attr
+
+    settings.customise_inv_warehouse_controller = customise_inv_warehouse_controller
 
     # -------------------------------------------------------------------------
     def customise_req_req_resource(r, tablename):

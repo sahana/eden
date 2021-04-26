@@ -153,13 +153,15 @@ def rlpptm_org_rheader(r, tabs=None):
                                          limitby = (0, 1)
                                          ).first()
                 if group:
-                    from .config import TESTSTATIONS, SCHOOLS
+                    from .config import TESTSTATIONS, SCHOOLS, GOVERNMENT
                     if group.name == TESTSTATIONS:
                         sites_tab = (T("Test Stations"), "facility")
                     elif group.name == SCHOOLS:
                         sites_tab = (T("Administrative Offices"), "office")
                         if is_org_group_admin:
                             invite_tab = (T("Invite"), "invite")
+                    elif group.name == GOVERNMENT:
+                        sites_tab = (T("Warehouses"), "warehouse")
 
                 tabs = [(T("Organisation"), None),
                         invite_tab,
@@ -433,6 +435,21 @@ def rlpptm_inv_rheader(r, tabs=None):
                                         % T("Did you receive this shipment?"))
 
             rheader = rheader(r, table=resource.table, record=record, actions=actions)
+
+        elif tablename == "inv_warehouse":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        ]
+
+            rheader_fields = [["code", "email"],
+                              ["organisation_id", "phone1"],
+                              ["location_id", "phone2"],
+                              ]
+            rheader_title = "name"
+
+            rheader = S3ResourceHeader(rheader_fields, tabs, title=rheader_title)
+            rheader = rheader(r, table=resource.table, record=record)
 
     return rheader
 

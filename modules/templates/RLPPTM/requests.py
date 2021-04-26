@@ -120,6 +120,9 @@ def send_filter_widgets():
     if current.auth.s3_has_role("SUPPLY_COORDINATOR"):
 
         coordinator_filters = [
+            S3OptionsFilter("site_id",
+                            label = T("Distribution Center"),
+                            ),
             S3OptionsFilter("to_site_id",
                             ),
             S3LocationFilter("to_site_id$location_id",

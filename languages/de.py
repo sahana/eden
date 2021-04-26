@@ -1709,6 +1709,7 @@
 'Distance from %s:': 'Abstand von %s:',
 'Distance(Kms)': 'Distanz (km)',
 'Distributed without Record': 'Verteilt ohne Aufzeichnung',
+'Distribution Center': 'Verteilungszentrum',
 'Distribution groups': 'Verteilergruppen',
 'Distribution of Clients': 'Verteilung der Klienten',
 'Distribution': 'Verteilung',
