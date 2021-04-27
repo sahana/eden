@@ -3365,7 +3365,8 @@ def config(settings):
                     if not is_supply_coordinator:
                         # Limit to sites of managed requester organisations
                         stable = s3db.org_site
-                        dbset = db(stable.organisation_id.belongs(requester_orgs))
+                        dbset = db((stable.organisation_id.belongs(requester_orgs)) & \
+                                   (stable.obsolete == False))
                         field = table.site_id
                         field.requires = IS_ONE_OF(dbset, "org_site.site_id",
                                                    field.represent,
@@ -3428,7 +3429,8 @@ def config(settings):
             from s3db.req import REQ_STATUS_COMPLETE, REQ_STATUS_CANCEL
             request_complete = (REQ_STATUS_COMPLETE, REQ_STATUS_CANCEL)
 
-            stable = s3db.inv_send
+            istable = s3db.inv_send
+
             from s3db.inv import SHIP_STATUS_IN_PROCESS, SHIP_STATUS_SENT
             shipment_in_process = (SHIP_STATUS_IN_PROCESS, SHIP_STATUS_SENT)
 
@@ -3443,23 +3445,29 @@ def config(settings):
                     # Single record view
                     if not r.component and has_role("SUPPLY_COORDINATOR"):
                         if record.fulfil_status not in request_complete:
-                            query = (stable.req_ref == record.req_ref) & \
-                                    (stable.status.belongs(shipment_in_process)) & \
-                                    (stable.deleted == False)
-                            shipment = db(query).select(stable.id, limitby=(0, 1)).first()
+                            query = (istable.req_ref == record.req_ref) & \
+                                    (istable.status.belongs(shipment_in_process)) & \
+                                    (istable.deleted == False)
+                            shipment = db(query).select(istable.id, limitby=(0, 1)).first()
                         else:
                             shipment = None
-                        if not shipment:
+                        from .requests import is_active
+                        site_active = is_active(record.site_id)
+                        if not shipment and site_active:
                             ship_btn = A(T("Register Shipment"),
                                          _class = "action-btn ship-btn",
                                          _db_id = str(record.id),
                                          )
                             inject_script = True
                         else:
+                            if not site_active:
+                                reason = T("Requesting site no longer active")
+                            else:
+                                reason = T("Shipment already in process")
                             ship_btn = A(T("Register Shipment"),
                                          _class = "action-btn",
                                          _disabled = "disabled",
-                                         _title = T("Shipment already in process"),
+                                         _title = reason,
                                          )
                         if "buttons" not in output:
                             buttons = output["buttons"] = {}
@@ -3472,6 +3480,7 @@ def config(settings):
 
                 elif not r.component and not r.method:
                     # Datatable
+                    stable = s3db.org_site
 
                     # Default action buttons (except delete)
                     from s3 import S3CRUD
@@ -3479,14 +3488,17 @@ def config(settings):
 
                     if has_role("SUPPLY_COORDINATOR"):
                         # Can only register shipments for unfulfilled requests with
-                        # no shipment currently in process or in transit
-                        left = stable.on((stable.req_ref == table.req_ref) & \
-                                         (stable.status.belongs(shipment_in_process)) & \
-                                         (stable.deleted == False))
+                        # no shipment currently in process or in transit, and the
+                        # requesting site still active
+                        left = istable.on((istable.req_ref == table.req_ref) & \
+                                          (istable.status.belongs(shipment_in_process)) & \
+                                          (istable.deleted == False))
+                        join = stable.on((stable.site_id == table.site_id) & \
+                                         (stable.obsolete == False))
                         query = (table.fulfil_status != REQ_STATUS_COMPLETE) & \
                                 (table.fulfil_status != REQ_STATUS_CANCEL) & \
-                                (stable.id == None)
-                        rows = db(query).select(table.id, groupby=table.id, left = left)
+                                (istable.id == None)
+                        rows = db(query).select(table.id, groupby=table.id, join=join, left=left)
                         restrict = [str(row.id) for row in rows]
 
                         # Register-shipment button
@@ -3512,10 +3524,10 @@ def config(settings):
                     if auth.s3_has_permission("delete", table):
                         # Requests can only be deleted while no shipment for them
                         # has been registered yet:
-                        left = stable.on((stable.req_ref == table.req_ref) & \
-                                         (stable.deleted == False))
+                        left = istable.on((istable.req_ref == table.req_ref) & \
+                                          (istable.deleted == False))
                         query = auth.s3_accessible_query("delete", table) & \
-                                (stable.id == None)
+                                (istable.id == None)
                         rows = db(query).select(table.id, left=left)
 
                         # Delete-button
