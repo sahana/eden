@@ -5636,7 +5636,7 @@ class org_SiteRepresent(S3Represent):
         rows = db(query).select(limitby=limitby, *fields)
         self.queries += 1
 
-        if show_type:
+        if show_type or show_link:
 
             # Collect the site_ids
             site_ids = set(row.site_id for row in rows)
@@ -5665,7 +5665,8 @@ class org_SiteRepresent(S3Represent):
 
             # Bulk-represent all type IDs
             # (stores the representations in the S3Represent)
-            ltable.facility_type_id.represent.bulk(list(all_types))
+            if show_type:
+                ltable.facility_type_id.represent.bulk(list(all_types))
 
             # Add the list of corresponding type IDs to each row
             for row in rows:

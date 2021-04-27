@@ -2024,73 +2024,79 @@ form.anonymize-form,
 }
 
 /* line 530, ../scss/theme/_widgets.scss */
+.prio-lightgreen {
+  color: #E0E0E0;
+  background-color: #009f00;
+}
+
+/* line 534, ../scss/theme/_widgets.scss */
 .prio-green {
   color: #E0E0E0;
   background-color: #006100;
 }
 
-/* line 534, ../scss/theme/_widgets.scss */
+/* line 538, ../scss/theme/_widgets.scss */
 .prio-blue {
   color: white;
   background-color: #10427b;
 }
 
-/* line 538, ../scss/theme/_widgets.scss */
+/* line 542, ../scss/theme/_widgets.scss */
 .prio-lightblue {
   background-color: #b7ddff;
 }
 
-/* line 541, ../scss/theme/_widgets.scss */
+/* line 545, ../scss/theme/_widgets.scss */
 .prio-grey {
   background-color: silver;
 }
 
-/* line 544, ../scss/theme/_widgets.scss */
+/* line 548, ../scss/theme/_widgets.scss */
 .prio-black {
   color: #E0E0E0;
   background-color: #1f1f1f;
 }
 
 /* Weekly Hours Widget */
-/* line 550, ../scss/theme/_widgets.scss */
+/* line 554, ../scss/theme/_widgets.scss */
 .wh-raster {
   margin-top: 0.3rem;
 }
-/* line 552, ../scss/theme/_widgets.scss */
+/* line 556, ../scss/theme/_widgets.scss */
 .wh-raster tr {
   border-bottom: 1px solid #ccc;
 }
-/* line 555, ../scss/theme/_widgets.scss */
+/* line 559, ../scss/theme/_widgets.scss */
 .wh-raster td {
   border-left: 1px solid #ccc;
 }
-/* line 557, ../scss/theme/_widgets.scss */
+/* line 561, ../scss/theme/_widgets.scss */
 .wh-raster td.wh-tick {
   border-left-width: 2px;
 }
-/* line 562, ../scss/theme/_widgets.scss */
+/* line 566, ../scss/theme/_widgets.scss */
 .wh-raster thead td {
   min-width: 1.8rem;
   padding-right: 0.6rem !important;
   font-size: 0.6rem;
   font-weight: normal;
 }
-/* line 571, ../scss/theme/_widgets.scss */
+/* line 575, ../scss/theme/_widgets.scss */
 .wh-raster tbody td.wh-hour {
   text-align: center;
   font-weight: normal;
 }
-/* line 574, ../scss/theme/_widgets.scss */
+/* line 578, ../scss/theme/_widgets.scss */
 .wh-raster tbody td.wh-hour.wh-on {
   color: darkgreen;
 }
-/* line 578, ../scss/theme/_widgets.scss */
+/* line 582, ../scss/theme/_widgets.scss */
 .wh-raster tbody td.wh-day {
   text-align: left;
   font-size: 0.7rem;
   padding: 0.2rem 0.4rem;
 }
-/* line 585, ../scss/theme/_widgets.scss */
+/* line 589, ../scss/theme/_widgets.scss */
 .wh-raster .wh-hour {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -2099,56 +2105,56 @@ form.anonymize-form,
   -ms-user-select: none;
   user-select: none;
 }
-/* line 593, ../scss/theme/_widgets.scss */
+/* line 597, ../scss/theme/_widgets.scss */
 .wh-raster .wh-hour.wh-on {
   background-color: lightgreen;
 }
-/* line 596, ../scss/theme/_widgets.scss */
+/* line 600, ../scss/theme/_widgets.scss */
 .wh-raster .wh-hour.wh-off {
   background-color: transparent;
 }
 
 /* Weekly Hours Representation */
-/* line 603, ../scss/theme/_widgets.scss */
+/* line 607, ../scss/theme/_widgets.scss */
 .wh-schedule {
   list-style: none;
   white-space: pre;
   margin: 0;
   font-size: 0.7rem;
 }
-/* line 608, ../scss/theme/_widgets.scss */
+/* line 612, ../scss/theme/_widgets.scss */
 .wh-schedule .wh-dayname {
   width: 1.5rem;
   display: inline-block;
 }
-/* line 612, ../scss/theme/_widgets.scss */
+/* line 616, ../scss/theme/_widgets.scss */
 .wh-schedule .wh-dayname::after {
   content: ":";
 }
 
-/* line 617, ../scss/theme/_widgets.scss */
+/* line 621, ../scss/theme/_widgets.scss */
 .announcements-title {
   font-variant: all-small-caps;
   font-weight: bold;
 }
 
-/* line 621, ../scss/theme/_widgets.scss */
+/* line 625, ../scss/theme/_widgets.scss */
 .announcements {
   margin: 0;
   padding: 0 0 0 1rem;
   border-left: 1px solid #871D33;
   list-style: none outside none;
 }
-/* line 626, ../scss/theme/_widgets.scss */
+/* line 630, ../scss/theme/_widgets.scss */
 .announcements ul, .announcements ol {
   padding-left: 20px;
   list-style: none outside none;
 }
-/* line 630, ../scss/theme/_widgets.scss */
+/* line 634, ../scss/theme/_widgets.scss */
 .announcements li {
   padding: 10px 0 0;
 }
-/* line 633, ../scss/theme/_widgets.scss */
+/* line 637, ../scss/theme/_widgets.scss */
 .announcements .announcement-box {
   display: block;
   background: #fff7d9;
@@ -2156,140 +2162,140 @@ form.anonymize-form,
   overflow: hidden;
   padding: 0.7rem;
 }
-/* line 640, ../scss/theme/_widgets.scss */
+/* line 644, ../scss/theme/_widgets.scss */
 .announcements .announcement-box.announcement-important .announcement-icon {
   color: #0088ca;
 }
-/* line 644, ../scss/theme/_widgets.scss */
+/* line 648, ../scss/theme/_widgets.scss */
 .announcements .announcement-box.announcement-critical {
   border: 1px solid #ca0000;
   background-color: #ffebea;
 }
-/* line 647, ../scss/theme/_widgets.scss */
+/* line 651, ../scss/theme/_widgets.scss */
 .announcements .announcement-box.announcement-critical .announcement-icon {
   color: #ca0000;
   animation: blinker 0.7s step-start 4;
 }
-/* line 653, ../scss/theme/_widgets.scss */
+/* line 657, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-header .announcement-icon {
   display: inline-block;
   font-size: 1.3rem;
   padding: 0 0.7rem 0 0;
 }
-/* line 658, ../scss/theme/_widgets.scss */
+/* line 662, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-header h4 {
   display: inline-block;
 }
-/* line 662, ../scss/theme/_widgets.scss */
+/* line 666, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text {
   font-size: 0.9rem;
   line-height: 1.3;
 }
-/* line 665, ../scss/theme/_widgets.scss */
+/* line 669, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text h4 {
   font-size: 1.2rem;
 }
-/* line 668, ../scss/theme/_widgets.scss */
+/* line 672, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text ul {
   list-style: disc outside none;
 }
-/* line 671, ../scss/theme/_widgets.scss */
+/* line 675, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text ol {
   list-style: decimal outside none;
 }
-/* line 674, ../scss/theme/_widgets.scss */
+/* line 678, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text li {
   padding: 0;
 }
-/* line 677, ../scss/theme/_widgets.scss */
+/* line 681, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text div {
   white-space: pre-line;
 }
-/* line 680, ../scss/theme/_widgets.scss */
+/* line 684, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text .announcement-header {
   margin: 0 0 0.8rem 0;
 }
-/* line 683, ../scss/theme/_widgets.scss */
+/* line 687, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text announcement-body {
   white-space: pre-line;
 }
-/* line 685, ../scss/theme/_widgets.scss */
+/* line 689, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text announcement-body p {
   margin-left: 1rem;
 }
-/* line 690, ../scss/theme/_widgets.scss */
+/* line 694, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-date {
   font-size: 0.7rem;
   margin-top: 0.4rem;
 }
 
-/* line 700, ../scss/theme/_widgets.scss */
+/* line 704, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header .ui-multiselect-filter {
   direction: rtl;
   float: right;
   margin-right: 3px;
   margin-left: 10px;
 }
-/* line 706, ../scss/theme/_widgets.scss */
+/* line 710, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header ul li {
   float: right;
   padding: 0 3px 0 10px;
 }
-/* line 710, ../scss/theme/_widgets.scss */
+/* line 714, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header li.ui-multiselect-close {
   float: left;
   text-align: left;
   padding-left: 0;
 }
-/* line 717, ../scss/theme/_widgets.scss */
+/* line 721, ../scss/theme/_widgets.scss */
 body.rtl .range-filter-widget input.date-filter-input {
   margin-right: 0;
   margin-left: 2px;
 }
-/* line 722, ../scss/theme/_widgets.scss */
+/* line 726, ../scss/theme/_widgets.scss */
 body.rtl #list-btn-add {
   float: left;
   margin-right: 0;
   margin-left: 0.35rem;
 }
-/* line 728, ../scss/theme/_widgets.scss */
+/* line 732, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0;
   margin-left: 0.3rem;
 }
-/* line 734, ../scss/theme/_widgets.scss */
+/* line 738, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 0;
   border-right: 1px solid red;
 }
-/* line 738, ../scss/theme/_widgets.scss */
+/* line 742, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 0;
   border-left: 1px solid red;
 }
 
-/* line 747, ../scss/theme/_widgets.scss */
+/* line 751, ../scss/theme/_widgets.scss */
 .map-popup {
   min-width: 20rem;
 }
-/* line 749, ../scss/theme/_widgets.scss */
+/* line 753, ../scss/theme/_widgets.scss */
 .map-popup h4 {
   font-size: 1rem;
 }
-/* line 752, ../scss/theme/_widgets.scss */
+/* line 756, ../scss/theme/_widgets.scss */
 .map-popup .map-popup-details {
   font-size: 0.8rem;
 }
-/* line 754, ../scss/theme/_widgets.scss */
+/* line 758, ../scss/theme/_widgets.scss */
 .map-popup .map-popup-details td {
   padding: 0.1rem 0.3rem 0 0;
 }
-/* line 756, ../scss/theme/_widgets.scss */
+/* line 760, ../scss/theme/_widgets.scss */
 .map-popup .map-popup-details td.map-popup-label {
   font-weight: bold;
 }
 
-/* line 762, ../scss/theme/_widgets.scss */
+/* line 766, ../scss/theme/_widgets.scss */
 .olPopupCloseBox {
   margin-right: 20px;
 }

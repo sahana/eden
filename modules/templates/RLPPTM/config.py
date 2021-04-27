@@ -2587,6 +2587,7 @@ def config(settings):
 
         table = s3db.inv_recv
 
+        # Custom label for req_ref
         from .requests import ShipmentCodeRepresent
         field = table.req_ref
         field.label = T("Order No.")
@@ -2596,12 +2597,28 @@ def config(settings):
         #field = table.send_ref
         #field.represent = lambda v, row=None: B(v if v else "-")
 
+        # Don't show type in site representation
+        field = table.site_id
+        field.represent = s3db.org_SiteRepresent(show_link = True,
+                                                 show_type = False,
+                                                 )
+
+        # Custom label for from_site_id, don't show link or type
+        field = table.from_site_id
+        field.label = T("Distribution Center")
+        field.readable = True
+        field.writable = False
+        field.represent = s3db.org_SiteRepresent(show_link = False,
+                                                 show_type = False,
+                                                 )
+
         if r.tablename == "inv_recv" and not r.component:
             if r.interactive:
                 from s3 import S3SQLCustomForm
                 crud_fields = ["req_ref",
                                #"send_ref",
                                "site_id",
+                               "from_site_id",
                                "status",
                                "recipient_id",
                                "date",
@@ -2614,6 +2631,7 @@ def config(settings):
             list_fields = ["req_ref",
                            #"send_ref",
                            "site_id",
+                           "from_site_id",
                            "date",
                            "status",
                            ]
@@ -2650,7 +2668,6 @@ def config(settings):
                 # Hide unused fields
                 unused = ("type",
                           "organisation_id",
-                          "from_site_id",
                           "purchase_ref",
                           "recv_ref",
                           )
@@ -2739,7 +2756,9 @@ def config(settings):
                                    not_filterby = "obsolete",
                                    not_filter_opts = (True,),
                                    )
-        field.represent = s3db.org_SiteRepresent(show_link=False)
+        field.represent = s3db.org_SiteRepresent(show_link = False,
+                                                 show_type = False,
+                                                 )
 
         # Recipient site is required, must be org_facility
         field = table.to_site_id
@@ -2748,6 +2767,22 @@ def config(settings):
                                    instance_types = ("org_facility",),
                                    sort = True,
                                    )
+        field.represent = s3db.org_SiteRepresent(show_link = True,
+                                                 show_type = False,
+                                                 )
+
+        # Color-coded status representation
+        from s3 import S3PriorityRepresent
+        field = table.status
+        status_opts = s3db.inv_ship_status
+        status_labels = s3db.inv_shipment_status_labels
+        field.represent = S3PriorityRepresent(status_labels,
+                                              {status_opts["IN_PROCESS"]: "lightblue",
+                                               status_opts["RECEIVED"]: "green",
+                                               status_opts["SENT"]: "lightgreen",
+                                               status_opts["CANCEL"]: "black",
+                                               status_opts["RETURNING"]: "amber",
+                                               }).represent
 
         # We don't use send_ref
         field = table.send_ref
@@ -3252,6 +3287,13 @@ def config(settings):
         field.label = T("Order No.")
         #field.represent = lambda v, row=None: v if v else "-"
 
+        # Don't show facility type
+        field = table.site_id
+        field.represent = s3db.org_SiteRepresent(show_link = True,
+                                                 show_type = False,
+                                                 )
+
+        # Custom method to register a shipment
         if auth.s3_has_role("SUPPLY_COORDINATOR"):
             from .requests import RegisterShipment
             s3db.set_method("req", "req",
