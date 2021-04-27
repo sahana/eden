@@ -620,7 +620,7 @@ class approve(S3CustomController):
 
                     # Add default tags for facility
                     from .helpers import add_facility_default_tags
-                    add_facility_default_tags(facility_id, approve=True)
+                    add_facility_default_tags(facility_id)
 
                     # Approve user
                     auth.s3_approve_user(user)
