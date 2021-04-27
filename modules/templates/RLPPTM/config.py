@@ -2612,6 +2612,19 @@ def config(settings):
                                                  show_type = False,
                                                  )
 
+        # Color-coded status representation
+        from s3 import S3PriorityRepresent
+        field = table.status
+        status_opts = s3db.inv_ship_status
+        status_labels = s3db.inv_shipment_status_labels
+        field.represent = S3PriorityRepresent(status_labels,
+                                              {status_opts["IN_PROCESS"]: "lightblue",
+                                               status_opts["RECEIVED"]: "green",
+                                               status_opts["SENT"]: "amber",
+                                               status_opts["CANCEL"]: "black",
+                                               status_opts["RETURNING"]: "red",
+                                               }).represent
+
         if r.tablename == "inv_recv" and not r.component:
             if r.interactive:
                 from s3 import S3SQLCustomForm
@@ -2779,9 +2792,9 @@ def config(settings):
         field.represent = S3PriorityRepresent(status_labels,
                                               {status_opts["IN_PROCESS"]: "lightblue",
                                                status_opts["RECEIVED"]: "green",
-                                               status_opts["SENT"]: "lightgreen",
+                                               status_opts["SENT"]: "amber",
                                                status_opts["CANCEL"]: "black",
-                                               status_opts["RETURNING"]: "amber",
+                                               status_opts["RETURNING"]: "red",
                                                }).represent
 
         # We don't use send_ref
