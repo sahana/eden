@@ -1077,16 +1077,22 @@ def config(settings):
 
         # Report options
         if r.method == "report":
+            field = table.created_by
+            field.represent = s3db.auth_UserRepresent(show_name = True,
+                                                      show_email = False,
+                                                      )
             facts = ((T("Total Services Rendered"), "sum(quantity)"),
                      (T("Number of Accepted Vouchers"), "count(id)"),
                      (T("Remaining Compensation Claims"), "sum(balance)"),
                      )
             axes = ["program_id",
-                    "pe_id",
                     "status",
                     ]
-            if current.auth.s3_has_role("PROGRAM_MANAGER"):
+            has_role = auth.s3_has_role
+            if has_role("PROGRAM_MANAGER"):
                 axes.insert(0, "pe_id")
+            if has_role("VOUCHER_PROVIDER"):
+                axes.append((T("User"), "created_by"))
             report_options = {
                 "rows": axes,
                 "cols": axes,
