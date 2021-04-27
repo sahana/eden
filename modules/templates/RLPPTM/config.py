@@ -2715,12 +2715,14 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_inv_send_resource(r, tablename):
 
+        db = current.db
         s3db = current.s3db
 
         table = s3db.inv_send
 
         from .requests import ShipmentCodeRepresent
 
+        # Custom representation of req_ref
         field = table.req_ref
         field.label = T("Order No.")
         if r.representation == "wws":
@@ -2728,17 +2730,24 @@ def config(settings):
         else:
             field.represent = ShipmentCodeRepresent("req_req", "req_ref")
 
+        # Sending site is required, must not be obsolete, +custom label
         field = table.site_id
         field.label = T("Distribution Center")
-        stable = s3db.org_site
-        wtable = s3db.inv_warehouse
-        dbset = current.db((stable.site_id == wtable.site_id) & \
-                           (wtable.obsolete == False))
-        field.requires = IS_ONE_OF(dbset, "org_site.site_id",
+        field.requires = IS_ONE_OF(db, "org_site.site_id",
                                    field.represent,
                                    instance_types = ("inv_warehouse",),
+                                   not_filterby = "obsolete",
+                                   not_filter_opts = (True,),
                                    )
         field.represent = s3db.org_SiteRepresent(show_link=False)
+
+        # Recipient site is required, must be org_facility
+        field = table.to_site_id
+        field.requires = IS_ONE_OF(db, "org_site.site_id",
+                                   field.represent,
+                                   instance_types = ("org_facility",),
+                                   sort = True,
+                                   )
 
         # We don't use send_ref
         field = table.send_ref

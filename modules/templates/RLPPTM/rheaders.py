@@ -364,26 +364,40 @@ def rlpptm_inv_rheader(r, tabs=None):
             # If the record status is SHIP_STATUS_IN_PROCESS, both sites are active
             # and there is at least one track item linked to it, add the send-button
             from .requests import is_active
-            if record.status == SHIP_STATUS_IN_PROCESS and \
-               is_active(record.site_id) and is_active(record.to_site_id) and \
-               auth.s3_has_permission("update", resource.table, record_id=record.id):
+            reason = None
+            if record.status == SHIP_STATUS_IN_PROCESS:
+                if not is_active(record.site_id):
+                    reason = T("Distribution center no longer active")
+                elif not is_active(record.to_site_id):
+                    reason = T("Requesting site no longer active")
+                elif auth.s3_has_permission("update", resource.table, record_id=record.id):
+                    titable = s3db.inv_track_item
+                    query = (titable.send_id == record.id) & \
+                            (titable.deleted == False)
+                    row = db(query).select(titable.id, limitby=(0, 1)).first()
+                    if row:
+                        actions.append(A(T("Send Shipment"),
+                                         _href = URL(c = "inv",
+                                                     f = "send_process",
+                                                     args = [record.id]
+                                                     ),
+                                         _id = "send_process",
+                                         _class = "action-btn",
+                                         ))
+                        s3.jquery_ready.append('''S3.confirmClick("#send_process","%s")''' \
+                                                % T("Do you want to send this shipment?"))
+                    else:
+                        reason = T("Shipment is empty")
+            else:
+                reason = T("Shipment already in process")
 
-                titable = s3db.inv_track_item
-                query = (titable.send_id == record.id) & \
-                        (titable.deleted == False)
-                row = db(query).select(titable.id, limitby=(0, 1)).first()
-                if row:
-                    actions.append(A(T("Send Shipment"),
-                                     _href = URL(c = "inv",
-                                                 f = "send_process",
-                                                 args = [record.id]
-                                                 ),
-                                     _id = "send_process",
-                                     _class = "action-btn",
-                                     ))
-
-                    s3.jquery_ready.append('''S3.confirmClick("#send_process","%s")''' \
-                                            % T("Do you want to send this shipment?"))
+            if reason:
+                actions.append(A(T("Send Shipment"),
+                                 _id = "send_process",
+                                 _disabled = "disabled",
+                                 _class = "action-btn",
+                                 _title = reason,
+                                 ))
 
             rheader = rheader(r, table=resource.table, record=record, actions=actions)
 

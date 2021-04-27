@@ -1710,6 +1710,7 @@
 'Distance(Kms)': 'Distanz (km)',
 'Distributed without Record': 'Verteilt ohne Aufzeichnung',
 'Distribution Center': 'Verteilungszentrum',
+'Distribution center no longer active': 'Verteilungszentrum nicht mehr aktiv',
 'Distribution groups': 'Verteilergruppen',
 'Distribution of Clients': 'Verteilung der Klienten',
 'Distribution': 'Verteilung',
