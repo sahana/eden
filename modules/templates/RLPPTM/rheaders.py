@@ -144,6 +144,7 @@ def rlpptm_org_rheader(r, tabs=None):
 
                 invite_tab = None
                 sites_tab = None
+                doc_tab = None
 
                 gtable = s3db.org_group
                 mtable = s3db.org_group_membership
@@ -156,6 +157,7 @@ def rlpptm_org_rheader(r, tabs=None):
                     from .config import TESTSTATIONS, SCHOOLS, GOVERNMENT
                     if group.name == TESTSTATIONS:
                         sites_tab = (T("Test Stations"), "facility")
+                        doc_tab = (T("Documents"), "document")
                     elif group.name == SCHOOLS:
                         sites_tab = (T("Administrative Offices"), "office")
                         if is_org_group_admin:
@@ -167,6 +169,7 @@ def rlpptm_org_rheader(r, tabs=None):
                         invite_tab,
                         sites_tab,
                         (T("Staff"), "human_resource"),
+                        doc_tab,
                         ]
 
             # Look up the OrgID

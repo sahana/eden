@@ -59,14 +59,10 @@
 
         <xsl:if test="$ToSite">
             <Bestellung>
-                <!-- Sending Site Code -->
-                <Gemeindeschluessel>
-                    <xsl:value-of select="$FromSite/data[@field='code']/text()"/>
-                </Gemeindeschluessel>
-
                 <!-- Requester Information -->
                 <xsl:call-template name="Requester">
-                    <xsl:with-param name="Site" select="$ToSite"/>
+                    <xsl:with-param name="FromSite" select="$FromSite"/>
+                    <xsl:with-param name="ToSite" select="$ToSite"/>
                     <xsl:with-param name="RequesterRef" select="$Request/reference[@field='requester_id']"/>
                 </xsl:call-template>
 
@@ -129,19 +125,24 @@
     <!-- Requester -->
     <xsl:template name="Requester">
 
-        <xsl:param name="Site"/>
+        <xsl:param name="FromSite"/>
+        <xsl:param name="ToSite"/>
         <xsl:param name="RequesterRef"/>
 
-        <xsl:if test="$Site">
+        <xsl:if test="$ToSite">
             <Besteller>
                 <!-- Name of the requesting facility -->
                 <Name>
-                    <xsl:value-of select="$Site/data[@field='name']/text()"/>
+                    <xsl:value-of select="$ToSite/data[@field='name']/text()"/>
                 </Name>
-                <Zusatz></Zusatz> <!-- omit? -->
+
+                <!-- Distribution Site Code -->
+                <Gemeindeschluessel>
+                    <xsl:value-of select="$FromSite/data[@field='code']/text()"/>
+                </Gemeindeschluessel>
 
                 <!-- Location details for the requesting facility -->
-                <xsl:variable name="LocationUUID" select="$Site/reference[@field='location_id']/@uuid"/>
+                <xsl:variable name="LocationUUID" select="$ToSite/reference[@field='location_id']/@uuid"/>
                 <xsl:variable name="Location" select="key('locations', $LocationUUID)[1]"/>
                 <xsl:if test="$Location">
                     <xsl:variable name="L4" select="$Location/data[@field='L4']/text()"/>
@@ -166,10 +167,10 @@
 
                 <!-- Contact Details for the requesting facility -->
                 <Telefon>
-                    <xsl:value-of select="$Site/data[@field='phone1']/text()"/>
+                    <xsl:value-of select="$ToSite/data[@field='phone1']/text()"/>
                 </Telefon>
                 <Email>
-                    <xsl:value-of select="$Site/data[@field='email']/text()"/>
+                    <xsl:value-of select="$ToSite/data[@field='email']/text()"/>
                 </Email>
 
                 <!-- The requesting user -->
