@@ -1510,6 +1510,14 @@ def config(settings):
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        )
+
+        # PDF export method
+        from .helpers import ClaimPDF
+        s3db.set_method("fin", "voucher_claim",
+                        method = "record",
+                        action = ClaimPDF,
+                        )
+
         s3db.add_custom_callback("fin_voucher_claim",
                                  "onaccept",
                                  claim_create_onaccept,
@@ -1549,6 +1557,41 @@ def config(settings):
 
             return result
         s3.prep = prep
+
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if not r.component and isinstance(output, dict):
+                record = r.record
+                if record and r.method in (None, "update", "read"):
+
+                    # Hint that the user need to confirm the claim
+                    if record.status == "NEW" and \
+                       all(record[fn] for fn in ("account_holder", "account_number")):
+                        current.response.warning = T('You must change the status to "confirmed" before an invoice can be issued')
+
+                    # Custom CRUD buttons
+                    if "buttons" not in output:
+                        buttons = output["buttons"] = {}
+                    else:
+                        buttons = output["buttons"]
+
+                    # PDF-button
+                    pdf_download = A(T("Download PDF"),
+                                     _href = "/%s/fin/voucher_claim/%s/record.pdf" % \
+                                             (r.application, record.id),
+                                     _class="action-btn",
+                                     )
+
+                    # Render in place of the delete-button
+                    buttons["delete_btn"] = TAG[""](pdf_download,
+                                                    )
+            return output
+        s3.postp = custom_postp
 
         return attr
 

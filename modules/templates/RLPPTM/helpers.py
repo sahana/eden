@@ -1257,4 +1257,355 @@ class InvoicePDF(S3Method):
 
         return data
 
+# =============================================================================
+class ClaimPDF(S3Method):
+    """
+        REST Method to generate a claim PDF
+        - for external accounting archives
+    """
+
+    def apply_method(self, r, **attr):
+        """
+            Generate a PDF of a Claim
+
+            @param r: the S3Request instance
+            @param attr: controller attributes
+        """
+
+        if r.representation != "pdf":
+            r.error(415, current.ERROR.BAD_FORMAT)
+        if not r.record or r.http != "GET":
+            r.error(400, current.ERROR.BAD_REQUEST)
+
+        T = current.T
+
+        # Filename to include invoice number if available
+        invoice_no = self.invoice_number(r.record)
+
+        from s3.s3export import S3Exporter
+        exporter = S3Exporter().pdf
+        return exporter(r.resource,
+                        request = r,
+                        method = "read",
+                        pdf_title = T("Compensation Claim"),
+                        pdf_filename = invoice_no if invoice_no else None,
+                        pdf_header = self.claim_header,
+                        pdf_callback = self.claim,
+                        pdf_footer = self.claim_footer,
+                        pdf_hide_comments = True,
+                        pdf_header_padding = 12,
+                        pdf_orientation = "Portrait",
+                        pdf_table_autogrow = "B",
+                        **attr
+                        )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def invoice_number(record):
+
+        invoice_id = record.invoice_id
+        if invoice_id:
+            s3db = current.s3db
+            itable = s3db.fin_voucher_invoice
+            query = (itable.id == invoice_id)
+            invoice = current.db(query).select(itable.invoice_no,
+                                               cache = s3db.cache,
+                                               limitby = (0, 1),
+                                               ).first()
+        else:
+            invoice = None
+
+        return invoice.invoice_no if invoice else None
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def claim_header(cls, r):
+        """
+            Generate the claim header
+
+            @param r: the S3Request
+        """
+
+        T = current.T
+
+        table = r.resource.table
+        itable = current.s3db.fin_voucher_invoice
+
+        claim = r.record
+        pdata = cls.lookup_header_data(claim)
+
+        place = [pdata.get(k) for k in ("addr_postcode", "addr_place")]
+
+        status = " " if claim.invoice_id else "(%s)" % T("not invoiced yet")
+
+        header = TABLE(TR(TD(DIV(H4(T("Compensation Claim")), P(status)),
+                             _colspan = 4,
+                             ),
+                          ),
+                       TR(TH(T("Invoicing Party")),
+                          TD(pdata.get("organisation", "-")),
+                          TH(T("Invoice No.")),
+                          TD(itable.invoice_no.represent(pdata.get("invoice_no"))),
+                          ),
+                       TR(TH(T("Address")),
+                          TD(pdata.get("addr_street", "-")),
+                          TH(itable.date.label),
+                          TD(itable.date.represent(pdata.get("invoice_date"))),
+                          ),
+                       TR(TH(T("Place")),
+                          TD(" ".join(v for v in place if v)),
+                          TH(T("Payers")),
+                          TD(pdata.get("payers")),
+                          ),
+                       TR(TH(T("Email")),
+                          TD(pdata.get("email", "-")),
+                          TH(T("Billing Date")),
+                          TD(table.date.represent(pdata.get("billing_date"))),
+                          ),
+                       )
+
+        return header
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def claim(cls, r):
+        """
+            Generate the claim body
+
+            @param r: the S3Request
+        """
+
+        T = current.T
+
+        table = r.table
+
+        claim = r.record
+        pdata = cls.lookup_body_data(claim)
+
+        # Lambda to format currency amounts
+        amt = lambda v: IS_FLOAT_AMOUNT.represent(v, precision=2, fixed=True)
+        currency = claim.currency
+
+        # Specification of costs
+        costs = TABLE(TR(TH(T("No.")),
+                         TH(T("Description")),
+                         TH(T("Number##count")),
+                         TH(T("Unit")),
+                         TH(table.price_per_unit.label),
+                         TH(T("Total")),
+                         TH(table.currency.label),
+                         ),
+                      TR(TD("1"), # only one line item here
+                         TD(pdata.get("title", "-")),
+                         TD(str(claim.quantity_total)),
+                         TD(pdata.get("unit", "-")),
+                         TD(amt(claim.price_per_unit)),
+                         TD(amt(claim.amount_receivable)),
+                         TD(currency),
+                         ),
+                      TR(TD(H5(T("Total")), _colspan=5),
+                         TD(H5(amt(claim.amount_receivable))),
+                         TD(H5(currency)),
+                         ),
+                      )
+
+        # Payment Details
+        an_field = table.account_number
+        an = an_field.represent(claim.account_number)
+        payment_details = TABLE(TR(TH(table.account_holder.label),
+                                   TD(claim.account_holder),
+                                   ),
+                                TR(TH(an_field.label),
+                                   TD(an),
+                                   ),
+                                TR(TH(table.bank_name.label),
+                                   TD(claim.bank_name),
+                                   ),
+                                )
+
+        return DIV(H4(" "),
+                   H5(T("Specification of Costs")),
+                   costs,
+                   H4(" "),
+                   H4(" "),
+                   H5(T("Payable within %(num)s days to") % {"num": 30}),
+                   payment_details,
+                   )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def claim_footer(r):
+        """
+            Generate the claim footer
+
+            @param r: the S3Request
+        """
+
+        T = current.T
+
+        claim = r.record
+
+        # Details about who generated the document and when
+        user = current.auth.user
+        if not user:
+            username = T("anonymous user")
+        else:
+            username = s3_fullname(user)
+        now = S3DateTime.datetime_represent(current.request.utcnow, utc=True)
+        note = T("Document generated by %(user)s on %(date)s") % {"user": username,
+                                                                  "date": now,
+                                                                  }
+        # Details about the data source
+        vhash = claim.vhash
+        try:
+            verification = vhash.split("$$")[1][:7]
+        except (AttributeError, IndexError):
+            verification = T("invalid")
+
+        settings = current.deployment_settings
+        source = TABLE(TR(TH(T("System Name")),
+                          TD(settings.get_system_name()),
+                          ),
+                       TR(TH(T("Web Address")),
+                          TD(settings.get_base_public_url()),
+                          ),
+                       TR(TH(T("Data Source")),
+                          TD("%s [%s]" % (claim.uuid, verification)),
+                          ),
+                       )
+
+        return DIV(P(note), source)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def lookup_header_data(claim):
+        """
+            Look up data for the claim header
+
+            @param claim: the claim record
+
+            @returns: dict with header data
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        data = {}
+
+        btable = s3db.fin_voucher_billing
+        itable = s3db.fin_voucher_invoice
+        ptable = s3db.fin_voucher_program
+        otable = s3db.org_organisation
+        ftable = s3db.org_facility
+        ltable = s3db.gis_location
+        ctable = s3db.pr_contact
+
+        # Look up the billing date
+        query = (btable.id == claim.billing_id)
+        billing = db(query).select(btable.date,
+                                   limitby = (0, 1),
+                                   ).first()
+        if billing:
+            data["billing_date"] = billing.date
+
+        # Look up invoice details
+        if claim.invoice_id:
+            query = (itable.id == claim.invoice_id)
+            invoice = db(query).select(itable.date,
+                                       itable.invoice_no,
+                                       limitby = (0, 1),
+                                       ).first()
+            if invoice:
+                data["invoice_no"] = invoice.invoice_no
+                data["invoice_date"] = invoice.date
+
+        # Use the program admin org as "payers"
+        query = (ptable.id == claim.program_id)
+        join = otable.on(otable.id == ptable.organisation_id)
+        admin_org = db(query).select(otable.name,
+                                     join = join,
+                                     limitby = (0, 1),
+                                     ).first()
+        if admin_org:
+            data["payers"] = admin_org.name
+
+        # Look up details of the invoicing party
+        query = (otable.pe_id == claim.pe_id) & \
+                (otable.deleted == False)
+        organisation = db(query).select(otable.id,
+                                        otable.name,
+                                        limitby = (0, 1),
+                                        ).first()
+        if organisation:
+
+            data["organisation"] = organisation.name
+
+            # Email address
+            query = (ctable.pe_id == claim.pe_id) & \
+                    (ctable.contact_method == "EMAIL") & \
+                    (ctable.deleted == False)
+            email = db(query).select(ctable.value,
+                                     limitby = (0, 1),
+                                     ).first()
+            if email:
+                data["email"] = email.value
+
+            # Facility address
+            query = (ftable.organisation_id == organisation.id) & \
+                    (ftable.obsolete == False) & \
+                    (ftable.deleted == False)
+            left = ltable.on(ltable.id == ftable.location_id)
+            facility = db(query).select(ftable.email,
+                                        ltable.addr_street,
+                                        ltable.addr_postcode,
+                                        ltable.L3,
+                                        ltable.L4,
+                                        left = left,
+                                        limitby = (0, 1),
+                                        orderby = ftable.created_on,
+                                        ).first()
+            if facility:
+                if data.get("email"):
+                    # Fallback
+                    data["email"] = facility.org_facility.email
+
+                location = facility.gis_location
+                data["addr_street"] = location.addr_street or "-"
+                data["addr_postcode"] = location.addr_postcode or "-"
+                data["addr_place"] = location.L4 or location.L3 or "-"
+
+        return data
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def lookup_body_data(claim):
+        """
+            Look up additional data for claim body
+
+            @param claim: the claim record
+
+            @returns: dict with claim data
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        ptable = s3db.fin_voucher_program
+
+        query = (ptable.id == claim.program_id) & \
+                (ptable.deleted == False)
+        program = db(query).select(ptable.id,
+                                   ptable.name,
+                                   ptable.unit,
+                                   limitby = (0, 1),
+                                   ).first()
+        if program:
+            data = {"title": program.name,
+                    "unit": program.unit,
+                    }
+        else:
+            data = {}
+
+        return data
+
 # END =========================================================================

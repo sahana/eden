@@ -6241,6 +6241,7 @@
 'not accessible - no cached version available!': 'Nicht verfügbar - keine zwischengespeicherte Version verfügbar!',
 'not accessible - using cached version from': 'Nicht verfügbar - benutze zwischengespeicherte Version von',
 'not checked-in!': 'nicht eingecheckt!',
+'not invoiced yet': 'noch nicht in Rechnung gestellt',
 'not specified': 'nicht angegeben',
 'obsolete': 'obsolet',
 'on %(date)s': 'am %(date)s',
