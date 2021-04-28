@@ -2300,6 +2300,27 @@ body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   margin-right: 20px;
 }
 
+/* line 770, ../scss/theme/_widgets.scss */
+.contact-repr {
+  background-color: #FFF0C1;
+  border: 1px solid #E0E0E0;
+  padding: 0.25rem 0.5rem;
+}
+/* line 774, ../scss/theme/_widgets.scss */
+.contact-repr .contact-name {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.2rem;
+}
+/* line 779, ../scss/theme/_widgets.scss */
+.contact-repr .contact-info {
+  font-size: 0.8rem;
+}
+/* line 781, ../scss/theme/_widgets.scss */
+.contact-repr .contact-info .fa {
+  padding-right: 0.4rem;
+}
+
 /* Case Rheader Flags */
 /* line 12, ../scss/theme/_misc.scss */
 .overdue {

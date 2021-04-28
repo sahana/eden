@@ -3316,13 +3316,25 @@ def config(settings):
                                                  show_type = False,
                                                  )
 
-        # Custom method to register a shipment
         if auth.s3_has_role("SUPPLY_COORDINATOR"):
+            # Custom method to register a shipment
             from .requests import RegisterShipment
             s3db.set_method("req", "req",
                             method = "ship",
                             action = RegisterShipment,
                             )
+            # Show contact details for requester
+            from .helpers import ContactRepresent
+            field = table.requester_id
+            field.represent = ContactRepresent(show_email = True,
+                                               show_phone = True,
+                                               show_link = False,
+                                               )
+        else:
+            # Simpler represent of requester, no link
+            field = table.requester_id
+            field.represent = s3db.pr_PersonRepresent(show_link = False,
+                                                      )
 
         # Filter out obsolete items
         ritable = s3db.req_req_item

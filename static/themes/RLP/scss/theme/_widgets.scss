@@ -767,4 +767,21 @@ body.rtl {
     margin-right: 20px;
 }
 
+.contact-repr {
+    background-color: #FFF0C1;
+    border: 1px solid #E0E0E0;
+    padding: 0.25rem 0.5rem;
+    .contact-name {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 0.2rem;
+    }
+    .contact-info {
+        font-size: 0.8rem;
+        .fa {
+            padding-right: 0.4rem;
+        }
+    }
+}
+
 // END ========================================================================
