@@ -135,6 +135,7 @@
                 <Name>
                     <xsl:value-of select="$ToSite/data[@field='name']/text()"/>
                 </Name>
+                <Zusatz></Zusatz> <!-- mandatory, even though always empty -->
 
                 <!-- Distribution Site Code -->
                 <Gemeindeschluessel>
