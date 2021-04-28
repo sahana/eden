@@ -129,6 +129,7 @@ SUPPLY_COORDINATOR,Supply Coordinator,,,,,inv_warehouse,READ|UPDATE,,any
 SUPPLY_COORDINATOR,Supply Coordinator,,,,,org_facility,READ,,any
 SUPPLY_COORDINATOR,Supply Coordinator,,,,,org_organisation,READ|UPDATE,,
 SUPPLY_COORDINATOR,Supply Coordinator,,,,,org_site,READ,,any
+SUPPLY_COORDINATOR,Supply Coordinator,,,,,pr_contact,READ,,any
 SUPPLY_COORDINATOR,Supply Coordinator,,,,,req_req,READ,,any
 VOUCHER_ISSUER,Voucher Issuer,,,fin,voucher,,READ,,any
 VOUCHER_ISSUER,Voucher Issuer,,,fin,voucher,,CREATE|READ|UPDATE,,
