@@ -3915,6 +3915,7 @@
 'Order Details': 'Details zur Bestellung',
 'Order Item': 'Bestellartikel',
 'Order No.': 'Bestellung Nr.',
+'Order Unit': 'Bestelleinheit',
 'Order canceled': 'Bestellung abgebrochen',
 'Order updated': 'Bestellung aktualisiert',
 'Order': 'Bestellung',

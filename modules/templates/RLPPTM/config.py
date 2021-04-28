@@ -3153,6 +3153,10 @@ def config(settings):
                                       show_link = True,
                                       )
 
+        # Custom label for Pack
+        field = table.item_pack_id
+        field.label = T("Order Unit")
+
         # Custom list fields
         resource = r.resource
         if resource.tablename == "supply_item":
@@ -3335,6 +3339,10 @@ def config(settings):
         field.requires = IS_FLOAT_AMOUNT(minimum = 1.0,
                                          error_message = T("Minimum quantity is %(min)s"),
                                          )
+
+        # Custom label for Pack
+        field = ritable.item_pack_id
+        field.label = T("Order Unit")
 
         if r.method == "report":
             axes = [(T("Orderer"), "site_id"),
@@ -3725,6 +3733,10 @@ def config(settings):
         # Use drop-down for supply item, not autocomplete
         field = table.item_id
         field.widget = None
+
+        # Custom label for Pack
+        field = table.item_pack_id
+        field.label = T("Order Unit")
 
         s3db.add_custom_callback("req_req_item",
                                  "onaccept",
