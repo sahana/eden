@@ -3464,6 +3464,11 @@ def config(settings):
             resource = r.resource
             table = resource.table
 
+            # Date is only writable for ADMIN
+            field = table.date
+            field.default = current.request.utcnow
+            field.writable = has_role("AMDIN")
+
             record = r.record
             if record:
                 # Check if there is any shipment for this request
@@ -3484,7 +3489,6 @@ def config(settings):
                                               editable = False,
                                               deletable = False,
                                               )
-
             if not r.component:
                 if r.interactive:
                     # Hide priority, date_required and date_recv
@@ -3571,32 +3575,44 @@ def config(settings):
             if r.interactive and isinstance(output, dict):
 
                 # Add register-shipment action button(s)
+                ritable = s3db.req_req_item
 
                 ship_btn_label = s3_str(T("Register Shipment"))
                 inject_script = False
                 if record:
                     # Single record view
                     if not r.component and has_role("SUPPLY_COORDINATOR"):
-                        if record.fulfil_status not in request_complete:
+                        query = (ritable.req_id == record.id) & \
+                                (ritable.deleted == False)
+                        item = db(query).select(ritable.id, limitby=(0, 1)).first()
+                        if item and record.fulfil_status not in request_complete:
                             query = (istable.req_ref == record.req_ref) & \
                                     (istable.status.belongs(shipment_in_process)) & \
                                     (istable.deleted == False)
                             shipment = db(query).select(istable.id, limitby=(0, 1)).first()
                         else:
                             shipment = None
-                        from .requests import is_active
-                        site_active = is_active(record.site_id)
-                        if not shipment and site_active:
+                        if item and not shipment:
+                            from .requests import is_active
+                            site_active = is_active(record.site_id)
+                        else:
+                            site_active = True
+                        if item and not shipment and site_active:
                             ship_btn = A(T("Register Shipment"),
                                          _class = "action-btn ship-btn",
                                          _db_id = str(record.id),
                                          )
                             inject_script = True
                         else:
-                            if not site_active:
-                                reason = T("Requesting site no longer active")
+                            warn = None
+                            if not item:
+                                warn = reason = T("Requests contains no items")
+                            elif not site_active:
+                                warn = reason = T("Requesting site no longer active")
                             else:
                                 reason = T("Shipment already in process")
+                            if warn:
+                                current.response.warning = warn
                             ship_btn = A(T("Register Shipment"),
                                          _class = "action-btn",
                                          _disabled = "disabled",
@@ -3622,12 +3638,15 @@ def config(settings):
                     if has_role("SUPPLY_COORDINATOR"):
                         # Can only register shipments for unfulfilled requests with
                         # no shipment currently in process or in transit, and the
-                        # requesting site still active
+                        # requesting site still active, and at least one requested item
                         left = istable.on((istable.req_ref == table.req_ref) & \
                                           (istable.status.belongs(shipment_in_process)) & \
                                           (istable.deleted == False))
-                        join = stable.on((stable.site_id == table.site_id) & \
-                                         (stable.obsolete == False))
+                        join = [stable.on((stable.site_id == table.site_id) & \
+                                          (stable.obsolete == False)),
+                                ritable.on((ritable.req_id == table.id) & \
+                                           (ritable.deleted == False)),
+                                ]
                         query = (table.fulfil_status != REQ_STATUS_COMPLETE) & \
                                 (table.fulfil_status != REQ_STATUS_CANCEL) & \
                                 (istable.id == None)
@@ -3645,7 +3664,7 @@ def config(settings):
                         # is currently disabled
                         disabled = {"label": ship_btn_label,
                                     "_class": "action-btn",
-                                    "_title": s3_str(T("Shipment already in process")),
+                                    "_title": s3_str(T("Shipment already in process, or not possible")),
                                     "_disabled": "disabled",
                                     "exclude": restrict,
                                     }

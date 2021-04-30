@@ -318,17 +318,6 @@ class RegisterShipment(S3Method):
         if not distribution_site_id:
             current.session.warning = T("No suitable distribution center found")
 
-        # Create the shipment
-        shipment = {"sender_id": user_person_id,
-                    "site_id": distribution_site_id,
-                    "recipient_id": req.requester_id,
-                    "to_site_id": req.site_id,
-                    "req_ref": req.req_ref,
-                    "status": 0,        # In Process
-                    }
-        shipment["id"] = shipment_id = stable.insert(**shipment)
-        auth.s3_set_record_owner(stable, shipment_id)
-
         # Get the requested items
         ritable = s3db.req_req_item
         query = (ritable.req_id == req.id) & \
@@ -341,6 +330,19 @@ class RegisterShipment(S3Method):
                                   ritable.quantity_transit,
                                   ritable.quantity_fulfil,
                                   )
+        if not ritems:
+            r.error(400, T("Request contains no items"))
+
+        # Create the shipment
+        shipment = {"sender_id": user_person_id,
+                    "site_id": distribution_site_id,
+                    "recipient_id": req.requester_id,
+                    "to_site_id": req.site_id,
+                    "req_ref": req.req_ref,
+                    "status": 0,        # In Process
+                    }
+        shipment["id"] = shipment_id = stable.insert(**shipment)
+        auth.s3_set_record_owner(stable, shipment_id)
 
         # Create corresponding track items
         # - directly from catalog items, not linked to any stock items,
