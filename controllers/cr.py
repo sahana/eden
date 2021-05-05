@@ -95,7 +95,7 @@ def shelter_registration():
         msg_record_created = T("Registration added"),
         msg_record_modified = T("Registration updated"),
         msg_record_deleted = T("Registration entry deleted"),
-        msg_list_empty = T("No people currently registered in this shelter")
+        msg_list_empty = T("No people currently registered in shelters")
         )
 
     output = s3_rest_controller()

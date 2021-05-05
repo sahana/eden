@@ -1159,7 +1159,8 @@ def config(settings):
 
         #from s3 import S3AddPersonWidget
 
-        table = current.s3db.cr_shelter_registration
+        s3db = current.s3db
+        table = s3db.cr_shelter_registration
         #table.person_id.widget = S3AddPersonWidget(pe_label = True)
         f = table.registration_status
         f.default = 2 # Checked-in
@@ -1167,8 +1168,42 @@ def config(settings):
         #table.check_out_date.readable = table.check_out_date.writable = False
         #table.comments.readable = table.comments.writable = False
 
+        if r.method == "import":
+            # Importing Clients adds Event Log entries
+            def import_event_log(form):
+
+                form_vars_get = form.vars.get
+                person_id = form_vars_get("person_id")
+                shelter_id = form_vars_get("shelter_id")
+
+                stable = s3db.cr_shelter
+                shelter = current.db(stable.id == shelter_id).select(stable.site_id,
+                                                                     limitby = (0, 1)
+                                                                     ).first()
+                site_id = shelter.site_id
+
+                # Add Site Event Log
+                s3db.org_site_event.insert(site_id = site_id,
+                                           person_id = person_id,
+                                           event = 2, # Checked-In
+                                           comments = "Client",
+                                           )
+
+            s3db.add_custom_callback("cr_shelter_registration",
+                                     "create_onaccept",
+                                     import_event_log,
+                                     )
+
     settings.customise_cr_shelter_registration_resource = customise_cr_shelter_registration_resource
 
+    # -----------------------------------------------------------------------------
+    def customise_cr_shelter_registration_controller(**attr):
+
+        attr["csv_template"] = ("../../themes/CumbriaEAC/xls", "Client_Registration.xlsm")
+
+        return attr
+
+    settings.customise_cr_shelter_registration_controller = customise_cr_shelter_registration_controller
 
     # -------------------------------------------------------------------------
     def customise_hrm_human_resource_resource(r, tablename):
@@ -1397,8 +1432,6 @@ def config(settings):
 
         return length
 
-    
-
     # -------------------------------------------------------------------------
     def postprocess_select(records, rfields=None, represent=False, as_rows=False):
         """
@@ -1591,7 +1624,7 @@ def config(settings):
                            "shelter_registration.check_in_date",
                            "nok.last_name",
                            "nok.first_name",
-                           (T("Relationship"), "nok_relationship"),
+                           (T("Relationship"), "nok_relationship"), # Fake Selector - to be populated in postprocess_select
                            (T("Phone"), "nok_phone"),
                            (T("Address"), "nok_address"),
                            ]
