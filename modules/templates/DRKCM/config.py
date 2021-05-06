@@ -148,6 +148,12 @@ def config(settings):
     #settings.ui.organizer_snap_duration = "00:10:00"
 
     settings.ui.custom_icons = {"eraser": "fa-remove",
+                                "file-pdf": "fa-file-pdf-o",
+                                "file-doc": "fa-file-word-o",
+                                "file-xls": "fa-file-excel-o",
+                                "file-text": "fa-file-text-o",
+                                "file-image": "fa-file-image-o",
+                                "file-generic": "fa-file-o",
                                 "_base": "fa",
                                 }
 
@@ -418,7 +424,7 @@ def config(settings):
 
             # Custom label for date-field
             field = table.date
-            field.label = T("Uploaded on")
+            field.label = T("Date") #T("Uploaded on")
             field.default = r.utcnow.date()
             field.writable = False
 
@@ -426,10 +432,16 @@ def config(settings):
             field = table.name
             field.label = T("Title")
 
+            # Custom Representation for file
+            if r.interactive or r.representation == "aadata":
+                from .helpers import file_represent
+                field = table.file
+                field.represent = file_represent
+
             # List fields
-            list_fields = ["name",
+            list_fields = ["date",
+                           "name",
                            "file",
-                           "date",
                            "comments",
                            ]
             s3db.configure("doc_document",
@@ -510,10 +522,20 @@ def config(settings):
                                            orderby = "instance_type",
                                            sort = False,
                                            )
+
+                r.resource.configure(list_fields = ["id",
+                                                    "date",
+                                                    (T("Attachment of"), "doc_id"),
+                                                    "name",
+                                                    "file",
+                                                    "comments",
+                                                    ],
+                                     orderby = "doc_document.date desc",
+                                     )
             return result
         s3.prep = custom_prep
 
-        attr["dtargs"] = {"dt_text_maximum_len": 40,
+        attr["dtargs"] = {"dt_text_maximum_len": 36,
                           "dt_text_condense_len": 36,
                           }
 
@@ -3420,8 +3442,6 @@ def config(settings):
 
         auth = current.auth
         s3db = current.s3db
-
-        s3 = current.response.s3
 
         from s3 import S3LocationSelector, \
                        S3SQLCustomForm

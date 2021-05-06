@@ -6,7 +6,11 @@
     @license: MIT
 """
 
-from gluon import current, DIV
+import os
+
+from gluon import current, A, DIV, SPAN, URL
+
+from s3 import ICON
 
 # =============================================================================
 def case_read_multiple_orgs():
@@ -222,6 +226,70 @@ def user_mailmerge_fields(resource, record):
         data["Telefon"] = numbers[0][0]
 
     return data
+
+# =============================================================================
+# Uploaded file representation
+#
+FILE_ICONS = {
+    ".pdf": "file-pdf",
+    ".xls": "file-xls",
+    ".xlsx": "file-xls",
+    ".doc": "file-doc",
+    ".docx": "file-doc",
+    ".odt": "file-text",
+    ".txt": "file-text",
+    ".png": "file-image",
+    ".jpg": "file-image",
+    ".jpeg": "file-image",
+    ".bmp": "file-image",
+    }
+
+def file_represent(value, row=None):
+    """
+        Represent an upload-field (file)
+
+        @param value: the uploaded file name
+        @param row: unused, for API compatibility
+
+        @returns: representation (DIV-type)
+    """
+
+    if not value:
+        return current.messages["NONE"]
+
+    try:
+        # Check whether file exists and extract the original
+        # file name from the stored file name
+        name, f = current.db.doc_document.file.retrieve(value)
+    except IOError:
+        return current.T("File not found")
+
+    # Get the file extension and generate corresponding icon
+    ext = os.path.splitext(name)[1].lower()
+    icon_type = FILE_ICONS.get(ext)
+    if not icon_type:
+        icon_type = "file-generic"
+    icon = ICON(icon_type)
+
+    output = A(icon,
+               _href = URL(c="default", f="download", args=[value]),
+               _title = name,
+               _class = "file-repr",
+               )
+
+    # Determine the file size
+    fsize = f.seek(0, 2) if f else None
+    if fsize is not None:
+        for u in ("B", "kB", "MB", "GB"):
+            unit = u
+            if fsize < 1024:
+                break
+            else:
+                fsize /= 1024
+        fsize = "%s %s" % (round(fsize), unit)
+        output.append(SPAN(fsize, _class="file-size"))
+
+    return output
 
 # =============================================================================
 class PriorityRepresent(object):
