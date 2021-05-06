@@ -411,6 +411,30 @@ def config(settings):
     #settings.dvr.event_registration_checkin_warning = True
 
     # -------------------------------------------------------------------------
+    def document_onaccept(form):
+
+        try:
+            record_id = form.vars.id
+        except AttributeError:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        table = db.doc_document
+        row = db(table.id == record_id).select(table.id,
+                                               table.name,
+                                               table.file,
+                                               limitby=(0, 1),
+                                               ).first()
+        if row and not row.name and row.file:
+            # Use the original file name as title
+            prop = table.file.retrieve_file_properties(row.file)
+            name = prop.get("filename")
+            if name:
+                row.update_record(name=name)
+
+    # -------------------------------------------------------------------------
     def customise_doc_document_resource(r, tablename):
 
         if r.controller == "dvr" or r.function == "organisation":
@@ -447,6 +471,12 @@ def config(settings):
             s3db.configure("doc_document",
                            list_fields = list_fields,
                            )
+
+            # Custom onaccept to make sure the document has a title
+            s3db.add_custom_callback("doc_document",
+                                     "onaccept",
+                                     document_onaccept,
+                                     )
 
     settings.customise_doc_document_resource = customise_doc_document_resource
 
@@ -2110,6 +2140,13 @@ def config(settings):
             dtable = s3db.doc_document
             field = dtable.date
             field.default = r.utcnow.date()
+
+            # Custom onaccept to make sure each document has a title
+            # (doc_document_onvalidation does not apply here)
+            s3db.add_custom_callback("doc_document",
+                                     "onaccept",
+                                     document_onaccept,
+                                     )
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm(
