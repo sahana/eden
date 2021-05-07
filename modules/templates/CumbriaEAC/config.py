@@ -1657,11 +1657,11 @@ def config(settings):
                                                   "filterby": {"tag": "pets_details"},
                                                   "multiple": False,
                                                   },
-                                                 {"name": "medical",
-                                                  "joinby": "person_id",
-                                                  "filterby": {"tag": "medical"},
-                                                  "multiple": False,
-                                                  },
+                                                 #{"name": "medical",
+                                                 # "joinby": "person_id",
+                                                 # "filterby": {"tag": "medical"},
+                                                 # "multiple": False,
+                                                 # },
                                                  {"name": "disability",
                                                   "joinby": "person_id",
                                                   "filterby": {"tag": "disability"},
@@ -1699,8 +1699,9 @@ def config(settings):
             f.widget = S3TagCheckboxWidget(on="Y", off="N")
             f.default = "N"
 
-            medical = components_get("medical")
-            medical.table.value.widget = s3_comments_widget
+            #medical = components_get("medical")
+            #medical.table.value.widget = s3_comments_widget
+            s3db.pr_physical_description.medical_conditions.widget = s3_comments_widget
 
             crud_fields = ["pe_label",
                            "first_name",
@@ -1708,7 +1709,6 @@ def config(settings):
                            "last_name",
                            "gender",
                            "date_of_birth",
-                           "person_details.nationality",
                            (T("Location at Time of Incident"), "location.value"),
                            # Not a multiple=False component
                            #(T("Phone"), "phone.value"),
@@ -1734,15 +1734,19 @@ def config(settings):
                            ),
                            (T("Pets"), "pets.value"),
                            (T("Details of Pets"), "pets_details.value"),
-                           (T("Medical Details"), "medical.value"),
+                           #(T("Medical Details"), "medical.value"),
+                           (T("Medical Details"), "physical_description.medical_conditions"),
                            (T("Disability Details"), "disability.value"),
                            (T("Dietary Needs"), "dietary.value"),
                            (T("GP"), "gp.value"),
+                           "person_details.nationality",
+                           "physical_description.ethnicity",
+                           "person_details.religion",
                            "comments",
                            ]
 
             if not household:
-                crud_fields.insert(7, S3SQLInlineComponent("address",
+                crud_fields.insert(6, S3SQLInlineComponent("address",
                                                            name = "address",
                                                            label = T("Address"),
                                                            multiple = False,
@@ -1812,6 +1816,7 @@ def config(settings):
             report_fields = ["gender",
                              "age_group",
                              "person_details.nationality",
+                             "physical_description.ethnicity",
                              "shelter_registration.shelter_id",
                              "location_id$L3",
                              "location_id$L4",

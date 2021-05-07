@@ -4364,7 +4364,7 @@ class S3MapModel(S3Model):
                     if geom_type == wkbPoint:
                         lon = geom.GetX()
                         lat = geom.GetY()
-                        wkt = "POINT(%f %f)" % (lon, lat)
+                        wkt = "POINT (%f %f)" % (lon, lat)
                     else:
                         wkt = geom.ExportToWkt()
                         centroid = geom.Centroid()

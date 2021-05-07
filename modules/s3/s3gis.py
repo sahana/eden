@@ -239,7 +239,7 @@ class GIS(object):
         #messages.centroid_error = str(A("Shapely", _href="http://pypi.python.org/pypi/Shapely/", _target="_blank")) + " library not found, so can't find centroid!"
         messages.centroid_error = "Shapely library not functional, so can't find centroid! Install Geos & Shapely for Line/Polygon support"
         messages.unknown_type = "Unknown Type!"
-        messages.invalid_wkt_point = "Invalid WKT: must be like POINT(3 4)"
+        messages.invalid_wkt_point = "Invalid WKT: must be like POINT (3 4)"
         messages.invalid_wkt = "Invalid WKT: see http://en.wikipedia.org/wiki/Well-known_text"
         messages.lon_empty = "Invalid: Longitude can't be empty if Latitude specified!"
         messages.lat_empty = "Invalid: Latitude can't be empty if Longitude specified!"
@@ -740,7 +740,7 @@ class GIS(object):
                 query = (table.level != None) & \
                         (table.deleted != True)
                 if current.deployment_settings.get_gis_spatialdb():
-                    point = "POINT(%s %s)" % (lon, lat)
+                    point = "POINT (%s %s)" % (lon, lat)
                     query &= (table.the_geom.st_intersects(point))
                     rows = current.db(query).select(table.id,
                                                     table.level,
@@ -4608,9 +4608,9 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             Convert a LatLon to a WKT string
 
             >>> s3gis.latlon_to_wkt(6, 80)
-            'POINT(80 6)'
+            'POINT (80 6)'
         """
-        WKT = "POINT(%f %f)" % (lon, lat)
+        WKT = "POINT (%f %f)" % (lon, lat)
         return WKT
 
     # -------------------------------------------------------------------------
@@ -4626,7 +4626,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
         if not wkt:
             if not lon is not None and lat is not None:
                 raise RuntimeError("Need wkt or lon+lat to parse a location")
-            wkt = "POINT(%f %f)" % (lon, lat)
+            wkt = "POINT (%f %f)" % (lon, lat)
             geom_type = GEOM_TYPES["point"]
             bbox = (lon, lat, lon, lat)
         else:
@@ -5830,7 +5830,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             elif lon is None or lon == "":
                 form.errors["lon"] = current.messages.lon_empty
             else:
-                form_vars.wkt = "POINT(%(lon)s %(lat)s)" % form_vars
+                form_vars.wkt = "POINT (%(lon)s %(lat)s)" % form_vars
                 radius = form_vars.get("radius", None)
                 if radius:
                     bbox = GIS.get_bounds_from_radius(lat, lon, radius)
@@ -5945,7 +5945,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     elif lon is None or lon == "":
                         form.errors["lon"] = current.messages.lon_empty
                     else:
-                        form_vars.wkt = "POINT(%(lon)s %(lat)s)" % form_vars
+                        form_vars.wkt = "POINT (%(lon)s %(lat)s)" % form_vars
                         if "lon_min" not in form_vars or form_vars.lon_min is None:
                             form_vars.lon_min = lon
                         if "lon_max" not in form_vars or form_vars.lon_max is None:

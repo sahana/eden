@@ -1866,6 +1866,14 @@ class S3Config(Storage):
                                            "other": T("other")
                                            })
 
+    def get_L10n_ethnicity(self):
+        """
+            Ethnicities used in Person Registry
+            - defaults to free-text
+            - dropdown options can be configured in Template (e.g. Locale)
+        """
+        return self.L10n.get("ethnicity", None)
+
     def get_L10n_date_format(self):
         """
             Lookup the Date Format - either by locale or by global setting

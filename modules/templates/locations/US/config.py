@@ -8,7 +8,7 @@ def config(settings):
         - designed to be used in a Cascade with an application template
     """
 
-    #T = current.T
+    T = current.T
 
     # Pre-Populate
     settings.base.prepopulate.append("locations/US")
@@ -33,6 +33,18 @@ def config(settings):
     settings.L10n.thousands_separator = ","
     # Default Country Code for telephone numbers
     settings.L10n.default_country_code = 1
+    # Ethnicity Options
+    settings.L10n.ethnicity = {"American Indian": T("American Indian"),
+                               "Alaskan": T("Alaskan"),
+                               "Asian": T("Asian"),
+                               "African American": T("African American"),
+                               "Hispanic or Latino": T("Hispanic or Latino"),
+                               "Native Hawaiian": T("Native Hawaiian"),
+                               "Pacific Islander": T("Pacific Islander"),
+                               "Two or more": T("Two or more"),
+                               "Unspecified": T("Unspecified"),
+                               "White": T("White"),
+                               }
 
     # Enable this to change the label for 'Mobile Phone'
     settings.ui.label_mobile_phone = "Cell Phone"

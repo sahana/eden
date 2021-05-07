@@ -5390,17 +5390,17 @@ class PRDescriptionModel(S3Model):
 
         T = current.T
 
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
-
         #configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
 
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
         # ---------------------------------------------------------------------
         # Note
         #
-        person_status = {
+        person_status_opts = {
             1: T("missing"),
             2: T("found"),
             3: T("deceased"),
@@ -5426,9 +5426,8 @@ class PRDescriptionModel(S3Model):
                      Field("status", "integer",
                            default = 9,
                            label = T("Status"),
-                           represent = lambda opt: \
-                                    person_status.get(opt, UNKNOWN_OPT),
-                           requires = IS_IN_SET(person_status,
+                           represent = S3Represent(options = person_status_opts),
+                           requires = IS_IN_SET(person_status_opts,
                                                 zero=None),
                            ),
                      s3_datetime("timestmp",
@@ -5486,9 +5485,7 @@ class PRDescriptionModel(S3Model):
         pr_age_group = S3ReusableField("age_group", "integer",
                                        default = 1,
                                        label = T("Age Group"),
-                                       represent = lambda opt: \
-                                                   pr_age_group_opts.get(opt,
-                                                                         UNKNOWN_OPT),
+                                       represent = S3Represent(options = pr_age_group_opts),
                                        requires = IS_IN_SET(pr_age_group_opts,
                                                             zero=None),
                                        )
@@ -5580,19 +5577,16 @@ class PRDescriptionModel(S3Model):
             4: T("shaved")
         }
 
-        # This set is suitable for use in the US
-        #pr_ethnicity_opts = [
-        #    "American Indian",
-        #    "Alaskan",
-        #    "Asian",
-        #    "African American",
-        #    "Hispanic or Latino",
-        #    "Native Hawaiian",
-        #    "Pacific Islander",
-        #    "Two or more",
-        #    "Unspecified",
-        #    "White"
-        #]
+        # Ethnicity Options
+        ethnicity_opts = current.deployment_settings.get_L10n_ethnicity()
+        if ethnicity_opts:
+            # Dropdown
+            ethnicity_represent = S3Represent(options = ethnicity_opts)
+            ethnicity_requires = IS_EMPTY_OR(IS_IN_SET(ethnicity_opts))
+        else:
+            # Free-text
+            ethnicity_represent = lambda opt: opt or UNKNOWN_OPT
+            ethnicity_requires = None
 
         tablename = "pr_physical_description"
         define_table(tablename,
@@ -5608,26 +5602,24 @@ class PRDescriptionModel(S3Model):
                      # Race and complexion
                      Field("race", "integer",
                            label = T("Race"),
-                           represent = lambda opt: \
-                                       pr_race_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = pr_race_opts),
                            requires = IS_EMPTY_OR(IS_IN_SET(pr_race_opts)),
                            ),
                      Field("complexion", "integer",
                            label = T("Complexion"),
-                           represent = lambda opt: \
-                                       pr_complexion_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = pr_complexion_opts),
                            requires = IS_EMPTY_OR(IS_IN_SET(pr_complexion_opts)),
                            ),
-                     Field("ethnicity", length=64, # Mayon Compatibility
+                     Field("ethnicity", #length=64, # Mayon Compatibility
                            label = T("Ethnicity"),
-                           #requires = IS_EMPTY_OR(IS_IN_SET(pr_ethnicity_opts)),
-                           requires = IS_LENGTH(64),
+                           represent = ethnicity_represent,
+                           requires = ethnicity_requires,
+                           #requires = IS_LENGTH(64),
                            ),
                      # Height and weight
                      Field("height", "integer",
                            label = T("Height"),
-                           represent = lambda opt: \
-                                       pr_height_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = pr_height_opts),
                            requires = IS_EMPTY_OR(IS_IN_SET(pr_height_opts)),
                            ),
                      Field("height_cm", "integer",
@@ -5639,8 +5631,7 @@ class PRDescriptionModel(S3Model):
                            ),
                      Field("weight", "integer",
                            label = T("Weight"),
-                           represent = lambda opt: \
-                                       pr_weight_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = pr_weight_opts),
                            requires = IS_EMPTY_OR(IS_IN_SET(pr_weight_opts)),
                            ),
                      Field("weight_kg", "integer",
@@ -5658,34 +5649,29 @@ class PRDescriptionModel(S3Model):
                            ),
                      Field("eye_color", "integer",
                            label = T("Eye Color"),
-                           represent = lambda opt: \
-                                       pr_eye_color_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = pr_eye_color_opts),
                            requires = IS_EMPTY_OR(IS_IN_SET(pr_eye_color_opts)),
                            ),
 
                      # Hair of the head
                      Field("hair_color", "integer",
                            label = T("Hair Color"),
-                           represent = lambda opt: \
-                                       pr_hair_color_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = pr_hair_color_opts),
                            requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_color_opts)),
                            ),
                      Field("hair_style", "integer",
                            label = T("Hair Style"),
-                           represent = lambda opt: \
-                                       pr_hair_style_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = pr_hair_style_opts),
                            requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_style_opts)),
                            ),
                      Field("hair_length", "integer",
                            label = T("Hair Length"),
-                           represent = lambda opt: \
-                                       pr_hair_length_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = pr_hair_length_opts),
                            requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_length_opts)),
                            ),
                      Field("hair_baldness", "integer",
                            label = T("Baldness"),
-                           represent = lambda opt: \
-                                       pr_hair_baldness_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = pr_hair_baldness_opts),
                            requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_baldness_opts)),
                            ),
                      Field("hair_comment",
@@ -5695,20 +5681,17 @@ class PRDescriptionModel(S3Model):
                      # Facial hair
                      Field("facial_hair_type", "integer",
                            label = T("Facial hair, type"),
-                           represent = lambda opt: \
-                                       pr_facial_hair_type_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = pr_facial_hair_type_opts),
                            requires = IS_EMPTY_OR(IS_IN_SET(pr_facial_hair_type_opts)),
                            ),
                      Field("facial_hair_color", "integer",
                            label = T("Facial hair, color"),
-                           represent = lambda opt: \
-                                       pr_hair_color_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = pr_hair_color_opts),
                            requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_color_opts)),
                            ),
                      Field("facial_hair_length", "integer",
                            label = T("Facial hair, length"),
-                           represent = lambda opt: \
-                                       pr_facial_hair_length_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = pr_facial_hair_length_opts),
                            requires = IS_EMPTY_OR(IS_IN_SET(pr_facial_hair_length_opts)),
                            ),
                      Field("facial_hair_comment",
@@ -6407,7 +6390,7 @@ class PRPersonDetailsModel(S3Model):
                           Field("marital_status", "integer",
                                 default = 1,
                                 label = T("Marital Status"),
-                                represent = S3Represent(options=marital_status_opts),
+                                represent = S3Represent(options = marital_status_opts),
                                 requires = IS_IN_SET(marital_status_opts,
                                                      zero=None,
                                                      ),
@@ -6417,7 +6400,7 @@ class PRPersonDetailsModel(S3Model):
                                 ),
                           Field("religion", length=128,
                                 label = T("Religion"),
-                                represent = S3Represent(options=religion_opts),
+                                represent = S3Represent(options = religion_opts),
                                 requires = IS_EMPTY_OR(IS_IN_SET(religion_opts)),
                                 ),
                           # This field can either be used as a free-text version of religion, or to provide details of the 'other'
