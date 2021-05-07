@@ -6152,6 +6152,8 @@ class S3LocationSelector(S3Selector):
             _placeholder = label
         else:
             _placeholder = None
+        if required:
+            _class = "%s required" % _class
         widget = INPUT(_name = name,
                        _id = input_id,
                        _class = _class,

@@ -1697,51 +1697,41 @@
                 }
             }
 
-            var current_value = data.id,
-                suffix = ['address', 'L5', 'L4', 'L3', 'L2', 'L1', 'L0'],
-                i,
+            var error,
+                suffix,
+                suffixes = ['postcode', 'address', 'L5', 'L4', 'L3', 'L2', 'L1', 'L0'],
                 s,
                 f,
-                visible = function(field) {
+                show = function(field, selector) {
                     if (field.hasClass('multiselect')) {
-                        return field.next('button.ui-multiselect').is(':visible');
+                        if (field.next('button.ui-multiselect').is(':hidden')) {
+                            $(selector + '__row').removeClass('hide').show();
+                            $(selector + '__row1').removeClass('hide').show();
+                        }
                     } else {
-                        return field.is(':visible');
+                        if (field.is(':hidden')) {
+                            $(selector + '__row').removeClass('hide').show();
+                            $(selector + '__row1').removeClass('hide').show();
+                        }
                     }
                 };
 
-            if (current_value) {
-                if (!hierarchyLocations[current_value]) {
-                    // Specific location => ok
-                    return true;
-                }
-                var current_level = hierarchyLocations[current_value].l;
-                // Is a lower level required? If so, then prevent submission
-                for (i = 0; i < 6 - current_level; i++) {
-                    s = selector + '_' + suffix[i];
+            for (var i = 0; i < 8; i++) {
+                suffix = suffixes[i];
+                if (!data[suffix]) {
+                    s = selector + '_' + suffix;
                     f = $(s);
-                    if (f.length && f.hasClass('required') && visible(f)) {
+                    if (f.length && f.hasClass('required')) {
+                        show(f, s);
                         S3.fieldError(s, i18n.enter_value);
-                        return false;
+                        error = true;
                     }
                 }
-                return true;
-            } else {
-                if (data.lat || data.lon || data.wkt || data.address || data.postcode) {
-                    // Specific location => ok
-                    return true;
-                }
-                // Is any level required? If so, then prevent submission
-                for (i = 0; i < 7; i++) {
-                    s = selector + '_' + suffix[i];
-                    f = $(s);
-                    if (f.length && f.hasClass('required') && visible(f)) {
-                        S3.fieldError(s, i18n.enter_value);
-                        return false;
-                    }
-                }
-                return true;
             }
+            if (error) {
+                return false;
+            }
+            return true;
         },
 
         /**
