@@ -5,7 +5,7 @@ tempdir = tempfile.gettempdir()
 
 path = os.path.abspath(os.path.join(os.path.dirname(__file__), "compiler.jar"))
 if not os.path.exists(path):
-    raise Exception("No closure compiler.jar at %s; Download from http://closure-compiler.googlecode.com/files/compiler-latest.zip" % path)
+    raise Exception("No closure compiler.jar at %s; Download from https://mvnrepository.com/artifact/com.google.javascript/closure-compiler" % path)
 
 # Useful extra_params:
 #   --compilation_level WHITESPACE_ONLY
