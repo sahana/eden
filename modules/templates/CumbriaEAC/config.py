@@ -50,8 +50,6 @@ def config(settings):
     #settings.gis.countries = ("US",)
     # Uncomment to display the Map Legend as a floating DIV, so that it is visible on Summary Map
     settings.gis.legend = "float"
-    # Uncomment to Disable the Postcode selector in the LocationSelector
-    #settings.gis.postcode_selector = False # @ToDo: Vary by country (include in the gis_config!)
     # Uncomment to show the Print control:
     # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
     #settings.gis.print_button = True

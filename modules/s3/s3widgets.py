@@ -6795,6 +6795,11 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                 errors[level] = current.T("Location Hierarchy is Required!")
                 break
 
+        # Address Required?
+        address = values_get("address")
+        if not address and self.address_required:
+            errors["address"] = current.T("Address is Required!")
+
         # Postcode Required?
         postcode = values_get("postcode")
         if not postcode and self.postcode_required:
@@ -6821,7 +6826,6 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         else:
             # Read other details
             parent = values_get("parent")
-            address = values_get("address")
 
         if parent or address or postcode or \
            wkt is not None or \
@@ -6986,7 +6990,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                 level = location.level
                 if level:
                     # Accept all levels above and including the lowest selectable level
-                    for i in xrange(5,-1,-1):
+                    for i in xrange(5, -1, -1):
                         if "L%s" % i in levels:
                             accepted_levels = set("L%s" % l for l in xrange(i, -1, -1))
                             break
