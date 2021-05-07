@@ -6152,14 +6152,16 @@ class S3LocationSelector(S3Selector):
             _placeholder = label
         else:
             _placeholder = None
-        if required:
-            _class = "%s required" % _class
+
         widget = INPUT(_name = name,
                        _id = input_id,
                        _class = _class,
                        _placeholder = _placeholder,
                        value = s3_str(value),
                        )
+        if required:
+            # Enable client-side validation:
+            widget.add_class("required")
 
         return (_label, widget, input_id, hidden)
 
@@ -6799,12 +6801,12 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
 
         # Address Required?
         address = values_get("address")
-        if not address and self.address_required:
+        if self.address_required and not address:
             errors["address"] = current.T("Address is Required!")
 
         # Postcode Required?
         postcode = values_get("postcode")
-        if not postcode and self.postcode_required:
+        if self.postcode_required and not postcode:
             errors["postcode"] = current.T("Postcode is Required!")
 
         if errors:

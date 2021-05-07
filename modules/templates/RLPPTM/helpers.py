@@ -10,8 +10,8 @@ from gluon import current, Field, \
                   CRYPT, IS_EMAIL, IS_IN_SET, IS_LOWER, IS_NOT_IN_DB, \
                   SQLFORM, A, DIV, H4, H5, I, INPUT, LI, P, SPAN, TABLE, TD, TH, TR, UL
 
-from s3 import ICON, IS_FLOAT_AMOUNT, S3DateTime, S3Method, S3Represent, \
-               s3_fullname, s3_mark_required, s3_str
+from s3 import ICON, IS_FLOAT_AMOUNT, S3DateTime, S3LocationSelector, \
+               S3Method, S3Represent, s3_fullname, s3_mark_required, s3_str
 
 from s3db.pr import pr_PersonRepresentContact
 # =============================================================================
@@ -1607,5 +1607,28 @@ class ClaimPDF(S3Method):
             data = {}
 
         return data
+
+# =============================================================================
+class RLPLocationSelector(S3LocationSelector):
+    """
+        Location selector with custom client-side validation
+        - re-implements the original error cascade for missing Lx
+    """
+
+    def __call__(self, field, value, **attributes):
+
+        widget = super(RLPLocationSelector, self).__call__(field,
+                                                           value,
+                                                           **attributes)
+
+        # Inject JS overrides
+        appname = current.request.application
+        script = "/%s/static/themes/RLP/js/rlp.ui.locationselector.js" % appname
+
+        s3 = current.response.s3
+        if script not in s3.scripts:
+            s3.scripts.append(script)
+
+        return widget
 
 # END =========================================================================
