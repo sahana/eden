@@ -2172,7 +2172,9 @@ def config(settings):
         field.widget = S3LocationSelector(levels = ("L1", "L2", "L3", "L4"),
                                           required_levels = ("L1", "L2", "L3"),
                                           show_address = True,
+                                          address_required = True,
                                           show_postcode = True,
+                                          postcode_required = True,
                                           show_map = True,
                                           )
         current.response.s3.scripts.append("/%s/static/themes/RLP/js/geocoderPlugin.js" % r.application)

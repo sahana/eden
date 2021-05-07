@@ -5101,6 +5101,7 @@ class S3LocationSelector(S3Selector):
                  hide_lx = True,
                  reverse_lx = False,
                  show_address = False,
+                 address_required = None,
                  show_postcode = None,
                  postcode_required = None,
                  postcode_to_address = None,
@@ -5138,6 +5139,7 @@ class S3LocationSelector(S3Selector):
                                address line
             @param show_address: show a field for street address.
                                  If the parameter is set to a string then this is used as the label.
+            @param address_required: address field is mandatory
             @param show_postcode: show a field for postcode
             @param postcode_required: postcode field is mandatory
             @param postcode_to_address: service to use to lookup a list of addresses from the postcode
@@ -5174,6 +5176,7 @@ class S3LocationSelector(S3Selector):
         self.hide_lx = hide_lx
         self.reverse_lx = reverse_lx
         self.show_address = show_address
+        self.address_required = address_required
         self.show_postcode = show_postcode
         self.postcode_required = postcode_required
         self.postcode_to_address = postcode_to_address or \
@@ -5438,6 +5441,7 @@ class S3LocationSelector(S3Selector):
                                                  address,
                                                  label,
                                                  hidden = not address,
+                                                 required = self.address_required,
                                                  )
 
         # Postcode INPUT
