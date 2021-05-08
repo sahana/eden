@@ -443,22 +443,33 @@ def config(settings):
                 # The dedicated check-in pages shouldn't have an rheader to clutter things up
                 return None
 
-            tabs = [(T("Shelter Details"), None),
-                    (T("Staff"), "human_resource_site"),
-                    (T("Clients"), "client"),
-                    #(T("Friends/Family"), "shelter_registration"),
-                    (T("Event Log"), "event"),
-                    ]
+            status = record.status
+            if record.status in (1, 6):
+                # Closed...cannot register Staff/Clients
+                tabs = [(T("Shelter Details"), None),
+                        (T("Event Log"), "event"),
+                        ]
+            else:
+                # Open
+                tabs = [(T("Shelter Details"), None),
+                        (T("Staff"), "human_resource_site"),
+                        (T("Clients"), "client"),
+                        (T("Event Log"), "event"),
+                        ]
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             table = r.table
             location_id = table.location_id
+            status_field = table.status
             rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
                                    record.name,
                                    ),
                                 TR(TH("%s: " % location_id.label),
                                    location_id.represent(record.location_id),
+                                   ),
+                                TR(TH("%s: " % status_field.label),
+                                   status_field.represent(status),
                                    ),
                                 ),
                           rheader_tabs)
@@ -1427,9 +1438,9 @@ def config(settings):
             borders.bottom = 1
             style.borders = borders
 
-            labels = ((0, 7, s3_unicode(T("Client"))),
-                      (8, 10, s3_unicode(T("Shelter"))),
-                      (11, 15, s3_unicode(T("Next of Kin"))),
+            labels = ((0, 8, s3_unicode(T("Client"))),
+                      (9, 11, s3_unicode(T("Shelter"))),
+                      (12, 16, s3_unicode(T("Next of Kin"))),
                       )
 
             for start_col, end_col, label in labels:
@@ -1444,7 +1455,7 @@ def config(settings):
         """
             Post-process resource.select of pr_person to populate fields which
             cannot be expressed as components due to conflict between the master
-            pr_person & the nok pr_person
+            pr_person & the NoK pr_person
 
             @param records: list of selected data
             @param rfields: list of S3ResourceFields in the records
@@ -1597,6 +1608,9 @@ def config(settings):
             s3db.pr_address.location_id.widget = S3LocationSelector(levels = ("L0", "L1", "L2", "L3", "L4"),
                                                                     required_levels = ("L0",),
                                                                     show_address = True,
+                                                                    #address_required = True,
+                                                                    #show_postcode = True,
+                                                                    #postcode_required = True,
                                                                     )
 
         if current.auth.permission.format == "xls" and \
@@ -1606,6 +1620,19 @@ def config(settings):
 
             # Filtered components
             s3db.add_components("pr_person",
+                                pr_address = ({"name": "current_address",
+                                               "joinby": "pe_id",
+                                               "filterby": {"type": 1},
+                                               "multiple": False,
+                                               "pkey": "pe_id",
+                                               },
+                                              {"name": "permanent_address",
+                                               "joinby": "pe_id",
+                                               "filterby": {"type": 2},
+                                               "multiple": False,
+                                               "pkey": "pe_id",
+                                               },
+                                              ),
                                 pr_person_tag = ({"name": "holmes",
                                                   "joinby": "person_id",
                                                   "filterby": {"tag": "holmes"},
@@ -1626,7 +1653,8 @@ def config(settings):
                            "date_of_birth",
                            "person_details.nationality",
                            (T("Phone"), "phone.value"),
-                           (T("Address"), "address.location_id"),
+                           (T("Current Address"), "current_address.location_id"),
+                           (T("Permanent Address"), "permanent_address.location_id"),
                            "pe_label",
                            "shelter_registration.shelter_id",
                            "shelter_registration.check_in_date",
@@ -1746,6 +1774,15 @@ def config(settings):
                            "last_name",
                            "gender",
                            "date_of_birth",
+                           S3SQLInlineComponent("address",
+                                                name = "perm_address",
+                                                label = T("Permanent Address (if different)"),
+                                                multiple = False,
+                                                fields = [("", "location_id")],
+                                                filterby = {"field": "type",
+                                                            "options": 2, # Permanent Home Address
+                                                            },
+                                                ),
                            (T("Location at Time of Incident"), "location.value"),
                            # Not a multiple=False component
                            #(T("Phone"), "phone.value"),
@@ -1786,7 +1823,7 @@ def config(settings):
             if not household:
                 crud_fields.insert(6, S3SQLInlineComponent("address",
                                                            name = "address",
-                                                           label = T("Address"),
+                                                           label = T("Current Address"),
                                                            multiple = False,
                                                            fields = [("", "location_id")],
                                                            filterby = {"field": "type",
@@ -2147,7 +2184,7 @@ def config(settings):
 # =============================================================================
 class pr_Household(S3CRUD):
     """
-        A Household are people who share a common Address
+        A Household are people who share a common Current Address
         - e.g. family or students sharing
         - handled on-site as a set of forms stapled together
     """
@@ -2183,14 +2220,18 @@ class pr_Household(S3CRUD):
         s3db = current.s3db
         ptable = s3db.pr_person
         atable = s3db.pr_address
+        gtable = s3db.gis_location
         query = (ptable.id == r.id) & \
-                (ptable.pe_id == atable.pe_id)
+                (ptable.pe_id == atable.pe_id) & \
+                (atable.type == 1) & \
+                (atable.location_id == gtable.id) & \
+                (gtable.level == None)
         address = current.db(query).select(atable.location_id,
                                            limitby = (0, 1)
                                            ).first()
         if not address:
             from gluon import redirect, URL
-            current.session.warning = current.T("Client has no Address to share with a Household!")
+            current.session.warning = current.T("Client has no Current Address to share with a Household!")
             redirect(URL(args = r.id))
 
         address_filter = (ptable.id != r.id) & \

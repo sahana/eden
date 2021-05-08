@@ -141,10 +141,10 @@ class CRShelterModel(S3Model):
                                           requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "cr_shelter_type.id",
                                                                   represent)),
-                                          comment=S3PopupLink(c = "cr",
-                                                              f = "shelter_type",
-                                                              label = ADD_SHELTER_TYPE,
-                                                              ),
+                                          comment = S3PopupLink(c = "cr",
+                                                                f = "shelter_type",
+                                                                label = ADD_SHELTER_TYPE,
+                                                                ),
                                           )
 
         # -------------------------------------------------------------------------
@@ -890,12 +890,15 @@ class CRShelterModel(S3Model):
         # Update Affiliation, record ownership and component ownership
         s3db.org_update_affiliations("cr_shelter", form_vars)
 
+        # @ToDo: Create a cr_shelter_status record
+
+        if current.response.s3.bulk:
+            # Import
+            return
+
         if current.deployment_settings.get_cr_shelter_population_dynamic():
             # Update population and available capacity
             cr_update_shelter_population(shelter_id)
-
-        # @ToDo: Create a cr_shelter_status record
-
 
         # Create an org_site_event record
         stable = s3db.cr_shelter

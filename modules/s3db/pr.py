@@ -920,11 +920,11 @@ class PRPersonModel(S3Model):
                           "local_name",
                           "identity.value"
                          ],
-                         label=T("Name and/or ID"),
-                         comment=T("To search for a person, enter any of the "
-                                   "first, middle or last names and/or an ID "
-                                   "number of a person, separated by spaces. "
-                                   "You may use % as wildcard."),
+                         label = T("Name and/or ID"),
+                         comment = T("To search for a person, enter any of the "
+                                     "first, middle or last names and/or an ID "
+                                     "number of a person, separated by spaces. "
+                                     "You may use % as wildcard."),
                         ),
             ]
 
