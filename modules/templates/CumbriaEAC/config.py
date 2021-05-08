@@ -634,8 +634,8 @@ def config(settings):
                                      _title="%s|%s" % (T("Unavailable"),
                                                        T("Site is temporarily unavailable (e.g. for building works) & so should be hidden from the map"),
                                                        ))
-        table.location_id.widget = S3LocationSelector(levels = ("L3", "L4"),
-                                                      required_levels = ("L3",),
+        table.location_id.widget = S3LocationSelector(levels = ("L2", "L3", "L4"),
+                                                      required_levels = ("L2", "L3"),
                                                       show_address = True,
                                                       )
 
@@ -1574,7 +1574,8 @@ def config(settings):
                 msg_list_empty = T("No Clients currently registered")
                 )
 
-        f = s3db.pr_person.pe_label
+        ptable = s3db.pr_person
+        f = ptable.pe_label
         f.label = T("Reception Centre Ref")
         f.comment = None
 
@@ -1584,8 +1585,8 @@ def config(settings):
         else:
             # Address asked for interactively
             postprocess = None
-            s3db.pr_address.location_id.widget = S3LocationSelector(levels = ("L3", "L4"),
-                                                                    required_levels = ("L3",),
+            s3db.pr_address.location_id.widget = S3LocationSelector(levels = ("L0", "L1", "L2", "L3", "L4"),
+                                                                    required_levels = ("L0",),
                                                                     show_address = True,
                                                                     )
 
@@ -1645,6 +1646,11 @@ def config(settings):
                                                   "filterby": {"tag": "location"},
                                                   "multiple": False,
                                                   },
+                                                 {"name": "language",
+                                                  "joinby": "person_id",
+                                                  "filterby": {"tag": "language"},
+                                                  "multiple": False,
+                                                  },
                                                  {"name": "pets",
                                                   "joinby": "person_id",
                                                   "filterby": {"tag": "pets"},
@@ -1701,6 +1707,30 @@ def config(settings):
             #medical.table.value.widget = s3_comments_widget
             s3db.pr_physical_description.medical_conditions.widget = s3_comments_widget
 
+            if current.auth.s3_has_role("POLICE", include_admin=False):
+                # Only the Holmes Ref is editable
+                ptable.pe_label.writable = False
+                ptable.first_name.writable = False
+                ptable.first_name.comment = None
+                ptable.middle_name.writable = False
+                ptable.last_name.writable = False
+                ptable.gender.writable = False
+                ptable.date_of_birth.writable = False
+                ptable.comments.writable = False
+                pets.table.value.writable = False
+                location = components_get("location")
+                location.table.value.writable = False
+                language = components_get("language")
+                language.table.value.writable = False
+                pets_details = components_get("pets_details")
+                pets_details.table.value.writable = False
+                disability = components_get("disability")
+                disability.table.value.writable = False
+                dietary = components_get("dietary")
+                dietary.table.value.writable = False
+                gp = components_get("gp")
+                gp.table.value.writable = False
+
             crud_fields = ["pe_label",
                            "first_name",
                            "middle_name",
@@ -1737,6 +1767,7 @@ def config(settings):
                            (T("Disability Details"), "disability.value"),
                            (T("Dietary Needs"), "dietary.value"),
                            (T("GP"), "gp.value"),
+                           (T("Communication and Language Needs"), "language.value"),
                            "person_details.nationality",
                            "physical_description.ethnicity",
                            "person_details.religion",
@@ -1754,7 +1785,7 @@ def config(settings):
                                                                        },
                                                            ))
 
-            if r.method in ("read", "update"):
+            if r.id and r.tablename == "pr_person":
                 crud_fields.insert(1, (T("Holmes Ref"), "holmes.value"))
 
             crud_form = S3SQLCustomForm(*crud_fields,
