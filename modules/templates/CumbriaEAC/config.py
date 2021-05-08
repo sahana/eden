@@ -578,10 +578,17 @@ def config(settings):
 
         form_vars = form.vars
         form_vars_get = form_vars.get
+
         status = form_vars_get("status")
         if status not in ("1", "6"):
-            # We don't need to do anything
+            # Shelter is Open
+            obsolete = form_vars_get("obsolete")
+            if obsolete:
+                # Cannot open an Unavailable Shelter
+                form.errors.obsolete = T("Cannot open an Unavailable Shelter")
             return
+
+        # Shelter is Closed: Ensure we use the correct one
 
         # Look up the Shelter Type
         shelter_type_id = form_vars_get("shelter_type_id")
@@ -604,6 +611,8 @@ def config(settings):
                        S3TextFilter, S3LocationFilter, S3OptionsFilter, S3RangeFilter
 
         s3db = current.s3db
+
+        current.messages.OBSOLETE = T("Unavailable")
 
         # Only have a single Status option visible
         shelter_status_opts = dict(cr_shelter_status_opts)
