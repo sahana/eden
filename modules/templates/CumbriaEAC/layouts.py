@@ -44,7 +44,7 @@ class S3MainMenuLayout(S3NavigationItem):
                 else:
                     toplevel = False
 
-                if item.components:
+                if items:
                     classes.append("has-dropdown not-click")
                     if item.selected:
                         classes.append("active")
@@ -53,13 +53,13 @@ class S3MainMenuLayout(S3NavigationItem):
                     if item.get_first(enabled=True, link=True):
                         _href = item.url()
                         return LI(A(item.label,
-                                    _href=_href,
-                                    _id=item.attr._id
+                                    _href = _href,
+                                    _id = item.attr._id
                                     ),
                                     UL(items,
-                                        _class="dropdown"
+                                        _class = "dropdown"
                                         ),
-                                    _class=_class,
+                                    _class = _class,
                                     )
                     else:
                         return None
@@ -73,10 +73,10 @@ class S3MainMenuLayout(S3NavigationItem):
                             classes.append("active")
                         _class = " ".join(classes)
                         return LI(A(item.label,
-                                    _href=item_url,
-                                    _id=item.attr._id,
+                                    _href = item_url,
+                                    _id = item.attr._id,
                                     ),
-                                    _class=_class,
+                                    _class = _class,
                                     )
                     else:
                         # Submenu item
@@ -109,18 +109,18 @@ class S3MainMenuLayout(S3NavigationItem):
                                 }
 
                 return NAV(UL(LI(A(" ",
-                                   _href=URL(c="default", f="index"),
+                                   _href = URL(c="default", f="index"),
                                    ),
-                                 _class="name"
+                                 _class = "name"
                                  ),
                               LI(A(SPAN(current.T("Menu"))),
-                                 _class="toggle-topbar menu-icon",
+                                 _class = "toggle-topbar menu-icon",
                                  ),
-                              _class="title-area",
+                              _class = "title-area",
                               ),
-                           SECTION(UL(right, _class="right"),
-                                   UL(left, _class="left"),
-                                   _class="top-bar-section",
+                           SECTION(UL(right, _class = "right"),
+                                   UL(left, _class = "left"),
+                                   _class = "top-bar-section",
                                    ),
                            _class = "top-bar",
                            data = {"topbar": " ",
