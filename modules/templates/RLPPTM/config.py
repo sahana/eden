@@ -2115,6 +2115,73 @@ def config(settings):
     settings.customise_org_organisation_controller = customise_org_organisation_controller
 
     # -------------------------------------------------------------------------
+    def customise_org_organisation_type_resource(r, tablename):
+
+        db = current.db
+        s3db = current.s3db
+
+        s3db.add_components("org_organisation_type",
+                            org_organisation_type_tag = ({"name": "group",
+                                                          "joinby": "organisation_type_id",
+                                                          "filterby": {"tag": "OrgGroup"},
+                                                          "multiple": False,
+                                                          },
+                                                         {"name": "commercial",
+                                                          "joinby": "organisation_type_id",
+                                                          "filterby": {"tag": "Commercial"},
+                                                          "multiple": False,
+                                                          },
+                                                         ),
+                            )
+
+        if r.tablename == "org_organisation_type":
+
+            T = current.T
+
+            resource = r.resource
+            component = resource.components.get("group")
+            if component:
+
+                # Look up organisation group names
+                gtable = s3db.org_group
+                groups = db(gtable.deleted == False).select(gtable.name,
+                                                            cache = s3db.cache,
+                                                            )
+                options = [group.name for group in groups]
+
+                # Configure them as options for the OrgGroup tag
+                ctable = component.table
+                field = ctable.value
+                field.label = T("Organization Group")
+                field.requires = IS_EMPTY_OR(IS_IN_SET(options))
+
+            # Configure binary tag representation
+            from .helpers import configure_binary_tags
+            configure_binary_tags(r.resource, ("commercial",))
+
+            # Custom form
+            from s3 import S3SQLCustomForm
+            crud_form = S3SQLCustomForm("name",
+                                        "group.value",
+                                        (T("Commercial Providers"), "commercial.value"),
+                                        "comments",
+                                        )
+
+            # Include tags in list view
+            list_fields = ["id",
+                           "name",
+                           "group.value",
+                           (T("Commercial Providers"), "commercial.value"),
+                           "comments",
+                           ]
+
+            resource.configure(crud_form = crud_form,
+                               list_fields = list_fields,
+                               )
+
+    settings.customise_org_organisation_type_resource = customise_org_organisation_type_resource
+
+    # -------------------------------------------------------------------------
     def facility_create_onaccept(form):
 
         # Get record ID

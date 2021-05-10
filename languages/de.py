@@ -1010,6 +1010,7 @@
 'Come back later.': 'Kommen Sie doch später noch einmal wieder :-( ',
 'Comments permitted?': 'Kommentare zugelassen?',
 'Comments': 'Kommentare',
+'Commercial Providers': 'Kommerzielle Anbieter',
 'Commercial/Offices': 'Kommerziell / Büros',
 'Commit Date': 'Datum der Einstellung',
 'Commit Status': 'Zusagestatus',
