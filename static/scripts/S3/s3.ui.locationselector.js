@@ -1324,6 +1324,9 @@
                                     // Geocoder incompatible with Postcode to Address
                                     //self.useGeocoder = false;
 
+                                    $(selector + '_L0__row').removeClass('hide').show();
+                                    $(selector + '_L0__row1').removeClass('hide').show(); // Tuple themes
+
                                     var pending;
                                     [L0, L1 || L2, L2 || L3, L3 || L4, L4 || L5, L5].forEach(function(level, index) {
                                         if (level) {
