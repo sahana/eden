@@ -2803,3 +2803,8 @@ body.rtl .event-type-header {
   padding: 0;
   margin: 0;
 }
+
+/* line 405, ../scss/theme/_misc.scss */
+.approve-form select {
+  margin: 0;
+}

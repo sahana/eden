@@ -540,14 +540,16 @@ def add_facility_default_tags(facility_id, approve=False):
                           )
 
 # -----------------------------------------------------------------------------
-def applicable_org_types(organisation_id, group=None):
+def applicable_org_types(organisation_id, group=None, represent=False):
     """
         Look up organisation types by OrgGroup-tag
 
         @param organisation_id: the record ID of an existing organisation
         @param group: alternatively, the organisation group name
+        @param represent: include type labels in the result
 
-        @returns: a list of organisation type IDs, for filtering
+        @returns: a list of organisation type IDs, for filtering,
+                  or a dict {type_id: label}, for selecting
     """
 
     db = current.db
@@ -589,8 +591,15 @@ def applicable_org_types(organisation_id, group=None):
         # Add the org types the record is currently linked to
         type_ids |= current_types
 
-    # Return the type_ids for filtering
-    return list(type_ids)
+    if represent:
+        labels = ttable.organisation_type_id.represent
+        if hasattr(labels, "bulk"):
+            labels.bulk(list(type_ids))
+        output = {str(t): labels(t) for t in type_ids}
+    else:
+        output = list(type_ids)
+
+    return output
 
 # =============================================================================
 def facility_map_popup(record):
