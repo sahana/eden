@@ -167,12 +167,14 @@
                     option = '<option value="' + locationID + '">' + location.n + '</option>';
                     dropdown.append(option);
                 }
-                // Show the L0 row
-                row.removeClass('hide').show();
-                // Handle separate label row in tuple themes
-                var labelRow = $(selector + '_L0__row1');
-                if (labelRow.length) {
-                    labelRow.removeClass('hide').show();
+                if (!this.postcodeToAddress) {
+                    // Show the L0 row
+                    row.removeClass('hide').show();
+                    // Handle separate label row in tuple themes
+                    var labelRow = $(selector + '_L0__row1');
+                    if (labelRow.length) {
+                        labelRow.removeClass('hide').show();
+                    }
                 }
             }
 
