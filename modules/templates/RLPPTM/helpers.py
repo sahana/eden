@@ -539,6 +539,59 @@ def add_facility_default_tags(facility_id, approve=False):
                           value = "Y" if approve else "N",
                           )
 
+# -----------------------------------------------------------------------------
+def applicable_org_types(organisation_id, group=None):
+    """
+        Look up organisation types by OrgGroup-tag
+
+        @param organisation_id: the record ID of an existing organisation
+        @param group: alternatively, the organisation group name
+
+        @returns: a list of organisation type IDs, for filtering
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    ttable = s3db.org_organisation_type_tag
+
+    if organisation_id:
+        # Look up the org groups of this record
+        gtable = s3db.org_group
+        mtable = s3db.org_group_membership
+        join = gtable.on(gtable.id == mtable.group_id)
+        query = (mtable.organisation_id == organisation_id) & \
+                (mtable.deleted == False)
+        rows = db(query).select(gtable.name, join=join)
+        groups = {row.name for row in rows}
+        q = (ttable.value.belongs(groups))
+
+        # Look up the org types the record is currently linked to
+        ltable = s3db.org_organisation_organisation_type
+        query = (ltable.organisation_id == organisation_id) & \
+                (ltable.deleted == False)
+        rows = db(query).select(ltable.organisation_type_id)
+        current_types = {row.organisation_type_id for row in rows}
+
+    elif group:
+        # Use group name as-is
+        q = (ttable.value == group)
+
+    # Look up all types tagged for this group
+    query = (ttable.tag == "OrgGroup") & q & \
+            (ttable.deleted == False)
+    rows = db(query).select(ttable.organisation_type_id,
+                            cache = s3db.cache,
+                            )
+    type_ids = {row.organisation_type_id for row in rows}
+
+    if organisation_id:
+        # Add the org types the record is currently linked to
+        type_ids |= current_types
+
+    # Return the type_ids for filtering
+    return list(type_ids)
+
 # =============================================================================
 def facility_map_popup(record):
     """
