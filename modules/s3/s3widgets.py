@@ -5090,6 +5090,7 @@ class S3LocationSelector(S3Selector):
             - Needs more testing
         * Should support use in an InlineComponent with multiple=True
         * Should support multiple on a page
+        * Option to allow having Lx mandatory *except* when a specific location is defined (e.g. Polygon spanning 2 countries)
     """
 
     keys = ("L0", "L1", "L2", "L3", "L4", "L5",

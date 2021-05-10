@@ -57,6 +57,9 @@ def config(settings):
     # Use GetAddress.io to lookup Addresses from Postcode
     settings.gis.postcode_to_address = "getaddress"
 
+    # Permanent Address/NoK can be in any country
+    settings.gis.countries = []
+
     # -------------------------------------------------------------------------
     # L10n (Localization) settings
     settings.L10n.languages = OrderedDict([

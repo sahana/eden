@@ -886,6 +886,7 @@ S3.hideAlerts = function(alerts) {
 S3.fieldError = function(selector, error) {
     // @ToDo: Are we using a Bootstrap or normal Theme?
     // Display the Error
+    // @ToDo: .addClass('invalidinput') when we ensure this is cleared when new content is provided
     $(selector).after('<div class="error" style="display: block;">' + error + '</div>');
 };
 

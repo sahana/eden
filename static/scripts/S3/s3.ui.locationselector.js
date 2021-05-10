@@ -1676,8 +1676,8 @@
                 data = this.data,
                 featureRequired = this.options.featureRequired;
 
+            // Check mandatory map feature (wkt or lat/lon)
             if (featureRequired) {
-                // Must have latlon or wkt
                 var valid = false;
                 switch (featureRequired) {
                     case 'latlon':
@@ -1692,46 +1692,45 @@
                         break;
                 }
                 if (!valid) {
-                    S3.fieldError(selector + '_map_icon', i18n.map_feature_required);
+                    this._fieldError($(selector + '_map_icon'), i18n.map_feature_required);
                     return false;
                 }
             }
 
-            var error,
-                suffix,
-                suffixes = ['postcode', 'address', 'L5', 'L4', 'L3', 'L2', 'L1', 'L0'],
-                s,
-                f,
-                show = function(field, selector) {
-                    if (field.hasClass('multiselect')) {
-                        if (field.next('button.ui-multiselect').is(':hidden')) {
-                            $(selector + '__row').removeClass('hide').show();
-                            $(selector + '__row1').removeClass('hide').show();
-                        }
-                    } else {
-                        if (field.is(':hidden')) {
-                            $(selector + '__row').removeClass('hide').show();
-                            $(selector + '__row1').removeClass('hide').show();
-                        }
-                    }
-                };
+            var isVisible = function(field) {
+                if (field.hasClass('multiselect')) {
+                    return field.next('button.ui-multiselect').is(':visible');
+                } else {
+                    return field.is(':visible');
+                }
+            };
 
-            for (var i = 0; i < 8; i++) {
-                suffix = suffixes[i];
-                if (!data[suffix]) {
-                    s = selector + '_' + suffix;
-                    f = $(s);
-                    if (f.length && f.hasClass('required')) {
-                        show(f, s);
-                        S3.fieldError(s, i18n.enter_value);
-                        error = true;
-                    }
+            // Check mandatory Lx
+            var missingInput = false,
+                suffix = ['L5', 'L4', 'L3', 'L2', 'L1', 'L0'],
+                s, f;
+            for (var i=0; i < 6; i++) {
+                var level = suffix[i];
+                s = selector + '_' + level;
+                f = $(s);
+                if (f.length && f.hasClass('required') && isVisible(f) && !data[level]) {
+                    this._fieldError(f, i18n.enter_value);
+                    missingInput = true;
+                    break;
                 }
             }
-            if (error) {
-                return false;
-            }
-            return true;
+
+            // Check mandatory text inputs
+            ['address', 'postcode'].forEach(function(suffix) {
+                s = selector + '_' + suffix;
+                f = $(s);
+                if (f.length && f.hasClass('required') && isVisible(f) && !data[suffix]) {
+                    this._fieldError(f, i18n.enter_value);
+                    missingInput = true;
+                }
+            }, this);
+
+            return !missingInput;
         },
 
         /**
@@ -1807,6 +1806,21 @@
         },
 
         /**
+         * Add an error message
+         *
+         * @param {jQuery} element - the input element
+         * @param {string} error - the error message
+         */
+        _fieldError: function(element, error) {
+
+            element.addClass('invalidinput')
+                   .after('<div class="error" style="display: block;">' + error + '</div>');
+
+            $('.invalidinput').get(0).scrollIntoView();
+        },
+
+
+        /**
          * Remove error messages
          *
          * @param {jQuery} element - the input field (removes all error messages
@@ -1826,7 +1840,7 @@
                           selector + '_postcode,' +
                           selector + '_map_icon';
             }
-            $(element).siblings('.error').remove();
+            $(element).removeClass('invalidinput').siblings('.error').remove();
         },
 
         /**
