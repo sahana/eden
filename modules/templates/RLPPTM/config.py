@@ -2225,6 +2225,7 @@ def config(settings):
         from s3 import (S3SQLCustomForm,
                         S3SQLInlineLink,
                         S3LocationFilter,
+                        S3LocationSelector,
                         S3OptionsFilter,
                         S3TextFilter,
                         S3WithIntro,
@@ -2234,20 +2235,19 @@ def config(settings):
         table = s3db.org_facility
 
         # Configure location selector incl. Geocoder
-        from .helpers import RLPLocationSelector
         field = table.location_id
         # Address/Postcode are required
         # - except for OrgGroupAdmin, who need to be able to
         #   update the record even when this detail is missing
         address_required = not is_org_group_admin
-        field.widget = RLPLocationSelector(levels = ("L1", "L2", "L3", "L4"),
-                                           required_levels = ("L1", "L2", "L3"),
-                                           show_address = True,
-                                           show_postcode = True,
-                                           address_required = address_required,
-                                           postcode_required = address_required,
-                                           show_map = True,
-                                           )
+        field.widget = S3LocationSelector(levels = ("L1", "L2", "L3", "L4"),
+                                          required_levels = ("L1", "L2", "L3"),
+                                          show_address = True,
+                                          show_postcode = True,
+                                          address_required = address_required,
+                                          postcode_required = address_required,
+                                          show_map = True,
+                                          )
         current.response.s3.scripts.append("/%s/static/themes/RLP/js/geocoderPlugin.js" % r.application)
 
         # Custom label for obsolete-Flag
@@ -3350,14 +3350,14 @@ def config(settings):
         if r.interactive:
 
             # Configure location selector and geocoder
-            from .helpers import RLPLocationSelector
+            from s3 import S3LocationSelector
             field = table.location_id
-            field.widget = RLPLocationSelector(levels = ("L1", "L2", "L3", "L4"),
-                                               required_levels = ("L1", "L2", "L3"),
-                                               show_address = True,
-                                               show_postcode = True,
-                                               show_map = True,
-                                               )
+            field.widget = S3LocationSelector(levels = ("L1", "L2", "L3", "L4"),
+                                              required_levels = ("L1", "L2", "L3"),
+                                              show_address = True,
+                                              show_postcode = True,
+                                              show_map = True,
+                                              )
             current.response.s3.scripts.append("/%s/static/themes/RLP/js/geocoderPlugin.js" % r.application)
 
             # Custom CRUD-Form

@@ -11,12 +11,12 @@ from gluon import Field, HTTP, SQLFORM, URL, current, redirect, \
 from gluon.storage import Storage
 
 from s3 import FS, IS_PHONE_NUMBER_MULTI, JSONERRORS, S3CRUD, S3CustomController, \
-               S3GroupedOptionsWidget, S3Represent, S3Request, \
+               S3GroupedOptionsWidget, S3LocationSelector, S3Represent, S3Request, \
                S3WithIntro, s3_comments_widget, s3_get_extension, s3_mark_required, \
                s3_str, s3_text_represent, s3_truncate
 
 from .config import TESTSTATIONS
-from .helpers import RLPLocationSelector, applicable_org_types
+from .helpers import applicable_org_types
 from .notifications import formatmap
 
 TEMPLATE = "RLPPTM"
@@ -1165,7 +1165,7 @@ class register(S3CustomController):
                             requires = IS_IN_SET(org_types),
                             ),
                       Field("location", "json",
-                            widget = RLPLocationSelector(
+                            widget = S3LocationSelector(
                                         levels = ("L1", "L2", "L3", "L4"),
                                         required_levels = ("L1", "L2", "L3"),
                                         show_address = True,
