@@ -16,7 +16,7 @@ from s3 import FS, IS_PHONE_NUMBER_MULTI, JSONERRORS, S3CRUD, S3CustomController
                s3_str, s3_text_represent, s3_truncate
 
 from .config import TESTSTATIONS
-from .helpers import RLPLocationSelector
+from .helpers import RLPLocationSelector, applicable_org_types
 from .notifications import formatmap
 
 TEMPLATE = "RLPPTM"
@@ -405,6 +405,19 @@ class approve(S3CustomController):
             facility_email = custom_get("facility_email")
             opening_times = custom_get("opening_times")
 
+            # Org type selector
+            selected_type = custom_get("organisation_type")
+            org_types = applicable_org_types(None, group=TESTSTATIONS, represent=True)
+            if selected_type and selected_type not in org_types:
+                selected_type = None
+            field = Field("organisation_type", "integer",
+                          label = T("Organization Type"),
+                          requires = IS_IN_SET(org_types),
+                          )
+            field.tablename = "approve"
+            from gluon.sqlhtml import OptionsWidget
+            type_selector = OptionsWidget.widget(field, selected_type)
+
             # Map selected projects to the projects selectable at time of approval
             selectable_projects = register.selectable_projects()
             projects = []
@@ -480,6 +493,9 @@ class approve(S3CustomController):
                                  TD(person),
                                  ),
                               test_station,
+                              TR(TD("%s:" % T("Organization Type")),
+                                 TD(type_selector),
+                                 ),
                               TR(TD("%s:" % T("Address")),
                                  TD(address),
                                  ),
@@ -501,7 +517,8 @@ class approve(S3CustomController):
                               TR(TD("%s:" % T("Comments")),
                                  TD(s3_text_represent(strrepr(comments))),
                                  ),
-                              )
+                              ),
+                        _class = "approve-form",
                         )
 
             if form.accepts(request.post_vars, session, formname="approve"):
@@ -534,6 +551,18 @@ class approve(S3CustomController):
                         membership["id"] = mtable.insert(**membership)
                         set_record_owner(mtable, membership)
                         s3db_onaccept(mtable, membership, method="create")
+
+                        # Link organisation to selected organisation type
+                        type_id = form_vars.get("organisation_type")
+                        if type_id:
+                            ltable = s3db.org_organisation_organisation_type
+                            type_id = int(type_id)
+                            link = {"organisation_id": organisation_id,
+                                    "organisation_type_id": type_id,
+                                    }
+                            link["id"] = ltable.insert(**link)
+                            set_record_owner(ltable, link)
+                            s3db_onaccept(ltable, link, method="create")
 
                         # Link organisation to selected projects
                         selected = form_vars.get("projects")
@@ -976,6 +1005,7 @@ class register(S3CustomController):
                       }
             if not organisation_id:
                 custom["organisation"] = organisation
+                custom["organisation_type"] = formvars.organisation_type
             record["custom"] = json.dumps(custom)
 
             temptable.insert(**record)
@@ -1098,6 +1128,9 @@ class register(S3CustomController):
         # Lookup site services
         services = cls.selectable_services()
 
+        # Lookup applicable organisation types
+        org_types = applicable_org_types(None, group=TESTSTATIONS, represent=True)
+
         # Form fields
         formfields = [utable.first_name,
                       utable.last_name,
@@ -1126,6 +1159,10 @@ class register(S3CustomController):
                                                               T("Specify the name of the test station (max 60 characters)"),
                                                               ),
                                           ),
+                            ),
+                      Field("organisation_type", "integer",
+                            label = T("Organization Type"),
+                            requires = IS_IN_SET(org_types),
                             ),
                       Field("location", "json",
                             widget = RLPLocationSelector(
