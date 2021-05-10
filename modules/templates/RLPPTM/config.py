@@ -2169,12 +2169,16 @@ def config(settings):
         # Configure location selector incl. Geocoder
         from .helpers import RLPLocationSelector
         field = table.location_id
+        # Address/Postcode are required
+        # - except for OrgGroupAdmin, who need to be able to
+        #   update the record even when this detail is missing
+        address_required = not is_org_group_admin
         field.widget = RLPLocationSelector(levels = ("L1", "L2", "L3", "L4"),
                                            required_levels = ("L1", "L2", "L3"),
                                            show_address = True,
-                                           address_required = True,
                                            show_postcode = True,
-                                           postcode_required = True,
+                                           address_required = address_required,
+                                           postcode_required = address_required,
                                            show_map = True,
                                            )
         current.response.s3.scripts.append("/%s/static/themes/RLP/js/geocoderPlugin.js" % r.application)
@@ -2189,6 +2193,14 @@ def config(settings):
                                               ),
                             )
 
+        # Opening times are mandatory
+        # - except for OrgGroupAdmin, who need to be able to
+        #   update the record even when this detail is missing
+        if not is_org_group_admin:
+            field = table.opening_times
+            field.requires = IS_NOT_EMPTY()
+
+        # Custom representation of service links
         stable = s3db.org_service_site
         field = stable.service_id
         from .helpers import ServiceListRepresent

@@ -1148,7 +1148,7 @@ class register(S3CustomController):
                             ),
                       Field("opening_times",
                             label = T("Opening Hours"),
-                            #requires = IS_NOT_EMPTY(),
+                            requires = IS_NOT_EMPTY(),
                             ),
                       Field("projects", "list:integer",
                             label = T("Programs"),
