@@ -4,7 +4,7 @@ from gluon import current
 
 def config(settings):
     """
-        Template settings for Canada
+        Template settings for the United States of America
         - designed to be used in a Cascade with an application template
     """
 

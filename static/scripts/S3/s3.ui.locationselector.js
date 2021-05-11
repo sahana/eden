@@ -178,6 +178,12 @@
                 }
             }
 
+            // Hide Lx if using postcodeToAddress & no Address yet known
+            var keepHidden;
+            if (this.postcodeToAddress && !data.address) {
+                keepHidden = true;
+            }
+
             // Propagate pre-selected values
             var self = this,
                 L0 = data.L0,
@@ -194,10 +200,10 @@
                 if (level) {
                     if (pending) {
                         pending = pending.then(function() {
-                            return self.lxSelect(index, level, true);
+                            return self.lxSelect(index, level, true, keepHidden);
                         });
                     } else {
-                        pending = self.lxSelect(index, level, true);
+                        pending = self.lxSelect(index, level, true, keepHidden);
                     }
                 }
             });
@@ -225,6 +231,10 @@
             // Show Postcode Rows (__row1 = tuple themes)
             $(selector + '_postcode__row').removeClass('hide').show();
             $(selector + '_postcode__row1').removeClass('hide').show();
+            if (this.postcodeToAddress) {
+                $(selector + '_postcode_to_address__row').removeClass('hide').show();
+                $(selector + '_postcode_to_address__row1').removeClass('hide').show();
+            }
 
             // Show Lat/Lon Rows (__row1 = tuple themes)
             $(selector + '_lat').val(data.lat)
@@ -298,6 +308,7 @@
                     L4Row = $(selector + '_L4__row'),
                     L5Row = $(selector + '_L5__row'),
                     addressRow = $(selector + '_address__row'),
+                    postcodeToAddressRow = $(selector + '_postcode_to_address__row'),
                     latRow = $(selector + '_lat__row'),
                     lonRow = $(selector + '_lon__row'),
                     latlonToggleRow = $(selector + '_latlon_toggle__row');
@@ -314,6 +325,7 @@
                            .after(L3Row)
                            .after(L4Row)
                            .after(L5Row)
+                           .after(postcodeToAddressRow)
                            .after(postcodeRow)
                            .after(addressRow)
                            .after(errorWrapper);
@@ -324,6 +336,7 @@
                            .after(latlonToggleRow)
                            .after(lonRow)
                            .after(latRow)
+                           .after(postcodeToAddressRow)
                            .after(postcodeRow)
                            .after(addressRow)
                            .after(L5Row)
@@ -397,8 +410,10 @@
          * @param {number} id - the record ID of the selected Lx location
          * @param {bool} refresh - whether this is called before user input
          *                         (in which case we want to prevent geocoding)
+         * @param {bool} keepHidden - whether to keep the dropdown hidden
+         *                           (e.g. we are using postcodeToAddress)
          */
-        lxSelect: function(level, id, refresh) {
+        lxSelect: function(level, id, refresh, keepHidden) {
 
             var dfd = $.Deferred(),
                 self = this,
@@ -586,7 +601,7 @@
                                     select.append(option);
                                 }
 
-                                if (self.postcodeToAddress && !self.data.address) {
+                                if (keepHidden) {
                                     // Don't show Dropdown
                                 } else {
                                     // Show dropdown
@@ -1906,6 +1921,38 @@
                     self._collectData();
                 }
             });
+            $(selector + '_postcode_to_address').bind('click' + ns, function() {
+                // Show fields to do manual entry
+                $(selector + '_address__row').removeClass('hide').show();
+                $(selector + '_address__row1').removeClass('hide').show();
+                $(selector + '_L0__row').removeClass('hide').show();
+                $(selector + '_L0__row1').removeClass('hide').show();
+                var data = self.data,
+                    L0 = data.L0,
+                    L1 = data.L1,
+                    L2 = data.L2,
+                    L3 = data.L3,
+                    L4 = data.L4,
+                    L5 = data.L5,
+                    pending;
+
+                // Select Lx in order
+                // || is to support Missing levels
+                [L0, L1 || L2, L2 || L3, L3 || L4, L4 || L5, L5].forEach(function(level, index) {
+                    if (level) {
+                        if (pending) {
+                            pending = pending.then(function() {
+                                return self.lxSelect(index, level, true);
+                            });
+                        } else {
+                            pending = self.lxSelect(index, level, true);
+                        }
+                    }
+                });
+
+                // Hide the manual entry button
+                $(this).hide();
+            });
             $(selector + '_lat,' +
               selector + '_lon').bind('change' + ns, function() {
                 self._latlonInput();
@@ -1964,6 +2011,7 @@
               selector + '_L5,' +
               selector + '_address,' +
               selector + '_postcode,' +
+              selector + '_postcode_to_address,' +
               selector + '_map_icon,' +
               selector + '_latlon_toggle').unbind(ns);
 

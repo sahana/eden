@@ -5089,7 +5089,6 @@ class S3LocationSelector(S3Selector):
             - Validation errors cause issues
             - Needs more testing
         * Should support use in an InlineComponent with multiple=True
-        * Should support multiple on a page
         * Option to allow having Lx mandatory *except* when a specific location is defined (e.g. Polygon spanning 2 countries)
     """
 
@@ -5470,6 +5469,18 @@ class S3LocationSelector(S3Selector):
 
                 # Store form key in form
                 postcode_component[1]["data"] = {"k": formkey}
+
+                # Add controls
+                input_id = "%s_postcode_to_address" % fieldname
+                widget = DIV(A(T("Enter address manually"),
+                               _id = input_id,
+                               ))
+                component = ("",    # label
+                             widget,
+                             input_id,
+                             True, # hidden
+                             )
+                components["postcode_to_address"] = component
 
             components["postcode"] = postcode_component
 
@@ -5991,6 +6002,7 @@ class S3LocationSelector(S3Selector):
             table_style = False
 
         selectors = DIV() if not table_style else TABLE()
+        sappend = selectors.append
         for name in ("L0", "L1", "L2", "L3", "L4", "L5"):
             if name in components:
                 label, widget, input_id, hidden = components[name]
@@ -6001,13 +6013,19 @@ class S3LocationSelector(S3Selector):
                                     hidden = hidden,
                                     )
                 if tuple_rows:
-                    selectors.append(formrow[0])
-                    selectors.append(formrow[1])
+                    sappend(formrow[0])
+                    sappend(formrow[1])
                 else:
-                    selectors.append(formrow)
+                    sappend(formrow)
 
         inputs = TAG[""]() if not table_style else TABLE()
-        for name in ("address", "postcode", "lat", "lon", "latlon_toggle"):
+        for name in ("address",
+                     "postcode",
+                     "postcode_to_address",
+                     "lat",
+                     "lon",
+                     "latlon_toggle",
+                     ):
             if name in components:
                 label, widget, input_id, hidden = components[name]
                 formrow = formstyle("%s__row" % input_id,
@@ -9474,7 +9492,8 @@ class S3QuestionEditorWidget(FormWidget):
                name,
                value,
                label,
-               _type="text"):
+               _type = "text"
+               ):
         """
             Render a text input with given attributes
 
