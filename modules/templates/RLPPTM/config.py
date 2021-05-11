@@ -2199,6 +2199,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
 
+        auth = current.auth
         s3db = current.s3db
 
         is_org_group_admin = current.auth.s3_has_role("ORG_GROUP_ADMIN")
@@ -2224,6 +2225,7 @@ def config(settings):
 
         from s3 import (S3SQLCustomForm,
                         S3SQLInlineLink,
+                        S3SQLInlineComponent,
                         S3LocationFilter,
                         S3LocationSelector,
                         S3OptionsFilter,
@@ -2340,62 +2342,116 @@ def config(settings):
                     ])
 
         # Custom CRUD form
-        crud_fields = [#"organisation_id",
-                       "name",
-                       #"public.value",
-                       S3SQLInlineLink(
-                              "facility_type",
-                              label = T("Facility Type"),
-                              field = "facility_type_id",
-                              widget = "groupedopts",
-                              cols = 3,
-                        ),
-                       "location_id",
-                       (T("Telephone"), "phone1"),
-                       "email",
-                       (T("Opening Hours"), "opening_times"),
-                       S3WithIntro(
-                            S3SQLInlineLink(
+        record = r.record
+        public_view = r.tablename == "org_facility" and \
+                        (not record or
+                         not auth.s3_has_permission("update", r.table, record_id=record.id))
+        if public_view:
+            crud_fields = ["name",
+                           S3SQLInlineLink(
+                                "facility_type",
+                                label = T("Facility Type"),
+                                field = "facility_type_id",
+                                widget = "groupedopts",
+                                cols = 3,
+                                ),
+                           "location_id",
+                           (T("Telephone"), "phone1"),
+                           "email",
+                           (T("Opening Hours"), "opening_times"),
+                           S3SQLInlineLink(
                                 "service",
                                 label = T("Services"),
                                 field = "service_id",
                                 widget = "groupedopts",
                                 cols = 1,
                                 ),
-                            intro = ("org",
-                                     "facility",
-                                     "SiteServiceIntro",
-                                     ),
-                            ),
-                       "comments",
-                       #"obsolete",
-                       ]
-
-        resource = r.resource
-        if r.tablename == "org_facility":
-            fresource = resource
-        elif r.tablename == "org_organisation":
-            fresource = resource.components.get("facility")
-            crud_fields.append("obsolete")
+                           "comments",
+                           ]
         else:
-            fresource = None
+            organisation = public = obsolete = services = documents = None
 
-        if fresource:
-            table = fresource.table
+            resource = r.resource
+            if r.tablename == "org_facility":
+                # Primary controller
+                fresource = resource
+                obsolete = None
+            elif r.tablename == "org_organisation":
+                # Tab of organisation
+                fresource = resource.components.get("facility")
+                obsolete = "obsolete"
+            else:
+                # Other view
+                fresource = None
 
-            # No Add-Organisation link
-            field = table.organisation_id
-            field.comment = None
+            if fresource:
+                table = fresource.table
 
-            if is_org_group_admin:
-                crud_fields.insert(0, "organisation_id")
+                # No Add-Organisation link
+                field = table.organisation_id
+                field.comment = None
 
-                # Configure binary tag representation
-                from .helpers import configure_binary_tags
-                configure_binary_tags(fresource, ("public",))
+                services = S3SQLInlineLink(
+                                "service",
+                                label = T("Services"),
+                                field = "service_id",
+                                widget = "groupedopts",
+                                cols = 1,
+                                )
+                documents = S3SQLInlineComponent(
+                                "document",
+                                name = "file",
+                                label = T("Documents"),
+                                fields = ["name", "file", "comments"],
+                                filterby = {"field": "file",
+                                            "options": "",
+                                            "invert": True,
+                                            },
+                                )
 
-                # Add binary tags to form
-                crud_fields.insert(2, (T("In Public Registry"), "public.value"))
+                if is_org_group_admin:
+                    # Show organisation
+                    organisation = "organisation_id"
+
+                    # Configure binary tag representation
+                    from .helpers import configure_binary_tags
+                    configure_binary_tags(fresource, ("public",))
+                    public = (T("In Public Registry"), "public.value")
+
+                else:
+                    # Add Intros for services and documents
+                    services = S3WithIntro(services,
+                                           intro = ("org",
+                                                    "facility",
+                                                    "SiteServiceIntro",
+                                                    ),
+                                           )
+                    documents = S3WithIntro(documents,
+                                            intro = ("org",
+                                                     "facility",
+                                                     "SiteDocumentsIntro",
+                                                     ),
+                                            )
+
+            crud_fields = [organisation,
+                           "name",
+                           public,
+                           S3SQLInlineLink(
+                                "facility_type",
+                                label = T("Facility Type"),
+                                field = "facility_type_id",
+                                widget = "groupedopts",
+                                cols = 3,
+                                ),
+                           "location_id",
+                           (T("Telephone"), "phone1"),
+                           "email",
+                           (T("Opening Hours"), "opening_times"),
+                           services,
+                           documents,
+                           "comments",
+                           obsolete,
+                           ]
 
         s3db.configure(tablename,
                        crud_form = S3SQLCustomForm(*crud_fields),

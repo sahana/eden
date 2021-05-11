@@ -140,6 +140,14 @@ form {
             .postfix.calendar-clear-btn {
                 margin-top: 0;
             }
+            input[type="text"],
+            .s3-upload-widget {
+                font-size: 0.8rem;
+                max-width: 14rem;
+            }
+            textarea {
+                font-size: 0.8rem;
+            }
             &.single td:only-child {
                 padding: 0;
                 div.form-row {
@@ -157,6 +165,11 @@ form {
         tr.read-row {
             .zoom img {
                 max-height: 8rem;
+            }
+            td {
+                font-size: 0.8rem;
+                max-width: 21rem;
+                white-space: pre-line;
             }
         }
     }

@@ -25,3 +25,4 @@ Message ClaimNotification,fin,voucher_claim,Im Rahmen der Abrechnung zu ”{prog
 Subject InvoiceSettled,fin,voucher_invoice,Vergütung zu ”{program}” wird ausgezahlt,
 Message InvoiceSettled,fin,voucher_invoice,Die Auszahlung des zu ”{program}” am {date} festgestellten Vergütungsanspruchs für {organisation} (Rechnungsnr. {invoice}) wurde veranlasst. Die Zahlung erfolgt in den nächsten Tagen auf das unter {url} angegebene Konto.,
 SiteServiceIntro,org,facility,Geben Sie an welche Leistungen ihre Teststelle neben PoC-Tests noch anbietet:,
+SiteDocumentsIntro,org,facility,"Laden Sie hier die erforderliche Dokumentation hoch (Hygienekonzept, Raumkonzept, usw.):",
