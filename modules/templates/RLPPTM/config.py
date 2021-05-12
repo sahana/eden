@@ -2204,16 +2204,40 @@ def config(settings):
 
         is_org_group_admin = current.auth.s3_has_role("ORG_GROUP_ADMIN")
 
-        # Tags as filtered components (for embedding in form)
+        # Approval workflow tags as filtered components (for embedding in form)
         add_org_tags()
         s3db.add_components("org_site",
-                            org_site_tag = ({"name": "public",
+                            org_site_tag = (# Approval workflow status
+                                            {"name": "status",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "STATUS"},
+                                             "multiple": False,
+                                             },
+                                            # MPAV qualification
+                                            {"name": "mpav",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "MPAV"},
+                                             "multiple": False,
+                                             },
+                                            # Hygiene concept
+                                            {"name": "hygiene",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "HYGIENE"},
+                                             "multiple": False,
+                                             },
+                                            # Facility layout
+                                            {"name": "layout",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "LAYOUT"},
+                                             "multiple": False,
+                                             },
+                                            # In public registry
+                                            {"name": "public",
                                              "joinby": "site_id",
                                              "filterby": {"tag": "PUBLIC"},
                                              "multiple": False,
                                              },
                                             ),
-
                             )
 
         # Custom onaccept to add default tags
@@ -2342,6 +2366,7 @@ def config(settings):
                     ])
 
         # Custom CRUD form
+        visible_tags = subheadings = None
         record = r.record
         public_view = r.tablename == "org_facility" and \
                         (not record or
@@ -2369,28 +2394,29 @@ def config(settings):
                            "comments",
                            ]
         else:
-            organisation = public = obsolete = services = documents = None
+            organisation = obsolete = services = documents = None
 
             resource = r.resource
             if r.tablename == "org_facility":
                 # Primary controller
                 fresource = resource
+                record_id = r.id
                 obsolete = None
-            elif r.tablename == "org_organisation":
-                # Tab of organisation
+            elif r.tablename == "org_organisation" and \
+                 r.component_name == "facility":
+                # Facility tab of organisation
                 fresource = resource.components.get("facility")
+                record_id = r.component_id
                 obsolete = "obsolete"
             else:
                 # Other view
-                fresource = None
+                fresource = record_id = None
+                obsolete = None
 
             if fresource:
                 table = fresource.table
 
-                # No Add-Organisation link
-                field = table.organisation_id
-                field.comment = None
-
+                # Inline service selector and documents
                 services = S3SQLInlineLink(
                                 "service",
                                 label = T("Services"),
@@ -2409,15 +2435,21 @@ def config(settings):
                                             },
                                 )
 
+                from .helpers import configure_workflow_tags
                 if is_org_group_admin:
                     # Show organisation
                     organisation = "organisation_id"
 
-                    # Configure binary tag representation
-                    from .helpers import configure_binary_tags
-                    configure_binary_tags(fresource, ("public",))
-                    public = (T("In Public Registry"), "public.value")
+                    # No Add-Organisation link here
+                    field = table.organisation_id
+                    field.comment = None
 
+                    # Workflow tags
+                    if record_id:
+                        visible_tags = configure_workflow_tags(fresource,
+                                                               role = "approver",
+                                                               record_id = record_id,
+                                                               )
                 else:
                     # Add Intros for services and documents
                     services = S3WithIntro(services,
@@ -2432,10 +2464,16 @@ def config(settings):
                                                      "SiteDocumentsIntro",
                                                      ),
                                             )
+                    # Workflow tags
+                    if record_id:
+                        visible_tags = configure_workflow_tags(fresource,
+                                                               role = "applicant",
+                                                               record_id = record_id,
+                                                               )
 
             crud_fields = [organisation,
                            "name",
-                           public,
+                           #public,
                            S3SQLInlineLink(
                                 "facility_type",
                                 label = T("Facility Type"),
@@ -2452,9 +2490,14 @@ def config(settings):
                            "comments",
                            obsolete,
                            ]
+            if visible_tags:
+                crud_fields.extend(visible_tags)
+                fname = visible_tags[0][1].replace(".", "_")
+                subheadings = {fname: T("Approval and Publication")}
 
         s3db.configure(tablename,
                        crud_form = S3SQLCustomForm(*crud_fields),
+                       subheadings = subheadings,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        )

@@ -178,6 +178,14 @@ form {
         margin-bottom: 1.25rem;
         margin-left: 0;
     }
+    .subheading {
+        background-color: #EEE;
+        font-size: 1rem;
+        border-top: solid 1px #ccc;
+        border-left: solid 1px #ccc;
+        margin: 0.7rem 0;
+        padding: 0.5rem 0.3rem 0.3rem 0.5rem;
+    }
 
     // Login-form on homepage
     &.auth_login #submit_record__row {
