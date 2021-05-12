@@ -2197,6 +2197,26 @@ def config(settings):
         add_facility_default_tags(record_id)
 
     # -------------------------------------------------------------------------
+    def site_tag_onaccept(form):
+
+        # Get record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        ttable = current.s3db.org_site_tag
+        row = current.db(ttable.id == record_id).select(ttable.site_id,
+                                                        limitby = (0, 1),
+                                                        ).first()
+        if row and row.site_id:
+            from .helpers import facility_approval_workflow
+            facility_approval_workflow(row.site_id)
+
+    # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
 
         auth = current.auth
@@ -2245,6 +2265,13 @@ def config(settings):
                                  "onaccept",
                                  facility_create_onaccept,
                                  method = "create",
+                                 )
+
+        # Custom onaccept to update workflow tags
+        s3db.add_custom_callback("org_site_tag",
+                                 "onaccept",
+                                 site_tag_onaccept,
+                                 method = "update",
                                  )
 
         from s3 import (S3SQLCustomForm,

@@ -594,6 +594,96 @@ def configure_workflow_tags(resource, role="applicant", record_id=None):
     return visible_tags
 
 # -----------------------------------------------------------------------------
+def facility_approval_workflow(site_id):
+    """
+        Update facility approval workflow tags
+
+        @param site_id: the site ID
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    workflow = ("STATUS", "MPAV", "HYGIENE", "LAYOUT", "PUBLIC")
+    review = ("MPAV", "HYGIENE", "LAYOUT")
+
+    # Get all tags for site
+    ttable = s3db.org_site_tag
+    query = (ttable.site_id == site_id) & \
+            (ttable.tag.belongs(workflow)) & \
+            (ttable.deleted == False)
+    rows = db(query).select(ttable.id,
+                            ttable.tag,
+                            ttable.value,
+                            )
+    tags = {row.tag: row.value for row in rows}
+
+    if any(k not in tags for k in workflow):
+        ftable = s3db.org_facility
+        facility = db(ftable.site_id == site_id).select(ftable.id,
+                                                        limitby = (0, 1),
+                                                        ).first()
+        if facility:
+            add_facility_default_tags(facility)
+            facility_approval_workflow(site_id)
+
+    update = {}
+
+    status = tags.get("STATUS")
+    if status == "REVISE":
+        update["PUBLIC"] = "N"
+        if all(tags[k] == "APPROVED" for k in review):
+            update["PUBLIC"] = "Y"
+            update["STATUS"] = "APPROVED"
+
+    elif status == "READY":
+        update["PUBLIC"] = "N"
+        if all(tags[k] == "APPROVED" for k in review):
+            for k in review:
+                update[k] = "REVIEW"
+        else:
+            for k in review:
+                if tags[k] == "REVISE":
+                    update[k] = "REVIEW"
+        update["STATUS"] = "REVIEW"
+
+    elif status == "REVIEW":
+        # Need MHL tags
+        if any(tags[k] == "REVISE" for k in review):
+            update["PUBLIC"] = "N"
+            update["STATUS"] = "REVISE"
+            # TODO Notify OrgAdmin
+        elif all(tags[k] == "APPROVED" for k in review):
+            update["PUBLIC"] = "Y"
+            update["STATUS"] = "APPROVED"
+        else:
+            update["PUBLIC"] = "N"
+
+    elif status == "APPROVED":
+        # Need MHL tags
+        if any(tags[k] == "REVISE" for k in review):
+            update["PUBLIC"] = "N"
+            update["STATUS"] = "REVISE"
+            # TODO Notify OrgAdmin
+        elif any(tags[k] == "REVIEW" for k in review):
+            update["PUBLIC"] = "N"
+            update["STATUS"] = "REVIEW"
+
+    for row in rows:
+        key = row.tag
+        if key in update:
+            row.update_record(value=update[key])
+
+    public = update.get("PUBLIC")
+    if public and public != tags["PUBLIC"]:
+        T = current.T
+        if public == "Y":
+            msg = T("Facility added to public registry")
+        else:
+            msg = T("Facility removed from public registry pending review")
+        current.response.warning = msg
+
+# -----------------------------------------------------------------------------
 def add_organisation_default_tags(organisation_id):
     """
         Add default tags to a new organisation
