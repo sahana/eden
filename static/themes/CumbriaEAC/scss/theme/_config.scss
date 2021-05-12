@@ -112,7 +112,7 @@ $title_background: false;
 
 // Footer
 //$footer_bgcolor: transparent;
-//$footer_fgcolor: #999;
+$footer_fgcolor: #767676; // Contrast of 4.5: 1 for AA accessibility (https://webaim.org/resources/contrastchecker/)
 //$footer_min_height: null;
 //$footer_top_margin: 20px;
 

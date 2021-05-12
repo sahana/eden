@@ -4627,7 +4627,7 @@ $('.copy-link').click(function(e){
 
         request_args = request.args
         len_request_args = len(request_args)
-        if len_request_args is 0 and request.get_vars.get("inactive") is None:
+        if len_request_args == 0 and request.get_vars.get("inactive") == None:
             # Add Bulk Messaging to List View
             dtargs["dt_bulk_actions"] = [(T("Message"), "message")]
 

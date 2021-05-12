@@ -1278,12 +1278,13 @@ $side-nav-divider-color: transparent;
 // $sub-nav-font-family: $body-font-family;
 // $sub-nav-font-size: rem-calc(12); // 0.75 rem (defaults to 0.875rem)
 // $sub-nav-font-color: $aluminum;
+$sub-nav-font-color: #767676; // Contrast of 4.5: 1 for AA accessibility (https://webaim.org/resources/contrastchecker/)
 // $sub-nav-font-weight: $font-weight-normal;
 // $sub-nav-text-decoration: none;
 $sub-nav-padding: rem-calc(1 3);
 // $sub-nav-border-radius: 3px;
 // $sub-nav-font-color-hover: scale-color($sub-nav-font-color, $lightness: -25%);
-
+//$sub-nav-font-color-hover: #000; // done just for :focus-visible in style.css
 
 // We use these to control the active item styles
 

@@ -242,7 +242,7 @@ main.main {
 }
 /* line 188, ../scss/theme/_page.scss */
 #poweredby a {
-  color: #999;
+  color: #767676;
   text-decoration: none;
   font-size: 0.8rem;
   margin-left: 0.2rem;
@@ -293,14 +293,14 @@ body.rtl #poweredby {
 }
 /* line 231, ../scss/theme/_page.scss */
 .sub-nav.about-menu {
-  color: #999;
+  color: #767676;
   text-align: left;
   margin-left: 0;
   margin-right: 0;
 }
 /* line 233, ../scss/theme/_page.scss */
 .sub-nav.about-menu a {
-  color: #999;
+  color: #767676;
 }
 
 /* line 241, ../scss/theme/_page.scss */
