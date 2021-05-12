@@ -2197,7 +2197,7 @@ def config(settings):
         add_facility_default_tags(record_id)
 
     # -------------------------------------------------------------------------
-    def site_tag_onaccept(form):
+    def facility_postprocess(form):
 
         # Get record ID
         form_vars = form.vars
@@ -2208,11 +2208,13 @@ def config(settings):
         else:
             return
 
-        ttable = current.s3db.org_site_tag
-        row = current.db(ttable.id == record_id).select(ttable.site_id,
-                                                        limitby = (0, 1),
-                                                        ).first()
+        # Lookup site_id
+        table = current.s3db.org_facility
+        row = current.db(table.id == record_id).select(table.site_id,
+                                                       limitby = (0, 1),
+                                                       ).first()
         if row and row.site_id:
+            # Update approval workflow
             from .helpers import facility_approval_workflow
             facility_approval_workflow(row.site_id)
 
@@ -2265,13 +2267,6 @@ def config(settings):
                                  "onaccept",
                                  facility_create_onaccept,
                                  method = "create",
-                                 )
-
-        # Custom onaccept to update workflow tags
-        s3db.add_custom_callback("org_site_tag",
-                                 "onaccept",
-                                 site_tag_onaccept,
-                                 method = "update",
                                  )
 
         from s3 import (S3SQLCustomForm,
@@ -2404,7 +2399,7 @@ def config(settings):
                     ])
 
         # Custom CRUD form
-        visible_tags = subheadings = None
+        visible_tags = subheadings = postprocess = None
         record = r.record
         public_view = r.tablename == "org_facility" and \
                         (not record or
@@ -2524,13 +2519,20 @@ def config(settings):
                            "comments",
                            obsolete,
                            ]
+
             if visible_tags:
+                # Append workflow tags in separate section
                 crud_fields.extend(visible_tags)
                 fname = visible_tags[0][1].replace(".", "_")
                 subheadings = {fname: T("Approval and Publication")}
 
+                # Add postprocess to update workflow statuses
+                postprocess = facility_postprocess
+
         s3db.configure(tablename,
-                       crud_form = S3SQLCustomForm(*crud_fields),
+                       crud_form = S3SQLCustomForm(*crud_fields,
+                                                   postprocess = postprocess,
+                                                   ),
                        subheadings = subheadings,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,

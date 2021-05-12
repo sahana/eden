@@ -631,10 +631,14 @@ def facility_approval_workflow(site_id):
 
     status = tags.get("STATUS")
     if status == "REVISE":
-        update["PUBLIC"] = "N"
         if all(tags[k] == "APPROVED" for k in review):
             update["PUBLIC"] = "Y"
             update["STATUS"] = "APPROVED"
+        elif all(tags[k] != "REVISE" for k in review):
+            update["STATUS"] = "REVIEW"
+            update["PUBLIC"] = "N"
+        else:
+            update["PUBLIC"] = "N"
 
     elif status == "READY":
         update["PUBLIC"] = "N"
@@ -648,7 +652,6 @@ def facility_approval_workflow(site_id):
         update["STATUS"] = "REVIEW"
 
     elif status == "REVIEW":
-        # Need MHL tags
         if any(tags[k] == "REVISE" for k in review):
             update["PUBLIC"] = "N"
             update["STATUS"] = "REVISE"
@@ -660,7 +663,6 @@ def facility_approval_workflow(site_id):
             update["PUBLIC"] = "N"
 
     elif status == "APPROVED":
-        # Need MHL tags
         if any(tags[k] == "REVISE" for k in review):
             update["PUBLIC"] = "N"
             update["STATUS"] = "REVISE"
