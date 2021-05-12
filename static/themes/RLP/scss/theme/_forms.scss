@@ -140,6 +140,14 @@ form {
             .postfix.calendar-clear-btn {
                 margin-top: 0;
             }
+            input[type="text"],
+            .s3-upload-widget {
+                font-size: 0.8rem;
+                max-width: 14rem;
+            }
+            textarea {
+                font-size: 0.8rem;
+            }
             &.single td:only-child {
                 padding: 0;
                 div.form-row {
@@ -158,12 +166,25 @@ form {
             .zoom img {
                 max-height: 8rem;
             }
+            td {
+                font-size: 0.8rem;
+                max-width: 21rem;
+                white-space: pre-line;
+            }
         }
     }
     .inline-open-add {
         display: inline-block;
         margin-bottom: 1.25rem;
         margin-left: 0;
+    }
+    .subheading {
+        background-color: #EEE;
+        font-size: 1rem;
+        border-top: solid 1px #ccc;
+        border-left: solid 1px #ccc;
+        margin: 0.7rem 0;
+        padding: 0.5rem 0.3rem 0.3rem 0.5rem;
     }
 
     // Login-form on homepage

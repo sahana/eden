@@ -406,5 +406,20 @@ body.rtl {
         margin: 0;
     }
 }
+.approve-workflow {
+    &.workflow-red {
+        color: #c42626;
+    }
+    &.workflow-amber {
+        color: #ec8d27;
+    }
+    &.workflow-green {
+        color: green;
+    }
+    .fa {
+        margin-right: 0.2rem;
+    }
+    margin-left: 0.5rem;
+}
 
 // END ========================================================================
