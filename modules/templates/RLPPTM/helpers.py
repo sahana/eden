@@ -973,6 +973,111 @@ class ServiceListRepresent(S3Represent):
         return html
 
 # =============================================================================
+class OrganisationRepresent(S3Represent):
+    """
+        Custom representation of organisations showing the organisation type
+        - relevant for facility approval
+    """
+
+    def __init__(self, show_type=True, show_link=True):
+
+        super(OrganisationRepresent, self).__init__(lookup = "org_organisation",
+                                                    fields = ["name",],
+                                                    show_link = show_link,
+                                                    )
+        self.show_type = show_type
+        self.org_types = {}
+        self.type_names = {}
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom lookup method for organisation rows, does a
+            left join with the parent organisation. Parameters
+            key and fields are not used, but are kept for API
+            compatibility reasons.
+
+            @param values: the organisation IDs
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        otable = s3db.org_organisation
+
+        count = len(values)
+        if count == 1:
+            query = (otable.id == values[0])
+        else:
+            query = (otable.id.belongs(values))
+
+        rows = db(query).select(otable.id,
+                                otable.name,
+                                limitby = (0, count),
+                                )
+
+        if self.show_type:
+            ltable = s3db.org_organisation_organisation_type
+            if count == 1:
+                query = (ltable.organisation_id == values[0])
+            else:
+                query = (ltable.organisation_id.belongs(values))
+            query &= (ltable.deleted == False)
+            types = db(query).select(ltable.organisation_id,
+                                     ltable.organisation_type_id,
+                                     )
+
+            all_types = set()
+            org_types = self.org_types = {}
+
+            for t in types:
+
+                type_id = t.organisation_type_id
+                all_types.add(type_id)
+
+                organisation_id = t.organisation_id
+                if organisation_id not in org_types:
+                    org_types[organisation_id] = {type_id}
+                else:
+                    org_types[organisation_id].add(type_id)
+
+            if all_types:
+                ttable = s3db.org_organisation_type
+                query = ttable.id.belongs(all_types)
+                types = db(query).select(ttable.id,
+                                         ttable.name,
+                                         limitby = (0, len(all_types)),
+                                         )
+                self.type_names = {t.id: t.name for t in types}
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row, prefix=None):
+        """
+            Represent a single Row
+
+            @param row: the org_organisation Row
+            @param prefix: the hierarchy prefix (unused here)
+        """
+
+        name = s3_str(row.name)
+
+        if self.show_type:
+
+            T = current.T
+
+            type_ids = self.org_types.get(row.id)
+            if type_ids:
+                type_names = self.type_names
+                types = [s3_str(T(type_names[t]))
+                         for t in type_ids if t in type_names
+                         ]
+                name = "%s (%s)" % (name, ", ".join(types))
+
+        return name
+
+# =============================================================================
 class ContactRepresent(pr_PersonRepresentContact):
     """
         Visually enhanced version of pr_PersonRepresentContact

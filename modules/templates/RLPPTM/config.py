@@ -2287,6 +2287,11 @@ def config(settings):
 
         table = s3db.org_facility
 
+        field = table.organisation_id
+        from .helpers import OrganisationRepresent
+        field.represent = OrganisationRepresent()
+        field.comment = None
+
         # Configure location selector incl. Geocoder
         field = table.location_id
         # Address/Postcode are required
@@ -2378,6 +2383,12 @@ def config(settings):
                                 options = binary_tag_opts,
                                 hidden = True,
                                 ),
+                S3OptionsFilter("organisation_id$organisation_type__link.organisation_type_id",
+                                hidden = True,
+                                options = lambda: s3_get_filter_opts("org_organisation_type",
+                                                                     translate = True,
+                                                                     ),
+                                ),
                 ])
             if r.method == "report":
                 filter_widgets.extend([
@@ -2467,10 +2478,6 @@ def config(settings):
                     # Show organisation
                     organisation = "organisation_id"
 
-                    # No Add-Organisation link here
-                    field = table.organisation_id
-                    field.comment = None
-
                     # Workflow tags
                     if record_id:
                         visible_tags = configure_workflow_tags(fresource,
@@ -2529,6 +2536,7 @@ def config(settings):
                        list_fields = list_fields,
                        )
 
+        # Report options
         if r.method == "report":
             axes = ["organisation_id",
                     "location_id$L3",
