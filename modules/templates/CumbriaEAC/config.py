@@ -1614,6 +1614,7 @@ def config(settings):
                                                                     #address_required = True,
                                                                     #show_postcode = True,
                                                                     #postcode_required = True,
+                                                                    show_map = False,
                                                                     )
 
         if current.auth.permission.format == "xls" and \

@@ -1,0 +1,338 @@
+// ============================================================================
+// Styles for Forms
+// ============================================================================
+// VARIABLES
+
+// Foundation variables used:
+
+// Form/Item Container
+$form_container_bgcolor: #fefefe !default;
+$item_container_controls_bgcolor: #fafafa !default;
+
+// Form Labels
+$form_label_color: black !default;
+
+// Form Errors
+$form_error_bgcolor: #c60f13 !default;
+
+// ============================================================================
+// STYLES
+
+/* General forms */
+form {
+    font-size: 0.8rem;
+    .form-row {
+        margin-top: 0.5rem !important;
+        .button {
+            margin-right: 0.5rem;
+            i.fa {
+                margin-right: 0.3rem;
+            }
+        }
+        & > .columns {
+            &:first-child {
+                overflow: hidden;
+            }
+            & > label {
+                font-weight: bold;
+            }
+        }
+        & > a {
+            margin-left: 0.625rem;
+        }
+        select {
+            min-width: 4rem;
+        }
+        .controls span.postfix {
+            height: 1.75rem;
+            line-height: 1.5rem;
+            font-size: 0.8rem;
+            .fa {
+                line-height: inherit;
+            }
+        }
+        .s3-hierarchy-widget,
+        .calendar-widget-container {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .inline-component {
+            overflow: auto;
+        }
+    }
+    .jstree-anchor {
+        font-size: 0.9rem;
+    }
+    label.inline {
+        padding: 0;
+    }
+    .gis_loc_select_btn {
+        font-size: 0.8em;
+        i {
+            font-size: 1.0em;
+            margin-right: 4px;
+        }
+    }
+    .error {
+        display: block;
+        padding: 0.375rem 0.5625rem 0.5625rem;
+        margin-top: -1px;
+        margin-bottom: 1rem;
+        font-size: 0.75rem;
+        font-style: italic;
+        background: $form_error_bgcolor;
+        color: white;
+    }
+    .invalidinput {
+        border: 1px solid #c60f13;
+    }
+    .date-clear-btn {
+        font-size: 0.75rem;
+        margin-left: 0.15rem !important;
+    }
+    .action-lnk {
+        font-weight: normal;
+        font-size: 0.75rem;
+    }
+
+    // Inline-components
+    table.embeddedComponent {
+        margin-top: 0.125rem;
+        margin-bottom: 0.125rem;
+        border: 1px solid #dddddd;
+        border-collapse: separate;
+
+        td {
+            border: none;
+            padding-bottom: 0.05rem;
+            padding-top: 0.15rem;
+            vertical-align: top;
+        }
+        &.subform-vertical {
+            .add-row, .edit-row {
+                td {
+                    border-top: 1px solid #dddddd;
+                    padding: 0 0.4rem 0.4rem 0.4rem;
+                    &.subform-action {
+                        vertical-align: bottom;
+                    }
+                }
+            }
+        }
+        .label-row {
+            td {
+                border-bottom: 1px solid #dddddd;
+                &:empty {
+                    padding: 0;
+                }
+            }
+            label {
+                color: $form_label_color;
+            }
+        }
+        tr.inline-form {
+            input,
+            .btn.date-clear-btn,
+            .postfix.calendar-clear-btn {
+                margin-top: 0;
+            }
+            &.single td:only-child {
+                padding: 0;
+                div.form-row {
+                    padding: 0 0.2rem 0.2rem;
+                }
+            }
+            select {
+                max-width: 18rem;
+            }
+            .s3_inline_add_resource_link {
+                padding: 0.1rem;
+            }
+        }
+        tr.inline-form,
+        tr.read-row {
+            .zoom img {
+                max-height: 8rem;
+            }
+        }
+    }
+    .inline-open-add {
+        display: inline-block;
+        margin-bottom: 1.25rem;
+        margin-left: 0;
+    }
+
+    // Login-form on homepage
+    &.auth_login #submit_record__row {
+        white-space: pre;
+    }
+}
+
+/* S3SQLInlineLink read-only list representation */
+ul.s3-inline-link {
+    font-size: inherit;
+}
+
+/* General Widgets */
+input[type="text"],
+input[type="password"],
+input[type="date"],
+input[type="datetime"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="time"],
+input[type="url"],
+textarea,
+select {
+  height: 1.75rem;
+  padding: 0.25rem!important; // override widget.css
+  display: inline-block;
+  font-weight: normal;
+}
+input[type="text"],
+input[type="password"],
+input[type="date"],
+input[type="datetime"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="time"],
+input[type="url"],
+select {
+    width: auto !important;
+    max-width: 100%;
+}
+textarea {
+    resize: both;
+    max-width: 100%;
+}
+input.datetimepicker {
+    max-width: 8rem;
+}
+select {
+    padding: 0 1rem 0 0.25rem!important;
+}
+
+/* Form and Item containers */
+#last_update,
+#markDuplicate {
+    float: right;
+    clear: right;
+    text-align: right;
+}
+#markDuplicate {
+    margin-bottom: 1rem;
+}
+body.rtl {
+    #last_update,
+    #markDuplicate {
+        float: left;
+        clear: left;
+        text-align: left;
+    }
+}
+
+.form-container,
+.item-container {
+    form {
+        background: $form_container_bgcolor;
+        padding: 5px 10px;
+        tr td {
+            padding: rem-calc(3);
+        }
+        .embeddedComponent td {
+            padding-right: rem-calc(9);
+        }
+    }
+    width: auto;
+    overflow: inherit;
+    .controls {
+        display: inline-block;
+        &:not(.columns) {
+            max-width: 100%;
+        }
+    }
+}
+.form-container {
+    margin-top: 0.125rem;
+    margin-bottom: 0.875rem;
+    form {
+        select,
+        input.string:not(.date),
+        textarea {
+            margin: 0;
+        }
+        .ui-multiselect {
+            max-width: 100%;
+            display: inline-block!important;
+        }
+        &:not(.filter-form):not(.auth_login):not(.auth_register):not(.rm-form) {
+            input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.hours):not(.dms-input) {
+                width: 20rem !important;
+            }
+        }
+    }
+}
+
+.item-container .controls {
+    background: $item_container_controls_bgcolor;
+    padding: 0.35rem;
+    min-height: 1.7rem;
+}
+
+/* Filter Forms & Report Options */
+.filter-form,
+.report-options {
+    // MultiSelect/GroupedOpts widgets
+    table tr,
+    .ui-multiselect {
+        max-width: 60%;
+    }
+    table.s3-groupedopts-widget {
+        display: inline-block;
+    }
+    .inline-tooltip {
+        padding-top: 0.2rem;
+    }
+    label.inline {
+        line-height: normal;
+        padding-top: 0.2rem;
+    }
+}
+
+/* Login/Registration box */
+#login_form,
+#register_form,
+#login_box {
+    clear: none !important;
+}
+
+/* Help Popup */
+.inline-tooltip {
+    display: inline-block;
+    vertical-align: top;
+    padding-left: 0.75rem;
+    .tooltip,
+    .tooltipbody,
+    .stickytip,
+    .ajaxtip {
+        display: block;
+        padding: 0;
+        width: 60px;
+    }
+    .s3_add_resource_link {
+        display: inline-block;
+        margin: -3px 0 -3px 5px;
+    }
+}
+
+// END ========================================================================

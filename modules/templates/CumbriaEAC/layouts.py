@@ -188,7 +188,10 @@ class S3PersonalMenuLayout(S3NavigationItem):
         else:
             # A menu item
             if item.enabled and item.authorized:
-                return TAG["li"](A(item.label, _href=item.url()))
+                return TAG["li"](A(item.label,
+                                   _href = item.url(),
+                                   _title = item.label or "",
+                                   ))
             else:
                 return None
 
@@ -212,7 +215,10 @@ class S3AboutMenuLayout(S3NavigationItem):
         else:
             # A menu item
             if item.enabled and item.authorized:
-                return TAG["li"](A(item.label, _href=item.url()))
+                return TAG["li"](A(item.label,
+                                   _href = item.url(),
+                                   _title = item.label or "",
+                                   ))
             else:
                 return None
 

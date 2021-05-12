@@ -5478,7 +5478,7 @@ ul.pagination li {
 .sub-nav dt,
 .sub-nav dd,
 .sub-nav li {
-  color: #999999;
+  color: #767676;
   float: left;
   font-family: Arial, "Helvetica Neue", Helvetica, Roboto, sans-serif;
   font-size: 0.875rem;
@@ -5492,7 +5492,7 @@ ul.pagination li {
 .sub-nav dt a,
 .sub-nav dd a,
 .sub-nav li a {
-  color: #999999;
+  color: #767676;
   padding: 0.0625rem 0.1875rem;
   text-decoration: none;
 }
@@ -5500,7 +5500,7 @@ ul.pagination li {
 .sub-nav dt a:hover,
 .sub-nav dd a:hover,
 .sub-nav li a:hover {
-  color: #737373;
+  color: #595959;
 }
 /* line 93, ../../foundation/scss/components/_sub-nav.scss */
 .sub-nav dt.active a,

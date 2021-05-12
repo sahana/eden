@@ -6,6 +6,36 @@ div.subheading {
     padding-bottom: 5px;
 }
 
+/* Accessibility for Keyboard Users */
+button:focus-visible,
+.button:focus-visible,
+.sub-nav li a:focus-visible,
+.top-bar-section li:not(.has-form) a:not(.button):focus-visible,
+.top-bar-section ul li:focus-visible,
+.top-bar-section ul li a:focus-visible,
+.top-bar-section ul li > a:focus-visible,
+.top-bar-section ul li:hover:not(.has-form) > a:focus-visible,
+.top-bar-section .dropdown li:not(.has-form):not(.active) > a:not(.button):focus-visible,
+input:not([type]):focus-visible,
+input[type="text"]:focus-visible,
+input[type="password"]:focus-visible,
+input[type="date"]:focus-visible,
+input[type="datetime"]:focus-visible,
+input[type="datetime-local"]:focus-visible,
+input[type="month"]:focus-visible,
+input[type="week"]:focus-visible,
+input[type="email"]:focus-visible,
+input[type="number"]:focus-visible,
+input[type="search"]:focus-visible,
+input[type="tel"]:focus-visible,
+input[type="time"]:focus-visible,
+input[type="url"]:focus-visible,
+input[type="color"]:focus-visible,
+textarea:focus-visible {
+    background-color: #d1e6f1;
+    color: #000;
+}
+
 #login_next .anonymize-btn {
     /*font-size: 1rem;
     padding: 1rem 2rem 1.0625rem 2rem;*/

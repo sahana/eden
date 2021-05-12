@@ -198,32 +198,41 @@ body.rtl {
     }
 }
 // This simple custom grid doesn't become columns
-.medium5 {
-    width: 20%;
+.small-17 {
+    width: 14%;
 }
-// Carlisle & CVS logos include no padding of it's own, so add in via CSS to stop it standing out from the rest so much
+// Some logos include no padding of their own, so add in via CSS to stop them from standing out from the rest so much
 @media #{$small-up} {
-    .padc {
-        padding: 2px 5px 6px;
+    .padb {
+        padding: 1px 6px 7px;
     }
-    .padcvs {
-        padding: 2px 6px 15px;
+    .padc {
+        padding: 1px 5px 6px;
+    }
+    .padcl {
+        padding-top: 1px;
     }
 }
 @media #{$medium-up} {
-    .padc {
-        padding: 5px 10px 12px;
+    .padb {
+        padding: 4px 11px 13px;
     }
-    .padcvs {
-        padding: 5px 12px 30px;
+    .padc {
+        padding: 4px 10px 12px;
+    }
+    .padcl {
+        padding-top: 4px;
     }
 }
 @media #{$large-up} {
-    .padc {
-        padding: 10px 20px 25px;
+    .padb {
+        padding: 8px 21px 26px;
     }
-    .padcvs {
-        padding: 10px 25px 75px;
+    .padc {
+        padding: 8px 20px 25px;
+    }
+    .padcl {
+        padding-top: 8px;
     }
 }
 
