@@ -197,11 +197,7 @@ body.rtl {
         text-align: left;
     }
 }
-// This simple custom grid doesn't become columns
-.medium5 {
-    width: 20%;
-}
-// Carlisle & CVS logos include no padding of it's own, so add in via CSS to stop it standing out from the rest so much
+// Carlisle & CVS logos include no padding of their own, so add in via CSS to stop them from standing out from the rest so much
 @media #{$small-up} {
     .padc {
         padding: 2px 5px 6px;
