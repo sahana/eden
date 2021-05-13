@@ -58,6 +58,7 @@ from gluon.tools import callback, fetch
 from s3compat import basestring, pickle, urllib2, urlopen, BytesIO, StringIO, HTTPError, URLError
 from s3dal import Field
 from .s3datetime import s3_utc
+from .s3fields import S3Represent
 from .s3rest import S3Method, S3Request
 from .s3resource import S3Resource
 from .s3utils import s3_get_foreign_key, s3_has_foreign_key, \
