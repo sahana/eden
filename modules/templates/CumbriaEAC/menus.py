@@ -197,6 +197,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #M("Roles", f="group"),
                         #M("Membership", f="membership"),
                     ),
+                    M("Audit Log", c="admin", f="audit"),
                     #M("Consent Tracking", c="admin", link=False, check=consent_tracking)(
                     M("Consent Tracking", c="admin", link=False)(
                         M("Processing Types", f="processing_type"),

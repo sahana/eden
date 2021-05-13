@@ -1240,7 +1240,7 @@ class auth_UserRepresent(S3Represent):
             * Name
             * Phone Number
             * Email address
-        using the highest-priority contact info   available (and permitted)
+        using the highest-priority contact info available (and permitted)
     """
 
     def __init__(self,

@@ -536,6 +536,23 @@ def user_create_onvalidation (form):
     return True
 
 # =============================================================================
+# Audit
+#
+@auth.s3_requires_membership(1)
+def audit():
+    """ Audit Logs: RESTful CRUD Controller """
+
+    # Ensure table is visible
+    settings.security.audit_write = True
+    from s3 import S3Audit
+    S3Audit().__init__()
+
+    # Represent the user_id column
+    db.s3_audit.user_id.represent = s3db.auth_UserRepresent()
+
+    return s3_rest_controller("s3", "audit")
+
+# =============================================================================
 # Consent Tracking
 #
 @auth.s3_requires_membership(1)
@@ -1295,7 +1312,39 @@ def translate():
     return output
 
 # =============================================================================
-# Selenium Test Results
+@auth.s3_requires_membership(1)
+def task():
+    """
+        Scheduler tasks: RESTful CRUD controller
+    """
+
+    s3db.add_components("scheduler_task",
+                        scheduler_run = "task_id",
+                        )
+    def prep(r):
+
+        if r.component_name == "run":
+
+            component = r.component
+
+            ctable = component.table
+
+            field = ctable.traceback
+            from s3 import s3_text_represent
+            field.represent = s3_text_represent
+
+            component.configure(insertable = False,
+                                editable = False,
+                                )
+
+        s3task.configure_tasktable_crud(task="", status_writable=True)
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller("scheduler", "task",
+                              rheader = s3db.s3_scheduler_rheader,
+                              )
+
 # =============================================================================
 def result():
     """
@@ -1355,40 +1404,6 @@ def result():
               }
 
     return output
-
-# =============================================================================
-@auth.s3_requires_membership(1)
-def task():
-    """
-        Scheduler tasks: RESTful CRUD controller
-    """
-
-    s3db.add_components("scheduler_task",
-                        scheduler_run = "task_id",
-                        )
-    def prep(r):
-
-        if r.component_name == "run":
-
-            component = r.component
-
-            ctable = component.table
-
-            field = ctable.traceback
-            from s3 import s3_text_represent
-            field.represent = s3_text_represent
-
-            component.configure(insertable = False,
-                                editable = False,
-                                )
-
-        s3task.configure_tasktable_crud(task="", status_writable=True)
-        return True
-    s3.prep = prep
-
-    return s3_rest_controller("scheduler", "task",
-                              rheader = s3db.s3_scheduler_rheader,
-                              )
 
 # =============================================================================
 # Configurations

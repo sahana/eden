@@ -963,6 +963,7 @@ def s3_auth_user_represent_name(user_id, row=None):
         table = db.auth_user
         row = db(table.id == user_id).select(table.first_name,
                                              table.last_name,
+                                             cache = current.s3db.cache,
                                              limitby = (0, 1),
                                              ).first()
     try:

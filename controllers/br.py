@@ -439,7 +439,8 @@ def person():
 
             # Represent the note author by their name (rather than email)
             ntable = r.component.table
-            ntable.modified_by.represent = s3base.s3_auth_user_represent_name
+            ntable.modified_by.represent = s3db.auth_UserRepresent(show_email = False,
+                                                                   show_link = False)
 
         return True
     s3.prep = prep

@@ -11,10 +11,15 @@ class index(S3CustomController):
 
     def __call__(self):
 
+        auth = current.auth
+
+        if auth.s3_has_role("POLICE", include_admin=False):
+            # Police don't manage Shelters, they are interested in Clients
+            redirect(URL(c="pr", f="person", args="summary"))
+
         output = {}
 
         T = current.T
-        auth = current.auth
         db = current.db
         s3db = current.s3db
         s3 = current.response.s3

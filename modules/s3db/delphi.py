@@ -125,12 +125,13 @@ class S3DelphiModel(S3Model):
                                                         ),
                                    )
 
+        user_represent = self.auth_UserRepresent(show_link = False)
         user_id = S3ReusableField("user_id", current.auth.settings.table_user,
                                   notnull=True,
                                   label = T("User"),
-                                  represent = s3_auth_user_represent,
+                                  represent = user_represent,
                                   requires = IS_ONE_OF(db, "auth_user.id",
-                                                       s3_auth_user_represent),
+                                                       user_represent),
                                   )
 
         # ---------------------------------------------------------------------

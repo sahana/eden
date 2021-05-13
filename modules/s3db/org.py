@@ -3734,6 +3734,7 @@ class S3SiteEventModel(S3Model):
                       2: T("Check-in"),
                       3: T("Check-out"),
                       4: T("Obsolete Change"),
+                      5: T("Data Export"),
                       }
 
         site_status_opts = self.org_site_status_opts
@@ -8666,7 +8667,8 @@ def org_customise_org_resource_fields(method):
                    ]
 
     if method in ("datalist", "profile"):
-        table.modified_by.represent = s3_auth_user_represent_name
+        table.modified_by.represent = s3db.auth_UserRepresent(show_email = False,
+                                                              show_link = False)
         table.modified_on.represent = lambda dt: \
                                 S3DateTime.datetime_represent(dt, utc=True)
         list_fields += ["modified_by",

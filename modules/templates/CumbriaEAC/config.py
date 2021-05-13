@@ -89,6 +89,8 @@ def config(settings):
 
     settings.security.policy = 5 # Controller, Function & Table ACLs
 
+    settings.ui.export_formats = ("xls",)
+
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
@@ -496,7 +498,16 @@ def config(settings):
                     org = ""
             else:
                 org = ""
-                tabs.insert(1, (T("Next of Kin"), "nok"))
+                if current.auth.s3_has_role("POLICE", include_admin=False):
+                    # Only show NoK tab if it already has data (this role cannot create)
+                    table = current.s3db.pr_person_relation
+                    nok = current.db(table.parent_id == record.id).select(table.id,
+                                                                          limitby = (0, 1)
+                                                                          ).first()
+                    if nok:
+                        tabs.insert(1, (T("Next of Kin"), "nok"))
+                else:
+                    tabs.insert(1, (T("Next of Kin"), "nok"))
                 #tabs.insert(2, (T("Household"), None, {}, "household"))
                 tabs.insert(2, (T("Household"), "household"))
 
@@ -619,7 +630,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_cr_shelter_resource(r, tablename):
 
-        from gluon import DIV, IS_EMPTY_OR, IS_IN_SET
+        from gluon import DIV, IS_EMPTY_OR, IS_IN_SET, IS_LENGTH, IS_NOT_EMPTY, IS_NOT_IN_DB
 
         from s3 import S3Represent, S3SQLCustomForm, S3LocationSelector, \
                        S3TextFilter, S3LocationFilter, S3OptionsFilter, S3RangeFilter
@@ -636,6 +647,10 @@ def config(settings):
             del shelter_status_opts[6]
 
         table = s3db.cr_shelter
+        table.name.requires = [IS_NOT_EMPTY(),
+                               IS_LENGTH(64),
+                               IS_NOT_IN_DB(current.db, "cr_shelter.name"),
+                               ]
         f = table.shelter_type_id
         f.label = T("Type")
         f.comment = None # No inline Create
@@ -959,6 +974,27 @@ def config(settings):
                 result = True
 
             if r.component_name == "human_resource_site":
+                if not r.interactive:
+                    auth = current.auth
+                    output_format = auth.permission.format
+                    if output_format not in ("aadata", "json", "xls"):
+                        # Block Exports
+                        return False
+                    if output_format == "xls":
+                        # Add Site Event Log
+                        s3db.org_site_event.insert(site_id = r.record.site_id,
+                                                   event = 5, # Data Export
+                                                   comments = "Staff",
+                                                   )
+                        # Log in Global Log
+                        settings.security.audit_write = True
+                        from s3 import S3Audit
+                        S3Audit().__init__()
+                        s3db.s3_audit.insert(timestmp = r.now,
+                                             user_id = auth.user.id,
+                                             method = "Data Export",
+                                             representation = "Staff",
+                                             )
 
                 if r.method == "create":
                     s3.crud_strings["cr_shelter"].title_display = T("Check-in Staff to %(shelter)s") % \
@@ -977,15 +1013,10 @@ def config(settings):
                 # Assigning Staff Checks them in
                 def staff_check_in(form):
 
+                    db = current.db
                     form_vars_get = form.vars.get
                     human_resource_id = form_vars_get("human_resource_id")
 
-                    db = current.db
-                    stable = s3db.cr_shelter
-                    shelter = db(stable.id == r.id).select(stable.site_id,
-                                                           limitby = (0, 1)
-                                                           ).first()
-                    site_id = shelter.site_id
                     htable = s3db.hrm_human_resource
                     staff = db(htable.id == human_resource_id).select(htable.id,
                                                                       htable.person_id,
@@ -993,6 +1024,7 @@ def config(settings):
                                                                       ).first()
 
                     # Set the site_id in the Staff record
+                    site_id = r.record.site_id
                     staff.update_record(site_id = site_id)
 
                     # Delete old hrm_human_resource_site records
@@ -1015,6 +1047,26 @@ def config(settings):
 
             elif r.component_name == "human_resource":
                 # UNUSED
+                if not r.interactive:
+                    output_format = current.auth.permission.format
+                    if output_format not in ("aadata", "json", "xls"):
+                        # Block Exports
+                        return False
+                    if output_format == "xls":
+                        # Add Site Event Log
+                        s3db.org_site_event.insert(site_id = r.record.site_id,
+                                                   event = 5, # Data Export
+                                                   comments = "Staff",
+                                                   )
+                        # Log in Global Log
+                        settings.security.audit_write = True
+                        from s3 import S3Audit
+                        S3Audit().__init__()
+                        s3db.s3_audit.insert(timestmp = r.now,
+                                             user_id = auth.user.id,
+                                             method = "Data Export",
+                                             representation = "Staff",
+                                             )
 
                 # Filtered components
                 s3db.add_components("pr_person",
@@ -1033,11 +1085,7 @@ def config(settings):
 
                 # Adding Staff here Checks them in
                 def staff_check_in(form):
-                    table = s3db.cr_shelter
-                    shelter = current.db(table.id == r.id).select(table.site_id,
-                                                                  limitby = (0, 1)
-                                                                  ).first()
-                    s3db.org_site_event.insert(site_id = shelter.site_id,
+                    s3db.org_site_event.insert(site_id = r.record.site_id,
                                                person_id = form.vars.get("person_id"),
                                                event = 2, # Checked-In
                                                comments = "Staff",
@@ -1048,27 +1096,41 @@ def config(settings):
                                          )
 
             elif r.component_name == "client":
+                if not r.interactive:
+                    output_format = current.auth.permission.format
+                    if output_format not in ("aadata", "json", "xls"):
+                        # Block Exports
+                        return False
+                    if output_format == "xls":
+                        # Add Site Event Log
+                        s3db.org_site_event.insert(site_id = r.record.site_id,
+                                                   event = 5, # Data Export
+                                                   comments = "Clients",
+                                                   )
+                        # Log in Global Log
+                        settings.security.audit_write = True
+                        from s3 import S3Audit
+                        S3Audit().__init__()
+                        s3db.s3_audit.insert(timestmp = r.now,
+                                             user_id = auth.user.id,
+                                             method = "Data Export",
+                                             representation = "Clients",
+                                             )
+
                 s3.crud_strings["cr_shelter"].title_display = T("Register Client to %(shelter)s") % \
                                                                             {"shelter": r.record.name}
 
                 # Registering Client Checks them in
                 def client_check_in(form):
-
                     form_vars_get = form.vars.get
                     person_id = form_vars_get("person_id")
-
-                    db = current.db
-                    stable = s3db.cr_shelter
-                    shelter = db(stable.id == r.id).select(stable.site_id,
-                                                           limitby = (0, 1)
-                                                           ).first()
-                    site_id = shelter.site_id
+                    site_id = r.record.site_id
 
                     # Delete old cr_shelter_registration records
                     ltable = s3db.cr_shelter_registration
                     query = (ltable.person_id == person_id) & \
                             (ltable.id != form_vars_get("id"))
-                    db(query).delete()
+                    current.db(query).delete()
 
                     # Add Site Event Log
                     s3db.org_site_event.insert(site_id = site_id,
@@ -1317,6 +1379,8 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
 
+        s3 = current.response.s3
+
         # Filtered components
         current.s3db.add_components("pr_person",
                                     pr_person_tag = ({"name": "car",
@@ -1327,10 +1391,36 @@ def config(settings):
                                                      ),
                                     )
 
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            if not r.interactive:
+                output_format = current.auth.permission.format
+                if output_format not in ("aadata", "json", "xls"):
+                    # Block Exports
+                    return False
+                if output_format == "xls":
+                    # Log
+                    settings.security.audit_write = True
+                    from s3 import S3Audit
+                    S3Audit().__init__()
+                    s3db.s3_audit.insert(timestmp = r.now,
+                                         user_id = auth.user.id,
+                                         method = "Data Export",
+                                         representation = "Staff",
+                                         )
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+            return result
+        s3.prep = prep
+
         return attr
 
     settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
-
 
     # -------------------------------------------------------------------------
     def customise_hrm_human_resource_site_resource(r, tablename):
@@ -1391,9 +1481,36 @@ def config(settings):
 
         from s3 import S3Represent
 
-        current.s3db.org_site_event.status.represent = S3Represent(options = cr_shelter_status_opts)
+        s3db = current.s3db
+
+        table = s3db.org_site_event
+        table.status.represent = S3Represent(options = cr_shelter_status_opts)
+        table.created_by.readable = True
+
+        s3db.configure(tablename,
+                       list_fields = ["date",
+                                      (T("User"), "created_by"),
+                                      "event",
+                                      "comments",
+                                      "person_id",
+                                      "status",
+                                      ],
+                       )
 
     settings.customise_org_site_event_resource = customise_org_site_event_resource
+
+    # -------------------------------------------------------------------------
+    def customise_s3_audit_resource(r, tablename):
+
+        current.s3db.configure(tablename,
+                               list_fields = [(T("Date"), "timestmp"),
+                                              (T("User"), "user_id"),
+                                              (T("Event"), "method"),
+                                              (T("Comments"), "representation"),
+                                              ],
+                               )
+
+    settings.customise_s3_audit_resource = customise_s3_audit_resource
 
     # -------------------------------------------------------------------------
     def pr_household_postprocess(form, parent_id):
@@ -1730,13 +1847,6 @@ def config(settings):
             # Individual settings for specific tag components
             components_get = s3db.resource(tablename).components.get
 
-            #integer_represent = IS_INT_AMOUNT.represent
-
-            #congregations = components_get("congregations")
-            #f = congregations.table.value
-            #f.represent = integer_represent
-            #f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
-
             pets = components_get("pets")
             f = pets.table.value
             f.requires = IS_EMPTY_OR(IS_IN_SET(("Y", "N")))
@@ -1938,8 +2048,11 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
+        auth = current.auth
         s3db = current.s3db
         s3 = current.response.s3
+
+        output_format = auth.permission.format
 
         # Redefine as multiple=False
         s3db.add_components("pr_person",
@@ -1960,6 +2073,21 @@ def config(settings):
         # Custom prep
         standard_prep = s3.prep
         def prep(r):
+            if not r.interactive:
+                if output_format not in ("aadata", "json", "xls"):
+                    # Block Exports
+                    return False
+                if output_format == "xls":
+                    # Log
+                    settings.security.audit_write = True
+                    from s3 import S3Audit
+                    S3Audit().__init__()
+                    s3db.s3_audit.insert(timestmp = r.now,
+                                         user_id = auth.user.id,
+                                         method = "Data Export",
+                                         representation = "Clients",
+                                         )
+
             # Call standard prep
             if callable(standard_prep):
                 result = standard_prep(r)
@@ -1978,7 +2106,17 @@ def config(settings):
                 # Next of Kin
                 s3.crud_strings["pr_person"].title_update = ""
                 
-                from s3 import S3SQLCustomForm, S3SQLInlineComponent
+                from gluon import IS_NOT_EMPTY
+                from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3LocationSelector
+
+                s3db.pr_address.location_id.widget = S3LocationSelector(levels = ("L0", "L1", "L2", "L3", "L4"),
+                                                                        required_levels = ("L0",),
+                                                                        show_address = True,
+                                                                        #address_required = True,
+                                                                        #show_postcode = True,
+                                                                        #postcode_required = True,
+                                                                        show_map = False,
+                                                                        )
 
                 # Filtered components
                 s3db.add_components("pr_person",
@@ -1989,6 +2127,11 @@ def config(settings):
                                                       },
                                                      ),
                                     )
+                # Individual settings for specific tag components
+                components_get = s3db.resource("pr_person").components.get
+
+                relationship = components_get("relationship")
+                relationship.table.value.requires = IS_NOT_EMPTY() # Mandatory as used in filters
 
                 crud_form = S3SQLCustomForm("first_name",
                                             #"middle_name",
@@ -2177,7 +2320,7 @@ def config(settings):
         s3.postp = postp
 
         attr["rheader"] = eac_rheader
-        if current.auth.permission.format == "xls":
+        if output_format == "xls":
             attr["evenodd"] = True
             attr["use_colour"] = True
 

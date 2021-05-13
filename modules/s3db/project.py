@@ -11905,7 +11905,7 @@ class S3ProjectTaskModel(S3Model):
 
             if changed:
                 table = db.project_comment
-                text = s3_auth_user_represent(current.auth.user.id)
+                text = s3db.auth_UserRepresent(show_link = False)(current.auth.user.id)
                 for var in changed:
                     text = "%s\n%s" % (text, changed[var])
                 table.insert(task_id = task_id,
@@ -13238,7 +13238,7 @@ def project_rheader(r):
 
         if record.created_by:
             creator = TR(TH("%s: " % T("Created By")),
-                         s3_auth_user_represent(record.created_by),
+                         s3db.auth_UserRepresent(show_link = False)(record.created_by),
                          )
         else:
             creator = ""

@@ -1597,7 +1597,8 @@ def cms_configure_newsfeed_post_fields():
 
     contact_field = settings.get_cms_person()
     if contact_field == "created_by":
-        table.created_by.represent = s3_auth_user_represent_name
+        table.created_by.represent = s3db.auth_UserRepresent(show_email = False,
+                                                             show_link = False)
     elif contact_field == "person_id":
         field = table.person_id
         field.readable = True

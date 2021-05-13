@@ -659,7 +659,8 @@ def newsfeed():
 
         elif r.representation == "xls":
             table.body.represent = None
-            table.created_by.represent = s3base.s3_auth_user_represent_name
+            table.created_by.represent = s3db.auth_UserRepresent(show_email = False,
+                                                                 show_link = False)
             #table.created_on.represent = datetime_represent
             utable = auth.settings.table_user
             utable.organisation_id.represent = s3db.org_organisation_represent
@@ -689,10 +690,11 @@ def newsfeed():
         elif r.representation == "plain":
             # Map Popups
             table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
-            table.created_by.represent = s3base.s3_auth_user_represent_name
+            table.created_by.represent = s3db.auth_UserRepresent(show_email = False,
+                                                                 show_link = False)
             # Used by default popups
             series = table.series_id.represent(r.record.series_id)
-            s3.crud_strings["cms_post"].title_display = "%(series)s Details" % dict(series=series)
+            s3.crud_strings["cms_post"].title_display = "%(series)s Details" % {"series": series}
             s3db.configure("cms_post",
                            popup_url = "",
                            )

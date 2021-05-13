@@ -5986,10 +5986,11 @@ def config(settings):
                     if r.get_vars.get("dashboard"):
                         # Dashboard for Office Manager
                         #from dateutil.relativedelta import relativedelta
-                        from s3 import S3DateTime, s3_auth_user_represent_name, s3_fieldmethod
+                        from s3 import S3DateTime, s3_fieldmethod
 
                         etable = s3db.hrm_training_event
-                        etable.created_by.represent = s3_auth_user_represent_name
+                        etable.created_by.represent = s3db.auth_UserRepresent(show_email = False,
+                                                                              show_link = False)
                         # Represent just with Date not Datetime
                         date_represent = S3DateTime.date_represent
                         etable.start_date.represent = date_represent

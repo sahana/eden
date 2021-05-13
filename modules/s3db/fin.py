@@ -76,7 +76,8 @@ class FinExpensesModel(S3Model):
                           s3_comments(),
                           *s3_meta_fields(),
                           on_define = lambda table: \
-                            [table.created_by.set_attributes(represent = s3_auth_user_represent_name),
+                            [table.created_by.set_attributes(represent = self.auth_UserRepresent(show_email = False,
+                                                                                                 show_link = False)),
                              #table.created_on.set_attributes(represent = S3DateTime.datetime_represent),
                              ]
                           )
