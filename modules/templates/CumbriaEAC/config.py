@@ -1083,7 +1083,10 @@ def config(settings):
             else:
                 result = True
 
-            shelter_name = r.record.name
+            if r.id:
+                shelter_name = r.record.name
+            else:
+                shelter_name = None
 
             #if current.auth.s3_has_role("SHELTER_ADMIN"):
             #    # Consistent Header across tabs
