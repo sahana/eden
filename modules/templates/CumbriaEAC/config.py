@@ -492,9 +492,9 @@ def config(settings):
                 occupancy = TR(TH("%s: " % table.population_day.label),
                                "%s / %s" % (record.population_day, record.capacity_day),
                                )
-            rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
-                                   record.name,
-                                   ),
+            rheader = DIV(TABLE(#TR(TH("%s: " % table.name.label),
+                                #   record.name,
+                                #   ),
                                 TR(TH("%s: " % location_id.label),
                                    location_id.represent(record.location_id),
                                    ),
@@ -1083,9 +1083,12 @@ def config(settings):
             else:
                 result = True
 
-            if current.auth.s3_has_role("SHELTER_ADMIN"):
-                # Consistent Header across tabs
-                s3.crud_strings["cr_shelter"].title_display = T("Manage Shelter")
+            shelter_name = r.record.name
+
+            #if current.auth.s3_has_role("SHELTER_ADMIN"):
+            #    # Consistent Header across tabs
+            #    s3.crud_strings["cr_shelter"].title_display = T("Manage Shelter")
+            s3.crud_strings["cr_shelter"].title_display = shelter_name
 
             if r.component_name == "human_resource_site":
                 if not r.interactive:
@@ -1112,7 +1115,7 @@ def config(settings):
 
                 if r.method == "create":
                     s3.crud_strings["cr_shelter"].title_display = T("Check-in Staff to %(shelter)s") % \
-                                                                            {"shelter": r.record.name}
+                                                                            {"shelter": shelter_name}
 
                 # Filtered components
                 s3db.add_components("pr_person",
@@ -1233,7 +1236,7 @@ def config(settings):
 
                 if r.method == "create":
                     s3.crud_strings["cr_shelter"].title_display = T("Register Client to %(shelter)s") % \
-                                                                            {"shelter": r.record.name}
+                                                                            {"shelter": shelter_name}
 
                 from s3 import S3TextFilter, S3OptionsFilter, S3DateFilter
 
@@ -1308,6 +1311,7 @@ def config(settings):
                                          )
             else:
                 s3.crud_strings["cr_shelter"].title_update = T("Manage Shelter")
+                s3.crud_strings["cr_shelter"].title_update = shelter_name
 
             return result
         s3.prep = prep

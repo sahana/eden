@@ -180,6 +180,7 @@ def job_title():
         return True
     s3.prep = prep
 
+    # Only show Job Titles for Volunteers (or Both)
     s3.filter = FS("human_resource.type").belongs((2, 3))
 
     if not auth.s3_has_role("ADMIN"):

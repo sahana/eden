@@ -276,8 +276,7 @@ class HRModel(S3Model):
                            label = T("Type"),
                            readable = hrm_types,
                            writable = hrm_types,
-                           represent = lambda opt: \
-                            hrm_type_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = hrm_type_opts),
                            requires = IS_IN_SET(hrm_type_opts),
                            ),
                      s3_comments(comment = None,
