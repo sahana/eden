@@ -472,6 +472,18 @@ def service_location():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def service_mode():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def booking_mode():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def site_location():
     """ RESTful CRUD controller """
 

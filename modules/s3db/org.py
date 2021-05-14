@@ -27,34 +27,34 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3OrganisationModel",
-           "S3OrganisationNameModel",
-           "S3OrganisationBranchModel",
-           "S3OrganisationCapacityModel",
-           "S3OrganisationGroupModel",
-           "S3OrganisationGroupPersonModel",
-           "S3OrganisationGroupTeamModel",
-           "S3OrganisationLocationModel",
-           "S3OrganisationOrganisationModel",
-           "S3OrganisationResourceModel",
-           "S3OrganisationSectorModel",
-           "S3OrganisationServiceModel",
-           "S3OrganisationTagModel",
-           "S3OrganisationTeamModel",
-           "S3OrganisationTypeTagModel",
-           "S3SiteModel",
-           "S3SiteDetailsModel",
-           "S3SiteEventModel",
-           "S3SiteGroupModel",
-           "S3SiteNameModel",
-           "S3SiteShiftModel",
-           "S3SiteTagModel",
-           "S3SiteLocationModel",
-           "S3FacilityModel",
+__all__ = ("OrgOrganisationModel",
+           "OrgOrganisationNameModel",
+           "OrgOrganisationBranchModel",
+           "OrgOrganisationCapacityModel",
+           "OrgOrganisationGroupModel",
+           "OrgOrganisationGroupPersonModel",
+           "OrgOrganisationGroupTeamModel",
+           "OrgOrganisationLocationModel",
+           "OrgOrganisationOrganisationModel",
+           "OrgOrganisationResourceModel",
+           "OrgOrganisationSectorModel",
+           "OrgServiceModel",
+           "OrgOrganisationTagModel",
+           "OrgOrganisationTeamModel",
+           "OrgOrganisationTypeTagModel",
+           "OrgSiteModel",
+           "OrgSiteDetailsModel",
+           "OrgSiteEventModel",
+           "OrgSiteGroupModel",
+           "OrgSiteNameModel",
+           "OrgSiteShiftModel",
+           "OrgSiteTagModel",
+           "OrgSiteLocationModel",
+           "OrgFacilityModel",
+           "OrgRoomModel",
+           "OrgOfficeModel",
+           "OrgOfficeTypeTagModel",
            "org_facility_rheader",
-           "S3RoomModel",
-           "S3OfficeModel",
-           "S3OfficeTypeTagModel",
            "org_organisation_logo",
            "org_organisation_address",
            "org_parents",
@@ -93,7 +93,7 @@ from s3layouts import S3PopupLink
 SEPARATORS = (",", ":")
 
 # =============================================================================
-class S3OrganisationModel(S3Model):
+class OrgOrganisationModel(S3Model):
     """
         Organisations
     """
@@ -1184,7 +1184,7 @@ class S3OrganisationModel(S3Model):
         return json.dumps(output, separators=SEPARATORS)
 
 # =============================================================================
-class S3OrganisationNameModel(S3Model):
+class OrgOrganisationNameModel(S3Model):
     """
         Organsiation Names model
         - local names/acronyms for Organisations
@@ -1226,7 +1226,7 @@ class S3OrganisationNameModel(S3Model):
         return {}
 
 # =============================================================================
-class S3OrganisationBranchModel(S3Model):
+class OrgOrganisationBranchModel(S3Model):
     """
         Organisation Branches
     """
@@ -1380,7 +1380,7 @@ class S3OrganisationBranchModel(S3Model):
                                             organisation_type_id = t,
                                             )
                     form = Storage(vars = Storage(id = link_id))
-                    S3OrganisationModel.org_organisation_organisation_type_onaccept(link_id)
+                    OrgOrganisationModel.org_organisation_organisation_type_onaccept(link_id)
 
                 # Inherit Org Sectors
                 ltable = s3db.org_sector_organisation
@@ -1429,7 +1429,7 @@ class S3OrganisationBranchModel(S3Model):
             org_update_affiliations("org_organisation_branch", record)
 
 # =============================================================================
-class S3OrganisationCapacityModel(S3Model):
+class OrgOrganisationCapacityModel(S3Model):
     """
         (Branch) Organisational Capacity Assessment
         - Flexible Questions (Dynamic Data Model)
@@ -1527,7 +1527,7 @@ class S3OrganisationCapacityModel(S3Model):
         return {}
 
 # =============================================================================
-class S3OrganisationGroupModel(S3Model):
+class OrgOrganisationGroupModel(S3Model):
     """
         Organisation Group Model
         - 'Coalitions' or 'Networks'
@@ -1773,7 +1773,7 @@ class S3OrganisationGroupModel(S3Model):
             org_update_affiliations("org_group_membership", record)
 
 # =============================================================================
-class S3OrganisationGroupPersonModel(S3Model):
+class OrgOrganisationGroupPersonModel(S3Model):
     """
         Link table between Organisation Groups & Persons
     """
@@ -1857,7 +1857,7 @@ class S3OrganisationGroupPersonModel(S3Model):
         return {}
 
 # =============================================================================
-class S3OrganisationGroupTeamModel(S3Model):
+class OrgOrganisationGroupTeamModel(S3Model):
     """
         Link table between Organisation Groups & Teams
     """
@@ -1927,7 +1927,7 @@ class S3OrganisationGroupTeamModel(S3Model):
                                             )
 
 # =============================================================================
-class S3OrganisationLocationModel(S3Model):
+class OrgOrganisationLocationModel(S3Model):
     """
         Organisation Location Model
         - Locations served by an Organisation
@@ -1978,7 +1978,7 @@ class S3OrganisationLocationModel(S3Model):
         return {}
 
 # =============================================================================
-class S3OrganisationOrganisationModel(S3Model):
+class OrgOrganisationOrganisationModel(S3Model):
     """
         Link table between Organisations & Organisations
         - can be used to provide non-hierarchical relationships
@@ -2020,7 +2020,7 @@ class S3OrganisationOrganisationModel(S3Model):
         return {}
 
 # =============================================================================
-class S3OrganisationResourceModel(S3Model):
+class OrgOrganisationResourceModel(S3Model):
     """
         Organisation Resource Model
         - depends on Stats module
@@ -2180,7 +2180,7 @@ class S3OrganisationResourceModel(S3Model):
         return {}
 
 # =============================================================================
-class S3OrganisationSectorModel(S3Model):
+class OrgOrganisationSectorModel(S3Model):
     """
         Organisation Sector Model
     """
@@ -2505,7 +2505,7 @@ class S3OrganisationSectorModel(S3Model):
     #        return current.messages.UNKNOWN_OPT
 
 # =============================================================================
-class S3OrganisationServiceModel(S3Model):
+class OrgServiceModel(S3Model):
     """
         Organisation Service Model
     """
@@ -2516,6 +2516,10 @@ class S3OrganisationServiceModel(S3Model):
              "org_service_site",
              "org_service_location",
              #"org_service_location_service",
+             "org_booking_mode",
+             "org_booking_mode_id",
+             "org_service_mode",
+             "org_service_mode_id",
              )
 
     def model(self):
@@ -2856,9 +2860,9 @@ class S3OrganisationServiceModel(S3Model):
         service_location_id = S3ReusableField("service_location_id",
                                               "reference %s" % tablename,
                                               ondelete = "CASCADE",
-                                              requires = IS_ONE_OF(current.db,
+                                              requires = IS_ONE_OF(db,
                                                             "org_service_location.id",
-                                                         ),
+                                                            ),
                                               )
 
 
@@ -2881,23 +2885,102 @@ class S3OrganisationServiceModel(S3Model):
                   )
 
         # ---------------------------------------------------------------------
+        # Modes how services can be booked (services, sites, bookings)
+        # - generic lookup table, e.g. phone, email, website, drop-in...
+        #
+        tablename = "org_booking_mode"
+        define_table(tablename,
+                     Field("name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields()
+                     )
+
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Booking Mode"),
+            title_display = T("Booking Mode Details"),
+            title_list = T("Booking Modes"),
+            title_update = T("Edit Booking Mode"),
+            title_upload = T("Import Booking Modes"),
+            label_list_button = T("List Booking Modes"),
+            label_delete_button = T("Delete Booking Mode"),
+            msg_record_created = T("Booking Mode added"),
+            msg_record_modified = T("Booking Mode updated"),
+            msg_record_deleted = T("Booking Mode deleted"),
+            msg_list_empty = T("No Booking Modes currently registered"))
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        booking_mode_id = S3ReusableField("booking_mode_id",
+                                          "reference %s" % tablename,
+                                          label = T("Booking Mode"),
+                                          ondelete = "SET NULL",
+                                          represent = represent,
+                                          requires = IS_EMPTY_OR(IS_ONE_OF(db,
+                                                        "%s.id" % tablename,
+                                                        represent,
+                                                        )),
+                                          )
+
+        # ---------------------------------------------------------------------
+        # Modes of Service (services, sites, teams)
+        # - generic lookup table, e.g. on-premises, call-out/mobile, standby,
+        #   drive-through...
+        #
+        tablename = "org_service_mode"
+        define_table(tablename,
+                     Field("name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields()
+                     )
+
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Service Mode"),
+            title_display = T("Service Mode Details"),
+            title_list = T("Service Modes"),
+            title_update = T("Edit Service Mode"),
+            title_upload = T("Import Service Modes"),
+            label_list_button = T("List Service Modes"),
+            label_delete_button = T("Delete Service Mode"),
+            msg_record_created = T("Service Mode added"),
+            msg_record_modified = T("Service Mode updated"),
+            msg_record_deleted = T("Service Mode deleted"),
+            msg_list_empty = T("No Service Modes currently defined"))
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        service_mode_id = S3ReusableField("service_mode_id",
+                                          "reference %s" % tablename,
+                                          label = T("Mode of Service"),
+                                          ondelete = "SET NULL",
+                                          represent = represent,
+                                          requires = IS_EMPTY_OR(IS_ONE_OF(db,
+                                                        "%s.id" % tablename,
+                                                        represent,
+                                                        )),
+                                          )
+
+        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
         return {"org_service_id": service_id,
-                }
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def defaults():
-        """ Safe defaults for names in case the module is disabled """
-
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False,
-                                )
-
-        return {"org_service_id": lambda name="service_id", **attr: \
-                                         dummy(name, **attr),
+                "org_booking_mode_id": booking_mode_id,
+                "org_service_mode_id": service_mode_id,
                 }
 
     # -------------------------------------------------------------------------
@@ -2995,7 +3078,7 @@ def org_service_root_service(service_id):
     return new_root
 
 # =============================================================================
-class S3OrganisationTagModel(S3Model):
+class OrgOrganisationTagModel(S3Model):
     """
         Organisation Tags
     """
@@ -3040,7 +3123,7 @@ class S3OrganisationTagModel(S3Model):
         return {}
 
 # =============================================================================
-class S3OrganisationTeamModel(S3Model):
+class OrgOrganisationTeamModel(S3Model):
     """
         Link table between Organisations & Teams
     """
@@ -3103,7 +3186,7 @@ class S3OrganisationTeamModel(S3Model):
         org_update_affiliations("org_organisation_team", row.id)
 
 # =============================================================================
-class S3OrganisationTypeTagModel(S3Model):
+class OrgOrganisationTypeTagModel(S3Model):
     """
         Organisation Type Tags
     """
@@ -3145,7 +3228,7 @@ class S3OrganisationTypeTagModel(S3Model):
         return {}
 
 # =============================================================================
-class S3SiteModel(S3Model):
+class OrgSiteModel(S3Model):
     """
         Site Super-Entity
     """
@@ -3294,12 +3377,14 @@ class S3SiteModel(S3Model):
                                         "joinby": "site_id",
                                         },
 
-                       # Status
+                       # Details and Status
+                       org_site_details = {"joinby": "site_id",
+                                           "multiple": False,
+                                           },
                        org_site_status = {"name": "status",
                                           "joinby": "site_id",
                                           "multiple": False,
                                           },
-
                        # Services
                        org_service = {"link": "org_service_site",
                                       "joinby": "site_id",
@@ -3311,12 +3396,10 @@ class S3SiteModel(S3Model):
                        org_site_event = {"name": "event",
                                          "joinby": "site_id",
                                          },
-
                        # Tags
                        org_site_tag = {"name": "tag",
                                        "joinby": "site_id",
                                        },
-
                        # Assets
                        asset_asset = "site_id",
 
@@ -3636,12 +3719,12 @@ class S3SiteModel(S3Model):
         return json.dumps(output, separators=SEPARATORS)
 
 # =============================================================================
-class S3SiteDetailsModel(S3Model):
+class OrgSiteDetailsModel(S3Model):
     """ Extra optional details for Sites """
 
     names = ("org_site_status",
              "org_site_status_opts",
-             "org_site_org_group",
+             "org_site_details",
              )
 
     def model(self):
@@ -3712,12 +3795,37 @@ class S3SiteDetailsModel(S3Model):
             msg_list_empty = T("There is no status for this %(site_label)s yet. Add %(site_label)s Status.") % {"site_label": site_label},
             )
 
+        # ---------------------------------------------------------------------
+        # Site Details Table
+        # - optional, context-specific attributes of sites
+        #
+        tablename = "org_site_details"
+        self.define_table(tablename,
+                          # Component not instance
+                          self.super_link("site_id", "org_site"),
+                          self.org_service_mode_id(
+                              readable = False,
+                              writable = False,
+                              ),
+                          self.org_booking_mode_id(
+                              readable = False,
+                              writable = False,
+                              ),
+                          # Advice on authorisation of service
+                          Field("authorisation_advice", "text",
+                                label = T("Service Authorisation Advice"),
+                                readable = False,
+                                writable = False,
+                                ),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         return {"org_site_status_opts": site_status_opts,
                 }
 
 # =============================================================================
-class S3SiteEventModel(S3Model):
+class OrgSiteEventModel(S3Model):
     """
         Events for Sites
         - Check-In/Check-Out
@@ -3782,7 +3890,7 @@ class S3SiteEventModel(S3Model):
         return {}
 
 # =============================================================================
-class S3SiteGroupModel(S3Model):
+class OrgSiteGroupModel(S3Model):
     """ Link Sites to Org Groups """
 
     names = ("org_site_org_group",
@@ -3806,7 +3914,7 @@ class S3SiteGroupModel(S3Model):
         return {}
 
 # =============================================================================
-class S3SiteNameModel(S3Model):
+class OrgSiteNameModel(S3Model):
     """
         Site Names model
         - local names/acronyms for Sites/Facilities
@@ -3844,7 +3952,7 @@ class S3SiteNameModel(S3Model):
         return {}
 
 # =============================================================================
-class S3SiteShiftModel(S3Model):
+class OrgSiteShiftModel(S3Model):
     """
         Site Shifts model
     """
@@ -3886,7 +3994,7 @@ class S3SiteShiftModel(S3Model):
         return {}
 
 # =============================================================================
-class S3SiteTagModel(S3Model):
+class OrgSiteTagModel(S3Model):
     """
         Site Tags
     """
@@ -3934,7 +4042,7 @@ class S3SiteTagModel(S3Model):
         return {}
 
 # =============================================================================
-class S3SiteLocationModel(S3Model):
+class OrgSiteLocationModel(S3Model):
     """
         Site Location Model
         - Locations served by a Site/Facility
@@ -3999,7 +4107,7 @@ class S3SiteLocationModel(S3Model):
         return {}
 
 # =============================================================================
-class S3FacilityModel(S3Model):
+class OrgFacilityModel(S3Model):
     """
         Generic Site
     """
@@ -4664,7 +4772,7 @@ def org_facility_rheader(r, tabs=None):
     return rheader
 
 # =============================================================================
-class S3RoomModel(S3Model):
+class OrgRoomModel(S3Model):
     """
         Rooms are a location within a Site
         - used by Asset module
@@ -4747,7 +4855,7 @@ class S3RoomModel(S3Model):
                 }
 
 # =============================================================================
-class S3OfficeModel(S3Model):
+class OrgOfficeModel(S3Model):
 
     names = ("org_office",
              "org_office_type",
@@ -5079,7 +5187,7 @@ class S3OfficeModel(S3Model):
         org_update_affiliations("org_office", form.vars)
 
 # =============================================================================
-class S3OfficeTypeTagModel(S3Model):
+class OrgOfficeTypeTagModel(S3Model):
     """
         Office Type Tags
     """
@@ -5303,8 +5411,7 @@ def org_root_organisation_name(organisation_id):
         # This is the root org
         row = db(otable.id == organisation_id).select(otable.name,
                                                       limitby=(0, 1)).first()
-        if row:
-            return row.name
+        return row.name if row else None
 
 # =============================================================================
 def org_organisation_requires(required = False,
@@ -6114,14 +6221,13 @@ class org_SiteCheckInMethod(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    def get_person(self, label):
+    @staticmethod
+    def get_person(label):
         """
             Get the person record for the label
 
             @param label: the PE label
         """
-
-        s3db = current.s3db
 
         # Fields to extract
         fields = ["id",
@@ -6135,16 +6241,11 @@ class org_SiteCheckInMethod(S3Method):
                   "location_id",
                   ]
 
-        query = (FS("pe_label") == label)
-        presource = s3db.resource("pr_person",
-                                  components = [],
-                                  filter = query,
-                                  )
-        rows = presource.select(fields,
-                                start = 0,
-                                limit = 1,
-                                as_rows = True,
-                                )
+        presource = current.s3db.resource("pr_person",
+                                          components = [],
+                                          filter = (FS("pe_label") == label),
+                                          )
+        rows = presource.select(fields, limit=1, as_rows=True)
 
         return rows[0] if rows else None
 
@@ -6249,7 +6350,8 @@ class org_SiteCheckInMethod(S3Method):
             return None
 
     # -------------------------------------------------------------------------
-    def check_in(self, r, person):
+    @staticmethod
+    def check_in(r, person):
         """
             Check-in the person at this site, invokes the site_check_in
             hook for the site resource
@@ -6283,7 +6385,8 @@ class org_SiteCheckInMethod(S3Method):
             site_check_in(site_id, person_id)
 
     # -------------------------------------------------------------------------
-    def check_out(self, r, person):
+    @staticmethod
+    def check_out(r, person):
         """
             Check-out the person from this site, invokes the site_check_out
             hook for the site resource
