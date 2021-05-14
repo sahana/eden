@@ -1264,6 +1264,7 @@ class S3CRUD(S3Method):
                                            _id = "%s-filter-form" % target
                                            )
                 fresource = current.s3db.resource(resource.tablename) # Use a clean resource
+                alias = resource.alias if r.component else None
                 output["list_filter_form"] = filter_form.html(fresource,
                                                               get_vars,
                                                               target = target,
