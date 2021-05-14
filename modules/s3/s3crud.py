@@ -1184,10 +1184,9 @@ class S3CRUD(S3Method):
             if filter_widgets and not hide_filter and \
                representation not in ("aadata", "dl"):
                 show_filter_form = True
-                alias = resource.alias if r.component else None
                 # Apply filter defaults (before rendering the data!)
                 from .s3filter import S3FilterForm
-                default_filters = S3FilterForm.apply_filter_defaults(r, resource, alias)
+                default_filters = S3FilterForm.apply_filter_defaults(r, resource)
             else:
                 default_filters = None
 

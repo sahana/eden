@@ -3514,7 +3514,7 @@ class S3FilterForm(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def apply_filter_defaults(request, resource, alias=None):
+    def apply_filter_defaults(request, resource):
         """
             Add default filters to resource, to be called on a multi-record
             view when a filter form is rendered the first time and before
@@ -3523,7 +3523,6 @@ class S3FilterForm(object):
 
             @param request: the request
             @param resource: the resource
-            @param alias: the resource.alias if r.component else None
 
             @return: dict with default filters (URL vars)
         """
@@ -3561,8 +3560,10 @@ class S3FilterForm(object):
             elif filter_defaults is None:
                 continue
 
+            # Use alias in selectors if looking at a component
+            filter_widget.alias = resource.alias if resource.parent else None
+
             defaults = set()
-            filter_widget.alias = alias
             variable = filter_widget.variable(resource, get_vars)
             multiple = type(variable) is list
 
