@@ -1184,9 +1184,10 @@ class S3CRUD(S3Method):
             if filter_widgets and not hide_filter and \
                representation not in ("aadata", "dl"):
                 show_filter_form = True
+                alias = resource.alias if r.component else None
                 # Apply filter defaults (before rendering the data!)
                 from .s3filter import S3FilterForm
-                default_filters = S3FilterForm.apply_filter_defaults(r, resource)
+                default_filters = S3FilterForm.apply_filter_defaults(r, resource, alias)
             else:
                 default_filters = None
 
@@ -1264,7 +1265,6 @@ class S3CRUD(S3Method):
                                            _id = "%s-filter-form" % target
                                            )
                 fresource = current.s3db.resource(resource.tablename) # Use a clean resource
-                alias = resource.alias if r.component else None
                 output["list_filter_form"] = filter_form.html(fresource,
                                                               get_vars,
                                                               target = target,

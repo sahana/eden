@@ -6537,7 +6537,7 @@ class S3ProjectPlanningModel(S3Model):
         record = db(table.id == record_id).select(table.indicator_id,
                                                   table.start_date,
                                                   table.end_date,
-                                                  limitby=(0, 1)
+                                                  limitby = (0, 1)
                                                   ).first()
         try:
             indicator_id = record.indicator_id
@@ -6553,8 +6553,8 @@ class S3ProjectPlanningModel(S3Model):
                 (table.end_date < end_date)
         date_field = table.end_date
         record = db(query).select(date_field,
-                                  limitby=(0, 1),
-                                  orderby=date_field,
+                                  limitby = (0, 1),
+                                  orderby = date_field,
                                   ).first()
         if record and record[date_field] != start_date:
             # Update this record's start_date
@@ -6567,8 +6567,8 @@ class S3ProjectPlanningModel(S3Model):
         record = db(query).select(table.id,
                                   table.start_date,
                                   date_field, # Needed for orderby on Postgres
-                                  limitby=(0, 1),
-                                  orderby=date_field,
+                                  limitby = (0, 1),
+                                  orderby = date_field,
                                   ).first()
         if record and record.start_date != end_date:
             # Update that record's start_date
@@ -6610,7 +6610,7 @@ class S3ProjectPlanningModel(S3Model):
         record = db(table.id == record_id).select(table.deleted_fk,
                                                   table.start_date,
                                                   table.end_date,
-                                                  limitby=(0, 1)
+                                                  limitby = (0, 1)
                                                   ).first()
         try:
             fks = json.loads(record.deleted_fk)
@@ -6627,8 +6627,8 @@ class S3ProjectPlanningModel(S3Model):
                 (table.end_date < end_date)
         date_field = table.end_date
         record = db(query).select(date_field,
-                                  limitby=(0, 1),
-                                  orderby=date_field,
+                                  limitby = (0, 1),
+                                  orderby = date_field,
                                   ).first()
         if record and record[date_field] != start_date:
             # Update this record's start_date
@@ -6641,8 +6641,8 @@ class S3ProjectPlanningModel(S3Model):
         record = db(query).select(table.id,
                                   table.start_date,
                                   date_field, # Needed for orderby on Postgres
-                                  limitby=(0, 1),
-                                  orderby=date_field,
+                                  limitby = (0, 1),
+                                  orderby = date_field,
                                   ).first()
         if record and record.start_date != end_date:
             # Update that record's start_date
@@ -6652,7 +6652,7 @@ class S3ProjectPlanningModel(S3Model):
         # Update Statuses
         table = s3db.project_indicator
         row = db(table.id == indicator_id).select(table.project_id,
-                                                  limitby=(0, 1)
+                                                  limitby = (0, 1)
                                                   ).first()
         try:
             project_id = row.project_id
@@ -6879,8 +6879,8 @@ class S3ProjectPlanningModel(S3Model):
                 (table.end_date < end_date)
         date_field = table.end_date
         record = db(query).select(date_field,
-                                  limitby=(0, 1),
-                                  orderby=date_field,
+                                  limitby = (0, 1),
+                                  orderby = date_field,
                                   ).first()
         if record and record[date_field] != start_date:
             # Update this record's start_date
@@ -6893,8 +6893,8 @@ class S3ProjectPlanningModel(S3Model):
         record = db(query).select(table.id,
                                   table.start_date,
                                   date_field, # Needed for orderby on Postgres
-                                  limitby=(0, 1),
-                                  orderby=date_field,
+                                  limitby = (0, 1),
+                                  orderby = date_field,
                                   ).first()
         if record and record.start_date != end_date:
             # Update that record's start_date
@@ -6931,7 +6931,7 @@ class S3ProjectPlanningModel(S3Model):
         record = db(table.id == record_id).select(table.deleted_fk,
                                                   table.start_date,
                                                   table.end_date,
-                                                  limitby=(0, 1)
+                                                  limitby = (0, 1)
                                                   ).first()
         try:
             fks = json.loads(record.deleted_fk)
@@ -6954,8 +6954,8 @@ class S3ProjectPlanningModel(S3Model):
                 (table.end_date < end_date)
         date_field = table.end_date
         record = db(query).select(date_field,
-                                  limitby=(0, 1),
-                                  orderby=date_field,
+                                  limitby = (0, 1),
+                                  orderby = date_field,
                                   ).first()
         if record and record[date_field] != start_date:
             # Update this record's start_date
@@ -6968,8 +6968,8 @@ class S3ProjectPlanningModel(S3Model):
         record = db(query).select(table.id,
                                   table.start_date,
                                   date_field, # Needed for orderby on Postgres
-                                  limitby=(0, 1),
-                                  orderby=date_field,
+                                  limitby = (0, 1),
+                                  orderby = date_field,
                                   ).first()
         if record and record.start_date != end_date:
             # Update that record's start_date
@@ -6978,7 +6978,7 @@ class S3ProjectPlanningModel(S3Model):
         # Update Statuses
         table = s3db.project_indicator_activity
         row = db(table.id == indicator_activity_id).select(table.project_id,
-                                                           limitby=(0, 1)
+                                                           limitby = (0, 1)
                                                            ).first()
         try:
             project_id = row.project_id
@@ -8160,7 +8160,7 @@ class project_SummaryReport(S3Method):
         #                        table.value,
         #                        table.target_value,
         #                        #table.comments,
-        #                        #orderby=table.end_date,
+        #                        #orderby = table.end_date,
         #                        )
         #for row in rows:
         #    date = row.end_date # Old: We just want to store the last
@@ -8753,11 +8753,11 @@ class project_IndicatorSummaryReport(S3Method):
                                 table[status_field],
                                 )
         for row in rows:
-            goals[row.id] = dict(code = row.code,
-                                 name = row.name,
-                                 outcomes = {},
-                                 status = row[status_field],
-                                 )
+            goals[row.id] = {"code": row.code,
+                             "name": row.name,
+                             "outcomes": {},
+                             "status": row[status_field],
+                             }
 
         # Outcomes
         table = s3db.project_outcome
@@ -8789,11 +8789,11 @@ class project_IndicatorSummaryReport(S3Method):
                                 )
         for row in rows:
             goals[row.goal_id]["outcomes"][row.outcome_id]["outputs"][row.id] = \
-                dict(code = row.code,
-                     name = row.name,
-                     indicators = {},
-                     status = row[status_field],
-                     )
+                {"code": row.code,
+                 "name": row.name,
+                 "indicators": {},
+                 "status": row[status_field],
+                 }
 
         # Indicators
         indicators = {}
@@ -8813,19 +8813,19 @@ class project_IndicatorSummaryReport(S3Method):
             goal_id = row.goal_id
             outcome_id = row.outcome_id
             output_id = row.output_id
-            indicators[indicator_id] = dict(goal = goal_id,
-                                            outcome = outcome_id,
-                                            output = output_id,
-                                            )
+            indicators[indicator_id] = {"goal": goal_id,
+                                        "outcome": outcome_id,
+                                        "output": output_id,
+                                        }
             goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = \
-                dict(code = row.code,
-                     name = row.name,
-                     dates = {},
-                     years = {},
-                     status = row[status_field],
-                     target = 0,
-                     actual = 0,
-                     )
+                {"code": row.code,
+                 "name": row.name,
+                 "dates": {},
+                 "years": {},
+                 "status": row[status_field],
+                 "target": 0,
+                 "actual": 0,
+                 }
 
         # Indicator Data
         table = s3db.project_indicator_data
@@ -8836,7 +8836,7 @@ class project_IndicatorSummaryReport(S3Method):
                                 table.end_date,
                                 table.target_value,
                                 table.value,
-                                orderby=table.end_date,
+                                orderby = table.end_date,
                                 )
         dates = []
         dappend = dates.append
@@ -8858,9 +8858,9 @@ class project_IndicatorSummaryReport(S3Method):
                 indicator["actual"] += actual
             elif actual is None:
                 actual = NONE
-            indicator["dates"][date] = dict(target = target,
-                                            actual = actual,
-                                            )
+            indicator["dates"][date] = {"target": target,
+                                        "actual": actual,
+                                        }
             iyears = indicator["years"]
             if year in iyears:
                 if target:
@@ -8868,9 +8868,9 @@ class project_IndicatorSummaryReport(S3Method):
                 if actual != NONE:
                     iyears[year]["actual"] += actual
             else:
-                iyears[year] = dict(target = target,
-                                    actual = actual,
-                                    )
+                iyears[year] = {"target": target,
+                                "actual": actual,
+                                }
 
         # Uniquify
         dates = set(dates)
@@ -8910,20 +8910,20 @@ class project_IndicatorSummaryReport(S3Method):
         colspan = (2 * len(dates)) + (2 * len(years)) + 3
 
         header_row = TR(TD(T("Number"),
-                           _rowspan=2,
-                           _class="tal",
+                           _rowspan = 2,
+                           _class = "tal",
                            ),
                         TD(T("Indicators"),
-                           _rowspan=2,
-                           _class="tal",
+                           _rowspan = 2,
+                           _class = "tal",
                            ),
                         TD(T("Total Target"),
-                           _rowspan=2,
+                           _rowspan = 2,
                            ),
                         )
         if not years:
             item = TABLE(header_row,
-                         _class="indicator_summary_report"
+                         _class = "indicator_summary_report"
                          )
             response.warning = T("No Indicator Data available")
         else:
@@ -8935,25 +8935,25 @@ class project_IndicatorSummaryReport(S3Method):
             for d in dates:
                 if d.year != year:
                     happend(TD(year,
-                               _colspan=2,
+                               _colspan = 2,
                                ))
                     y += 1
                     year = years[y]
                 happend(TD(represent(d),
-                           _colspan=2,
+                           _colspan = 2,
                            ))
             happend(TD(year,
-                       _colspan=2,
+                       _colspan = 2,
                        ))
 
             happend(TD(T("Actual Total"),
-                       _rowspan=2,
+                       _rowspan = 2,
                        ))
             happend(TD(T("% Achieved"),
-                       _rowspan=2,
+                       _rowspan = 2,
                        ))
             item = TABLE(header_row,
-                         _class="indicator_summary_report"
+                         _class = "indicator_summary_report"
                          )
             iappend = item.append
             row_2 = TR()
@@ -8971,54 +8971,54 @@ class project_IndicatorSummaryReport(S3Method):
             for goal_id in goals:
                 goal = goals[goal_id]
                 row = TR(TD("%s: %s" % (T("Goal"), goal["code"]),
-                            _class="tal",
+                            _class = "tal",
                             ),
                          TD(goal["name"],
-                            _class="tal",
-                            _colspan=colspan,
+                            _class = "tal",
+                            _colspan = colspan,
                             ),
                          TD(project_status_represent(goal["status"])),
-                         _class="project_goal",
+                         _class = "project_goal",
                          )
                 iappend(row)
                 outcomes = goal["outcomes"]
                 for outcome_id in outcomes:
                     outcome = outcomes[outcome_id]
                     row = TR(TD("%s: %s" % (T("Outcome"), outcome["code"]),
-                                _class="tal",
+                                _class = "tal",
                                 ),
                              TD(outcome["name"],
-                                _class="tal",
-                                _colspan=colspan,
+                                _class = "tal",
+                                _colspan = colspan,
                                 ),
                              TD(project_status_represent(outcome["status"])),
-                             _class="project_outcome",
+                             _class = "project_outcome",
                              )
                     iappend(row)
                     outputs = outcome["outputs"]
                     for output_id in outputs:
                         output = outputs[output_id]
                         row = TR(TD("%s: %s" % (T("Output"), output["code"]),
-                                    _class="tal",
+                                    _class = "tal",
                                     ),
                                  TD(output["name"],
-                                    _class="tal",
-                                    _colspan=colspan,
+                                    _class = "tal",
+                                    _colspan = colspan,
                                     ),
                                  TD(project_status_represent(output["status"])),
-                                 _class="project_output",
+                                 _class = "project_output",
                                  )
                         iappend(row)
                         indicators = output["indicators"]
                         for i in indicators:
                             indicator = indicators[i]
                             row = TR(TD("%s: %s" % (T("Indicator"), indicator["code"]),
-                                        _class="tal",
+                                        _class = "tal",
                                         ),
                                      TD(indicator["name"],
-                                        _class="tal",
+                                        _class = "tal",
                                         ),
-                                     _class="project_indicator",
+                                     _class = "project_indicator",
                                      )
                             rappend = row.append
                             rappend(TD(indicator["target"]))
@@ -9054,8 +9054,8 @@ class project_IndicatorSummaryReport(S3Method):
                             iappend(row)
 
             iappend(TR(TD(T(self.project_status_label),
-                          _colspan=colspan + 1,
-                          _class="tar",
+                          _colspan = colspan + 1,
+                          _class = "tar",
                           ),
                        TD(project_status_represent(record[self.status_field])),
                        ))
@@ -9068,10 +9068,10 @@ class project_IndicatorSummaryReport(S3Method):
             #                                         ),
             #                            },
             #                    ),
-            #                _class="list_formats",
+            #                _class = "list_formats",
             #                ),
-            #           _class="tar",
-            #           _colspan=colspan + 5,
+            #           _class = "tar",
+            #           _colspan = colspan + 5,
             #           ))
 
         output = dict(item=item)
@@ -9417,11 +9417,11 @@ def project_ProgressReport(r, **attr):
                                     table.actual_progress_by_activities,
                                     )
             for row in rows:
-                goals[row.id] = dict(code = row.code,
-                                     name = row.name,
-                                     outcomes = {},
-                                     status = row.actual_progress_by_activities,
-                                     )
+                goals[row.id] = {"code": row.code,
+                                 "name": row.name,
+                                 "outcomes": {},
+                                 "status": row.actual_progress_by_activities,
+                                 }
 
             # Outcomes
             table = s3db.project_outcome
@@ -9466,11 +9466,11 @@ def project_ProgressReport(r, **attr):
                 outcome_id = row.outcome_id
                 append(outcome_id)
                 goals[row.goal_id]["outcomes"][outcome_id]["outputs"][row.id] = \
-                    dict(code = row.code,
-                         name = row.name,
-                         indicators = {},
-                         status = row.actual_progress_by_activities,
-                         )
+                    {"code": row.code,
+                     "name": row.name,
+                     "indicators": {},
+                     "status": row.actual_progress_by_activities,
+                     }
             outcomes_without_outputs = number_of_outcomes - len(set(outcomes_with_outputs))
 
             # Indicators
@@ -9495,13 +9495,13 @@ def project_ProgressReport(r, **attr):
                 output_id = row.output_id
                 append(output_id)
                 goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][row.id] = \
-                    dict(code = row.code,
-                         name = row.name,
-                         dates = {},
-                         status = row.actual_progress_by_activities,
-                         target = 0,
-                         actual = 0,
-                         )
+                    {"code": row.code,
+                     "name": row.name,
+                     "dates": {},
+                     "status": row.actual_progress_by_activities,
+                     "target": 0,
+                     "actual": 0,
+                     }
             outputs_without_indicators = number_of_outputs - len(set(outputs_with_indicators))
 
         else:
@@ -9518,11 +9518,11 @@ def project_ProgressReport(r, **attr):
                                     table.overall_status_by_indicators,
                                     )
             for row in rows:
-                goals[row.id] = dict(code = row.code,
-                                     name = row.name,
-                                     outcomes = {},
-                                     status = row.overall_status_by_indicators,
-                                     )
+                goals[row.id] = {"code": row.code,
+                                 "name": row.name,
+                                 "outcomes": {},
+                                 "status": row.overall_status_by_indicators,
+                                 }
 
             # Outcomes
             table = s3db.project_outcome
@@ -9541,11 +9541,11 @@ def project_ProgressReport(r, **attr):
                 number_of_outcomes += 1
                 goal_id = row.goal_id
                 append(goal_id)
-                goals[goal_id]["outcomes"][row.id] = dict(code = row.code,
-                                                          name = row.name,
-                                                          outputs = {},
-                                                          status = row.overall_status_by_indicators,
-                                                          )
+                goals[goal_id]["outcomes"][row.id] = {"code": row.code,
+                                                      "name": row.name,
+                                                      "outputs": {},
+                                                      "status": row.overall_status_by_indicators,
+                                                      }
             goals_without_outcomes = len(goals) - len(set(goals_with_outcomes))
 
             # Outputs
@@ -9567,11 +9567,11 @@ def project_ProgressReport(r, **attr):
                 outcome_id = row.outcome_id
                 append(outcome_id)
                 goals[row.goal_id]["outcomes"][outcome_id]["outputs"][row.id] = \
-                    dict(code = row.code,
-                         name = row.name,
-                         indicators = {},
-                         status = row.overall_status_by_indicators,
-                         )
+                    {"code": row.code,
+                     "name": row.name,
+                     "indicators": {},
+                     "status": row.overall_status_by_indicators,
+                     }
             outcomes_without_outputs = number_of_outcomes - len(set(outcomes_with_outputs))
 
             # Indicators
@@ -9596,13 +9596,13 @@ def project_ProgressReport(r, **attr):
                 output_id = row.output_id
                 append(output_id)
                 goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][row.id] = \
-                    dict(code = row.code,
-                         name = row.name,
-                         dates = {},
-                         status = row.overall_status_by_indicators,
-                         target = 0,
-                         actual = 0,
-                         )
+                    {"code": row.code,
+                     "name": row.name,
+                     "dates": {},
+                     "status": row.overall_status_by_indicators,
+                     "target": 0,
+                     "actual": 0,
+                     }
             outputs_without_indicators = number_of_outputs - len(set(outputs_with_indicators))
 
         # Sort
@@ -9622,10 +9622,10 @@ def project_ProgressReport(r, **attr):
         item = TABLE(_class="project_progress_report")
         rows = []
         row = TR(TD(T("Project"),
-                    _rowspan=number_of_rows,
+                    _rowspan = number_of_rows,
                     ),
                  TD(project_status_represent(project_status),
-                    _rowspan=number_of_rows,
+                    _rowspan = number_of_rows,
                     ),
                  )
         rows.append(row)
@@ -9647,18 +9647,18 @@ def project_ProgressReport(r, **attr):
 
             if first_goal:
                 row.append(TD("%s: %s" % (T("Goal"), goal["code"]),
-                              _rowspan=rowspan,
+                              _rowspan = rowspan,
                               ))
                 row.append(TD(project_status_represent(goal["status"]),
-                              _rowspan=rowspan,
+                              _rowspan = rowspan,
                               ))
                 first_goal = False
             else:
                 row = TR(TD("%s: %s" % (T("Goal"), goal["code"]),
-                            _rowspan=rowspan,
+                            _rowspan = rowspan,
                             ),
                          TD(project_status_represent(goal["status"]),
-                            _rowspan=rowspan,
+                            _rowspan = rowspan,
                             ))
                 rows.append(row)
 
@@ -9675,18 +9675,18 @@ def project_ProgressReport(r, **attr):
 
                 if first_outcome:
                     row.append(TD("%s: %s" % (T("Outcome"), outcome["code"]),
-                                  _rowspan=rowspan,
+                                  _rowspan = rowspan,
                                   ))
                     row.append(TD(project_status_represent(outcome["status"]),
-                                  _rowspan=rowspan,
+                                  _rowspan = rowspan,
                                   ))
                     first_outcome = False
                 else:
                     row = TR(TD("%s: %s" % (T("Outcome"), outcome["code"]),
-                                _rowspan=rowspan,
+                                _rowspan = rowspan,
                                 ),
                              TD(project_status_represent(outcome["status"]),
-                                _rowspan=rowspan,
+                                _rowspan = rowspan,
                                 ))
                     rows.append(row)
 
@@ -9700,18 +9700,18 @@ def project_ProgressReport(r, **attr):
 
                     if first_output:
                         row.append(TD("%s: %s" % (T("Output"), output["code"]),
-                                      _rowspan=rowspan,
+                                      _rowspan = rowspan,
                                       ))
                         row.append(TD(project_status_represent(output["status"]),
-                                      _rowspan=rowspan,
+                                      _rowspan = rowspan,
                                       ))
                         first_output = False
                     else:
                         row = TR(TD("%s: %s" % (T("Output"), output["code"]),
-                                    _rowspan=rowspan,
+                                    _rowspan = rowspan,
                                     ),
                                  TD(project_status_represent(output["status"]),
-                                    _rowspan=rowspan,
+                                    _rowspan = rowspan,
                                     ))
                         rows.append(row)
 
@@ -9734,13 +9734,15 @@ def project_ProgressReport(r, **attr):
                             rows.append(row)
 
                     if output_number < number_of_outputs:
-                        rows.append(TR(TD(_colspan=11),
-                                       _class="spacer"))
+                        rows.append(TR(TD(_colspan = 11),
+                                       _class = "spacer",
+                                       ))
 
         for row in rows:
             item.append(row)
 
-        output = dict(item=item)
+        output = {"item": item,
+                  }
         output["title"] = T("Total Project Progress")
         output["subtitle"] = "%s: %s" % (T("Project"), r.record.name)
         # @ToDo: Add "On Date"
@@ -9776,7 +9778,8 @@ def project_ProgressReport(r, **attr):
 #        # Format Data
 #        item = TABLE(_class="budget_progress_report")
 #
-#        output = dict(item=item)
+#        output = {"item": item,
+#                  }
 #        output["title"] = T("Total Budget Progress")
 #        output["subtitle"] = "%s: %s" % (T("Project"), r.record.name)
 #        # @ToDo: Add "On Date"
@@ -9812,7 +9815,8 @@ def project_ProgressReport(r, **attr):
 #        # Format Data
 #        item = TABLE(_class="project_indicator_progress_report")
 #
-#        output = dict(item=item)
+#        output = {"item": item,
+#                  }
 #        output["title"] = T("Monthly Progress by Indicator")
 #        output["subtitle"] = "%s: %s" % (T("Project"), r.record.name)
 #        # @ToDo: Add "On Date"

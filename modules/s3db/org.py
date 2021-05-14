@@ -3745,7 +3745,7 @@ class S3SiteEventModel(S3Model):
         #   Check-In/Check-Out
         #
         # Possible @ToDo:
-        #    Staff Member who checks them in/out
+        #    Staff Member who checks them in/out (covered by created_by, when data entry done by some person)
         #
         tablename = "org_site_event"
         self.define_table(tablename,
@@ -3764,12 +3764,18 @@ class S3SiteEventModel(S3Model):
                                 ),
                           self.pr_person_id(ondelete = "SET NULL"),
                           s3_comments(),
+                          Field("archived", "boolean",
+                                default = False,
+                                readable = False,
+                                writable = False,
+                                ),
                           *s3_meta_fields())
 
         self.configure(tablename,
                        deletable = False,
                        editable = False,
                        insertable = False,
+                       orderby = "org_site_event.date desc",
                        )
 
         # Pass names back to global scope (s3.*)

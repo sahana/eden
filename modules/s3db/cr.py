@@ -1731,7 +1731,7 @@ class CRShelterRegistrationModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        registration_onaccept = self.shelter_registration_onaccept
+        registration_onaccept = self.cr_shelter_registration_onaccept
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("person_id",
                                                        "shelter_id",
@@ -1783,7 +1783,7 @@ class CRShelterRegistrationModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
-        return {"cr_shelter_population_onaccept": self.shelter_population_onaccept,
+        return {"cr_shelter_population_onaccept": self.cr_shelter_population_onaccept,
                 "cr_shelter_registration_status_opts": reg_status_opts,
                 }
 
@@ -1829,7 +1829,7 @@ class CRShelterRegistrationModel(S3Model):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def shelter_registration_onaccept(cls, form):
+    def cr_shelter_registration_onaccept(cls, form):
         """
             Registration onaccept: track status changes, update
             shelter population
@@ -1938,14 +1938,14 @@ class CRShelterRegistrationModel(S3Model):
                             s3db.dvr_update_last_seen(person_id)
 
         # Update population
-        cls.shelter_population_onaccept(form,
-                                        tablename = "cr_shelter_registration",
-                                        unit_id = unit_id,
-                                        )
+        cls.cr_shelter_population_onaccept(form,
+                                           tablename = "cr_shelter_registration",
+                                           unit_id = unit_id,
+                                           )
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def shelter_population_onaccept(form, tablename=None, unit_id=None):
+    def cr_shelter_population_onaccept(form, tablename=None, unit_id=None):
         """
             Update the shelter population, onaccept
 

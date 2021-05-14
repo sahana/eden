@@ -811,8 +811,8 @@ class S3DataTable(object):
             permalink = attr_get("dt_permalink", None)
             base_url = attr_get("dt_base_url", None)
             export_formats = S3DataTable.export_formats(rfields,
-                                                        permalink=permalink,
-                                                        base_url=base_url)
+                                                        permalink = permalink,
+                                                        base_url = base_url)
             # Nb These can be moved around in initComplete()
             form.append(export_formats)
 

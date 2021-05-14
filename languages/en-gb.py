@@ -49,6 +49,7 @@
 'Credentialling Organization': 'Credentialling Organisation',
 'Current Owned By (Organization/Branch)': 'Current Owned By (Organisation/Branch)',
 'Currently no programs registered': 'Currently no programmes registered',
+'Data Anonymization Scheduled': 'Data Anonymisation Scheduled',
 'Delete Catalog': 'Delete Catalogue',
 'Delete Catalog Item': 'Delete Catalogue Item',
 'Delete Organization': 'Delete Organisation',
