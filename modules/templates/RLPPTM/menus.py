@@ -372,6 +372,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Facility Types", f="facility_type"),
                         M("Organization Types", f="organisation_type"),
                         M("Services", f="service"),
+                        M("Service Modes", f="service_mode"),
+                        M("Booking Modes", f="booking_mode"),
                         ),
                     )
 
