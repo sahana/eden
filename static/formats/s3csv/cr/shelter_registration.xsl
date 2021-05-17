@@ -12,12 +12,13 @@
          Status.........................optional.....Shelter Registration Status
          Check-in Date..................optional.....Shelter Registration Check-In Date
          Check-out Date.................optional.....Shelter Registration Check-Out Date
+         Comments.......................optional.....Shelter Registration Comments
          Reference......................optional.....Person pe_label
          First Name.....................required.....Person First Name
          Middle Name....................optional.....Person Middle Name
          Last Name......................optional.....Person Last Name
          DOB............................optional.....Person Date of Birth
-         Nationality....................optional.....Person Nationality
+         Nationality....................optional.....pr_person_details.nationality
          Email..........................optional.....person email address. Supports multiple comma-separated
          Mobile Phone...................optional.....person mobile phone number
          Home Address...................optional.....person home address
@@ -29,7 +30,33 @@
          Home L2........................optional.....person home address L2
          Home L3........................optional.....person home address L3
          Home L4........................optional.....person home address L4
-         Comments.......................optional.....Shelter Registration Comments
+         Permanent Address..............optional.....person permanent address
+         Permanent Postcode.............optional.....person permanent address postcode
+         Permanent Lat..................optional.....person permanent address latitude
+         Permanent Lon..................optional.....person permanent address longitude
+         Permanent Country..............optional.....person permanent address Country
+         Permanent L1...................optional.....person permanent address L1
+         Permanent L2...................optional.....person permanent address L2
+         Permanent L3...................optional.....person permanent address L3
+         Permanent L4...................optional.....person permanent address L4
+         Medical Conditions.............optional.....pr_physical_description.medical_conditions
+         Ethnicity......................optional.....pr_physical_description.ethnicity
+         Religion.......................optional.....pr_person_details.religion
+         KV:XX..........................optional.....pr_person_tag Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
+
+         Relation First Name............optional.....pr_person_relation.person_id$first_name
+         Relation Last Name.............optional.....pr_person_relation.person_id$last_name
+         Relation Mobile Phone..........optional.....pr_person_relation.person_id$ mobile phone number
+         Relation Address...............optional.....pr_person_relation.person_id$ address
+         Relation Postcode..............optional.....pr_person_relation.person_id$ address postcode
+         Relation Lat...................optional.....pr_person_relation.person_id$ latitude
+         Relation Lon...................optional.....pr_person_relation.person_id$ longitude
+         Relation Country...............optional.....pr_person_relation.person_id$ Country
+         Relation L1....................optional.....pr_person_relation.person_id$ L1
+         Relation L2....................optional.....pr_person_relation.person_id$ L2
+         Relation L3....................optional.....pr_person_relation.person_id$ L3
+         Relation L4....................optional.....pr_person_relation.person_id$ L4
+         Relation KV:XX.................optional.....pr_person_relation.person_id$person_tag Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
 
          Column headers looked up in labels.xml:
 
@@ -231,12 +258,20 @@
                 <xsl:with-param name="colhdrs" select="$HomeAddress"/>
             </xsl:call-template>
         </xsl:variable>
+        <xsl:variable name="address_tuid" select="concat('Location Address:',
+                                                         $FirstName,
+                                                         $MiddleName,
+                                                         $LastName,
+                                                         col[@field='Email']/text(),
+                                                         col[@field='Mobile Phone']/text()
+                                                         )"/>
+
 
         <resource name="pr_person">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="concat('Person:', $LastName, ',', $MiddleName, ',', $FirstName)"/>
             </xsl:attribute>
-            <xsl:if test="col[@field='Reference']/text()!=''">
+            <xsl:if test="col[@field='Reference']!=''">
                 <data field="pe_label"><xsl:value-of select="col[@field='Reference']/text()"/></data>
             </xsl:if>
             <data field="first_name"><xsl:value-of select="$FirstName"/></data>
@@ -250,32 +285,73 @@
                     <xsl:attribute name="value"><xsl:value-of select="$gender"/></xsl:attribute>
                 </data>
             </xsl:if>
+
             <resource name="pr_person_details">
 	            <xsl:variable name="l0">
                     <xsl:value-of select="col[@field='Nationality']"/>
                 </xsl:variable>
-                <xsl:variable name="countrycode">
-                    <xsl:choose>
-                        <xsl:when test="string-length($l0)!=2">
-                            <xsl:call-template name="countryname2iso">
-                                <xsl:with-param name="country">
-                                    <xsl:value-of select="$l0"/>
-                                </xsl:with-param>
-                            </xsl:call-template>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <xsl:call-template name="uppercase">
-                                <xsl:with-param name="string">
-                                   <xsl:value-of select="$l0"/>
-                                </xsl:with-param>
-                            </xsl:call-template>
-                        </xsl:otherwise>
-                    </xsl:choose>
+                <xsl:if test="$l0!=''">
+                    <xsl:variable name="countrycode">
+                        <xsl:choose>
+                            <xsl:when test="string-length($l0)!=2">
+                                <xsl:call-template name="countryname2iso">
+                                    <xsl:with-param name="country">
+                                        <xsl:value-of select="$l0"/>
+                                    </xsl:with-param>
+                                </xsl:call-template>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:call-template name="uppercase">
+                                    <xsl:with-param name="string">
+                                       <xsl:value-of select="$l0"/>
+                                    </xsl:with-param>
+                                </xsl:call-template>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:variable>
+                    <data field="nationality">
+                        <xsl:value-of select="$countrycode"/>
+                    </data>
+                </xsl:if>
+	            <xsl:variable name="religion">
+                    <xsl:value-of select="col[@field='Religion']"/>
                 </xsl:variable>
-                <data field="nationality">
-                    <xsl:value-of select="$countrycode"/>
-                </data>
+                <xsl:if test="$religion!=''">
+                    <data field="religion">
+                        <xsl:value-of select="$religion"/>
+                    </data>
+                </xsl:if>
             </resource>
+
+            <resource name="pr_physical_description">
+	            <xsl:variable name="ethnicity">
+                    <xsl:value-of select="col[@field='Ethnicity']"/>
+                </xsl:variable>
+                <xsl:if test="$ethnicity!=''">
+                    <data field="ethnicity">
+                        <xsl:value-of select="$ethnicity"/>
+                    </data>
+                </xsl:if>
+	            <xsl:variable name="medical">
+                    <xsl:value-of select="col[@field='Medical Conditions']"/>
+                </xsl:variable>
+                <xsl:if test="$medical!=''">
+                    <data field="medical_conditions">
+                        <xsl:value-of select="$medical"/>
+                    </data>
+                </xsl:if>
+            </resource>
+
+            <!-- Relation -->
+            <xsl:if test="col[@field='Relation First Name']!=''">
+                <resource name="pr_person_relation">
+                    <reference field="person_id" resource="pr_person">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('Relation:', $LastName, ',', $MiddleName, ',', $FirstName)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
 
             <!-- Contact Information -->
             <xsl:call-template name="ContactInformation"/>
@@ -284,6 +360,14 @@
             <xsl:if test="$home!='' or col[@field='Home Postcode']!='' or col[@field='Home L4']!='' or col[@field='Home L3']!='' or col[@field='Home L2']!='' or col[@field='Home L1']!=''">
                 <xsl:call-template name="Address">
                     <xsl:with-param name="type">1</xsl:with-param>
+                    <xsl:with-param name="tuid" select="$address_tuid"/>
+                </xsl:call-template>
+            </xsl:if>
+
+            <xsl:if test="col[@field='Permanent Address']!='' or col[@field='Permanent Postcode']!='' or col[@field='Permanent L4']!='' or col[@field='Permanent L3']!='' or col[@field='Permanent L2']!='' or col[@field='Permanent L1']!=''">
+                <xsl:call-template name="Address">
+                    <xsl:with-param name="type">2</xsl:with-param>
+                    <xsl:with-param name="tuid" select="$address_tuid"/>
                 </xsl:call-template>
             </xsl:if>
 
@@ -297,9 +381,10 @@
         <!-- Locations -->
         <xsl:if test="$home!='' or col[@field='Home Postcode']!='' or col[@field='Home L4']!='' or col[@field='Home L3']!='' or col[@field='Home L2']!='' or col[@field='Home L1']!=''">
             <xsl:call-template name="Locations">
+                <xsl:with-param name="tuid" select="$address_tuid"/>
+                <xsl:with-param name="type">1</xsl:with-param>
                 <xsl:with-param name="address" select="$home"/>
                 <xsl:with-param name="postcode" select="col[@field='Home Postcode']/text()"/>
-                <xsl:with-param name="type">1</xsl:with-param>
                 <xsl:with-param name="l0" select="col[@field='Home Country']/text()"/>
                 <xsl:with-param name="l1" select="col[@field='Home L1']/text()"/>
                 <xsl:with-param name="l2" select="col[@field='Home L2']/text()"/>
@@ -308,6 +393,29 @@
                 <xsl:with-param name="l5" select="col[@field='Home L5']/text()"/>
                 <xsl:with-param name="lat" select="col[@field='Home Lat']/text()"/>
                 <xsl:with-param name="lon" select="col[@field='Home Lon']/text()"/>
+            </xsl:call-template>
+        </xsl:if>
+        <xsl:if test="col[@field='Permanent Address']!='' or col[@field='Permanent Postcode']!='' or col[@field='Permanent L4']!='' or col[@field='Permanent L3']!='' or col[@field='Permanent L2']!='' or col[@field='Permanent L1']!=''">
+            <xsl:call-template name="Locations">
+                <xsl:with-param name="tuid" select="$address_tuid"/>
+                <xsl:with-param name="type">2</xsl:with-param>
+                <xsl:with-param name="address" select="col[@field='Permanent Address']/text()"/>
+                <xsl:with-param name="postcode" select="col[@field='Permanent Postcode']/text()"/>
+                <xsl:with-param name="l0" select="col[@field='Permanent Country']/text()"/>
+                <xsl:with-param name="l1" select="col[@field='Permanent L1']/text()"/>
+                <xsl:with-param name="l2" select="col[@field='Permanent L2']/text()"/>
+                <xsl:with-param name="l3" select="col[@field='Permanent L3']/text()"/>
+                <xsl:with-param name="l4" select="col[@field='Permanent L4']/text()"/>
+                <xsl:with-param name="l5" select="col[@field='Permanent L5']/text()"/>
+                <xsl:with-param name="lat" select="col[@field='Permanent Lat']/text()"/>
+                <xsl:with-param name="lon" select="col[@field='Permanent Lon']/text()"/>
+            </xsl:call-template>
+        </xsl:if>
+
+        <!-- Relation -->
+        <xsl:if test="col[@field='Relation First Name']!=''">
+            <xsl:call-template name="PersonRelation">
+                <xsl:with-param name="tuid" select="concat('Relation:', $LastName, ',', $MiddleName, ',', $FirstName)"/>
             </xsl:call-template>
         </xsl:if>
 
@@ -329,6 +437,69 @@
                 <data field="value"><xsl:value-of select="$Value"/></data>
             </resource>
         </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="PersonRelation">
+        <xsl:param name="tuid"/>
+        <xsl:variable name="type"><xsl:text>1</xsl:text></xsl:variable>
+        <xsl:variable name="address_tuid" select="concat('Relation Address:',
+                                                         col[@field='First Name']/text(),
+                                                         col[@field='Middle Name']/text(),
+                                                         col[@field='Last Name']/text(),
+                                                         col[@field='Email']/text(),
+                                                         col[@field='Mobile Phone']/text()
+                                                         )"/>
+
+        <resource name="pr_person">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$tuid"/>
+            </xsl:attribute>
+            <data field="first_name"><xsl:value-of select="col[@field='Relation First Name']/text()"/></data>
+            <data field="last_name"><xsl:value-of select="col[@field='Relation Last Name']/text()"/></data>
+
+            <!-- Address -->
+            <xsl:if test="col[@field='Relation Address']!='' or col[@field='Relation Postcode']!='' or col[@field='Relation L4']!='' or col[@field='Relation L3']!='' or col[@field='Relation L2']!='' or col[@field='Relation L1']!=''">
+                <xsl:call-template name="Address">
+                    <xsl:with-param name="type" select="$type"/>
+                    <xsl:with-param name="tuid" select="$address_tuid"/>
+                </xsl:call-template>
+            </xsl:if>
+
+            <xsl:if test="col[@field='Relation Mobile Phone']!=''">
+                <resource name="pr_contact">
+                    <data field="contact_method" value="SMS"/>
+                    <data field="value">
+                        <xsl:value-of select="col[@field='Relation Mobile Phone']/text()"/>
+                    </data>
+                </resource>
+            </xsl:if>
+
+            <!-- Arbitrary Tags -->
+            <xsl:for-each select="col[starts-with(@field, 'Relation KV')]">
+                <xsl:call-template name="KeyValue"/>
+            </xsl:for-each>
+            
+        </resource>
+
+        <!-- Locations -->
+        <xsl:if test="col[@field='Relation Address']!='' or col[@field='Relation Postcode']!='' or col[@field='Relation L4']!='' or col[@field='Relation L3']!='' or col[@field='Relation L2']!='' or col[@field='Relation L1']!=''">
+            <xsl:call-template name="Locations">
+                <xsl:with-param name="tuid" select="$address_tuid"/>
+                <xsl:with-param name="type" select="$type"/>
+                <xsl:with-param name="address" select="col[@field='Relation Address']/text()"/>
+                <xsl:with-param name="postcode" select="col[@field='Relation Postcode']/text()"/>
+                <xsl:with-param name="l0" select="col[@field='Relation Country']/text()"/>
+                <xsl:with-param name="l1" select="col[@field='Relation L1']/text()"/>
+                <xsl:with-param name="l2" select="col[@field='Relation L2']/text()"/>
+                <xsl:with-param name="l3" select="col[@field='Relation L3']/text()"/>
+                <xsl:with-param name="l4" select="col[@field='Relation L4']/text()"/>
+                <xsl:with-param name="l5" select="col[@field='Relation L5']/text()"/>
+                <xsl:with-param name="lat" select="col[@field='Relation Lat']/text()"/>
+                <xsl:with-param name="lon" select="col[@field='Relation Lon']/text()"/>
+            </xsl:call-template>
+        </xsl:if>
+            
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -402,22 +573,14 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Address">
+        <xsl:param name="tuid"/>
         <xsl:param name="type"/>
 
         <resource name="pr_address">
             <!-- Link to Location -->
-            <xsl:variable name="laddress_tuid" select="concat('Location Address:',
-                                                              col[@field='First Name'],
-                                                              col[@field='Middle Name'],
-                                                              col[@field='Last Name'],
-                                                              col[@field='Email'],
-                                                              col[@field='Mobile Phone'],
-                                                              $type
-                                                              )"/>
-
             <reference field="location_id" resource="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$laddress_tuid"/>
+                    <xsl:value-of select="concat($tuid,$type)"/>
                 </xsl:attribute>
             </reference>
 
@@ -431,6 +594,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Locations">
+        <xsl:param name="tuid"/>
         <xsl:param name="type"/>
         <xsl:param name="address"/>
         <xsl:param name="postcode"/>
@@ -448,14 +612,7 @@
         <xsl:variable name="l3id" select="concat('Location L3: ', $l3)"/>
         <xsl:variable name="l4id" select="concat('Location L4: ', $l4)"/>
         <xsl:variable name="l5id" select="concat('Location L5: ', $l5)"/>
-        <xsl:variable name="laddress_tuid" select="concat('Location Address:',
-                                                          col[@field='First Name'],
-                                                          col[@field='Middle Name'],
-                                                          col[@field='Last Name'],
-                                                          col[@field='Email'],
-                                                          col[@field='Mobile Phone'],
-                                                          $type
-                                                          )"/>
+        <xsl:variable name="laddress_tuid" select="concat($tuid,$type)"/>
 
         <!-- Country Code = UUID of the L0 Location -->
         <xsl:variable name="countrycode">
