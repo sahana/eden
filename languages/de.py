@@ -3705,6 +3705,7 @@
 'No data in this table - cannot create PDF!': 'Keine Daten in dieser Tabelle - PDF kann nicht erstellt werden!',
 'No databases in this application': 'Keine Datenbanken in dieser Anwendung',
 'No dead body reports available': 'Keine Leichenberichte verfügbar',
+'No entries currently available': 'Keine Einträge',
 'No entries found': 'Keine Einträge gefunden',
 'No entries matching the query': 'Die Abfrage lieferte keine Einträge',
 'No entry available': 'Kein Eintrag verfügbar',

@@ -3963,17 +3963,24 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             if requires is None:
                 # Get the selectable entries for the widget and construct
                 # a validator from it
-                zero = None if multiple else options.get("zero", XML("&nbsp"))
                 opts = self.get_options()
-                if zero is None:
-                    # Remove the empty option
+                zero = options.get("zero", XML("&nbsp"))
+                if multiple or zero is not None:
+                    # Drop the empty option
+                    # - multiple does not need one (must de-select all instead)
+                    # - otherwise, it shall be replaced by the zero-option
                     opts = {k: v for k, v in opts.items() if k != ""}
+
                 requires = IS_IN_SET(opts,
-                                     multiple=multiple,
-                                     zero=zero,
-                                     sort=options.get("sort", True))
+                                     multiple = multiple,
+                                     zero = None if multiple else zero,
+                                     sort = options.get("sort", True),
+                                     )
                 if zero is not None:
+                    # Allow deselecting all (or single: selection of explicit none)
+                    # NB this is the default, unless zero is explicitly set to None
                     requires = IS_EMPTY_OR(requires)
+
             dummy_field.requires = requires
 
         # Helper to extract widget options

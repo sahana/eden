@@ -36,7 +36,7 @@ $anonymize_button_bgcolor_hover: $alert-button-bg-hover !default;
         //background: none;
         font-weight: bold;
         text-decoration: none !important;
-        font-size: 0.7em;
+        font-size: 0.85rem;
     }
 }
 .ui-widget-header.ui-slider-range {
@@ -50,6 +50,18 @@ $anonymize_button_bgcolor_hover: $alert-button-bg-hover !default;
 .ui-widget-content .ui-state-active.ui-slider-handle {
     background: #007fff;
     border: 1px solid #003eff;
+}
+button.ui-multiselect {
+    min-height: 1.75rem;
+    background-color: #FAFAFA;
+    &:focus, &:focus:hover, &.ui-state-active {
+        color: #222222;
+        background-color: #fffbe0;
+    }
+    &:hover {
+        color: #222222;
+        background-color: #F8F8F8;
+    }
 }
 .ui-multiselect-header {
     span.ui-icon {
@@ -105,6 +117,13 @@ $anonymize_button_bgcolor_hover: $alert-button-bg-hover !default;
     }
 }
 
+button.btn.toggle-text {
+    font-size: 0.7rem !important;
+    margin-left: 0.7rem !important;
+    line-height: 1.0;
+    padding: 0.2rem 0.3rem;
+}
+
 /* Date picker */
 input.date.hasDatepicker {
     display: inline-block;
@@ -116,6 +135,12 @@ input.date.hasDatepicker {
 }
 .ui-datepicker.ui-widget {
     z-index: 1000!important;
+    dl dd, dl dt {
+        font-size: 0.8rem;
+    }
+    dl dt {
+        margin-bottom: 0;
+    }
 }
 
 /* Range filter widgets */
@@ -204,7 +229,7 @@ div.s3-groupedopts-widget {
 /* Widget Intro-Wrapper */
 .s3-widget-intro {
     max-width: 42rem;
-    padding: 0.5rem 0;
+    padding: 0.2rem 0 0.5rem 0;
     font-size: 0.8rem;
 }
 

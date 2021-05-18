@@ -2328,6 +2328,15 @@ def config(settings):
                                                show_link = False,
                                                )
 
+        # Expose booking mode and service mode
+        # TODO labels + translations
+        dtable = s3db.org_site_details
+        field = dtable.booking_mode_id
+        field.readable = field.writable = True
+
+        field = dtable.service_mode_id
+        field.readable = field.writable = True
+
         # Custom list fields
         list_fields = ["name",
                        #"organisation_id",
@@ -2513,6 +2522,8 @@ def config(settings):
                            "location_id",
                            (T("Telephone"), "phone1"),
                            "email",
+                           "site_details.service_mode_id",
+                           "site_details.booking_mode_id",
                            (T("Opening Hours"), "opening_times"),
                            services,
                            documents,

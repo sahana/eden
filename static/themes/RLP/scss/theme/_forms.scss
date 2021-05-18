@@ -22,7 +22,8 @@ $form_error_bgcolor: #c60f13 !default;
 form {
     font-size: 0.8rem;
     .form-row {
-        margin-top: 0.5rem !important;
+        padding: 0 0.3rem;
+        margin-top: 0.75rem !important;
         .button {
             margin-right: 0.5rem;
             i.fa {
@@ -179,12 +180,17 @@ form {
         margin-left: 0;
     }
     .subheading {
-        background-color: #EEE;
-        font-size: 1rem;
-        border-top: solid 1px #ccc;
-        border-left: solid 1px #ccc;
-        margin: 0.7rem 0;
-        padding: 0.5rem 0.3rem 0.3rem 0.5rem;
+        background-color: #FFEDCB;
+        font-size: 0.9rem;
+        font-weight: bold;
+        border-top: solid 1px #FFD7A3;
+        border-left: solid 1px #FFD7A3;
+        margin: 1.5rem 0 0.75rem;
+        &:first-of-type {
+            margin-top: 0;
+        }
+        padding: 0.5rem 0.25rem 0.25rem 0.75rem;
+        max-width: 80%;
     }
 
     // Login-form on homepage
@@ -292,9 +298,11 @@ body.rtl {
     overflow: inherit;
     .controls {
         display: inline-block;
+        min-height: 1.7rem;
         &:not(.columns) {
             max-width: 100%;
         }
+        padding: 0 0.1rem;
     }
     .no-options-available {
         color: #aaa;
@@ -314,6 +322,9 @@ body.rtl {
         .ui-multiselect {
             max-width: 100%;
             display: inline-block!important;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            margin-right: 0.3rem;
         }
         &:not(.filter-form):not(.auth_login):not(.auth_register):not(.rm-form) {
             input[type="text"]:not(.integer):not(.double):not(.datetimepicker):not(.date):not(.hours):not(.dms-input) {
@@ -325,7 +336,7 @@ body.rtl {
 
 .item-container .controls {
     background: $item_container_controls_bgcolor;
-    padding: 0.35rem;
+    padding: 0.3rem;
     min-height: 1.7rem;
 }
 
