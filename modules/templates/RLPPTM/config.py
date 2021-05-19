@@ -2269,6 +2269,8 @@ def config(settings):
                                  method = "create",
                                  )
 
+        # Configure fields
+        in_org_controller = r.tablename == "org_organisation"
         from s3 import (S3SQLCustomForm,
                         S3SQLInlineLink,
                         S3SQLInlineComponent,
@@ -2278,10 +2280,12 @@ def config(settings):
                         S3TextFilter,
                         S3WithIntro,
                         s3_get_filter_opts,
+                        s3_text_represent,
                         )
 
         table = s3db.org_facility
 
+        # Custom representation of organisation_id including type
         field = table.organisation_id
         from .helpers import OrganisationRepresent
         field.represent = OrganisationRepresent()
@@ -2302,6 +2306,18 @@ def config(settings):
                                           show_map = True,
                                           )
         current.response.s3.scripts.append("/%s/static/themes/RLP/js/geocoderPlugin.js" % r.application)
+
+        # Custom tooltip for comments field
+        field = table.comments
+        if in_org_controller:
+            field.comment = DIV(_class="tooltip",
+                                _title="%s|%s" % (T("Comments"),
+                                                  T("Additional information and advice regarding facility and services"),
+                                                  ),
+                                )
+        else:
+            field.writable = False
+            field.comment = None
 
         # Custom label for obsolete-Flag
         field = table.obsolete
@@ -2328,14 +2344,24 @@ def config(settings):
                                                show_link = False,
                                                )
 
-        # Expose booking mode and service mode
-        # TODO labels + translations
+        # Expose site details
         dtable = s3db.org_site_details
         field = dtable.booking_mode_id
-        field.readable = field.writable = True
+        field.readable = True
+        field.writable = in_org_controller
 
         field = dtable.service_mode_id
-        field.readable = field.writable = True
+        field.readable = True
+        field.writable = in_org_controller
+
+        field = dtable.authorisation_advice
+        field.label = T("Advice")
+        field.represent = lambda v, row=None: s3_text_represent(v,
+                                                    truncate = False,
+                                                    _class = "authorisation-advice",
+                                                    )
+        field.readable = True
+        field.writable = is_org_group_admin
 
         # Custom list fields
         list_fields = ["name",
@@ -2352,7 +2378,7 @@ def config(settings):
                        ]
         if is_org_group_admin and r.get_vars.get("$$pending") == "1":
             list_fields.insert(1, "organisation_id")
-        elif r.tablename == "org_organisation":
+        elif in_org_controller:
             list_fields.append("obsolete")
 
         # Custom filter widgets
@@ -2423,9 +2449,8 @@ def config(settings):
                                 cols = 3,
                                 ),
                            "location_id",
-                           (T("Telephone"), "phone1"),
-                           "email",
                            (T("Opening Hours"), "opening_times"),
+                           "site_details.service_mode_id", # not showing - why?
                            S3SQLInlineLink(
                                 "service",
                                 label = T("Services"),
@@ -2433,6 +2458,10 @@ def config(settings):
                                 widget = "groupedopts",
                                 cols = 1,
                                 ),
+                           (T("Telephone"), "phone1"),
+                           "email",
+                           "website",
+                           (T("Appointments via"), "site_details.booking_mode_id"), # not showing - why?
                            "comments",
                            ]
         else:
@@ -2510,8 +2539,8 @@ def config(settings):
                                                                )
 
             crud_fields = [organisation,
+                           # -- Facility
                            "name",
-                           #public,
                            S3SQLInlineLink(
                                 "facility_type",
                                 label = T("Facility Type"),
@@ -2519,23 +2548,34 @@ def config(settings):
                                 widget = "groupedopts",
                                 cols = 3,
                                 ),
+                           # -- Address
                            "location_id",
+                           # -- Service Offer
+                           (T("Opening Hours"), "opening_times"),
+                           "site_details.service_mode_id",
+                           services,
+                           # -- Appointments and Contact
                            (T("Telephone"), "phone1"),
                            "email",
-                           "site_details.service_mode_id",
-                           "site_details.booking_mode_id",
-                           (T("Opening Hours"), "opening_times"),
-                           services,
-                           documents,
+                           "website",
+                           (T("Appointments via"), "site_details.booking_mode_id"),
                            "comments",
+                           # -- Administrative
+                           documents,
                            obsolete,
                            ]
+            subheadings = {"name": T("Facility"),
+                           "location_id": T("Address"),
+                           "opening_times": T("Service Offer"),
+                           "phone1": T("Contact and Appointments"),
+                           "filedocument": T("Administrative"),
+                           }
 
             if visible_tags:
                 # Append workflow tags in separate section
                 crud_fields.extend(visible_tags)
                 fname = visible_tags[0][1].replace(".", "_")
-                subheadings = {fname: T("Approval and Publication")}
+                subheadings[fname] = T("Approval and Publication")
 
                 # Add postprocess to update workflow statuses
                 postprocess = facility_postprocess
@@ -2699,6 +2739,16 @@ def config(settings):
             elif callable(standard_postp):
                 output = standard_postp(r, output)
 
+            if not is_org_group_admin and \
+               r.record and isinstance(output, dict):
+                # Override list-button to go to summary
+                buttons = output.get("buttons")
+                if isinstance(buttons, dict) and "list_btn" in buttons:
+                    from s3 import S3CRUD
+                    summary = r.url(method="summary", id="", component="")
+                    buttons["list_btn"] = S3CRUD.crud_button(label = T("List Facilities"),
+                                                             _href = summary,
+                                                             )
             return output
         s3.postp = postp
 

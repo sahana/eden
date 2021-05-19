@@ -590,6 +590,7 @@ def configure_workflow_tags(resource, role="applicant", record_id=None):
             field.writable = False
         field.represent = workflow_tag_represent(binary_tag_opts)
     visible_tags.append((T("In Public Registry"), "public.value"))
+    visible_tags.append("site_details.authorisation_advice")
 
     return visible_tags
 

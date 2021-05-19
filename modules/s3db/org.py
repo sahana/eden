@@ -2914,7 +2914,7 @@ class OrgServiceModel(S3Model):
             msg_record_created = T("Booking Mode added"),
             msg_record_modified = T("Booking Mode updated"),
             msg_record_deleted = T("Booking Mode deleted"),
-            msg_list_empty = T("No Booking Modes currently registered"))
+            msg_list_empty = T("No Booking Modes currently defined"))
 
         # Reusable field
         represent = S3Represent(lookup=tablename, translate=True)
@@ -2966,7 +2966,7 @@ class OrgServiceModel(S3Model):
         represent = S3Represent(lookup=tablename, translate=True)
         service_mode_id = S3ReusableField("service_mode_id",
                                           "reference %s" % tablename,
-                                          label = T("Mode of Service"),
+                                          label = T("Service Mode"),
                                           ondelete = "SET NULL",
                                           represent = represent,
                                           requires = IS_EMPTY_OR(IS_ONE_OF(db,
