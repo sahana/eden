@@ -750,6 +750,7 @@ class PRPersonModel(S3Model):
              "pr_gender_opts",
              "pr_person_id",
              "pr_person_lookup",
+             "pr_person_obscure_dob",
              "pr_person_represent",
              )
 
@@ -1279,6 +1280,7 @@ class PRPersonModel(S3Model):
                 "pr_gender_opts": pr_gender_opts,
                 "pr_person_id": person_id,
                 "pr_person_lookup": self.pr_person_lookup,
+                "pr_person_obscure_dob": self.pr_person_obscure_dob,
                 "pr_person_represent": person_represent,
                 }
 
@@ -1345,6 +1347,26 @@ class PRPersonModel(S3Model):
             return relativedelta(current.request.utcnow.date(), dob).years
         else:
             return None
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def pr_person_obscure_dob(record_id, field, value):
+        """
+            Helper to obscure a date of birth; maps to the first day of
+            the quarter, thus retaining the approximate age for statistics
+
+            @param record_id: the record ID
+            @param field: the Field
+            @param value: the field value
+
+            @return: the new field value
+        """
+
+        if value:
+            month = int((value.month - 1) / 3) * 3 + 1
+            value = value.replace(month=month, day=1)
+
+        return value
 
     # -------------------------------------------------------------------------
     @staticmethod

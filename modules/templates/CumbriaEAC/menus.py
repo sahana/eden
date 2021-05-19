@@ -59,8 +59,9 @@ class S3MainMenu(default.S3MainMenu):
                        MM("New Shelter", c="cr", f="shelter", m="create"),
                        ),
                     MM("Staff", c="hrm", f="human_resource")(),
-                    MM("Clients", c="pr", f="person", m="summary")(
+                    MM("Clients", c="pr", f="person")(
                        MM("Import", c="cr", f="shelter_registration", m="import"),
+                       MM("Report", m="report"),
                        ),
                     ]
 

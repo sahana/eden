@@ -313,13 +313,15 @@ def config(settings):
                                    "car",
                                    ]
 
+    ANONYMOUS = "-"
+
     # -------------------------------------------------------------------------
     def eac_person_anonymize():
         """ Rules to anonymise a person """
 
         #auth = current.auth
+        s3db = current.s3db
 
-        ANONYMOUS = "-"
         #anonymous_email = uuid4().hex
 
         title = "Name, Contacts, Address, Additional Information"
@@ -330,8 +332,7 @@ def config(settings):
                              "middle_name": ("set", ANONYMOUS),
                              "last_name": ("set", ANONYMOUS),
                              "pe_label": "remove",
-                             #"date_of_birth": current.s3db.pr_person_obscure_dob,
-                             "date_of_birth": "remove",
+                             "date_of_birth": s3db.pr_person_obscure_dob,
                              "comments": "remove",
                              },
                   "cascade": [("pr_contact", {"key": "pe_id",
@@ -342,45 +343,31 @@ def config(settings):
                                                          },
                                               "delete": True,
                                               }),
-                              ("pr_contact_emergency", {"key": "pe_id",
-                                                        "match": "pe_id",
-                                                        "fields": {"name": ("set", ANONYMOUS),
-                                                                   "relationship": "remove",
-                                                                   "phone": "remove",
-                                                                   "comments": "remove",
-                                                                   },
-                                                        "delete": True,
-                                                        }),
                               ("pr_address", {"key": "pe_id",
                                               "match": "pe_id",
-                                              "fields": {"location_id": current.s3db.pr_address_anonymise,
+                                              "fields": {"location_id": s3db.pr_address_anonymise,
                                                          "comments": "remove",
                                                          },
+                                              #"delete": True,
                                               }),
                               #("pr_person_details", {"key": "person_id",
                               #                       "match": "id",
-                              #                       "fields": {"education": "remove",
-                              #                                  "occupation": "remove",
+                              #                       "fields": {"nationality": "remove",
+                              #                                  "religion": "remove",
                               #                                  },
                               #                       }),
+                              ("pr_physical_description", {"key": "person_id",
+                                                           "match": "id",
+                                                           "fields": {#"ethnicity": "remove",
+                                                                      "medical_conditions": "remove",
+                                                                      },
+                                                           }),
                               ("pr_person_tag", {"key": "person_id",
                                                  "match": "id",
                                                  "fields": {"value": ("set", ANONYMOUS),
                                                             },
                                                  "delete": True,
                                                  }),
-                              #("br_case", {"key": "person_id",
-                              #             "match": "id",
-                              #             "fields": {"comments": "remove",
-                              #                        },
-                              #             "cascade": [("br_note", {"key": "id",
-                              #                                      "match": "case_id",
-                              #                                      "fields": {"note": "remove",
-                              #                                                 },
-                              #                                      "delete": True,
-                              #                                      }),
-                              #                         ],
-                              #             }),
                               ("hrm_human_resource", {"key": "person_id",
                                                       "match": "id",
                                                       "fields": {"status": ("set", 2),
@@ -388,30 +375,42 @@ def config(settings):
                                                                  "comments": "remove",
                                                                  },
                                                       "delete": True,
-                                                      "cascade": [("hrm_human_resource_tag", {"key": "human_resource_id",
-                                                                                              "match": "id",
-                                                                                              "fields": {"value": ("set", ANONYMOUS),
-                                                                                                         },
-                                                                                              "delete": True,
-                                                                                              }),
+                                                      }),
+                              ("pr_person_relation", {"key": "parent_id",
+                                                      "match": "id",
+                                                      "delete": True,
+                                                      "cascade": [("pr_person", {"key": "id",
+                                                                                 "match": "person_id",
+                                                                                 "fields": {"first_name": ("set", ANONYMOUS),
+                                                                                            "last_name": ("set", ANONYMOUS),
+                                                                                            "comments": "remove",
+                                                                                            },
+                                                                                 "delete": True,
+                                                                                 "cascade": [("pr_contact", {"key": "pe_id",
+                                                                                                             "match": "pe_id",
+                                                                                                             "fields": {"contact_description": "remove",
+                                                                                                                        "value": ("set", ""),
+                                                                                                                        "comments": "remove",
+                                                                                                                        },
+                                                                                                             "delete": True,
+                                                                                                             }),
+                                                                                             ("pr_address", {"key": "pe_id",
+                                                                                                             "match": "pe_id",
+                                                                                                             "fields": {"location_id": s3db.pr_address_anonymise,
+                                                                                                                        "comments": "remove",
+                                                                                                                        },
+                                                                                                             "delete": True,
+                                                                                                             }),
+                                                                                             ("pr_person_tag", {"key": "person_id",
+                                                                                                                "match": "id",
+                                                                                                                "fields": {"value": ("set", ANONYMOUS),
+                                                                                                                           },
+                                                                                                                "delete": True,
+                                                                                                                }),
+                                                                                             ],
+                                                                                 }),
                                                                   ],
                                                       }),
-                              #("pr_person_user", {"key": "pe_id",
-                              #                    "match": "pe_id",
-                              #                    "cascade": [("auth_user", {"key": "id",
-                              #                                               "match": "user_id",
-                              #                                               "fields": {"id": auth.s3_anonymise_roles,
-                              #                                                          "first_name": ("set", "-"),
-                              #                                                          "last_name": "remove",
-                              #                                                          "email": ("set", anonymous_email),
-                              #                                                          "organisation_id": "remove",
-                              #                                                          "password": auth.s3_anonymise_password,
-                              #                                                          "deleted": ("set", True),
-                              #                                                          },
-                              #                                               }),
-                              #                                ],
-                              #                    "delete": True,
-                              #                    }),
                               ],
                   "delete": True,
                   },
@@ -584,6 +583,29 @@ def config(settings):
             form_vars.status = 6
 
     # -------------------------------------------------------------------------
+    def cr_shelter_onaccept(form):
+        """
+            When a Shelter is Closed
+                - Check-Out all Clients 
+        """
+
+        form_vars = form.vars
+        form_vars_get = form_vars.get
+
+        status = form_vars_get("status")
+        if status not in ("1", "6"):
+            # Shelter is Open
+            return
+
+        shelter_id = form_vars_get("id")
+        table = current.s3db.cr_shelter_registration
+        query = (table.shelter_id == shelter_id) & \
+                (table.registration_status == 2) # Checked-in
+        db(query).update(registration_status = 3, # Checked-out
+                         #check_out_date = current.request.now,
+                         )
+
+    # -------------------------------------------------------------------------
     def customise_cr_shelter_resource(r, tablename):
 
         from gluon import DIV, IS_EMPTY_OR, IS_IN_SET, IS_LENGTH, IS_NOT_EMPTY, IS_NOT_IN_DB
@@ -746,6 +768,11 @@ def config(settings):
                          (T("WiFi available"), "wifi.value"),
                          (T("Catering"), "catering.value"),
                          ]
+
+        s3db.add_custom_callback("cr_shelter",
+                                 "update_onaccept",
+                                 cr_shelter_onaccept,
+                                 )
 
         s3db.configure(tablename,
                        create_next = None, # Don't redirect to People Registration after creation
@@ -1216,6 +1243,10 @@ def config(settings):
                                          )
 
             elif r.component_name == "client":
+                # Filter out Anonymised People
+                from s3 import FS
+                r.resource.add_filter(FS("client.first_name") != ANONYMOUS)
+
                 if not r.interactive:
                     output_format = current.auth.permission.format
                     if output_format not in ("aadata", "json", "xls"):
@@ -1909,8 +1940,65 @@ def config(settings):
                                                                     show_map = False,
                                                                     )
 
-        if current.auth.permission.format == "xls" and \
-           r.method != "report":
+        if r.method == "report":
+
+            s3.crud_strings["pr_person"].title_report = T("Clients Report")
+
+            filter_widgets = [
+                    S3OptionsFilter("shelter_registration.registration_status",
+                                    label = T("Status"),
+                                    options = {#1: T("Planned"),
+                                               2: T("Checked-in"),
+                                               3: T("Checked-out"),
+                                               },
+                                    ),
+                    S3LocationFilter("shelter_registration.shelter_id$location_id",
+                        label = T("Location"),
+                        levels = ("L3", "L4"),
+                        ),
+                    S3OptionsFilter("shelter_registration.shelter_id",
+                                    ),
+                    S3OptionsFilter("age_group",
+                                    label = T("Age"),
+                                    #hidden = True,
+                                    ),
+                    S3OptionsFilter("gender",
+                                    #hidden = True,
+                                    ),
+                    S3DateFilter("shelter_registration.check_in_date",
+                                 #hide_time = True,
+                                 hidden = True,
+                                 ),
+                    S3DateFilter("shelter_registration.check_out_date",
+                                 #hide_time = True,
+                                 hidden = True,
+                                 ),
+                    ]
+
+            report_fields = ["gender",
+                             "age_group",
+                             "person_details.nationality",
+                             "physical_description.ethnicity",
+                             "shelter_registration.shelter_id",
+                             "shelter_registration.shelter_id$location_id$L3",
+                             "shelter_registration.shelter_id$location_id$L4",
+                             ]
+
+            s3db.configure(tablename,
+                           filter_widgets = filter_widgets,
+                           report_options = Storage(
+                            rows = report_fields,
+                            cols = report_fields,
+                            fact = report_fields,
+                            defaults = Storage(rows = "shelter_registration.shelter_id$location_id$L4", # Lowest-level of hierarchy
+                                               cols = "age_group",
+                                               fact = "count(id)",
+                                               totals = True,
+                                               )
+                            ),
+                           )
+            
+        elif current.auth.permission.format == "xls":
             # Custom XLS Title Row
             settings.base.xls_title_row = xls_title_row
 
@@ -2146,7 +2234,14 @@ def config(settings):
                                  label = T("Search"),
                                  #_class = "filter-search",
                                  ),
-                    S3LocationFilter("location_id",
+                    S3OptionsFilter("shelter_registration.registration_status",
+                                    label = T("Status"),
+                                    options = {#1: T("Planned"),
+                                               2: T("Checked-in"),
+                                               3: T("Checked-out"),
+                                               },
+                                    ),
+                    S3LocationFilter("shelter_registration.shelter_id$location_id",
                                      label = T("Location"),
                                      levels = ("L3", "L4"),
                                      ),
@@ -2187,15 +2282,6 @@ def config(settings):
             if r.controller == "pr":
                 list_fields.insert(2, "shelter_registration.shelter_id")
 
-            report_fields = ["gender",
-                             "age_group",
-                             "person_details.nationality",
-                             "physical_description.ethnicity",
-                             "shelter_registration.shelter_id",
-                             "location_id$L3",
-                             "location_id$L4",
-                             ]
-
             from gluon import URL
 
             s3db.configure(tablename,
@@ -2207,25 +2293,25 @@ def config(settings):
                            filter_widgets = filter_widgets,
                            listadd = True, #if household else False,
                            list_fields = list_fields,
-                           report_options = Storage(
-                            rows = report_fields,
-                            cols = report_fields,
-                            fact = report_fields,
-                            defaults = Storage(rows = "location_id$L4", # Lowest-level of hierarchy
-                                               cols = "age_group",
-                                               fact = "count(id)",
-                                               totals = True,
-                                               )
-                            ),
-                           summary = ({"name": "table",
-                                       "label": "Table",
-                                       "widgets": [{"method": "datatable"}]
-                                       },
-                                      {"name": "report",
-                                       "label": "Report",
-                                       "widgets": [{"method": "report", "ajax_init": True}],
-                                       },
-                                      ),
+                           #report_options = Storage(
+                           # rows = report_fields,
+                           # cols = report_fields,
+                           # fact = report_fields,
+                           # defaults = Storage(rows = "shelter_registration.shelter_id$location_id$L4", # Lowest-level of hierarchy
+                           #                    cols = "age_group",
+                           #                    fact = "count(id)",
+                           #                    totals = True,
+                           #                    )
+                           # ),
+                           #summary = ({"name": "table",
+                           #            "label": "Table",
+                           #            "widgets": [{"method": "datatable"}]
+                           #            },
+                           #           {"name": "report",
+                           #            "label": "Report",
+                           #            "widgets": [{"method": "report", "ajax_init": True}],
+                           #            },
+                           #           ),
                            )
 
     settings.customise_pr_person_resource = customise_pr_person_resource
@@ -2233,11 +2319,16 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
+        from s3 import s3_set_default_filter
+
         auth = current.auth
         s3db = current.s3db
         s3 = current.response.s3
 
         output_format = auth.permission.format
+
+        # Exclude Checked-out Clients by default
+        s3_set_default_filter("shelter_registration.registration_status", [2], tablename="pr_person")
 
         # Redefine as multiple=False
         s3db.add_components("pr_person",
@@ -2258,6 +2349,15 @@ def config(settings):
         # Custom prep
         standard_prep = s3.prep
         def prep(r):
+
+            from s3 import FS
+
+            resource = r.resource
+
+            if r.method != "report":
+                # Filter out Anonymised People
+                resource.add_filter(FS("first_name") != ANONYMOUS)
+
             if not r.interactive:
                 if output_format not in ("aadata", "json", "xls"):
                     # Block Exports
@@ -2451,10 +2551,6 @@ def config(settings):
                                              "create_onaccept",
                                              household_check_in,
                                              )
-
-            from s3 import FS
-
-            resource = r.resource
 
             # Filter out Users
             resource.add_filter(FS("user.id") == None)
