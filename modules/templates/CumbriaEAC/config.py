@@ -89,6 +89,7 @@ def config(settings):
 
     settings.security.policy = 5 # Controller, Function & Table ACLs
 
+    settings.ui.auth_user_represent = "name"
     settings.ui.export_formats = ("xls",)
 
     # -------------------------------------------------------------------------
@@ -324,10 +325,8 @@ def config(settings):
 
         #anonymous_email = uuid4().hex
 
-        title = "Name, Contacts, Address, Additional Information"
-
         rules = [{"name": "default",
-                  "title": title,
+                  "title": "Name, Contacts, Address, Additional Information",
                   "fields": {"first_name": ("set", ANONYMOUS),
                              "middle_name": ("set", ANONYMOUS),
                              "last_name": ("set", ANONYMOUS),
@@ -471,22 +470,28 @@ def config(settings):
             button = ""
             if closed:
                 occupancy = ""
-                # Is there any unarchived data to Export?
-                etable = current.s3db.org_site_event
-                query = (etable.site_id == record.site_id) & \
-                        (etable.archived == False)
-                unarchived = current.db(query).select(etable.id,
-                                                      limitby = (0, 1)
-                                                      ).first()
-                if unarchived:
-                    # Add Export Button
+                # What is the Data Status of the Site?
+                ttable = current.s3db.org_site_tag
+                query = (ttable.site_id == record.site_id) & \
+                        (ttable.tag == "status")
+                tag = current.db(query).select(ttable.id,
+                                               ttable.value,
+                                               limitby = (0, 1)
+                                               ).first()
+                if tag:
+                    # Add Button
                     from gluon import A, URL
-                    button = A(T("Export"),
-                               _href = URL(args = [r.id, "export.xls"]),
-                               _class = "action-btn",
-                               )
-                # Is there any unanonymised data?
-                # @ToDo: Add Anonymise Button
+                    if tag.value == "CLOSED":
+                        button = A(T("Export"),
+                                   _href = URL(args = [r.id, "export.xls"]),
+                                   _class = "action-btn",
+                                   )
+                    #elif tag.value = "EXPORTED":
+                    else:
+                        button = A(T("Anonymize"),
+                                   _href = URL(args = [r.id, "anonymise"]),
+                                   _class = "action-btn",
+                                   )
             else:
                 occupancy = TR(TH("%s: " % table.population_day.label),
                                "%s / %s" % (record.population_day, record.capacity_day),
@@ -585,25 +590,129 @@ def config(settings):
     # -------------------------------------------------------------------------
     def cr_shelter_onaccept(form):
         """
+            When a Shelter is Opened/Closed
+                - Control Flag to track Data Exporting/Anonymising
             When a Shelter is Closed
-                - Check-Out all Clients 
+                - Check-out all Clients 
         """
+
+        record = form.record
+        if not record:
+            # Create form
+            # (NB We don't hook into update_onaccept as this would mean that the default onaccept wouldn't run)
+            return
 
         form_vars = form.vars
         form_vars_get = form_vars.get
 
         status = form_vars_get("status")
-        if str(status) not in ("1", "6"):
-            # Shelter is Open
+
+        if status == record.status:
+            # Status hasn't changed
             return
 
+        # Control Flag to track Data Exporting/Anonymising
+        db = current.db
+        s3db = current.s3db
+
+        site_id = form_vars_get("site_id")
+        table = s3db.org_site_tag
+        query = (table.site_id == site_id) & \
+                (table.tag == "status")
+
+        if status not in (1, 6):
+            # Shelter has been Opened
+            # Clear Flag
+            db(query).delete()
+            return
+
+        tag = db(query).select(table.id,
+                               limitby = (0 ,1)
+                               ).first()
+        if not tag:
+            # No tag, so create one
+            table.insert(site_id = site_id,
+                         tag = "status",
+                         value = "CLOSED",
+                         )
+
+        # Check-out all clients
         shelter_id = form_vars_get("id")
-        table = current.s3db.cr_shelter_registration
+        table = s3db.cr_shelter_registration
         query = (table.shelter_id == shelter_id) & \
                 (table.registration_status == 2) # Checked-in
-        current.db(query).update(registration_status = 3, # Checked-out
-                                 #check_out_date = current.request.now,
-                                 )
+        db(query).update(registration_status = 3, # Checked-out
+                         #check_out_date = current.request.now,
+                         )
+
+    # -------------------------------------------------------------------------
+    def cr_shelter_anonymise(r, **attr):
+        """
+            Anonymise all Client data for a Shelter
+            Archive Logs
+        """
+
+        site_id = r.record.site_id
+        shelter_name = r.record.name
+
+        db = current.db
+        s3db = current.s3db
+
+        # Check Flag
+        ttable = s3db.org_site_tag
+        query = (ttable.site_id == site_id) & \
+                (ttable.tag == "status")
+        tag = db(query).select(ttable.id,
+                               ttable.value,
+                               limitby = (0, 1)
+                               ).first()
+        if not tag or tag.value != "EXPORTED":
+            current.session.error = T("Cannot Anonymize Data for a Shelter unless the data has been Exported!")
+            # Redirect to Normal page
+            from gluon import redirect, URL
+            redirect(URL(args = [r.id]))
+
+        # Remove Flag
+        db(ttable.id == tag.id).delete()
+
+        # Log
+        settings.security.audit_write = True
+        from s3 import S3Audit
+        S3Audit().__init__()
+        s3db.s3_audit.insert(timestmp = r.now,
+                             user_id = current.auth.user.id,
+                             method = "Data Anonymise",
+                             representation = shelter_name,
+                             )
+
+        # Read Site Logs
+        etable = s3db.org_site_event
+        equery = (etable.site_id == site_id) & \
+                 (etable.archived == False)
+        log_rows = db(equery).select(etable.event,
+                                     etable.comments,
+                                     etable.person_id,
+                                     )
+        client_ids = []
+        cappend = client_ids.append
+        for row in log_rows:
+            if row.event != 2:
+                # Only interested in check-ins
+                continue
+            if row.comments == "Client":
+                cappend(row.person_id)
+
+        # Anonymise Clients
+        from s3 import S3Anonymize
+        rules = eac_person_anonymize()[0]
+        S3Anonymize.cascade(s3db.pr_person, client_ids, rules)
+
+        # Archive Logs
+        db(equery).update(archived = True)
+
+        current.session.confirmation = T("Data Anoynmized succesfully!")
+        from gluon import redirect, URL
+        redirect(URL(args = [r.id]))
 
     # -------------------------------------------------------------------------
     def cr_shelter_export(r, **attr):
@@ -651,6 +760,7 @@ def config(settings):
         #####
         # Log
         #####
+
         # Site Log
         site_id = record.site_id
         etable = s3db.org_site_event
@@ -669,13 +779,26 @@ def config(settings):
                              representation = shelter_name,
                              )
 
+        ######
+        # Flag
+        ######
+        ttable = s3db.org_site_tag
+        query = (ttable.site_id == site_id) & \
+                (ttable.tag == "status")
+        tag = db(query).select(ttable.id,
+                               limitby = (0, 1)
+                               ).first()
+        if tag:
+            tag.update_record(value = "EXPORTED")
+
         ##############
         # Extract Data
         ##############
 
         # Event Log
         event_represent = etable.event.represent
-        status_represent = etable.status.represent
+        status_represent = lambda opt: \
+                            cr_shelter_status_opts.get(opt, current.messages.UNKNOWN_OPT)
 
         query = (etable.site_id == site_id) & \
                 (etable.archived == False)
@@ -1174,7 +1297,7 @@ def config(settings):
                          ]
 
         s3db.add_custom_callback("cr_shelter",
-                                 "update_onaccept",
+                                 "onaccept",
                                  cr_shelter_onaccept,
                                  )
 
@@ -1316,6 +1439,10 @@ def config(settings):
         set_method = s3db.set_method
 
         set_method("cr", "shelter",
+                   method = "anonymise",
+                   action = cr_shelter_anonymise)
+
+        set_method("cr", "shelter",
                    component_name = "client",
                    method = "checkout",
                    action = client_checkout)
@@ -1366,7 +1493,8 @@ def config(settings):
             #    s3.crud_strings["cr_shelter"].title_display = T("Manage Shelter")
             s3.crud_strings["cr_shelter"].title_display = shelter_name
 
-            if r.component_name == "human_resource_site":
+            cname = r.component_name
+            if cname == "human_resource_site":
                 if not r.interactive:
                     auth = current.auth
                     output_format = auth.permission.format
@@ -1438,60 +1566,10 @@ def config(settings):
                                          staff_check_in,
                                          )
 
-            elif r.component_name == "human_resource":
-                # UNUSED
-                if not r.interactive:
-                    output_format = current.auth.permission.format
-                    if output_format not in ("aadata", "json", "xls"):
-                        # Block Exports
-                        return False
-                    if output_format == "xls":
-                        # Add Site Event Log
-                        s3db.org_site_event.insert(site_id = r.record.site_id,
-                                                   event = 5, # Data Export
-                                                   comments = "Staff",
-                                                   )
-                        # Log in Global Log
-                        settings.security.audit_write = True
-                        from s3 import S3Audit
-                        S3Audit().__init__()
-                        s3db.s3_audit.insert(timestmp = r.now,
-                                             user_id = auth.user.id,
-                                             method = "Data Export",
-                                             representation = "Staff",
-                                             )
-
-                # Filtered components
-                s3db.add_components("pr_person",
-                                    pr_person_tag = ({"name": "car",
-                                                      "joinby": "person_id",
-                                                      "filterby": {"tag": "car"},
-                                                      "multiple": False,
-                                                      },
-                                                     ),
-                                    )
-
-                # Override the defaulting/hiding of Organisation
-                f = r.component.table.organisation_id
-                f.default = None
-                f.readable = f.writable = True
-
-                # Adding Staff here Checks them in
-                def staff_check_in(form):
-                    s3db.org_site_event.insert(site_id = r.record.site_id,
-                                               person_id = form.vars.get("person_id"),
-                                               event = 2, # Checked-In
-                                               comments = "Staff",
-                                               )
-                s3db.add_custom_callback("hrm_human_resource",
-                                         "create_onaccept",
-                                         staff_check_in,
-                                         )
-
-            elif r.component_name == "client":
+            elif cname == "client":
                 # Filter out Anonymised People
                 from s3 import FS
-                r.resource.add_filter(FS("client.first_name") != ANONYMOUS)
+                r.resource.add_component_filter(cname, (FS("client.first_name") != ANONYMOUS))
 
                 if not r.interactive:
                     output_format = current.auth.permission.format
@@ -1588,6 +1666,60 @@ def config(settings):
                 s3db.add_custom_callback("cr_shelter_registration",
                                          "create_onaccept",
                                          client_check_in,
+                                         )
+
+            elif cname == "event":
+                from s3 import FS
+                r.resource.add_component_filter(cname, (FS("archived") == False))
+
+            elif cname == "human_resource":
+                # UNUSED
+                if not r.interactive:
+                    output_format = current.auth.permission.format
+                    if output_format not in ("aadata", "json", "xls"):
+                        # Block Exports
+                        return False
+                    if output_format == "xls":
+                        # Add Site Event Log
+                        s3db.org_site_event.insert(site_id = r.record.site_id,
+                                                   event = 5, # Data Export
+                                                   comments = "Staff",
+                                                   )
+                        # Log in Global Log
+                        settings.security.audit_write = True
+                        from s3 import S3Audit
+                        S3Audit().__init__()
+                        s3db.s3_audit.insert(timestmp = r.now,
+                                             user_id = auth.user.id,
+                                             method = "Data Export",
+                                             representation = "Staff",
+                                             )
+
+                # Filtered components
+                s3db.add_components("pr_person",
+                                    pr_person_tag = ({"name": "car",
+                                                      "joinby": "person_id",
+                                                      "filterby": {"tag": "car"},
+                                                      "multiple": False,
+                                                      },
+                                                     ),
+                                    )
+
+                # Override the defaulting/hiding of Organisation
+                f = r.component.table.organisation_id
+                f.default = None
+                f.readable = f.writable = True
+
+                # Adding Staff here Checks them in
+                def staff_check_in(form):
+                    s3db.org_site_event.insert(site_id = r.record.site_id,
+                                               person_id = form.vars.get("person_id"),
+                                               event = 2, # Checked-In
+                                               comments = "Staff",
+                                               )
+                s3db.add_custom_callback("hrm_human_resource",
+                                         "create_onaccept",
+                                         staff_check_in,
                                          )
             else:
                 s3.crud_strings["cr_shelter"].title_update = T("Manage Shelter")

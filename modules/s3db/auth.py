@@ -1321,7 +1321,10 @@ class auth_UserRepresent(S3Represent):
         if self.show_email:
             email = row.get("auth_user.email")
             if email:
-                repr_str = "%s <%s>" % (repr_str, email)
+                if repr_str:
+                    repr_str = "%s <%s>" % (repr_str, email)
+                else:
+                    repr_str = email
 
         if self.show_phone:
             phone = self._phone.get(row.get("pr_person.pe_id"))
