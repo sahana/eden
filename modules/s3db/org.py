@@ -5505,12 +5505,12 @@ class org_OrganisationRepresent(S3Represent):
                       ]
 
         super(org_OrganisationRepresent,
-              self).__init__(lookup="org_organisation",
-                             fields=fields,
-                             show_link=show_link,
-                             linkto=linkto,
-                             translate=translate,
-                             multiple=multiple)
+              self).__init__(lookup = "org_organisation",
+                             fields = fields,
+                             show_link = show_link,
+                             linkto = linkto,
+                             translate = translate,
+                             multiple = multiple)
 
     # -------------------------------------------------------------------------
     def custom_lookup_rows(self, key, values, fields=None):

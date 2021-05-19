@@ -676,10 +676,16 @@ def s3_fullname(person=None, pe_id=None, truncate=True):
         record = db(query).select(ptable.first_name,
                                   ptable.middle_name,
                                   ptable.last_name,
-                                  limitby=(0, 1)).first()
+                                  limitby = (0, 1)
+                                  ).first()
     if record:
         fname, mname, lname = "", "", ""
         if "pr_person" in record:
+            # Check if this is a LazySet from db.auth_user
+            #test = record["pr_person"]
+            #from pydal.objects import LazySet
+            #if not isinstance(test, LazySet)
+            #    record = test
             record = record["pr_person"]
         if record.first_name:
             fname = record.first_name.strip()

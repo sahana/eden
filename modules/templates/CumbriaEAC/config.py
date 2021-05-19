@@ -560,7 +560,7 @@ def config(settings):
         form_vars_get = form_vars.get
 
         status = form_vars_get("status")
-        if status not in ("1", "6"):
+        if str(status) not in ("1", "6"):
             # Shelter is Open
             obsolete = form_vars_get("obsolete")
             if obsolete:
@@ -593,7 +593,7 @@ def config(settings):
         form_vars_get = form_vars.get
 
         status = form_vars_get("status")
-        if status not in ("1", "6"):
+        if str(status) not in ("1", "6"):
             # Shelter is Open
             return
 
@@ -601,9 +601,413 @@ def config(settings):
         table = current.s3db.cr_shelter_registration
         query = (table.shelter_id == shelter_id) & \
                 (table.registration_status == 2) # Checked-in
-        db(query).update(registration_status = 3, # Checked-out
-                         #check_out_date = current.request.now,
-                         )
+        current.db(query).update(registration_status = 3, # Checked-out
+                                 #check_out_date = current.request.now,
+                                 )
+
+    # -------------------------------------------------------------------------
+    def cr_shelter_export(r, **attr):
+        """
+            Export Logs and all Client data for a Shelter to XLS
+        """
+
+        shelter_id = r.id
+        record = r.record
+        if record.status not in (1, 6):
+            current.session.error = T("Cannot Export Data for a Shelter unless it is Closed")
+            # Redirect to Normal page
+            from gluon import redirect, URL
+            redirect(URL(args = [shelter_id]))
+
+        # Export all the data for the Shelter
+        from s3.codecs.xls import S3XLS
+        try:
+            import xlwt
+        except ImportError:
+            error = S3XLS.ERROR.XLWT_ERROR
+            current.log.error(error)
+            raise HTTP(503, body=error)
+        try:
+            from xlrd.xldate import xldate_from_date_tuple, \
+                                    xldate_from_datetime_tuple
+        except ImportError:
+            error = S3XLS.ERROR.XLRD_ERROR
+            current.log.error(error)
+            raise HTTP(503, body=error)
+
+        from s3 import s3_format_fullname, s3_fullname, s3_unicode
+
+        date_format = settings.get_L10n_date_format()
+        date_format_str = str(date_format)
+
+        dt_format_translate = S3XLS.dt_format_translate
+        date_format = dt_format_translate(date_format)
+        datetime_format = dt_format_translate(settings.get_L10n_datetime_format())
+
+        db = current.db
+        s3db = current.s3db
+        shelter_name = record.name
+
+        #####
+        # Log
+        #####
+        # Site Log
+        site_id = record.site_id
+        etable = s3db.org_site_event
+        etable.insert(site_id = site_id,
+                      event = 5, # Data Export
+                      comments = "Shelter",
+                      )
+
+        # Global Log
+        settings.security.audit_write = True
+        from s3 import S3Audit
+        S3Audit().__init__()
+        s3db.s3_audit.insert(timestmp = r.now,
+                             user_id = current.auth.user.id,
+                             method = "Data Export",
+                             representation = shelter_name,
+                             )
+
+        ##############
+        # Extract Data
+        ##############
+
+        # Event Log
+        event_represent = etable.event.represent
+        status_represent = etable.status.represent
+
+        query = (etable.site_id == site_id) & \
+                (etable.archived == False)
+        log_rows = db(query).select(etable.date,
+                                    etable.created_by,
+                                    etable.event,
+                                    etable.comments,
+                                    etable.person_id,
+                                    etable.status,
+                                    )
+        client_ids = []
+        cappend = client_ids.append
+        staff_ids = []
+        sappend = staff_ids.append
+        user_ids = []
+        uappend = user_ids.append
+        for row in log_rows:
+            uappend(row.created_by)
+            if row.event != 2:
+                # Only interested in check-ins
+                continue
+            if row.comments == "Staff":
+                sappend(row.person_id)
+            else:
+                cappend(row.person_id)
+
+        # Users
+        utable = db.auth_user
+        user_rows = db(utable.id.belongs(set(user_ids))).select(utable.id,
+                                                                utable.first_name,
+                                                                utable.last_name,
+                                                                )
+        users = {row.id: s3_format_fullname(row.first_name.strip(), "", row.last_name.strip(), False) for row in user_rows}
+
+        # Clients
+        ptable = s3db.pr_person
+        client_rows = db(ptable.id.belongs(client_ids)).select(ptable.id,
+                                                               ptable.pe_label,
+                                                               ptable.first_name,
+                                                               ptable.middle_name,
+                                                               ptable.last_name,
+                                                               ptable.date_of_birth,
+                                                               ptable.gender,
+                                                               )
+        clients = {row.id: s3_fullname(row) for row in client_rows}
+        gender_represent = ptable.gender.represent
+
+        # Staff
+        htable = s3db.hrm_human_resource
+        query = (ptable.id.belongs(set(staff_ids))) & \
+                (ptable.id == htable.person_id)
+        staff_rows = db(query).select(ptable.id,
+                                      ptable.first_name,
+                                      ptable.last_name,
+                                      htable.organisation_id,
+                                      )
+        organisation_ids = set([row["hrm_human_resource.organisation_id"] for row in staff_rows])
+        otable = s3db.org_organisation
+        organisations = db(otable.id.belongs(organisation_ids)).select(otable.id,
+                                                                       otable.name,
+                                                                       ).as_dict()
+        staff = {}
+        for row in staff_rows:
+            organisation_id = row["hrm_human_resource.organisation_id"]
+            represent = s3_fullname(row["pr_person"])
+            if organisation_id:
+                represent = "%s (%s)" % (represent, organisations.get(organisation_id)["name"])
+            staff[row["pr_person.id"]] = represent
+
+        #session = current.session
+        #session.confirmation = T("Data Exported")
+        #session.information = T("Data Anonymization Scheduled")
+
+        ##############
+        # Write Data
+        ##############
+
+        # Create the workbook
+        book = xlwt.Workbook(encoding="utf-8")
+        COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
+        styles = S3XLS._styles(use_colour = True,
+                               evenodd = True)
+        header_style = styles["header"]
+        odd_style = styles["odd"]
+        even_style = styles["even"]
+
+        # Clients Sheet
+        sheet = book.add_sheet("Clients")
+        column_widths = []
+        header_row = sheet.row(0)
+        for col_index, label in ((0, "Reception Centre Ref"),
+                                 (1, "Last Name"),
+                                 (2, "Middle Name"),
+                                 (3, "First Name"),
+                                 (4, "Sex"),
+                                 (5, "Date of Birth"),
+                                 ):
+            header_row.write(col_index, label, header_style)
+            width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
+            width = min(width, 65535) # USHRT_MAX
+            column_widths.append(width)
+            sheet.col(col_index).width = width
+
+        row_index = 1
+        for row in client_rows:
+            current_row = sheet.row(row_index)
+            style = even_style if row_index % 2 == 0 else odd_style
+            col_index = 0
+            for field in ("pe_label",
+                          "last_name",
+                          "middle_name",
+                          "first_name",
+                          ):
+                represent = row[field]
+                if represent:
+                    current_row.write(col_index, represent, style)
+                    width = len(represent) * COL_WIDTH_MULTIPLIER
+                    if width > column_widths[col_index]:
+                        column_widths[col_index] = width
+                        sheet.col(col_index).width = width
+                else:
+                    # Just add the row style
+                    current_row.write(col_index, "", style)
+                col_index += 1
+
+            gender = row["gender"]
+            if gender:
+                represent = s3_unicode(gender_represent(gender))
+                current_row.write(col_index, represent, style)
+                width = len(represent) * COL_WIDTH_MULTIPLIER
+                if width > column_widths[col_index]:
+                    column_widths[col_index] = width
+                    sheet.col(col_index).width = width
+            else:
+                # Just add the row style
+                current_row.write(col_index, "", style)
+            col_index += 1
+
+            date_of_birth = row["date_of_birth"]
+            if date_of_birth:
+                represent = s3_unicode(date_of_birth)
+                date_tuple = (date_of_birth.year,
+                              date_of_birth.month,
+                              date_of_birth.day)
+                date_of_birth = xldate_from_date_tuple(date_tuple, 0)
+                style.num_format_str = date_format
+                current_row.write(col_index, date_of_birth, style)
+                width = len(represent) * COL_WIDTH_MULTIPLIER
+                if width > column_widths[col_index]:
+                    column_widths[col_index] = width
+                    sheet.col(col_index).width = width
+                style.num_format_str = "General"
+            else:
+                # Just add the row style
+                current_row.write(col_index, "", style)
+            col_index += 1
+
+            row_index += 1
+
+        # Staff Sheet
+        sheet = book.add_sheet("Staff")
+        column_widths = []
+        header_row = sheet.row(0)
+        for col_index, label in ((0, "Organisation"),
+                                 (1, "Last Name"),
+                                 (2, "First Name"),
+                                 ):
+            header_row.write(col_index, label, header_style)
+            width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
+            width = min(width, 65535) # USHRT_MAX
+            column_widths.append(width)
+            sheet.col(col_index).width = width
+
+        row_index = 1
+        for row in staff_rows:
+            current_row = sheet.row(row_index)
+            style = even_style if row_index % 2 == 0 else odd_style
+            col_index = 0
+
+            organisation_id = row["hrm_human_resource.organisation_id"]
+            if organisation_id:
+                represent = organisations.get(organisation_id)["name"]
+                current_row.write(col_index, represent, style)
+                width = len(represent) * COL_WIDTH_MULTIPLIER
+                if width > column_widths[col_index]:
+                    column_widths[col_index] = width
+                    sheet.col(col_index).width = width
+            else:
+                # Just add the row style
+                current_row.write(col_index, "", style)
+            col_index += 1
+
+            row = row["pr_person"]
+            for field in ("last_name",
+                          "first_name",
+                          ):
+                represent = row[field]
+                current_row.write(col_index, represent, style)
+                width = len(represent) * COL_WIDTH_MULTIPLIER
+                if width > column_widths[col_index]:
+                    column_widths[col_index] = width
+                    sheet.col(col_index).width = width
+                col_index += 1
+
+            row_index += 1
+
+        # Log Sheet
+        sheet = book.add_sheet("Log")
+        column_widths = []
+        header_row = sheet.row(0)
+        for col_index, label in ((0, "Date"),
+                                 (1, "User"),
+                                 (2, "Event"),
+                                 (3, "Comments"),
+                                 (4, "Person"),
+                                 (5, "Status"),
+                                 ):
+            header_row.write(col_index, label, header_style)
+            width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
+            width = min(width, 65535) # USHRT_MAX
+            column_widths.append(width)
+            sheet.col(col_index).width = width
+
+        row_index = 1
+        for row in log_rows:
+            current_row = sheet.row(row_index)
+            style = even_style if row_index % 2 == 0 else odd_style
+            col_index = 0
+
+            date = row["date"]
+            represent = s3_unicode(date)
+            date_tuple = (date.year,
+                          date.month,
+                          date.day,
+                          date.hour,
+                          date.minute,
+                          date.second)
+            date = xldate_from_datetime_tuple(date_tuple, 0)
+            style.num_format_str = datetime_format
+            current_row.write(col_index, date, style)
+            width = len(represent) * COL_WIDTH_MULTIPLIER
+            if width > column_widths[col_index]:
+                column_widths[col_index] = width
+                sheet.col(col_index).width = width
+            style.num_format_str = "General"
+            col_index += 1
+
+            user_id = row["created_by"]
+            if user_id:
+                represent = users.get(user_id)
+                current_row.write(col_index, represent, style)
+                width = len(represent) * COL_WIDTH_MULTIPLIER
+                if width > column_widths[col_index]:
+                    column_widths[col_index] = width
+                    sheet.col(col_index).width = width
+            else:
+                # Just add the row style
+                current_row.write(col_index, "", style)
+            col_index += 1
+
+            event = row["event"]
+            if event:
+                represent = s3_unicode(event_represent(event))
+                current_row.write(col_index, represent, style)
+                width = len(represent) * COL_WIDTH_MULTIPLIER
+                if width > column_widths[col_index]:
+                    column_widths[col_index] = width
+                    sheet.col(col_index).width = width
+            else:
+                # Just add the row style
+                current_row.write(col_index, "", style)
+            col_index += 1
+
+            comments = row["comments"]
+            if comments:
+                represent = comments
+                current_row.write(col_index, represent, style)
+                width = len(represent) * COL_WIDTH_MULTIPLIER
+                if width > column_widths[col_index]:
+                    column_widths[col_index] = width
+                    sheet.col(col_index).width = width
+            else:
+                # Just add the row style
+                current_row.write(col_index, "", style)
+            col_index += 1
+
+            person_id = row["person_id"]
+            if person_id:
+                if comments == "Staff":
+                    represent = staff.get(person_id)
+                else:
+                    represent = clients.get(person_id) or staff.get(person_id)
+                current_row.write(col_index, represent, style)
+                width = len(represent) * COL_WIDTH_MULTIPLIER
+                if width > column_widths[col_index]:
+                    column_widths[col_index] = width
+                    sheet.col(col_index).width = width
+            else:
+                # Just add the row style
+                current_row.write(col_index, "", style)
+            col_index += 1
+
+            status = row["status"]
+            if status:
+                represent = s3_unicode(status_represent(status))
+                current_row.write(col_index, represent, style)
+                width = len(represent) * COL_WIDTH_MULTIPLIER
+                if width > column_widths[col_index]:
+                    column_widths[col_index] = width
+                    sheet.col(col_index).width = width
+            else:
+                # Just add the row style
+                current_row.write(col_index, "", style)
+            col_index += 1
+
+            row_index += 1
+
+        # Write output
+        from s3compat import BytesIO
+        output = BytesIO()
+        book.save(output)
+        output.seek(0)
+
+        # Response headers
+        from gluon.contenttype import contenttype
+        filename = "%s.xls" % shelter_name
+        disposition = "attachment; filename=\"%s\"" % filename
+        response = current.response
+        response.headers["Content-Type"] = contenttype(".xls")
+        response.headers["Content-disposition"] = disposition
+
+        return output.read()
 
     # -------------------------------------------------------------------------
     def customise_cr_shelter_resource(r, tablename):
@@ -784,7 +1188,7 @@ def config(settings):
                         rows = report_fields,
                         cols = report_fields,
                         fact = report_fields,
-                        defaults = Storage(rows = "location_id$L4", # Lowest-level of hierarchy
+                        defaults = Storage(rows = "location_id$L3",
                                            cols = "status",
                                            fact = "count(name)",
                                            totals = True,
@@ -887,164 +1291,6 @@ def config(settings):
                                  ],
                          ))
 
-        def shelter_export(r, **attr):
-            shelter_id = r.id
-            record = r.record
-            if record.status not in (1, 6):
-                current.session.error = T("Cannot Export Data for a Shelter unless it is Closed")
-                # Redirect to Normal page
-                from gluon import redirect
-                redirect(URL(args = [shelter_id]))
-
-            # Export all the data for the Shelter
-            from s3.codecs.xls import S3XLS
-            try:
-                import xlwt
-            except ImportError:
-                error = S3XLS.ERROR.XLWT_ERROR
-                current.log.error(error)
-                raise HTTP(503, body=error)
-            try:
-                from xlrd.xldate import xldate_from_date_tuple, \
-                                        xldate_from_datetime_tuple
-            except ImportError:
-                error = S3XLS.ERROR.XLRD_ERROR
-                current.log.error(error)
-                raise HTTP(503, body=error)
-
-            shelter_name = record.name
-            # Log in Site Log
-            etable = s3db.org_site_event
-            etable.insert(site_id = record.site_id,
-                          event = 5, # Data Export
-                          comments = "Shelter",
-                          )
-            # Log in Global Log
-            settings.security.audit_write = True
-            from s3 import S3Audit
-            S3Audit().__init__()
-            s3db.s3_audit.insert(timestmp = r.now,
-                                 user_id = current.auth.user.id,
-                                 method = "Data Export",
-                                 representation = shelter_name,
-                                 )
-            # Extract Data
-            db = current.db
-            # Event Log
-            logs = db(etable.archived == False).select(etable.date,
-                                                       etable.created_by,
-                                                       etable.event,
-                                                       etable.comments,
-                                                       etable.person_id,
-                                                       etable.status,
-                                                       )
-            client_ids = []
-            cappend = client_ids.append
-            staff_ids = []
-            sappend = staff_ids.append
-            for row in logs:
-                if row.event != 2:
-                    # Only interested in check-ins
-                    continue
-                if row.comments == "Staff":
-                    sappend(row.person_id)
-                else:
-                    cappend(row.person_id)
-            # Clients
-            ptable = s3db.pr_person
-            clients = db(ptable.id.belongs(client_ids)).select(ptable.id,
-                                                               ptable.pe_label,
-                                                               ptable.first_name,
-                                                               ptable.middle_name,
-                                                               ptable.last_name,
-                                                               ptable.date_of_birth,
-                                                               ptable.gender,
-                                                               )
-            # Staff
-            htable = s3db.hrm_human_resource
-            query = (ptable.id.belongs(set(staff_ids))) & \
-                    (ptable.id == htable.person_id)
-            staff = db(query).select(ptable.id,
-                                     ptable.first_name,
-                                     ptable.last_name,
-                                     htable.organisation_id,
-                                     )
-
-            #session = current.session
-            #session.confirmation = T("Data Exported")
-            #session.information = T("Data Anonymization Scheduled")
-
-            # Create the workbook
-            book = xlwt.Workbook(encoding="utf-8")
-            styles = S3XLS._styles(use_colour = True,
-                                   evenodd = True)
-            header_style = styles["header"]
-            odd_style = styles["odd"]
-            even_style = styles["even"]
-
-            # Clients Sheet
-            sheet = book.add_sheet("Clients")
-            header_row = sheet.row(0)
-            header_row.write(0, "ID", header_style)
-            header_row.write(1, "Reception Centre Ref", header_style)
-            header_row.write(2, "Last Name", header_style)
-            header_row.write(3, "Middle Name", header_style)
-            header_row.write(4, "First Name", header_style)
-            header_row.write(5, "Sex", header_style)
-            header_row.write(6, "Date of Birth", header_style)
-            row_index = 0
-            for row in clients:
-                current_row = sheet.row(row_index)
-                style = even_style if row_index % 2 == 0 else odd_style
-                col_index = 0
-                for field in ("id",
-                              "pe_label",
-                              "last_name",
-                              "middle_name",
-                              "first_name",
-                              "gender",
-                              "date_of_birth",
-                              ):
-                    current_row.write(col_index, row[field], style)
-                    col_index += 1
-                row_index += 1
-
-            # Staff Sheet
-            sheet = book.add_sheet("Staff")
-            header_row = sheet.row(0)
-            header_row.write(0, "ID", header_style)
-            header_row.write(1, "Organisation", header_style)
-            header_row.write(2, "Last Name", header_style)
-            header_row.write(3, "First Name", header_style)
-            col_index = 0
-
-            # Log Sheet
-            sheet = book.add_sheet("Log")
-            header_row = sheet.row(0)
-            header_row.write(0, "Date", header_style)
-            header_row.write(1, "User", header_style)
-            header_row.write(2, "Event", header_style)
-            header_row.write(3, "Comments", header_style)
-            header_row.write(4, "Person", header_style)
-            header_row.write(5, "Status", header_style)
-            col_index = 0
-
-            # Write output
-            from s3compat import BytesIO
-            output = BytesIO()
-            book.save(output)
-            output.seek(0)
-
-            # Response headers
-            from gluon.contenttype import contenttype
-            filename = "%s.xls" % shelter_name
-            disposition = "attachment; filename=\"%s\"" % filename
-            response = current.response
-            response.headers["Content-Type"] = contenttype(".xls")
-            response.headers["Content-disposition"] = disposition
-
-            return output.read()
-
         def shelter_manage(r, **attr):
             shelter_id = r.id
             # Set this shelter into the session
@@ -1081,7 +1327,7 @@ def config(settings):
 
         set_method("cr", "shelter",
                    method = "export",
-                   action = shelter_export)
+                   action = cr_shelter_export)
 
         set_method("cr", "shelter",
                    method = "manage",
@@ -1572,7 +1818,7 @@ def config(settings):
                         rows = report_fields,
                         cols = report_fields,
                         fact = report_fields,
-                        defaults = Storage(rows = "location_id$L4", # Lowest-level of hierarchy
+                        defaults = Storage(rows = "location_id$L3",
                                            cols = "organisation_id",
                                            fact = "count(person_id)",
                                            totals = True,
@@ -1990,7 +2236,7 @@ def config(settings):
                             rows = report_fields,
                             cols = report_fields,
                             fact = report_fields,
-                            defaults = Storage(rows = "shelter_registration.shelter_id$location_id$L4", # Lowest-level of hierarchy
+                            defaults = Storage(rows = "shelter_registration.shelter_id$location_id$L3",
                                                cols = "age_group",
                                                fact = "count(id)",
                                                totals = True,
@@ -2297,7 +2543,7 @@ def config(settings):
                            # rows = report_fields,
                            # cols = report_fields,
                            # fact = report_fields,
-                           # defaults = Storage(rows = "shelter_registration.shelter_id$location_id$L4", # Lowest-level of hierarchy
+                           # defaults = Storage(rows = "shelter_registration.shelter_id$location_id$L3",
                            #                    cols = "age_group",
                            #                    fact = "count(id)",
                            #                    totals = True,
