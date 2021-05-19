@@ -2095,10 +2095,11 @@ def config(settings):
                                      )
 
             elif r.component_name == "facility":
-                ctable = r.component.table
-                if is_org_group_admin or \
-                   record and auth.s3_has_role("ORG_ADMIN", for_pe=record.pe_id):
+                if r.component_id and \
+                   (is_org_group_admin or \
+                    record and auth.s3_has_role("ORG_ADMIN", for_pe=record.pe_id)):
                     # Expose obsolete-flag
+                    ctable = r.component.table
                     field = ctable.obsolete
                     field.readable = field.writable = True
 
@@ -2353,6 +2354,9 @@ def config(settings):
         field = dtable.service_mode_id
         field.readable = True
         field.writable = in_org_controller
+        requires = field.requires
+        if isinstance(requires, IS_EMPTY_OR):
+            field.requires = requires.other
 
         field = dtable.authorisation_advice
         field.label = T("Advice")
