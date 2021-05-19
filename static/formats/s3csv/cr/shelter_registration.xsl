@@ -161,27 +161,27 @@
                 </xsl:attribute>
             </reference>
 
-            <data field="registration_status">
-                <xsl:choose>
-                    <xsl:when test="$Status='PLANNED'">
-                        <xsl:text>1</xsl:text>
-                    </xsl:when>
-                    <xsl:when test="$Status='IN'">
-                        <xsl:text>2</xsl:text>
-                    </xsl:when>
-                    <xsl:when test="$Status='OUT'">
-                        <xsl:text>3</xsl:text>
-                    </xsl:when>
-                    <xsl:when test="$Status!=''">
-                        <!-- Assume Numeric -->
-                        <xsl:value-of select="$Status"/>
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <!-- Planned (legacy, left for backwards-compatibility) -->
-                        <xsl:text>1</xsl:text>
-                    </xsl:otherwise>
-                </xsl:choose>
-            </data>
+            
+            <xsl:choose>
+                <xsl:when test="$Status='PLANNED'">
+                    <data field="registration_status"><xsl:text>1</xsl:text></data>
+                </xsl:when>
+                <xsl:when test="$Status='IN'">
+                    <data field="registration_status"><xsl:text>2</xsl:text></data>
+                </xsl:when>
+                <xsl:when test="$Status='OUT'">
+                    <data field="registration_status"><xsl:text>3</xsl:text></data>
+                </xsl:when>
+                <xsl:when test="$Status!=''">
+                    <!-- Assume Numeric -->
+                    <data field="registration_status"><xsl:value-of select="$Status"/></data>
+                </xsl:when>
+                <xsl:otherwise>
+                    <!-- Allow server-side default to kick in (defaults to 1 (Planned))
+                    <data field="registration_status"><xsl:text>1</xsl:text></data> -->
+                </xsl:otherwise>
+            </xsl:choose>
+            
 
             <xsl:if test="$CheckInDate!=''">
                 <data field="check_in_date">
