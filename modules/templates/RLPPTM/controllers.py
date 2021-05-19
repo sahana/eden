@@ -376,6 +376,7 @@ class approve(S3CustomController):
             except JSONERRORS:
                 custom = {}
 
+            # Test Station (Organisation)
             custom_get = custom.get
             organisation = custom_get("organisation")
             if organisation:
@@ -384,6 +385,21 @@ class approve(S3CustomController):
                                   )
             else:
                 test_station = None
+
+            # Org type selector
+            selected_type = custom_get("organisation_type")
+            org_types = applicable_org_types(None, group=TESTSTATIONS, represent=True)
+            if selected_type and selected_type not in org_types:
+                selected_type = None
+            field = Field("organisation_type", "integer",
+                          label = T("Organization Type"),
+                          requires = IS_IN_SET(org_types),
+                          )
+            field.tablename = "approve"
+            from gluon.sqlhtml import OptionsWidget
+            type_selector = OptionsWidget.widget(field, selected_type)
+
+            # Address
             location = custom_get("location")
             location_get = location.get
             addr_street = location_get("addr_street")
@@ -401,23 +417,58 @@ class approve(S3CustomController):
                             TR(represent(L1) if L1 else ""),
                             )
 
-            facility_phone = custom_get("facility_phone") or custom_get("office_phone")
-            facility_email = custom_get("facility_email")
+            # Service Offer
             opening_times = custom_get("opening_times")
 
-            # Org type selector
-            selected_type = custom_get("organisation_type")
-            org_types = applicable_org_types(None, group=TESTSTATIONS, represent=True)
-            if selected_type and selected_type not in org_types:
-                selected_type = None
-            field = Field("organisation_type", "integer",
-                          label = T("Organization Type"),
-                          requires = IS_IN_SET(org_types),
-                          )
-            field.tablename = "approve"
-            from gluon.sqlhtml import OptionsWidget
-            type_selector = OptionsWidget.widget(field, selected_type)
+            service_modes = register.selectable_services_modes()
+            service_mode_id = custom_get("service_mode")
+            if service_mode_id:
+                try:
+                    service_mode_id = int(service_mode_id)
+                except (ValueError, TypeError):
+                    service_mode_id = None
+            if service_mode_id in service_modes:
+                service_mode = service_modes[service_mode_id]
+            else:
+                service_mode = service_mode_id = None
 
+            # Map selected services to the services selectable at time of approval
+            selectable_services = register.selectable_services()
+            service_ids, service_names = [], []
+            selected = custom_get("services")
+            if selected:
+                if not isinstance(selected, list):
+                    selected = [selected]
+                for v in selected:
+                    try:
+                        service_id = int(v)
+                    except (ValueError, TypeError):
+                        continue
+                    if service_id in selectable_services:
+                        service_ids.append(service_id)
+                        service_names.append(selectable_services[service_id])
+            services = ", ".join(service_names)
+
+            comments = custom_get("comments")
+
+            # Contact and Appointments
+            facility_phone = custom_get("facility_phone") or custom_get("office_phone")
+            facility_email = custom_get("facility_email")
+            facility_website = custom_get("facility_website")
+
+            booking_modes = register.selectable_booking_modes()
+            booking_mode_id = custom_get("booking_mode")
+            if booking_mode_id:
+                try:
+                    booking_mode_id = int(booking_mode_id)
+                except (ValueError, TypeError):
+                    booking_mode_id = None
+            if booking_mode_id in booking_modes:
+                booking_mode = booking_modes[booking_mode_id]
+            else:
+                booking_mode = booking_mode_id = None
+
+            # Administrative
             # Map selected projects to the projects selectable at time of approval
             selectable_projects = register.selectable_projects()
             projects = []
@@ -444,25 +495,6 @@ class approve(S3CustomController):
                           )
             field.tablename = "approve" # Dummy to make widget work
             projects_selector = S3GroupedOptionsWidget(cols=1)(field, projects)
-
-            # Map selected services to the services selectable at time of approval
-            selectable_services = register.selectable_services()
-            service_ids, service_names = [], []
-            selected = custom_get("services")
-            if selected:
-                if not isinstance(selected, list):
-                    selected = [selected]
-                for v in selected:
-                    try:
-                        service_id = int(v)
-                    except (ValueError, TypeError):
-                        continue
-                    if service_id in selectable_services:
-                        service_ids.append(service_id)
-                        service_names.append(selectable_services[service_id])
-            services = ", ".join(service_names)
-
-            comments = custom_get("comments")
 
             if user.registration_key is None:
                 response.warning = T("Registration has previously been Approved")
@@ -499,20 +531,32 @@ class approve(S3CustomController):
                               TR(TD("%s:" % T("Address")),
                                  TD(address),
                                  ),
+
+                              TR(TD("%s:" % T("Opening Hours")),
+                                 TD(strrepr(opening_times)),
+                                 ),
+                              TR(TD("%s:" % T("Service Mode")),
+                                 TD(strrepr(service_mode)),
+                                 ),
+                              TR(TD("%s:" % T("Services")),
+                                 TD(strrepr(services)),
+                                 ),
+
                               TR(TD("%s:" % T("Telephone")),
                                  TD(strrepr(facility_phone)),
                                  ),
                               TR(TD("%s:" % T("Email")),
                                  TD(strrepr(facility_email)),
                                  ),
-                              TR(TD("%s:" % T("Opening Hours")),
-                                 TD(strrepr(opening_times)),
+                              TR(TD("%s:" % T("Website")),
+                                 TD(strrepr(facility_website)),
                                  ),
+                              TR(TD("%s:" % T("Appointments via")),
+                                 TD(strrepr(booking_mode)),
+                                 ),
+
                               TR(TD("%s:" % T("Projects")),
                                  TD(projects_selector),
-                                 ),
-                              TR(TD("%s:" % T("Services")),
-                                 TD(strrepr(services)),
                                  ),
                               TR(TD("%s:" % T("Comments")),
                                  TD(s3_text_represent(strrepr(comments))),
@@ -617,6 +661,7 @@ class approve(S3CustomController):
                                 "location_id": location_id,
                                 "phone1": facility_phone,
                                 "email": facility_email,
+                                "website": facility_website,
                                 "opening_times": opening_times,
                                 "comments": comments,
                                 }
@@ -626,6 +671,17 @@ class approve(S3CustomController):
                     s3db_onaccept(ftable, facility, method="create")
 
                     site_id = facility["site_id"]
+
+                    # Capture site details
+                    dtable = s3db.org_site_details
+                    details = {"site_id": site_id,
+                               "service_mode_id": service_mode_id,
+                               "booking_mode_id": booking_mode_id,
+                               }
+                    details["id"] = dtable.insert(**details)
+                    update_super(dtable, details)
+                    set_record_owner(dtable, details, owned_by_user=user_id)
+                    s3db_onaccept(dtable, details, method="create")
 
                     # Link facility to facility type
                     fttable = s3db.org_facility_type
@@ -996,12 +1052,15 @@ class register(S3CustomController):
 
             # Store Custom fields
             custom = {"location": formvars.location,
+                      "opening_times": formvars.opening_times,
+                      "service_mode": formvars.service_mode,
+                      "services": formvars.services,
                       "facility_phone": formvars.facility_phone,
                       "facility_email": formvars.facility_email,
-                      "opening_times": formvars.opening_times,
-                      "projects": formvars.projects,
-                      "services": formvars.services,
+                      "facility_website": formvars.facility_website,
+                      "booking_mode": formvars.booking_mode,
                       "comments": formvars.comments,
+                      "projects": formvars.projects,
                       }
             if not organisation_id:
                 custom["organisation"] = organisation
@@ -1132,7 +1191,8 @@ class register(S3CustomController):
         org_types = applicable_org_types(None, group=TESTSTATIONS, represent=True)
 
         # Form fields
-        formfields = [utable.first_name,
+        formfields = [# -- User account ---
+                      utable.first_name,
                       utable.last_name,
                       utable.email,
                       utable[passfield],
@@ -1150,7 +1210,7 @@ class register(S3CustomController):
                                                               ),
                                           ),
                             ),
-                      # --------------------------------------------
+                      # -- Test Station ---
                       Field("organisation",
                             label = T("Name"),
                             requires = [IS_NOT_EMPTY(), IS_LENGTH(60)],
@@ -1164,6 +1224,8 @@ class register(S3CustomController):
                             label = T("Organization Type"),
                             requires = IS_IN_SET(org_types),
                             ),
+
+                      # -- Address --
                       Field("location", "json",
                             widget = S3LocationSelector(
                                         levels = ("L1", "L2", "L3", "L4"),
@@ -1175,6 +1237,30 @@ class register(S3CustomController):
                                         show_map = True,
                                         ),
                             ),
+                      # -- Service Offer --
+                      Field("opening_times",
+                            label = T("Opening Hours"),
+                            requires = IS_NOT_EMPTY(),
+                            ),
+                      Field("service_mode", "integer",
+                            label = T("Service Mode"),
+                            requires = IS_IN_SET(cls.selectable_services_modes()),
+                            ),
+                      Field("services", "list:integer",
+                            label = T("Services"),
+                            requires = IS_IN_SET(services,
+                                                 multiple = True,
+                                                 zero = None,
+                                                 ),
+                            widget = S3WithIntro(S3GroupedOptionsWidget(cols=1),
+                                                 # Widget intro from CMS
+                                                 intro = ("org",
+                                                          "facility",
+                                                          "SiteServiceIntro",
+                                                          ),
+                                                 ),
+                           ),
+                      # -- Contact and Appointments --
                       Field("facility_phone",
                             label = T("Telephone"),
                             requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI()),
@@ -1183,10 +1269,21 @@ class register(S3CustomController):
                             label = T("Email"),
                             requires = IS_EMPTY_OR(IS_EMAIL()),
                             ),
-                      Field("opening_times",
-                            label = T("Opening Hours"),
-                            requires = IS_NOT_EMPTY(),
+                      Field("facility_website",
+                            label = T("Website"),
                             ),
+                      Field("booking_mode", "integer",
+                            label = T("Appointments via"),
+                            requires = IS_EMPTY_OR(IS_IN_SET(
+                                         cls.selectable_booking_modes(),
+                                         )),
+                            ),
+                      Field("comments", "text",
+                            label = T("Comments"),
+                            widget = s3_comments_widget,
+                            ),
+
+                      # -- Administrative --
                       Field("projects", "list:integer",
                             label = T("Programs"),
                             requires = [IS_IN_SET(projects,
@@ -1203,26 +1300,7 @@ class register(S3CustomController):
                                                           ),
                                                  ),
                             ),
-                      Field("services", "list:integer",
-                            label = T("Services"),
-                            requires = IS_IN_SET(services,
-                                                 multiple = True,
-                                                 zero = None,
-                                                 ),
-                            widget = S3WithIntro(S3GroupedOptionsWidget(cols=1),
-                                                 # Widget intro from CMS
-                                                 intro = ("org",
-                                                          "facility",
-                                                          "SiteServiceIntro",
-                                                          ),
-                                                 ),
-                           ),
-                      Field("comments", "text",
-                            label = T("Comments"),
-                            widget = s3_comments_widget,
-                            ),
-
-                      # --------------------------------------------
+                      # -- Privacy and Consent --
                       Field("consent",
                            label = T("Consent"),
                            widget = consent.widget,
@@ -1237,7 +1315,11 @@ class register(S3CustomController):
         # Subheadings
         subheadings = ((0, T("User Account")),
                        (5, T("Test Station")),
-                       (14, T("Privacy")),
+                       (7, T("Address")),
+                       (8, T("Service Offer")),
+                       (11, T("Contact and Appointments")),
+                       (16, T("Administrative")),
+                       (17, "%s / %s" % (T("Privacy"), T("Terms of Service"))),
                        )
 
         # Geocoder
@@ -1402,7 +1484,6 @@ Thank you
         db = current.db
         s3db = current.s3db
 
-        # Lookup projects with provider self-registration
         stable = s3db.org_service
         query = (stable.deleted == False)
         rows = db(query).select(stable.id,
@@ -1410,6 +1491,46 @@ Thank you
                                 )
         services = {row.id: row.name for row in rows}
         return services
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def selectable_services_modes():
+        """
+            Service modes the user can select during test station registration
+
+            @returns: list of service_ids
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        mtable = s3db.org_service_mode
+        query = (mtable.deleted == False)
+        rows = db(query).select(mtable.id,
+                                mtable.name,
+                                )
+        modes = {row.id: row.name for row in rows}
+        return modes
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def selectable_booking_modes():
+        """
+            Booking modes the user can select during test station registration
+
+            @returns: list of service_ids
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        mtable = s3db.org_booking_mode
+        query = (mtable.deleted == False)
+        rows = db(query).select(mtable.id,
+                                mtable.name,
+                                )
+        modes = {row.id: row.name for row in rows}
+        return modes
 
 # =============================================================================
 class verify_email(S3CustomController):

@@ -5512,6 +5512,7 @@
 'Term for the third-level within-country administrative division (e.g. City or Town).': 'Begriff für die 3. Ebene der Verwaltungshierarchie eines Landes (z. B. Ort oder Stadt).',
 'Term for the top-level administrative division (i.e. Country).': 'Begriff für die Verwaltung der höchsten Ebene (d. h. Land).',
 'Terminated': 'Beendet',
+'Terms of Service': 'Nutzungsbedingungen',
 'Territorial Authority': 'Territoriale Behörde',
 'Terrorism': 'Terrorismus',
 'Tertiary Server (Optional)': 'Tertiärer Server (Optional)',
