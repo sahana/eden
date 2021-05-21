@@ -3814,6 +3814,8 @@ class OrgSiteDetailsModel(S3Model):
                           # Advice on authorisation of service
                           Field("authorisation_advice", "text",
                                 label = T("Service Authorisation Advice"),
+                                represent = s3_text_represent,
+                                widget = s3_comments_widget,
                                 readable = False,
                                 writable = False,
                                 ),

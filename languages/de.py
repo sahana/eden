@@ -2712,6 +2712,7 @@
 'Institution': 'Institution',
 'Instructions for handling of the case': 'Anweisungen zur Handhabung des Falls',
 'Instructions': 'Anweisungen',
+'Instructions/advice for the test station how to proceed with regard to authorization': 'Anweisungen / Ratschläge für die Teststation, wie bezüglich der Freigabe weiter vorzugehen ist',
 'Instructor': 'Ausbilder',
 'Insufficient Privileges': 'Fehlende Berechtigung',
 'Insufficient vars: Need module, resource, jresource, instance': 'Unzureichende vars: Benötige module, resource, jresource, instance',

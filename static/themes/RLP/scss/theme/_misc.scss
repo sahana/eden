@@ -408,10 +408,16 @@ body.rtl {
     &.workflow-green {
         color: green;
     }
+    &.workflow-advice {
+        border: 1px solid #c42626;
+        background-color: #ffdede;
+        padding: 0.3rem 0.7rem;
+    }
     .fa {
         margin-right: 0.2rem;
     }
     margin-left: 0.5rem;
 }
+
 
 // END ========================================================================

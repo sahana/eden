@@ -2360,12 +2360,22 @@ def config(settings):
 
         field = dtable.authorisation_advice
         field.label = T("Advice")
-        field.represent = lambda v, row=None: s3_text_represent(v,
-                                                    truncate = False,
-                                                    _class = "authorisation-advice",
-                                                    )
+        css = "approve-workflow"
+        field.represent = lambda v, row=None: \
+                            s3_text_represent(v,
+                                truncate = False,
+                                _class = ("%s workflow-advice" % css) if v else css,
+                                )
         field.readable = True
-        field.writable = is_org_group_admin
+        if is_org_group_admin:
+            field.comment = DIV(_class="tooltip",
+                                _title="%s|%s" % (T("Advice"),
+                                                  T("Instructions/advice for the test station how to proceed with regard to authorization"),
+                                                  ),
+                                )
+            field.writable = True
+        else:
+            field.writable = False
 
         # Custom list fields
         list_fields = ["name",

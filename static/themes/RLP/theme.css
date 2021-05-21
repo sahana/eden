@@ -2890,6 +2890,12 @@ body.rtl .event-type-header {
   color: green;
 }
 /* line 411, ../scss/theme/_misc.scss */
+.approve-workflow.workflow-advice {
+  border: 1px solid #c42626;
+  background-color: #ffdede;
+  padding: 0.3rem 0.7rem;
+}
+/* line 416, ../scss/theme/_misc.scss */
 .approve-workflow .fa {
   margin-right: 0.2rem;
 }
