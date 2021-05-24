@@ -2496,7 +2496,7 @@ class S3XML(S3Codec):
                 wb = source
             else:
                 # Unsupported source type
-                raise RuntimeError("xls2tree: invalid source %s" %
+                raise RuntimeError("xlsx2tree: invalid source %s" %
                                    type(source))
 
             # Find the sheet
@@ -2512,7 +2512,7 @@ class S3XML(S3Codec):
                     except KeyError:
                         ws = wb[wb.worksheets[0].title]
                 else:
-                    raise SyntaxError("xls2tree: invalid sheet %s" % sheet)
+                    raise SyntaxError("xlsx2tree: invalid sheet %s" % sheet)
             except (IndexError, KeyError):
                 ws = None
 
