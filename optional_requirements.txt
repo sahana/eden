@@ -14,8 +14,10 @@ reportlab>=2.5
 pyserial>=2.6
 # Warning: S3Msg unresolved dependency: tweepy required for non-Tropo Twitter support
 tweepy>=1.9
-# Warning: S3XLS unresolved dependency: xlrd required for XLS export
+# Warning: S3XLS unresolved dependency: xlrd required for XLS export and import
 xlrd>=0.7.1
+# Warning: S3XLS unresolved dependency: openpyxl required for XLSX import
+openpyxl>=3.0.7
 # Warning: S3MSG unresolved dependency: sgmllib3k required for Feed import on Python 3.x
 sgmllib3k>=1.0.0
 # Warning: Vulnerability unresolved dependency: numpy required for Vulnerability module support

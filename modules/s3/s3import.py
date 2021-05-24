@@ -364,7 +364,8 @@ class S3Importer(S3Method):
                                  filename = ofilename,
                                  user_id = current.session.auth.user.id)
                 row = db(query).select(table.id,
-                                       limitby=(0, 1)).first()
+                                       limitby = (0, 1)
+                                       ).first()
                 upload_id = row.id
 
         if not output:
@@ -419,11 +420,11 @@ class S3Importer(S3Method):
                 if single_pass:
                     current.session.confirmation = self.messages.file_uploaded
                     # For a single pass retain the vars from the original URL
-                    next_URL = URL(r=self.request,
-                                   f=self.function,
-                                   args=["import"],
-                                   vars=current.request.get_vars
-                                  )
+                    next_URL = URL(r = self.request,
+                                   f = self.function,
+                                   args = ["import"],
+                                   vars = current.request.get_vars
+                                   )
                     redirect(next_URL)
                 s3.dataTable_vars = {"job": upload_id}
                 return self.display_job(upload_id)
@@ -947,7 +948,7 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
             This will take a s3_import_upload record and
             generate the importJob
 
-            @param uploadFilename: The name of the uploaded file
+            @param infile: The uploaded file
 
             @todo: complete parameter descriptions
         """
@@ -967,9 +968,16 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
 
         # ---------------------------------------------------------------------
         # XLS
-        elif file_format in ("xls", "xlsx", "xlsm"):
+        elif file_format == "xls":
 
             fmt = "xls"
+            src = infile
+
+        # ---------------------------------------------------------------------
+        # XLSX
+        elif file_format in ("xlsx", "xlsm"):
+
+            fmt = "xlsx"
             src = infile
 
         # ---------------------------------------------------------------------

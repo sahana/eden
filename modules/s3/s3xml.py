@@ -2182,7 +2182,7 @@ class S3XML(S3Codec):
             @param extra_data: dict of extra cols {key:value} to add to each row
             @param hashtags: dict of hashtags for extra cols {key:hashtag}
             @param sheet: sheet name or index, or an open XLRD sheet
-                          (open work sheet overrides source)
+                          (open worksheet overrides source)
             @param rows: Rows range, integer (length from 0) or
                          tuple (start, length) - or a tuple (start,) to
                          read all available rows after start
@@ -2201,17 +2201,15 @@ class S3XML(S3Codec):
             @return: an etree.ElementTree representing the table
         """
 
-        import xlrd
+        try:
+            import xlrd
+        except ImportError:
+            current.log.error("ERROR: xlrd module is needed for importing XLS files")
+            return None
 
         # Shortcuts
         ATTRIBUTE = cls.ATTRIBUTE
-        FIELD = ATTRIBUTE.field
-        HASHTAG = ATTRIBUTE.hashtag
         TAG = cls.TAG
-        COL = TAG.col
-        SubElement = etree.SubElement
-
-        DEFAULT_SHEET_NAME = "SahanaData"
 
         # Root element
         root = etree.Element(TAG.table)
@@ -2219,18 +2217,18 @@ class S3XML(S3Codec):
             root.set(ATTRIBUTE.name, resourcename)
 
         if isinstance(sheet, xlrd.sheet.Sheet):
-            # Open work sheet passed as argument => use this
-            s = sheet
+            # Open worksheet passed as argument => use this
+            ws = sheet
         else:
             if hasattr(source, "read"):
                 # Source is a stream
                 if hasattr(source, "seek"):
                     source.seek(0)
-                wb = xlrd.open_workbook(file_contents=source.read(),
+                wb = xlrd.open_workbook(file_contents = source.read(),
                                         # requires xlrd 0.7.x or higher
-                                        on_demand=True)
+                                        on_demand = True)
             elif isinstance(source, xlrd.book.Book):
-                # Source is an open work book
+                # Source is an open workbook
                 wb = source
             else:
                 # Unsupported source type
@@ -2240,53 +2238,68 @@ class S3XML(S3Codec):
             # Find the sheet
             try:
                 if isinstance(sheet, INTEGER_TYPES):
-                    s = wb.sheet_by_index(sheet)
+                    ws = wb.sheet_by_index(sheet)
                 elif isinstance(sheet, basestring):
-                    s = wb.sheet_by_name(sheet)
+                    ws = wb.sheet_by_name(sheet)
                 elif sheet is None:
+                    DEFAULT_SHEET_NAME = "SahanaData"
                     if DEFAULT_SHEET_NAME in wb.sheet_names():
-                        s = wb.sheet_by_name(DEFAULT_SHEET_NAME)
+                        ws = wb.sheet_by_name(DEFAULT_SHEET_NAME)
                     else:
-                        s = wb.sheet_by_index(0)
+                        ws = wb.sheet_by_index(0)
                 else:
                     raise SyntaxError("xls2tree: invalid sheet %s" % sheet)
             except (IndexError, xlrd.XLRDError):
-                s = None
+                ws = None
 
-        def cell_range(cells, max_cells):
-            """
-                Helper method to calculate a cell range
+        if ws:
+            # Shortcuts
+            FIELD = ATTRIBUTE.field
+            HASHTAG = ATTRIBUTE.hashtag
+            COL = TAG.col
+            ROW = TAG.row
+            SubElement = etree.SubElement
+            XL_CELL_TEXT = xlrd.XL_CELL_TEXT
+            XL_CELL_NUMBER = xlrd.XL_CELL_NUMBER
+            XL_CELL_DATE = xlrd.XL_CELL_DATE
+            XL_CELL_BOOLEAN = xlrd.XL_CELL_BOOLEAN
+            XL_CELL_EMPTY = xlrd.XL_CELL_EMPTY
 
-                @param cells: the specified range
-                @param max_cells: maximum number of cells
-            """
-            if not cells:
-                cells = (0, max_cells)
-            elif not isinstance(cells, (tuple, list)):
-                cells = (0, cells)
-            elif len(cells) == 1:
-                cells = (cells[0], max_cells)
-            else:
-                cells = (cells[0], cells[0] + cells[1])
-            return cells
-
-        if s:
             # Calculate cell range
-            rows = cell_range(rows, s.nrows)
-            cols = cell_range(cols, s.ncols)
+            def cell_range(cells, max_cells):
+                """
+                    Helper method to calculate a cell range
+
+                    @param cells: the specified range
+                    @param max_cells: maximum number of cells
+                """
+                if not cells:
+                    cells = (0, max_cells)
+                elif not isinstance(cells, (tuple, list)):
+                    cells = (0, cells)
+                elif len(cells) == 1:
+                    cells = (cells[0], max_cells)
+                else:
+                    cells = (cells[0], cells[0] + cells[1])
+                return cells
+
+            rows = cell_range(rows, ws.nrows)
+            cols = cell_range(cols, ws.ncols)
 
             # Column headers
             if fields:
                 headers = fields
             elif not header_row:
                 headers = dict((i, "%s" % i)
-                               for i in range(cols[1]- cols[0]))
+                               for i in range(cols[1] - cols[0]))
             else:
-                # Use header row in the work sheet
+                # Use header row in the worksheet
                 headers = {}
 
             # Lambda to decode XLS dates into a datetime.datetime
-            decode_date = lambda v: xlrd.xldate.xldate_as_datetime(v, wb.datemode)
+            datemode = wb.datemode
+            xldate_as_datetime = xlrd.xldate.xldate_as_datetime
+            decode_date = lambda v: xldate_as_datetime(v, datemode)
 
             def decode(t, v):
                 """
@@ -2300,14 +2313,14 @@ class S3XML(S3Codec):
                 if v:
                     if t is None:
                         text = s3_unicode(v).strip()
-                    elif t == xlrd.XL_CELL_TEXT:
+                    elif t == XL_CELL_TEXT:
                         text = v.strip()
-                    elif t == xlrd.XL_CELL_NUMBER:
+                    elif t == XL_CELL_NUMBER:
                         text = str(long(v)) if long(v) == v else str(v)
-                    elif t == xlrd.XL_CELL_DATE:
+                    elif t == XL_CELL_DATE:
                         # Convert into an ISO datetime string
                         text = s3_encode_iso_datetime(decode_date(v))
-                    elif t == xlrd.XL_CELL_BOOLEAN:
+                    elif t == XL_CELL_BOOLEAN:
                         text = str(v).lower()
                 return text
 
@@ -2331,14 +2344,13 @@ class S3XML(S3Codec):
             hashtags = dict(hashtags) if hashtags else {}
 
             # Process the rows
-            ROW = TAG.row
             record_idx = 0
             extra_fields = set(extra_data) if extra_data else None
             check_headers = extra_fields is not None
             for ridx in range(*rows):
                 # Read types and values
-                types = s.row_types(ridx, *cols)
-                values = s.row_values(ridx, *cols)
+                types = ws.row_types(ridx, *cols)
+                values = ws.row_values(ridx, *cols)
 
                 # Skip empty rows
                 if not any(v != "" for v in values):
@@ -2364,14 +2376,15 @@ class S3XML(S3Codec):
                                 v = values[cidx]
                             except IndexError:
                                 continue
-                            if t not in (xlrd.XL_CELL_TEXT, xlrd.XL_CELL_EMPTY):
+                            if t not in (XL_CELL_TEXT, XL_CELL_EMPTY):
                                 items = None
                                 break
                             elif v:
                                 items[name] = v
-                        if items and all(v[0] == '#' for v in items.values()):
+                        if items and all(v[0] == "#" for v in items.values()):
                             hashtags.update(items)
                             continue
+
                     # Add output row
                     orow = SubElement(root, ROW)
                     for cidx, name in headers.items():
@@ -2395,7 +2408,286 @@ class S3XML(S3Codec):
         # Use this to debug the source tree if needed:
         #sys.stderr.write(cls.tostring(root, pretty_print=True))
 
-        return  etree.ElementTree(root)
+        return etree.ElementTree(root)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def xlsx2tree(cls, source,
+                  resourcename = None,
+                  extra_data = None,
+                  hashtags = None,
+                  sheet = None,
+                  rows = None,
+                  cols = None,
+                  fields = None,
+                  header_row = True):
+        """
+            Convert a table in an XLSX (MS Excel) sheet into an ElementTree,
+            consisting of <table name="format">, <row> and
+            <col field="fieldname"> elements (see: L{csv2tree}).
+
+            The returned ElementTree can be imported using S3CSV
+            stylesheets (through S3Resource.import_xml()).
+
+            @param source: the XLS source (stream, or OpenPyXL book, or
+                           None if sheet is an open OpenPyXL sheet)
+            @param resourcename: the resource name
+            @param extra_data: dict of extra cols {key:value} to add to each row
+            @param hashtags: dict of hashtags for extra cols {key:hashtag}
+            @param sheet: sheet name or index, or an open OpenPyXL sheet
+                          (open worksheet overrides source)
+            @param rows: Rows range, integer (length from 0) or
+                         tuple (start, length) - or a tuple (start,) to
+                         read all available rows after start
+            @param cols: Columns range, like "rows"
+            @param fields: Field map, a dict {index: fieldname} where
+                           index is the column index counted from the
+                           first column within the specified range,
+                           e.g. cols=(2,7), fields={1:"MyField"}
+                           means column 3 in the sheet is "MyField",
+                           the field map can be omitted to read the field
+                           names from the sheet (see "header_row")
+            @param header_row: the first row contains column headers
+                               (if fields is None, they will be used
+                               as field names in the output - otherwise
+                               they will be ignored)
+            @return: an etree.ElementTree representing the table
+        """
+
+        try:
+            import openpyxl
+        except ImportError:
+            # See of we have an old version of XLRD which we can use for backwards-compatibility
+            try:
+                import xlrd
+            except ImportError:
+                error = "OpenPyXL module is needed for importing XLSX files"
+                current.log.error(error)
+                raise HTTP(500, body=cls.json_message(False, 500, "ERROR: %s" % error))
+            if int(xlrd.__VERSION__[0]) < 2:
+                current.log.warning("OpenPyXL module should be used for importing XLSX files. Currently using old XLRD for backwards-compatibility, although this has security concerns")
+                return cls.xls2tree(source, resourcename, extra_data, hashtags, sheet, rows, cols, fields, header_row)
+            else:
+                error = "OpenPyXL module is needed for importing XLSX files"
+                current.log.error(error)
+                raise HTTP(500, body=cls.json_message(False, 500, "ERROR: %s" % error))
+
+        # Shortcuts
+        ATTRIBUTE = cls.ATTRIBUTE
+        TAG = cls.TAG
+
+        # Root element
+        root = etree.Element(TAG.table)
+        if resourcename is not None:
+            root.set(ATTRIBUTE.name, resourcename)
+
+        if isinstance(sheet, openpyxl.worksheet.worksheet.Worksheet):
+            # Open worksheet passed as argument => use this
+            ws = sheet
+        else:
+            if hasattr(source, "read"):
+                # Source is a stream
+                if hasattr(source, "seek"):
+                    source.seek(0)
+                    wb = openpyxl.load_workbook(filename = source,
+                                                read_only = True)
+            elif isinstance(source, openpyxl.Workbook):
+                # Source is an open workbook
+                wb = source
+            else:
+                # Unsupported source type
+                raise RuntimeError("xls2tree: invalid source %s" %
+                                   type(source))
+
+            # Find the sheet
+            try:
+                if isinstance(sheet, INTEGER_TYPES):
+                    ws = wb[wb.worksheets[sheet].title]
+                elif isinstance(sheet, basestring):
+                    ws = wb[sheet]
+                elif sheet is None:
+                    DEFAULT_SHEET_NAME = "SahanaData"
+                    try:
+                        ws = wb[DEFAULT_SHEET_NAME]
+                    except KeyError:
+                        ws = wb[wb.worksheets[0].title]
+                else:
+                    raise SyntaxError("xls2tree: invalid sheet %s" % sheet)
+            except (IndexError, KeyError):
+                ws = None
+
+        if ws:
+            # Shortcuts
+            FIELD = ATTRIBUTE.field
+            HASHTAG = ATTRIBUTE.hashtag
+            COL = TAG.col
+            ROW = TAG.row
+            SubElement = etree.SubElement
+
+            # Lambda to decode XLS dates into a datetime.datetime
+            #epoch = wb.epoch
+            #from_excel = openpyxl.utils.datetime.from_excel
+            #decode_date = lambda v: from_excel(v, epoch)
+
+            import datetime
+
+            def decode(v):
+                """
+                    Helper method to decode the cell value by type
+
+                    @param v: the cell value
+                    @return: text representation of the cell value
+                """
+                text = ""
+                if v:
+                    if isinstance(v, str):
+                        text = v.strip()
+                    elif isinstance(v, (int, float)):
+                        text = str(long(v)) if long(v) == v else str(v)
+                    elif isinstance(v, (datetime.datetime, datetime.date, datetime.time)):
+                        # Convert into an ISO datetime string
+                        #text = s3_encode_iso_datetime(decode_date(v))
+                        text = s3_encode_iso_datetime(v)
+                    elif isinstance(v, bool):
+                        text = str(v).lower()
+                    else:
+                        text = s3_unicode(v).strip()
+                return text
+
+            def add_col(row, name, v, hashtags=None):
+                """
+                    Helper method to add a column to an output row
+
+                    @param row: the output row (etree.Element)
+                    @param name: the column name
+                    @param v: the cell value
+                """
+                col = SubElement(row, COL)
+                col.set(FIELD, name)
+                if hashtags:
+                    hashtag = hashtags.get(name)
+                    if hashtag and hashtag[1:]:
+                        col.set(HASHTAG, hashtag)
+                col.text = decode(v)
+
+            # Calculate cell range
+            # NB cells is specified starting from zero for backwards-compatibility, although openpyxl starts at 1
+            def cell_range(cells, max_cells):
+                """
+                    Helper method to calculate a cell range
+
+                    @param cells: the specified range
+                    @param max_cells: maximum number of cells
+                """
+                if not cells:
+                    cells = (0, max_cells)
+                elif not isinstance(cells, (tuple, list)):
+                    cells = (0, cells)
+                elif len(cells) == 1:
+                    cells = (cells[0], max_cells)
+                else:
+                    cells = (cells[0], cells[0] + cells[1])
+                return cells
+
+            rows = cell_range(rows, ws.max_row - 1)
+            cols = cell_range(cols, ws.max_column - 1)
+
+            extra_fields = set(extra_data) if extra_data else None
+            check_headers = extra_fields is not None
+
+            # Column headers
+            if fields:
+                headers = fields
+                min_data_row = rows[0] + 1
+            elif not header_row:
+                headers = dict((i, "%s" % i)
+                               for i in range(cols[1] - cols[0]))
+                min_data_row = rows[0] + 1
+            else:
+                # Use header row in the worksheet
+                headers = {}
+                cidx = 0
+                for row in ws.iter_rows(min_row = rows[0] + 1,
+                                        max_row = rows[0] + 1,
+                                        min_col = cols[0] + 1,
+                                        max_col = cols[1] + 1,
+                                        values_only = True
+                                        ):
+                    for header in row:
+                        headers[cidx] = header
+                        if check_headers:
+                            extra_fields.discard(header)
+                        cidx += 1
+                check_headers = False
+                min_data_row = rows[0] + 2
+
+            hashtags = dict(hashtags) if hashtags else {}
+            if not fields and header_row:
+                detect_hashtags = True
+            else:
+                detect_hashtags = False
+
+            # Process the data rows
+            for row in ws.iter_rows(min_row = min_data_row,
+                                    max_row = rows[1] + 1,
+                                    min_col = cols[0] + 1,
+                                    max_col = cols[1] + 1,
+                                    values_only = True
+                                    ):
+                # Read Values
+                values = []
+                vappend = values.append
+                for cell in row:
+                    vappend(cell)
+
+                # Skip empty rows
+                if not any(v is not None for v in values):
+                    continue
+
+                if detect_hashtags:
+                    # Autodetect hashtags
+                    items = {}
+                    for cidx, name in headers.items():
+                        try:
+                            v = values[cidx]
+                        except IndexError:
+                            continue
+                        if isinstance(v, str) or isinstance(v, type(None)):
+                            if v:
+                                items[name] = v
+                        else:
+                            items = None
+                            break
+                    detect_hashtags = False
+                    if items and all(v[0] == '#' for v in items.values()):
+                        hashtags.update(items)
+                        continue
+
+                # Add output row
+                orow = SubElement(root, ROW)
+                for cidx, name in headers.items():
+                    if check_headers:
+                        extra_fields.discard(name)
+                    try:
+                        v = values[cidx]
+                    except IndexError:
+                        pass
+                    else:
+                        add_col(orow, name, v, hashtags=hashtags)
+                check_headers = False
+
+                # Add extra data
+                if extra_fields:
+                    for key in extra_fields:
+                        add_col(orow, key, extra_data[key], hashtags=hashtags)
+
+        # OpenPyXL read_only mode requires explicit close
+        wb.close()
+
+        # Use this to debug the source tree if needed:
+        #sys.stderr.write(cls.tostring(root, pretty_print=True))
+
+        return etree.ElementTree(root)
 
     # -------------------------------------------------------------------------
     @classmethod

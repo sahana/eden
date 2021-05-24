@@ -1918,7 +1918,7 @@ def config(settings):
                                 },
                                ]
 
-            elif r.method == "update" and \
+            elif (r.method == "update" or r.id and r.method is None) and \
                  isinstance(output, dict):
 
                 form = output.get("form")
