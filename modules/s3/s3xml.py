@@ -2290,8 +2290,7 @@ class S3XML(S3Codec):
             if fields:
                 headers = fields
             elif not header_row:
-                headers = dict((i, "%s" % i)
-                               for i in range(cols[1] - cols[0]))
+                headers = {i: str(i) for i in range(cols[1] - cols[0])}
             else:
                 # Use header row in the worksheet
                 headers = {}
@@ -2377,6 +2376,7 @@ class S3XML(S3Codec):
                             except IndexError:
                                 continue
                             if t not in (XL_CELL_TEXT, XL_CELL_EMPTY):
+                                # If v is neither text nor empty, it's not a hashtag row
                                 items = None
                                 break
                             elif v:
@@ -2600,8 +2600,7 @@ class S3XML(S3Codec):
                 headers = fields
                 min_data_row = rows[0] + 1
             elif not header_row:
-                headers = dict((i, "%s" % i)
-                               for i in range(cols[1] - cols[0]))
+                headers = {i: str(i) for i in range(cols[1] - cols[0])}
                 min_data_row = rows[0] + 1
             else:
                 # Use header row in the worksheet
@@ -2652,12 +2651,12 @@ class S3XML(S3Codec):
                             v = values[cidx]
                         except IndexError:
                             continue
-                        if isinstance(v, str) or isinstance(v, type(None)):
-                            if v:
-                                items[name] = v
-                        else:
+                        if not isinstance(v, (str, type(None))):
+                            # If v is neither text nor empty, it's not a hashtag row
                             items = None
                             break
+                        elif v:
+                            items[name] = v
                     detect_hashtags = False
                     if items and all(v[0] == '#' for v in items.values()):
                         hashtags.update(items)
