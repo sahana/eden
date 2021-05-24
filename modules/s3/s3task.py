@@ -314,7 +314,9 @@ class S3Task(object):
                       enabled = None, # None = Enabled
                       group_name = None,
                       ignore_duplicate = False,
-                      sync_output = 0):
+                      sync_output = 0,
+                      user_id = True
+                      ):
         """
             Schedule a task in web2py Scheduler
 
@@ -333,6 +335,7 @@ class S3Task(object):
             @param group_name: group_name for the scheduled task
             @param ignore_duplicate: disable or enable duplicate checking
             @param sync_output: sync output every n seconds (0 = disable sync)
+            @param user_id: Add the user_id to task vars if logged in
         """
 
         if args is None:
@@ -390,10 +393,11 @@ class S3Task(object):
         if sync_output != 0:
             kwargs["sync_output"] = sync_output
 
-        auth = current.auth
-        if auth.is_logged_in():
-            # Add the current user to the vars
-            vars["user_id"] = auth.user.id
+        if user_id:
+            auth = current.auth
+            if auth.is_logged_in():
+                # Add the current user to the vars
+                vars["user_id"] = auth.user.id
 
         # Add to DB for pickup by Scheduler task
         # @ToDo: Switch to API: self.scheduler.queue_task()
@@ -478,9 +482,10 @@ class S3Task(object):
 
         query = (ttable.id == task_id) & (ttable.status == "FAILED")
         task = db(query).select(ttable.id,
-                                limitby=(0, 1)).first()
+                                limitby = (0, 1)
+                                ).first()
         if task:
-            task.update_record(status="QUEUED")
+            task.update_record(status = "QUEUED")
 
     # =========================================================================
     # Functions run within the Task itself

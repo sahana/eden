@@ -53,7 +53,8 @@ class index(S3CustomController):
                 (table.deleted != True)
         item = current.db(query).select(table.body,
                                         table.id,
-                                        limitby=(0, 1)).first()
+                                        limitby = (0, 1)
+                                        ).first()
         if item:
             if ADMIN:
                 item = DIV(XML(item.body),
@@ -65,7 +66,7 @@ class index(S3CustomController):
                                                  "resource": resource,
                                                  },
                                          ),
-                             _class="action-btn",
+                             _class = "action-btn",
                              ),
                            )
             else:
@@ -81,7 +82,7 @@ class index(S3CustomController):
                                          "resource": resource,
                                          },
                                  ),
-                     _class="%s cms-edit" % _class,
+                     _class = "%s cms-edit" % _class,
                      )
         else:
             item = ""

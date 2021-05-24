@@ -129,12 +129,12 @@ class S3SQLForm(object):
     # Rendering/Processing
     # -------------------------------------------------------------------------
     def __call__(self,
-                 request=None,
-                 resource=None,
-                 record_id=None,
-                 readonly=False,
-                 message="Record created/updated",
-                 format=None,
+                 request = None,
+                 resource = None,
+                 record_id = None,
+                 readonly = False,
+                 message = "Record created/updated",
+                 format = None,
                  **options):
         """
             Render/process the form. To be implemented in subclass.
@@ -1630,11 +1630,12 @@ class S3SQLFormElement(object):
     # -------------------------------------------------------------------------
     @staticmethod
     def _rename_field(field, name,
-                      comments=True,
-                      label=DEFAULT,
-                      popup=None,
-                      skip_post_validation=False,
-                      widget=DEFAULT):
+                      comments = True,
+                      label = DEFAULT,
+                      popup = None,
+                      skip_post_validation = False,
+                      widget = DEFAULT
+                      ):
         """
             Rename a field (actually: create a new Field instance with the
             same attributes as the given Field, but a different field name).
@@ -2301,7 +2302,7 @@ class S3SQLSubFormLayout(object):
             elements.append([TAG[""](list(chain.from_iterable(t))[:-1]), ", "])
 
         return DIV(list(chain.from_iterable(elements))[:-1],
-                   _class="embeddedComponent",
+                   _class = "embeddedComponent",
                    )
 
     # -------------------------------------------------------------------------
@@ -2317,7 +2318,7 @@ class S3SQLSubFormLayout(object):
 
         # Don't render a header row if there are no labels
         render_header = False
-        header_row = TR(_class="label-row static")
+        header_row = TR(_class = "label-row static")
         happend = header_row.append
         for f in fields:
             label = f["label"]
@@ -2333,7 +2334,7 @@ class S3SQLSubFormLayout(object):
                 happend(TD())
             return THEAD(header_row)
         else:
-            return THEAD(_class="hide")
+            return THEAD(_class = "hide")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2341,9 +2342,10 @@ class S3SQLSubFormLayout(object):
                 formname,
                 index,
                 item = None,
-                readonly=True,
-                editable=True,
-                deletable=True):
+                readonly = True,
+                editable = True,
+                deletable = True
+                ):
         """
             Render subform row actions into the row
 
@@ -2361,12 +2363,15 @@ class S3SQLSubFormLayout(object):
 
         # Action button helper
         def action(title, name, throbber=False):
-            btn = DIV(_id="%s-%s" % (name, action_id),
-                      _class="inline-%s" % name)
+            btn = DIV(_id = "%s-%s" % (name, action_id),
+                      _class = "inline-%s" % name,
+                      )
             if throbber:
                 return DIV(btn,
-                        DIV(_class="inline-throbber hide",
-                            _id="throbber-%s" % action_id))
+                           DIV(_class = "inline-throbber hide",
+                               _id = "throbber-%s" % action_id,
+                               ),
+                           )
             else:
                 return DIV(btn)
 
@@ -2486,7 +2491,7 @@ class S3SQLVerticalSubFormLayout(S3SQLSubFormLayout):
         headers = super(S3SQLVerticalSubFormLayout, self).headers
 
         header_row = headers(data, readonly = readonly)
-        element = header_row.element('tr')
+        element = header_row.element("tr")
         if hasattr(element, "remove_class"):
             element.remove_class("static")
         return header_row
@@ -2995,7 +3000,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 else:
                     label = explicit_add
                 inline_open_add = A(label,
-                                    _class="inline-open-add action-lnk",
+                                    _class = "inline-open-add action-lnk",
                                     )
             has_rows = True
             add_row = self._render_item(table, None, fields,
@@ -3341,7 +3346,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                 ptable = s3db.pr_person
                                 query = (ptable.id == master[pkey])
                                 person = db(query).select(ptable.pe_id,
-                                                          limitby=(0, 1)
+                                                          limitby = (0, 1)
                                                           ).first()
                                 if person:
                                     values["pe_id"] = person.pe_id
@@ -4244,10 +4249,10 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                 pass
 
         # Filter these options?
-        widget_opts = self.options
-        filterby = widget_opts.get("filterby")
-        filteropts = widget_opts.get("options")
-        filterexpr = widget_opts.get("match")
+        widget_opts_get = self.options.get
+        filterby = widget_opts_get("filterby")
+        filteropts = widget_opts_get("options")
+        filterexpr = widget_opts_get("match")
 
         if filterby and \
            (filteropts is not None or filterexpr and resource._rows):

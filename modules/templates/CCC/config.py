@@ -2388,7 +2388,7 @@ $('.copy-link').click(function(e){
         trainings = current.db(query).select(ttable.person_id)
         selected = [t.person_id for t in trainings]
 
-        # Sent Reminders async as it may take some time to run
+        # Send Reminders async as it may take some time to run
         current.s3task.run_async("settings_task",
                                  args = ["hrm_training_event_notification"],
                                  vars = {"record": r.record.as_json(),
@@ -2514,13 +2514,13 @@ $('.copy-link').click(function(e){
                 exists.update_record(start_time = start_time)
         else:
             current.s3task.schedule_task("settings_task",
-                                 args = ["hrm_training_event_reminder_day"],
-                                 vars = {"record_id": training_event_id},
-                                 start_time = start_time,
-                                 #period = 300,  # seconds
-                                 timeout = 300, # seconds
-                                 repeats = 1    # run once
-                                 )
+                                         args = ["hrm_training_event_reminder_day"],
+                                         vars = {"record_id": training_event_id},
+                                         start_time = start_time,
+                                         #period = 300,  # seconds
+                                         timeout = 300, # seconds
+                                         repeats = 1    # run once
+                                         )
 
     # -------------------------------------------------------------------------
     def customise_hrm_training_event_resource(r, tablename):
@@ -5630,13 +5630,13 @@ $('.copy-link').click(function(e){
                 exists.update_record(start_time = start_time)
         else:
             current.s3task.schedule_task("settings_task",
-                                 args = ["req_need_reminder_day"],
-                                 vars = {"record_id": need_id},
-                                 start_time = start_time,
-                                 #period = 300,  # seconds
-                                 timeout = 300, # seconds
-                                 repeats = 1    # run once
-                                 )
+                                         args = ["req_need_reminder_day"],
+                                         vars = {"record_id": need_id},
+                                         start_time = start_time,
+                                         #period = 300,  # seconds
+                                         timeout = 300, # seconds
+                                         repeats = 1    # run once
+                                         )
 
     # -------------------------------------------------------------------------
     def req_need_organisation_onaccept(form):

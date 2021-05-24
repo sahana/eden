@@ -470,10 +470,10 @@ def config(settings):
             button = ""
             if closed:
                 occupancy = ""
-                # What is the Data Status of the Site?
+                # What is the Workflow Status of the Site?
                 ttable = current.s3db.org_site_tag
                 query = (ttable.site_id == record.site_id) & \
-                        (ttable.tag == "status")
+                        (ttable.tag == "workflow_status")
                 tag = current.db(query).select(ttable.id,
                                                ttable.value,
                                                limitby = (0, 1)
@@ -591,7 +591,8 @@ def config(settings):
     def cr_shelter_onaccept(form):
         """
             When a Shelter is Opened/Closed
-                - Control Flag to track Data Exporting/Anonymising
+                - Control Workflow Flag to track Data Exporting/Anonymising
+                - Add Shelter to Session
             When a Shelter is Closed
                 - Check-out all Clients 
         """
@@ -611,19 +612,26 @@ def config(settings):
             # Status hasn't changed
             return
 
-        # Control Flag to track Data Exporting/Anonymising
+        # Control Workflow Flag to track Data Exporting/Anonymising
         db = current.db
         s3db = current.s3db
 
         site_id = form_vars_get("site_id")
         table = s3db.org_site_tag
         query = (table.site_id == site_id) & \
-                (table.tag == "status")
+                (table.tag == "workflow_status")
+
+        shelter_id = form_vars_get("id")
 
         if status not in (1, 6):
             # Shelter has been Opened
+
             # Clear Flag
             db(query).delete()
+
+            # Set this shelter into the session
+            current.session.s3.shelter_id = shelter_id
+
             return
 
         tag = db(query).select(table.id,
@@ -632,12 +640,11 @@ def config(settings):
         if not tag:
             # No tag, so create one
             table.insert(site_id = site_id,
-                         tag = "status",
+                         tag = "workflow_status",
                          value = "CLOSED",
                          )
 
         # Check-out all clients
-        shelter_id = form_vars_get("id")
         table = s3db.cr_shelter_registration
         query = (table.shelter_id == shelter_id) & \
                 (table.registration_status == 2) # Checked-in
@@ -646,46 +653,112 @@ def config(settings):
                          )
 
     # -------------------------------------------------------------------------
-    def cr_shelter_anonymise(r, **attr):
+    def cr_shelter_anonymise_method(r, **attr):
         """
             Anonymise all Client data for a Shelter
             Archive Logs
+            - Interactive Method called manually from front-end UI
         """
 
-        site_id = r.record.site_id
+        shelter_id = r.id
         shelter_name = r.record.name
+        site_id = r.record.site_id
 
         db = current.db
         s3db = current.s3db
 
-        # Check Flag
+        # Check Workflow Flag
         ttable = s3db.org_site_tag
         query = (ttable.site_id == site_id) & \
-                (ttable.tag == "status")
-        tag = db(query).select(ttable.id,
-                               ttable.value,
-                               limitby = (0, 1)
-                               ).first()
+                (ttable.tag == "workflow_status")
+        tag = current.db(query).select(ttable.id,
+                                       ttable.value,
+                                       limitby = (0, 1)
+                                       ).first()
         if not tag or tag.value != "EXPORTED":
             current.session.error = T("Cannot Anonymize Data for a Shelter unless the data has been Exported!")
             # Redirect to Normal page
             from gluon import redirect, URL
-            redirect(URL(args = [r.id]))
+            redirect(URL(args = [shelter_id]))
 
-        # Remove Flag
-        db(ttable.id == tag.id).delete()
+        tag_id = tag.id
+
+        # Disable Scheduled Task
+        import json
+        ttable = s3db.scheduler_task
+        task_name = "settings_task"
+        args = ["cr_shelter_anonymise_task"]
+        vars = {"shelter_id": shelter_id,
+                "tag_id": tag_id,
+                }
+        query = (ttable.task_name == task_name) & \
+                (ttable.args == json.dumps(args)) & \
+                (ttable.vars == json.dumps(vars))
+        task = db(query).select(ttable.id,
+                                limitby = (0, 1)
+                                ).first()
+        if task:
+            task.update_record(status = "STOPPED")
 
         # Log
         settings.security.audit_write = True
         from s3 import S3Audit
         S3Audit().__init__()
-        s3db.s3_audit.insert(timestmp = r.now,
+        s3db.s3_audit.insert(timestmp = r.utcnow,
                              user_id = current.auth.user.id,
                              method = "Data Anonymise",
                              representation = shelter_name,
                              )
 
-        # Read Site Logs
+        # Anonymise
+        cr_shelter_anonymise(site_id, tag_id)
+
+        # Inform User
+        current.session.confirmation = T("Data Anoynmized succesfully!")
+        from gluon import redirect, URL
+        redirect(URL(args = [shelter_id]))
+
+    # -------------------------------------------------------------------------
+    def cr_shelter_anonymise_task(shelter_id, tag_id):
+        """
+            Anonymise all Client data for a Shelter
+            Archive Logs
+            - Scheduled Task created when Data Exported
+        """
+
+        # Check that we should still proceed
+        # Is the site still closed?
+        table = current.s3db.cr_shelter
+        shelter = current.db(table.id == shelter_id).select(table.status,
+                                                            table.site_id,
+                                                            limitby = (0, 1)
+                                                            ).first()
+        if not shelter:
+            return "Shelter not found!"
+
+        if shelter.status not in (1, 6):
+            return "Shelter Open, so aborting anonymise!"
+
+        # Anonymise
+        result = cr_shelter_anonymise(shelter.site_id, tag_id)
+        db.commit()
+        return result
+
+    # -------------------------------------------------------------------------
+    def cr_shelter_anonymise(site_id, tag_id):
+        """
+            Anonymise all Client data for a Shelter
+            Archive Logs
+            - Common Function which does the actual work
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Remove Workflow Flag
+        db(s3db.org_site_tag.id == tag_id).delete()
+
+        # Read Site Logs to find Clients to Anonymise
         etable = s3db.org_site_event
         equery = (etable.site_id == site_id) & \
                  (etable.archived == False)
@@ -710,9 +783,8 @@ def config(settings):
         # Archive Logs
         db(equery).update(archived = True)
 
-        current.session.confirmation = T("Data Anoynmized succesfully!")
-        from gluon import redirect, URL
-        redirect(URL(args = [r.id]))
+        # Return Result
+        return "Shelter Anonymised"
 
     # -------------------------------------------------------------------------
     def cr_shelter_export(r, **attr):
@@ -773,23 +845,61 @@ def config(settings):
         settings.security.audit_write = True
         from s3 import S3Audit
         S3Audit().__init__()
-        s3db.s3_audit.insert(timestmp = r.now,
+        s3db.s3_audit.insert(timestmp = r.utcnow,
                              user_id = current.auth.user.id,
                              method = "Data Export",
                              representation = shelter_name,
                              )
 
-        ######
-        # Flag
-        ######
+        ###################
+        # Set Workflow Flag
+        ###################
         ttable = s3db.org_site_tag
         query = (ttable.site_id == site_id) & \
-                (ttable.tag == "status")
+                (ttable.tag == "workflow_status")
         tag = db(query).select(ttable.id,
                                limitby = (0, 1)
                                ).first()
         if tag:
             tag.update_record(value = "EXPORTED")
+            tag_id = tag.id
+        else:
+            # Create Flag
+            tag_id = ttable.insert(site_id = site_id,
+                                   tag = "workflow_status",
+                                   value = "EXPORTED",
+                                   )
+
+        ####################
+        # Schedule Anonymise
+        ####################
+        import json
+        ttable = current.s3db.scheduler_task
+        task_name = "settings_task"
+        args = ["cr_shelter_anonymise_task"]
+        vars = {"shelter_id": shelter_id,
+                "tag_id": tag_id,
+                }
+        query = (ttable.task_name == task_name) & \
+                (ttable.args == json.dumps(args)) & \
+                (ttable.vars == json.dumps(vars))
+        task = current.db(query).select(ttable.id,
+                                        limitby = (0, 1)
+                                        ).first()
+        if not task:
+            from dateutil.relativedelta import relativedelta
+            start_time = r.utcnow + relativedelta(days = 30)
+            current.s3task.schedule_task("settings_task",
+                                         args = ["cr_shelter_anonymise_task"],
+                                         vars = {"shelter_id": shelter_id,
+                                                 "tag_id": tag_id,
+                                                 },
+                                         start_time = start_time,
+                                         #period = 300,  # seconds
+                                         timeout = 300,  # seconds
+                                         repeats = 1,    # run once
+                                         user_id = False # Don't add user_id to vars
+                                         )
 
         ##############
         # Extract Data
@@ -868,6 +978,7 @@ def config(settings):
                 represent = "%s (%s)" % (represent, organisations.get(organisation_id)["name"])
             staff[row["pr_person.id"]] = represent
 
+        # Would need to have this function called by AJAX & use JS to Alert User & refresh button
         #session = current.session
         #session.confirmation = T("Data Exported")
         #session.information = T("Data Anonymization Scheduled")
@@ -1374,7 +1485,7 @@ def config(settings):
             if form.accepts(r.post_vars, current.session):
                 # Update Shelter Registration
                 current.db(s3db.cr_shelter_registration.person_id == person_id).update(registration_status = 3,# Checked-Out
-                                                                                       check_out_date = r.now,
+                                                                                       check_out_date = r.utcnow,
                                                                                        )
                 # Update Shelter Population
                 s3db.cr_update_shelter_population(r.id)
@@ -1440,7 +1551,7 @@ def config(settings):
 
         set_method("cr", "shelter",
                    method = "anonymise",
-                   action = cr_shelter_anonymise)
+                   action = cr_shelter_anonymise_method)
 
         set_method("cr", "shelter",
                    component_name = "client",
@@ -1511,7 +1622,7 @@ def config(settings):
                         settings.security.audit_write = True
                         from s3 import S3Audit
                         S3Audit().__init__()
-                        s3db.s3_audit.insert(timestmp = r.now,
+                        s3db.s3_audit.insert(timestmp = r.utcnow,
                                              user_id = auth.user.id,
                                              method = "Data Export",
                                              representation = "Staff",
@@ -1586,7 +1697,7 @@ def config(settings):
                         settings.security.audit_write = True
                         from s3 import S3Audit
                         S3Audit().__init__()
-                        s3db.s3_audit.insert(timestmp = r.now,
+                        s3db.s3_audit.insert(timestmp = r.utcnow,
                                              user_id = auth.user.id,
                                              method = "Data Export",
                                              representation = "Clients",
@@ -1689,7 +1800,7 @@ def config(settings):
                         settings.security.audit_write = True
                         from s3 import S3Audit
                         S3Audit().__init__()
-                        s3db.s3_audit.insert(timestmp = r.now,
+                        s3db.s3_audit.insert(timestmp = r.utcnow,
                                              user_id = auth.user.id,
                                              method = "Data Export",
                                              representation = "Staff",
@@ -1807,6 +1918,19 @@ def config(settings):
                                 },
                                ]
 
+            elif r.method == "update" and \
+                 isinstance(output, dict):
+
+                form = output.get("form")
+                if form:
+                    # Add 2nd Submit button at top
+                    from gluon import INPUT, SQLFORM
+                    submit_btn = INPUT(_type = "submit",
+                                       _value = s3.crud.submit_button,
+                                       )
+                    submit_row = s3.crud.formstyle("submit_record_top" + SQLFORM.ID_ROW_SUFFIX, "", submit_btn, "")
+                    form[0].insert(0, submit_row)
+
             return output
         s3.postp = postp
 
@@ -1840,7 +1964,7 @@ def config(settings):
                 form_vars_get = form.vars.get
                 person_id = form_vars_get("person_id")
                 shelter_id = form_vars_get("shelter_id")
-                check_in_date = form_vars_get("check_in_date", r.now)
+                check_in_date = form_vars_get("check_in_date", r.utcnow)
 
                 stable = s3db.cr_shelter
                 shelter = current.db(stable.id == shelter_id).select(stable.site_id,
@@ -1988,7 +2112,7 @@ def config(settings):
                     settings.security.audit_write = True
                     from s3 import S3Audit
                     S3Audit().__init__()
-                    s3db.s3_audit.insert(timestmp = r.now,
+                    s3db.s3_audit.insert(timestmp = r.utcnow,
                                          user_id = auth.user.id,
                                          method = "Data Export",
                                          representation = "Staff",
@@ -2745,7 +2869,7 @@ def config(settings):
                     settings.security.audit_write = True
                     from s3 import S3Audit
                     S3Audit().__init__()
-                    s3db.s3_audit.insert(timestmp = r.now,
+                    s3db.s3_audit.insert(timestmp = r.utcnow,
                                          user_id = auth.user.id,
                                          method = "Data Export",
                                          representation = "Clients",

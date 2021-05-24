@@ -102,7 +102,20 @@ class index(S3CustomController):
                                           _class = "menu-box",
                                           )
             else:
-                manage_facility_box = DIV(T("No Open Shelters"))
+                manage_facility_box = DIV(DIV(T("No Open Shelters"),
+                                              _class = "row",
+                                              ),
+                                          DIV(A(T("Find a Shelter to Open"),
+                                                _href = URL(c="cr", f="shelter",
+                                                            args = ["summary"],
+                                                            vars = {"~.status__belongs": "1,3,4,5,6",
+                                                                    },
+                                                            )
+                                                ),
+                                              _class = "row",
+                                              ),
+                                          _class = "columns",
+                                          )
             output["manage_facility_box"] = manage_facility_box
 
             s3.jquery_ready.append('''$('#manage-facility-select').change(function(){
