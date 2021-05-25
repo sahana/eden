@@ -2431,7 +2431,10 @@ class S3ImportItem(object):
                 if update_policy(f) == MASTER and self.mci != 1:
                     del data[f]
 
-            if len(data) or self.components or self.references:
+            if self.skip:
+                return True
+
+            elif len(data) or self.components or self.references:
 
                 # Restore UID and MCI
                 if self.uid and UID in table.fields:
