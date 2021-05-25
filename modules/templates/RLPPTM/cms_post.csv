@@ -3,7 +3,7 @@ Subject InviteOrg,auth,user,{system}: Invitation to Register Account,
 Message InviteOrg,auth,user,"Please visit {url} to register a user account.
 
 Your registration code: {code}",
-WelcomeMessageInvited,auth,user,"Welcome to the {system_name} Portal 
+WelcomeMessageInvited,auth,user,"Welcome to the {system_name} Portal
 
 - To edit your profile go to: {profile}
 
@@ -27,7 +27,7 @@ Message InvoiceSettled,fin,voucher_invoice,Die Auszahlung des zu ”{program}”
 SiteServiceIntro,org,facility,Geben Sie an welche Leistungen ihre Teststelle neben PoC-Tests noch anbietet:,
 SiteDocumentsIntro,org,facility,"Laden Sie hier die erforderliche Dokumentation hoch (Hygienekonzept, Raumkonzept, usw.):",
 Subject FacilityApproved,org,facility,Freigabe Ihrer Teststelle,
-Message FacilityApproved – Disabled,org,facility,"Sehr geehrte Damen und Herren,
+Message FacilityApproved - Disabled,org,facility,"Sehr geehrte Damen und Herren,
 
 Wir freuen uns Ihnen mitteilen zu können, dass Ihre registrierte Teststelle {name} auf Basis der von Ihnen gemachten Angaben und eingereichten Unterlagen sodann freigegeben wurde. Dies entspricht einer landesseitigen Beauftragung. Eine gesonderte Bescheinigung erfolgt nicht.
 
@@ -35,11 +35,11 @@ Sollten sich die von Ihnen gemachten Angaben verändern, sind Sie verpflichtet d
 
 Alle weiteren Angaben, die aus Ihrer Sicht zu aktualisieren sind, müssen selbstständig von Ihnen vorgenommen unter {url} werden. Eine Anleitung dazu findet sich im Hilfebereich des Ihnen bekannten Registrierungsportals.
 
-Abschließend möchte ich Sie darüber informieren, dass Ihre Teststelle jederzeit durch Mitarbeiterinnen und Mitarbeiter des Landesamtes für Soziales, Jugend und Versorgung im Rahmen einer Inspektion unangekündigt überprüft werden kann. 
+Abschließend möchte ich Sie darüber informieren, dass Ihre Teststelle jederzeit durch Mitarbeiterinnen und Mitarbeiter des Landesamtes für Soziales, Jugend und Versorgung im Rahmen einer Inspektion unangekündigt überprüft werden kann.
 
 Mit freundlichen Grüßen ",
 Subject FacilityReview,org,facility,Zur Freigabe Ihrer Teststelle: Dokumentation erforderlich,
-Message FacilityReview – Disabled,org,facility,"Sehr geehrte Damen und Herren,
+Message FacilityReview - Disabled,org,facility,"Sehr geehrte Damen und Herren,
 
 herzlichen Dank für Ihre eingereichten Unterlagen zur Teststelle {name}. Diese sind aktuell noch unvollständig.
 
@@ -56,7 +56,9 @@ Erläuterungen:
 Mit freundlichen Grüßen ",
 FacilityMPAVRequirements,org,facility,"BEZUGSBERECHTIGUNG NACH MPAV
 
-Sie müssen nach § 3 Abs. 4 und 4a MPAV berechtigt sein PoC-Tests (prof. use) beziehen zu können. Die in diesem Zusammenhang möglichen Personen bzw. Einrichtungen/ Institutionen sind im Gesetz definiert. Eine Zusammenfassung dieser finden Sie auf den letzten beiden Seiten des nachfolgenden Dokumentes (Link nachfolgend).  https://www.bundesgesundheitsministerium.de/fileadmin/Dateien/3_Downloads/Gesetze_und_Verordnungen/GuV/M/MPAV-Aend_Auslegungshilfe_end_2021-02-08.pdf 
+Sie müssen nach § 3 Abs. 4 und 4a MPAV berechtigt sein PoC-Tests (prof. use) beziehen zu können. Die in diesem Zusammenhang möglichen Personen bzw. Einrichtungen/ Institutionen sind im Gesetz definiert. Eine Zusammenfassung dieser finden Sie auf den letzten beiden Seiten des nachfolgenden Dokumentes (Link nachfolgend).
+
+https://www.bundesgesundheitsministerium.de/fileadmin/Dateien/3_Downloads/Gesetze_und_Verordnungen/GuV/M/MPAV-Aend_Auslegungshilfe_end_2021-02-08.pdf
 
 Bislang geht aus Ihren Unterlagen die nötige Berechtigung zum Bezug der Schnelltest for prof use nach § 3 Absatz 4a MPAV nicht hervor.  Bitte reichen Sie diese Information nach.  ",
 FacilityHygienePlanRequirements,org,facility,"HYGIENEPLAN
