@@ -5530,6 +5530,8 @@
 'Test Stations to be Approved': 'Zu bestätigende Teststellen',
 'Test Stations': 'Teststellen',
 'Test Type': 'Test-Typ',
+'Test station could not be notified: %(error)s': 'Teststelle konnte nicht benachrichtigt werden: %(error)s',
+'Test station notified': 'Teststelle benachrichtigt',
 'Text Color for Text blocks': 'Text Farbe für Text Blöcke',
 'Thank you for validating your email. Your user account is still pending for approval by the system administrator (%s). You will get a notification by email when your account is activated.': 'Danke für die Bestätigung Ihrer E-Mail-Adresse. Ihr Zugang wurde vom Systemadministrator noch nicht genehmigt (%s). Sie werden per E-Mail benachrichtigt wenn ihr Benutzerkonto aktiviert wurde.',
 'Thank you for validating your email. Your user account is still pending for approval by the system administrator. You will get a notification by email when your account is activated.': 'Danke für die Bestätigung Ihrer E-Mail-Adresse. Ihr Zugang wurde vom Systemadministrator noch nicht genehmigt. Sie werden per E-Mail benachrichtigt wenn ihr Benutzerkonto aktiviert wurde.',

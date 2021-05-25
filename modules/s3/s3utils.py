@@ -1002,9 +1002,10 @@ def s3_keep_messages():
     response = current.response
     session = current.session
 
-    session.flash = response.flash
     session.confirmation = response.confirmation
     session.error = response.error
+    session.flash = response.flash
+    session.information = response.information
     session.warning = response.warning
 
 # =============================================================================

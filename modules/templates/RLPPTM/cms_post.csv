@@ -26,3 +26,54 @@ Subject InvoiceSettled,fin,voucher_invoice,Vergütung zu ”{program}” wird au
 Message InvoiceSettled,fin,voucher_invoice,Die Auszahlung des zu ”{program}” am {date} festgestellten Vergütungsanspruchs für {organisation} (Rechnungsnr. {invoice}) wurde veranlasst. Die Zahlung erfolgt in den nächsten Tagen auf das unter {url} angegebene Konto.,
 SiteServiceIntro,org,facility,Geben Sie an welche Leistungen ihre Teststelle neben PoC-Tests noch anbietet:,
 SiteDocumentsIntro,org,facility,"Laden Sie hier die erforderliche Dokumentation hoch (Hygienekonzept, Raumkonzept, usw.):",
+Subject FacilityApproved,org,facility,Freigabe Ihrer Teststelle,
+Message FacilityApproved – Disabled,org,facility,"Sehr geehrte Damen und Herren,
+
+Wir freuen uns Ihnen mitteilen zu können, dass Ihre registrierte Teststelle {name} auf Basis der von Ihnen gemachten Angaben und eingereichten Unterlagen sodann freigegeben wurde. Dies entspricht einer landesseitigen Beauftragung. Eine gesonderte Bescheinigung erfolgt nicht.
+
+Sollten sich die von Ihnen gemachten Angaben verändern, sind Sie verpflichtet dies anzuzeigen (dies gilt nur für die Bezugsberechtigung nach MPAV).
+
+Alle weiteren Angaben, die aus Ihrer Sicht zu aktualisieren sind, müssen selbstständig von Ihnen vorgenommen unter {url} werden. Eine Anleitung dazu findet sich im Hilfebereich des Ihnen bekannten Registrierungsportals.
+
+Abschließend möchte ich Sie darüber informieren, dass Ihre Teststelle jederzeit durch Mitarbeiterinnen und Mitarbeiter des Landesamtes für Soziales, Jugend und Versorgung im Rahmen einer Inspektion unangekündigt überprüft werden kann. 
+
+Mit freundlichen Grüßen ",
+Subject FacilityReview,org,facility,Zur Freigabe Ihrer Teststelle: Dokumentation erforderlich,
+Message FacilityReview – Disabled,org,facility,"Sehr geehrte Damen und Herren,
+
+herzlichen Dank für Ihre eingereichten Unterlagen zur Teststelle {name}. Diese sind aktuell noch unvollständig.
+
+Bitte reichen Sie diese (korrigiert) nach, oder laden Sie sie im Portal unter {url} hoch und setzen Sie anschließend den Freigabestatus auf ""Bereit zur Prüfung"".
+
+Hinweise:
+
+{advice}
+
+Erläuterungen:
+
+{explanations}
+
+Mit freundlichen Grüßen ",
+FacilityMPAVRequirements,org,facility,"BEZUGSBERECHTIGUNG NACH MPAV
+
+Sie müssen nach § 3 Abs. 4 und 4a MPAV berechtigt sein PoC-Tests (prof. use) beziehen zu können. Die in diesem Zusammenhang möglichen Personen bzw. Einrichtungen/ Institutionen sind im Gesetz definiert. Eine Zusammenfassung dieser finden Sie auf den letzten beiden Seiten des nachfolgenden Dokumentes (Link nachfolgend).  https://www.bundesgesundheitsministerium.de/fileadmin/Dateien/3_Downloads/Gesetze_und_Verordnungen/GuV/M/MPAV-Aend_Auslegungshilfe_end_2021-02-08.pdf 
+
+Bislang geht aus Ihren Unterlagen die nötige Berechtigung zum Bezug der Schnelltest for prof use nach § 3 Absatz 4a MPAV nicht hervor.  Bitte reichen Sie diese Information nach.  ",
+FacilityHygienePlanRequirements,org,facility,"HYGIENEPLAN
+
+Für die Teststelle muss ein Hygieneplan vorgelegt werden, der folgende Punkte zwingend enthalten muss:
+
+  1. Grundsätzliche Einhaltung der AHAL-Regeln
+  2. Wegeführung / Beschilderung
+  3. Räumlichkeiten / Trennung der Bereiche / Desinfektion / Lüftung
+  4. Personal / Schulung / persönliche Schutzausrüstung
+  5. Testpersonen und deren Begleitpersonen
+  6. Reinigung / Desinfektion
+  7. Entsorgung
+
+Aktuell liegt kein (ausreichender) Hygieneplan für Ihre Teststelle vor. ",
+FacilityLayoutRequirements,org,facility,"RAUMKONZEPT
+
+Aktuell liegt kein (ausreichendes) Raumkonzept für Ihre Teststelle vor. Bitte beachten Sie, dass eine räumliche Abgrenzung zu Ihren üblichen Betriebsräumen gegeben sein muss.
+
+Bitte legen Sie ein entsprechendes Raumkonzept vor. ",

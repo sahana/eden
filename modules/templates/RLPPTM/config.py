@@ -401,7 +401,16 @@ def config(settings):
 
         s3db = current.s3db
 
-        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+        table = s3db.cms_post
+
+        from s3 import S3SQLCustomForm, \
+                       S3SQLInlineComponent, \
+                       S3SQLInlineLink, \
+                       s3_text_represent
+
+        field = table.body
+        field.represent = lambda v, row=None: \
+                          s3_text_represent(v, lines=20, _class = "cms-item-body")
 
         record = r.record
         if r.tablename == "cms_series" and \

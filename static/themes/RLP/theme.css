@@ -2899,3 +2899,10 @@ body.rtl .event-type-header {
 .approve-workflow .fa {
   margin-right: 0.2rem;
 }
+
+/* line 422, ../scss/theme/_misc.scss */
+.text-body.cms-item-body {
+  background-color: #FFF8E6;
+  padding: 0.7rem;
+  max-width: 48rem;
+}

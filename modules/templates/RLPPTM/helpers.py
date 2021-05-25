@@ -6,7 +6,7 @@
     @license: MIT
 """
 
-from gluon import current, Field, \
+from gluon import current, Field, URL, \
                   CRYPT, IS_EMAIL, IS_IN_SET, IS_LOWER, IS_NOT_IN_DB, \
                   SQLFORM, A, DIV, H4, H5, I, INPUT, LI, P, SPAN, TABLE, TD, TH, TR, UL
 
@@ -629,17 +629,20 @@ def facility_approval_workflow(site_id):
             facility_approval_workflow(site_id)
 
     update = {}
+    notify = False
 
     status = tags.get("STATUS")
     if status == "REVISE":
         if all(tags[k] == "APPROVED" for k in review):
             update["PUBLIC"] = "Y"
             update["STATUS"] = "APPROVED"
-        elif all(tags[k] != "REVISE" for k in review):
-            update["STATUS"] = "REVIEW"
+            notify = True
+        elif any(tags[k] == "REVIEW" for k in review):
             update["PUBLIC"] = "N"
+            update["STATUS"] = "REVIEW"
         else:
             update["PUBLIC"] = "N"
+            # Keep status REVISE
 
     elif status == "READY":
         update["PUBLIC"] = "N"
@@ -653,38 +656,161 @@ def facility_approval_workflow(site_id):
         update["STATUS"] = "REVIEW"
 
     elif status == "REVIEW":
-        if any(tags[k] == "REVISE" for k in review):
-            update["PUBLIC"] = "N"
-            update["STATUS"] = "REVISE"
-            # TODO Notify OrgAdmin
-        elif all(tags[k] == "APPROVED" for k in review):
+        if all(tags[k] == "APPROVED" for k in review):
             update["PUBLIC"] = "Y"
             update["STATUS"] = "APPROVED"
-        else:
-            update["PUBLIC"] = "N"
-
-    elif status == "APPROVED":
-        if any(tags[k] == "REVISE" for k in review):
-            update["PUBLIC"] = "N"
-            update["STATUS"] = "REVISE"
-            # TODO Notify OrgAdmin
+            notify = True
         elif any(tags[k] == "REVIEW" for k in review):
             update["PUBLIC"] = "N"
+            # Keep status REVIEW
+        elif any(tags[k] == "REVISE" for k in review):
+            update["PUBLIC"] = "N"
+            update["STATUS"] = "REVISE"
+            notify = True
+
+    elif status == "APPROVED":
+        if any(tags[k] == "REVIEW" for k in review):
+            update["PUBLIC"] = "N"
             update["STATUS"] = "REVIEW"
+        elif any(tags[k] == "REVISE" for k in review):
+            update["PUBLIC"] = "N"
+            update["STATUS"] = "REVISE"
+            notify = True
 
     for row in rows:
         key = row.tag
         if key in update:
             row.update_record(value=update[key])
 
+    T = current.T
+
     public = update.get("PUBLIC")
     if public and public != tags["PUBLIC"]:
-        T = current.T
         if public == "Y":
             msg = T("Facility added to public registry")
         else:
             msg = T("Facility removed from public registry pending review")
-        current.response.warning = msg
+        current.response.information = msg
+
+    # Send Notifications
+    if notify:
+        tags.update(update)
+        msg = facility_review_notification(site_id, tags)
+        if msg:
+            current.response.warning = \
+                T("Test station could not be notified: %(error)s") % {"error": msg}
+        else:
+            current.response.flash = \
+                T("Test station notified")
+
+# -----------------------------------------------------------------------------
+def facility_review_notification(site_id, tags):
+    """
+        Notify the OrgAdmin of a test station about the status of the review
+
+        @param site_id: the test facility site ID
+        @param tags: the current workflow tags
+
+        @returns: error message on error, else None
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    # Lookup the facility
+    ftable = s3db.org_facility
+    query = (ftable.site_id == site_id) & \
+            (ftable.deleted == False)
+    facility = db(query).select(ftable.id,
+                                ftable.name,
+                                ftable.organisation_id,
+                                limitby = (0, 1),
+                                ).first()
+    if not facility:
+        return "Facility not found"
+
+    organisation_id = facility.organisation_id
+    if not organisation_id:
+        return "Organisation not found"
+
+    # Find the OrgAdmin email addresses
+    email = get_role_emails("ORG_ADMIN",
+                            organisation_id = organisation_id,
+                            )
+    if not email:
+        return "No Organisation Administrator found"
+
+    # Data for the notification email
+    data = {"name": facility.name,
+            "url": URL(c = "org",
+                       f = "organisation",
+                       args = [organisation_id, "facility", facility.id],
+                       host = True,
+                       ),
+            }
+
+    status = tags.get("STATUS")
+
+    if status == "REVISE":
+        template = "FacilityReview"
+
+        # Add advice
+        dtable = s3db.org_site_details
+        query = (dtable.site_id == site_id) & \
+                (dtable.deleted == False)
+        details = db(query).select(dtable.authorisation_advice,
+                                   limitby = (0, 1),
+                                   ).first()
+        if details and details.authorisation_advice:
+            data["advice"] = details.authorisation_advice
+
+        # Add explanations for relevant requirements
+        review = (("MPAV", "FacilityMPAVRequirements"),
+                  ("HYGIENE", "FacilityHygienePlanRequirements"),
+                  ("LAYOUT", "FacilityLayoutRequirements"),
+                  )
+        ctable = s3db.cms_post
+        ltable = s3db.cms_post_module
+        join = ltable.on((ltable.post_id == ctable.id) & \
+                         (ltable.module == "org") & \
+                         (ltable.resource == "facility") & \
+                         (ltable.deleted == False))
+        explanations = []
+        for tag, requirements in review:
+            if tags.get(tag) == "REVISE":
+                query = (ctable.name == requirements) & \
+                        (ctable.deleted == False)
+                row = db(query).select(ctable.body,
+                                       join = join,
+                                       limitby = (0, 1),
+                                       ).first()
+                if row:
+                    explanations.append(row.body)
+        data["explanations"] = "\n\n".join(explanations) if explanations else "-"
+
+    elif status == "APPROVED":
+        template = "FacilityApproved"
+
+    else:
+        # No notifications for this status
+        return "invalid status"
+
+    # Lookup email address of current user
+    from .notifications import CMSNotifications
+    auth = current.auth
+    if auth.user:
+        cc = CMSNotifications.lookup_contact(auth.user.pe_id)
+    else:
+        cc = None
+
+    # Send CMS Notification FacilityReview
+    return CMSNotifications.send(email,
+                                 template,
+                                 data,
+                                 module = "org",
+                                 resource = "facility",
+                                 cc = cc,
+                                 )
 
 # -----------------------------------------------------------------------------
 def add_organisation_default_tags(organisation_id):
