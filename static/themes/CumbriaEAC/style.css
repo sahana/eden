@@ -42,3 +42,7 @@ textarea:focus-visible {
     font-size: 0.8125rem;
     padding: 0.875rem 1.75rem 0.9375rem 1.75rem;
 }
+
+.menu-box {
+    border: 0
+}

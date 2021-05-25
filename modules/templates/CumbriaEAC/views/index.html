@@ -7,6 +7,7 @@
   {{AUTHENTICATED = auth.get_system_roles().AUTHENTICATED}}
   {{if AUTHENTICATED in session.s3.roles:}}
    {{=manage_facility_box}}
+   {{=find_shelter}}
   {{else:}}
   <div id='login_box'>
    <div id='login_form'>
