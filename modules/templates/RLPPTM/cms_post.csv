@@ -26,8 +26,8 @@ Subject InvoiceSettled,fin,voucher_invoice,Vergütung zu ”{program}” wird au
 Message InvoiceSettled,fin,voucher_invoice,Die Auszahlung des zu ”{program}” am {date} festgestellten Vergütungsanspruchs für {organisation} (Rechnungsnr. {invoice}) wurde veranlasst. Die Zahlung erfolgt in den nächsten Tagen auf das unter {url} angegebene Konto.,
 SiteServiceIntro,org,facility,Geben Sie an welche Leistungen ihre Teststelle neben PoC-Tests noch anbietet:,
 SiteDocumentsIntro,org,facility,"Laden Sie hier die erforderliche Dokumentation hoch (Hygienekonzept, Raumkonzept, usw.):",
-Subject FacilityApproved,org,facility,Freigabe Ihrer Teststelle,
-Message FacilityApproved - Disabled,org,facility,"Sehr geehrte Damen und Herren,
+Subject FacilityApproved - Disabled,org,facility,Freigabe Ihrer Teststelle,
+Message FacilityApproved,org,facility,"Sehr geehrte Damen und Herren,
 
 Wir freuen uns Ihnen mitteilen zu können, dass Ihre registrierte Teststelle {name} auf Basis der von Ihnen gemachten Angaben und eingereichten Unterlagen sodann freigegeben wurde. Dies entspricht einer landesseitigen Beauftragung. Eine gesonderte Bescheinigung erfolgt nicht.
 
@@ -38,8 +38,8 @@ Alle weiteren Angaben, die aus Ihrer Sicht zu aktualisieren sind, müssen selbst
 Abschließend möchte ich Sie darüber informieren, dass Ihre Teststelle jederzeit durch Mitarbeiterinnen und Mitarbeiter des Landesamtes für Soziales, Jugend und Versorgung im Rahmen einer Inspektion unangekündigt überprüft werden kann.
 
 Mit freundlichen Grüßen ",
-Subject FacilityReview,org,facility,Zur Freigabe Ihrer Teststelle: Dokumentation erforderlich,
-Message FacilityReview - Disabled,org,facility,"Sehr geehrte Damen und Herren,
+Subject FacilityReview - Disabled,org,facility,Zur Freigabe Ihrer Teststelle: Dokumentation erforderlich,
+Message FacilityReview,org,facility,"Sehr geehrte Damen und Herren,
 
 herzlichen Dank für Ihre eingereichten Unterlagen zur Teststelle {name}. Diese sind aktuell noch unvollständig.
 

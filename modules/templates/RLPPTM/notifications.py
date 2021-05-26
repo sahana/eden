@@ -165,16 +165,19 @@ class CMSNotifications(object):
             message_template = ""
 
         # Look up attachments
-        dtable = s3db.doc_document
-        query = (dtable.doc_id == row.doc_id) & \
-                (dtable.file != None) & (dtable.file != "") & \
-                (dtable.deleted == False)
-        rows = db(query).select(dtable.file)
-        attachments = []
-        for row in rows:
-            filename, stream = dtable.file.retrieve(row.file)
-            attachments.append(current.mail.Attachment(stream, filename=filename))
-        if not attachments:
+        if row:
+            dtable = s3db.doc_document
+            query = (dtable.doc_id == row.doc_id) & \
+                    (dtable.file != None) & (dtable.file != "") & \
+                    (dtable.deleted == False)
+            rows = db(query).select(dtable.file)
+            attachments = []
+            for row in rows:
+                filename, stream = dtable.file.retrieve(row.file)
+                attachments.append(current.mail.Attachment(stream, filename=filename))
+            if not attachments:
+                attachments = None
+        else:
             attachments = None
 
         return subject_template, message_template, attachments
