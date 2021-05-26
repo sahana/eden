@@ -41,7 +41,9 @@
          Permanent L4...................optional.....person permanent address L4
          Medical Conditions.............optional.....pr_physical_description.medical_conditions
          Ethnicity......................optional.....pr_physical_description.ethnicity
+         Ethnicity Other................optional.....pr_physical_description.ethnicity_other
          Religion.......................optional.....pr_person_details.religion
+         Religion Other.................optional.....pr_person_details.religion_other
          KV:XX..........................optional.....pr_person_tag Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
 
          Relation First Name............optional.....pr_person_relation.person_id$first_name
@@ -321,6 +323,14 @@
                         <xsl:value-of select="$religion"/>
                     </data>
                 </xsl:if>
+	            <xsl:variable name="religion_other">
+                    <xsl:value-of select="col[@field='Religion Other']"/>
+                </xsl:variable>
+                <xsl:if test="$religion_other!=''">
+                    <data field="religion_other">
+                        <xsl:value-of select="$religion_other"/>
+                    </data>
+                </xsl:if>
             </resource>
 
             <resource name="pr_physical_description">
@@ -330,6 +340,14 @@
                 <xsl:if test="$ethnicity!=''">
                     <data field="ethnicity">
                         <xsl:value-of select="$ethnicity"/>
+                    </data>
+                </xsl:if>
+	            <xsl:variable name="ethnicity_other">
+                    <xsl:value-of select="col[@field='Ethnicity Other']"/>
+                </xsl:variable>
+                <xsl:if test="$ethnicity_other!=''">
+                    <data field="ethnicity_other">
+                        <xsl:value-of select="$ethnicity_other"/>
                     </data>
                 </xsl:if>
 	            <xsl:variable name="medical">

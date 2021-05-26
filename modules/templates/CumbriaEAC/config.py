@@ -649,7 +649,7 @@ def config(settings):
         query = (table.shelter_id == shelter_id) & \
                 (table.registration_status == 2) # Checked-in
         db(query).update(registration_status = 3, # Checked-out
-                         #check_out_date = current.request.now,
+                         check_out_date = current.request.now,
                          )
 
     # -------------------------------------------------------------------------
@@ -1683,7 +1683,8 @@ def config(settings):
                 r.resource.add_component_filter(cname, (FS("client.first_name") != ANONYMOUS))
 
                 if not r.interactive:
-                    output_format = current.auth.permission.format
+                    auth = current.auth
+                    output_format = auth.permission.format
                     if output_format not in ("aadata", "json", "xls"):
                         # Block Exports
                         return False
@@ -1786,7 +1787,8 @@ def config(settings):
             elif cname == "human_resource":
                 # UNUSED
                 if not r.interactive:
-                    output_format = current.auth.permission.format
+                    auth = current.auth
+                    output_format = auth.permission.format
                     if output_format not in ("aadata", "json", "xls"):
                         # Block Exports
                         return False
@@ -2103,7 +2105,8 @@ def config(settings):
         standard_prep = s3.prep
         def prep(r):
             if not r.interactive:
-                output_format = current.auth.permission.format
+                auth = current.auth
+                output_format = auth.permission.format
                 if output_format not in ("aadata", "json", "xls"):
                     # Block Exports
                     return False
@@ -2112,11 +2115,11 @@ def config(settings):
                     settings.security.audit_write = True
                     from s3 import S3Audit
                     S3Audit().__init__()
-                    s3db.s3_audit.insert(timestmp = r.utcnow,
-                                         user_id = auth.user.id,
-                                         method = "Data Export",
-                                         representation = "Staff",
-                                         )
+                    current.s3db.s3_audit.insert(timestmp = r.utcnow,
+                                                 user_id = auth.user.id,
+                                                 method = "Data Export",
+                                                 representation = "Staff",
+                                                 )
 
             # Call standard prep
             if callable(standard_prep):
@@ -2560,7 +2563,12 @@ def config(settings):
         else:
             # Filtered components
             s3db.add_components("pr_person",
-                                pr_person_tag = ({"name": "holmes",
+                                pr_person_tag = ({"name": "birth_town",
+                                                  "joinby": "person_id",
+                                                  "filterby": {"tag": "birth_town"},
+                                                  "multiple": False,
+                                                  },
+                                                 {"name": "holmes",
                                                   "joinby": "person_id",
                                                   "filterby": {"tag": "holmes"},
                                                   "multiple": False,
@@ -2634,6 +2642,8 @@ def config(settings):
                 ptable.gender.writable = False
                 ptable.date_of_birth.writable = False
                 ptable.comments.writable = False
+                birth_town = components_get("birth_town")
+                birth_town.table.value.writable = False
                 pets.table.value.writable = False
                 location = components_get("location")
                 location.table.value.writable = False
@@ -2647,6 +2657,13 @@ def config(settings):
                 dietary.table.value.writable = False
                 gp = components_get("gp")
                 gp.table.value.writable = False
+                s3db.pr_physical_description.ethnicity_other.readable = True
+                s3db.pr_person_details.religion_other.readable = True
+            else:
+                f = s3db.pr_physical_description.ethnicity_other
+                f.readable = f.writable = True
+                f = s3db.pr_person_details.religion_other
+                f.readable = f.writable = True
 
             crud_fields = ["pe_label",
                            "first_name",
@@ -2654,6 +2671,7 @@ def config(settings):
                            "last_name",
                            "gender",
                            "date_of_birth",
+                           (T("Town of Birth"), "birth_town.value"),
                            S3SQLInlineComponent("address",
                                                 name = "perm_address",
                                                 label = T("Permanent Address (if different)"),
@@ -2696,7 +2714,9 @@ def config(settings):
                            (T("Communication and Language Needs"), "language.value"),
                            "person_details.nationality",
                            "physical_description.ethnicity",
+                           (T("Other Ethnicity"), "physical_description.ethnicity_other"),
                            "person_details.religion",
+                           (T("Other Religion"), "person_details.religion_other"),
                            "comments",
                            ]
 

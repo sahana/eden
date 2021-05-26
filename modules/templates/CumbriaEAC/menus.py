@@ -50,8 +50,9 @@ class S3MainMenu(default.S3MainMenu):
                        ),
                     MM("My Clients", c="cr", f="shelter", args=[shelter_id, "client"])(
                        MM("Check-In", c="cr", f="shelter", args=[shelter_id, "client", "create"]),
-                       MM("All Clients", c="pr", f="person", m="summary"),
+                       MM("All Clients", c="pr", f="person"),
                        MM("Import", c="cr", f="shelter_registration", m="import"),
+                       MM("Report", c="pr", f="person", m="report"),
                        ),
                     ]
         else:

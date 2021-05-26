@@ -5638,6 +5638,11 @@ class PRDescriptionModel(S3Model):
                            requires = ethnicity_requires,
                            #requires = IS_LENGTH(64),
                            ),
+                     Field("ethnicity_other",
+                           #label = T("Other Ethnicity"),
+                           readable = False,
+                           writable = False,
+                           ),
                      # Height and weight
                      Field("height", "integer",
                            label = T("Height"),
