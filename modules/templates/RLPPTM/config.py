@@ -2399,7 +2399,15 @@ def config(settings):
                        "location_id$L3",
                        "location_id$L2",
                        ]
-        if is_org_group_admin and r.get_vars.get("$$pending") == "1":
+
+        get_vars = r.get_vars
+        if is_org_group_admin and not in_org_controller:
+            pending = get_vars.get("$$pending") == "1"
+            review = get_vars.get("$$review") == "1"
+        else:
+            pending = review = False
+
+        if pending or review:
             list_fields.insert(1, "organisation_id")
         elif in_org_controller:
             list_fields.append("obsolete")
@@ -2681,10 +2689,19 @@ def config(settings):
 
                     # Filter by public-tag
                     get_vars = r.get_vars
-                    pending = get_vars.get("$$pending")
-                    if is_org_group_admin and pending == "1":
+                    if is_org_group_admin:
+                        pending = get_vars.get("$$pending")
+                        review = get_vars.get("$$review")
+                    else:
+                        pending = review = False
+
+                    if pending == "1":
                         resource.add_filter(FS("public.value") == "N")
                         s3.crud_strings.org_facility.title_list = T("Unapproved Test Stations")
+
+                    elif review == "1":
+                        resource.add_filter(FS("status.value") == "REVIEW")
+                        s3.crud_strings.org_facility.title_list = T("Test Stations to review")
 
                     else:
                         resource.add_filter(FS("public.value") == "Y")
@@ -2715,7 +2732,7 @@ def config(settings):
                           "output": facility_map_popup(record),
                           }
             else:
-                # Read view
+                # Single facility read view
 
                 # No facility details editable here except comments
                 for fn in table.fields:

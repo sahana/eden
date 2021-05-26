@@ -5528,6 +5528,7 @@
 'Test Stations for Everybody': 'Teststellen für Alle',
 'Test Stations for School and Child Care Staff': 'Teststellen für Schul- und Kindergartenpersonal',
 'Test Stations to be Approved': 'Zu bestätigende Teststellen',
+'Test Stations to review': 'Zu prüfende Teststellen',
 'Test Stations': 'Teststellen',
 'Test Type': 'Test-Typ',
 'Test station could not be notified: %(error)s': 'Teststelle konnte nicht benachrichtigt werden: %(error)s',

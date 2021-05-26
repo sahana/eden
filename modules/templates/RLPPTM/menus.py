@@ -87,6 +87,9 @@ class S3MainMenu(default.S3MainMenu):
                     MM("Test Stations for School and Child Care Staff",
                        c = "org", f = "facility", m = "summary", vars={"$$code": "TESTS-SCHOOLS"},
                        ),
+                    MM("Test Stations to review",
+                       c = "org", f = "facility", vars={"$$review": "1"}, restrict="ORG_GROUP_ADMIN",
+                       ),
                     MM("Unapproved Test Stations",
                        c = "org", f = "facility", vars={"$$pending": "1"}, restrict="ORG_GROUP_ADMIN",
                        ),
@@ -358,6 +361,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M(c="org")(
                     org_menu,
                     M("Facilities", f="facility", link=False)(
+                        M("Test Stations to review",
+                          vars = {"$$review": "1"},
+                          restrict = "ORG_GROUP_ADMIN",
+                          ),
                         M("Unapproved Test Stations",
                           vars = {"$$pending": "1"},
                           restrict = "ORG_GROUP_ADMIN",
