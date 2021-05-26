@@ -2721,7 +2721,7 @@ def config(settings):
                            ]
 
             if not household:
-                crud_fields.insert(6, S3SQLInlineComponent("address",
+                crud_fields.insert(7, S3SQLInlineComponent("address",
                                                            name = "address",
                                                            label = T("Current Address"),
                                                            multiple = False,
@@ -2743,8 +2743,10 @@ def config(settings):
             # Compact JSON encoding
             SEPARATORS = (",", ":")
 
-            current.response.s3.jquery_ready.append('''S3.showHidden('%s',%s,'%s')''' % \
+            s3 = current.response.s3
+            s3.jquery_ready.append('''S3.showHidden('%s',%s,'%s')''' % \
                 ("sub_pets_value", json.dumps(["sub_pets_details_value"], separators=SEPARATORS), "pr_person"))
+            s3.scripts.append("/%s/static/themes/CumbriaEAC/js/client_registration.js" % r.application)
 
             filter_widgets = [
                     S3TextFilter(["first_name",
