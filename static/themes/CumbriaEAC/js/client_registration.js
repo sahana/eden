@@ -3,8 +3,8 @@ $(document).ready(function(){
     // Hide 'Other Ethnicity' and 'Other Religion' fields
     // - unless appropriate entries selected
 
-    var ethnicity = $('#pr_person_sub_physical_description_ethnicity')
-        ethnicity_other = $('#pr_person_sub_physical_description_ethnicity_other__row')
+    var ethnicity = $('#pr_person_sub_physical_description_ethnicity'),
+        ethnicity_other = $('#pr_person_sub_physical_description_ethnicity_other__row'),
         religion = $('#pr_person_sub_person_details_religion'),
         religion_other = $('#pr_person_sub_person_details_religion_other__row');
 

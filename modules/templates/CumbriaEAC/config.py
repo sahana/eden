@@ -1837,6 +1837,7 @@ def config(settings):
             else:
                 s3.crud_strings["cr_shelter"].title_update = T("Manage Shelter")
                 s3.crud_strings["cr_shelter"].title_update = shelter_name
+                s3.scripts.append("/%s/static/themes/CumbriaEAC/js/shelter.js" % r.application)
 
             return result
         s3.prep = prep
