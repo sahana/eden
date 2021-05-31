@@ -139,10 +139,10 @@ def rlp_deployment_sites(managed_orgs=False, organisation_id=None):
         orgs = None
 
     if not orgs:
-        # Sites of all organisations except MSAGD
-        from .config import MSAGD
+        # Sites of all organisations except MWG
+        from .config import MWG
         otable = current.s3db.org_organisation
-        query = (otable.name != MSAGD) & (otable.deleted == False)
+        query = (otable.name != MWG) & (otable.deleted == False)
         orgs = [row.id for row in db(query).select(otable.id)]
 
     if not orgs:

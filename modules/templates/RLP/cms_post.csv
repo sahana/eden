@@ -1,10 +1,10 @@
 Name,Module,Resource,Comments,Body
-Subject Organisation,hrm,delegation,Notification MSAGD=>Deploying Organisation,{system}: Volunteer Deployment of {volunteer_id} has been Approved
-Message Organisation,hrm,delegation,Notification MSAGD=>Deploying Organisation,Volunteer {volunteer_id} {volunteer_name} has been Approved for a Deployment to {organisation} from {start} to {end}.
-Subject Volunteer,hrm,delegation,Notification MSAGD=>Volunteer,{system}: Your Deployment to {organisation} has been Approved
-Message Volunteer,hrm,delegation,Notification MSAGD=>Volunteer,Your Deployment to {organisation} from {start} to {end} has been Approved.
-Subject Office,hrm,delegation,Notification MSAGD=>Volunteer Office,{system}: Volunteer Deployment of {volunteer_id} has been Approved
-Message Office,hrm,delegation,Notification MSAGD=>Volunteer Office,Volunteer {volunteer_id} {volunteer_name} has been Approved for a Deployment to {organisation} from {start} to {end}.
+Subject Organisation,hrm,delegation,Notification MWG=>Deploying Organisation,{system}: Volunteer Deployment of {volunteer_id} has been Approved
+Message Organisation,hrm,delegation,Notification MWG=>Deploying Organisation,Volunteer {volunteer_id} {volunteer_name} has been Approved for a Deployment to {organisation} from {start} to {end}.
+Subject Volunteer,hrm,delegation,Notification MWG=>Volunteer,{system}: Your Deployment to {organisation} has been Approved
+Message Volunteer,hrm,delegation,Notification MWG=>Volunteer,Your Deployment to {organisation} from {start} to {end} has been Approved.
+Subject Office,hrm,delegation,Notification MWG=>Volunteer Office,{system}: Volunteer Deployment of {volunteer_id} has been Approved
+Message Office,hrm,delegation,Notification MWG=>Volunteer Office,Volunteer {volunteer_id} {volunteer_name} has been Approved for a Deployment to {organisation} from {start} to {end}.
 Subject OrgToVolunteer,hrm,delegation,Notification Deploying Organisation=>Volunteer,{system}: Your Deployment to {organisation} has been Approved
 Message OrgToVolunteer,hrm,delegation,Notification Deploying Organisation=>Volunteer,Your Deployment to {organisation} from {start} to {end} has been Approved.
 WelcomeMessageDisabled,auth,user,Rename into ”WelcomeMessage” to activate welcome message,"Welcome to the {system_name} Portal!

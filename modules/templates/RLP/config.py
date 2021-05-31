@@ -20,7 +20,7 @@ from s3dal import original_tablename
 from .helpers import rlp_active_deployments
 #from ..RLPPTM.rlpgeonames import rlp_GeoNames
 
-MSAGD = "Ministerium für Soziales, Arbeit, Gesundheit und Demografie"
+MWG = "Ministerium für Wissenschaft und Gesundheit"
 ALLOWED_FORMATS = ("html", "iframe", "popup", "aadata", "json", "xls", "pdf")
 
 # =============================================================================
@@ -151,7 +151,7 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     settings.org.projects_tab = False
-    settings.org.default_organisation = MSAGD
+    settings.org.default_organisation = MWG
 
     # -------------------------------------------------------------------------
     # Custom group types for volunteer pools
