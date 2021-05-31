@@ -924,8 +924,8 @@ class register(S3CustomController):
 
         auth = current.auth
 
-        # Redirect if already logged-in
         if auth.s3_logged_in():
+            # Redirect if already logged-in
             redirect(URL(c="default", f="index"))
 
         auth_settings = auth.settings
@@ -940,6 +940,10 @@ class register(S3CustomController):
         response = current.response
         session = current.session
         settings = current.deployment_settings
+
+        if not settings.get_custom(key="test_station_registration"):
+            session.error = T("Function not available")
+            redirect(URL(c="default", f="index"))
 
         utable = auth_settings.table_user
 

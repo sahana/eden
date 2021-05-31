@@ -40,6 +40,7 @@ class S3MainMenu(default.S3MainMenu):
         """ Modules Menu """
 
         auth = current.auth
+        settings = current.deployment_settings
 
         has_role = auth.s3_has_role
         has_roles = auth.s3_has_roles
@@ -99,7 +100,8 @@ class S3MainMenu(default.S3MainMenu):
                    ),
                 MM("Register Test Station",
                    c = "default", f = "index", args = ["register"],
-                   check = lambda i: not current.auth.s3_logged_in(),
+                   check = lambda i: settings.get_custom("test_station_registration") and \
+                                     not current.auth.s3_logged_in(),
                    ),
                 ]
 

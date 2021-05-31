@@ -216,6 +216,10 @@ def config(settings):
     settings.ui.calendar_clear_icon = True
 
     # -------------------------------------------------------------------------
+    # Custom settings
+    settings.custom.test_station_registration = False
+
+    # -------------------------------------------------------------------------
     # Realm Rules
     #
     def rlpptm_realm_entity(table, row):
@@ -2278,6 +2282,12 @@ def config(settings):
                                  facility_create_onaccept,
                                  method = "create",
                                  )
+
+        if not is_org_group_admin and \
+           not settings.get_custom(key="test_station_registration"):
+            # If test station registration is disabled, no new test
+            # facilities can be added either
+            s3db.configure(tablename, insertable = False)
 
         # Configure fields
         in_org_controller = r.tablename == "org_organisation"
