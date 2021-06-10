@@ -741,28 +741,31 @@ class S3LocationModel(S3Model):
         """
 
         data = item.data
-        name = data.get("name")
+        data_get = data.get
+        name = data_get("name")
 
         if not name:
             return
 
-        level = data.get("level")
+        level = data_get("level")
         if not level:
-            address = data.get("addr_street")
+            address = data_get("addr_street")
             if not address:
                 # Don't deduplicate precise locations as hard to ensure these have unique names
                 return
             table = item.table
-            query = (table.addr_street == address) & \
+            query = (table.name == name) & \
+                    (table.addr_street == address) & \
                     (table.deleted != True)
-            postcode = data.get("addr_postcode")
+            postcode = data_get("addr_postcode")
             if postcode:
                 query &= (table.addr_postcode == postcode)
-            parent = data.get("parent")
+            parent = data_get("parent")
             if parent:
                 query &= (table.parent == parent)
             duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
+                                                 limitby = (0, 1)
+                                                 ).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -801,8 +804,9 @@ class S3LocationModel(S3Model):
             duplicate = current.db(query).select(table.id,
                                                  table.name,
                                                  table.level,
-                                                 orderby=orderby,
-                                                 limitby=(0, 1)).first()
+                                                 orderby = orderby,
+                                                 limitby = (0, 1)
+                                                 ).first()
 
             if duplicate:
                 # @ToDo: Import Log
@@ -813,9 +817,9 @@ class S3LocationModel(S3Model):
                 item.skip = skip(duplicate.level, duplicate.id)
                 return
 
-        parent = data.get("parent")
-        start_date = data.get("start_date")
-        end_date = data.get("end_date")
+        parent = data_get("parent")
+        start_date = data_get("start_date")
+        end_date = data_get("end_date")
 
         # @ToDo: check the the lat and lon if they exist?
         #lat = "lat" in data and data.lat
@@ -848,8 +852,9 @@ class S3LocationModel(S3Model):
 
         duplicate = current.db(query).select(table.id,
                                              table.level,
-                                             orderby=orderby,
-                                             limitby=(0, 1)).first()
+                                             orderby = orderby,
+                                             limitby = (0, 1)
+                                             ).first()
         if duplicate:
             # @ToDo: Import Log
             #current.log.debug("Location Match")
@@ -875,7 +880,8 @@ class S3LocationModel(S3Model):
                                                  table.name,
                                                  table.level,
                                                  orderby=orderby,
-                                                 limitby=(0, 1)).first()
+                                                 limitby = (0, 1)
+                                                 ).first()
             if duplicate:
                 # @ToDo: Import Log
                 #current.log.debug("Location l10n Match")
