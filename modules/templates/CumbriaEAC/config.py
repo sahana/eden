@@ -556,6 +556,30 @@ def config(settings):
         return rheader
 
     # -------------------------------------------------------------------------
+    def customise_cms_post_resource(r, tablename):
+
+        series = r.get_vars.get("~.series_id$name", None)
+        if series == "CEP":
+            current.response.s3.crud_strings[tablename] = Storage(label_create = T("Create Plan"),
+                                                                  title_display = T("Plan Details"),
+                                                                  title_list = T("Community Emergency Plans"),
+                                                                  title_update = T("Edit Plan"),
+                                                                  title_upload = T("Import Plans"),
+                                                                  label_list_button = T("List Plans"),
+                                                                  msg_record_created = T("Plan added"),
+                                                                  msg_record_modified = T("Plan updated"),
+                                                                  msg_record_deleted = T("Plan deleted"),
+                                                                  msg_list_empty = T("No plans currently available")
+                                                                  )
+            from s3 import S3SQLCustomForm
+            current.s3db.configure(tablename,
+                                   crud_form = S3SQLCustomForm("name"),
+                                   list_fields = ["name"],
+                                   )
+
+    settings.customise_cms_post_resource = customise_cms_post_resource
+
+    # -------------------------------------------------------------------------
     def cr_shelter_onvalidation(form):
         """
             Ensure that the correct closed Status is used for the Shelter Type
@@ -1246,14 +1270,17 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_cr_shelter_resource(r, tablename):
 
-        from gluon import DIV, IS_EMPTY_OR, IS_IN_SET, IS_LENGTH, IS_NOT_EMPTY, IS_NOT_IN_DB
+        from gluon import A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_LENGTH, IS_NOT_EMPTY, IS_NOT_IN_DB
 
         from s3 import S3Represent, S3SQLCustomForm, S3LocationSelector, \
                        S3TextFilter, S3LocationFilter, S3OptionsFilter, S3RangeFilter
 
+        db = current.db
         s3db = current.s3db
 
-        current.messages.OBSOLETE = T("Unavailable")
+        messages = current.messages
+        messages.OBSOLETE = T("Unavailable")
+        NONE = messages["NONE"]
 
         # Only have a single Status option visible
         shelter_status_opts = dict(cr_shelter_status_opts)
@@ -1265,7 +1292,7 @@ def config(settings):
         table = s3db.cr_shelter
         table.name.requires = [IS_NOT_EMPTY(),
                                IS_LENGTH(64),
-                               IS_NOT_IN_DB(current.db, "cr_shelter.name"),
+                               IS_NOT_IN_DB(db, "cr_shelter.name"),
                                ]
         f = table.shelter_type_id
         f.label = T("Type")
@@ -1284,10 +1311,10 @@ def config(settings):
             f.represent = S3Represent(options = shelter_status_opts)
         table.population_day.label = T("Occupancy")
         table.obsolete.label = T("Unavailable")
-        table.obsolete.comment = DIV(_class="tooltip",
-                                     _title="%s|%s" % (T("Unavailable"),
-                                                       T("Site is temporarily unavailable (e.g. for building works) & so should be hidden from the map"),
-                                                       ))
+        table.obsolete.comment = DIV(_class = "tooltip",
+                                     _title = "%s|%s" % (T("Unavailable"),
+                                                         T("Site is temporarily unavailable (e.g. for building works) & so should be hidden from the map"),
+                                                         ))
         table.location_id.widget = S3LocationSelector(levels = ("L2", "L3", "L4"),
                                                       required_levels = ("L2", "L3"),
                                                       show_address = True,
@@ -1314,12 +1341,33 @@ def config(settings):
                                              },
                                             {"name": "catering",
                                              "joinby": "site_id",
-                                             "filterby": {"tag": "catering"},
+                                             "filterby": {"tag": "Catering"},
+                                             "multiple": False,
+                                             },
+                                            {"name": "purpose",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "purpose"},
+                                             "multiple": False,
+                                             },
+                                            {"name": "plan",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "plan"},
+                                             "multiple": False,
+                                             },
+                                            {"name": "streetview",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "streetview"},
+                                             "multiple": False,
+                                             },
+                                            {"name": "UPRN",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "UPRN"},
                                              "multiple": False,
                                              },
                                             ),
                             )
 
+        from gluon import IS_INT_IN_RANGE, IS_URL
         from s3 import S3TagCheckboxWidget
 
         # Individual settings for specific tag components
@@ -1327,17 +1375,57 @@ def config(settings):
 
         red_bag = components_get("red_bag")
         f = red_bag.table.value
-        f.requires = IS_EMPTY_OR(IS_IN_SET(("Yes", "No"), zero= T("Unknown")))
+        f.requires = IS_EMPTY_OR(IS_IN_SET(("Yes", "No"), zero = T("Unknown")))
 
         wifi = components_get("wifi")
         f = wifi.table.value
-        f.requires = IS_EMPTY_OR(IS_IN_SET(("Yes", "No"), zero= T("Unknown")))
+        f.requires = IS_EMPTY_OR(IS_IN_SET(("Yes", "No"), zero = T("Unknown")))
+
+        purpose = components_get("purpose")
+        f = purpose.table.value
+        purpose_opts = {"command": T("Command Centre"),
+                        "generic": T("Generic Central Point"),
+                        "meeting": T("Meeting & Briefing Centre"),
+                        "rest": T("Rest Centre"),
+                        "storage": T("Storage"),
+                        }
+        f.requires = IS_EMPTY_OR(IS_IN_SET(purpose_opts, zero = T("Not defined")))
+
+        plan = components_get("plan")
+        f = plan.table.value
+        ctable = s3db.cms_post
+        stable = s3db.cms_series
+        query = (stable.name == "CEP") & \
+                (ctable.series_id == stable.id) & \
+                (ctable.deleted == False)
+        plans = db(query).select(ctable.id,
+                                 ctable.name,
+                                 )
+        plan_opts = {p.id: p.name for p in plans}
+        f.requires = IS_EMPTY_OR(IS_IN_SET(plan_opts, zero = T("Unknown")))
+
+        streetview = components_get("streetview")
+        f = streetview.table.value
+        f.requires = IS_EMPTY_OR(IS_URL())
+        f.represent = lambda v: A(v, _href=v, _target="blank") if v else NONE
+
+        uprn = components_get("UPRN")
+        f = uprn.table.value
+        f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(1, None))
+        f.comment = DIV(_class = "tooltip",
+                        _title = "%s|%s" % (T("UPRN"),
+                                            T("Unique Property Reference Number")
+                                            ))
 
         crud_form = S3SQLCustomForm("name",
                                     "status",
                                     "shelter_service_shelter.service_id",
                                     "shelter_type_id",
+                                    (T("Purpose of Location"), "purpose.value"),
+                                    (T("Community Emergency Plan"), "plan.value"),
                                     "location_id",
+                                    (T("UPRN"), "UPRN.value"),
+                                    (T("Streetview"), "streetview.value"),
                                     "phone",
                                     "capacity_day",
                                     (T("Red Bag Lite"), "red_bag.value"),
@@ -1458,7 +1546,6 @@ def config(settings):
 
             class REPLACE_TEXT(object):
                 def __call__(self, value):
-                    error = None
                     value = "Client going to: %s" % value
                     return (value, None)
 
@@ -1598,6 +1685,8 @@ def config(settings):
                 shelter_name = r.record.name
             else:
                 shelter_name = None
+                from templates.CumbriaEAC.controllers import cr_shelter_import_prep
+                s3.import_prep = cr_shelter_import_prep
 
             #if current.auth.s3_has_role("SHELTER_ADMIN"):
             #    # Consistent Header across tabs
@@ -1936,6 +2025,10 @@ def config(settings):
 
             return output
         s3.postp = postp
+
+        # Custom stylesheet which sets Tag Aliases
+        # - doesn't work as only plans get imported
+        #attr["csv_stylesheet"] = "shelter_tag_alias.xsl"
 
         attr["rheader"] = eac_rheader
 

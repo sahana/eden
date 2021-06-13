@@ -135,4 +135,79 @@ return false}})''' % (T("Please Select a Shelter")))
         self._view(THEME, "index.html")
         return output
 
+# =============================================================================
+def cr_shelter_import_prep(data):
+    """
+        Called when Shelters are imported from CSV
+
+        Lookups Pseudo-reference fields from Names
+
+        Defined in controllers to be able to import from post-pop as well as config
+    """
+
+    db = current.db
+    s3db = current.s3db
+    update_super = s3db.update_super
+    ctable = s3db.cms_post
+
+    tree = data[1]
+
+    def add_plan(name):
+        """ Helper to add a New Plan """
+        plan_id = ctable.insert(name = name,
+                                body = "", # notnull=True
+                                )
+        record = Storage(id = plan_id)
+        update_super(ctable, record)
+        # @ToDo: Call set_record_owner?
+        # @ToDo: Call onaccept?
+        return plan_id
+
+    def plan_lookup(name):
+        """ Helper to lookup a Plan """
+
+        query = (ctable.name.lower() == name.lower()) & \
+                (ctable.deleted != True)
+
+        records = db(query).select(ctable.id,
+                                   limitby = (0, 1)
+                                   )
+        if len(records):
+            record = records.first()
+            plan_id = record.id
+        else:
+            # Add a new record
+            plan_id = add_plan(name)
+
+        return plan_id
+
+    # Plans
+    # This works for plans, but then other tags don't get imported on 2nd pass! (1st pass OK)
+    #elements = tree.getroot().xpath("/s3xml//resource[@alias='plan']/data[@field='value']")
+    elements = tree.getroot().xpath("/s3xml//data[@field='tag']")
+    looked_up = {}
+    #for value_element in elements:
+    for tag_element in elements:
+        #value = value_element.text
+        tag = tag_element.text
+
+        if tag == "plan":
+            value_element = tag_element.getnext()
+            value = value_element.text
+            if value:
+                if value in looked_up:
+                    # Replace string with plan_id
+                    value_element.text = looked_up[value]
+                    # Don't check again
+                    continue
+
+                # This is a non-integer, so must be 1st or only phase
+                plan_id = plan_lookup(value)
+
+                new_value = str(plan_id)
+                # Replace string with plan_id
+                value_element.text = new_value
+                # Store in case we get called again with same value
+                looked_up[value] = new_value
+
 # END =========================================================================

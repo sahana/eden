@@ -97,7 +97,7 @@
                 </xsl:attribute>
             </data>
 
-            <!-- Mandatory -->
+            <!-- Obsolete -->
             <xsl:variable name="obsolete" select="col[@field='Obsolete']/text()"/>
             <data field="obsolete">
                 <xsl:attribute name="value">

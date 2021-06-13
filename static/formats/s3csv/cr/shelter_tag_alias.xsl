@@ -5,6 +5,10 @@
     <!-- **********************************************************************
          Shelters - CSV Import Stylesheet
 
+        variant of default Shelter Stylesheet:
+        - org_site_tags use an alias identical to the tag name
+        - NB This doesn't work well as only 1 tag gets imported :/
+
          Column headers defined in this stylesheet:
 
          Name...........................required.....cr_shelter.name
@@ -225,12 +229,8 @@
                     <data field="capacity_day"><xsl:value-of select="$Capacity"/></data>
                 </xsl:when>
                 <xsl:otherwise>
-                    <xsl:if test="col[@field='Capacity Day']!=''">
-                        <data field="capacity_day"><xsl:value-of select="col[@field='Capacity Day']"/></data>
-                    </xsl:if>
-                    <xsl:if test="col[@field='Capacity Night']!=''">
-                        <data field="capacity_night"><xsl:value-of select="col[@field='Capacity Night']"/></data>
-                    </xsl:if>
+                    <data field="capacity_day"><xsl:value-of select="col[@field='Capacity Day']"/></data>
+                    <data field="capacity_night"><xsl:value-of select="col[@field='Capacity Night']"/></data>
                 </xsl:otherwise>
             </xsl:choose>
             <xsl:if test="col[@field='Population']!=''">
@@ -265,20 +265,18 @@
             </reference>
 
             <!-- Link to Organisation -->
-            <xsl:if test="$OrgName!=''">
-                <reference field="organisation_id" resource="org_organisation">
-                    <xsl:attribute name="tuid">
-                        <xsl:choose>
-                            <xsl:when test="$BranchName!=''">
-                                <xsl:value-of select="concat($OrgName, $BranchName)"/>
-                            </xsl:when>
-                            <xsl:otherwise>
-                                <xsl:value-of select="$OrgName"/>
-                            </xsl:otherwise>
-                        </xsl:choose>
-                    </xsl:attribute>
-                </reference>
-            </xsl:if>
+            <reference field="organisation_id" resource="org_organisation">
+                <xsl:attribute name="tuid">
+                    <xsl:choose>
+                        <xsl:when test="$BranchName!=''">
+                            <xsl:value-of select="concat($OrgName, $BranchName)"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="$OrgName"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:attribute>
+            </reference>
 
             <!-- Link to Shelter Type -->
             <reference field="shelter_type_id" resource="cr_shelter_type">
@@ -396,7 +394,10 @@
         <xsl:variable name="Value" select="text()"/>
 
         <xsl:if test="$Value!=''">
-            <resource name="org_site_tag" alias="tag">
+            <resource name="org_site_tag">
+                <xsl:attribute name="alias">
+                    <xsl:value-of select="$Key"/>
+                </xsl:attribute>
                 <data field="tag"><xsl:value-of select="$Key"/></data>
                 <data field="value"><xsl:value-of select="$Value"/></data>
             </resource>

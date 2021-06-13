@@ -1480,6 +1480,8 @@ class S3XML(S3Codec):
 
                 child.set(VALUE, s3_unicode(v))
                 if error:
+                    # Console just reports 'Validation error'...use this to see the actual error
+                    #current.log.error("%s.%s: %s" % (table, f, error))
                     child.set(ERROR, s3_unicode("%s: %s" % (f, error)))
                     valid = False
                     continue

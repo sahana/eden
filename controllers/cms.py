@@ -125,7 +125,7 @@ def post():
                     # Lookup ID
                     stable = db.cms_series
                     row = db(stable.name == series).select(stable.id,
-                                                           limitby=(0, 1)
+                                                           limitby = (0, 1)
                                                            ).first()
                     if row:
                         field = table.series_id
@@ -146,7 +146,7 @@ def post():
                         query = (table.name == page) & \
                                 (table.deleted == False)
                         record = current.db(query).select(table.id,
-                                                          limitby=(0, 1)
+                                                          limitby = (0, 1)
                                                           ).first()
                         if record:
                             record_id = record.id

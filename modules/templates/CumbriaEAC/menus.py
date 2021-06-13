@@ -200,6 +200,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #M("Membership", f="membership"),
                     ),
                     M("Audit Log", c="admin", f="audit"),
+                    M("Community Emergency Plans", c="cms", f="post", vars={"~.series_id$name": "CEP"}),
                     #M("Consent Tracking", c="admin", link=False, check=consent_tracking)(
                     M("Consent Tracking", c="admin", link=False)(
                         M("Processing Types", f="processing_type"),

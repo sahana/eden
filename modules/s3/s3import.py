@@ -1803,10 +1803,11 @@ class S3ImportItem(object):
     # -------------------------------------------------------------------------
     def parse(self,
               element,
-              original=None,
-              table=None,
-              tree=None,
-              files=None):
+              original = None,
+              table = None,
+              tree = None,
+              files = None
+              ):
         """
             Read data from a <resource> element
 
@@ -1854,9 +1855,9 @@ class S3ImportItem(object):
 
         postprocess = s3db.get_config(tablename, "xml_post_parse")
         data = xml.record(table, element,
-                          files=files,
-                          original=original,
-                          postprocess=postprocess)
+                          files = files,
+                          original = original,
+                          postprocess = postprocess)
 
         if data is None:
             self.error = current.ERROR.VALIDATION_ERROR
@@ -3673,7 +3674,7 @@ class S3ImportJob():
                 element = item.element
                 if element is not None:
                     if not element.get(ATTRIBUTE.error, False):
-                        element.set(ATTRIBUTE.error, s3_unicode(self.error))
+                        element.set(ATTRIBUTE.error, s3_unicode(error))
                     if not logged:
                         self.error_tree.append(deepcopy(element))
 
@@ -3720,7 +3721,9 @@ class S3ImportJob():
                                   notnull=True),
                             Field("tablename"),
                             Field("timestmp", "datetime",
-                                  default=datetime.datetime.utcnow()))
+                                  default = datetime.datetime.utcnow()
+                                  )
+                            )
 
         return db[cls.JOB_TABLE_NAME]
 
@@ -3744,7 +3747,8 @@ class S3ImportJob():
                             Field("element", "text"),
                             Field("ritems", "list:string"),
                             Field("citems", "list:string"),
-                            Field("parent", length=128))
+                            Field("parent", length=128)
+                            )
 
         return db[cls.ITEM_TABLE_NAME]
 
