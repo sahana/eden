@@ -1308,7 +1308,7 @@ def config(settings):
             # GeoJSON should have smaller numbers which are also distinguishable across the 2x closed statuses
             f.represent = None
         else:
-            f.represent = S3Represent(options = shelter_status_opts)
+            f.represent = S3Represent(options = dict(cr_shelter_status_opts))
         table.population_day.label = T("Occupancy")
         table.obsolete.label = T("Unavailable")
         table.obsolete.comment = DIV(_class = "tooltip",
