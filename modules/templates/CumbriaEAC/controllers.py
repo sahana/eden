@@ -77,7 +77,7 @@ class index(S3CustomController):
             # Provide a way to select the default Shelter (from those which are Open)
             stable = s3db.cr_shelter
             query = (stable.deleted == False) & \
-                    (stable.status != 1)
+                    (stable.status.belongs(3,4,5))
             shelters = db(query).select(stable.id,
                                         stable.name,
                                         )
