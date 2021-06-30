@@ -1758,7 +1758,7 @@ class S3SetupDeploymentModel(S3Model):
         server = current.db(table.id == row.id).select(table.host_ip,
                                                        limitby = (0, 1)
                                                        ).first()
-        if server.host_ip != "127.0.0.1":
+        if server.host_ip not in ("127.0.0.1", None):
             # Cleanup known_hosts as it will change for a new deployment
             import subprocess
             command = ["ssh-keygen",
