@@ -568,7 +568,7 @@ class S3OpenStackCloudModel(S3CloudModel):
                            #requires = IS_IN_SET(openstack_instance_types), # Varies by Deployment
                            ),
                      Field("image",
-                           default = "Debian 10.1", # Varies by Deployment, this matches OSUOSL
+                           default = "Debian 10.7", # Varies by Deployment, this matches OSUOSL
                            #label = T("Image"), # Image Name or ID
                            ),
                      Field("volume_size", "integer",
