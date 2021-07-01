@@ -185,13 +185,14 @@ def s3_validate(table, field, value, record=None):
 
 # =============================================================================
 def s3_represent_value(field,
-                       value=None,
-                       record=None,
-                       linkto=None,
-                       strip_markup=False,
-                       xml_escape=False,
-                       non_xml_output=False,
-                       extended_comments=False):
+                       value = None,
+                       record = None,
+                       linkto = None,
+                       strip_markup = False,
+                       xml_escape = False,
+                       non_xml_output = False,
+                       extended_comments = False
+                       ):
     """
         Represent a field value
 

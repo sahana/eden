@@ -1309,7 +1309,11 @@ def config(settings):
         if r.extension == "geojson":
             # GeoJSON should have smaller numbers which are also distinguishable across the 2x closed statuses
             f.represent = None
+        elif r.method == "report":
+            # Differentiate the 2x Closed
+            f.represent = S3Represent(options = cr_shelter_status_opts)
         else:
+            # Show the 2x Closed as 'Closed'
             f.represent = S3Represent(options = dict(cr_shelter_status_opts))
         table.population_day.label = T("Occupancy")
         table.obsolete.label = T("Unavailable")

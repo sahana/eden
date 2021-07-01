@@ -377,7 +377,6 @@
          *
          * @todo: optimize parameter list (pass in data? use "this"?)
          * @todo: get cols, labels and opts from this or pass in pt?
-         * @todo: use dashes in CSS classes instead of underscores
          */
         _renderHeader: function(thead, cols, labels, opts) {
 
@@ -413,7 +412,6 @@
          *
          * @todo: optimize parameter list (pass in data? use "this"?)
          * @todo: get cols, labels and opts from this or pass in pt?
-         * @todo: use dashes in CSS classes instead of underscores
          */
         _renderColumns: function(thead, cols, labels, singleCol) {
 

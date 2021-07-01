@@ -541,10 +541,10 @@ class S3Report(S3Method):
             ajax_vars.update(get_vars)
             filter_form = attr.get("filter_form", None)
             filter_tab = attr.get("filter_tab", None)
-            filter_url = r.url(method="",
-                               representation="",
-                               vars=ajax_vars.fromkeys((k for k in ajax_vars
-                                                        if k not in report_vars)),
+            filter_url = r.url(method = "",
+                               representation = "",
+                               vars = ajax_vars.fromkeys((k for k in ajax_vars
+                                                          if k not in report_vars)),
                                )
             ajaxurl = attr.get("ajaxurl", r.url(method="report",
                                                 representation="json",
@@ -781,13 +781,14 @@ class S3ReportForm(object):
     # -------------------------------------------------------------------------
     def html(self,
              pivotdata,
-             filter_widgets=None,
-             get_vars=None,
-             ajaxurl=None,
-             filter_url=None,
-             filter_form=None,
-             filter_tab=None,
-             widget_id=None):
+             filter_widgets = None,
+             get_vars = None,
+             ajaxurl = None,
+             filter_url = None,
+             filter_form = None,
+             filter_tab = None,
+             widget_id = None
+             ):
         """
             Render the form for the report
 
@@ -816,8 +817,9 @@ class S3ReportForm(object):
         if filter_widgets is not None:
             filter_options = self._fieldset(T("Filter Options"),
                                             filter_widgets,
-                                            _id="%s-filters" % widget_id,
-                                            _class="filter-form")
+                                            _id = "%s-filters" % widget_id,
+                                            _class = "filter-form",
+                                            )
         else:
             filter_options = ""
 
@@ -834,9 +836,10 @@ class S3ReportForm(object):
             else:
                 label = submit
             submit = TAG[""](
-                        INPUT(_type="button",
-                              _value=label,
-                              _class=_class))
+                        INPUT(_type = "button",
+                              _value = label,
+                              _class = _class,
+                              ))
         else:
             submit = ""
 
@@ -965,11 +968,13 @@ class S3ReportForm(object):
 
         # Layer selector
         layer_id = "%s-fact" % widget_id
-        layer_widget = self.layer_options(options=options,
-                                          get_vars=get_vars,
-                                          widget_id=layer_id)
+        layer_widget = self.layer_options(options = options,
+                                          get_vars = get_vars,
+                                          widget_id = layer_id)
         formfields.append((layer_id + "-row",
-                           label(REPORT, _for=layer_id),
+                           label(REPORT,
+                                 _for = layer_id,
+                                 ),
                            layer_widget,
                            "",
                            ))
@@ -979,20 +984,24 @@ class S3ReportForm(object):
         rows_id = "%s-rows" % widget_id
         cols_id = "%s-cols" % widget_id
         rows_options = axis_options("rows",
-                                    options=options,
-                                    get_vars=get_vars,
-                                    widget_id=rows_id)
+                                    options = options,
+                                    get_vars = get_vars,
+                                    widget_id = rows_id)
         cols_options = axis_options("cols",
-                                    options=options,
-                                    get_vars=get_vars,
-                                    widget_id=cols_id)
+                                    options = options,
+                                    get_vars = get_vars,
+                                    widget_id = cols_id)
         axis_widget = DIV(rows_options,
-                          label(COLS, _for=cols_id),
+                          label(COLS,
+                                _for = cols_id,
+                                ),
                           cols_options,
-                          _class="pt-axis-options",
+                          _class = "pt-axis-options",
                           )
         formfields.append(("%s-axis-row" % widget_id,
-                           label(ROWS, _for=rows_id),
+                           label(ROWS,
+                                 _for = rows_id,
+                                 ),
                            axis_widget,
                            "",
                            ))
@@ -1005,15 +1014,17 @@ class S3ReportForm(object):
         self.show_totals = show_totals
 
         show_totals_id = "%s-totals" % widget_id
-        totals_widget = INPUT(_type="checkbox",
-                              _id=show_totals_id,
-                              _name="totals",
-                              _class="pt-totals",
-                              value=show_totals
+        totals_widget = INPUT(_type = "checkbox",
+                              _id = show_totals_id,
+                              _name = "totals",
+                              _class = "pt-totals",
+                              value = show_totals,
                               )
 
         formfields.append(("%s-show-totals-row" % widget_id,
-                           label(SHOW_TOTALS, _for=show_totals_id),
+                           label(SHOW_TOTALS,
+                                 _for = show_totals_id,
+                                 ),
                            totals_widget,
                            "",
                            ))
@@ -1027,16 +1038,19 @@ class S3ReportForm(object):
         # Render fieldset
         fieldset = self._fieldset(T("Report Options"),
                                   widgets,
-                                  _id="%s-options" % widget_id,
-                                  _class="report-options")
+                                  _id = "%s-options" % widget_id,
+                                  _class = "report-options",
+                                  )
 
         return fieldset
 
     # -------------------------------------------------------------------------
-    def axis_options(self, axis,
-                     options=None,
-                     get_vars=None,
-                     widget_id=None):
+    def axis_options(self,
+                     axis,
+                     options = None,
+                     get_vars = None,
+                     widget_id = None
+                     ):
         """
             Construct an OptionsWidget for rows or cols axis
 
@@ -1086,20 +1100,24 @@ class S3ReportForm(object):
 
         # Dummy field
         opts = [(prefix(rfield.selector), rfield.label) for rfield in rfields]
-        dummy_field = Storage(name=axis, requires=IS_IN_SET(opts))
+        dummy_field = Storage(name = axis,
+                              requires = IS_IN_SET(opts),
+                              )
 
         # Construct widget
         return OptionsWidget.widget(dummy_field,
                                     value,
-                                    _id=widget_id,
-                                    _name=axis,
-                                    _class="pt-%s" % axis)
+                                    _id = widget_id,
+                                    _name = axis,
+                                    _class = "pt-%s" % axis,
+                                    )
 
     # -------------------------------------------------------------------------
     def layer_options(self,
-                      options=None,
-                      get_vars=None,
-                      widget_id=None):
+                      options = None,
+                      get_vars = None,
+                      widget_id = None
+                      ):
         """
             Construct an OptionsWidget for the fact layer
 
@@ -1242,20 +1260,23 @@ class S3ReportForm(object):
             # Field is read-only if there is only 1 option
             default = layer_opts[0]
             widget = TAG[""](default[1],
-                             INPUT(_type="hidden",
-                                   _id=widget_id,
-                                   _name=widget_id,
-                                   _value=default[0],
-                                   _class="pt-fact-single-option"))
+                             INPUT(_type = "hidden",
+                                   _id = widget_id,
+                                   _name = widget_id,
+                                   _value = default[0],
+                                   _class = "pt-fact-single-option",
+                                   ))
         else:
             # Render Selector
-            dummy_field = Storage(name="fact",
-                                  requires=IS_IN_SET(layer_opts))
+            dummy_field = Storage(name = "fact",
+                                  requires = IS_IN_SET(layer_opts),
+                                  )
             widget = OptionsWidget.widget(dummy_field,
                                           layer,
-                                          _id=widget_id,
-                                          _name="fact",
-                                          _class="pt-fact")
+                                          _id = widget_id,
+                                          _name = "fact",
+                                          _class = "pt-fact",
+                                          )
 
         return widget
 
@@ -1277,12 +1298,12 @@ class S3ReportForm(object):
 
         return FIELDSET(LEGEND(title,
                                BUTTON(SHOW,
-                                      _type="button",
-                                      _class="toggle-text",
+                                      _type = "button",
+                                      _class = "toggle-text",
                                       ),
                                BUTTON(HIDE,
-                                      _type="button",
-                                      _class="toggle-text",
+                                      _type = "button",
+                                      _class = "toggle-text",
                                       )
                         ),
                         widgets,
@@ -1593,8 +1614,8 @@ class S3PivotTableFact(object):
 
         facts = [cls(method,
                      selector,
-                     label=label,
-                     default_method=default_method,
+                     label = label,
+                     default_method = default_method,
                      ),
                  ]
         if other:
@@ -1675,7 +1696,6 @@ class S3PivotTableFact(object):
         if label:
             # Already set
             return label
-
 
         if fact_options:
             # Lookup the label from the fact options
@@ -1901,8 +1921,9 @@ class S3PivotTable(object):
 
     # -------------------------------------------------------------------------
     def geojson(self,
-                fact=None,
-                level="L0"):
+                fact = None,
+                level = "L0"
+                ):
         """
             Render the pivot table data as a dict ready to be exported as
             GeoJSON for display on a Map.
@@ -1974,7 +1995,7 @@ class S3PivotTable(object):
                         q = query & (gtable.name == rval)
                         row = db(q).select(gtable.id,
                                            gtable.parent,
-                                           limitby=(0, 1)
+                                           limitby = (0, 1)
                                            ).first()
                         try:
                             _id = row.id
@@ -1983,16 +2004,17 @@ class S3PivotTable(object):
                         # Cache
                         ids[rval] = _id
 
-                    attribute = dict(name=s3_str(rval),
-                                     value=rtotal)
+                    attribute = {"name": s3_str(rval),
+                                 "value": rtotal,
+                                 }
                     attributes[_id] = attribute
 
             location_ids = [ids[r] for r in ids]
             query = (gtable.id.belongs(location_ids))
             geojsons = current.gis.get_locations(gtable,
                                                  query,
-                                                 join=False,
-                                                 geojson=True)
+                                                 join = False,
+                                                 geojson = True)
 
         # Prepare for export via xml.gis_encode() and geojson/export.xsl
         location_data = {}
