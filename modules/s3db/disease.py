@@ -30,6 +30,7 @@
 """
 
 __all__ = ("DiseaseDataModel",
+           "DiseaseMonitoringModel",
            "CaseTrackingModel",
            "ContactTracingModel",
            "DiseaseStatsModel",
@@ -230,6 +231,201 @@ class DiseaseDataModel(S3Model):
         if duplicate:
             item.id = duplicate
             item.method = item.METHOD.UPDATE
+
+# =============================================================================
+class DiseaseMonitoringModel(S3Model):
+    """ Data Model for Disease Monitoring """
+
+    names = ("disease_testing_report",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        #db = current.db
+        s3 = current.response.s3
+
+        define_table = self.define_table
+        crud_strings = s3.crud_strings
+
+        # ---------------------------------------------------------------------
+        # Testing Site Daily Summary Report
+        # - for spatial-temporal analysis of testing activity and results
+        #
+        tablename = "disease_testing_report"
+        define_table(tablename,
+                     self.disease_disease_id(
+                         ondelete = "CASCADE",
+                         ),
+                     self.super_link("site_id", "org_site",
+                                     empty = False,
+                                     instance_types = ("org_facility",
+                                                       "hms_hospital",
+                                                       ),
+                                     label = T("Test Station"),
+                                     represent = self.org_SiteRepresent(show_link = False,
+                                                                        show_type = False,
+                                                                        ),
+                                     readable = True,
+                                     writable = True,
+                                     #ondelete = "CASCADE", # default
+                                     ),
+                     s3_date(default="now",
+                             past = 1,
+                             future = 0,
+                             ),
+                     Field("tests_total", "integer",
+                           label = T("Total Number of Tests"),
+                           requires = IS_INT_IN_RANGE(0),
+                           ),
+                     Field("tests_positive", "integer",
+                           label = T("Number of Positive Test Results"),
+                           requires = IS_INT_IN_RANGE(0),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Filter Widgets
+        filter_widgets = [S3TextFilter(["site_id$name", "comments"],
+                                       label = T("Search"),
+                                       ),
+                          S3DateFilter("date",
+                                       ),
+                          ]
+
+        # List fields
+        list_fields = ["date",
+                       "site_id",
+                       "disease_id",
+                       "tests_total",
+                       "tests_positive",
+                       "comments",
+                       ]
+
+        # Report options
+        facts = ((T("Number of Tests"), "sum(tests_total)"),
+                 (T("Number of Positive Test Results"), "sum(tests_positive)"),
+                 (T("Number of Reports"), "count(id)"),
+                 )
+        axes = ["site_id",
+                "site_id$location_id$L2",
+                "site_id$location_id$L3",
+                "disease_id",
+                ]
+        report_options = {
+            "rows": axes,
+            "cols": axes,
+            "fact": facts,
+            "defaults": {"rows": axes[1],
+                         "cols": None,
+                         "fact": facts[0],
+                         "totals": True,
+                         },
+            }
+
+        # Table Configuration
+        self.configure(tablename,
+                       list_fields = list_fields,
+                       filter_widgets = filter_widgets,
+                       onvalidation = self.testing_report_onvalidation,
+                       orderby = "%s.date desc" % tablename,
+                       report_options = report_options,
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Daily Report"),
+            title_display = T("Daily Report"),
+            title_list = T("Daily Reports"),
+            title_update = T("Edit Daily Report"),
+            label_list_button = T("List Daily Reports"),
+            label_delete_button = T("Delete Daily Report"),
+            msg_record_created = T("Daily Report created"),
+            msg_record_modified = T("Daily Report updated"),
+            msg_record_deleted = T("Daily Report deleted"),
+            msg_list_empty = T("No Daily Reports currently registered"),
+            )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        #dummy = S3ReusableField.dummy
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def testing_report_onvalidation(form):
+        """
+            Validate testing report:
+            - prevent duplicate reports for the same site+date
+            - check numbers for plausibility
+        """
+
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            record_id = None
+
+        # Extract disease_id, site_id, date
+        form_data = lambda fn: form_vars[fn] if fn in form_vars else False
+        context = {"disease_id": form_data("disease"),
+                   "site_id": form_data("site_id"),
+                   "date": form_data("date")
+                   }
+
+        T = current.T
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.disease_testing_report
+        if record_id:
+            # Get missing context details from existing record
+            missing = [table[fn] for fn in context if context[fn] is False]
+            row = db(table.id == record_id).select(*missing,
+                                                   limitby = (0, 1),
+                                                   ).first()
+            if row:
+                for fn, v in context.items():
+                    if v is False:
+                        context[fn] = row[fn]
+        else:
+            # Get missing context details from defaults
+            for fn, v in context.items():
+                if v is False:
+                    context[fn] = table[fn].default
+
+        # Check for duplicate report
+        query = None
+        for fn, v in context.items():
+            if v:
+                q = (table[fn] == context[fn])
+                query = query & q if query else q
+        if query:
+            if record_id:
+                query &= (table.id != record_id)
+            duplicate = db(query).select(table.id, limitby=(0, 1)).first()
+            if duplicate:
+                form.errors["date"] = T("Previous report for this site/date found - please update the existing report")
+
+        # Validate numbers
+        total = form_vars.get("tests_total")
+        positive = form_vars.get("tests_positive")
+        if total is not None and positive is not None:
+            if positive > total:
+                form.errors["tests_positive"] = T("Number of positive results cannot be greater than number of total tests")
 
 # =============================================================================
 class CaseTrackingModel(S3Model):
@@ -1811,47 +2007,34 @@ class DiseaseStatsModel(S3Model):
         pfield = gtable.parent
         query = (gtable.deleted == False) & \
                 (pfield.belongs(ancestors))
-        all_children = db(query).select(ifield,
-                                        pfield)
+        all_children = db(query).select(ifield, pfield)
 
         # Read the levels
-        rows = db(ifield.belongs(ancestors)).select(ifield,
-                                                    gtable.level)
-        L0 = []
-        L0_append = L0.append
-        L1 = []
-        L1_append = L1.append
-        L2 = []
-        L2_append = L2.append
-        L3 = []
-        L3_append = L3.append
-        L4 = []
-        L4_append = L4.append
-        for row in rows:
-            if row.level == "L0":
-                L0_append(row.id)
-            elif row.level == "L1":
-                L1_append(row.id)
-            elif row.level == "L2":
-                L2_append(row.id)
-            elif row.level == "L3":
-                L3_append(row.id)
-            elif row.level == "L4":
-                L4_append(row.id)
+        query = (gtable.id.belongs(ancestors)) & \
+                (gtable.level.belongs(("L4", "L3", "L2", "L1"))) # L0?
+        rows = db(query).select(gtable.id,
+                                gtable.level,
+                                # Build the lowest level first
+                                # FIXME this ordering makes no real sense when building async
+                                #       with multiple workers; in that case, the entire child
+                                #       cascade must happen synchronously inside each top-level
+                                #       build
+                                orderby = ~gtable.level,
+                                )
 
         run_async = current.s3task.run_async
         from gluon.serializers import json as jsons
+
         dates = jsons(dates)
-        # Build the lowest level first
-        for level in (L4, L3, L2, L1):
-            for location_id in level:
-                children = [c.id for c in all_children if c.parent == location_id]
-                children = json.dumps(children)
-                for parameter_id in parameters:
-                    run_async("disease_stats_update_location_aggregates",
-                              args = [location_id, children, parameter_id, dates],
-                              timeout = 1800 # 30m
-                              )
+        for row in rows:
+            location_id = row.id
+            children = [c.id for c in all_children if c.parent == location_id]
+            children = json.dumps(children)
+            for parameter_id in parameters:
+                run_async("disease_stats_update_location_aggregates",
+                          args = [location_id, children, parameter_id, dates],
+                          timeout = 1800 # 30m
+                          )
 
     # -------------------------------------------------------------------------
     @staticmethod
