@@ -58,13 +58,10 @@ class S3MainMenu(default.S3MainMenu):
         order_access = lambda i: supply_coordinator(i) or supply_requester(i)
         supply_access = lambda i: order_access(i) or supply_distributor(i)
 
-        menu = [MM("Equipment", c=("req", "inv", "supply"), link=False, check=supply_access)(
-                    MM("Orders##delivery", f="req", vars={"type": 1}, check=order_access),
-                    MM("Shipment##process", c="inv", f="send", restrict="SUPPLY_COORDINATOR"),
-                    MM("Shipments", c="inv", f="send", check=supply_distributor),
-                    MM("Deliveries", c="inv", f="recv", check=supply_requester),
-                    MM("Items", c="supply", f="item", restrict="SUPPLY_COORDINATOR"),
-                    ),
+        menu = [MM("Tests##disease", c="disease", link=False)(
+                   #MM("Certificates##disease", link=False),
+                   MM("Daily Reports", f="testing_report"),
+                   ),
                 #MM("Test Results",
                 #   c="disease", f="case_diagnostics", restrict="DISEASE_TEST_READER",
                 #   ),
@@ -73,9 +70,13 @@ class S3MainMenu(default.S3MainMenu):
                 #    MM("Report Test Result", m="create", vars={"format": "popup"}, modal=True),
                 #    MM("List Test Results"),
                 #    ),
-                MM("Tests and Certificates##disease", c="disease", link=False)(
-                   MM("Daily Reports", f="testing_report"),
-                   ),
+                MM("Equipment", c=("req", "inv", "supply"), link=False, check=supply_access)(
+                    MM("Orders##delivery", f="req", vars={"type": 1}, check=order_access),
+                    MM("Shipment##process", c="inv", f="send", restrict="SUPPLY_COORDINATOR"),
+                    MM("Shipments", c="inv", f="send", check=supply_distributor),
+                    MM("Deliveries", c="inv", f="recv", check=supply_requester),
+                    MM("Items", c="supply", f="item", restrict="SUPPLY_COORDINATOR"),
+                    ),
                 MM("Organizations",
                    c="org", f="organisation", restrict=("ORG_GROUP_ADMIN", "ORG_ADMIN"),
                    vars = {"mine": 1} if not has_role("ORG_GROUP_ADMIN") else None,
@@ -269,6 +270,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #M("Test Results", f="case_diagnostics")(
                     #    M("Registrieren", m="create", check=report_results),
                     #    M("Statistics", m="report"),
+                    #    ),
+                    #M("Certificates##disease", link=False)(
+                    #    M("Create Certificate##disease", link=False),
                     #    ),
                     M("Daily Reports", f="testing_report")(
                         M("Create", m="create"),
