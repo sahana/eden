@@ -285,7 +285,10 @@ def req_controller(template = False):
             if r.component:
                 if r.component_name == "document":
                     s3.crud.submit_button = T("Add")
-                    #table = r.component.table
+                    # Simplify a little
+                    table = s3db.doc_document
+                    table.url.readable = table.url.writable = False
+                    table.date.readable = table.date.writable = False
                     # @ToDo: Fix for Link Table
                     #table.date.default = r.record.date
                     #if r.record.site_id:

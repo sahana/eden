@@ -319,6 +319,7 @@ class RequestModel(S3Model):
         #
         tablename = "req_req"
         self.define_table(tablename,
+                          # Instance
                           super_link("doc_id", "doc_entity"),
                           Field("type", "integer",
                                 default = default_type,
@@ -470,6 +471,14 @@ class RequestModel(S3Model):
                           req_status("fulfil_status",
                                      label = T("Fulfil. Status"),
                                      writable = req_status_writable,
+                                     ),
+                          req_status("filing_status",
+                                     label = T("Filing Status"),
+                                     comment = DIV(_class="tooltip",
+                                                   _title="%s|%s" % (T("Filing Status"),
+                                                                     T("Have all the signed documents for this shipment been filed?"))),
+                                     readable = settings.get_req_document_filing(),
+                                     writable = False,
                                      ),
                           Field("closed", "boolean",
                                 default = False,
@@ -4809,6 +4818,7 @@ def req_rheader(r, check_page=False):
             tabs.append((req_item_tab_label, "req_item"))
         elif people:
             tabs.append((T("Skills"), "req_skill"))
+        #if settings.get_req_document_filing():
         tabs.append((T("Documents"), "document"))
         if is_template:
             tabs.append((T("Schedule"), "job"))

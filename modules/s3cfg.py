@@ -4697,6 +4697,9 @@ class S3Config(Storage):
     def get_inv_collapse_tabs(self):
         return self.inv.get("collapse_tabs", True)
 
+    def get_inv_document_filing(self):
+        return self.inv.get("document_filing", False)
+
     def get_inv_facility_label(self):
         return self.inv.get("facility_label", "Warehouse")
 
@@ -5786,6 +5789,9 @@ class S3Config(Storage):
             Provide a Copy button for Requests?
         """
         return self.req.get("copyable", False)
+
+    def get_req_document_filing(self):
+        return self.req.get("document_filing", False)
 
     def get_req_recurring(self):
         """

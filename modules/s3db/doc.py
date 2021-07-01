@@ -66,9 +66,7 @@ class S3DocumentLibrary(S3Model):
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
 
-        messages = current.messages
-        NONE = messages["NONE"]
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
+        NONE = current.messages["NONE"]
 
         # Shortcuts
         add_components = self.add_components
@@ -100,6 +98,8 @@ class S3DocumentLibrary(S3Model):
                                hrm_human_resource = T("Human Resource"),
                                hrm_training_event_report = T("Training Event Report"),
                                inv_adj = T("Stock Adjustment"),
+                               inv_recv = T("Incoming Shipment"),
+                               inv_send = T("Sent Shipment"),
                                inv_warehouse = T("Warehouse"),
                                # @ToDo: Deprecate
                                #irs_ireport = T("Incident Report"),
@@ -110,9 +110,9 @@ class S3DocumentLibrary(S3Model):
                                project_framework = T("Project Framework"),
                                project_programme = T("Project Programme"),
                                project_task = T("Task"),
-                               org_office = T("Office"),
                                org_facility = T("Facility"),
                                org_group = T("Organization Group"),
+                               org_office = T("Office"),
                                req_need = T("Need"),
                                req_need_response = T("Activity Group"),
                                req_req = T("Request"),
@@ -170,11 +170,6 @@ class S3DocumentLibrary(S3Model):
                             url and A(url, _href=url) or NONE,
                            requires = IS_EMPTY_OR(IS_URL()),
                            ),
-                     Field("has_been_indexed", "boolean",
-                           default = False,
-                           readable = False,
-                           writable = False,
-                           ),
                      # Mailmerge template?
                      Field("is_template", "boolean",
                            default = False,
@@ -201,6 +196,11 @@ class S3DocumentLibrary(S3Model):
                                  writable = False,
                                  ),
                      s3_comments(),
+                     Field("has_been_indexed", "boolean",
+                           default = False,
+                           readable = False,
+                           writable = False,
+                           ),
                      Field("checksum",
                            readable = False,
                            writable = False,
@@ -290,7 +290,7 @@ class S3DocumentLibrary(S3Model):
                            length = current.MAX_FILENAME_LENGTH,
                            represent = doc_image_represent,
                            requires = IS_EMPTY_OR(
-                                        IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS)),
+                                        IS_IMAGE(extensions = (s3.IMAGE_EXTENSIONS)),
                                         # Distinguish from prepop
                                         null = "",
                                       ),
@@ -316,8 +316,7 @@ class S3DocumentLibrary(S3Model):
                      Field("type", "integer",
                            default = 1,
                            label = T("Image Type"),
-                           represent = lambda opt: \
-                            doc_image_type_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = doc_image_type_opts),
                            requires = IS_IN_SET(doc_image_type_opts,
                                                 zero=None),
                            ),

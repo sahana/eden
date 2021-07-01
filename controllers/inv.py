@@ -1046,32 +1046,38 @@ def recv():
                            editable = False,
                            listadd = False,
                            )
-        component = r.component
-        if record and component and component.name == "track_item":
-            # Can only create or delete track items for a recv record
-            # if the status is preparing:
-            if r.method == "create" or r.method == "delete":
-                if record.status != SHIP_STATUS_IN_PROCESS:
-                    return False
 
-            # Configure which fields in track_item are readable/writable
-            # depending on status:
-            if r.component_id:
-                track_record = db(tracktable.id == r.component_id).select(tracktable.status,
-                                                                          limitby = (0, 1)
-                                                                          ).first()
-                set_track_attr(track_record.status)
-            else:
-                set_track_attr(TRACK_STATUS_PREPARING)
-                tracktable.status.readable = False
+        if record and r.component:
+            if r.component_name == "track_item":
+                # Can only create or delete track items for a recv record
+                # if the status is preparing:
+                if r.method == "create" or r.method == "delete":
+                    if record.status != SHIP_STATUS_IN_PROCESS:
+                        return False
 
-            # Adjust CRUD strings
-            if record.status == SHIP_STATUS_IN_PROCESS:
-                s3.crud_strings.inv_recv.title_update = \
-                s3.crud_strings.inv_recv.title_display = T("Process Received Shipment")
+                # Configure which fields in track_item are readable/writable
+                # depending on status:
+                if r.component_id:
+                    track_record = db(tracktable.id == r.component_id).select(tracktable.status,
+                                                                              limitby = (0, 1)
+                                                                              ).first()
+                    set_track_attr(track_record.status)
+                else:
+                    set_track_attr(TRACK_STATUS_PREPARING)
+                    tracktable.status.readable = False
 
-            # Default the Supplier/Donor to the Org sending the shipment
-            tracktable.supply_org_id.default = record.organisation_id
+                # Adjust CRUD strings
+                if record.status == SHIP_STATUS_IN_PROCESS:
+                    s3.crud_strings.inv_recv.title_update = \
+                    s3.crud_strings.inv_recv.title_display = T("Process Received Shipment")
+
+                # Default the Supplier/Donor to the Org sending the shipment
+                tracktable.supply_org_id.default = record.organisation_id
+            elif r.component_name == "document":
+                # Simplify a little
+                table = s3db.doc_document
+                table.url.readable = table.url.writable = False
+                table.date.readable = table.date.writable = False
         else:
             # Configure which fields in inv_recv are readable/writable
             # depending on status
@@ -1086,6 +1092,7 @@ def recv():
                 if r.method and r.method != "read":
                     # Don't want to see in Create forms
                     recvtable.status.readable = False
+
         return True
     s3.prep = prep
 
