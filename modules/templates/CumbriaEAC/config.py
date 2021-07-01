@@ -92,6 +92,8 @@ def config(settings):
     settings.ui.auth_user_represent = "name"
     settings.ui.export_formats = ("xls",)
 
+    settings.search.filter_manager = False
+
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
