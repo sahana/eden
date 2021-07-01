@@ -294,11 +294,43 @@ class DiseaseMonitoringModel(S3Model):
                                        ),
                           ]
 
+        # List fields
+        list_fields = ["date",
+                       "site_id",
+                       "disease_id",
+                       "tests_total",
+                       "tests_positive",
+                       "comments",
+                       ]
+
+        # Report options
+        facts = ((T("Number of Tests"), "sum(tests_total)"),
+                 (T("Number of Positive Test Results"), "sum(tests_positive)"),
+                 (T("Number of Reports"), "count(id)"),
+                 )
+        axes = ["site_id",
+                "site_id$location_id$L2",
+                "site_id$location_id$L3",
+                "disease_id",
+                ]
+        report_options = {
+            "rows": axes,
+            "cols": axes,
+            "fact": facts,
+            "defaults": {"rows": axes[1],
+                         "cols": None,
+                         "fact": facts[0],
+                         "totals": True,
+                         },
+            }
+
         # Table Configuration
-        # TODO Report Options
         self.configure(tablename,
+                       list_fields = list_fields,
                        filter_widgets = filter_widgets,
                        onvalidation = self.testing_report_onvalidation,
+                       orderby = "%s.date desc" % tablename,
+                       report_options = report_options,
                        )
 
         # CRUD Strings

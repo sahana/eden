@@ -32,8 +32,10 @@ AUTHENTICATED,Authenticated,,,,,pr_occupation_type_person,CREATE|READ,UPDATE|DEL
 AUTHENTICATED,Authenticated,,,,,pr_person,NONE,READ|UPDATE|DELETE,
 AUTHENTICATED,Authenticated,,,,,pr_person_details,CREATE,READ|UPDATE,
 DISEASE_TEST_READER,Disease Test Reader,,,disease,case_diagnostics,,READ,,any
+DISEASE_TEST_READER,Disease Test Reader,,,disease,testing_report,,READ,,any
 DISEASE_TEST_READER,Disease Test Reader,,,disease,,,READ,,
 DISEASE_TEST_READER,Disease Test Reader,,,,,disease_case_diagnostics,READ,,any
+DISEASE_TEST_READER,Disease Test Reader,,,,,disease_testing_report,READ,,any
 DISEASE_TEST_READER,Disease Test Reader,,,,,project_project,READ,,any
 MAP_ADMIN,,,true,gis,location,,CREATE|READ|UPDATE|DELETE,,
 ORG_ADMIN,Organisation Admin,,,admin,user,,CREATE|READ|UPDATE|DELETE,,
@@ -111,8 +113,6 @@ PROVIDER_ACCOUNTANT,Provider Accountant,,,,,fin_voucher,READ,,any
 PROVIDER_ACCOUNTANT,Provider Accountant,,,,,fin_voucher_claim,READ|UPDATE,,
 PROVIDER_ACCOUNTANT,Provider Accountant,,,,,fin_voucher_debit,READ,,
 PROVIDER_ACCOUNTANT,Provider Accountant,,,,,fin_voucher_program,READ,,any
-SUPPLY_DISTRIBUTOR,Supply Distributor,,,inv,send,,READ,,
-SUPPLY_DISTRIBUTOR,Supply Distributor,,,,,inv_send,READ,,
 SUPPLY_COORDINATOR,Supply Coordinator,,,inv,send,,CREATE|READ|UPDATE|DELETE,,any
 SUPPLY_COORDINATOR,Supply Coordinator,,,inv,send_process,,READ|UPDATE,,any
 SUPPLY_COORDINATOR,Supply Coordinator,,,inv,warehouse,,CREATE|READ|UPDATE|DELETE,,
@@ -131,6 +131,12 @@ SUPPLY_COORDINATOR,Supply Coordinator,,,,,org_organisation,READ|UPDATE,,
 SUPPLY_COORDINATOR,Supply Coordinator,,,,,org_site,READ,,any
 SUPPLY_COORDINATOR,Supply Coordinator,,,,,pr_contact,READ,,any
 SUPPLY_COORDINATOR,Supply Coordinator,,,,,req_req,READ,,any
+SUPPLY_DISTRIBUTOR,Supply Distributor,,,inv,send,,READ,,
+SUPPLY_DISTRIBUTOR,Supply Distributor,,,,,inv_send,READ,,
+TEST_PROVIDER,Test Provider,,,disease,testing_report,,CREATE|READ|UPDATE|DELETE,,
+TEST_PROVIDER,Test Provider,,,disease,,,READ,,
+TEST_PROVIDER,Test Provider,,,,,disease_testing_report,CREATE|READ|UPDATE|DELETE,,
+TEST_PROVIDER,Test Provider,,,,,org_site,READ,,
 VOUCHER_ISSUER,Voucher Issuer,,,fin,voucher,,READ,,any
 VOUCHER_ISSUER,Voucher Issuer,,,fin,voucher,,CREATE|READ|UPDATE,,
 VOUCHER_ISSUER,Voucher Issuer,,,fin,voucher_debit,,NONE,,
