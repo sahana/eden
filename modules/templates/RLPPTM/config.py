@@ -74,6 +74,7 @@ def config(settings):
                                       "SUPPLY_COORDINATOR": "SUPPLY_COORDINATOR",
                                       "VOUCHER_ISSUER": "VOUCHER_ISSUER",
                                       "VOUCHER_PROVIDER": "VOUCHER_PROVIDER",
+                                      "TEST_PROVIDER": "TEST_PROVIDER",
                                       }
 
     settings.auth.password_min_length = 8
@@ -703,6 +704,53 @@ def config(settings):
             msg_list_empty = T("No Test Results currently registered"))
 
     settings.customise_disease_case_diagnostics_resource = customise_disease_case_diagnostics_resource
+
+    # -------------------------------------------------------------------------
+    def customise_disease_testing_report_resource(r, tablename):
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.disease_testing_report
+
+        list_fields = ["date",
+                       "site_id",
+                       #"disease_id",
+                       "tests_total",
+                       "tests_positive",
+                       "comments",
+                       ]
+
+        # No add-link on disease_id
+        field = table.disease_id
+        field.comment = None
+
+        # If there is only one disease, set as default + hide field
+        dtable = s3db.disease_disease
+        rows = db(dtable.deleted == False).select(dtable.id,
+                                                  cache = s3db.cache,
+                                                  limitby = (0, 2),
+                                                  )
+        if len(rows) == 1:
+            field.default = rows[0].id
+            field.readable = field.writable = False
+        else:
+            list_fields.insert(1, "disease_id")
+
+        # If there is only one selectable site, set as default + make r/o
+        field = table.site_id
+        requires = field.requires
+        if hasattr(requires, "options"):
+            selectable = [o[0] for o in field.requires.options() if o[0]]
+            if len(selectable) == 1:
+                field.default = selectable[0]
+                field.writable = False
+
+        s3db.configure("disease_testing_report",
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_disease_testing_report_resource = customise_disease_testing_report_resource
 
     # -------------------------------------------------------------------------
     def customise_fin_voucher_resource(r, tablename):

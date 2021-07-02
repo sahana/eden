@@ -418,14 +418,14 @@ class DiseaseMonitoringModel(S3Model):
                 query &= (table.id != record_id)
             duplicate = db(query).select(table.id, limitby=(0, 1)).first()
             if duplicate:
-                form.errors["date"] = T("Previous report for this site/date found - please update the existing report")
+                form.errors["date"] = T("Report for this date exists - please update the existing report instead")
 
         # Validate numbers
         total = form_vars.get("tests_total")
         positive = form_vars.get("tests_positive")
         if total is not None and positive is not None:
             if positive > total:
-                form.errors["tests_positive"] = T("Number of positive results cannot be greater than number of total tests")
+                form.errors["tests_positive"] = T("Number of positive results cannot be greater than number of tests")
 
 # =============================================================================
 class CaseTrackingModel(S3Model):
