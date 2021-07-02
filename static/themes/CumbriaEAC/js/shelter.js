@@ -34,9 +34,8 @@ $(document).ready(function(){
                 // Normal Submit
                 return true;
             } else {
-                // Stop Form Submission (including any subsequent handlers)
+                // Stop Event Propagation
                 event.stopImmediatePropagation();
-                S3ClearNavigateAwayConfirm();
                 // Prevent Submission
                 return false;
             }
