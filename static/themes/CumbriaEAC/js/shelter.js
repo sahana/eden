@@ -25,17 +25,20 @@ $(document).ready(function(){
 
     if (['3', '4', '5'].includes(status_field.val())) {
         // Shelter is Open, so set watch on form submission
-        $('form:not(.filter-form,.pt-form)').submit(function(event){
-            if (typeof S3.warning === 'undefined') {
-                // For some reason, form is submitted twice, we only want to prompt on the 2nd submission
-                S3.warning = true;
-            } else {
-                if (['1', '6'].includes(status_field.val())) {
-                    // Shelter is now Closed, so Warn
-                    return confirm('Closing the Shelter will check-out all clients, are you sure?');
-                }
+        $('form:not(.filter-form,.pt-form)').on('submit.eac', function(event){
+            // Shelter is now Closed, so Warn
+            var result = confirm('Closing the Shelter will check-out all clients, are you sure?');
+            if (result) {
+                // Unbind handler so it doesn't get called a 2nd time
+                $('form').off('submit.eac');
                 // Normal Submit
                 return true;
+            } else {
+                // Stop Form Submission (including any subsequent handlers)
+                event.stopImmediatePropagation();
+                S3ClearNavigateAwayConfirm();
+                // Prevent Submission
+                return false;
             }
         });
     }

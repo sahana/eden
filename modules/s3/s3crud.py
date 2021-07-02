@@ -956,15 +956,15 @@ class S3CRUD(S3Method):
 
             # Get the form
             try:
-                form = self.sqlform(request=self.request,
-                                    resource=resource,
-                                    record_id=record_id,
-                                    onvalidation=onvalidation,
-                                    onaccept=onaccept,
-                                    message=message,
-                                    link=link,
-                                    subheadings=subheadings,
-                                    format=representation)
+                form = self.sqlform(request = self.request,
+                                    resource = resource,
+                                    record_id = record_id,
+                                    onvalidation = onvalidation,
+                                    onaccept = onaccept,
+                                    message = message,
+                                    link = link,
+                                    subheadings = subheadings,
+                                    format = representation)
             except HTTP as e:
                 message = current.ERROR.BAD_RECORD \
                           if e.status == 404 else e.message
