@@ -1588,6 +1588,15 @@ def config(settings):
             response.view = "popup.html"
             return {"form": form}
 
+        def clients_count(r, **attr):
+            table = s3db.cr_shelter_registration
+            query = (table.shelter_id == r.id) & \
+                    (table.registration_status == 2)
+            clients = current.db(query).count()
+
+            response.headers["Content-Type"] = "application/json"
+            return clients
+
         def staff_checkout(r, **attr):
             db = current.db
             component_id = r.component_id
@@ -1655,6 +1664,10 @@ def config(settings):
                    component_name = "human_resource_site",
                    method = "checkout",
                    action = staff_checkout)
+
+        set_method("cr", "shelter",
+                   method = "clients",
+                   action = clients_count)
 
         set_method("cr", "shelter",
                    method = "export",
@@ -1929,9 +1942,10 @@ def config(settings):
                                          "create_onaccept",
                                          staff_check_in,
                                          )
-            else:
-                s3.crud_strings["cr_shelter"].title_update = T("Manage Shelter")
+            elif r.id:
+                #s3.crud_strings["cr_shelter"].title_update = T("Manage Shelter")
                 s3.crud_strings["cr_shelter"].title_update = shelter_name
+                s3.js_global.append('''S3.r_id=%s''' % r.id)
                 s3.scripts.append("/%s/static/themes/CumbriaEAC/js/shelter.js" % r.application)
 
             return result

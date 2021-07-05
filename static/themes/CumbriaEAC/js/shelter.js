@@ -26,18 +26,51 @@ $(document).ready(function(){
     if (['3', '4', '5'].includes(status_field.val())) {
         // Shelter is Open, so set watch on form submission
         $('form:not(.filter-form,.pt-form)').on('submit.eac', function(event){
-            // Shelter is now Closed, so Warn
-            var result = confirm('Closing the Shelter will check-out all clients, are you sure?');
-            if (result) {
-                // Unbind handler so it doesn't get called a 2nd time
-                $('form').off('submit.eac');
-                // Normal Submit
-                return true;
-            } else {
-                // Stop Event Propagation
-                event.stopImmediatePropagation();
-                // Prevent Submission
-                return false;
+            if (['1', '6'].includes(status_field.val())) {
+                // Shelter is now Closed
+                // Lookup the number of clients who remain checked-in
+                var result;
+                $.ajaxS3({
+                    'url': S3.Ap.concat('/cr/shelter/' + S3.r_id + '/clients'),
+                    'async': false,
+                    'success': function (response) {
+                        if (response) {
+                            // There are still clients checked-in, so warn:
+                            var nclients = response + ' client';
+                            if (response > 1) {
+                                nclients += 's';
+                            }
+                            var confirmation = confirm('Closing the Shelter will check-out ' + nclients + ', are you sure?');
+                            if (confirmation) {
+                                // Unbind handler so it doesn't get called a 2nd time
+                                $('form').off('submit.eac');
+                                // Normal Submit
+                                result = true;
+                                //return true;
+                            } else {
+                                // Stop Event Propagation
+                                event.stopImmediatePropagation();
+                                // Prevent Submission
+                                result = false;
+                                //return false;
+                            }
+                        } else {
+                            // Unbind handler so it doesn't get called a 2nd time
+                            $('form').off('submit.eac');
+                            // Normal Submit
+                            result = true;
+                            //return true;
+                        }
+                    },
+                    'error': function () {
+                        // Stop Event Propagation
+                        event.stopImmediatePropagation();
+                        // Prevent Submission
+                        result = false;
+                        //return false;
+                    }
+                });
+                return result;
             }
         });
     }
