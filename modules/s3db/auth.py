@@ -163,6 +163,7 @@ class AuthConsentModel(S3Model):
              "auth_consent_option",
              "auth_consent_option_hash_fields",
              "auth_consent",
+             "auth_consent_assertion",
              )
 
     def model(self):
@@ -367,6 +368,31 @@ class AuthConsentModel(S3Model):
         self.configure(tablename,
                        onaccept = self.consent_onaccept,
                        )
+
+        # ---------------------------------------------------------------------
+        # Consent Assertion
+        # - when a local user asserts that a non-local entity has consented
+        #   to a transaction (e.g. a person who is not registered locally)
+        # - differs from auth_consent in that it assigns liability to obtain
+        #   consent rather than being proof of consent itself
+        # - the respective consent option should therefore be worded as
+        #   testimony - not as declaration - of consent
+        #
+        tablename = "auth_consent_assertion"
+        define_table(tablename,
+                     self.pr_person_id(), # the person asserting consent
+                     Field("context", "text"),
+                     Field("option_id", "reference auth_consent_option",
+                           ondelete = "RESTRICT",
+                           represent = S3Represent(lookup="auth_consent_option"),
+                           ),
+                     Field("consented", "boolean",
+                           default = False,
+                           ),
+                     s3_datetime(default = "now",
+                                 ),
+                     Field("vhash", "text"),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -917,6 +943,105 @@ class auth_Consent(object):
 
                 # Reset consent response in temp user record
                 row.update_record(consent=None)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def assert_consent(cls,
+                       context,
+                       code,
+                       value,
+                       person_id = None,
+                       timestmp = None,
+                       allow_obsolete = False,
+                       ):
+        """
+            Assert consent of a non-local entity
+
+            @param context: string specifying the transaction to which
+                            consent was to be obtained
+            @param code: the processing type code
+            @param value: the value returned from the consent widget
+            @param person_id: the person asserting consent (defaults to
+                              the current user)
+            @param timestmp: datetime when consent was obtained (defaults
+                             to current time)
+            @param allow_obsolete: allow recording assertions for obsolete
+                                   consent options
+
+            @raises TypeError for invalid parameter types
+            @raises ValueError for invalid input data
+
+            @returns: the consent assertion record ID
+        """
+
+        if not context:
+            raise ValueError("Context is required")
+        context = str(context)
+
+        now = current.request.utcnow
+        if not timestmp:
+            timestmp = now
+        elif not isinstance(timestmp, datetime.datetime):
+            raise TypeError("Invalid timestmp type, expected datetime but got %s" % type(timestmp))
+        elif timestmp > now:
+            raise ValueError("Future timestmp not permitted")
+
+        if not person_id:
+            person_id = current.auth.s3_logged_in_person()
+        if not person_id:
+            raise ValueError("Must be logged in or specify a person_id")
+
+        # Parse the value and extract the option_id
+        parsed = cls.parse(value)
+        consent = parsed.get(code)
+        if not consent:
+            raise ValueError("Invalid JSON, or no response for processing type found")
+        option_id, response = consent
+
+        # Get all current+valid options matching the codes
+        db = current.db
+        s3db = current.s3db
+
+        ttable = s3db.auth_processing_type
+        otable = s3db.auth_consent_option
+
+        hash_fields = s3db.auth_consent_option_hash_fields
+        option_fields = {"id"} | set(hash_fields)
+        fields = [otable[fn] for fn in option_fields]
+
+        join = ttable.on((ttable.id == otable.type_id) & \
+                         (ttable.code == code))
+        query = (otable.id == option_id) & \
+                (otable.deleted == False)
+        if not allow_obsolete:
+            query &= (otable.obsolete == False)
+        option = db(query).select(*fields,
+                                  join = join,
+                                  limitby = (0, 1),
+                                  ).first()
+        if not option:
+            raise ValueError("Invalid consent option for processing type")
+
+        ohash = cls.get_hash([(fn, option[fn]) for fn in hash_fields])
+        consent = (("person_id", person_id),
+                   ("date", timestmp.isoformat()),
+                   ("option_id", option.id),
+                   ("consented", bool(response)),
+                   ("ohash", ohash),
+                   )
+        # Generate verification hash
+        vhash = cls.get_hash(consent)
+        consent = dict(consent[:4])
+        consent["vhash"] = vhash
+        consent["date"] = timestmp
+
+        atable = s3db.auth_consent_assertion
+        record_id = atable.insert(**consent)
+        if record_id:
+            consent["id"] = record_id
+            s3db.onaccept(atable, consent)
+
+        return record_id
 
     # -------------------------------------------------------------------------
     @classmethod

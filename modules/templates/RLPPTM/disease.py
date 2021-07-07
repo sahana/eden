@@ -186,12 +186,21 @@ class TestResultRegistration(S3Method):
 
             #formvars = form.vars
 
-            # TODO Extract consent
-            # TODO Extend consent tracking with proxy_registration
+            # Create disease_case_diagnostics record + onaccept
 
-            # TODO Implement result registration (disease_case_diagnostics)
-            # TODO Implement result reporting to CWA
-            # TODO Implement result view
+            # if report_to_cwa is NO
+            #   confirmation message
+            #   redirect to form
+            # else
+            #   register consent
+            #   generate JSON for QR-code
+            #   generate HASH
+            #   send to corona-app
+            #   if successful:
+            #       confirmation message
+            #   else:
+            #       error message
+            #   generate certificate view with QR-code
 
             return "registered" # TESTING
 
