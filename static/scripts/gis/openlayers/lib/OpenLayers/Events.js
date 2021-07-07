@@ -263,7 +263,11 @@ OpenLayers.Event = {
 
         //add the actual browser event listener
         if (element.addEventListener) {
-            element.addEventListener(name, observer, useCapture);
+            element.addEventListener(name, observer, {'capture': useCapture,
+                                                      // Allow the ZoomWheel to not bubble through to browser scrollbars on modern browsers:
+                                                      // https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#improving_scrolling_performance_with_passive_listeners
+                                                      'passive': false
+                                                      });
         } else if (element.attachEvent) {
             element.attachEvent('on' + name, observer);
         }
