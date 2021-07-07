@@ -1488,6 +1488,7 @@ def s3_date(name="date", **attr):
         @keyword set_max: CSS selector for another date/time widget to
                           dynamically set the maximum selectable date/time to
                           the value selected in this widget
+        @keyword month_selector: allow direct selection of month
 
         @note: other S3ReusableField keywords are also supported (in addition
                to the above)
@@ -1531,6 +1532,7 @@ def s3_date(name="date", **attr):
                       "default_explicit",
                       "set_min",
                       "set_max",
+                      "month_selector",
                       )
 
     # Widget
@@ -1576,6 +1578,7 @@ def s3_date(name="date", **attr):
         # Supported additional widget options
         SUPPORTED_OPTIONS = ("set_min",
                              "set_max",
+                             "month_selector",
                              )
         for option in WIDGET_OPTIONS:
             if option in attributes:

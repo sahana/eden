@@ -64,6 +64,24 @@
 
             this._unbindEvents();
 
+            var el = $(this.element),
+                responses = this._deserialize();
+
+            // Update checkboxes from current input value
+            $('.consent-checkbox', el).each(function() {
+                var code = $(this).data('code'),
+                    response = responses[code];
+                if (response !== undefined) {
+                    $(this).prop('checked', response[1]);
+                }
+            });
+
+            // Deal with .invalidinput
+            if (this.input.hasClass('invalidinput')) {
+                el.addClass('invalidinput');
+                window.scrollTo(0, $('.invalidinput').first().offset().top);
+            }
+
             this._bindEvents();
         },
 
@@ -110,6 +128,25 @@
         },
 
         /**
+         * Programmatically de-select a consent option, e.g. when it
+         * becomes irrelevant for current input data
+         *
+         * @param {string} code - the consent option code
+         */
+        deselect: function(code) {
+
+            var el = $(this.element);
+
+            $('.consent-checkbox', el).each(function() {
+                var $this = $(this);
+                if ($this.data('code') == code) {
+                    $this.prop('checked', false);
+                }
+            });
+            this._serialize();
+        },
+
+        /**
          * Bind events to generated elements (after refresh)
          */
         _bindEvents: function() {
@@ -119,6 +156,12 @@
                 self = this;
 
             el.on('change' + ns, '.consent-checkbox', function() {
+
+                // Remove any previous error
+                $('.error_wrapper', el).remove();
+                el.removeClass('invalidinput');
+                self.input.removeClass('invalidinput');
+
                 self._serialize();
             });
 

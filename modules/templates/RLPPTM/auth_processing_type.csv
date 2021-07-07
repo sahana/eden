@@ -1,4 +1,6 @@
 Code,Name,Comments
+CWA_ANONYMOUS,Report test result to CWA anonymously,For test result registration
+CWA_PERSONAL,Report test result to CWA by name,For test result registration
 SHARE,Share Infection Test Station Data,For registration of test stations
 RULES_PRO,Provider Rules,For registration of test stations
 STORE,Store User Personal Information,For registration of schools

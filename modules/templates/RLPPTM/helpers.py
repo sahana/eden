@@ -51,6 +51,46 @@ def get_role_realms(role):
     return role_realms
 
 # =============================================================================
+def get_managed_facilities(role="ORG_ADMIN", public_only=True):
+    """
+        Get test stations managed by the current user
+
+        @param role: the user role to consider
+        @param public_only: only include sites with PUBLIC=Y tag
+
+        @returns: list of site_ids
+    """
+
+
+    s3db = current.s3db
+
+    ftable = s3db.org_facility
+    query = (ftable.obsolete == False) & \
+            (ftable.deleted == False)
+
+    realms = get_role_realms(role)
+    if realms:
+        query = (ftable.realm_entity.belongs(realms)) & query
+    elif realms is not None:
+        # User does not have the required role, or at least not for any realms
+        return realms
+
+    if public_only:
+        ttable = s3db.org_site_tag
+        join = ttable.on((ttable.site_id == ftable.site_id) & \
+                         (ttable.tag == "PUBLIC") & \
+                         (ttable.deleted == False))
+        query &= (ttable.value == "Y")
+    else:
+        join = None
+
+    sites = current.db(query).select(ftable.site_id,
+                                     cache = s3db.cache,
+                                     join = join,
+                                     )
+    return [s.site_id for s in sites]
+
+# =============================================================================
 def get_org_accounts(organisation_id):
     """
         Get all user accounts linked to an organisation
@@ -337,6 +377,8 @@ def get_stats_projects():
         Find all projects the current user can report test results, i.e.
         - projects marked as STATS=Y where
         - the current user has the VOUCHER_PROVIDER role for a partner organisation
+
+        @status: obsolete, test results shall be reported for all projects
     """
 
     permitted_realms = current.auth.permission.permitted_realms
