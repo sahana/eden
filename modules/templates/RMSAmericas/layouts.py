@@ -1,9 +1,27 @@
 # -*- coding: utf-8 -*-
 
 from gluon import *
-from gluon.storage import Storage
+#from gluon.storage import Storage
 from s3 import *
-from s3theme import NAV, SECTION
+#from s3theme import NAV, SECTION
+
+# =============================================================================
+class CIRCLE(DIV):
+    """ <circle> element """
+
+    tag = "circle"
+
+# =============================================================================
+class PATH(DIV):
+    """ <path> element """
+
+    tag = "path"
+
+# =============================================================================
+class SVG(DIV):
+    """ <svg> element """
+
+    tag = "svg"
 
 # =============================================================================
 class S3MainMenuLayout(S3NavigationItem):
@@ -13,171 +31,132 @@ class S3MainMenuLayout(S3NavigationItem):
     def layout(item):
         """ Custom Layout Method """
 
-        # Manage flags: hide any disabled/unauthorized items
-        if not item.authorized:
-            item.enabled = False
-            item.visible = False
-        elif item.enabled is None or item.enabled:
-            item.enabled = True
-            item.visible = True
+        T = current.T
 
-        if item.enabled and item.visible:
-
-            items = item.render_components()
-            if item.parent is not None:
-
-                classes = []
-
-                if item.parent.parent is None:
-                    # Item at the top-level?
-                    toplevel = True
-                    if item.opts.right:
-                        classes.append("menu-right")
-                else:
-                    toplevel = False
-
-                if item.components:
-                    classes.append("has-dropdown not-click")
-                    if item.selected:
-                        classes.append("active")
-                    _class = " ".join(classes)
-                    # Menu item with Dropdown
-                    if item.get_first(enabled=True):
-                        _href = item.url()
-                        return LI(A(item.label,
-                                    _href=_href,
-                                    _id=item.attr._id
-                                    ),
-                                    UL(items,
-                                        _class="dropdown"
-                                        ),
-                                    _class=_class,
-                                    )
-                else:
-                    # Menu item without Drop-Down
-                    if toplevel:
-                        item_url = item.url()
-                        if item_url == URL(c="default", f="index"):
-                            classes.append("menu-home")
-                        if item.selected:
-                            classes.append("active")
-                        _class = " ".join(classes)
-                        return LI(A(item.label,
-                                    _href=item_url,
-                                    _id=item.attr._id,
-                                    ),
-                                    _class=_class,
-                                    )
-                    else:
-                        # Submenu item
-                        if isinstance(item.label, dict):
-                            if "name" in item.label:
-                                label = item.label["name"]
-                            else:
-                                return None
-                        else:
-                            label = item.label
-                        link = A(label, _href=item.url(), _id=item.attr._id)
-                        return LI(link)
-            else:
-                # Main menu
-
-                right = []
-                left = []
-                for item in items:
-                    if "menu-right" in item["_class"]:
-                        item.remove_class("menu-right")
-                        right.append(item)
-                    else:
-                        left.append(item)
-                right.reverse()
-                if current.response.s3.rtl:
-                    right, left = left, right
-                return NAV(UL(LI(A(" ",
-                                   _href=URL(c="default", f="index"),
+        divs = [DIV(DIV(A(SVG(PATH(_d = "M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z",
                                    ),
-                                 _class="name"
-                                 ),
-                              LI(A(SPAN(current.T("Menu"))),
-                                 _class="toggle-topbar menu-icon",
-                                 ),
-                              _class="title-area",
+                              _fill = "#5f6368",
                               ),
-                           SECTION(UL(right, _class="right"),
-                                   UL(left, _class="left"),
-                                   _class="top-bar-section",
-                                   ),
-                           _class = "top-bar",
-                           data = {"topbar": " "},
-                           )
-        else:
-            return None
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def checkbox_item(item):
-        """ Render special active items """
-
-        name = item.label
-        link = item.url()
-        _id = name["id"]
-        if "name" in name:
-            _name = name["name"]
-        else:
-            _name = ""
-        if "value" in name:
-            _value = name["value"]
-        else:
-            _value = False
-        if "request_type" in name:
-            _request_type = name["request_type"]
-        else:
-            _request_type = "ajax"
-        if link:
-            if _request_type == "ajax":
-                _onchange='''var val=$('#%s:checked').length;$.getS3('%s'+'?val='+val,null,false,null,false,false)''' % \
-                             (_id, link)
-            else:
-                # Just load the page. Use this if the changed menu
-                # item should alter the contents of the page, and
-                # it's simpler just to load it.
-                _onchange="location.href='%s'" % link
-        else:
-            _onchange=None
-        return LI(A(INPUT(_type="checkbox",
-                          _id=_id,
-                          _onchange=_onchange,
-                          value=_value,
+                          _href = "#",
+                          _class = "ha",
+                          _role = "button",
+                          _title = T("Main menu"),
                           ),
-                    "%s" % _name,
-                    _nowrap="nowrap",
+                        _class = "hd",
+                        ),
+                    _class = "large-2 medium-3 small-4 columns",
                     ),
-                  _class="menu-toggle",
-                  )
+                DIV(_class = "large-8 medium-6 small-4 columns",
+                    ),
+                DIV(DIV(A(SVG(PATH(_fill = "none",
+                                   _d = "M0 0h24v24H0z",
+                                   ),
+                              PATH(_d = "M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z",
+                                   ),
+                              _fill = "#5f6368",
+                              ),
+                          _href = URL(c = "default",
+                                      f = "help",
+                                      ),
+                          _class = "ha",
+                          _role = "button",
+                          _title = T("Support"),
+                          ),
+                        _class = "hd",
+                        ),
+                    DIV(A(SVG(PATH(_d = "M13.85 22.25h-3.7c-.74 0-1.36-.54-1.45-1.27l-.27-1.89c-.27-.14-.53-.29-.79-.46l-1.8.72c-.7.26-1.47-.03-1.81-.65L2.2 15.53c-.35-.66-.2-1.44.36-1.88l1.53-1.19c-.01-.15-.02-.3-.02-.46 0-.15.01-.31.02-.46l-1.52-1.19c-.59-.45-.74-1.26-.37-1.88l1.85-3.19c.34-.62 1.11-.9 1.79-.63l1.81.73c.26-.17.52-.32.78-.46l.27-1.91c.09-.7.71-1.25 1.44-1.25h3.7c.74 0 1.36.54 1.45 1.27l.27 1.89c.27.14.53.29.79.46l1.8-.72c.71-.26 1.48.03 1.82.65l1.84 3.18c.36.66.2 1.44-.36 1.88l-1.52 1.19c.01.15.02.3.02.46s-.01.31-.02.46l1.52 1.19c.56.45.72 1.23.37 1.86l-1.86 3.22c-.34.62-1.11.9-1.8.63l-1.8-.72c-.26.17-.52.32-.78.46l-.27 1.91c-.1.68-.72 1.22-1.46 1.22zm-3.23-2h2.76l.37-2.55.53-.22c.44-.18.88-.44 1.34-.78l.45-.34 2.38.96 1.38-2.4-2.03-1.58.07-.56c.03-.26.06-.51.06-.78s-.03-.53-.06-.78l-.07-.56 2.03-1.58-1.39-2.4-2.39.96-.45-.35c-.42-.32-.87-.58-1.33-.77l-.52-.22-.37-2.55h-2.76l-.37 2.55-.53.21c-.44.19-.88.44-1.34.79l-.45.33-2.38-.95-1.39 2.39 2.03 1.58-.07.56a7 7 0 0 0-.06.79c0 .26.02.53.06.78l.07.56-2.03 1.58 1.38 2.4 2.39-.96.45.35c.43.33.86.58 1.33.77l.53.22.38 2.55z",
+                                   ),
+                              CIRCLE(_cx = "12",
+                                     _cy = "12",
+                                     _r = "3.5",
+                                     ),
+                              _fill = "#5f6368",
+                              ),
+                          _href = "#",
+                          _class = "ha",
+                          _role = "button",
+                          _title = T("Settings"),
+                          ),
+                        _class = "hd",
+                        ),
+                    DIV(A(SVG(PATH(_d = "M6,8c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM6,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM6,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM16,6c0,1.1 0.9,2 2,2s2,-0.9 2,-2 -0.9,-2 -2,-2 -2,0.9 -2,2zM12,8c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM18,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM18,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2z",
+                                   ),
+                              _fill = "#5f6368",
+                              ),
+                          _href = "#",
+                          _class = "ha",
+                          _role = "button",
+                          _title = T("RMS modules"),
+                          ),
+                        _class = "hd",
+                        ),
+                    DIV(A(s3_avatar_represent(current.auth.user.id,
+                                              _class = "ip",
+                                              _height = 36,
+                                              _width = 36,
+                                              ),
+                          _href = "#",
+                          _class = "hap",
+                          _role = "button",
+                          _title = T("RMS Account"),
+                          ),
+                        _class = "hdp",
+                        ),
+                    _class = "large-2 medium-3 small-4 columns",
+                    ),
+                ]
+
+        return TAG[""](*divs)
 
 # =============================================================================
-class S3PersonalMenuLayout(S3NavigationItem):
+def auth_formstyle(form, fields, *args, **kwargs):
+    """
+        Formstyle for the Login box on the homepage
+    """
+
+    def render_row(row_id, label, widget, comment, hidden=False):
+
+        if hasattr(widget, "element"):
+            submit = widget.element("input", _type="submit")
+            if submit:
+                submit.add_class("small primary button")
+            elif label:
+                widget["_placeholder"] = label[0]
+
+        return DIV(widget,
+                   _class = "medium-3 columns",
+                   _id = row_id,
+                   )
+
+    if args:
+        row_id = form
+        label = fields
+        widget, comment = args
+        hidden = kwargs.get("hidden", False)
+        return render_row(row_id, label, widget, comment, hidden)
+    else:
+        parent = TAG[""]()
+        for row_id, label, widget, comment in fields:
+            parent.append(render_row(row_id, label, widget, comment))
+        return parent
+
+# -----------------------------------------------------------------------------
+class S3LoginMenuLayout(S3NavigationItem):
+    """ Layout for the Login box in top navigation """
 
     @staticmethod
     def layout(item):
 
-        if item.parent is None:
-            # The menu
-            items = item.render_components()
-            if items:
-                return TAG["ul"](items, _class="sub-nav personal-menu")
-            else:
-                return "" # menu is empty
-        else:
-            # A menu item
-            if item.enabled and item.authorized:
-                return TAG["li"](A(item.label, _href=item.url()))
-            else:
-                return None
+        auth = current.auth
+        auth.settings.label_separator = ""
+        formstyle = auth_formstyle
+        login_form = auth.login(formstyle = formstyle)
+
+        return login_form
 
 # -----------------------------------------------------------------------------
 # Shortcut
-MP = S3PersonalMenuLayout
+LM = S3LoginMenuLayout
 
 # =============================================================================
 class S3AboutMenuLayout(S3NavigationItem):
@@ -189,68 +168,19 @@ class S3AboutMenuLayout(S3NavigationItem):
             # The menu
             items = item.render_components()
             if items:
-                return TAG["ul"](items, _class="sub-nav about-menu left")
+                return UL(items, _class="sub-nav about-menu left")
             else:
                 return "" # menu is empty
         else:
             # A menu item
             if item.enabled and item.authorized:
-                return TAG["li"](A(item.label, _href=item.url()))
+                return LI(A(item.label, _href=item.url()))
             else:
                 return None
 
 # -----------------------------------------------------------------------------
 # Shortcut
 MA = S3AboutMenuLayout
-
-# =============================================================================
-class S3LanguageMenuLayout(S3NavigationItem):
-
-    @staticmethod
-    def layout(item):
-        """ Language menu layout
-
-            options for each entry:
-                - lang_code: the language code
-                - lang_name: the language name
-            option for the menu
-                - current_language: code of the current language
-        """
-
-        if item.enabled:
-            if item.components:
-                # The language menu itself
-                current_language = current.T.accepted_language
-                items = item.render_components()
-                select = SELECT(items, value=current_language,
-                                    _name="_language",
-                                    # @ToDo T:
-                                    _title="Language Selection",
-                                    _onchange="S3.reloadWithQueryStringVars({'_language':$(this).val()});")
-                form = FORM(select, _class="language-selector",
-                                    _name="_language",
-                                    _action="",
-                                    _method="get")
-                return form
-            else:
-                # A language entry
-                return OPTION(item.opts.lang_name,
-                              _value=item.opts.lang_code)
-        else:
-            return None
-
-    # -------------------------------------------------------------------------
-    def check_enabled(self):
-        """ Check whether the language menu is enabled """
-
-        if current.deployment_settings.get_L10n_display_toolbar():
-            return True
-        else:
-            return False
-
-# -----------------------------------------------------------------------------
-# Shortcut
-ML = S3LanguageMenuLayout
 
 # =============================================================================
 class S3OrgMenuLayout(S3NavigationItem):
@@ -293,32 +223,33 @@ class S3OrgMenuLayout(S3NavigationItem):
                 #if l10n.acronym_l10n:
                     #name = _name = l10n.acronym_l10n
                 #else:
-                name = _name = l10n.name_l10n
+                name = l10n.name_l10n
 
             if record:
                 if not l10n:
                     #if record.acronym:
                         #name = _name = record.acronym
                     #else:
-                    name = _name = record.name
+                    name = record.name
 
                 if record.logo:
                     size = (60, None)
                     image = s3db.pr_image_library_represent(record.logo, size=size)
                     url_small = URL(c="default", f="download", args=image)
-                    alt = "%s logo" % _name
+                    alt = "%s logo" % name
                     logo = IMG(_src=url_small, _alt=alt, _width=60)
 
         if not logo:
             # Default to generic IFRC
-            logo = IMG(_src="/%s/static/themes/RMSAmericas/img/logo_small.png" %
-                            current.request.application,
-                       _alt=current.T("Red Cross/Red Crescent"),
-                       _width=60,
+            logo = IMG(_src = "/%s/static/themes/RMSAmericas/img/logo_small.png" %
+                              current.request.application,
+                       _alt = current.T("Red Cross/Red Crescent"),
+                       _width = 60,
                        )
 
         # Note: render using current.menu.org.render()[0] + current.menu.org.render()[1]
-        return (name, logo)
+        #return (name, logo)
+        return logo
 
 # -----------------------------------------------------------------------------
 # Shortcut

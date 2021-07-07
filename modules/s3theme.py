@@ -102,10 +102,18 @@ def formstyle_bootstrap(form, fields, *args, **kwargs):
 
         if _submit:
             # submit button has unwrapped label and controls, different class
-            return DIV(label, controls, _class="%sform-actions" % _class, _id=row_id)
+            return DIV(label,
+                       controls,
+                       _class = "%sform-actions" % _class,
+                       _id = row_id,
+                       )
         else:
             # unwrapped label
-            return DIV(label, _controls, _class="%scontrol-group" % _class, _id=row_id)
+            return DIV(label,
+                       _controls,
+                       _class = "%scontrol-group" % _class,
+                       _id = row_id,
+                       )
 
     if args:
         row_id = form
@@ -113,7 +121,8 @@ def formstyle_bootstrap(form, fields, *args, **kwargs):
         widget, comment = args
         if comment:
             comment = DIV(_class = "tooltip",
-                          _title = "%s|%s" % (label, comment))
+                          _title = "%s|%s" % (label, comment),
+                          )
         hidden = kwargs.get("hidden", False)
         return render_row(row_id, label, widget, comment, hidden)
     else:
@@ -140,10 +149,16 @@ def formstyle_foundation(form, fields, *args, **kwargs):
         _class = "form-row row hide" if hidden else "form-row row"
         hints = DIV(render_tooltip(label, comment), _class="inline-tooltip")
         controls = DIV(label,
-                       DIV(widget, hints, _class="controls"),
-                       _class="small-12 columns",
+                       DIV(widget,
+                           hints,
+                           _class = "controls",
+                           ),
+                       _class = "small-12 columns",
                        )
-        return DIV(controls, _class=_class, _id=row_id)
+        return DIV(controls,
+                   _class = _class,
+                   _id = row_id,
+                   )
 
     if args:
         row_id = form
@@ -185,21 +200,32 @@ def formstyle_foundation_2col(form, fields, *args, **kwargs):
         if isinstance(label, LABEL):
             label.add_class("right inline")
         else:
-            label = LABEL(label, _class="right inline")
-        label = DIV(label, _class="small-2 columns")
+            label = LABEL(label,
+                          _class = "right inline",
+                          )
+        label = DIV(label,
+                    _class = "small-2 columns",
+                    )
 
         # Wrap the controls
         if columns is None:
             _columns = "small-10 columns"
         else:
             _columns = "small-%s columns end" % columns
-        controls = DIV(widget, hints, _class=_columns)
+        controls = DIV(widget,
+                       hints,
+                       _class = _columns,
+                       )
 
         # Render the row
         _class = "form-row row"
         if hidden:
             _class = "%s hide" % _class
-        return DIV(label, controls, _class=_class, _id=row_id)
+        return DIV(label,
+                   controls,
+                   _class = _class,
+                   _id = row_id,
+                   )
 
     if args:
         row_id = form
@@ -232,7 +258,9 @@ def formstyle_foundation_inline(form, fields, *args, **kwargs):
         if label:
             if isinstance(label, LABEL):
                 label.add_class("left inline")
-            label_col = DIV(label, _class="medium-2 columns")
+            label_col = DIV(label,
+                            _class = "medium-2 columns",
+                            )
         else:
             if label is not False:
                 controls_col.add_class("medium-offset-2")
@@ -241,14 +269,18 @@ def formstyle_foundation_inline(form, fields, *args, **kwargs):
         if comment:
             comment = render_tooltip(label,
                                      comment,
-                                     _class="inline-tooltip tooltip",
+                                     _class = "inline-tooltip tooltip",
                                      )
             if hasattr(comment, "add_class"):
                 comment.add_class("inline-tooltip")
             controls_col.append(comment)
 
         _class = "form-row row hide" if hidden else "form-row row"
-        return DIV(label_col, controls_col, _class=_class, _id=row_id)
+        return DIV(label_col,
+                   controls_col,
+                   _class = _class,
+                   _id = row_id,
+                   )
 
     if args:
         row_id = form
@@ -275,16 +307,22 @@ def formstyle_table(form, fields, *args, **kwargs):
         _class = "hide" if hidden else None
 
         # Label on the 1st row
-        row.append(TR(TD(label, _class="w2p_fl"),
+        row.append(TR(TD(label,
+                         _class = "w2p_fl",
+                         ),
                       TD(""),
                       _id = row_id + "1",
-                      _class=_class))
+                      _class = _class,
+                      ))
 
         # Widget & Comment on the 2nd Row
         row.append(TR(widget,
-                      TD(comment, _class="w2p_fc"),
-                      _id=row_id,
-                      _class=_class))
+                      TD(comment,
+                         _class = "w2p_fc",
+                         ),
+                      _id = row_id,
+                      _class = _class,
+                      ))
 
         return tuple(row)
 
@@ -312,15 +350,20 @@ def formstyle_table_inline(form, fields, *args, **kwargs):
 
         _class = "hide" if hidden else None
 
-        row = TR(TD(label, _class="w2p_fl"),
+        row = TR(TD(label,
+                    _class = "w2p_fl",
+                    ),
                  TD(widget),
-                 _id=row_id,
-                 _class=_class)
+                 _id = row_id,
+                 _class = _class,
+                 )
 
         if comment:
-            row.append(TD(DIV(_class="tooltip",
-                              _title="%s|%s" % (label, comment)),
-                          _class="w2p_fc"))
+            row.append(TD(DIV(_class = "tooltip",
+                              _title = "%s|%s" % (label, comment),
+                              ),
+                          _class = "w2p_fc",
+                          ))
         return row
 
     if args:
@@ -347,7 +390,8 @@ def render_tooltip(label, comment, _class="tooltip"):
         elif hasattr(label, "flatten"):
             label = label.flatten().strip("*")
         tooltip = DIV(_class = _class,
-                      _title = "%s|%s" % (label, comment))
+                      _title = "%s|%s" % (label, comment),
+                      )
     else:
         tooltip = comment
     return tooltip

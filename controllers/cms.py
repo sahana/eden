@@ -251,7 +251,8 @@ def post():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller(rheader=s3db.cms_rheader)
+    output = s3_rest_controller(rheader = s3db.cms_rheader,
+                                )
     return output
 
 # -----------------------------------------------------------------------------
@@ -267,7 +268,9 @@ def page():
         table = s3db.cms_post
         query = (table.name == get_vars.name) & \
                 (table.deleted != True)
-        row = db(query).select(table.id, limitby=(0, 1)).first()
+        row = db(query).select(table.id,
+                               limitby = (0, 1)
+                               ).first()
         if row:
             request.args.append(str(row.id))
         else:

@@ -2107,7 +2107,7 @@ class S3Config(Storage):
         if callable(setting):
             # A custom formstyle defined in the template
             formstyle = setting
-        if setting in FORMSTYLES:
+        elif setting in FORMSTYLES:
             # One of the standard supported formstyles
             formstyle = FORMSTYLES[setting]
         else:

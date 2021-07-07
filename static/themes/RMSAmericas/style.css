@@ -1,3 +1,18 @@
+/* Login Form in Top Navigation Bar */
+.auth_login .primary.btn {
+    border-radius: 100%;
+}
+#auth_user_email,
+#auth_user_password {
+    margin-top: 10px;
+}
+#auth_user_remember {
+    margin-top: 15px;
+}
+label[for="auth_user_remember"] {
+    margin-right: 0;
+}
+/* Top Navigation Bar */
 .hd {
     display: inline-block;
     padding-top: 12px;
@@ -13,6 +28,7 @@
     height: 24px;
     width: 24px;
 }
+/* Profile button in top-nav */
 .hdp {
     display: inline-block;
     padding-top: 6px;
@@ -25,4 +41,39 @@
     position: relative;
     bottom: 120px;
     vertical-align: inherit;
+}
+/* Application Switcher from Top Navigation Bar */
+.ah {
+    height: 84px;
+    width: 84px;
+    padding: 8px;
+}
+.ah:hover {
+    border-radius: 10%;
+    background-color: #eaf0fe;
+}
+.ai {
+    margin-top: -10px;
+}
+.al {
+    color: #202124;
+    display: inline-block;
+    font-family: Roboto,RobotoDraft,Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.09px;
+    line-height: 18px;
+    overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 76px;
+}
+/* WH needs more space for label */
+.alw {
+    width: 80px;
+}
+/* HRM needs much more space for label */
+.alh {
+    font-size: 13px;
+    width: 82px;
 }

@@ -527,9 +527,10 @@ Thank you"""
               onvalidation = DEFAULT,
               onaccept = DEFAULT,
               log = DEFAULT,
-              inline = False, # Set to True to use an 'inline' variant of the style
               lost_pw_link = None,
               register_link = True,
+              formstyle = None,
+              inline = False, # Set to True to use an 'inline' variant of the style
               ):
         """
             Overrides Web2Py's login() to use custom flash styles & utcnow
@@ -571,10 +572,11 @@ Thank you"""
         # Do we use our own login form, or from a central source?
         if settings.login_form == self:
 
-            if inline:
-                formstyle = deployment_settings.get_ui_inline_formstyle()
-            else:
-                formstyle = deployment_settings.get_ui_formstyle()
+            if not formstyle:
+                if inline:
+                    formstyle = deployment_settings.get_ui_inline_formstyle()
+                else:
+                    formstyle = deployment_settings.get_ui_formstyle()
 
             buttons = []
 

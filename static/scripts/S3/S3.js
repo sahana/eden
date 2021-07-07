@@ -544,7 +544,7 @@ var S3EnableNavigateAwayConfirm = function() {
             // If there are errors, ensure the unsaved form is still protected
             S3SetNavigateAwayConfirm();
         }
-        var form = $('form:not(.filter-form,.pt-form)');
+        var form = $('form:not(.dt-wrapper,.filter-form,.pt-form)');
 
         $('input, textarea', form).on('keypress', S3SetNavigateAwayConfirm);
                                   // This gets triggered by browsers' Autofill:

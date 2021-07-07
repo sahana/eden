@@ -562,6 +562,19 @@ def config(settings):
 
         series = r.get_vars.get("~.series_id$name", None)
         if series == "CEP":
+            s3db = current.s3db
+            table = s3db.cms_post
+            table.body.default = "" # NotNull = True
+            if not r.method:
+                # Lookup ID
+                stable = s3db.cms_series
+                row = current.db(stable.name == series).select(stable.id,
+                                                               limitby = (0, 1)
+                                                               ).first()
+                if row:
+                    field = table.series_id
+                    field.default = row.id
+                    #field.readable = field.writable = False
             current.response.s3.crud_strings[tablename] = Storage(label_create = T("Create Plan"),
                                                                   title_display = T("Plan Details"),
                                                                   title_list = T("Community Emergency Plans"),
@@ -574,10 +587,35 @@ def config(settings):
                                                                   msg_list_empty = T("No plans currently available")
                                                                   )
             from s3 import S3SQLCustomForm
-            current.s3db.configure(tablename,
-                                   crud_form = S3SQLCustomForm("name"),
-                                   list_fields = ["name"],
-                                   )
+            s3db.configure(tablename,
+                           crud_form = S3SQLCustomForm("name"),
+                           list_fields = ["name"],
+                           orderby = "cms_post.name",
+                           )
+        elif r.id:
+            # Update form
+            s3db = current.s3db
+            stable = s3db.cms_series
+            row = current.db(stable.name == "CEP").select(stable.id,
+                                                          limitby = (0, 1)
+                                                          ).first()
+            if row and row.id == r.record.series_id:
+                current.response.s3.crud_strings[tablename] = Storage(label_create = T("Create Plan"),
+                                                                  title_display = T("Plan Details"),
+                                                                  title_list = T("Community Emergency Plans"),
+                                                                  title_update = T("Edit Plan"),
+                                                                  title_upload = T("Import Plans"),
+                                                                  label_list_button = T("List Plans"),
+                                                                  msg_record_created = T("Plan added"),
+                                                                  msg_record_modified = T("Plan updated"),
+                                                                  msg_record_deleted = T("Plan deleted"),
+                                                                  msg_list_empty = T("No plans currently available")
+                                                                  )
+                from s3 import S3SQLCustomForm
+                s3db.configure(tablename,
+                               crud_form = S3SQLCustomForm("name"),
+                               list_fields = ["name"],
+                               )
 
     settings.customise_cms_post_resource = customise_cms_post_resource
 
@@ -1325,6 +1363,10 @@ def config(settings):
                                                       required_levels = ("L2", "L3"),
                                                       show_address = True,
                                                       )
+        # Now done centrally
+        #if r.representation == "plain":
+        #    # Don't have a clickable map in Popups
+        #    table.location_id.represent = s3db.gis_LocationRepresent(show_link = False)
 
         # Redefine as multiple=False
         s3db.add_components("cr_shelter",
@@ -1396,6 +1438,7 @@ def config(settings):
                         "storage": T("Storage"),
                         }
         f.requires = IS_EMPTY_OR(IS_IN_SET(purpose_opts, zero = T("Not defined")))
+        f.represent = S3Represent(options = purpose_opts)
 
         plan = components_get("plan")
         f = plan.table.value
@@ -1406,9 +1449,11 @@ def config(settings):
                 (ctable.deleted == False)
         plans = db(query).select(ctable.id,
                                  ctable.name,
+                                 cache = s3db.cache
                                  )
-        plan_opts = {p.id: p.name for p in plans}
+        plan_opts = {str(p.id): p.name for p in plans}
         f.requires = IS_EMPTY_OR(IS_IN_SET(plan_opts, zero = T("Unknown")))
+        f.represent = S3Represent(options = plan_opts)
 
         streetview = components_get("streetview")
         f = streetview.table.value

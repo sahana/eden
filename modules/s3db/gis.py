@@ -127,7 +127,11 @@ class S3LocationModel(S3Model):
         else:
             meta_spatial_fields = (s3_meta_fields())
 
-        gis_location_represent = gis_LocationRepresent(show_link = True)
+        if current.auth.permission.format == "plain":
+            # Popup Maps from Map Popups is poor UX
+            gis_location_represent = gis_LocationRepresent()
+        else:
+            gis_location_represent = gis_LocationRepresent(show_link = True)
 
         tablename = "gis_location"
         self.define_table(tablename,
