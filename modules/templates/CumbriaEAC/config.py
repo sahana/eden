@@ -836,7 +836,7 @@ def config(settings):
             if row.event != 2:
                 # Only interested in check-ins
                 continue
-            if row.comments == "Client":
+            if row.comments in ("Client", "Client Import"):
                 cappend(row.person_id)
 
         # Anonymise Clients
@@ -997,6 +997,7 @@ def config(settings):
             if row.comments == "Staff":
                 sappend(row.person_id)
             else:
+                # Client
                 cappend(row.person_id)
 
         # Users
@@ -2119,12 +2120,26 @@ def config(settings):
         #table.comments.readable = table.comments.writable = False
 
         if r.method == "import":
-            # Importing Clients adds Event Log entries
-            def import_event_log(form):
-
+            def create_onaccept(form):
+                """
+                    Importing Clients
+                        * updates Occupancy
+                        * adds Event Log entry
+                """
                 form_vars_get = form.vars.get
                 person_id = form_vars_get("person_id")
                 shelter_id = form_vars_get("shelter_id")
+
+                # Delete old cr_shelter_registration records
+                ltable = s3db.cr_shelter_registration
+                query = (ltable.person_id == person_id) & \
+                        (ltable.id != form_vars_get("id"))
+                current.db(query).delete()
+
+                # Update Shelter Population
+                s3db.cr_update_shelter_population(shelter_id)
+
+                # Add Site Event Log
                 check_in_date = form_vars_get("check_in_date", r.utcnow)
 
                 stable = s3db.cr_shelter
@@ -2133,17 +2148,16 @@ def config(settings):
                                                                      ).first()
                 site_id = shelter.site_id
 
-                # Add Site Event Log
                 s3db.org_site_event.insert(site_id = site_id,
                                            person_id = person_id,
                                            event = 2, # Checked-In
                                            date = check_in_date,
-                                           comments = "Client",
+                                           comments = "Client Import",
                                            )
 
             s3db.add_custom_callback("cr_shelter_registration",
                                      "create_onaccept",
-                                     import_event_log,
+                                     create_onaccept,
                                      )
 
     settings.customise_cr_shelter_registration_resource = customise_cr_shelter_registration_resource
