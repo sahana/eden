@@ -2048,7 +2048,7 @@ form.anonymize-form,
 /* line 514, ../scss/theme/_widgets.scss */
 .consent-widget .consent-explanation {
   white-space: pre-wrap;
-  padding: 0.3rem 2rem;
+  padding: 0.3rem 1.7rem;
   font-size: 0.8rem;
   font-style: italic;
   color: #7F7F7F;
@@ -2060,7 +2060,7 @@ form.anonymize-form,
 /* line 524, ../scss/theme/_widgets.scss */
 .consent-widget .consent-checkbox {
   vertical-align: bottom;
-  margin-right: 0.5rem;
+  margin-right: 0.5rem !important;
 }
 /* line 528, ../scss/theme/_widgets.scss */
 .consent-widget .req {
@@ -2764,24 +2764,28 @@ body.rtl .event-type-header {
 }
 
 /* line 311, ../scss/theme/_misc.scss */
-.auth_register {
+.auth_register,
+.result-register {
   padding: 1rem !important;
 }
-/* line 312, ../scss/theme/_misc.scss */
+/* line 313, ../scss/theme/_misc.scss */
 .auth_register .subheading,
 .auth_register .consent-widget,
-.auth_register .controls {
+.auth_register .controls,
+.result-register .subheading,
+.result-register .consent-widget,
+.result-register .controls {
   max-width: 48rem;
 }
 
-/* line 319, ../scss/theme/_misc.scss */
+/* line 320, ../scss/theme/_misc.scss */
 .registration-form {
   position: relative;
   max-width: 60rem;
   margin: 1rem auto;
 }
 
-/* line 324, ../scss/theme/_misc.scss */
+/* line 325, ../scss/theme/_misc.scss */
 .sub-label {
   font-weight: normal;
   font-size: 0.8rem;
@@ -2790,38 +2794,38 @@ body.rtl .event-type-header {
   padding-top: 0.2rem;
 }
 
-/* line 332, ../scss/theme/_misc.scss */
+/* line 333, ../scss/theme/_misc.scss */
 .avcomments {
   font-size: 0.7rem;
 }
 
-/* line 336, ../scss/theme/_misc.scss */
+/* line 337, ../scss/theme/_misc.scss */
 .org-account-list {
   border: 1px solid #eee;
   padding: 1rem;
 }
-/* line 339, ../scss/theme/_misc.scss */
+/* line 340, ../scss/theme/_misc.scss */
 .org-account-list ul li {
   font-size: 0.8rem;
   color: #666;
 }
-/* line 343, ../scss/theme/_misc.scss */
+/* line 344, ../scss/theme/_misc.scss */
 .org-account-list h4 {
   font-size: 1rem;
   font-weight: bold;
   color: #333;
 }
 
-/* line 350, ../scss/theme/_misc.scss */
+/* line 351, ../scss/theme/_misc.scss */
 .action-btn.organizer-switch {
   margin-bottom: -1.2em;
 }
 
-/* line 354, ../scss/theme/_misc.scss */
+/* line 355, ../scss/theme/_misc.scss */
 .organizer-alternatives .action-btn {
   margin: 0.5rem 0 1rem 0;
 }
-/* line 357, ../scss/theme/_misc.scss */
+/* line 358, ../scss/theme/_misc.scss */
 .organizer-alternatives .organizer-intro {
   font-size: 0.8rem;
   margin: 0.5rem 0 1rem 0;
@@ -2829,7 +2833,7 @@ body.rtl .event-type-header {
   background: #ffdeb8;
 }
 
-/* line 365, ../scss/theme/_misc.scss */
+/* line 366, ../scss/theme/_misc.scss */
 .status-reason {
   font-size: 0.725rem;
   padding: 0.3rem;
@@ -2840,26 +2844,26 @@ body.rtl .event-type-header {
   background: #ffe1e3;
 }
 
-/* line 375, ../scss/theme/_misc.scss */
+/* line 376, ../scss/theme/_misc.scss */
 .record-integrity-ok {
   color: #008600;
 }
-/* line 377, ../scss/theme/_misc.scss */
+/* line 378, ../scss/theme/_misc.scss */
 .record-integrity-ok i {
   padding: 0 0.2rem;
 }
 
-/* line 381, ../scss/theme/_misc.scss */
+/* line 382, ../scss/theme/_misc.scss */
 .record-integrity-broken {
   color: #aa0000;
   animation: blinker 0.7s step-start 4;
 }
-/* line 384, ../scss/theme/_misc.scss */
+/* line 385, ../scss/theme/_misc.scss */
 .record-integrity-broken i {
   padding: 0 0.2rem;
 }
 
-/* line 389, ../scss/theme/_misc.scss */
+/* line 390, ../scss/theme/_misc.scss */
 .service-list {
   font-size: 0.8rem;
   list-style-type: disc;
@@ -2868,39 +2872,39 @@ body.rtl .event-type-header {
   margin: 0;
 }
 
-/* line 397, ../scss/theme/_misc.scss */
+/* line 398, ../scss/theme/_misc.scss */
 .approve-form select {
   margin: 0;
 }
 
-/* line 401, ../scss/theme/_misc.scss */
+/* line 402, ../scss/theme/_misc.scss */
 .approve-workflow {
   margin-left: 0.5rem;
 }
-/* line 402, ../scss/theme/_misc.scss */
+/* line 403, ../scss/theme/_misc.scss */
 .approve-workflow.workflow-red {
   color: #c42626;
 }
-/* line 405, ../scss/theme/_misc.scss */
+/* line 406, ../scss/theme/_misc.scss */
 .approve-workflow.workflow-amber {
   color: #ec8d27;
 }
-/* line 408, ../scss/theme/_misc.scss */
+/* line 409, ../scss/theme/_misc.scss */
 .approve-workflow.workflow-green {
   color: green;
 }
-/* line 411, ../scss/theme/_misc.scss */
+/* line 412, ../scss/theme/_misc.scss */
 .approve-workflow.workflow-advice {
   border: 1px solid #c42626;
   background-color: #ffdede;
   padding: 0.3rem 0.7rem;
 }
-/* line 416, ../scss/theme/_misc.scss */
+/* line 417, ../scss/theme/_misc.scss */
 .approve-workflow .fa {
   margin-right: 0.2rem;
 }
 
-/* line 422, ../scss/theme/_misc.scss */
+/* line 423, ../scss/theme/_misc.scss */
 .text-body.cms-item-body {
   background-color: #FFF8E6;
   padding: 0.7rem;

@@ -569,24 +569,30 @@ def processing_type():
 def consent_option():
     """ Consent Options: RESTful CRUD Controller """
 
+    ctable = s3db.auth_consent
+    atable = s3db.auth_consent_assertion
+
     def prep(r):
 
         resource = r.resource
         table = resource.table
 
-        # Make hash-fields writable while no consent reference exists
-        editable = False
-        if not r.record:
-            editable = True
-        else:
-            ctable = s3db.auth_consent
-            query = (ctable.option_id == r.id) & (ctable.deleted == False)
-            editable = db(query).count() == 0
+        editable = True
+        if r.record:
+            # Make hash-fields writable only when not referenced by any
+            # consent / consent assertion record
+            for t in (ctable, atable):
+                query = (t.option_id == r.id) & (t.deleted == False)
+                row = db(query).select(t.id, limitby=(0, 1)).first()
+                if row:
+                    editable = False
+                    break
         if editable:
             for fn in s3db.auth_consent_option_hash_fields:
                 table[fn].writable = True
         else:
-            # Prevent deletion when referenced in consent record
+            # Prevent deletion when referenced in a consent
+            # or consent assertion record
             resource.configure(deletable=False)
 
         return True
@@ -599,15 +605,20 @@ def consent_option():
             s3_action_buttons(r, deletable=False)
 
             # Add delete-button only for options not yet referenced
-            # by any consent record:
+            # by any consent / consent assertion record:
             table = r.table
-            ctable = s3db.auth_consent
-            left = ctable.on(table.id == ctable.option_id)
-            consent_count = ctable.id.count()
+            left = [ctable.on((ctable.option_id == table.id) & \
+                              (ctable.deleted == False)),
+                    atable.on((atable.option_id == table.id) & \
+                              (atable.deleted == False)),
+                    ]
+            ccount = ctable.id.count()
+            acount = atable.id.count()
             rows = db(table.deleted == False).select(table.id,
-                                                     consent_count,
+                                                     ccount,
+                                                     acount,
                                                      groupby = table.id,
-                                                     having = consent_count == 0,
+                                                     having = (ccount == 0) & (acount == 0),
                                                      left = left,
                                                      )
             deletable = [str(row.auth_consent_option.id) for row in rows]

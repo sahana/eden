@@ -248,9 +248,12 @@ def config(settings):
         #    # Persons are owned by the org employing them (default ok)
         #    realm_entity = 0
         #
-        if tablename == "disease_case_diagnostics":
+        if tablename in ("disease_case_diagnostics",
+                         "disease_testing_report",
+                         ):
 
-            # Test results inherit realm-entity from the testing site
+            # Test results / daily reports inherit realm-entity
+            # from the testing site
             table = s3db.table(tablename)
             stable = s3db.org_site
             query = (table._id == row.id) & \
@@ -574,7 +577,7 @@ def config(settings):
         query = (table.id == record_id)
         record = db(query).select(table.site_id,
                                   table.disease_id,
-                                  table.date,
+                                  table.result_date,
                                   limitby = (0, 1),
                                   ).first()
         if not record:
@@ -582,14 +585,14 @@ def config(settings):
 
         site_id = record.site_id
         disease_id = record.disease_id
-        date = record.date
+        result_date = record.result_date
 
-        if site_id and disease_id and date:
+        if site_id and disease_id and result_date:
 
             # Count records grouped by result
             query = (table.site_id == site_id) & \
                     (table.disease_id == disease_id) & \
-                    (table.date == date) & \
+                    (table.result_date == result_date) & \
                     (table.deleted == False)
             cnt = table.id.count()
             rows = db(query).select(table.result,
@@ -600,14 +603,14 @@ def config(settings):
             for row in rows:
                 num = row[cnt]
                 total += num
-                if row.result == "POS":
+                if row.disease_case_diagnostics.result == "POS":
                     positive += num
 
             # Look up the daily report
             rtable = s3db.disease_testing_report
             query = (rtable.site_id == site_id) & \
                     (rtable.disease_id == disease_id) & \
-                    (rtable.date == date) & \
+                    (rtable.date == result_date) & \
                     (rtable.deleted == False)
             report = db(query).select(rtable.id,
                                       rtable.tests_total,
@@ -623,12 +626,17 @@ def config(settings):
                                          )
             else:
                 # Create report
-                rtable.insert(site_id = site_id,
-                              disease_id = disease_id,
-                              date = date,
-                              tests_total = total,
-                              tests_positive = positive,
-                              )
+                report = {"site_id": site_id,
+                          "disease_id": disease_id,
+                          "date": result_date,
+                          "tests_total": total,
+                          "tests_positive": positive,
+                          }
+                report_id = rtable.insert(**report)
+                if report_id:
+                    current.auth.s3_set_record_owner(rtable, report_id)
+                    report["id"] = report_id
+                    s3db.onaccept(rtable, report, method="create")
 
     # -------------------------------------------------------------------------
     def customise_disease_case_diagnostics_resource(r, tablename):
@@ -709,7 +717,8 @@ def config(settings):
         # Formal results
         result_options = (("NEG", T("Negative")),
                           ("POS", T("Positive")),
-                          ("INC", T("Inconclusive")),
+                          # Only relevant for two-step workflow:
+                          #("INC", T("Inconclusive")),
                           )
         field = table.result
         field.requires = IS_IN_SET(result_options,
@@ -720,70 +729,72 @@ def config(settings):
                                    )
         field.represent = S3Represent(options=dict(result_options))
 
-        # Custom list_fields
         if not single_site or current.auth.s3_has_role("DISEASE_TEST_READER"):
             site_id = "site_id"
         else:
             site_id = None
+        disease_id = "disease_id" if not single_disease else None
+
+        # Custom list_fields
         list_fields = [site_id,
-                       "disease_id" if not single_disease else None,
+                       disease_id,
                        "result_date",
                        "result",
                        ]
 
-        ## Custom form # TODO re-instate for READ
-        #from s3 import S3SQLCustomForm
-        #crud_form = S3SQLCustomForm("project_id",
-                                    #"disease_id",
-                                    #"test_type",
-                                    #"result_date",
-                                    #"result",
-                                    #)
+        # Custom form (for read)
+        from s3 import S3SQLCustomForm
+        crud_form = S3SQLCustomForm(disease_id,
+                                    site_id,
+                                    "result_date",
+                                    "result",
+                                    )
 
         # Filters
         from s3 import S3DateFilter, S3OptionsFilter
         filter_widgets = [S3DateFilter("result_date",
                                        label = T("Date"),
                                        ),
-                          S3OptionsFilter("disease_id", hidden=True),
-                          S3OptionsFilter("project_id", hidden=True),
-                          S3OptionsFilter("test_type",
-                                          options = OrderedDict(type_options),
-                                          hidden = True,
-                                          ),
                           S3OptionsFilter("result",
                                           options = OrderedDict(result_options),
                                           hidden = True,
                                           ),
                           ]
+        if site_id:
+            # Better to use text filter for site name?
+            # - better scalability, but cannot select multiple
+            filter_widgets.append(S3OptionsFilter("site_id", hidden=True))
+        if disease_id:
+            filter_widgets.append(S3OptionsFilter("disease_id", hidden=True))
 
-        ## Report options # TODO re-instate
-        #facts = ((T("Number of Tests"), "count(id)"),
-                 #)
-        #axes = ["result",
-                #"test_type",
+        # Report options
+        facts = ((T("Number of Tests"), "count(id)"),
+                 )
+        axes = ["result",
+                "site_id",
                 #"disease_id",
-                #"project_id",
-                #]
-        #report_options = {
-            #"rows": axes,
-            #"cols": axes,
-            #"fact": facts,
-            #"defaults": {"rows": axes[1],
-                         #"cols": axes[0],
-                         #"fact": facts[0],
-                         #"totals": True,
-                         #},
-            #}
+                ]
+        if disease_id:
+            axes.append(disease_id)
+        report_options = {
+            "rows": axes,
+            "cols": axes,
+            "fact": facts,
+            "defaults": {"rows": axes[1],
+                         "cols": axes[0],
+                         "fact": facts[0],
+                         "totals": True,
+                         },
+            }
 
         s3db.configure("disease_case_diagnostics",
                        insertable = False,
                        editable = False,
                        deletable = False,
-                       #crud_form = crud_form,
+                       crud_form = crud_form,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
-                       #report_options = report_options,
+                       report_options = report_options,
                        orderby = "disease_case_diagnostics.result_date desc",
                        )
 

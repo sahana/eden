@@ -513,7 +513,7 @@ form.anonymize-form,
     }
     .consent-explanation {
         white-space: pre-wrap;
-        padding: 0.3rem 2rem;
+        padding: 0.3rem 1.7rem;
         font-size: 0.8rem;
         font-style: italic;
         color: #7F7F7F;
@@ -523,7 +523,7 @@ form.anonymize-form,
     }
     .consent-checkbox {
         vertical-align: bottom;
-        margin-right: 0.5rem;
+        margin-right: 0.5rem!important;
     }
     .req {
         padding: 0 0.2rem;

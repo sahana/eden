@@ -184,25 +184,57 @@ class TestResultRegistration(S3Method):
                         onvalidation = self.validate,
                         ):
 
-            #formvars = form.vars
+            formvars = form.vars
 
-            # Create disease_case_diagnostics record + onaccept
+            # Create disease_case_diagnostics record
+            testresult = {"result": formvars.get("result"),
+                          }
+            if "site_id" in formvars:
+                testresult["site_id"] = formvars["site_id"]
+            if "disease_id" in formvars:
+                testresult["disease_id"] = formvars["disease_id"]
+            if "result_date" in formvars:
+                testresult["result_date"] = formvars["result_date"]
 
-            # if report_to_cwa is NO
-            #   confirmation message
-            #   redirect to form
-            # else
-            #   register consent
-            #   generate JSON for QR-code
-            #   generate HASH
-            #   send to corona-app
-            #   if successful:
-            #       confirmation message
-            #   else:
-            #       error message
-            #   generate certificate view with QR-code
+            record_id = table.insert(**testresult)
+            if not record_id:
+                raise RuntimeError("Could not create testresult record")
 
-            return "registered" # TESTING
+            testresult["id"] = record_id
+            # Set record owner
+            auth = current.auth
+            auth.s3_set_record_owner(table, record_id)
+            auth.s3_make_session_owner(table, record_id)
+            # Onaccept
+            s3db.onaccept(table, testresult, method="create")
+
+            report_to_cwa = formvars.get("report_to_cwa")
+            if report_to_cwa == "NO":
+                # Do not report to CWA, just forward to read view
+                response.confirmation = T("Test Result registered")
+                self.next = r.url(id=record_id, method="read")
+            else:
+                # TODO Report to CWA and show test certificate
+                raise NotImplementedError
+                cwa_data = None
+                if report_to_cwa == "ANONYMOUS":
+                    # record CWA_ANONYMOUS consent (already validated to be True)
+                    # compile data JSON matching anonymous report
+                    pass
+                elif report_to_cwa == "PERSONAL":
+                    # record CWA_PERSONAL consent (already validated to be True)
+                    # compile data JSON matching personal report
+                    pass
+
+                if cwa_data:
+                    # generate QR code
+                    # generate hash
+                    # send to CWA
+                    # confirmation/error
+                    # generate certificate view with QR code (do not redirect)
+                    pass
+
+            return None
 
         elif form.errors:
             current.response.error = T("There are errors in the form, please check your input")

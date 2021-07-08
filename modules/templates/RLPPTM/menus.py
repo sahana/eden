@@ -259,6 +259,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M(c="disease")(
                     M("Test Results", f="case_diagnostics", restrict="TEST_PROVIDER")(
                         M("Registrieren", m="register"),
+                        M("Statistics", m="report"),
                         ),
                     M("Daily Reports", f="testing_report")(
                         M("Create", m="create"),

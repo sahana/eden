@@ -5540,6 +5540,7 @@
 'Tertiary Server (Optional)': 'Tertiärer Server (Optional)',
 'Test Result added': 'Testergebnis hinzugefügt',
 'Test Result deleted': 'Testergebnis gelöscht',
+'Test Result registered': 'Testergebnis registriert',
 'Test Result updated': 'Testergebnis aktualisiert',
 'Test Result': 'Testergebnis',
 'Test Results Statistics': 'Testergebnis-Statistik',
