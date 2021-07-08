@@ -11,11 +11,15 @@
  </div>
 </div>{{pass}}{{except:}}{{pass}}
 <div class='row'>
- <div class='small-4 columns'>
-   {{try:}}{{=qrcode}}{{except:}}{{pass}}
- </div>
  <div class='small-8 columns'>
-   {{try:}}{{=certificate}}{{except:}}{{pass}}
+   <div class='certificate-wrapper'>
+     <div class='certificate-qrcode'>
+       {{try:}}{{=qrcode}}{{except:}}{{pass}}
+     </div>
+     <div class='certificate-details'>
+       {{try:}}{{=certificate}}{{except:}}{{pass}}
+     </div>
+  </div>
  </div>
 </div>
 </section>

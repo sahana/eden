@@ -6,14 +6,16 @@
     @license: MIT
 """
 
-import json
+import base64
 import hashlib
+import json
 import secrets
 
-from gluon import current, \
-                  DIV, Field, INPUT, IS_IN_SET, SQLFORM
+from gluon import current, Field, IS_IN_SET, SQLFORM, \
+                  DIV, H4, INPUT, TABLE, TD, TR
 
-from s3 import S3CustomController, S3Method, s3_date, s3_mark_required
+from s3 import S3CustomController, S3Method, \
+               s3_date, s3_mark_required, s3_qrcode_represent
 
 # =============================================================================
 class TestResultRegistration(S3Method):
@@ -47,7 +49,6 @@ class TestResultRegistration(S3Method):
             @param r: the S3Request instance
             @param attr: controller attributes
         """
-        # TODO translations
 
         if r.http not in ("GET", "POST"):
             r.error(405, current.ERROR.BAD_METHOD)
@@ -98,7 +99,9 @@ class TestResultRegistration(S3Method):
             field.readable = False
             offset = 0
 
-        cwa = {"system": "RKI / Corona-Warn-App"}
+        cwa = {"system": "RKI / Corona-Warn-App",
+               "app": "Corona-Warn-App",
+               }
         cwa_options = (("NO", T("Do not report")),
                        ("ANONYMOUS", T("Issue anonymous contact tracing code")),
                        ("PERSONAL", T("Issue personal test certificate")),
@@ -237,16 +240,15 @@ class TestResultRegistration(S3Method):
                     if success:
                         cwa_retry = False
                         cwa_link = cwa_report.get_link()
-                        from s3 import s3_qrcode_represent
                         qrcode = s3_qrcode_represent(cwa_link, show_value=False)
-                        response.information = T("Result reported to CWA")
+                        response.information = T("Result reported to %(system)s") % cwa
                     else:
                         cwa_retry = True
                         qrcode = None
-                        response.warning = T("Report to CWA failed")
+                        response.warning = T("Report to %(system)s failed") % cwa
 
                     S3CustomController._view("RLPPTM", "certificate.html")
-                    return {"title": T("CWA Code"),
+                    return {"title": T("Code for %(app)s") % cwa,
                             "intro": None, # TODO
                             "qrcode": qrcode,
                             "certificate": certificate,
@@ -254,7 +256,7 @@ class TestResultRegistration(S3Method):
                             "cwa_retry": cwa_retry,
                             }
                 else:
-                    response.information = T("Result not reported to CWA")
+                    response.information = T("Result not reported to %(system)s") % cwa
                     self.next = r.url(id=record_id, method="read")
 
 
@@ -383,6 +385,9 @@ class CWAReport(object):
                     (table.deleted == False)
             result = db(query).select(table.uuid,
                                       table.modified_on,
+                                      table.site_id,
+                                      table.disease_id,
+                                      table.result_date,
                                       table.result,
                                       limitby = (0, 1),
                                       ).first()
@@ -392,6 +397,9 @@ class CWAReport(object):
             raise ValueError("Test result ID is required")
 
         # Store the test result
+        self.site_id = result.site_id
+        self.disease_id = result.disease_id
+        self.result_date = result.result_date
         self.result = result.result
 
         # Determine the testid and timestamp
@@ -469,7 +477,6 @@ class CWAReport(object):
         data_json = json.dumps(self.data, separators=SEPARATORS)
 
         # Base64-encode the data JSON
-        import base64
         data_str = base64.urlsafe_b64encode(data_json.encode("utf-8")).decode("utf-8")
 
         # Generate the link
@@ -479,27 +486,59 @@ class CWAReport(object):
 
     # -------------------------------------------------------------------------
     def formatted(self):
-        # TODO implement properly, include test result for confirmation
-
-        from gluon import DIV, SPAN, TABLE, TR, TD
+        """
+            Formatted version of this report to display alongside QR Code
+        """
 
         T = current.T
+        rtable = current.s3db.disease_case_diagnostics
 
         certificate = DIV(_class="test-certificate")
-        if not any(k in self.data for k in ("fn", "ln", "dob")):
-            certificate.append(SPAN(T("Anonymous"), _class="anonymous"))
+        details = TABLE()
+
+        # Certificate Title
+        field = rtable.disease_id
+        if field.represent:
+            disease = field.represent(self.disease_id)
+            title = H4("%s %s" % (disease, T("Test Result")))
         else:
-            table = TABLE()
+            title = H4(T("Test Result"))
+        certificate.append(title)
+
+        # Personal Details
+        if not any(k in self.data for k in ("fn", "ln", "dob")):
+            details.append(TR(TD(T("Person Tested")),
+                              TD(T("anonymous")),
+                              ))
+        else:
             labels = {"fn": T("First Name"),
                       "ln": T("Last Name"),
                       "dob": T("Date of Birth"),
                       }
             for k in ("ln", "fn", "dob"):
                 value = self.data[k]
-                table.append(TR(TD(labels.get(k)),
-                                TD(value),
-                                ))
-            certificate.append(table)
+                details.append(TR(TD(labels.get(k)),
+                               TD(value),
+                               ))
+
+        # Test Station, date and result
+        field = rtable.site_id
+        if field.represent:
+            details.append(TR(TD(field.label),
+                           TD(field.represent(self.site_id)),
+                           ))
+        field = rtable.result_date
+        if field.represent:
+            details.append(TR(TD(field.label),
+                           TD(field.represent(self.result_date)),
+                           ))
+        field = rtable.result
+        if field.represent:
+            details.append(TR(TD(field.label),
+                           TD(field.represent(self.result)),
+                           ))
+
+        certificate.append(details)
 
         return certificate
 
@@ -508,6 +547,6 @@ class CWAReport(object):
         # TODO docstring
         # TODO implement
 
-        return True # Pretense
+        return True # Pretend success
 
 # END =========================================================================

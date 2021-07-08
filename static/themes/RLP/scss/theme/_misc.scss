@@ -426,4 +426,17 @@ body.rtl {
     max-width: 48rem;
 }
 
+.certificate-qrcode {
+    display: inline-block;
+    vertical-align: top;
+    svg {
+        vertical-align: middle;
+    }
+}
+.certificate-details {
+    display: inline-block;
+    vertical-align: top;
+    padding: 0.2rem;
+}
+
 // END ========================================================================

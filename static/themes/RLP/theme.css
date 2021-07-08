@@ -2910,3 +2910,20 @@ body.rtl .event-type-header {
   padding: 0.7rem;
   max-width: 48rem;
 }
+
+/* line 429, ../scss/theme/_misc.scss */
+.certificate-qrcode {
+  display: inline-block;
+  vertical-align: top;
+}
+/* line 432, ../scss/theme/_misc.scss */
+.certificate-qrcode svg {
+  vertical-align: middle;
+}
+
+/* line 436, ../scss/theme/_misc.scss */
+.certificate-details {
+  display: inline-block;
+  vertical-align: top;
+  padding: 0.2rem;
+}
