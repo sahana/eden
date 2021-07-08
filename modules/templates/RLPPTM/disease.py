@@ -6,6 +6,10 @@
     @license: MIT
 """
 
+import json
+import hashlib
+import secrets
+
 from gluon import current, \
                   DIV, Field, INPUT, IS_IN_SET, SQLFORM
 
@@ -121,8 +125,6 @@ class TestResultRegistration(S3Method):
                               label = T("Date of Birth"),
                               month_selector = True,
                               ),
-                      # TODO Styling
-                      # TODO Prepop-options + upgrade-script to deploy
                       Field("consent",
                             label = "",
                             widget = consent.widget,
@@ -207,32 +209,54 @@ class TestResultRegistration(S3Method):
             auth.s3_make_session_owner(table, record_id)
             # Onaccept
             s3db.onaccept(table, testresult, method="create")
+            response.confirmation = T("Test Result registered")
 
             report_to_cwa = formvars.get("report_to_cwa")
             if report_to_cwa == "NO":
                 # Do not report to CWA, just forward to read view
-                response.confirmation = T("Test Result registered")
                 self.next = r.url(id=record_id, method="read")
             else:
-                # TODO Report to CWA and show test certificate
-                raise NotImplementedError
-                cwa_data = None
+                # Report to CWA and show test certificate
                 if report_to_cwa == "ANONYMOUS":
-                    # record CWA_ANONYMOUS consent (already validated to be True)
-                    # compile data JSON matching anonymous report
-                    pass
+                    cwa_report = CWAReport(record_id)
                 elif report_to_cwa == "PERSONAL":
-                    # record CWA_PERSONAL consent (already validated to be True)
-                    # compile data JSON matching personal report
-                    pass
+                    cwa_report = CWAReport(record_id,
+                                           anonymous = False,
+                                           first_name = formvars.get("first_name"),
+                                           last_name = formvars.get("last_name"),
+                                           dob = formvars.get("date_of_birth"),
+                                           )
+                else:
+                    cwa_report = None
 
-                if cwa_data:
-                    # generate QR code
-                    # generate hash
-                    # send to CWA
-                    # confirmation/error
-                    # generate certificate view with QR code (do not redirect)
-                    pass
+                if cwa_report:
+                    cwa_data = cwa_report.data
+                    certificate = cwa_report.formatted()
+
+                    success = cwa_report.send()
+                    if success:
+                        cwa_retry = False
+                        cwa_link = cwa_report.get_link()
+                        from s3 import s3_qrcode_represent
+                        qrcode = s3_qrcode_represent(cwa_link, show_value=False)
+                        response.information = T("Result reported to CWA")
+                    else:
+                        cwa_retry = True
+                        qrcode = None
+                        response.warning = T("Report to CWA failed")
+
+                    S3CustomController._view("RLPPTM", "certificate.html")
+                    return {"title": T("CWA Code"),
+                            "intro": None, # TODO
+                            "qrcode": qrcode,
+                            "certificate": certificate,
+                            "cwa_data": cwa_data,
+                            "cwa_retry": cwa_retry,
+                            }
+                else:
+                    response.information = T("Result not reported to CWA")
+                    self.next = r.url(id=record_id, method="read")
+
 
             return None
 
@@ -318,5 +342,172 @@ class TestResultRegistration(S3Method):
             r.error(415, current.ERROR.BAD_FORMAT)
 
         return "cwaretry"
+
+# =============================================================================
+class CWAReport(object):
+    """
+        CWA Report Generator
+        @see: https://github.com/corona-warn-app/cwa-quicktest-onboarding/wiki/Anbindung-der-Partnersysteme
+    """
+
+    def __init__(self,
+                 result_id,
+                 anonymous=True,
+                 first_name=None,
+                 last_name=None,
+                 dob=None,
+                 salt=None,
+                 dhash=None,
+                 ):
+        """
+            Constructor
+
+            @param result_id: the disease_case_diagnostics record ID
+            @param anonymous: generate anonymous report
+            @param first_name: first name
+            @param last_name: last name
+            @param doc: date of birth (str in isoformat, or datetime.date)
+            @param salt: previously used salt (for retry)
+            @param dhash: previously generated hash (for retry)
+
+            @note: if not anonymous, personal data are required
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Lookup the result
+        if result_id:
+            table = s3db.disease_case_diagnostics
+            query = (table.id == result_id) & \
+                    (table.deleted == False)
+            result = db(query).select(table.uuid,
+                                      table.modified_on,
+                                      table.result,
+                                      limitby = (0, 1),
+                                      ).first()
+            if not result:
+                raise ValueError("Test result #%s not found" % result_id)
+        else:
+            raise ValueError("Test result ID is required")
+
+        # Store the test result
+        self.result = result.result
+
+        # Determine the testid and timestamp
+        testid = result.uuid
+        timestamp = str(int(result.modified_on.replace(microsecond=0).timestamp()))
+
+        if not anonymous:
+            if not all(value for value in (first_name, last_name, dob)):
+                raise ValueError("Incomplete person data for personal report")
+            data = {"fn": first_name,
+                    "ln": last_name,
+                    "dob": dob.isoformat(),
+                    "timestamp": timestamp,
+                    "testid": testid,
+                    }
+        else:
+            data = {"timestamp": timestamp,
+                    }
+
+        # Add salt and hash
+        data["salt"] = salt if salt else self.get_salt()
+        if dhash:
+            # Verify the hash
+            if dhash != self.get_hash(data, anonymous=anonymous):
+                raise ValueError("Invalid hash")
+            data["hash"] = dhash
+        else:
+            data["hash"] = self.get_hash(data, anonymous=anonymous)
+
+        self.data = data
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_salt():
+        """
+            Produce a secure 128-bit (=16 bytes) random hex token
+
+            @returns: the token as str
+        """
+        return secrets.token_hex(16)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_hash(data, anonymous=True):
+        """
+            Generate a SHA256 hash from report data string
+            String formats:
+            - personal : [dob]#[fn]#[ln]#[timestamp]#[testid]#[salt]
+            - anonymous: [timestamp]#[salt]
+
+            @returns: the hash as str
+        """
+
+        hashable = lambda fields: "#".join(data[k] for k in fields)
+        if not anonymous:
+            dstr = hashable(["dob", "fn", "ln", "timestamp", "testid", "salt"])
+        else:
+            dstr = hashable(["timestamp", "salt"])
+
+        return hashlib.sha256(dstr.encode("utf-8")).hexdigest().lower()
+
+    # -------------------------------------------------------------------------
+    def get_link(self):
+        """
+            Construct the link for QR code generation
+
+            @returns: the link as str
+        """
+
+        # TODO make deployment setting
+        template = "https://s.coronawarn.app?v=1#%(data)s"
+
+        # Convert data to JSON
+        from s3.s3xml import SEPARATORS
+        data_json = json.dumps(self.data, separators=SEPARATORS)
+
+        # Base64-encode the data JSON
+        import base64
+        data_str = base64.urlsafe_b64encode(data_json.encode("utf-8")).decode("utf-8")
+
+        # Generate the link
+        link = template % {"data": data_str}
+
+        return link
+
+    # -------------------------------------------------------------------------
+    def formatted(self):
+        # TODO implement properly, include test result for confirmation
+
+        from gluon import DIV, SPAN, TABLE, TR, TD
+
+        T = current.T
+
+        certificate = DIV(_class="test-certificate")
+        if not any(k in self.data for k in ("fn", "ln", "dob")):
+            certificate.append(SPAN(T("Anonymous"), _class="anonymous"))
+        else:
+            table = TABLE()
+            labels = {"fn": T("First Name"),
+                      "ln": T("Last Name"),
+                      "dob": T("Date of Birth"),
+                      }
+            for k in ("ln", "fn", "dob"):
+                value = self.data[k]
+                table.append(TR(TD(labels.get(k)),
+                                TD(value),
+                                ))
+            certificate.append(table)
+
+        return certificate
+
+    # -------------------------------------------------------------------------
+    def send(self):
+        # TODO docstring
+        # TODO implement
+
+        return True # Pretense
 
 # END =========================================================================

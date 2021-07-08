@@ -807,7 +807,9 @@ def s3_qrcode_represent(value, row=None, show_value=True):
 
     # Generate the QR Code
     qr = qrcode.QRCode(version = 2,
-                       error_correction = qrcode.constants.ERROR_CORRECT_M,
+                       # L-level good enough for displaying on screen, as
+                       # it would rarely be damaged or dirty there ;)
+                       error_correction = qrcode.constants.ERROR_CORRECT_L,
                        box_size = 10,
                        border = 4,
                        image_factory=qrcode.image.svg.SvgImage,

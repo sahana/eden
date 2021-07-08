@@ -1,0 +1,21 @@
+{{extend "layout.html"}}
+<section class="test-certificate">
+<div class='row'>
+ <div class='small-12 columns'>
+  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+ </div>
+</div>
+{{try:}}{{if intro:}}<div class='row'>
+ <div class='small-12 columns'>
+  {{=P(intro, _class="certificate-intro")}}
+ </div>
+</div>{{pass}}{{except:}}{{pass}}
+<div class='row'>
+ <div class='small-4 columns'>
+   {{try:}}{{=qrcode}}{{except:}}{{pass}}
+ </div>
+ <div class='small-8 columns'>
+   {{try:}}{{=certificate}}{{except:}}{{pass}}
+ </div>
+</div>
+</section>
