@@ -615,9 +615,9 @@ class CWAReport(object):
         verify = settings.get_custom("cwa_server_ca")
         if verify:
             # Use the specified CA Certificate to verify server identity
-            verify = "%s/%s" (current.request.folder, verify)
+            verify = "%s/%s" % (current.request.folder, verify)
         else:
-            # Use python-certifi (make sure the latest version is installed)
+            # Use python-certifi (=> make sure the latest version is installed)
             verify = True
 
         # POST to server
@@ -634,8 +634,8 @@ class CWAReport(object):
             current.log.error("CWAReport: transmission to CWA server failed (local error: %s)" % error)
             return False
 
-        expected = (requests.codes.ok, requests.codes.no_content)
-        if sr.status_code not in expected:
+        # Check return code (should be 204, but 202/200 would also be good news)
+        if sr.status_code not in (204, 202, 200):
             # Remote error
             current.log.error("CWAReport: transmission to CWA server failed, status code %s" % sr.status_code)
             return False

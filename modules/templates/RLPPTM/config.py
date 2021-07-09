@@ -738,7 +738,6 @@ def config(settings):
         field.requires = IS_IN_SET(result_options,
                                    zero = "",
                                    sort = False,
-                                   # TODO translation
                                    error_message = T("Please select a value"),
                                    )
         field.represent = S3Represent(options=dict(result_options))

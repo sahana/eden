@@ -4219,6 +4219,7 @@
 'Please provide the URL of the page you are referring to, a description of what you expected to happen & what actually happened.': 'Bitte geben Sie die URL der Seite auf die sie sich beziehen, eine Beschreibung dessen, was sie erwartet haben & was wirklich passiert ist.',
 'Please report here where you are:': 'Bitte hier angeben, wo sie sich befinden:',
 'Please select a valid image!': 'Bitte ein gültiges Bild auswählen!',
+'Please select a value': 'Bitte wählen Sie einen Wert',
 'Please select an event type': 'Bitte wählen Sie einen Ereignistyp',
 'Please select another level': 'Bitte wählen Sie eine andere Ebene',
 'Please select another volunteer': 'Bitte wählen Sie einen anderen Freiwilligen aus',
