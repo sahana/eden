@@ -252,7 +252,7 @@ class TestResultRegistration(S3Method):
                         cwa_retry = False
                     else:
                         # No QR-code, prepare for retry
-                        qrcode = None
+                        qrcode = ""
                         response.warning = T("Report to %(system)s failed") % cwa
                         cwa_retry = True
 
