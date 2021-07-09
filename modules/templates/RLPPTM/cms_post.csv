@@ -79,3 +79,4 @@ FacilityLayoutRequirements,org,facility,"RAUMKONZEPT
 Aktuell liegt kein (ausreichendes) Raumkonzept für Ihre Teststelle vor. Bitte beachten Sie, dass eine räumliche Abgrenzung zu Ihren üblichen Betriebsräumen gegeben sein muss.
 
 Bitte legen Sie ein entsprechendes Raumkonzept vor. ",
+TestResultRegistrationIntroDisabled,disease,case_diagnostics,Placeholder post for test result registration page intro,Rename into TestResultRegistrationIntro (remove Disabled-suffix) to activate

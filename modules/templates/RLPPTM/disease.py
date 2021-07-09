@@ -87,7 +87,6 @@ class TestResultRegistration(S3Method):
         intro = row.body if row else None
 
         # Instantiate Consent Tracker
-        # TODO option to skip validation of mandatory options
         consent = s3db.auth_Consent(processing_types=["CWA_ANONYMOUS", "CWA_PERSONAL"])
 
         # Form Fields
@@ -221,8 +220,10 @@ class TestResultRegistration(S3Method):
             else:
                 # Report to CWA and show test certificate
                 if report_to_cwa == "ANONYMOUS":
+                    processing_type = "CWA_ANONYMOUS"
                     cwa_report = CWAReport(record_id)
                 elif report_to_cwa == "PERSONAL":
+                    processing_type = "CWA_PERSONAL"
                     cwa_report = CWAReport(record_id,
                                            anonymous = False,
                                            first_name = formvars.get("first_name"),
@@ -230,29 +231,35 @@ class TestResultRegistration(S3Method):
                                            dob = formvars.get("date_of_birth"),
                                            )
                 else:
-                    cwa_report = None
+                    processing_type = cwa_report = None
 
                 if cwa_report:
-                    cwa_data = cwa_report.data
-                    certificate = cwa_report.formatted()
-
+                    # Register consent
+                    if processing_type:
+                        cwa_report.register_consent(processing_type,
+                                                    formvars.get("consent"),
+                                                    )
+                    # Send to CWA
                     success = cwa_report.send()
                     if success:
-                        cwa_retry = False
+                        # Render the QR-code with the CWA-link
                         cwa_link = cwa_report.get_link()
                         qrcode = s3_qrcode_represent(cwa_link, show_value=False)
                         response.information = T("Result reported to %(system)s") % cwa
+                        cwa_retry = False
                     else:
-                        cwa_retry = True
+                        # No QR-code, prepare for retry
                         qrcode = None
                         response.warning = T("Report to %(system)s failed") % cwa
+                        cwa_retry = True
 
                     S3CustomController._view("RLPPTM", "certificate.html")
+
                     return {"title": T("Code for %(app)s") % cwa,
                             "intro": None, # TODO
                             "qrcode": qrcode,
-                            "certificate": certificate,
-                            "cwa_data": cwa_data,
+                            "certificate": cwa_report.formatted(),
+                            "cwa_data": cwa_report.data,
                             "cwa_retry": cwa_retry,
                             }
                 else:
@@ -266,9 +273,7 @@ class TestResultRegistration(S3Method):
             current.response.error = T("There are errors in the form, please check your input")
 
         # Custom View
-        response.view = "create.html"
-        # TODO Implement custom view to include intro
-        #S3CustomController._view("RLPPTM", "register.html")
+        S3CustomController._view("RLPPTM", "testresult.html")
 
         return {"title": title,
                 "intro": intro,
@@ -541,6 +546,25 @@ class CWAReport(object):
         certificate.append(details)
 
         return certificate
+
+    # -------------------------------------------------------------------------
+    def register_consent(self, processing_type, response):
+        """
+            Register consent assertion using the current hash as reference
+
+            @param processing type: the data processing type for which
+                                    consent is required
+            @param response: the consent response
+        """
+
+        data = self.data
+
+        dhash = data.get("hash")
+        if not dhash:
+            raise ValueError("Missing context hash")
+
+        consent = current.s3db.auth_Consent
+        consent.assert_consent(dhash, processing_type, response)
 
     # -------------------------------------------------------------------------
     def send(self):

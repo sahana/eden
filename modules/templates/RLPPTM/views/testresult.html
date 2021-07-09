@@ -1,0 +1,19 @@
+{{extend "layout.html"}}
+<div class='row'>
+ <div class='small-12 columns'>
+  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+ </div>
+</div>
+{{try:}}{{if intro:}}<div class='row'>
+ <div class='small-12 columns'>
+  {{=P(intro, _class="register-intro")}}
+ </div>
+</div>{{pass}}{{except:}}{{pass}}
+<div class='row'>
+ <div class='small-12 columns'>
+  {{include "key.html"}}
+  <div class='form-container'>
+   {{try:}}{{=form}}{{except:}}{{pass}}
+  </div>
+ </div>
+</div>

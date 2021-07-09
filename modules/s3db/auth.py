@@ -1024,6 +1024,7 @@ class auth_Consent(object):
 
         ohash = cls.get_hash([(fn, option[fn]) for fn in hash_fields])
         consent = (("person_id", person_id),
+                   ("context", context),
                    ("date", timestmp.isoformat()),
                    ("option_id", option.id),
                    ("consented", bool(response)),
