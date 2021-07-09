@@ -693,9 +693,23 @@ def config(settings):
             field.default = rows[0].id
             field.writable = False
 
+        # Default probe details
+        field = table.probe_status
+        field.default = "PROCESSED"
+
+        now = current.request.utcnow
+
+        # Probe date/time is mandatory
+        field = table.probe_date
+        field.label = T("Test Date/Time")
+        field.default = now
+        requires = field.requires
+        if isinstance(requires, IS_EMPTY_OR):
+            requires = requires.other
+
         # Default result date
         field = table.result_date
-        field.default = current.request.utcnow.date()
+        field.default = now.date()
         field.writable = False
 
         # Formal test types
@@ -738,7 +752,7 @@ def config(settings):
         # Custom list_fields
         list_fields = [site_id,
                        disease_id,
-                       "result_date",
+                       "probe_date",
                        "result",
                        ]
 
@@ -746,19 +760,25 @@ def config(settings):
         from s3 import S3SQLCustomForm
         crud_form = S3SQLCustomForm(disease_id,
                                     site_id,
-                                    "result_date",
+                                    "probe_date",
                                     "result",
+                                    "result_date",
                                     )
 
         # Filters
         from s3 import S3DateFilter, S3OptionsFilter
-        filter_widgets = [S3DateFilter("result_date",
+        filter_widgets = [S3DateFilter("probe_date",
                                        label = T("Date"),
+                                       hide_time = True,
                                        ),
                           S3OptionsFilter("result",
                                           options = OrderedDict(result_options),
                                           hidden = True,
                                           ),
+                          S3DateFilter("result_date",
+                                       label = T("Result Date"),
+                                       hidden = True,
+                                       ),
                           ]
         if site_id:
             # Better to use text filter for site name?
@@ -805,7 +825,7 @@ def config(settings):
                                  )
 
         # Custom REST methods
-        from .disease import TestResultRegistration
+        from .cwa import TestResultRegistration
         s3db.set_method("disease", "case_diagnostics",
                         method = "register",
                         action = TestResultRegistration,

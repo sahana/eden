@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 
 """
-    Disease reporting customisations for RLPPTM template
+    Infection test result reporting for RLPPTM template
 
     @license: MIT
 """
 
 import base64
+import datetime
 import hashlib
 import json
+import requests
 import secrets
+import sys
 
 from gluon import current, Field, IS_IN_SET, SQLFORM, \
                   DIV, H4, INPUT, TABLE, TD, TR
@@ -108,7 +111,7 @@ class TestResultRegistration(S3Method):
         formfields = [# -- Test Result --
                       table.site_id,
                       table.disease_id,
-                      table.result_date,
+                      table.probe_date,
                       table.result,
 
                       # -- Report to CWA --
@@ -197,8 +200,8 @@ class TestResultRegistration(S3Method):
                 testresult["site_id"] = formvars["site_id"]
             if "disease_id" in formvars:
                 testresult["disease_id"] = formvars["disease_id"]
-            if "result_date" in formvars:
-                testresult["result_date"] = formvars["result_date"]
+            if "probe_date" in formvars:
+                testresult["probe_date"] = formvars["probe_date"]
 
             record_id = table.insert(**testresult)
             if not record_id:
@@ -392,6 +395,7 @@ class CWAReport(object):
                                       table.modified_on,
                                       table.site_id,
                                       table.disease_id,
+                                      table.probe_date,
                                       table.result_date,
                                       table.result,
                                       limitby = (0, 1),
@@ -409,7 +413,7 @@ class CWAReport(object):
 
         # Determine the testid and timestamp
         testid = result.uuid
-        timestamp = str(int(result.modified_on.replace(microsecond=0).timestamp()))
+        timestamp = int(result.probe_date.replace(microsecond=0).timestamp())
 
         if not anonymous:
             if not all(value for value in (first_name, last_name, dob)):
@@ -458,7 +462,7 @@ class CWAReport(object):
             @returns: the hash as str
         """
 
-        hashable = lambda fields: "#".join(data[k] for k in fields)
+        hashable = lambda fields: "#".join(str(data[k]) for k in fields)
         if not anonymous:
             dstr = hashable(["dob", "fn", "ln", "timestamp", "testid", "salt"])
         else:
@@ -474,8 +478,8 @@ class CWAReport(object):
             @returns: the link as str
         """
 
-        # TODO make deployment setting
-        template = "https://s.coronawarn.app?v=1#%(data)s"
+        # Template for CWA-link
+        template = current.deployment_settings.get_custom(key="cwa_link_template")
 
         # Convert data to JSON
         from s3.s3xml import SEPARATORS
@@ -511,7 +515,8 @@ class CWAReport(object):
         certificate.append(title)
 
         # Personal Details
-        if not any(k in self.data for k in ("fn", "ln", "dob")):
+        data = self.data
+        if not any(k in data for k in ("fn", "ln", "dob")):
             details.append(TR(TD(T("Person Tested")),
                               TD(T("anonymous")),
                               ))
@@ -521,7 +526,7 @@ class CWAReport(object):
                       "dob": T("Date of Birth"),
                       }
             for k in ("ln", "fn", "dob"):
-                value = self.data[k]
+                value = data[k]
                 details.append(TR(TD(labels.get(k)),
                                TD(value),
                                ))
@@ -532,10 +537,12 @@ class CWAReport(object):
             details.append(TR(TD(field.label),
                            TD(field.represent(self.site_id)),
                            ))
-        field = rtable.result_date
-        if field.represent:
+        field = rtable.probe_date
+        ts = data.get("timestamp")
+        if field.represent and ts:
+            probe_date = datetime.datetime.fromtimestamp(ts)
             details.append(TR(TD(field.label),
-                           TD(field.represent(self.result_date)),
+                           TD(field.represent(probe_date)),
                            ))
         field = rtable.result
         if field.represent:
@@ -568,9 +575,72 @@ class CWAReport(object):
 
     # -------------------------------------------------------------------------
     def send(self):
-        # TODO docstring
-        # TODO implement
+        """
+            Send the CWA Report to the server;
+            see also: https://github.com/corona-warn-app/cwa-quicktest-onboarding/blob/master/api/quicktest-openapi.json
 
-        return True # Pretend success
+            @returns: True|False whether successful
+        """
+
+        # Encode the result
+        results = {"NEG": 6, "POS": 7, "INC": 8}
+        result = results.get(self.result)
+        if not result:
+            current.log.error("CWAReport: invalid test result %s" % self.result)
+            return False
+
+        # Build the QuickTestResult JSON structure
+        data = self.data
+        testresult = {"id": data.get("hash"),
+                      "sc": data.get("timestamp"),
+                      "result": result,
+                      }
+
+        # The CWA server URL
+        settings = current.deployment_settings
+        server_url = settings.get_custom("cwa_server_url")
+        if not server_url:
+            raise RuntimeError("No CWA server URL configured")
+
+        # The client credentials to access the server
+        folder = current.request.folder
+        cert = settings.get_custom("cwa_client_certificate")
+        key = settings.get_custom("cwa_certificate_key")
+        if not cert or not key:
+            raise RuntimeError("No CWA client credentials configured")
+        cert = "%s/%s" % (folder, cert)
+        key = "%s/%s" % (folder, key)
+
+        # The certificate chain to verify the server identity
+        verify = settings.get_custom("cwa_server_ca")
+        if verify:
+            # Use the specified CA Certificate to verify server identity
+            verify = "%s/%s" (current.request.folder, verify)
+        else:
+            # Use python-certifi (make sure the latest version is installed)
+            verify = True
+
+        # POST to server
+        try:
+            sr = requests.post(server_url,
+                               # Send a QuickTestResultList
+                               json = {"testResults": [testresult]},
+                               cert = (cert, key),
+                               verify = verify,
+                               )
+        except Exception:
+            # Local error
+            error = sys.exc_info()[1]
+            current.log.error("CWAReport: transmission to CWA server failed (local error: %s)" % error)
+            return False
+
+        expected = (requests.codes.ok, requests.codes.no_content)
+        if sr.status_code not in expected:
+            # Remote error
+            current.log.error("CWAReport: transmission to CWA server failed, status code %s" % sr.status_code)
+            return False
+
+        # Success
+        return True
 
 # END =========================================================================

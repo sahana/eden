@@ -5542,6 +5542,7 @@
 'Territorial Authority': 'Territoriale Behörde',
 'Terrorism': 'Terrorismus',
 'Tertiary Server (Optional)': 'Tertiärer Server (Optional)',
+'Test Date/Time': 'Test Datum/Uhrzeit',
 'Test Result added': 'Testergebnis hinzugefügt',
 'Test Result deleted': 'Testergebnis gelöscht',
 'Test Result registered': 'Testergebnis registriert',

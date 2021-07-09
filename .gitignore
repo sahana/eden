@@ -9,6 +9,7 @@
 /models/0000_update_check.py
 /sessions/*
 /uploads/*
+/private/keys/*
 /static/cache/*
 /static/fonts/unifont.ttf
 /static/scripts/tools/compiler.jar
