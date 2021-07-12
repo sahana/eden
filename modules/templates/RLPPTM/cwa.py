@@ -15,27 +15,18 @@ import secrets
 import sys
 import uuid
 
-from reportlab.lib.pagesizes import A4
-from reportlab.platypus import Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
-
 from gluon import current, Field, IS_IN_SET, SQLFORM, URL, \
                   BUTTON, DIV, FORM, H5, INPUT, TABLE, TD, TR
 
 from s3 import S3CustomController, S3Method, \
-               s3_date, s3_mark_required, s3_qrcode_represent, s3_str, \
+               s3_date, s3_mark_required, s3_qrcode_represent, \
                JSONERRORS
 
-from s3.codecs.card import S3PDFCardLayout
+from .vouchers import RLPCardLayout
 
 CWA = {"system": "RKI / Corona-Warn-App",
        "app": "Corona-Warn-App",
        }
-
-# Fonts we use in this layout (TODO use from voucher card layout)
-NORMAL = "Helvetica"
-BOLD = "Helvetica-Bold"
 
 # =============================================================================
 class TestResultRegistration(S3Method):
@@ -262,7 +253,7 @@ class TestResultRegistration(S3Method):
                         response.information = T("Result reported to %(system)s") % CWA
                         retry = False
                     else:
-                        response.warning = T("Report to %(system)s failed") % CWA
+                        response.error = T("Report to %(system)s failed") % CWA
                         retry = True
 
                     S3CustomController._view("RLPPTM", "certificate.html")
@@ -380,9 +371,11 @@ class TestResultRegistration(S3Method):
         item = {"link": cwareport.get_link(),
                 }
         if not anonymous:
-            # TODO Parse dob from ISOFORMAT and convert to local format
-            for fn in ("ln", "fn", "dob"):
-                item[fn] = cwadata.get(fn)
+            for k in ("ln", "fn", "dob"):
+                value = cwadata.get(k)
+                if k == "dob":
+                    value = CWAReport.to_local_dtfmt(value)
+                item[k] = value
 
         # Test Station, date and result
         table = current.s3db.disease_case_diagnostics
@@ -411,7 +404,7 @@ class TestResultRegistration(S3Method):
 
         # Export PDF
         output = S3Exporter().pdfcard([item],
-                                      layout = CWAReportLayout,
+                                      layout = CWACardLayout,
                                       title = pdf_title,
                                       )
 
@@ -430,7 +423,6 @@ class TestResultRegistration(S3Method):
             @param r: the S3Request instance
             @param attr: controller attributes
         """
-        # TODO implement
 
         if not r.record:
             r.error(400, current.ERROR.BAD_REQUEST)
@@ -439,7 +431,46 @@ class TestResultRegistration(S3Method):
         if r.representation != "json":
             r.error(415, current.ERROR.BAD_FORMAT)
 
-        return "cwaretry"
+        T = current.T
+
+        # Parse JSON body
+        s = r.body
+        s.seek(0)
+        try:
+            options = json.load(s)
+        except JSONERRORS:
+            options = None
+        if not isinstance(options, dict):
+            r.error(400, "Invalid request options")
+
+        # Verify formkey
+        formkey = options.get("formkey")
+        keyname = "_formkey[testresult/%s]" % r.id
+        if not formkey or formkey not in current.session.get(keyname, []):
+            r.error(403, current.ERROR.NOT_PERMITTED)
+
+        # Instantiate CWAReport
+        cwadata = options.get("cwadata", {})
+        anonymous = "fn" not in cwadata
+        try:
+            cwareport = CWAReport(r.id,
+                                  anonymous = anonymous,
+                                  first_name = cwadata.get("fn"),
+                                  last_name = cwadata.get("ln"),
+                                  dob = cwadata.get("dob"),
+                                  salt = cwadata.get("salt"),
+                                  dhash = cwadata.get("hash"),
+                                  )
+        except ValueError:
+            r.error(400, current.ERROR.BAD_RECORD)
+
+        success = cwareport.send()
+        if success:
+            message = T("Result reported to %(system)s") % CWA
+            output = current.xml.json_message(message=message)
+        else:
+            r.error(503, T("Report to %(system)s failed") % CWA)
+        return output
 
 # =============================================================================
 class CWAReport(object):
@@ -584,11 +615,31 @@ class CWAReport(object):
         return link
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def to_local_dtfmt(dtstr):
+        """
+            Helper to convert an ISO-formatted date to local format
+
+            @param dtstr: the ISO-formatted date as string
+
+            @returns: the date in local format as string
+        """
+
+        c = current.calendar
+        dt = c.parse_date(dtstr)
+        return c.format_date(dt, local=True) if dt else dtstr
+
+    # -------------------------------------------------------------------------
     def formatted(self, retry=False):
         """
-            Formatted version of this report to display alongside QR Code
+            Formatted version of this report
 
-            TODO update docstring
+            @param retry: add retry-action for sending to CWA
+
+            @returns: a FORM containing
+                      - the QR-code
+                      - human-readable report details
+                      - actions to download PDF, or retry sending to CWA
         """
 
         T = current.T
@@ -606,9 +657,10 @@ class CWAReport(object):
                       "ln": T("Last Name"),
                       "dob": T("Date of Birth"),
                       }
-            # TODO Parse dob from ISOFORMAT and convert to local format
             for k in ("ln", "fn", "dob"):
                 value = data[k]
+                if k == "dob":
+                    value = self.to_local_dtfmt(value)
                 data_repr.append(TR(TD(labels.get(k)),
                                     TD(value, _class="cwa-data"),
                                     ))
@@ -786,16 +838,10 @@ class CWAReport(object):
         return True
 
 # =============================================================================
-class CWAReportLayout(S3PDFCardLayout):
+class CWACardLayout(RLPCardLayout):
     """
         Layout for printable vouchers
-
-        TODO inherit from + DRY with voucher card layout
     """
-
-    cardsize = A4
-    orientation = "Portrait"
-    doublesided = False
 
     # -------------------------------------------------------------------------
     def draw(self):
@@ -829,7 +875,7 @@ class CWAReportLayout(S3PDFCardLayout):
 
         if not self.backside:
 
-            # Signature QR Code
+            # CWA QR-Code
             link = item.get("link")
             if link:
                 self.draw_qrcode(link,
@@ -840,6 +886,15 @@ class CWAReportLayout(S3PDFCardLayout):
                                  valign = "middle",
                                  level = "M",
                                  )
+                draw_value(120,
+                           h - 255,
+                           T("Code for %(app)s") % CWA,
+                           width = 160,
+                           height = 20,
+                           size = 7,
+                           bold = False,
+                           halign = "center",
+                           )
 
             # Alignments for header items
             HL = 360
@@ -850,50 +905,49 @@ class CWAReportLayout(S3PDFCardLayout):
             if title:
                 draw_value(HL, HY[0], title, width=280, height=20, size=16)
 
-            # Alignments for data items
-            DL = 270
-            DR = 400
-            DY = (h - 115, h - 135, h - 155, h - 175, h - 195, h - 215, h - 235)
+            # Horizontal alignments for data items
+            DL, DR = 270, 400
 
+            # Vertical alignment for data items
+            dy = lambda rnr: h - 115 - rnr * 20
             # Person first name, last name, date of birth
             if "fn" in item:
                 last_name = item.get("ln")
                 if last_name:
-                    draw_value(DL, DY[0], "%s:" % T("Last Name"), width=100, height=20, size=9, bold=False)
-                    draw_value(DR, DY[0], last_name, width=180, height=20, size=12)
+                    draw_value(DL, dy(0), "%s:" % T("Last Name"), width=100, height=20, size=9, bold=False)
+                    draw_value(DR, dy(0), last_name, width=180, height=20, size=12)
 
                 first_name = item.get("fn")
                 if first_name:
-                    draw_value(DL, DY[1], "%s:" % T("First Name"), width=100, height=20, size=9, bold=False)
-                    draw_value(DR, DY[1], first_name, width=180, height=20, size=12)
+                    draw_value(DL, dy(1), "%s:" % T("First Name"), width=100, height=20, size=9, bold=False)
+                    draw_value(DR, dy(1), first_name, width=180, height=20, size=12)
 
                 dob = item.get("dob")
                 if dob:
-                    draw_value(DL, DY[2], "%s:" % T("Date of Birth"), width=100, height=20, size=9, bold=False)
-                    draw_value(DR, DY[2], dob, width=180, height=20, size=12)
+                    draw_value(DL, dy(2), "%s:" % T("Date of Birth"), width=100, height=20, size=9, bold=False)
+                    draw_value(DR, dy(2), dob, width=180, height=20, size=12)
                 offset = 3
             else:
-                draw_value(DL, DY[0], "%s:" % T("Person Tested"), width=100, height=20, size=9, bold=False)
-                draw_value(DR, DY[0], T("anonymous"), width=180, height=20, size=12)
+                draw_value(DL, dy(0), "%s:" % T("Person Tested"), width=100, height=20, size=9, bold=False)
+                draw_value(DR, dy(0), T("anonymous"), width=180, height=20, size=12)
                 offset = 1
 
+            dy = lambda rnr: h - 115 - (rnr + offset) * 20
             # Test Station
             site_name = item.get("site_name")
             if site_name:
-                draw_value(DL, DY[offset + 1], "%s:" % T("Test Station"), width=100, height=20, size=9, bold=False)
-                draw_value(DR, DY[offset + 1], site_name, width=180, height=20, size=12)
-
+                draw_value(DL, dy(1), "%s:" % T("Test Station"), width=100, height=20, size=9, bold=False)
+                draw_value(DR, dy(1), site_name, width=180, height=20, size=12)
             # Test Date
             test_date = item.get("test_date")
             if test_date:
-                draw_value(DL, DY[offset + 2], "%s:" % T("Test Date/Time"), width=100, height=20, size=9, bold=False)
-                draw_value(DR, DY[offset + 2], test_date, width=180, height=20, size=12)
-
+                draw_value(DL, dy(2), "%s:" % T("Test Date/Time"), width=100, height=20, size=9, bold=False)
+                draw_value(DR, dy(2), test_date, width=180, height=20, size=12)
             # Test Result
             result = item.get("result")
             if result:
-                draw_value(DL, DY[offset + 3], "%s:" % T("Test Result"), width=100, height=20, size=9, bold=False)
-                draw_value(DR, DY[offset + 3], result, width=180, height=20, size=12)
+                draw_value(DL, dy(3), "%s:" % T("Test Result"), width=100, height=20, size=9, bold=False)
+                draw_value(DR, dy(3), result, width=180, height=20, size=12)
 
             # Add a cutting line with multiple cards per page
             if self.multiple:
@@ -902,57 +956,5 @@ class CWAReportLayout(S3PDFCardLayout):
         else:
             # No backside
             pass
-
-    # -------------------------------------------------------------------------
-    def draw_value(self, x, y, value, width=120, height=40, size=7, bold=True, valign=None, halign=None):
-        """
-            Helper function to draw a centered text above position (x, y);
-            allows the text to wrap if it would otherwise exceed the given
-            width
-
-            @param x: drawing position
-            @param y: drawing position
-            @param value: the text to render
-            @param width: the maximum available width (points)
-            @param height: the maximum available height (points)
-            @param size: the font size (points)
-            @param bold: use bold font
-            @param valign: vertical alignment ("top"|"middle"|"bottom"),
-                           default "bottom"
-            @param halign: horizontal alignment ("left"|"center")
-
-            @returns: the actual height of the text element drawn
-        """
-
-        # Preserve line breaks by replacing them with <br/> tags
-        value = s3_str(value).strip("\n").replace('\n','<br />\n')
-
-        styleSheet = getSampleStyleSheet()
-        style = styleSheet["Normal"]
-        style.fontName = BOLD if bold else NORMAL
-        style.fontSize = size
-        style.leading = size + 2
-        style.splitLongWords = False
-        style.alignment = TA_CENTER if halign=="center" else TA_LEFT
-
-        para = Paragraph(value, style)
-        aW, aH = para.wrap(width, height)
-
-        while((aH > height or aW > width) and style.fontSize > 4):
-            # Reduce font size to make fit
-            style.fontSize -= 1
-            style.leading = style.fontSize + 2
-            para = Paragraph(value, style)
-            aW, aH = para.wrap(width, height)
-
-        if valign == "top":
-            vshift = aH
-        elif valign == "middle":
-            vshift = aH / 2.0
-        else:
-            vshift = 0
-
-        para.drawOn(self.canv, x - para.width / 2, y - vshift)
-        return aH
 
 # END =========================================================================

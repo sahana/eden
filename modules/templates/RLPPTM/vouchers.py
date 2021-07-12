@@ -18,9 +18,9 @@ NORMAL = "Helvetica"
 BOLD = "Helvetica-Bold"
 
 # =============================================================================
-class VoucherCardLayout(S3PDFCardLayout):
+class RLPCardLayout(S3PDFCardLayout):
     """
-        Layout for printable vouchers
+        Parent class for PDF cards to implement common attributes and methods
     """
 
     cardsize = A4
@@ -28,6 +28,63 @@ class VoucherCardLayout(S3PDFCardLayout):
     doublesided = False
 
     # -------------------------------------------------------------------------
+    def draw_value(self, x, y, value, width=120, height=40, size=7, bold=True, valign=None, halign=None):
+        """
+            Helper function to draw a centered text above position (x, y);
+            allows the text to wrap if it would otherwise exceed the given
+            width
+
+            @param x: drawing position
+            @param y: drawing position
+            @param value: the text to render
+            @param width: the maximum available width (points)
+            @param height: the maximum available height (points)
+            @param size: the font size (points)
+            @param bold: use bold font
+            @param valign: vertical alignment ("top"|"middle"|"bottom"),
+                           default "bottom"
+            @param halign: horizontal alignment ("left"|"center")
+
+            @returns: the actual height of the text element drawn
+        """
+
+        # Preserve line breaks by replacing them with <br/> tags
+        value = s3_str(value).strip("\n").replace('\n','<br />\n')
+
+        styleSheet = getSampleStyleSheet()
+        style = styleSheet["Normal"]
+        style.fontName = BOLD if bold else NORMAL
+        style.fontSize = size
+        style.leading = size + 2
+        style.splitLongWords = False
+        style.alignment = TA_CENTER if halign=="center" else TA_LEFT
+
+        para = Paragraph(value, style)
+        aW, aH = para.wrap(width, height)
+
+        while((aH > height or aW > width) and style.fontSize > 4):
+            # Reduce font size to make fit
+            style.fontSize -= 1
+            style.leading = style.fontSize + 2
+            para = Paragraph(value, style)
+            aW, aH = para.wrap(width, height)
+
+        if valign == "top":
+            vshift = aH
+        elif valign == "middle":
+            vshift = aH / 2.0
+        else:
+            vshift = 0
+
+        para.drawOn(self.canv, x - para.width / 2, y - vshift)
+        return aH
+
+# =============================================================================
+class VoucherCardLayout(RLPCardLayout):
+    """
+        Layout for printable vouchers
+    """
+
     @classmethod
     def fields(cls, resource):
         """
@@ -225,57 +282,5 @@ class VoucherCardLayout(S3PDFCardLayout):
         else:
             # No backside
             pass
-
-    # -------------------------------------------------------------------------
-    def draw_value(self, x, y, value, width=120, height=40, size=7, bold=True, valign=None, halign=None):
-        """
-            Helper function to draw a centered text above position (x, y);
-            allows the text to wrap if it would otherwise exceed the given
-            width
-
-            @param x: drawing position
-            @param y: drawing position
-            @param value: the text to render
-            @param width: the maximum available width (points)
-            @param height: the maximum available height (points)
-            @param size: the font size (points)
-            @param bold: use bold font
-            @param valign: vertical alignment ("top"|"middle"|"bottom"),
-                           default "bottom"
-            @param halign: horizontal alignment ("left"|"center")
-
-            @returns: the actual height of the text element drawn
-        """
-
-        # Preserve line breaks by replacing them with <br/> tags
-        value = s3_str(value).strip("\n").replace('\n','<br />\n')
-
-        styleSheet = getSampleStyleSheet()
-        style = styleSheet["Normal"]
-        style.fontName = BOLD if bold else NORMAL
-        style.fontSize = size
-        style.leading = size + 2
-        style.splitLongWords = False
-        style.alignment = TA_CENTER if halign=="center" else TA_LEFT
-
-        para = Paragraph(value, style)
-        aW, aH = para.wrap(width, height)
-
-        while((aH > height or aW > width) and style.fontSize > 4):
-            # Reduce font size to make fit
-            style.fontSize -= 1
-            style.leading = style.fontSize + 2
-            para = Paragraph(value, style)
-            aW, aH = para.wrap(width, height)
-
-        if valign == "top":
-            vshift = aH
-        elif valign == "middle":
-            vshift = aH / 2.0
-        else:
-            vshift = 0
-
-        para.drawOn(self.canv, x - para.width / 2, y - vshift)
-        return aH
 
 # END =========================================================================
