@@ -2912,18 +2912,33 @@ body.rtl .event-type-header {
 }
 
 /* line 429, ../scss/theme/_misc.scss */
-.certificate-qrcode {
+.form-row .cwa-details,
+.form-row .cwa-qrcode {
   display: inline-block;
   vertical-align: top;
-}
-/* line 432, ../scss/theme/_misc.scss */
-.certificate-qrcode svg {
-  vertical-align: middle;
 }
 
-/* line 436, ../scss/theme/_misc.scss */
-.certificate-details {
-  display: inline-block;
-  vertical-align: top;
-  padding: 0.2rem;
+/* line 435, ../scss/theme/_misc.scss */
+.form-row .cwa-details table {
+  border: none;
+  margin-right: 2.5rem;
+}
+/* line 438, ../scss/theme/_misc.scss */
+.form-row .cwa-details table tr td {
+  padding: 0.5rem;
+}
+/* line 440, ../scss/theme/_misc.scss */
+.form-row .cwa-details table tr td.cwa-data {
+  font-weight: bold;
+}
+
+/* line 446, ../scss/theme/_misc.scss */
+.form-row .cwa-qrcode {
+  margin: 1px solid black;
+  padding-bottom: 0.2rem;
+}
+/* line 449, ../scss/theme/_misc.scss */
+.form-row .cwa-qrcode .cwa-qrcode-title {
+  width: 100%;
+  text-align: center;
 }

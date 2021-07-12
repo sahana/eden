@@ -100,5 +100,64 @@
         });
         togglePersonalOption();
 
+        // TODO if cwa-retry button exists:
+        // - disable + hide the cwa-pdf button in the same form
+        // - set retry-counter to 5
+        // otherwise:
+        // - enable + show the cwa-pdf button
+
+        // TODO register action for cwa-retry button if it exists
+        // Render a throbber in place of the retry-button, hide the button
+        // Make an ajax-request to url using POST and JSON-data
+        // if Ajax is successful:
+        // - enable + show cwa-pdf button
+        // - set retry-counter to 0
+        // - remove the throbber and the retry-button
+        // otherwise:
+        // - remove the throbber
+        // - decrease retry-counter
+        // - remove retry-button if retry-count is 0 otherwise show the retry-button
+
+        // Action for cwa-pdf button
+        var downloadCertificatePDF = function(pdfButton) {
+
+            var certificate = pdfButton.closest('form'),
+                cwadata = $('input[name="cwadata"]', certificate).val(),
+                formurl = $('input[name="formurl"]', certificate).val(),
+                formkey = $('input[name="_formkey"]', certificate).val();
+
+            if (!cwadata || !formurl || !formkey) {
+                return;
+            }
+
+            var form = document.createElement('form');
+
+            form.action = formurl + '/certify.pdf';
+            form.method = 'POST';
+            form.target = '_blank';
+            form.enctype = 'multipart/form-data';
+
+            var input;
+
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'cwadata';
+            input.value = cwadata;
+            form.appendChild(input);
+
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = '_formkey';
+            input.value = formkey;
+            form.appendChild(input);
+
+            form.style.display = 'none';
+            document.body.appendChild(form);
+            form.submit();
+        };
+
+        $('button.cwa-pdf').off(ns).on('click' + ns, function() {
+            downloadCertificatePDF($(this));
+        });
     });
 })(jQuery);

@@ -426,17 +426,30 @@ body.rtl {
     max-width: 48rem;
 }
 
-.certificate-qrcode {
+.form-row .cwa-details,
+.form-row .cwa-qrcode {
     display: inline-block;
     vertical-align: top;
-    svg {
-        vertical-align: middle;
+}
+.form-row .cwa-details {
+    table {
+        border: none;
+        margin-right: 2.5rem;
+        tr td {
+            padding: 0.5rem;
+            &.cwa-data {
+                font-weight: bold;
+            }
+        }
     }
 }
-.certificate-details {
-    display: inline-block;
-    vertical-align: top;
-    padding: 0.2rem;
+.form-row .cwa-qrcode {
+    margin: 1px solid black;
+    padding-bottom: 0.2rem;
+    .cwa-qrcode-title {
+        width: 100%;
+        text-align: center;
+    }
 }
 
 // END ========================================================================

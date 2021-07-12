@@ -13,12 +13,29 @@ import json
 import requests
 import secrets
 import sys
+import uuid
 
-from gluon import current, Field, IS_IN_SET, SQLFORM, \
-                  DIV, H4, INPUT, TABLE, TD, TR
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
+
+from gluon import current, Field, IS_IN_SET, SQLFORM, URL, \
+                  BUTTON, DIV, FORM, H5, INPUT, TABLE, TD, TR
 
 from s3 import S3CustomController, S3Method, \
-               s3_date, s3_mark_required, s3_qrcode_represent
+               s3_date, s3_mark_required, s3_qrcode_represent, s3_str, \
+               JSONERRORS
+
+from s3.codecs.card import S3PDFCardLayout
+
+CWA = {"system": "RKI / Corona-Warn-App",
+       "app": "Corona-Warn-App",
+       }
+
+# Fonts we use in this layout (TODO use from voucher card layout)
+NORMAL = "Helvetica"
+BOLD = "Helvetica-Bold"
 
 # =============================================================================
 class TestResultRegistration(S3Method):
@@ -101,9 +118,6 @@ class TestResultRegistration(S3Method):
             field.readable = False
             offset = 0
 
-        cwa = {"system": "RKI / Corona-Warn-App",
-               "app": "Corona-Warn-App",
-               }
         cwa_options = (("NO", T("Do not report")),
                        ("ANONYMOUS", T("Issue anonymous contact tracing code")),
                        ("PERSONAL", T("Issue personal test certificate")),
@@ -118,7 +132,7 @@ class TestResultRegistration(S3Method):
                       Field("report_to_cwa", "string",
                             requires = IS_IN_SET(cwa_options, sort=False, zero=""),
                             default = "NO",
-                            label = T("Report test result to %(system)s") % cwa,
+                            label = T("Report test result to %(system)s") % CWA,
                             ),
                       Field("last_name",
                             label = T("Last Name"),
@@ -141,7 +155,7 @@ class TestResultRegistration(S3Method):
 
         # Subheadings
         subheadings = ((0, T("Test Result")),
-                       (3 + offset, cwa["system"]),
+                       (3 + offset, CWA["system"]),
                        )
 
         # Generate labels (and mark required fields in the process)
@@ -245,28 +259,28 @@ class TestResultRegistration(S3Method):
                     # Send to CWA
                     success = cwa_report.send()
                     if success:
-                        # Render the QR-code with the CWA-link
-                        cwa_link = cwa_report.get_link()
-                        qrcode = s3_qrcode_represent(cwa_link, show_value=False)
-                        response.information = T("Result reported to %(system)s") % cwa
-                        cwa_retry = False
+                        response.information = T("Result reported to %(system)s") % CWA
+                        retry = False
                     else:
-                        # No QR-code, prepare for retry
-                        qrcode = ""
-                        response.warning = T("Report to %(system)s failed") % cwa
-                        cwa_retry = True
+                        response.warning = T("Report to %(system)s failed") % CWA
+                        retry = True
 
                     S3CustomController._view("RLPPTM", "certificate.html")
 
-                    return {"title": T("Code for %(app)s") % cwa,
+                    # Title
+                    field = table.disease_id
+                    if cwa_report.disease_id and field.represent:
+                        disease = field.represent(cwa_report.disease_id)
+                        title = "%s %s" % (disease, T("Test Result"))
+                    else:
+                        title = T("Test Result")
+
+                    return {"title": title,
                             "intro": None, # TODO
-                            "qrcode": qrcode,
-                            "certificate": cwa_report.formatted(),
-                            "cwa_data": cwa_report.data,
-                            "cwa_retry": cwa_retry,
+                            "form": cwa_report.formatted(retry=retry),
                             }
                 else:
-                    response.information = T("Result not reported to %(system)s") % cwa
+                    response.information = T("Result not reported to %(system)s") % CWA
                     self.next = r.url(id=record_id, method="read")
 
 
@@ -323,7 +337,6 @@ class TestResultRegistration(S3Method):
             @param r: the S3Request instance
             @param attr: controller attributes
         """
-        # TODO implement
 
         if not r.record:
             r.error(400, current.ERROR.BAD_REQUEST)
@@ -332,7 +345,82 @@ class TestResultRegistration(S3Method):
         if r.representation != "pdf":
             r.error(415, current.ERROR.BAD_FORMAT)
 
-        return "certify"
+        post_vars = r.post_vars
+
+        # Extract and check formkey from post data
+        formkey = post_vars.get("_formkey")
+        keyname = "_formkey[testresult/%s]" % r.id
+        if not formkey or formkey not in current.session.get(keyname, []):
+            r.error(403, current.ERROR.NOT_PERMITTED)
+
+        # Extract cwadata
+        cwadata = post_vars.get("cwadata")
+        if not cwadata:
+            r.error(400, current.ERROR.BAD_REQUEST)
+        try:
+            cwadata = json.loads(cwadata)
+        except JSONERRORS:
+            r.error(400, current.ERROR.BAD_REQUEST)
+
+        # Generate the CWAReport (implicitly validates the hash)
+        anonymous = "fn" not in cwadata
+        try:
+            cwareport = CWAReport(r.id,
+                                  anonymous = anonymous,
+                                  first_name = cwadata.get("fn"),
+                                  last_name = cwadata.get("ln"),
+                                  dob = cwadata.get("dob"),
+                                  salt = cwadata.get("salt"),
+                                  dhash = cwadata.get("hash"),
+                                  )
+        except ValueError:
+            r.error(400, current.ERROR.BAD_RECORD)
+
+        # Generate the data item
+        item = {"link": cwareport.get_link(),
+                }
+        if not anonymous:
+            # TODO Parse dob from ISOFORMAT and convert to local format
+            for fn in ("ln", "fn", "dob"):
+                item[fn] = cwadata.get(fn)
+
+        # Test Station, date and result
+        table = current.s3db.disease_case_diagnostics
+        field = table.site_id
+        if field.represent:
+            item["site_name"] = field.represent(cwareport.site_id)
+        field = table.probe_date
+        if field.represent:
+            item["test_date"] = field.represent(cwareport.probe_date)
+        field = table.result
+        if field.represent:
+            item["result"] = field.represent(cwareport.result)
+
+        # Title
+        T = current.T
+        field = table.disease_id
+        if cwareport.disease_id and field.represent:
+            disease = field.represent(cwareport.disease_id)
+            title = "%s %s" % (disease, T("Test Result"))
+        else:
+            title = T("Test Result")
+        item["title"] = pdf_title = title
+
+        from s3.s3export import S3Exporter
+        from gluon.contenttype import contenttype
+
+        # Export PDF
+        output = S3Exporter().pdfcard([item],
+                                      layout = CWAReportLayout,
+                                      title = pdf_title,
+                                      )
+
+        response = current.response
+        disposition = "attachment; filename=\"certificate.pdf\""
+        response.headers["Content-Type"] = contenttype(".pdf")
+        response.headers["Content-disposition"] = disposition
+
+        return output
 
     # -------------------------------------------------------------------------
     def cwaretry(self, r, **attr):
@@ -406,8 +494,10 @@ class CWAReport(object):
             raise ValueError("Test result ID is required")
 
         # Store the test result
+        self.result_id = result_id
         self.site_id = result.site_id
         self.disease_id = result.disease_id
+        self.probe_date = result.probe_date
         self.result_date = result.result_date
         self.result = result.result
 
@@ -420,7 +510,7 @@ class CWAReport(object):
                 raise ValueError("Incomplete person data for personal report")
             data = {"fn": first_name,
                     "ln": last_name,
-                    "dob": dob.isoformat(),
+                    "dob": dob.isoformat() if isinstance(dob, datetime.date) else dob,
                     "timestamp": timestamp,
                     "testid": testid,
                     }
@@ -494,65 +584,117 @@ class CWAReport(object):
         return link
 
     # -------------------------------------------------------------------------
-    def formatted(self):
+    def formatted(self, retry=False):
         """
             Formatted version of this report to display alongside QR Code
+
+            TODO update docstring
         """
 
         T = current.T
-        rtable = current.s3db.disease_case_diagnostics
-
-        certificate = DIV(_class="test-certificate")
-        details = TABLE()
-
-        # Certificate Title
-        field = rtable.disease_id
-        if field.represent:
-            disease = field.represent(self.disease_id)
-            title = H4("%s %s" % (disease, T("Test Result")))
-        else:
-            title = H4(T("Test Result"))
-        certificate.append(title)
+        table = current.s3db.disease_case_diagnostics
 
         # Personal Details
+        data_repr = TABLE()
         data = self.data
         if not any(k in data for k in ("fn", "ln", "dob")):
-            details.append(TR(TD(T("Person Tested")),
-                              TD(T("anonymous")),
-                              ))
+            data_repr.append(TR(TD(T("Person Tested")),
+                                TD(T("anonymous"), _class="cwa-data"),
+                                ))
         else:
             labels = {"fn": T("First Name"),
                       "ln": T("Last Name"),
                       "dob": T("Date of Birth"),
                       }
+            # TODO Parse dob from ISOFORMAT and convert to local format
             for k in ("ln", "fn", "dob"):
                 value = data[k]
-                details.append(TR(TD(labels.get(k)),
-                               TD(value),
-                               ))
+                data_repr.append(TR(TD(labels.get(k)),
+                                    TD(value, _class="cwa-data"),
+                                    ))
 
         # Test Station, date and result
-        field = rtable.site_id
+        field = table.site_id
         if field.represent:
-            details.append(TR(TD(field.label),
-                           TD(field.represent(self.site_id)),
-                           ))
-        field = rtable.probe_date
-        ts = data.get("timestamp")
-        if field.represent and ts:
-            probe_date = datetime.datetime.fromtimestamp(ts)
-            details.append(TR(TD(field.label),
-                           TD(field.represent(probe_date)),
-                           ))
-        field = rtable.result
+            data_repr.append(TR(TD(field.label),
+                                TD(field.represent(self.site_id),
+                                   _class="cwa-data",
+                                   ),
+                                ))
+        field = table.probe_date
         if field.represent:
-            details.append(TR(TD(field.label),
-                           TD(field.represent(self.result)),
-                           ))
+            data_repr.append(TR(TD(field.label),
+                                TD(field.represent(self.probe_date),
+                                   _class="cwa-data",
+                                   ),
+                                ))
+        field = table.result
+        if field.represent:
+            data_repr.append(TR(TD(field.label),
+                                TD(field.represent(self.result),
+                                   _class="cwa-data",
+                                   ),
+                                ))
 
-        certificate.append(details)
+        # Details
+        details = DIV(H5(T("Details")),
+                      data_repr,
+                      _class = "cwa-details",
+                      )
 
-        return certificate
+        # QR Code
+        title = T("Code for %(app)s") % CWA
+        qrcode = DIV(s3_qrcode_represent(self.get_link(), show_value=False),
+                     DIV(title, _class="cwa-qrcode-title"),
+                     _class="cwa-qrcode",
+                     )
+        if retry:
+            qrcode.add_class("hide")
+
+        # Form buttons
+        buttons = [
+            BUTTON(T("Download PDF"),
+                   _class = "tiny primary button cwa-pdf",
+                   _type = "button",
+                   ),
+            ]
+        if retry:
+            buttons[0].add_class("hide")
+            buttons.append(BUTTON(T("Retry sending to %(app)s") % CWA,
+                                  _class = "tiny alert button cwa-retry",
+                                  _type = "button",
+                                  ))
+
+        # Generate form key
+        formurl = URL(c = "disease",
+                      f = "case_diagnostics",
+                      args = [self.result_id],
+                      )
+        formkey = uuid.uuid4().hex
+
+        # Store form key in session
+        session = current.session
+        keyname = "_formkey[testresult/%s]" % self.result_id
+        session[keyname] = session.get(keyname, [])[-9:] + [formkey]
+
+        form = FORM(DIV(DIV(details,
+                            qrcode,
+                            _class="small-12 columns",
+                            ),
+                        _class="row form-row",
+                        ),
+                    DIV(DIV(buttons,
+                            _class="small-12 columns",
+                            ),
+                        _class="row form-row",
+                        ),
+                    hidden = {"formurl": formurl,
+                              "cwadata": json.dumps(self.data),
+                              "_formkey": formkey,
+                              },
+                    )
+
+        return form
 
     # -------------------------------------------------------------------------
     def register_consent(self, processing_type, response):
@@ -642,5 +784,175 @@ class CWAReport(object):
 
         # Success
         return True
+
+# =============================================================================
+class CWAReportLayout(S3PDFCardLayout):
+    """
+        Layout for printable vouchers
+
+        TODO inherit from + DRY with voucher card layout
+    """
+
+    cardsize = A4
+    orientation = "Portrait"
+    doublesided = False
+
+    # -------------------------------------------------------------------------
+    def draw(self):
+        """
+            Draw the card (one side)
+
+            Instance attributes (NB draw-function should not modify them):
+            - self.canv...............the canvas (provides the drawing methods)
+            - self.resource...........the resource
+            - self.item...............the data item (dict)
+            - self.labels.............the field labels (dict)
+            - self.backside...........this instance should render the backside
+                                      of a card
+            - self.multiple...........there are multiple cards per page
+            - self.width..............the width of the card (in points)
+            - self.height.............the height of the card (in points)
+
+            NB Canvas coordinates are relative to the lower left corner of the
+               card's frame, drawing must not overshoot self.width/self.height
+        """
+
+        T = current.T
+
+        c = self.canv
+        #w = self.width
+        h = self.height
+
+        item = self.item
+
+        draw_value = self.draw_value
+
+        if not self.backside:
+
+            # Signature QR Code
+            link = item.get("link")
+            if link:
+                self.draw_qrcode(link,
+                                 100,
+                                 h - 160,
+                                 size = 120,
+                                 halign = "center",
+                                 valign = "middle",
+                                 level = "M",
+                                 )
+
+            # Alignments for header items
+            HL = 340
+            HY = (h - 55, h - 75)
+
+            # Title
+            title = item.get("title")
+            if title:
+                draw_value(HL, HY[0], title, width=280, height=20, size=16)
+
+            # Alignments for data items
+            DL = 250
+            DR = 380
+            DY = (h - 115, h - 135, h - 155, h - 175, h - 195, h - 215, h - 235)
+
+            # Person first name, last name, date of birth
+            if "fn" in item:
+                last_name = item.get("ln")
+                if last_name:
+                    draw_value(DL, DY[0], "%s:" % T("Last Name"), width=100, height=20, size=9, bold=False)
+                    draw_value(DR, DY[0], last_name, width=180, height=20, size=12)
+
+                first_name = item.get("fn")
+                if first_name:
+                    draw_value(DL, DY[1], "%s:" % T("First Name"), width=100, height=20, size=9, bold=False)
+                    draw_value(DR, DY[1], first_name, width=180, height=20, size=12)
+
+                dob = item.get("dob")
+                if dob:
+                    draw_value(DL, DY[2], "%s:" % T("Date of Birth"), width=100, height=20, size=9, bold=False)
+                    draw_value(DR, DY[2], dob, width=180, height=20, size=12)
+                offset = 3
+            else:
+                draw_value(DL, DY[0], "%s:" % T("Person Tested"), width=100, height=20, size=9, bold=False)
+                draw_value(DR, DY[0], T("anonymous"), width=180, height=20, size=12)
+                offset = 1
+
+            # Test Station
+            site_name = item.get("site_name")
+            if site_name:
+                draw_value(DL, DY[offset + 1], "%s:" % T("Test Station"), width=100, height=20, size=9, bold=False)
+                draw_value(DR, DY[offset + 1], site_name, width=180, height=20, size=12)
+
+            # Test Date
+            test_date = item.get("test_date")
+            if test_date:
+                draw_value(DL, DY[offset + 2], "%s:" % T("Test Date/Time"), width=100, height=20, size=9, bold=False)
+                draw_value(DR, DY[offset + 2], test_date, width=180, height=20, size=12)
+
+            # Test Result
+            result = item.get("result")
+            if result:
+                draw_value(DL, DY[offset + 3], "%s:" % T("Test Result"), width=100, height=20, size=9, bold=False)
+                draw_value(DR, DY[offset + 3], result, width=180, height=20, size=12)
+
+            # Add a cutting line with multiple cards per page
+            if self.multiple:
+                c.setDash(1, 2)
+                self.draw_outline()
+        else:
+            # No backside
+            pass
+
+    # -------------------------------------------------------------------------
+    def draw_value(self, x, y, value, width=120, height=40, size=7, bold=True, valign=None, halign=None):
+        """
+            Helper function to draw a centered text above position (x, y);
+            allows the text to wrap if it would otherwise exceed the given
+            width
+
+            @param x: drawing position
+            @param y: drawing position
+            @param value: the text to render
+            @param width: the maximum available width (points)
+            @param height: the maximum available height (points)
+            @param size: the font size (points)
+            @param bold: use bold font
+            @param valign: vertical alignment ("top"|"middle"|"bottom"),
+                           default "bottom"
+            @param halign: horizontal alignment ("left"|"center")
+
+            @returns: the actual height of the text element drawn
+        """
+
+        # Preserve line breaks by replacing them with <br/> tags
+        value = s3_str(value).strip("\n").replace('\n','<br />\n')
+
+        styleSheet = getSampleStyleSheet()
+        style = styleSheet["Normal"]
+        style.fontName = BOLD if bold else NORMAL
+        style.fontSize = size
+        style.leading = size + 2
+        style.splitLongWords = False
+        style.alignment = TA_CENTER if halign=="center" else TA_LEFT
+
+        para = Paragraph(value, style)
+        aW, aH = para.wrap(width, height)
+
+        while((aH > height or aW > width) and style.fontSize > 4):
+            # Reduce font size to make fit
+            style.fontSize -= 1
+            style.leading = style.fontSize + 2
+            para = Paragraph(value, style)
+            aW, aH = para.wrap(width, height)
+
+        if valign == "top":
+            vshift = aH
+        elif valign == "middle":
+            vshift = aH / 2.0
+        else:
+            vshift = 0
+
+        para.drawOn(self.canv, x - para.width / 2, y - vshift)
+        return aH
 
 # END =========================================================================

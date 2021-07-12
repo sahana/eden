@@ -1,25 +1,25 @@
 {{extend "layout.html"}}
 <section class="test-certificate">
-<div class='row'>
- <div class='small-12 columns'>
-  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
- </div>
-</div>
-{{try:}}{{if intro:}}<div class='row'>
- <div class='small-12 columns'>
-  {{=P(intro, _class="certificate-intro")}}
- </div>
-</div>{{pass}}{{except:}}{{pass}}
-<div class='row'>
- <div class='small-8 columns'>
-   <div class='certificate-wrapper'>
-     <div class='certificate-qrcode'>
-       {{try:}}{{=qrcode}}{{except:}}{{pass}}
-     </div>
-     <div class='certificate-details'>
-       {{try:}}{{=certificate}}{{except:}}{{pass}}
-     </div>
+ <div class='row'>
+  <div class='small-12 columns'>
+   {{try:}}{{=H2(title)}}{{except:}}{{pass}}
   </div>
  </div>
-</div>
+ {{try:}}{{if intro:}}<div class='row'>
+  <div class='small-12 columns'>
+   {{=P(intro, _class="certificate-intro")}}
+  </div>
+ </div>{{pass}}{{except:}}{{pass}}
+ <div class='row'>
+  <div class='small-12 columns'>
+   <div class='form-container'>
+    {{try:}}{{=form}}{{except:}}{{pass}}
+   </div>
+  </div>
+ </div>
+ <div class='row'>
+  <div class='small-12 columns'>
+   <a href='{{=URL(c="disease", f="case_diagnostics", args=["register"])}}' class='action-lnk'>{{=T("Register another test result")}}</a>
+  </div>
+ </div>
 </section>
