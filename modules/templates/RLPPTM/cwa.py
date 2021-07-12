@@ -833,16 +833,16 @@ class CWAReportLayout(S3PDFCardLayout):
             link = item.get("link")
             if link:
                 self.draw_qrcode(link,
-                                 100,
-                                 h - 160,
-                                 size = 120,
+                                 120,
+                                 h - 170,
+                                 size = 160,
                                  halign = "center",
                                  valign = "middle",
                                  level = "M",
                                  )
 
             # Alignments for header items
-            HL = 340
+            HL = 360
             HY = (h - 55, h - 75)
 
             # Title
@@ -851,8 +851,8 @@ class CWAReportLayout(S3PDFCardLayout):
                 draw_value(HL, HY[0], title, width=280, height=20, size=16)
 
             # Alignments for data items
-            DL = 250
-            DR = 380
+            DL = 270
+            DR = 400
             DY = (h - 115, h - 135, h - 155, h - 175, h - 195, h - 215, h - 235)
 
             # Person first name, last name, date of birth
