@@ -813,7 +813,7 @@ def config(settings):
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        report_options = report_options,
-                       orderby = "disease_case_diagnostics.result_date desc",
+                       orderby = "disease_case_diagnostics.probe_date desc",
                        )
 
         # Custom callback to auto-update test station daily reports
@@ -852,6 +852,57 @@ def config(settings):
             msg_list_empty = T("No Test Results currently registered"))
 
     settings.customise_disease_case_diagnostics_resource = customise_disease_case_diagnostics_resource
+
+    # -------------------------------------------------------------------------
+    def customise_disease_case_diagnostics_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Enable bigtable features
+        settings.base.bigtable = True
+
+        ## Custom prep
+        #standard_prep = s3.prep
+        #def prep(r):
+        #    # Call standard prep
+        #    result = standard_prep(r) if callable(standard_prep) else True
+        #
+        #    return result
+        #s3.prep = prep
+
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if isinstance(output, dict):
+
+                record = r.record
+                method = r.method
+
+                # Add Register-button in list and read views
+                key, label = None, None
+                permitted = current.auth.s3_has_permission("create", r.table)
+                if permitted:
+                    if not record and not method:
+                        key, label = "add_btn", T("Register Test Result")
+                    elif record and method in (None, "read"):
+                        key, label = "list_btn", T("Register another test result")
+                if key:
+                    crud = r.resource.crud
+                    regbtn =  crud.crud_button(label = label,
+                                               _href = r.url(id="", method="register"),
+                                               )
+                    output["buttons"] = {key: regbtn}
+
+            return output
+        s3.postp = custom_postp
+
+        return attr
+
+    settings.customise_disease_case_diagnostics_controller = customise_disease_case_diagnostics_controller
 
     # -------------------------------------------------------------------------
     def customise_disease_testing_report_resource(r, tablename):
@@ -899,6 +950,16 @@ def config(settings):
                        )
 
     settings.customise_disease_testing_report_resource = customise_disease_testing_report_resource
+
+    # -------------------------------------------------------------------------
+    def customise_disease_testing_report_controller(**attr):
+
+        # Enable bigtable features
+        settings.base.bigtable = True
+
+        return attr
+
+    settings.customise_disease_testing_report_controller = customise_disease_testing_report_controller
 
     # -------------------------------------------------------------------------
     def customise_fin_voucher_resource(r, tablename):
