@@ -823,19 +823,19 @@ def config(settings):
                                  )
 
         # Custom REST methods
-        from .cwa import TestResultRegistration
-        s3db.set_method("disease", "case_diagnostics",
-                        method = "register",
-                        action = TestResultRegistration,
-                        )
-        s3db.set_method("disease", "case_diagnostics",
-                        method = "certify",
-                        action = TestResultRegistration,
-                        )
-        s3db.set_method("disease", "case_diagnostics",
-                        method = "cwaretry",
-                        action = TestResultRegistration,
-                        )
+        #from .cwa import TestResultRegistration
+        #s3db.set_method("disease", "case_diagnostics",
+        #                method = "register",
+        #                action = TestResultRegistration,
+        #                )
+        #s3db.set_method("disease", "case_diagnostics",
+        #                method = "certify",
+        #                action = TestResultRegistration,
+        #                )
+        #s3db.set_method("disease", "case_diagnostics",
+        #                method = "cwaretry",
+        #                action = TestResultRegistration,
+        #                )
 
         crud_strings = current.response.s3.crud_strings
         crud_strings["disease_case_diagnostics"] = Storage(
