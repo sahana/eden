@@ -2839,6 +2839,7 @@ def config(settings):
             crud_fields = [organisation,
                            # -- Facility
                            "name",
+                           #"code", # TODO
                            S3SQLInlineLink(
                                 "facility_type",
                                 label = T("Facility Type"),

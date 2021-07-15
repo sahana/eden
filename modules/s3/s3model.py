@@ -1521,22 +1521,39 @@ class S3Model(object):
         fields = []
         has_deleted = "deleted" in table.fields
         has_uuid = "uuid" in table.fields
+
         for s in supertables:
+            # Get the supertable and the corresponding superkey
             if type(s) is not Table:
                 s = cls.table(s)
             if s is None:
                 continue
             tn = s._tablename
             key = cls.super_key(s)
+            protected = [key]
+
+            # Fields in the supertable that shall not be treated as
+            # shared fields (i.e. must not be overridden by instance
+            # values)
+            not_shared = get_config(tn, "no_shared_fields")
+            if isinstance(not_shared, (tuple, list)):
+                protected.extend(not_shared)
+
+            # Shared fields
             shared = get_config(tablename, "%s_fields" % tn)
-            if not shared:
-                shared = {fn: fn for fn in s.fields
-                                 if fn != key and fn in table.fields}
-            else:
+            if shared:
+                # Instance table specifies a specific field mapping
+                # {superfield: instfield} for this supertable
                 shared = {fn: shared[fn] for fn in shared
-                                         if fn != key and \
+                                         if fn not in protected and \
                                             fn in s.fields and \
                                             shared[fn] in table.fields}
+            else:
+                # All fields the supertable and instance table have
+                # in common, except protected fields
+                shared = {fn: fn for fn in s.fields
+                                 if fn not in protected and \
+                                    fn in table.fields}
             fields.extend(shared.values())
             fields.append(key)
             updates.append((tn, s, key, shared))

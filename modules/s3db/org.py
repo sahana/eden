@@ -3351,10 +3351,12 @@ class OrgSiteModel(S3Model):
                        list_fields = list_fields,
                        # Include site_id in JSON (for filterOptionsS3):
                        json_fields = list_fields + ["site_id"],
+                       # Do not override the code with any codes from instance tables:
+                       no_shared_fields = ("code",),
                        onaccept = self.org_site_onaccept,
                        ondelete_cascade = self.org_site_ondelete_cascade,
-                       referenced_by = [(auth.settings.table_user_name,
-                                         "site_id")],
+                       referenced_by = [(auth.settings.table_user_name, "site_id"),
+                                        ],
                        )
 
         # Components
@@ -3457,44 +3459,207 @@ class OrgSiteModel(S3Model):
                 }
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def get_unique_code(name, site_id):
+        """
+            The original algorithm to find a unique site code
+            from variations of its name (rewritten for better
+            comprehensibility; unused, retained for reference)
+
+            @param name: the site name
+            @param site_id: the site ID
+
+            @returns: the unique code, or None if no unique code could
+                      be found
+
+            @note: this function shows extremely poor performance when
+                   there are hundreds or thousands of sites where the
+                   names start with the same 10 characters (e.g. when
+                   the names start with the site type, as is often the
+                   case)
+        """
+
+        # ASCII alphanumeric characters, with letters in least
+        # commonly used order
+        # - nice idea, but actually, if this generator is used for
+        #   most or all site codes (as it is), this special order
+        #   does nothing to reduce the number of permutations to
+        #   trial, because naturally it would become the MOST commonly
+        #   used order ;)
+        charset = "1234567890ZQJXKVBWPYGUMCFLDHSIRNOATE"
+
+        # Normalize name to charset
+        name = "".join(c for c in name.upper() if c in charset)
+
+        # Generate initial code
+        maxlen = min(current.deployment_settings.get_org_site_code_len(), 10)
+        code = name[:maxlen]
+
+        # Check for duplicate
+        db = current.db
+        stable = current.s3db.org_site
+        query = (stable.code == code) & \
+                (stable.site_id != site_id) & \
+                (stable.deleted == False)
+        duplicate = db(query).select(stable.site_id, limitby=(0, 1)).first()
+        if not duplicate:
+            return code
+
+        # Replace characters in the code, starting from the end
+        import itertools
+        codelen = len(code)
+        for bits in range(1, 2**codelen):
+
+            # Determine the replacement positions (bit indexes)
+            q = bits
+            wildcard_posn = []
+            for i in range(codelen):
+                if q & 1:
+                    wildcard_posn.append(codelen - (i + 1))
+                q = q >> 1
+
+            # Generate a pattern with wildcards at these positions
+            newcode = list(code)
+            for pos in wildcard_posn:
+                newcode[pos] = "_"
+            pattern = "".join(newcode)
+
+            # Look up all currently used codes matching this pattern
+            # - we should hope that this succeeds in the first two iterations,
+            #   since any iteration with more than 1 wildcard could find
+            #   hundreds or thousands of matches, which would become very
+            #   costly to extract
+            query = (stable.code.like(pattern)) & \
+                    (stable.site_id != site_id) & \
+                    (stable.deleted == False)
+            rows = db(query).select(stable.code)
+            used_codes = set(row.code for row in rows)
+
+            # Find a combination of replacement characters for the wildcards
+            # that does not match any of the existing codes
+            # - since the charset order is fix, there will normally be as many
+            #   iterations here as there are matches; which is very slow even
+            #   though we're searching through a set here (which is already 4x
+            #   faster than the original implementation with a list)
+            for replacement in itertools.permutations(charset, len(wildcard_posn)):
+                for i, pos in enumerate(wildcard_posn):
+                    newcode[pos] = replacement[i]
+                c = "".join(newcode)
+                if not used_codes or c not in used_codes:
+                    return c
+
+        return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def generate_site_code(name, site_id):
+        """
+            Generate a unique site code (replaces get_unique_code)
+
+            @param name: the site name
+            @param site_id: the site_id
+
+            @returns: site code
+        """
+
+        import random
+
+        db = current.db
+        stable = current.s3db.org_site
+
+        # Code length and suffix length
+        l = min(current.deployment_settings.get_org_site_code_len(), 10)
+        min_suffix_length = min(l, 4)
+
+        # Normalize name to uppercase ASCII
+        # - drop all vowels after 2nd letter for a more condensed+relevant substring
+        alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        cons = "BCDFGHJKLMNPQRSTVWXYZ"
+        if not name:
+            name = "SITE" # fallback
+        else:
+            name = "".join(c for c in name[:2].upper() if c in alpha) + \
+                   "".join(c for c in name[2:].upper() if c in cons)
+        if not name:
+            # Imagine one
+            name = "".join(random.choice(alpha) for _ in range(l))
+
+        # Generate code prefix from normalized name
+        # - fill up with X if name is too short
+        prefix = (name[:l] + "X" * l)[:l]
+
+        # Generate random suffix from consonants and digits
+        charset = "1234567890" + cons
+        for suffix_length in range(min_suffix_length, l + 1):
+            # NB this has been tested and found sufficient for at least
+            # 200,000 potential duplicates at a suffix length of 4; if
+            # it however keeps failing, increasing min_suffix_length will
+            # help more than increasing max_tries!
+            max_tries = 20
+            while max_tries:
+                suffix = "".join(random.choice(charset) for _ in range(suffix_length))
+                code = prefix[:-suffix_length] + suffix
+                query = (stable.code == code) & (stable.site_id != site_id)
+                duplicate = db(query).select(stable.site_id,
+                                             limitby = (0, 1),
+                                             ).first()
+                if not duplicate:
+                    return code
+                max_tries -= 1
+
+        # Giving up
+        raise RuntimeError("Could not generate a site code")
+
+    # -------------------------------------------------------------------------
     @classmethod
     def org_site_onaccept(cls, form):
         """
-            Create the code from the name
+            Onaccept-routine for site super-records:
+            - generate a unique site code
+
+            NB Site code differs from instance table "code" fields in that
+               it shall be unique across all site types, which is not ensured
+               for instance table codes; the site code is meant to be
+               used as part of document reference numbers (e.g. waybills);
+               we prevent the "code" field from being updated as a shared
+               field, and produce a unique site code here onaccept
         """
 
-        name = form.vars.name
-        if not name:
+        # Get record ID
+        form_vars = form.vars
+        if "site_id" in form_vars:
+            site_id = form_vars.site_id
+        elif "id" in form_vars:
+            site_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            site_id = form.record_id
+        else:
             return
 
-        # Normalize to ASCII-Alphanumeric
-        alnum = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-        pname = "".join(c for c in name.upper() if c in alnum)
-
-        # Apply length-setting (max 10 characters though, as per model)
-        code_len = min(current.deployment_settings.get_org_site_code_len(), 10)
-        temp_code = pname[:code_len]
-
         db = current.db
-        site_table = db.org_site
-        query = (site_table.code == temp_code)
-        row = db(query).select(site_table.id, limitby=(0, 1)).first()
-        if row:
-            code = temp_code
-            temp_code = None
-            wildcard_bit = 1
-            length = len(code)
-            max_wc_bit = pow(2, length)
-            while not temp_code and wildcard_bit < max_wc_bit:
-                wildcard_posn = []
-                for w in range(length):
-                    if wildcard_bit & pow(2, w):
-                        wildcard_posn.append(length - (1 + w))
-                wildcard_bit += 1
-                code_list = cls.get_code_list(code, wildcard_posn)
-                temp_code = cls.get_unique_code(code, wildcard_posn, code_list)
-        if temp_code:
-            db(site_table.site_id == form.vars.site_id).update(code=temp_code)
+        table = current.s3db.org_site
+
+        name = form_vars.get("name")
+        code = form_vars.get("code")
+        if not name or not code:
+            # Look up from record
+            row = db(table.site_id == site_id).select(table.name,
+                                                      table.code,
+                                                      limitby = (0, 1),
+                                                      ).first()
+            if not row:
+                # Record doesn't exist
+                return
+            if not name:
+                name = row.name
+            if not code:
+                code = row.code
+
+        # If we have no code yet, generate one from the name
+        if not code and name:
+            code = cls.generate_site_code(name, site_id)
+            if code:
+                db(table.site_id == site_id).update(code = code)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3513,78 +3678,6 @@ class OrgSiteModel(S3Model):
         rows = db(query).select(htable.id)
         db(query).update(site_id = None)
         current.auth.set_realm_entity(htable, rows, force_update=True)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def get_code_list(code, wildcard_posn=None):
-        """
-            Called by org_site_onaccept
-        """
-
-        if wildcard_posn is None:
-            wildcard_posn = []
-
-        temp_code = ""
-        # Inject the wildcard charater in the right positions
-        for posn in range(len(code)):
-            if posn in wildcard_posn:
-                temp_code += "%"
-            else:
-                temp_code += code[posn]
-        # Now set up the db call
-        db = current.db
-        site_table = db.org_site
-        query = site_table.code.like(temp_code)
-        rows = db(query).select(site_table.id,
-                                site_table.code)
-        # Extract the rows in the database to provide a list of used codes
-        code_list = []
-        for record in rows:
-            code_list.append(record.code)
-
-        return code_list
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def get_unique_code(code, wildcard_posn=None, code_list=None):
-        """
-            Called by org_site_onaccept
-        """
-
-        if wildcard_posn is None:
-            wildcard_posn = []
-        if code_list is None:
-            code_list = []
-
-        # Select the replacement letters with numbers first and then
-        # followed by the letters in least commonly used order
-        replacement_char = "1234567890ZQJXKVBWPYGUMCFLDHSIRNOATE"
-        rep_posn = [0] * len(wildcard_posn)
-        finished = False
-        while (not finished):
-            # Find the next code to try
-            temp_code = ""
-            r = 0
-            for posn in range(len(code)):
-                if posn in wildcard_posn:
-                    temp_code += replacement_char[rep_posn[r]]
-                    r += 1
-                else:
-                    temp_code += code[posn]
-            if temp_code not in code_list:
-                return temp_code
-            # Set up the next rep_posn
-            p = 0
-            while (p < len(wildcard_posn)):
-                if rep_posn[p] == 35: # the maximum number of replacement characters
-                    rep_posn[p] = 0
-                    p += 1
-                else:
-                    rep_posn[p] = rep_posn[p] + 1
-                    break
-            # If no new permutation of replacement characters has been found
-            if p == len(wildcard_posn):
-                return None
 
     # -------------------------------------------------------------------------
     @staticmethod
