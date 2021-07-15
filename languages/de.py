@@ -5553,6 +5553,7 @@
 'Test Result': 'Testergebnis',
 'Test Results Statistics': 'Testergebnis-Statistik',
 'Test Results': 'Testergebnisse',
+'Test Station ID': 'Teststellen-ID',
 'Test Station Name': 'Name der Teststelle',
 'Test Station': 'Teststelle',
 'Test Stations for Everybody': 'Teststellen für Alle',

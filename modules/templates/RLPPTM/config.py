@@ -2464,8 +2464,11 @@ def config(settings):
         else:
             return
 
-        from .helpers import add_facility_default_tags
+        # Generate facility ID and add default tags
+        from .helpers import add_facility_default_tags, set_facility_code
+        set_facility_code(record_id)
         add_facility_default_tags(record_id)
+
 
     # -------------------------------------------------------------------------
     def facility_postprocess(form):
@@ -2567,6 +2570,12 @@ def config(settings):
         from .helpers import OrganisationRepresent
         field.represent = OrganisationRepresent()
         field.comment = None
+
+        # Expose code (r/o)
+        field = table.code
+        field.label = T("Test Station ID")
+        field.readable = True
+        field.writable = False
 
         # Configure location selector incl. Geocoder
         field = table.location_id
@@ -2839,7 +2848,7 @@ def config(settings):
             crud_fields = [organisation,
                            # -- Facility
                            "name",
-                           #"code", # TODO
+                           "code",
                            S3SQLInlineLink(
                                 "facility_type",
                                 label = T("Facility Type"),
@@ -2933,6 +2942,13 @@ def config(settings):
         # Custom prep
         standard_prep = s3.prep
         def prep(r):
+
+            # Restrict data formats
+            allowed = ("html", "iframe", "popup", "aadata", "plain", "geojson", "pdf", "xls")
+            settings.ui.export_formats = ("pdf", "xls")
+            if r.representation not in allowed:
+                r.error(403, current.ERROR.NOT_PERMITTED)
+
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
@@ -2954,7 +2970,6 @@ def config(settings):
                     s3.crud_strings.org_facility.title_report = T("Facilities Statistics")
 
                 else:
-
                     # Filter by public-tag
                     get_vars = r.get_vars
                     if is_org_group_admin:

@@ -43,7 +43,7 @@ from gluon.languages import lazyT
 from s3compat import PY2, BytesIO, basestring, xrange
 from ..s3codec import S3Codec
 from ..s3utils import s3_strip_markup, s3_unicode, s3_str
-        
+
 if not PY2:
     import unicodedata
 
@@ -1104,8 +1104,10 @@ class S3PDFTable(object):
 
                 # Wrap in paragraph if string contains newlines or component is
                 # a block-element, preserving newlines and setting font weight
+                is_block = lambda e: isinstance(e, DIV) and \
+                                     e.tag in ("h6", "h5", "h4", "h3", "h2", "h1", "p", "div")
                 if isinstance(pdf_value, basestring) and \
-                   isinstance(value, (H1, H2, H3, H4, H5, H6, P, DIV)) or "\n" in pdf_value:
+                   (is_block(value) or "\n" in pdf_value):
                     pdf_value = Paragraph(pdf_value.replace("\n", "<br/>"), para_style)
 
             elif num_components > 0:
