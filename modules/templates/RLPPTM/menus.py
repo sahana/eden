@@ -9,7 +9,6 @@ except ImportError:
     pass
 import s3menus as default
 
-from .helpers import get_stats_projects
 from .requests import get_managed_requester_orgs
 
 # =============================================================================
@@ -46,9 +45,6 @@ class S3MainMenu(default.S3MainMenu):
         has_roles = auth.s3_has_roles
 
         is_org_group_admin = lambda i: has_role("ORG_GROUP_ADMIN", include_admin=False)
-        report_results = lambda i: has_role("VOUCHER_PROVIDER", include_admin=False) and \
-                                   len(get_stats_projects()) > 0
-
         managed_requester_orgs = get_managed_requester_orgs()
 
         supply_coordinator = lambda i: has_role("SUPPLY_COORDINATOR")
@@ -59,7 +55,7 @@ class S3MainMenu(default.S3MainMenu):
         supply_access = lambda i: order_access(i) or supply_distributor(i)
 
         menu = [MM("Tests##disease", c="disease", link=False)(
-                    MM("Test Results", f="case_diagnostics", restrict="TEST_PROVIDER"),
+                    #MM("Test Results", f="case_diagnostics", restrict="TEST_PROVIDER"),
                     MM("Daily Reports", f="testing_report"),
                     ),
                 MM("Equipment", c=("req", "inv", "supply"), link=False, check=supply_access)(
@@ -254,15 +250,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
     @staticmethod
     def disease():
 
-        s3db = current.s3db
-
+        has_role = current.auth.s3_has_role
+        daily_report = lambda i: has_role("ORG_ADMIN") and \
+                                 has_role("TEST_PROVIDER", include_admin=False)
         return M(c="disease")(
-                    M("Test Results", f="case_diagnostics", restrict="TEST_PROVIDER")(
-                        M("Registrieren", m="register"),
-                        M("Statistics", m="report"),
-                        ),
+                    #M("Test Results", f="case_diagnostics", restrict="TEST_PROVIDER")(
+                    #    M("Registrieren", m="register"),
+                    #    M("Statistics", m="report"),
+                    #    ),
                     M("Daily Reports", f="testing_report")(
-                        M("Create", m="create"),
+                        M("Create", m="create", check=daily_report),
                         M("Statistics", m="report"),
                         ),
                     M("Administration", restrict="ADMIN")(

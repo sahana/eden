@@ -945,8 +945,14 @@ def config(settings):
                 field.default = selectable[0]
                 field.writable = False
 
+        # Daily reports only writable for ORG_ADMINs of test stations
+        writable = current.auth.s3_has_roles(["ORG_ADMIN", "TEST_PROVIDER"], all=True)
+
         s3db.configure("disease_testing_report",
                        list_fields = list_fields,
+                       insertable = writable,
+                       editable = writable,
+                       deletable = writable,
                        )
 
     settings.customise_disease_testing_report_resource = customise_disease_testing_report_resource

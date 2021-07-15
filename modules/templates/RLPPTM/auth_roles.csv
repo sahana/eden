@@ -133,8 +133,12 @@ SUPPLY_COORDINATOR,Supply Coordinator,,,,,pr_contact,READ,,any
 SUPPLY_COORDINATOR,Supply Coordinator,,,,,req_req,READ,,any
 SUPPLY_DISTRIBUTOR,Supply Distributor,,,inv,send,,READ,,
 SUPPLY_DISTRIBUTOR,Supply Distributor,,,,,inv_send,READ,,
+TEST_PROVIDER,Test Provider,,,disease,case_diagnostics,,CREATE|READ|UPDATE|DELETE,,
+TEST_PROVIDER,Test Provider,,,disease,case_diagnostics,,READ,,any
+TEST_PROVIDER,Test Provider,,,disease,,,READ,,
 TEST_PROVIDER,Test Provider,,,disease,testing_report,,CREATE|READ|UPDATE|DELETE,,
 TEST_PROVIDER,Test Provider,,,disease,,,READ,,
+TEST_PROVIDER,Test Provider,,,,,disease_case_diagnostics,CREATE|READ|UPDATE|DELETE,,
 TEST_PROVIDER,Test Provider,,,,,disease_testing_report,CREATE|READ|UPDATE|DELETE,,
 TEST_PROVIDER,Test Provider,,,,,org_site,READ,,
 VOUCHER_ISSUER,Voucher Issuer,,,fin,voucher,,READ,,any
