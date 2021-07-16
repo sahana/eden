@@ -994,10 +994,10 @@ def set_facility_code(facility_id):
         return None
 
     try:
-        uid = int(facility.uuid[9:14], 16)
+        uid = int(facility.uuid[9:14], 16) % 1000000
     except (TypeError, ValueError):
         import uuid
-        uid = int(uuid.uuid4().urn[9:14], 16)
+        uid = int(uuid.uuid4().urn[9:14], 16) % 1000000
 
     # Generate code
     import random
