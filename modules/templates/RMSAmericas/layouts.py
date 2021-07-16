@@ -45,8 +45,11 @@ class S3MainMenuLayout(S3NavigationItem):
             apps = ""
             iframe = ""
         else:
+            request = current.request
+            # Inject JavaScript
+            current.response.s3.scripts.append("/%s/static/themes/RMSAmericas/js/nav.js" % request.application)
+
             # Show Applications switcher
-            current.response.s3.scripts.append("/%s/static/themes/RMSAmericas/js/nav.js" % current.request.application)
             apps = DIV(A(SVG(PATH(_d = "M6,8c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM6,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM6,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM16,6c0,1.1 0.9,2 2,2s2,-0.9 2,-2 -0.9,-2 -2,-2 -2,0.9 -2,2zM12,8c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM18,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM18,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2z",
                                   ),
                              _fill = "#5f6368",
@@ -73,15 +76,37 @@ class S3MainMenuLayout(S3NavigationItem):
                                 ),
                          _style = "overflow: hidden; position: absolute; top: 0px; width: 328px; z-index: 991; height: 224px; margin-top: 250px; transition: height 0.3s ease-in-out 0s; right: 0px; margin-right: 4px; max-height: calc(-65px + 100vh);"
                          )
+
+            c = request.controller
+            f = request.function
+            if c == "default" and \
+               f == "help":
+                help_active = " active"
+            else:
+                help_active = ""
+
             if has_role("ADMIN"):
                 settings = URL(c="admin", f="index")
+                if c == "admin":
+                    settings_active = " active"
+                else:
+                    settings_active = ""
             elif has_role("ORG_ADMIN"):
                 settings = URL(c="admin", f="user")
+                if c == "admin":
+                    settings_active = " active"
+                else:
+                    settings_active = ""
             elif auth.s3_has_roles(("hr_manager",
                                     "ns_training_manager",
                                     "training_coordinator",
                                     )):
                 settings = URL(c="pr", f="forum")
+                if c == "pr" and \
+                   f == "forum":
+                    settings_active = " active"
+                else:
+                    settings_active = ""
             #elif auth.s3_has_roles(("wh_manager",
             #                        )):
             #   # @ToDo: WMS Module configuration
@@ -90,6 +115,7 @@ class S3MainMenuLayout(S3NavigationItem):
             #            ▪ Sharing authorisation
             #            ▪ Alerts
             #            ▪ Email for notification    
+                
             if settings:
                 settings = DIV(A(SVG(PATH(_d = "M13.85 22.25h-3.7c-.74 0-1.36-.54-1.45-1.27l-.27-1.89c-.27-.14-.53-.29-.79-.46l-1.8.72c-.7.26-1.47-.03-1.81-.65L2.2 15.53c-.35-.66-.2-1.44.36-1.88l1.53-1.19c-.01-.15-.02-.3-.02-.46 0-.15.01-.31.02-.46l-1.52-1.19c-.59-.45-.74-1.26-.37-1.88l1.85-3.19c.34-.62 1.11-.9 1.79-.63l1.81.73c.26-.17.52-.32.78-.46l.27-1.91c.09-.7.71-1.25 1.44-1.25h3.7c.74 0 1.36.54 1.45 1.27l.27 1.89c.27.14.53.29.79.46l1.8-.72c.71-.26 1.48.03 1.82.65l1.84 3.18c.36.66.2 1.44-.36 1.88l-1.52 1.19c.01.15.02.3.02.46s-.01.31-.02.46l1.52 1.19c.56.45.72 1.23.37 1.86l-1.86 3.22c-.34.62-1.11.9-1.8.63l-1.8-.72c-.26.17-.52.32-.78.46l-.27 1.91c-.1.68-.72 1.22-1.46 1.22zm-3.23-2h2.76l.37-2.55.53-.22c.44-.18.88-.44 1.34-.78l.45-.34 2.38.96 1.38-2.4-2.03-1.58.07-.56c.03-.26.06-.51.06-.78s-.03-.53-.06-.78l-.07-.56 2.03-1.58-1.39-2.4-2.39.96-.45-.35c-.42-.32-.87-.58-1.33-.77l-.52-.22-.37-2.55h-2.76l-.37 2.55-.53.21c-.44.19-.88.44-1.34.79l-.45.33-2.38-.95-1.39 2.39 2.03 1.58-.07.56a7 7 0 0 0-.06.79c0 .26.02.53.06.78l.07.56-2.03 1.58 1.38 2.4 2.39-.96.45.35c.43.33.86.58 1.33.77l.53.22.38 2.55z",
                                           ),
@@ -105,7 +131,7 @@ class S3MainMenuLayout(S3NavigationItem):
                                  _role = "button",
                                  _title = T("Settings"),
                                  ),
-                               _class = "hd",
+                               _class = "hd%s" % settings_active,
                                )
 
         user_a = A(s3_avatar_represent(auth.user.id,
@@ -176,7 +202,7 @@ class S3MainMenuLayout(S3NavigationItem):
                           _role = "button",
                           _title = T("Support"),
                           ),
-                        _class = "hd",
+                        _class = "hd%s" % help_active,
                         ),
                     settings,
                     apps,
@@ -190,56 +216,6 @@ class S3MainMenuLayout(S3NavigationItem):
                 ]
 
         return TAG[""](*divs)
-
-# =============================================================================
-def auth_formstyle(form, fields, *args, **kwargs):
-    """
-        Formstyle for the Login box on the homepage
-    """
-
-    def render_row(row_id, label, widget, comment, hidden=False):
-
-        if hasattr(widget, "element"):
-            submit = widget.element("input", _type="submit")
-            if submit:
-                submit.add_class("small primary button")
-            elif label:
-                widget["_placeholder"] = label[0]
-
-        return DIV(widget,
-                   _class = "medium-3 columns",
-                   _id = row_id,
-                   )
-
-    if args:
-        row_id = form
-        label = fields
-        widget, comment = args
-        hidden = kwargs.get("hidden", False)
-        return render_row(row_id, label, widget, comment, hidden)
-    else:
-        parent = TAG[""]()
-        for row_id, label, widget, comment in fields:
-            parent.append(render_row(row_id, label, widget, comment))
-        return parent
-
-# -----------------------------------------------------------------------------
-class S3LoginMenuLayout(S3NavigationItem):
-    """ Layout for the Login box in top navigation """
-
-    @staticmethod
-    def layout(item):
-
-        auth = current.auth
-        auth.settings.label_separator = ""
-        formstyle = auth_formstyle
-        login_form = auth.login(formstyle = formstyle)
-
-        return login_form
-
-# -----------------------------------------------------------------------------
-# Shortcut
-LM = S3LoginMenuLayout
 
 # =============================================================================
 class S3AboutMenuLayout(S3NavigationItem):

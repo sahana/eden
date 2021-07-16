@@ -1,16 +1,7 @@
-/* Login Form in Top Navigation Bar */
-.auth_login .primary.btn {
-    border-radius: 100%;
-}
-#auth_user_email,
-#auth_user_password {
+/* Login Form on Homepage */
+.hp-login {
+    margin-left: 20px;
     margin-top: 10px;
-}
-#auth_user_remember {
-    margin-top: 15px;
-}
-label[for="auth_user_remember"] {
-    margin-right: 0;
 }
 /* Top Navigation Bar */
 .hd {
@@ -23,6 +14,9 @@ label[for="auth_user_remember"] {
 }
 .hd:hover {
     background-color: #f0f0f0;
+}
+.hd.active {
+    background-color: #d9dadb;
 }
 /* Profile button in top-nav */
 .hdp {
