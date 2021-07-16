@@ -18,11 +18,13 @@ class S3MainMenu(default.S3MainMenu):
     # -------------------------------------------------------------------------
     @classmethod
     def menu(cls):
-        """ Top Navigation """
+        """ Main Menus """
+
+        # Footer
+        current.menu.about = cls.menu_about()
 
         if current.auth.is_logged_in():
             # Provide top-level Navigation bar
-            current.menu.about = cls.menu_about()
             return MM()
         else:
             # Blank top menu
