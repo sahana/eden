@@ -18,6 +18,10 @@
 .hd.active {
     background-color: #d9dadb;
 }
+.hi {
+    margin-top: -6px;
+    margin-left: -6px;
+}
 /* Profile button in top-nav */
 .hdp {
     display: inline-block;

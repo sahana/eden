@@ -135,9 +135,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         #ADMIN = s3.system_roles.ADMIN
         ORG_ADMIN = s3.system_roles.ORG_ADMIN
 
-        if request.function in ("certificate", "course", "course_certificate",
-                                "facility", "training", "training_center",
-                                "training_event", "trainee", "trainee_person"):
+        # training_functions imported from layouts
+        if request.function in training_functions:
             return M()( M("Training Centers", c="hrm", f="training_center")(
                         ),
                         M("Training Course Catalog", c="hrm", f="course")(

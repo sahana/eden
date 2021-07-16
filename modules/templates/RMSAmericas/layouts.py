@@ -5,6 +5,13 @@ from gluon import *
 from s3 import *
 #from s3theme import NAV, SECTION
 
+THEME = "RMSAmericas"
+
+training_functions = ("certificate", "course", "course_certificate",
+                      "facility", "training", "training_center",
+                      "training_event", "trainee", "trainee_person",
+                      )
+
 # =============================================================================
 class CIRCLE(DIV):
     """ <circle> element """
@@ -44,12 +51,65 @@ class S3MainMenuLayout(S3NavigationItem):
             # Just show Profile on main menu
             apps = ""
             iframe = ""
+            side_menu_control = ""
+            module_logo = ""
         else:
             request = current.request
+            c = request.controller
+            f = request.function
+
             # Inject JavaScript
             current.response.s3.scripts.append("/%s/static/themes/RMSAmericas/js/nav.js" % request.application)
 
-            # Show Applications switcher
+            # Side-menu control
+            side_menu_control = DIV(A(SVG(PATH(_d = "M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z",
+                                               ),
+                                          _fill = "#5f6368",
+                                          _height = "24px",
+                                          _width = "24px",
+                                          ),
+                                      _role = "button",
+                                      _title = T("Main menu"),
+                                      ),
+                                    _id = "menu-btn",
+                                    _class = "hd",
+                                    )
+
+            # Module Logo
+            if c == "hrm":
+                if f in training_functions:
+                    image = "training.png"
+                else:
+                    image = "human_talent.png"
+            elif c == "org":
+                image = "human_talent.png"
+            elif c in ("inv", "supply", "req"):
+                image = "warehouses.png"
+            elif c == "project":
+                image = "projects.png"
+            elif c == "deploy":
+                image = "RIT.png"
+            elif c == "member":
+                image = "partners.png"
+            else:
+                image = None
+
+            if image:
+                module_logo = DIV(IMG(_src = URL(c="static", f="themes",
+                                                 args = [THEME,
+                                                         "img",
+                                                         image,
+                                                         ]),
+                                       _class = "hi",
+                                       _height = "64",
+                                       _width = "64",
+                                       ),
+                                    _class = "hd",
+                                  )
+            else:
+                module_logo = ""
+
+            # Applications switcher
             apps = DIV(A(SVG(PATH(_d = "M6,8c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM6,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM6,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM16,6c0,1.1 0.9,2 2,2s2,-0.9 2,-2 -0.9,-2 -2,-2 -2,0.9 -2,2zM12,8c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM18,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM18,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2z",
                                   ),
                              _fill = "#5f6368",
@@ -77,14 +137,7 @@ class S3MainMenuLayout(S3NavigationItem):
                          _style = "overflow: hidden; position: absolute; top: 0px; width: 328px; z-index: 991; height: 224px; margin-top: 250px; transition: height 0.3s ease-in-out 0s; right: 0px; margin-right: 4px; max-height: calc(-65px + 100vh);"
                          )
 
-            c = request.controller
-            f = request.function
-            if c == "default" and \
-               f == "help":
-                help_active = " active"
-            else:
-                help_active = ""
-
+            # Settings
             if has_role("ADMIN"):
                 settings = URL(c="admin", f="index")
                 if c == "admin":
@@ -134,6 +187,14 @@ class S3MainMenuLayout(S3NavigationItem):
                                _class = "hd%s" % settings_active,
                                )
 
+        # Help Menu
+        if c == "default" and \
+           f == "help":
+            help_active = " active"
+        else:
+            help_active = ""
+
+        # User Profile
         user_a = A(s3_avatar_represent(auth.user.id,
                                        _class = "ip",
                                        _height = 36,
@@ -148,7 +209,7 @@ class S3MainMenuLayout(S3NavigationItem):
         user_menu = UL(LI(A(T("Profile"),
                             _href = URL(c="hrm", f="person",
                                         args = [str(auth.s3_logged_in_person())],
-                                        vars = {"profile":1},
+                                        vars = {"profile": 1},
                                         ),
                             ),
                           ),
@@ -171,20 +232,12 @@ class S3MainMenuLayout(S3NavigationItem):
         user_menu["data-dropdown-content"]
         user_menu["aria-hidden"] = "true"
 
-        divs = [DIV(DIV(A(SVG(PATH(_d = "M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z",
-                                   ),
-                              _fill = "#5f6368",
-                              _height = "24px",
-                              _width = "24px",
-                              ),
-                          _role = "button",
-                          _title = T("Main menu"),
-                          ),
-                        _id = "menu-btn",
-                        _class = "hd",
-                        ),
+        # Overall menu
+        divs = [DIV(side_menu_control,
+                    module_logo,
                     _class = "large-2 medium-3 small-4 columns",
                     ),
+                # Empty spacer div
                 DIV(_class = "large-8 medium-6 small-4 columns",
                     ),
                 DIV(DIV(A(SVG(PATH(_fill = "none",
