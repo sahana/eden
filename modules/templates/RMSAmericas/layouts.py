@@ -59,7 +59,11 @@ class S3MainMenuLayout(S3NavigationItem):
             f = request.function
 
             # Inject JavaScript
-            current.response.s3.scripts.append("/%s/static/themes/RMSAmericas/js/nav.js" % request.application)
+            s3 = current.response.s3
+            s3.scripts.append("/%s/static/themes/RMSAmericas/js/nav.js" % request.application)
+            # Use tooltip-f class to avoid clash with widgets.css
+            # Remove nub
+            s3.js_foundation.append('''{tooltip:{tooltip_class:'.tooltip-f',tip_template:function(selector,content){return '<span data-selector="'+selector+'" class="'+Foundation.libs.tooltip.settings.tooltip_class.substring(1)+'">'+content+'</span>'}}}''')
 
             # Side-menu control
             side_menu_control = DIV(A(SVG(PATH(_d = "M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z",
@@ -69,11 +73,13 @@ class S3MainMenuLayout(S3NavigationItem):
                                           _width = "24px",
                                           ),
                                       _role = "button",
-                                      _title = T("Main menu"),
                                       ),
                                     _id = "menu-btn",
                                     _class = "hd",
+                                    _title = T("Main menu"),
                                     )
+            side_menu_control["_data-tooltip"] = ""
+            side_menu_control["_aria-haspopup"] = "true"
 
             # Module Logo
             if c == "hrm":
@@ -118,11 +124,13 @@ class S3MainMenuLayout(S3NavigationItem):
                              ),
                          _href = "#",
                          _role = "button",
-                         _title = T("RMS modules"),
                          ),
                        _class = "hd",
                        _id = "apps-btn",
+                       _title = T("RMS modules"),
                        )
+            apps["_data-tooltip"] = ""
+            apps["_aria-haspopup"] = "true"
 
             iframe = DIV(IFRAME(_role = "presentation",
                                 _class = "hide",
@@ -182,10 +190,12 @@ class S3MainMenuLayout(S3NavigationItem):
                                      ),
                                  _href = settings,
                                  _role = "button",
-                                 _title = T("Settings"),
                                  ),
                                _class = "hd%s" % settings_active,
+                               _title = T("Settings"),
                                )
+                settings["_data-tooltip"] = ""
+                settings["_aria-haspopup"] = "true"
 
         # Help Menu
         if c == "default" and \
@@ -193,117 +203,32 @@ class S3MainMenuLayout(S3NavigationItem):
             help_active = " active"
         else:
             help_active = ""
-
-        # User Profile
-        user_a = A(s3_avatar_represent(auth.user.id,
-                                       _class = "hip",
-                                       _height = 36,
-                                       _width = 36,
-                                       ),
-                   _id = "user-btn",
-                   _role = "button",
-                   _title = T("RMS Account"),
-                   )
-        user_menu = DIV(UL(LI(A(T("Profile"),
-                                _href = URL(c="hrm", f="person",
-                                            args = str(auth.s3_logged_in_person()),
-                                            vars = {"profile": 1},
-                                            ),
-                                ),
-                              ),
-                           LI(A(T("Change Password"),
-                                _href = URL(c="default", f="user",
-                                            args = "change_password",
-                                            ),
-                                ),
-                              ),
-                           LI(A(T("Logout"),
-                                _href = URL(c="default", f="user",
-                                            args = "logout",
-                                            ),
-                                ),
-                              ),
-                           ),
-                        _id = "user-menu",
-                        _class = "hide",
-                        )
-
-        # Overall menu
-        divs = [DIV(side_menu_control,
-                    module_logo,
-                    _class = "large-2 medium-3 small-4 columns",
-                    ),
-                DIV(DIV(DIV(A(SVG(PATH(_fill = "none",
-                                       _d = "M0 0h24v24H0z",
-                                       ),
-                                  PATH(_d = "M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z",
-                                       ),
-                                  _fill = "#5f6368",
-                                  _height = "24px",
-                                  _width = "24px",
-                                  ),
-                              _href = URL(c = "default",
-                                          f = "help",
-                                          ),
-                              _role = "button",
-                              _title = T("Support"),
-                              ),
-                            _class = "hd%s" % help_active,
+        support = DIV(A(SVG(PATH(_fill = "none",
+                                 _d = "M0 0h24v24H0z",
+                                 ),
+                            PATH(_d = "M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z",
+                                 ),
+                            _fill = "#5f6368",
+                            _height = "24px",
+                            _width = "24px",
                             ),
-                        settings,
-                        apps,
-                        DIV(user_a,
-                            user_menu,
-                            _class = "hdp",
-                            ),
-                        iframe,
-                        _class = "fright",
+                        _href = URL(c = "default",
+                                    f = "help",
+                                    ),
+                        _role = "button",
                         ),
-                    _class = "large-4 medium-6 small-8 columns",
-                    ),
-                ]
+                      _class = "hd%s" % help_active,
+                      _title = T("Support"),
+                      )
+        support["_data-tooltip"] = ""
+        support["_aria-haspopup"] = "true"
 
-        return TAG[""](*divs)
-
-# =============================================================================
-class S3AboutMenuLayout(S3NavigationItem):
-
-    @staticmethod
-    def layout(item):
-
-        if item.parent is None:
-            # The menu
-            items = item.render_components()
-            if items:
-                return UL(items, _class="sub-nav about-menu left")
-            else:
-                return "" # menu is empty
-        else:
-            # A menu item
-            if item.enabled and item.authorized:
-                return LI(A(item.label, _href=item.url()))
-            else:
-                return None
-
-# -----------------------------------------------------------------------------
-# Shortcut
-MA = S3AboutMenuLayout
-
-# =============================================================================
-class S3OrgMenuLayout(S3NavigationItem):
-    """ Layout for the organisation-specific menu """
-
-    @staticmethod
-    def layout(item):
-        """
-            @ToDo: Migrate to s3db.org_logo_represent
-        """
-
+        # Logo
         name = "IFRC"
         logo = None
 
         # Lookup Root Organisation name & Logo
-        root_org = current.auth.root_org()
+        root_org = auth.root_org()
         if root_org:
             db = current.db
             s3db = current.s3db
@@ -344,22 +269,104 @@ class S3OrgMenuLayout(S3NavigationItem):
                     image = s3db.pr_image_library_represent(record.logo, size=size)
                     url_small = URL(c="default", f="download", args=image)
                     alt = "%s logo" % name
-                    logo = IMG(_src=url_small, _alt=alt, _width=60)
+                    logo = IMG(_src = url_small,
+                               _alt = alt,
+                               _class = "hi",
+                               _width = 60,
+                               )
 
         if not logo:
             # Default to generic IFRC
             logo = IMG(_src = "/%s/static/themes/RMSAmericas/img/logo_small.png" %
-                              current.request.application,
-                       _alt = current.T("Red Cross/Red Crescent"),
+                              request.application,
+                       _alt = T("Red Cross/Red Crescent"),
+                       _class = "hi",
                        _width = 60,
                        )
 
-        # Note: render using current.menu.org.render()[0] + current.menu.org.render()[1]
-        #return (name, logo)
-        return logo
+        # User Profile
+        user_a = A(s3_avatar_represent(auth.user.id,
+                                       _class = "hip",
+                                       _height = 36,
+                                       _width = 36,
+                                       ),
+                   _id = "user-btn",
+                   _role = "button",
+                   )
+        user_menu = DIV(UL(LI(A(T("Profile"),
+                                _href = URL(c="hrm", f="person",
+                                            args = str(auth.s3_logged_in_person()),
+                                            vars = {"profile": 1},
+                                            ),
+                                ),
+                              ),
+                           LI(A(T("Change Password"),
+                                _href = URL(c="default", f="user",
+                                            args = "change_password",
+                                            ),
+                                ),
+                              ),
+                           LI(A(T("Logout"),
+                                _href = URL(c="default", f="user",
+                                            args = "logout",
+                                            ),
+                                ),
+                              ),
+                           ),
+                        _id = "user-menu",
+                        _class = "hide",
+                        )
+        user_profile = DIV(user_a,
+                           user_menu,
+                           _class = "hdp",
+                           _title = T("RMS Account"),
+                           )
+        user_profile["_data-tooltip"] = ""
+        user_profile["_aria-haspopup"] = "true"
+
+        # Overall menu
+        divs = [DIV(side_menu_control,
+                    module_logo,
+                    _class = "large-2 medium-3 small-4 columns",
+                    ),
+                DIV(DIV(support,
+                        settings,
+                        apps,
+                        DIV(logo,
+                            _class = "hdl",
+                            ),
+                        user_profile,
+                        iframe,
+                        _class = "fright",
+                        ),
+                    _class = "large-4 medium-6 small-8 columns",
+                    ),
+                ]
+
+        return TAG[""](*divs)
+
+# =============================================================================
+class S3AboutMenuLayout(S3NavigationItem):
+
+    @staticmethod
+    def layout(item):
+
+        if item.parent is None:
+            # The menu
+            items = item.render_components()
+            if items:
+                return UL(items, _class="sub-nav about-menu left")
+            else:
+                return "" # menu is empty
+        else:
+            # A menu item
+            if item.enabled and item.authorized:
+                return LI(A(item.label, _href=item.url()))
+            else:
+                return None
 
 # -----------------------------------------------------------------------------
 # Shortcut
-OM = S3OrgMenuLayout
+MA = S3AboutMenuLayout
 
 # END =========================================================================

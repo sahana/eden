@@ -91,6 +91,7 @@ s3.scripts = []
 s3.scripts_modules = []
 s3.js_global = []
 s3.jquery_ready = []
+s3.js_foundation = []
 
 # -----------------------------------------------------------------------------
 # Languages

@@ -18,7 +18,7 @@ $(document).ready(function(){
     var hideAppsMenu = function() {
         // Hide the App Switcher
         appsFrame.addClass('hide')
-                 .parent().css('margin-top', '250px');
+                 .parent().css('margin-top', '800px');
         // Remove Highlight
         appsBtn.css('background-color', '');
     }
@@ -32,13 +32,16 @@ $(document).ready(function(){
     var hideUserMenu = function() {
         // Hide the User Menu
         userDiv.addClass('hide')
-                 .css('margin-top', '250px');
+                 .css('margin-top', '800px');
     }
 
     appsBtn.on('click', function() {
         if (appsFrame.hasClass('hide')) {
             hideUserMenu();
             showAppsMenu();
+            // Hide the tooltip
+            var tooltipSelector = appsBtn.data('selector');
+            $('span[data-selector="' + tooltipSelector + '"]').hide();
         } else {
             hideAppsMenu();
         }
@@ -62,8 +65,12 @@ $(document).ready(function(){
         if (userDiv.hasClass('hide')) {
             hideAppsMenu();
             showUserMenu();
+            // Hide the tooltip
+            var tooltipSelector = userBtn.parent().data('selector');
+            $('span[data-selector="' + tooltipSelector + '"]').hide();
         } else {
             hideUserMenu();
         }
     });
+
 });
