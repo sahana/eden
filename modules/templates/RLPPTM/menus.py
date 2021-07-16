@@ -55,7 +55,7 @@ class S3MainMenu(default.S3MainMenu):
         supply_access = lambda i: order_access(i) or supply_distributor(i)
 
         menu = [MM("Tests##disease", c="disease", link=False)(
-                    #MM("Test Results", f="case_diagnostics", restrict="TEST_PROVIDER"),
+                    MM("Test Results", f="case_diagnostics", restrict="TEST_PROVIDER"),
                     MM("Daily Reports", f="testing_report"),
                     ),
                 MM("Equipment", c=("req", "inv", "supply"), link=False, check=supply_access)(
@@ -254,10 +254,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
         daily_report = lambda i: has_role("ORG_ADMIN") and \
                                  has_role("TEST_PROVIDER", include_admin=False)
         return M(c="disease")(
-                    #M("Test Results", f="case_diagnostics", restrict="TEST_PROVIDER")(
-                    #    M("Registrieren", m="register"),
-                    #    M("Statistics", m="report"),
-                    #    ),
+                    M("Test Results", f="case_diagnostics", restrict="TEST_PROVIDER")(
+                        M("Registrieren", m="register"),
+                        M("Statistics", m="report"),
+                        ),
                     M("Daily Reports", f="testing_report")(
                         M("Create", m="create", check=daily_report),
                         M("Statistics", m="report"),
