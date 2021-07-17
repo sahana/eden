@@ -25,7 +25,6 @@ def config(settings):
 
     # PrePopulate data
     settings.base.prepopulate.append("BRCMS")
-    settings.base.prepopulate_demo.append("BRCMS/Demo")
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "BRCMS"

@@ -29,8 +29,8 @@ def config(settings):
     settings.base.system_name_short = T("%(name)s Emergency Relief Portal") % operation
 
     # PrePopulate data
-    settings.base.prepopulate += ("BRCMS/RLP",)
-    settings.base.prepopulate_demo = ["default/users", "BRCMS/RLP/Demo"]
+    settings.base.prepopulate.append("BRCMS/RLP")
+    settings.base.prepopulate_demo.append("BRCMS/RLP/Demo")
 
     # Theme
     settings.base.theme = "RLP"
