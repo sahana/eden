@@ -1259,6 +1259,7 @@ class BRAssistanceModel(S3Model):
 
     names = ("br_assistance_measure",
              "br_assistance_measure_theme",
+             "br_assistance_offer",
              "br_assistance_status",
              "br_assistance_theme",
              "br_assistance_type",
@@ -1385,6 +1386,78 @@ class BRAssistanceModel(S3Model):
                                                       )),
                                 sortby = "name",
                                 )
+
+        # ---------------------------------------------------------------------
+        # Offers of assistance
+        #
+        offer_availability = (("AVL", T("available")),
+                              ("OCP", T("occupied")),
+                              ("RTD", T("no longer available")),
+                              )
+        offer_status = (("NEW", T("new")),
+                        ("APR", T("approved")),
+                        ("BLC", T("blocked")),
+                        )
+
+        # Representation of provider
+        pe_represent = self.pr_PersonEntityRepresent(show_label = False,
+                                                     show_link = False,
+                                                     show_type = True,
+                                                     )
+        tablename = "br_assistance_offer"
+        define_table(tablename,
+                     assistance_type_id(),
+                     self.event_event_id(),
+                     Field("pe_id", "reference pr_pentity",
+                           label = T("Provider##assistance"),
+                           represent = pe_represent,
+                           requires = IS_EMPTY_OR(IS_ONE_OF(db, "pr_pentity.pe_id",
+                                                            pe_represent,
+                                                            instance_types = ["pr_person",
+                                                                              "org_organisation",
+                                                                              ],
+                                                            )),
+                           ),
+                     s3_date(label = T("Available from"),
+                             default = "now",
+                             ),
+                     s3_date("end_date",
+                             label = T("Available until"),
+                             ),
+                     Field("name",
+                           label = T("Short Description"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("description", "text",
+                           label = T("Details"),
+                           represent = s3_text_represent,
+                           widget = s3_comments_widget,
+                           ),
+                     Field("capacity",
+                           label = T("Quantity / Size / Capacity"),
+                           ),
+                     Field("chargeable", "boolean",
+                           default = False,
+                           label = T("Chargeable"),
+                           ),
+                     self.gis_location_id(), # Location of the offer (if housing)
+                     Field("contact_name"),
+                     Field("contact_email"),
+                     Field("contact_phone"),
+                     Field("availability",
+                           requires = IS_IN_SET(offer_availability, zero=None, sort=False),
+                           represent = S3Represent(options=dict(offer_availability),
+                                                   ),
+                           ),
+                     Field("status",
+                           requires = IS_IN_SET(offer_status, zero=None, sort=False),
+                           represent = S3Represent(options=dict(offer_status),
+                                                   ),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # TODO list fields, filters, CRUD strings
 
         # ---------------------------------------------------------------------
         # Status of Assistance

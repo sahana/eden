@@ -1042,6 +1042,12 @@ def assistance_type():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def assistance_offer():
+    """ Offers of Assistance: RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def assistance_measure():
     """ Assistance Measures: RESTful CRUD controller """
 

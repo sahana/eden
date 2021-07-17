@@ -38,24 +38,43 @@ class S3MainMenu(default.S3MainMenu):
 
         auth = current.auth
 
-        case_vars = {"closed": "0"}
-        if auth.s3_logged_in_human_resource() and \
-           auth.s3_has_role("CASE_MANAGEMENT"):
-            case_vars["mine"] = "1"
-
+        has_role = auth.s3_has_role
+        logged_in = auth.s3_logged_in()
         labels = current.s3db.br_terminology()
 
-        return [MM(labels.CASES, c=("br", "pr"), f="person", vars=case_vars),
-                MM("Case Management", c="br", f="index",
-                   check = lambda this: not this.preceding()[-1].check_permission(),
+        if has_role("EVENT_MANAGER"):
+            # Organisation managing events
+            menu = [MM("Current Needs", c="br", f="case_activity"),
+                    MM("Relief Offers", c="br", f="assistance_offer"),
+                    MM(labels.CASES, c="br", f="person"),
+                    ]
+        elif has_role("CASE_MANAGER"):
+            # Organisation managing cases
+            menu = [MM(labels.CASES, c="br", f="person"),
+                    MM("Relief Offers", c="br", f="assistance_offer"),
+                    ]
+        elif has_role("RELIEF_PROVIDER"):
+            # Organisation offering relief services / supplies
+            menu = [MM("Our Relief Offers", c="br", f="assistance_offer"),
+                    MM("Current Needs", c="br", f="case_activity"),
+                    ]
+        else:
+            # Private Citizen
+            menu = [MM("Get Help", c="br", f="case_activity"),
+                    MM("Offer Assistance / Supplies", c="br", f="assistance_offer"),
+                    ]
+
+        return [menu,
+
+                # TODO adapt label if managing only one org
+                MM("Organizations", c="org", f="organisation",
+                   restrict=["ORG_ADMIN", "ORG_GROUP_ADMIN"],
                    ),
-                #MM("ToDo", c="project", f="task"),
-                #MM("Shelters", c="cr", f="shelter"),
-                MM("More", link=False)(
-                    MM("Organizations", c="org", f="organisation"),
-                    MM("Facilities", c="org", f="facility"),
-                    MM("Staff", c="hrm", f="staff"),
-                    MM("Volunteers", c="vol", f="volunteer"),
+                MM("Events", c="event", f="event", restrict="EVENT_MANAGER"),
+                MM("Register", c="default", f="index", link=False,
+                   check = not logged_in)(
+                    MM("Private Citizen", args=["register"]),
+                    MM("Organisation / Company", args=["register_org"]),
                     ),
                 ]
 
@@ -168,6 +187,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def br():
         """ Beneficiary Registry """
 
+        # TODO split into case | needs | offers
+
         auth = current.auth
         has_role = auth.s3_has_role
 
@@ -274,20 +295,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def cr():
-        """ CR / Shelter Registry """
+    def event():
+        # TODO implement
 
-        ADMIN = current.auth.get_system_roles().ADMIN
-
-        return M(c="cr")(
-                    M("Shelters", f="shelter")(
-                        M("Create", m="create"),
-                        M("Map", m="map"),
-                        ),
-                    M("Administration", link=False, restrict=(ADMIN,))(
-                        M("Shelter Types", f="shelter_type"),
-                        ),
-                )
+        pass
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -301,73 +312,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         return M(c="org")(
                     M("Organizations", f="organisation")(
-                        M("Hierarchy", m="hierarchy"),
                         M("Create", m="create", restrict=(ADMIN, ORG_GROUP_ADMIN)),
                         ),
-                    M("Facilities", f="facility")(
-                        M("Create", m="create"),
-                        ),
                     M("Administration", restrict=(ADMIN, ORG_GROUP_ADMIN))(
-                        M("Facility Types", f="facility_type"),
                         M("Organization Types", f="organisation_type"),
                         M("Sectors", f="sector"),
                         )
-                    )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def hrm():
-        """ HRM / Human Resources Management """
-
-        settings = current.deployment_settings
-
-        teams = settings.get_hrm_teams()
-        use_teams = lambda i: teams
-
-        return M(c="hrm")(
-                    M(settings.get_hrm_staff_label(), f="staff")(
-                        M("Create", m="create"),
-                        ),
-                    M(teams, f="group", check=use_teams)(
-                        M("Create", m="create"),
-                        ),
-                    M("Job Titles", f="job_title")(
-                        M("Create", m="create"),
-                        ),
-                    )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def vol():
-        """ VOL / Volunteer Management """
-
-        settings = current.deployment_settings
-
-        teams = settings.get_hrm_teams()
-        use_teams = lambda i: teams
-
-        return M(c="vol")(
-                    M("Volunteers", f="volunteer")(
-                        M("Create", m="create"),
-                        ),
-                    M(teams, f="group", check=use_teams)(
-                        M("Create", m="create"),
-                        ),
-                    M("Job Titles", f="job_title")(
-                        M("Create", m="create"),
-                        ),
-                    )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project():
-        """ PROJECT / Project/Task Management """
-
-        return M(c="project", f="task")(
-                    M("Tasks", f="task")(
-                        M("Create", m="create"),
-                        M("My Open Tasks", vars={"mine":1}),
-                        ),
                     )
 
 # END =========================================================================

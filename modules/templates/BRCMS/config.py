@@ -171,6 +171,14 @@ def config(settings):
     settings.doc.mailmerge_fields = {}
 
     # -------------------------------------------------------------------------
+    # Event Module Settings
+    #
+    #settings.event.label = "Disaster"
+    settings.event.incident = False
+    settings.event.types_hierarchical = False
+    settings.event.impact_tab = False
+
+    # -------------------------------------------------------------------------
     # Human Resource Module Settings
     #
     settings.hrm.teams_orgs = True
@@ -498,12 +506,12 @@ def config(settings):
         #    restricted = True,
         #    module_type = 10,
         #)),
-        #("event", Storage(
-        #   name_nice = T("Events"),
-        #   #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
-        #   restricted = True,
-        #   module_type = 10,
-        #)),
+        ("event", Storage(
+            name_nice = T("Events"),
+            #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
+            restricted = True,
+            module_type = 10,
+        )),
         #("security", Storage(
         #   name_nice = T("Security"),
         #   restricted = True,
