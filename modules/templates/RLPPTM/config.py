@@ -2,7 +2,7 @@
 
 """
     Application Template for Rhineland-Palatinate (RLP) Crisis Management
-    - used to manage Personnel Tests for COVID-19 response
+    - used to manage COVID-19 test stations
 
     @license MIT
 """

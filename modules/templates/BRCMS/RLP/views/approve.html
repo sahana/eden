@@ -1,0 +1,35 @@
+{{extend "layout.html"}}
+<section>
+<div class='row'>
+ <div class='small-12 columns'>
+  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+ </div>
+</div>
+<div class='row'>
+ <div class='small-12 columns'>
+  <div>
+    {{try:}}{{=form}}{{except:}}{{pass}}
+  </div>
+ </div>
+</div>
+</section>
+<script type="text/javascript">//<![CDATA[
+$(document).ready(function(){
+  $('#approve-btn').on('click', function(event) {
+    if (confirm('{{=T("Do you really want to approve this record?")}}')) {
+      return true;
+    } else {
+      event.preventDefault();
+      return false;
+    }
+  });
+  $('#reject-btn').on('click', function(event) {
+    if (confirm('{{=T("Do you really want to reject this record? (This action can not be reversed)")}}')) {
+      return true;
+    } else {
+      event.preventDefault();
+      return false;
+    }
+  });
+});
+//]]></script>
