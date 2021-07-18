@@ -1,0 +1,7 @@
+Name,Module,Resource,Body,Comments
+RegistrationCitizenIntroDisabled,auth,user,"Use this form to register as a private citizen, so you can use the portal to report your personal needs and find matching offers of assistance and supplies",
+WelcomeMessageCitizen,auth,user,"Welcome to the {system_name} Portal
+
+- To edit your profile go to: {profile}
+
+Thank you",

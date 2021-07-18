@@ -61,7 +61,7 @@ class S3MainMenu(default.S3MainMenu):
         else:
             # Private Citizen
             menu = [MM("Get Help", c="br", f="case_activity"),
-                    MM("Offer Assistance / Supplies", c="br", f="assistance_offer"),
+                    MM("Offer Assistance / Supplies", c="br", f="assistance_offer", vars={"mine": "1"}),
                     ]
 
         return [menu,
@@ -193,30 +193,51 @@ class S3OptionsMenu(default.S3OptionsMenu):
         crud_strings = s3db.br_crud_strings("pr_person")
 
         f = current.request.function
-        if f in ("assistance_offer", "assistance_type"):
-            # Offers of assistance
-            menu = [# TODO Offer-help menu
-                    M("Current Relief Offers", f="assistance_offer")(
-                        M("Create", m="create"),
-                        M("Statistics", m="report", restrict=("EVENT_MANAGER",)),
-                        M("Map", m="map", restrict=("EVENT_MANAGER", "CASE_MANAGER")),
-                        ),
-                    M("Administration", link=False, restrict="ADMIN")(
-                        M("Assistance Types", f="assistance_type"),
-                        )
-                    ]
-        elif f in ("case_activity", "need"):
-            # Needs
-            menu = [M("Current Needs", f="case_activity"),
-                    M("Administration", link=False, restrict="ADMIN")(
-                        M("Need Types", f="need"),
-                        )
-                    ]
+
+        has_roles = current.auth.s3_has_roles
+
+        if has_roles(("EVENT_MANAGER", "CASE_MANAGER", "RELIEF_PROVIDER")):
+            # Org Users: separate menus per function
+            if f == "person":
+                # Cases
+                menu = [M(labels.CURRENT, f="person", vars={"closed": "0"},
+                          restrict=("EVENT_MANAGER", "CASE_MANAGER"))(
+                            M(crud_strings.label_create, m="create"),
+                            )
+                        ]
+            elif f in ("assistance_offer", "assistance_type"):
+                # Relief Offers
+                menu = [M("Our Relief Offers", f="assistance_offer", vars={"ours": "1"},
+                          restrict="RELIEF_PROVIDER")(
+                            M("Create", m="create"),
+                            ),
+                        M("Current Relief Offers", f="assistance_offer")(
+                            M("Statistics", m="report"),
+                            M("Map", m="map"),
+                            ),
+                        M("Administration", link=False, restrict="ADMIN")(
+                            M("Assistance Types", f="assistance_type"),
+                            )
+                        ]
+            else:
+                # Needs
+                menu = [M("Current Needs", f="case_activity"),
+                        M("Administration", link=False, restrict="ADMIN")(
+                            M("Need Types", f="need"),
+                            )
+                        ]
         else:
-            # Cases
-            menu = [M(labels.CURRENT, f="person", vars={"closed": "0"}, restrict=("CASE_MANAGER"))(
-                        M(crud_strings.label_create, m="create"),
-                        )
+            # Private Citizen: combined menu
+            menu = [M("My Needs", f="case_activity")(
+                        M("Register Need", m="create"),
+                        ),
+                    M("Current Relief Offers", f="assistance_offer")(
+                        M("Matching My Needs", vars={"match": "1"}),
+                        M("All Offers"),
+                        ),
+                    M("My Relief Offers", f="assistance_offer", vars={"mine": "1"})(
+                        M("New Offer", m="create"),
+                        ),
                     ]
 
         return M(c="br")(menu)

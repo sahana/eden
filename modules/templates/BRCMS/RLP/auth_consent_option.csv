@@ -1,0 +1,5 @@
+Code,Type,Title,Explanation,Valid From,OptOut,Mandatory,Obsolete,Comments
+TOS_PRIVATE,Terms of Service for private citizens,Terms of Service,Ich erkläre mich einverstanden mit den Allgemeinen Geschäftsbedingungen für diesen Dienst,2021-07-01,false,true,,
+TOS_CORPORATE,Terms of Service for corporations,Terms of Service,Wir erklären uns einverstanden mit den Allgemeinen Geschäftsbedingungen für diesen Dienst,2021-07-01,false,true,,
+SHARE_OFFERS,Sharing of contact information related to relief offers,Share contact information related to relief offers,Ich stimme zu dass Kontaktinformationen zu meinen/unseren Hilfsangeboten anderen registrierten Nutzern des Portals bekannt gemacht werden,2021-01-15,false,true,,
+STORE,Storing of personal information with account,Store my personal information in the database,Ich stimme zu dass meine persönlichen Informationen in der Datenbank des Portals gespeichert werden,2021-01-15,false,true,,

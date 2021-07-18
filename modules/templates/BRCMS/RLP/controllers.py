@@ -500,8 +500,8 @@ class register(S3CustomController):
         # Last name is required
         utable.last_name.requires = IS_NOT_EMPTY(error_message=T("input required"))
 
-        # Instantiate Consent Tracker TODO
-        consent = s3db.auth_Consent(processing_types=["STORE", "RULES_ISS"])
+        # Instantiate Consent Tracker
+        consent = s3db.auth_Consent(processing_types=["TOS_PRIVATE", "STORE", "SHARE_OFFERS"])
 
         # Form fields
         formfields = [# -- User Account --
@@ -540,11 +540,10 @@ class register(S3CustomController):
                             requires = IS_EMPTY_OR(IS_PHONE_NUMBER_SINGLE()),
                             ),
                       # -- Privacy and Terms --
-                      # TODO only works when consent options are prepop'ed
-                      #Field("consent",
-                      #      label = T("Consent"),
-                      #      widget = consent.widget,
-                      #      ),
+                      Field("consent",
+                            label = T("Consent"),
+                            widget = consent.widget,
+                            ),
                       ]
 
 
