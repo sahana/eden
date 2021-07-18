@@ -640,7 +640,7 @@ class register(S3CustomController):
         # Create case file
         ctable = s3db.br_case
         case = {"person_id": person_id,
-                # TODO lookup and set default case status
+                "status_id": s3db.br_case_default_status(),
                 }
         case["id"] = ctable.insert(**case)
         set_record_owner(ctable, case, owned_by_user=user_id)

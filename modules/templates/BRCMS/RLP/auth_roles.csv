@@ -1,44 +1,46 @@
-uid,role,description,controller,function,table,uacl,oacl,hidden,system,protected,Notes
-ANONYMOUS,Anonymous,Unauthenticated users,gis,display_feature,,READ,,,,,
-ANONYMOUS,Anonymous,Unauthenticated users,gis,geocode_r,,READ,,,,,
-ANONYMOUS,Anonymous,Unauthenticated users,gis,hdata,,READ,,,,,
-ANONYMOUS,Anonymous,Unauthenticated users,gis,ldata,,READ,,,,,
-ANONYMOUS,Anonymous,Unauthenticated users,,,gis_location,READ,,,,,
-AUTHENTICATED,Authenticated,,gis,location,,CREATE|READ,READ|UPDATE|DELETE,,,,"Authenticated users can create and read locations, and edit/delete the ones they created"
-AUTHENTICATED,Authenticated,,gis,,,READ,READ|UPDATE|DELETE,,,,Authenticated users can see the Map
-AUTHENTICATED,Authenticated,,hrm,group,,NONE,,,,,Normal users have no access to teams
-AUTHENTICATED,Authenticated,,hrm,index,,NONE,,,,,Hides the Staff menu item
-AUTHENTICATED,Authenticated,,hrm,person,,,READ,,,,Authenticated users can see their own staff record
-AUTHENTICATED,Authenticated,,hrm,staff,,NONE,,,,,Normal users have no general access to staff data
-AUTHENTICATED,Authenticated,,hrm,,,NONE,,,,,Default rule for HRM
-AUTHENTICATED,Authenticated,,msg,search,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
-AUTHENTICATED,Authenticated,,org,,,NONE,,,,,Normal users don't see org menu entries
-AUTHENTICATED,Authenticated,,pr,pentity,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
-AUTHENTICATED,Authenticated,,pr,person,,,READ|UPDATE,,,,Authenticated users can only see/edit their own PR records
-AUTHENTICATED,Authenticated,,pr,person_search,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
-AUTHENTICATED,Authenticated,,pr,,,CREATE,READ|UPDATE,,,,Authenticated users can only see/edit their own PR records
-AUTHENTICATED,Authenticated,,,,br_assistance_status,READ,,,,,All users can read global taxonomies
-AUTHENTICATED,Authenticated,,,,br_assistance_type,READ,,,,,All users can read global taxonomies
-AUTHENTICATED,Authenticated,,,,br_case_activity_status,READ,,,,,All users can read global taxonomies
-AUTHENTICATED,Authenticated,,,,br_case_activity_update_type,READ,,,,,All users can read global taxonomies
-AUTHENTICATED,Authenticated,,,,br_case_appointment_type,READ,,,,,All users can read global taxonomies
-AUTHENTICATED,Authenticated,,,,br_case_status,READ,,,,,All users can read global taxonomies
-AUTHENTICATED,Authenticated,,,,cr_shelter_type,READ,,,,,All users can read global taxonomies
-AUTHENTICATED,Authenticated,,,,hrm_job_title,READ,,,,,All users can read global taxonomies
-AUTHENTICATED,Authenticated,,,,org_facility_type,READ,,,,,All users can read global taxonomies
-AUTHENTICATED,Authenticated,,,,org_organisation_type,READ,,,,,All users can read global taxonomies
-AUTHENTICATED,Authenticated,,,,org_sector,READ,,,,,All users can read global taxonomies
-AUTHENTICATED,Authenticated,,,,org_sector_organisation,READ,,,,,All users can read organisation sector links
-AUTHENTICATED,Authenticated,,,,org_site_facility_type,READ,,,,,All users can read facility type links
-AUTHENTICATED,Authenticated,,,,pr_address,CREATE,READ|UPDATE|DELETE,,,,All users can manage their own addresses
-AUTHENTICATED,Authenticated,,,,pr_contact,CREATE,READ|UPDATE|DELETE,,,,All users can manage their own contact information
-AUTHENTICATED,Authenticated,,,,pr_contact_emergency,CREATE,READ|UPDATE|DELETE,,,,All users can manage their own emergency contact information
-AUTHENTICATED,Authenticated,,,,pr_person,,READ|UPDATE,,,,Authenticated users can only see/edit their own PR records
-AUTHENTICATED,Authenticated,,,,pr_person_details,CREATE,READ|UPDATE|DELETE,,,,Authenticated users can only see/edit their own PR records
-AUTHENTICATED,Authenticated,,br,,,CREATE|READ|UPDATE|DELETE,,,,,
-CASE_MANAGER,Case Manager,,br,,,CREATE|READ|UPDATE|DELETE,,,,,
-EVENT_MANAGER,Event Manager,,br,,,CREATE|READ|UPDATE|DELETE,,,,,
-EVENT_MANAGER,Event Manager,,event,,,CREATE|READ|UPDATE|DELETE,,,,,
-ORG_ADMIN,Organisation Admin,,org,,,CREATE|READ|UPDATE|DELETE,,,,,
-ORG_GROUP_ADMIN,Organisation Group Admin,,org,,,CREATE|READ|UPDATE|DELETE,,,,,
-RELIEF_PROVIDER,Relief Provider,,br,,,CREATE|READ|UPDATE|DELETE,,,,,
+uid,role,description,controller,function,table,uacl,oacl,entity
+ANONYMOUS,Anonymous,Unauthenticated users,gis,display_feature,,READ,,
+ANONYMOUS,Anonymous,Unauthenticated users,gis,geocode_r,,READ,,
+ANONYMOUS,Anonymous,Unauthenticated users,gis,hdata,,READ,,
+ANONYMOUS,Anonymous,Unauthenticated users,gis,ldata,,READ,,
+ANONYMOUS,Anonymous,Unauthenticated users,,,gis_location,READ,,
+AUTHENTICATED,Authenticated,,gis,location,,CREATE|READ,READ|UPDATE|DELETE,
+AUTHENTICATED,Authenticated,,gis,,,READ,READ|UPDATE|DELETE,
+AUTHENTICATED,Authenticated,,hrm,group,,NONE,,
+AUTHENTICATED,Authenticated,,hrm,index,,NONE,,
+AUTHENTICATED,Authenticated,,hrm,person,,,READ,
+AUTHENTICATED,Authenticated,,hrm,staff,,NONE,,
+AUTHENTICATED,Authenticated,,hrm,,,NONE,,
+AUTHENTICATED,Authenticated,,msg,search,,READ,,
+AUTHENTICATED,Authenticated,,org,,,NONE,,
+AUTHENTICATED,Authenticated,,pr,pentity,,READ,,
+AUTHENTICATED,Authenticated,,pr,person,,,READ|UPDATE,
+AUTHENTICATED,Authenticated,,pr,person_search,,READ,,
+AUTHENTICATED,Authenticated,,pr,,,CREATE,READ|UPDATE,
+AUTHENTICATED,Authenticated,,,,br_assistance_status,READ,,
+AUTHENTICATED,Authenticated,,,,br_assistance_type,READ,,
+AUTHENTICATED,Authenticated,,,,br_case_activity_status,READ,,
+AUTHENTICATED,Authenticated,,,,br_case_activity_update_type,READ,,
+AUTHENTICATED,Authenticated,,,,br_case_appointment_type,READ,,
+AUTHENTICATED,Authenticated,,,,br_case_status,READ,,
+AUTHENTICATED,Authenticated,,,,cr_shelter_type,READ,,
+AUTHENTICATED,Authenticated,,,,hrm_job_title,READ,,
+AUTHENTICATED,Authenticated,,,,org_facility_type,READ,,
+AUTHENTICATED,Authenticated,,,,org_organisation_type,READ,,
+AUTHENTICATED,Authenticated,,,,org_sector,READ,,
+AUTHENTICATED,Authenticated,,,,org_sector_organisation,READ,,
+AUTHENTICATED,Authenticated,,,,org_site_facility_type,READ,,
+AUTHENTICATED,Authenticated,,,,pr_address,CREATE,READ|UPDATE|DELETE,
+AUTHENTICATED,Authenticated,,,,pr_contact,CREATE,READ|UPDATE|DELETE,
+AUTHENTICATED,Authenticated,,,,pr_contact_emergency,CREATE,READ|UPDATE|DELETE,
+AUTHENTICATED,Authenticated,,,,pr_person,,READ|UPDATE,
+AUTHENTICATED,Authenticated,,,,pr_person_details,CREATE,READ|UPDATE|DELETE,
+AUTHENTICATED,Authenticated,,br,,,CREATE|READ|UPDATE|DELETE,,
+CASE_MANAGER,Case Manager,,br,,,CREATE|READ|UPDATE|DELETE,,
+CITIZEN,Private Citizen,,br,case_activity,,CREATE|READ,UPDATE|DELETE,any
+CITIZEN,Private Citizen,,,,br_case_activity,CREATE|READ,UPDATE|DELETE,any
+EVENT_MANAGER,Event Manager,,br,,,CREATE|READ|UPDATE|DELETE,,
+EVENT_MANAGER,Event Manager,,event,,,CREATE|READ|UPDATE|DELETE,,
+ORG_ADMIN,Organisation Admin,,org,,,CREATE|READ|UPDATE|DELETE,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,org,,,CREATE|READ|UPDATE|DELETE,,
+RELIEF_PROVIDER,Relief Provider,,br,,,CREATE|READ|UPDATE|DELETE,,

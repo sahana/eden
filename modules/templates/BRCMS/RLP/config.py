@@ -96,6 +96,14 @@ def config(settings):
     settings.ui.calendar_clear_icon = True
 
     # -------------------------------------------------------------------------
+    # BR Settings
+    #
+    settings.br.case_activity_status = True
+    settings.br.case_activity_manager = False
+    settings.br.case_activity_need_details = True
+    settings.br.manage_assistance = False
+
+    # -------------------------------------------------------------------------
     # TODO Realm Rules
     #
     def brcms_realm_entity(table, row):
@@ -340,13 +348,26 @@ def config(settings):
     #
     def customise_br_case_activity_resource(r, tablename):
 
-        # TODO Configure CRUD form
+        s3 = current.response.s3
+        crud_strings = s3.crud_strings
 
-        # TODO Configure List fields and filters
+        s3db = current.s3db
+        table = s3db.br_case_activity
 
-        # TODO Adjust CRUD strings
-
-        pass
+        # CRUD Strings
+        crud_strings["br_case_activity"] = Storage(
+            label_create = T("Register Need"),
+            title_display = T("Need Details"),
+            title_list = T("Needs"),
+            title_report = T("Needs Statistic"),
+            title_update = T("Edit Need"),
+            label_list_button = T("List Needs"),
+            label_delete_button = T("Delete Need"),
+            msg_record_created = T("Need added"),
+            msg_record_modified = T("Need updated"),
+            msg_record_deleted = T("Need deleted"),
+            msg_list_empty = T("No Needs currently registered"),
+            )
 
     settings.customise_br_case_activity_resource = customise_br_case_activity_resource
 
@@ -361,15 +382,66 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
-            # TODO if not mine, filter for current activities only
+            auth = current.auth
+            s3db = current.s3db
 
-            # TODO DRY roles list with menus.py
-            if not current.auth.s3_has_roles(("EVENT_MANAGER", "CASE_MANAGER", "RELIEF_PROVIDER")):
-                r.resource.configure(insertable = True,
-                                     deletable = True,
-                                     )
+            resource = r.resource
 
-                # TODO set default for pr_person (to logged-in person)
+            org_role = auth.s3_has_roles(("EVENT_MANAGER", "CASE_MANAGER", "RELIEF_PROVIDER"))
+
+            if not r.component:
+                table = resource.table
+
+                # Hide irrelevant fields
+                for fn in ("person_id", "activity_details", "outcome", "priority"):
+                    field = table[fn]
+                    field.readable = field.writable = False
+
+                # TODO Custom CRUD form?
+
+                # List fields
+                list_fields = ["date",
+                               "need_id",
+                               "need_details",
+                               "status_id",
+                               ]
+
+                # TODO Filters
+
+                resource.configure(list_fields = list_fields,
+                                   orderby = "br_case_activity.date desc",
+                                   )
+
+            # Mandatory filters and CRUD limitations
+            view_all = r.get_vars.get("all") == "1"
+            if view_all or org_role:
+                # Limit to active activities
+                query = FS("status_id$is_closed") == False
+                resource.add_filter(query)
+
+                # Deny create, only event manager can update/delete
+                insertable = False
+                editable = deletable = auth.s3_has_role("EVENT_MANAGER")
+
+            else:
+                logged_in_person = auth.s3_logged_in_person()
+
+                # Limit to own activities
+                query = FS("person_id") == logged_in_person
+                resource.add_filter(query)
+
+                # Set default beneficiary + hide it
+                field = table.person_id
+                field.default = logged_in_person
+                field.readable = field.writable = False
+
+                # Allow create/update/delete
+                insertable = editable = deletable = True
+
+            resource.configure(insertable = insertable,
+                               editable = editable,
+                               deletable = deletable,
+                               )
 
             return result
         s3.prep = prep
