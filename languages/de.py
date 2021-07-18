@@ -67,7 +67,7 @@
 '%(event)s already registered today, not combinable': '%(event)s heute bereits registriert, nicht kombinierbar',
 '%(event)s on': '%(event)s am',
 '%(msg)s\nIf the request type is "%(type)s", please enter the %(type)s on the next screen.': '%(msg)s\n Wenn der Typ des Requests "%(type)s" ist, geben Sie die %(type)s bitte auf der nächsten Seite ein.',
-'%(name)s Emergency Relief Portal': '%(name)s Katastrophenhilfe-Portal',
+'%(region)s Emergency Relief Portal': 'Katastrophenhilfe-Portal %(region)s',
 '%(name)s could not be notified of new compensation claim: %(error)s': '%(name)s konnte nicht über neue Vergütungsansprüche benachrichtigt werden: %(error)s',
 '%(num)s other pending request(s) for the same time interval declined': '%(num)s andere offene Anfrage(n) für den gleichen Zeitraum abgelehnt',
 '%(number)s payment(s) not found': '%(number)s Auszahlung(en) nicht gefunden',

@@ -24,9 +24,9 @@ def config(settings):
 
     T = current.T
 
-    operation = {"name": "RLP"}
-    settings.base.system_name = T("%(name)s Emergency Relief Portal") % operation
-    settings.base.system_name_short = T("%(name)s Emergency Relief Portal") % operation
+    names = {"region": "Rheinland-Pfalz"}
+    settings.base.system_name = T("%(region)s Emergency Relief Portal") % names
+    settings.base.system_name_short = T("%(region)s Emergency Relief Portal") % names
 
     # PrePopulate data
     settings.base.prepopulate.append("BRCMS/RLP")
