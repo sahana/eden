@@ -332,10 +332,10 @@ def config(settings):
 
     settings.customise_cms_post_controller = customise_cms_post_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # TODO customise br_assistance_offer
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # TODO customise br_case_activity
     #
     def customise_br_case_activity_resource(r, tablename):
@@ -350,7 +350,7 @@ def config(settings):
 
     settings.customise_br_case_activity_resource = customise_br_case_activity_resource
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_br_case_activity_controller(**attr):
 
         s3 = current.response.s3
@@ -380,13 +380,71 @@ def config(settings):
 
     settings.customise_br_case_activity_controller = customise_br_case_activity_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # TODO customise event_event
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # TODO customise org_organisation
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # TODO customise pr_person (Case file, Profile)
+    # -------------------------------------------------------------------------
+    def customise_pr_person_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            from s3 import S3SQLCustomForm, \
+                           S3SQLInlineComponent, \
+                           StringTemplateParser
+
+            # Determine order of name fields
+            NAMES = ("first_name", "middle_name", "last_name")
+            keys = StringTemplateParser.keys(settings.get_pr_name_format())
+            name_fields = [fn for fn in keys if fn in NAMES]
+
+            # TODO Customise for br
+
+            if r.controller == "default":
+                # Personal profile (default/person)
+                if not r.component:
+
+                    # Last name is required
+                    table = r.resource.table
+                    table.last_name.requires = IS_NOT_EMPTY()
+
+                    # Custom Form
+                    crud_fields = name_fields
+                    address = S3SQLInlineComponent(
+                                    "address",
+                                    label = T("Current Address"),
+                                    fields = [("", "location_id")],
+                                    filterby = {"field": "type",
+                                                "options": "1",
+                                                },
+                                    link = False,
+                                    multiple = False,
+                                    )
+                    crud_fields.append(address)
+                    r.resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
+                                         deletable = False,
+                                         )
+            return result
+        s3.prep = prep
+
+        # Custom rheader
+        if current.request.controller == "default":
+            from .rheaders import rlpcm_profile_rheader
+            attr["rheader"] = rlpcm_profile_rheader
+
+        return attr
+
+    settings.customise_pr_person_controller = customise_pr_person_controller
+
 
 # END =========================================================================

@@ -535,7 +535,7 @@ class register(S3CustomController):
                                         ),
                             ),
                       # -- Contact Information --
-                      Field("mobile_phone",
+                      Field("mobile_phone", # TODO this doesn't get stored
                             label = T("Mobile Phone"),
                             requires = IS_EMPTY_OR(IS_PHONE_NUMBER_SINGLE()),
                             ),
@@ -636,6 +636,15 @@ class register(S3CustomController):
         set_record_owner(ptable, person_id, force_update=True)
         if person_update:
             s3db_onaccept(ptable, person_update, method="update")
+
+        # Create case file
+        ctable = s3db.br_case
+        case = {"person_id": person_id,
+                # TODO lookup and set default case status
+                }
+        case["id"] = ctable.insert(**case)
+        set_record_owner(ctable, case, owned_by_user=user_id)
+        s3db_onaccept(ctable, case, method="create")
 
         # Register address
         location = custom.get("location")
