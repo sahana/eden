@@ -25,8 +25,9 @@ def config(settings):
     T = current.T
 
     names = {"region": "Rheinland-Pfalz"}
-    settings.base.system_name = T("%(region)s Emergency Relief Portal") % names
-    settings.base.system_name_short = T("%(region)s Emergency Relief Portal") % names
+    settings.base.system_name = T("%(region)s Emergency Relief") % names
+    settings.base.system_name_short = T("%(region)s Emergency Relief") % names
+    settings.custom.homepage_title = T("Emergency Relief")
 
     # PrePopulate data
     settings.base.prepopulate.append("BRCMS/RLP")
@@ -35,6 +36,10 @@ def config(settings):
     # Theme
     settings.base.theme = "RLP"
     settings.base.theme_layouts = "BRCMS/RLP"
+
+    # Auth settings
+    settings.auth.password_min_length = 8
+    settings.auth.consent_tracking = True
 
     # Custom Logo
     settings.ui.menu_logo = URL(c="static", f="themes", args=["RLP", "img", "logo_rlp.png"])
@@ -89,5 +94,109 @@ def config(settings):
     # -------------------------------------------------------------------------
     # UI Settings
     settings.ui.calendar_clear_icon = True
+
+    # -------------------------------------------------------------------------
+    def customise_cms_post_resource(r, tablename):
+
+        s3db = current.s3db
+
+        table = s3db.cms_post
+
+        from s3 import S3SQLCustomForm, \
+                       S3SQLInlineComponent, \
+                       S3SQLInlineLink, \
+                       s3_text_represent
+
+        field = table.body
+        field.represent = lambda v, row=None: \
+                          s3_text_represent(v, lines=20, _class = "cms-item-body")
+
+        record = r.record
+        if r.tablename == "cms_series" and \
+           record and record.name == "Announcements":
+            table = s3db.cms_post
+            field = table.priority
+            field.readable = field.writable = True
+
+            crud_fields = ["name",
+                           "body",
+                           "priority",
+                           "date",
+                           "expired",
+                           S3SQLInlineLink("roles",
+                                           label = T("Roles"),
+                                           field = "group_id",
+                                           ),
+                           ]
+            list_fields = ["date",
+                           "priority",
+                           "name",
+                           "body",
+                           "post_role.group_id",
+                           "expired",
+                           ]
+            orderby = "cms_post.date desc"
+        else:
+            crud_fields = ["name",
+                           "body",
+                           "date",
+                           S3SQLInlineComponent("document",
+                                                name = "file",
+                                                label = T("Attachments"),
+                                                fields = ["file", "comments"],
+                                                filterby = {"field": "file",
+                                                            "options": "",
+                                                            "invert": True,
+                                                            },
+                                                ),
+                           "comments",
+                           ]
+            list_fields = ["post_module.module",
+                           "post_module.resource",
+                           "name",
+                           "date",
+                           "comments",
+                           ]
+            orderby = "cms_post.name"
+
+        s3db.configure("cms_post",
+                       crud_form = S3SQLCustomForm(*crud_fields),
+                       list_fields = list_fields,
+                       orderby = orderby,
+                       )
+
+    settings.customise_cms_post_resource = customise_cms_post_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_cms_post_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            table = r.table
+            context = r.get_vars.get("resource")
+            if context == "Privacy":
+                page = URL(c="default", f="index", args=["privacy"])
+                r.resource.configure(create_next = page,
+                                     update_next = page,
+                                     )
+                table.name.default = "Privacy Notice"
+            elif context == "Legal":
+                page = URL(c="default", f="index", args=["legal"])
+                r.resource.configure(create_next = page,
+                                     update_next = page,
+                                     )
+                table.name.default = "Legal Notice"
+            return result
+        s3.prep = prep
+
+        return attr
+
+    settings.customise_cms_post_controller = customise_cms_post_controller
 
 # END =========================================================================

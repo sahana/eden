@@ -1,4 +1,9 @@
 uid,role,description,controller,function,table,uacl,oacl,hidden,system,protected,Notes
+ANONYMOUS,Anonymous,Unauthenticated users,gis,display_feature,,READ,,,,,
+ANONYMOUS,Anonymous,Unauthenticated users,gis,geocode_r,,READ,,,,,
+ANONYMOUS,Anonymous,Unauthenticated users,gis,hdata,,READ,,,,,
+ANONYMOUS,Anonymous,Unauthenticated users,gis,ldata,,READ,,,,,
+ANONYMOUS,Anonymous,Unauthenticated users,,,gis_location,READ,,,,,
 AUTHENTICATED,Authenticated,,gis,location,,CREATE|READ,READ|UPDATE|DELETE,,,,"Authenticated users can create and read locations, and edit/delete the ones they created"
 AUTHENTICATED,Authenticated,,gis,,,READ,READ|UPDATE|DELETE,,,,Authenticated users can see the Map
 AUTHENTICATED,Authenticated,,hrm,group,,NONE,,,,,Normal users have no access to teams
