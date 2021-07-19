@@ -2968,7 +2968,7 @@
 'Leader': 'Leiter',
 'Lebanon': 'Libanon',
 'Left Voluntarily': 'Freiwillig ausgereist',
-'Legal Advice': 'Rechtberatung',
+'Legal Advice': 'Rechtsberatung',
 'Legal Counsel': 'Rechtsberatung',
 'Legal Notice': 'Impressum',
 'Legally Departed': 'Legal abgereist',
