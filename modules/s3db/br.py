@@ -1423,8 +1423,6 @@ class BRAssistanceModel(S3Model):
         tablename = "br_assistance_offer"
         define_table(tablename,
                      self.event_event_id(),
-                     self.br_need_id(),
-                     assistance_type_id(),
                      Field("pe_id", "reference pr_pentity",
                            label = T("Provider##assistance"),
                            represent = pe_represent,
@@ -1435,16 +1433,14 @@ class BRAssistanceModel(S3Model):
                                                                               ],
                                                             )),
                            ),
-                     s3_date(label = T("Available from"),
-                             default = "now",
-                             # TODO setmin
-                             ),
-                     s3_date("end_date",
-                             label = T("Available until"),
-                             # TODO setmax
-                             ),
+                     self.br_need_id(),
+                     assistance_type_id(
+                         # Enable in template if/as required
+                         readable = False,
+                         writable = False,
+                         ),
                      Field("name",
-                           label = T("Short Description"),
+                           label = T("Offer"),
                            requires = IS_NOT_EMPTY(),
                            ),
                      Field("description", "text",
@@ -1460,6 +1456,14 @@ class BRAssistanceModel(S3Model):
                            label = T("Chargeable"),
                            ),
                      self.gis_location_id(), # Location of the offer (if housing)
+                     s3_date(label = T("Available from"),
+                             default = "now",
+                             # TODO setmin
+                             ),
+                     s3_date("end_date",
+                             label = T("Available until"),
+                             # TODO setmax
+                             ),
                      Field("contact_name"),
                      Field("contact_email"), # TODO validate
                      Field("contact_phone"), # TODO validate

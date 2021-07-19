@@ -353,22 +353,63 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_br_assistance_offer_controller(**attr):
 
-        # TODO
-        # Default event
+        db = current.db
+        auth = current.auth
+        s3db = current.s3db
 
-        # Default provider:
-        #   ORG USER => organisation (if multiple, make selectable)
-        #   CITIZEN => logged-in person
+        s3 = current.response.s3
 
-        # Address => location selector without address L1-L4, L2-L3 required
+        is_event_manager = auth.s3_has_role("EVENT_MANAGER")
+        org_role = is_event_manager or auth.s3_has_roles(("CASE_MANAGER", "RELIEF_PROVIDER"))
 
-        # End date => make required, default to 4 weeks from now
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
 
-        # Contact Email => default from user if CITIZEN, else org
-        # Contact Phone number => required, populate from user if CITIZEN, else org office
+            resource = r.resource
+            table = resource.table
 
-        # Status => r/o, writable only for EVENT_MANAGER, default to NEW? or APPROVED?
-        # Comments
+            if not r.component:
+
+                # Default Event
+                field = table.event_id
+                from .helpers import get_current_events
+                events = get_current_events(r.record)
+                if events:
+                    dbset = db(s3db.event_event.id.belongs(events))
+                    field.requires = IS_ONE_OF(dbset, "event_event.id",
+                                               field.represent,
+                                               )
+                    field.default = events[0]
+                    field.writable = len(events) != 1
+
+                # Default Provider
+                field = table.pe_id
+                if not org_role:
+                    pe_id = auth.user.pe_id if auth.user else None
+                    if pe_id:
+                        field.default = pe_id
+                        field.readable = field.writable = False
+                else:
+                    # TODO Get managed orgs (offers only made by RELIEF_PROVIDER)
+                    # if one: set org_pe_id
+                    # otherwise: make selectable
+                    pass
+
+            # Address => location selector without address L1-L4, L2-L3 required
+
+            # End date => make required, default to 4 weeks from now
+
+            # Contact Email => default from user if CITIZEN, else org
+            # Contact Phone number => required, populate from user if CITIZEN, else org office
+
+            # Status => r/o, writable only for EVENT_MANAGER, default to NEW? or APPROVED? in customise_resource?
+            # Comments
+
+            return result
+        s3.prep = prep
 
         return attr
 
