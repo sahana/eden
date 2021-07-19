@@ -642,6 +642,30 @@ def config(settings):
         field.label = T("Short Description")
         field.requires = [IS_NOT_EMPTY(), IS_LENGTH(128)]
 
+        # Location is visible, defaults to logged-in user's tracking location
+        from .helpers import get_current_location
+        from s3 import S3LocationSelector
+
+        field = table.location_id
+        field.readable = field.writable = True
+        field.label = T("Place")
+        field.default = get_current_location()
+        field.widget = S3LocationSelector(levels = ("L1", "L2", "L3", "L4"),
+                                          required_levels = ("L1", "L2", "L3"),
+                                          show_address = False,
+                                          show_postcode = False,
+                                          show_map = False,
+                                          )
+
+        # Subheadings for CRUD form
+        subheadings = {"date": T("Need Details"),
+                       "location_id": T("Need Location"),
+                       "status_id": T("Status"),
+                       }
+        s3db.configure("br_case_activity",
+                       subheadings = subheadings,
+                       )
+
         # CRUD Strings
         crud_strings["br_case_activity"] = Storage(
             label_create = T("Report Need"),

@@ -3531,6 +3531,7 @@
 'Nautical Accident': 'See-Unfall',
 'Nautical Hijacking': 'See-Entführung',
 'Need Details': 'Details zum Bedarf',
+'Need Location': 'Ort des Bedarfs',
 'Need Type Details': 'Details zum Bedarfstyp',
 'Need Type added': 'Bedarfstyp hinzugefügt',
 'Need Type deleted': 'Bedarfstyp gelöscht',
