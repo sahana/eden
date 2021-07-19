@@ -377,6 +377,9 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
+            # Check perspective
+            mine = r.function == "assistance_offer"
+
             resource = r.resource
             table = resource.table
 
@@ -386,20 +389,19 @@ def config(settings):
                            S3TextFilter, \
                            s3_get_filter_opts
 
-            # Check perspective
-            mine = r.function == "assistance_offer"
-
             # Make read-only
             if mine:
                 resource.configure(insertable = True,
                                    editable = True,
                                    deletable = True,
                                    )
+                s3.hide_last_update = False
             else:
                 resource.configure(insertable = False,
                                    editable = is_event_manager,
                                    deletable = is_event_manager,
                                    )
+                s3.hide_last_update = True
 
             if not r.component:
 
@@ -622,6 +624,9 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
+            # Check perspective
+            mine = r.function == "case_activity"
+
             auth = current.auth
             s3db = current.s3db
 
@@ -716,22 +721,11 @@ def config(settings):
                         }
                     resource.configure(report_options=report_options)
 
-            # Mandatory filters and CRUD limitations
             crud_strings = s3.crud_strings["br_case_activity"]
-            if r.function == "activities":
-                crud_strings["title_list"] = T("Current Needs")
-
-                # Limit to active activities
-                # TODO filter by end-date too
-                query = FS("status_id$is_closed") == False
-                resource.add_filter(query)
-
-                # Deny create, only event manager can update/delete
-                insertable = False
-                editable = deletable = is_event_manager
-
-            else:
+            if mine:
+                # Adjust list title, allow last update info
                 crud_strings["title_list"] = T("My Needs")
+                s3.hide_last_update = False
 
                 logged_in_person = auth.s3_logged_in_person()
 
@@ -747,6 +741,20 @@ def config(settings):
 
                 # Allow create/update/delete
                 insertable = editable = deletable = True
+            else:
+                # Adjust list title, hide last update info
+                crud_strings["title_list"] = T("Current Needs")
+                s3.hide_last_update = True
+
+                # Limit to active activities
+                # TODO filter by end-date too
+                query = FS("status_id$is_closed") == False
+                resource.add_filter(query)
+
+                # Deny create, only event manager can update/delete
+                insertable = False
+                editable = deletable = is_event_manager
+
 
             resource.configure(insertable = insertable,
                                editable = editable,
