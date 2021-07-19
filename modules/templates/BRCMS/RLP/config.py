@@ -9,12 +9,12 @@
 
 from collections import OrderedDict
 
-from gluon import current, URL, A, DIV, TAG, \
-                  IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_LENGTH, IS_NOT_EMPTY
+from gluon import current, URL, \
+                  IS_EMPTY_OR, IS_LENGTH, IS_NOT_EMPTY
 
 from gluon.storage import Storage
 
-from s3 import FS, IS_FLOAT_AMOUNT, ICON, IS_ONE_OF, S3Represent, s3_str
+from s3 import FS, IS_ONE_OF
 from s3dal import original_tablename
 
 from templates.RLPPTM.rlpgeonames import rlp_GeoNames
@@ -377,11 +377,47 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
-            # Check perspective
-            mine = r.function == "assistance_offer"
-
             resource = r.resource
             table = resource.table
+
+            # Check perspective
+            mine = r.function == "assistance_offer"
+            if mine:
+                # Adjust list title, allow last update info
+                title_list = T("Our Relief Offers") if org_role else T("My Relief Offers")
+                s3.hide_last_update = False
+
+                # Filter for offers of current user
+                pe_id = auth.user.pe_id if auth.user else None
+                if pe_id:
+                    query = (FS("pe_id") == pe_id)
+                else:
+                    query = (FS("pe_id").belongs([]))
+                resource.add_filter(query)
+
+                # Make editable
+                resource.configure(insertable = True,
+                                   editable = True,
+                                   deletable = True,
+                                   )
+            else:
+                # Adjust list title, hide last update info
+                title_list = T("Current Relief Offers")
+                s3.hide_last_update = not is_event_manager
+
+                # Restrict data formats
+                allowed = ("html", "iframe", "popup", "aadata", "plain", "geojson", "pdf", "xls")
+                settings.ui.export_formats = ("pdf", "xls")
+                if r.representation not in allowed:
+                    r.error(403, current.ERROR.NOT_PERMITTED)
+
+                # Make read-only
+                resource.configure(insertable = False,
+                                   editable = is_event_manager,
+                                   deletable = is_event_manager,
+                                   )
+
+            s3.crud_strings["br_assistance_offer"]["title_list"] = title_list
 
             from s3 import S3LocationFilter, \
                            S3LocationSelector, \
@@ -389,28 +425,7 @@ def config(settings):
                            S3TextFilter, \
                            s3_get_filter_opts
 
-            # Make read-only
-            if mine:
-                resource.configure(insertable = True,
-                                   editable = True,
-                                   deletable = True,
-                                   )
-                s3.hide_last_update = False
-            else:
-                resource.configure(insertable = False,
-                                   editable = is_event_manager,
-                                   deletable = is_event_manager,
-                                   )
-                s3.hide_last_update = True
-
             if not r.component:
-
-                # Adapt CRUD-Strings to perspective
-                if mine:
-                    title_list = T("Our Relief Offers") if org_role else T("My Relief Offers")
-                else:
-                    title_list = T("Current Relief Offers")
-                s3.crud_strings["br_assistance_offer"]["title_list"] = title_list
 
                 # Default Event
                 field = table.event_id
@@ -485,15 +500,7 @@ def config(settings):
                                         ),
                         ]
 
-                    if mine:
-                        # Filter for offers of current user
-                        pe_id = auth.user.pe_id if auth.user else None
-                        if pe_id:
-                            query = (FS("pe_id") == pe_id)
-                        else:
-                            query = (FS("pe_id").belongs([]))
-                        resource.add_filter(query)
-                    else:
+                    if not mine:
                         # Add location filter for all-offers perspective
                         filter_widgets.append(
                             S3LocationFilter("location_id",
@@ -616,7 +623,13 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_br_case_activity_controller(**attr):
 
+        auth = current.auth
+        #s3db = current.s3db
+
         s3 = current.response.s3
+
+        is_event_manager = auth.s3_has_role("EVENT_MANAGER")
+        #org_role = is_event_manager or auth.s3_has_roles(("CASE_MANAGER", "RELIEF_PROVIDER"))
 
         # Custom prep
         standard_prep = s3.prep
@@ -624,26 +637,63 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
+            resource = r.resource
+            table = resource.table
+
             # Check perspective
             mine = r.function == "case_activity"
+            crud_strings = s3.crud_strings["br_case_activity"]
+            if mine:
+                # Adjust list title, allow last update info
+                crud_strings["title_list"] = T("My Needs")
+                s3.hide_last_update = False
 
-            auth = current.auth
-            s3db = current.s3db
+                logged_in_person = auth.s3_logged_in_person()
 
-            resource = r.resource
+                # Limit to own activities
+                if not r.record:
+                    query = FS("person_id") == logged_in_person
+                    resource.add_filter(query)
 
-            is_event_manager = auth.s3_has_role("EVENT_MANAGER")
-            org_role = is_event_manager or auth.s3_has_roles(("CASE_MANAGER", "RELIEF_PROVIDER"))
+                # Set default beneficiary + hide it
+                field = table.person_id
+                field.default = logged_in_person
+                field.readable = field.writable = False
+
+                # Allow create/update/delete
+                insertable = editable = deletable = True
+            else:
+                # Adjust list title, hide last update info
+                crud_strings["title_list"] = T("Current Needs")
+                s3.hide_last_update = not is_event_manager
+
+                # Restrict data formats
+                allowed = ("html", "iframe", "popup", "aadata", "plain", "geojson", "pdf", "xls")
+                settings.ui.export_formats = ("pdf", "xls")
+                if r.representation not in allowed:
+                    r.error(403, current.ERROR.NOT_PERMITTED)
+
+                # Limit to active activities
+                # TODO filter by end-date too
+                query = FS("status_id$is_closed") == False
+                resource.add_filter(query)
+
+                # Deny create, only event manager can update/delete
+                insertable = False
+                editable = deletable = is_event_manager
+
+
+            resource.configure(insertable = insertable,
+                               editable = editable,
+                               deletable = deletable,
+                               )
 
             if not r.component:
-                table = resource.table
 
                 # Hide irrelevant fields
                 for fn in ("person_id", "activity_details", "outcome", "priority"):
                     field = table[fn]
                     field.readable = field.writable = False
-
-                # TODO Custom CRUD form?
 
                 # List fields
                 list_fields = ["date",
@@ -720,46 +770,6 @@ def config(settings):
                                     },
                         }
                     resource.configure(report_options=report_options)
-
-            crud_strings = s3.crud_strings["br_case_activity"]
-            if mine:
-                # Adjust list title, allow last update info
-                crud_strings["title_list"] = T("My Needs")
-                s3.hide_last_update = False
-
-                logged_in_person = auth.s3_logged_in_person()
-
-                # Limit to own activities
-                if not r.record:
-                    query = FS("person_id") == logged_in_person
-                    resource.add_filter(query)
-
-                # Set default beneficiary + hide it
-                field = table.person_id
-                field.default = logged_in_person
-                field.readable = field.writable = False
-
-                # Allow create/update/delete
-                insertable = editable = deletable = True
-            else:
-                # Adjust list title, hide last update info
-                crud_strings["title_list"] = T("Current Needs")
-                s3.hide_last_update = True
-
-                # Limit to active activities
-                # TODO filter by end-date too
-                query = FS("status_id$is_closed") == False
-                resource.add_filter(query)
-
-                # Deny create, only event manager can update/delete
-                insertable = False
-                editable = deletable = is_event_manager
-
-
-            resource.configure(insertable = insertable,
-                               editable = editable,
-                               deletable = deletable,
-                               )
 
             return result
         s3.prep = prep
