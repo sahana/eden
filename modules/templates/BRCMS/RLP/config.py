@@ -431,7 +431,8 @@ def config(settings):
 
             resource = r.resource
 
-            org_role = auth.s3_has_roles(("EVENT_MANAGER", "CASE_MANAGER", "RELIEF_PROVIDER"))
+            is_event_manager = auth.s3_has_role("EVENT_MANAGER")
+            org_role = is_event_manager or auth.s3_has_roles(("CASE_MANAGER", "RELIEF_PROVIDER"))
 
             if not r.component:
                 table = resource.table
@@ -446,33 +447,72 @@ def config(settings):
                 # List fields
                 list_fields = ["date",
                                "need_id",
-                               "need_details",
-                               "status_id",
+                               "subject",
+                               "person_id$address.location_id$L4",
+                               "person_id$address.location_id$L3",
+                               "person_id$address.location_id$L2",
+                               "person_id$address.location_id$L1",
+                               #"status_id",
                                ]
+                if is_event_manager:
+                    list_fields.append("status_id")
 
-                # TODO Filters
+                # Filters
+                from s3 import S3DateFilter, S3TextFilter, S3LocationFilter, S3OptionsFilter, s3_get_filter_opts
+                filter_widgets = [
+                    S3TextFilter(["subject",
+                                  "details",
+                                  ],
+                                 label = T("Search"),
+                                 ),
+                    S3OptionsFilter("need_id",
+                                    options = lambda: \
+                                        s3_get_filter_opts("br_need",
+                                                           translate = True,
+                                                           ),
+                                    ),
+                    S3LocationFilter("person_id$address.location_id",
+                                     label = T("Place"),
+                                     levels = ("L2", "L3"),
+                                     ),
+                    S3DateFilter("date",
+                                 hidden = True,
+                                 ),
+                    ]
+                if is_event_manager:
+                    filter_widgets.append(
+                        S3OptionsFilter("status_id",
+                                        options = lambda: \
+                                            s3_get_filter_opts("br_case_activity_status",
+                                                               translate = True,
+                                                               ),
+                                        hidden = True,
+                                        ))
 
-                resource.configure(list_fields = list_fields,
+                resource.configure(filter_widgets = filter_widgets,
+                                   list_fields = list_fields,
                                    orderby = "br_case_activity.date desc",
                                    )
 
             # Mandatory filters and CRUD limitations
-            view_all = r.get_vars.get("all") == "1"
-            if view_all or org_role:
+            if r.function == "activities":
+
                 # Limit to active activities
+                # TODO filter by end-date too
                 query = FS("status_id$is_closed") == False
                 resource.add_filter(query)
 
                 # Deny create, only event manager can update/delete
                 insertable = False
-                editable = deletable = auth.s3_has_role("EVENT_MANAGER")
+                editable = deletable = is_event_manager
 
             else:
                 logged_in_person = auth.s3_logged_in_person()
 
                 # Limit to own activities
-                query = FS("person_id") == logged_in_person
-                resource.add_filter(query)
+                if not r.record:
+                    query = FS("person_id") == logged_in_person
+                    resource.add_filter(query)
 
                 # Set default beneficiary + hide it
                 field = table.person_id

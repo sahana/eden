@@ -45,7 +45,7 @@ class S3MainMenu(default.S3MainMenu):
         if has_role("EVENT_MANAGER"):
             # Organisation managing events
             menu = [MM("Affected Persons", c="br", f="person"),
-                    MM("Current Needs", c="br", f="case_activity"),
+                    MM("Current Needs", c="br", f="activities"),
                     MM("Relief Offers", c="br", f="assistance_offer"),
                     ]
         elif has_role("CASE_MANAGER"):
@@ -55,7 +55,7 @@ class S3MainMenu(default.S3MainMenu):
                     ]
         elif has_role("RELIEF_PROVIDER"):
             # Organisation offering relief services / supplies
-            menu = [MM("Current Needs", c="br", f="case_activity"),
+            menu = [MM("Current Needs", c="br", f="activities"),
                     MM("Our Relief Offers", c="br", f="assistance_offer"),
                     ]
         else:
@@ -239,6 +239,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("My Relief Offers", f="assistance_offer", vars={"mine": "1"})(
                         M("New Offer", m="create"),
                         ),
+                    M("All Current Needs", f="activities"),
                     ]
 
         return M(c="br")(menu)
