@@ -23,6 +23,7 @@ AUTHENTICATED,Authenticated,,,,br_case_activity_status,READ,,
 AUTHENTICATED,Authenticated,,,,br_case_activity_update_type,READ,,
 AUTHENTICATED,Authenticated,,,,br_case_appointment_type,READ,,
 AUTHENTICATED,Authenticated,,,,br_case_status,READ,,
+AUTHENTICATED,Authenticated,,,,br_need,READ,,
 AUTHENTICATED,Authenticated,,,,cr_shelter_type,READ,,
 AUTHENTICATED,Authenticated,,,,event_event,READ,,
 AUTHENTICATED,Authenticated,,,,hrm_job_title,READ,,
@@ -38,16 +39,25 @@ AUTHENTICATED,Authenticated,,,,pr_person,,READ|UPDATE,
 AUTHENTICATED,Authenticated,,,,pr_person_details,CREATE,READ|UPDATE|DELETE,
 AUTHENTICATED,Authenticated,,br,,,CREATE|READ|UPDATE|DELETE,,
 CASE_MANAGER,Case Manager,,br,,,CREATE|READ|UPDATE|DELETE,,
-CITIZEN,Private Citizen,,br,case_activity,,CREATE,READ|UPDATE|DELETE,
-CITIZEN,Private Citizen,,br,activities,,READ,READ|UPDATE|DELETE,any
+CITIZEN,Private Citizen,,br,activities,,READ,,any
+CITIZEN,Private Citizen,,br,assistance_offer,,CREATE|READ,READ|UPDATE|DELETE,
+CITIZEN,Private Citizen,,br,case_activity,,CREATE|READ,READ|UPDATE|DELETE,
+CITIZEN,Private Citizen,,br,offers,,READ,,any
+CITIZEN,Private Citizen,,br,,,NONE,,
+CITIZEN,Private Citizen,,,,br_assistance_offer,CREATE,READ|UPDATE|DELETE,
+CITIZEN,Private Citizen,,,,br_assistance_offer,READ,,any
 CITIZEN,Private Citizen,,,,br_case_activity,CREATE,READ|UPDATE|DELETE,
 CITIZEN,Private Citizen,,,,br_case_activity,READ,,any
-EVENT_MANAGER,Event Manager,,br,,,CREATE|READ|UPDATE|DELETE,,
 EVENT_MANAGER,Event Manager,,br,activities,,READ|UPDATE|DELETE,,any
+EVENT_MANAGER,Event Manager,,br,offers,,READ|UPDATE|DELETE,,any
+EVENT_MANAGER,Event Manager,,br,,,CREATE|READ|UPDATE|DELETE,,
+EVENT_MANAGER,Event Manager,,event,event,,CREATE|READ|UPDATE|DELETE,,
+EVENT_MANAGER,Event Manager,,event,,,READ,,
+EVENT_MANAGER,Event Manager,,,,br_assistance_offer,READ|UPDATE|DELETE,,any
 EVENT_MANAGER,Event Manager,,,,br_case_activity,READ|UPDATE|DELETE,,any
-EVENT_MANAGER,Event Manager,,event,,,CREATE|READ|UPDATE|DELETE,,
+EVENT_MANAGER,Event Manager,,,,event_event,CREATE|READ|UPDATE|DELETE,,
 ORG_ADMIN,Organisation Admin,,org,,,CREATE|READ|UPDATE|DELETE,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,org,,,CREATE|READ|UPDATE|DELETE,,
-RELIEF_PROVIDER,Relief Provider,,br,,,CREATE|READ|UPDATE|DELETE,,
 RELIEF_PROVIDER,Relief Provider,,br,activities,,READ,,any
+RELIEF_PROVIDER,Relief Provider,,br,,,CREATE|READ|UPDATE|DELETE,,
 RELIEF_PROVIDER,Relief Provider,,,,br_case_activity,READ,,any

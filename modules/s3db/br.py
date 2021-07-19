@@ -1450,6 +1450,7 @@ class BRAssistanceModel(S3Model):
                            ),
                      Field("capacity",
                            label = T("Quantity / Size / Capacity"),
+                           represent = lambda v, row=None: v if v else "-",
                            ),
                      Field("chargeable", "boolean",
                            default = False,
@@ -1467,14 +1468,17 @@ class BRAssistanceModel(S3Model):
                              ),
                      Field("contact_name",
                            label = T("Contact Name"),
+                           represent = lambda v, row=None: v if v else "-",
                            ),
                      Field("contact_email",
                            label = T("Email"),
                            requires = IS_EMPTY_OR(IS_EMAIL()),
+                           represent = lambda v, row=None: v if v else "-",
                            ),
                      Field("contact_phone",
                            label = T("Contact Phone"),
                            requires = IS_EMPTY_OR(IS_PHONE_NUMBER_SINGLE()),
+                           represent = lambda v, row=None: v if v else "-",
                            ),
                      Field("availability",
                            default = "AVL",
@@ -1493,7 +1497,35 @@ class BRAssistanceModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        # TODO list fields, filters
+        # List fields
+        list_fields = ["need_id",
+                       "name",
+                       "chargeable",
+                       "location_id",
+                       "availability",
+                       "date",
+                       "end_date",
+                       ]
+
+        # Filters
+        filter_widgets = [S3TextFilter(["name",
+                                        "description",
+                                        ],
+                                       label = T("Search"),
+                                       ),
+                          S3OptionsFilter("need_id",
+                                          ),
+                          S3OptionsFilter("chargeable",
+                                          cols = 2,
+                                          ),
+                          S3LocationFilter("location_id",
+                                           ),
+                          ]
+
+        self.configure(tablename,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(

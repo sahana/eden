@@ -1156,6 +1156,29 @@ def assistance_offer():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def offers():
+    """
+        Separate CRUD controller for assistance offers
+        - can be used for shared (site-wide) perspectives on offers
+        - not normally including provider details (but care needs to be taken)
+        - normally read-only
+    """
+
+    def prep(r):
+
+        resource = r.resource
+
+        # Make read-only
+        resource.configure(insertable = False,
+                           editable = False,
+                           deletable = False,
+                           )
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller("br", "assistance_offer")
+
+# -----------------------------------------------------------------------------
 def assistance_measure():
     """ Assistance Measures: RESTful CRUD controller """
 

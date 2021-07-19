@@ -351,6 +351,15 @@ def config(settings):
     settings.customise_cms_post_controller = customise_cms_post_controller
 
     # -------------------------------------------------------------------------
+    def customise_br_home():
+        """ Do not redirect to person-controller """
+
+        return {"module_name": T("Current Needs"),
+                }
+
+    settings.customise_br_home = customise_br_home
+
+    # -------------------------------------------------------------------------
     def customise_br_assistance_offer_controller(**attr):
 
         db = current.db
@@ -371,7 +380,35 @@ def config(settings):
             resource = r.resource
             table = resource.table
 
+            from s3 import S3LocationFilter, \
+                           S3LocationSelector, \
+                           S3OptionsFilter, \
+                           S3TextFilter, \
+                           s3_get_filter_opts
+
+            # Check perspective
+            mine = r.function == "assistance_offer"
+
+            # Make read-only
+            if mine:
+                resource.configure(insertable = True,
+                                   editable = True,
+                                   deletable = True,
+                                   )
+            else:
+                resource.configure(insertable = False,
+                                   editable = is_event_manager,
+                                   deletable = is_event_manager,
+                                   )
+
             if not r.component:
+
+                # Adapt CRUD-Strings to perspective
+                if mine:
+                    title_list = T("Our Relief Offers") if org_role else T("My Relief Offers")
+                else:
+                    title_list = T("Current Relief Offers")
+                s3.crud_strings["br_assistance_offer"]["title_list"] = title_list
 
                 # Default Event
                 field = table.event_id
@@ -392,21 +429,131 @@ def config(settings):
                     if pe_id:
                         field.default = pe_id
                         field.readable = field.writable = False
-                else:
+                elif auth.s3_has_role("RELIEF_PROVIDER"):
                     # TODO Get managed orgs (offers only made by RELIEF_PROVIDER)
                     # if one: set org_pe_id
                     # otherwise: make selectable
                     pass
+                elif is_event_manager:
+                    field.writable = False
 
-            # Address => location selector without address L1-L4, L2-L3 required
+                # Address mandatory, Lx-only
+                field = table.location_id
+                requires = field.requires
+                if isinstance(requires, IS_EMPTY_OR):
+                    requires = requires.other
+                field.widget = S3LocationSelector(levels = ("L1", "L2", "L3", "L4"),
+                                                  required_levels = ("L1", "L2", "L3"),
+                                                  show_address = False,
+                                                  show_postcode = False,
+                                                  show_map = False,
+                                                  )
 
-            # End date => make required, default to 4 weeks from now
+                # TODO End date mandatory
+                # => default to 4 weeks from now
 
-            # Contact Email => default from user if CITIZEN, else org
-            # Contact Phone number => required, populate from user if CITIZEN, else org office
+                # TODO Contact defaults
+                # - Contact Email => default from user if CITIZEN
+                # - Contact Phone number => default from user if CITIZEN
 
-            # Status => r/o, writable only for EVENT_MANAGER, default to NEW? or APPROVED? in customise_resource?
-            # Comments
+                # Status only writable for EVENT_MANAGER
+                # TODO default to NEW? or APPROVED?
+                field = table.status
+                field.writable = is_event_manager
+
+                # List configuration
+                if not r.record:
+
+                    # Filters
+                    filter_widgets = [
+                        S3TextFilter(["name",
+                                      "description",
+                                      ],
+                                     label = T("Search"),
+                                     ),
+                        S3OptionsFilter("need_id",
+                                        options = lambda: \
+                                            s3_get_filter_opts("br_need",
+                                                               translate = True,
+                                                               ),
+                                        ),
+                        S3OptionsFilter("chargeable",
+                                        cols = 2,
+                                        hidden = mine,
+                                        ),
+                        ]
+
+                    if not mine:
+                        # Add location filter for all-offers perspective
+                        filter_widgets.append(
+                            S3LocationFilter("location_id",
+                                             levels = ("L2", "L3"),
+                                             ))
+
+                    if mine or is_event_manager:
+                        # Add filter for availability / status
+                        filter_widgets.extend([
+                            S3OptionsFilter("availability",
+                                            # TODO options-getter
+                                            hidden = True,
+                                            ),
+                            S3OptionsFilter("status",
+                                            # TODO options-getter
+                                            hidden = True,
+                                            ),
+                            ])
+                    else:
+                        # Filter out unavailable or unapproved offers
+                        today = current.request.utcnow.date()
+                        query = (FS("availability") == "AVL") & \
+                                (FS("status") == "APR") & \
+                                ((FS("end_date") == None) | (FS("end_date") >= today))
+                        resource.add_filter(query)
+
+                    # List fields
+                    list_fields = ["need_id",
+                                   "name",
+                                   "chargeable",
+                                   "location_id$L3",
+                                   "location_id$L2",
+                                   "location_id$L1",
+                                   "availability",
+                                   "date",
+                                   "end_date",
+                                   ]
+                    if mine or is_event_manager:
+                        list_fields.append("status")
+
+                    resource.configure(filter_widgets = filter_widgets,
+                                       list_fields = list_fields,
+                                       )
+
+                    # Report options
+                    if r.method == "report":
+                        facts = ((T("Number of Relief Offers"), "count(id)"),
+                                )
+                        axes = ["need_id",
+                                "location_id$L4",
+                                "location_id$L3",
+                                "location_id$L2",
+                                "location_id$L1",
+                                "availability",
+                                "chargeable",
+                                ]
+                        default_rows = "need_id"
+                        default_cols = "location_id$L3"
+
+                        report_options = {
+                            "rows": axes,
+                            "cols": axes,
+                            "fact": facts,
+                            "defaults": {"rows": default_rows,
+                                        "cols": default_cols,
+                                        "fact": "count(id)",
+                                        "totals": True,
+                                        },
+                            }
+                        resource.configure(report_options=report_options)
 
             return result
         s3.prep = prep
@@ -530,6 +677,11 @@ def config(settings):
                                         hidden = True,
                                         ))
 
+                resource.configure(filter_widgets = filter_widgets,
+                                   list_fields = list_fields,
+                                   orderby = "br_case_activity.date desc",
+                                   )
+
                 # Report options
                 if r.method == "report":
                     facts = ((T("Number of Need Reports"), "count(id)"),
@@ -556,13 +708,10 @@ def config(settings):
                         }
                     resource.configure(report_options=report_options)
 
-                resource.configure(filter_widgets = filter_widgets,
-                                   list_fields = list_fields,
-                                   orderby = "br_case_activity.date desc",
-                                   )
-
             # Mandatory filters and CRUD limitations
+            crud_strings = s3.crud_strings["br_case_activity"]
             if r.function == "activities":
+                crud_strings["title_list"] = T("Current Needs")
 
                 # Limit to active activities
                 # TODO filter by end-date too
@@ -574,6 +723,8 @@ def config(settings):
                 editable = deletable = is_event_manager
 
             else:
+                crud_strings["title_list"] = T("My Needs")
+
                 logged_in_person = auth.s3_logged_in_person()
 
                 # Limit to own activities

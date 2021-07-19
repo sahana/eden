@@ -46,12 +46,12 @@ class S3MainMenu(default.S3MainMenu):
             # Organisation managing events
             menu = [MM("Affected Persons", c="br", f="person"),
                     MM("Current Needs", c="br", f="activities"),
-                    MM("Relief Offers", c="br", f="assistance_offer"),
+                    MM("Relief Offers", c="br", f="offers"),
                     ]
         elif has_role("CASE_MANAGER"):
             # Organisation managing cases
             menu = [MM("Affected Persons", c="br", f="person"),
-                    MM("Relief Offers", c="br", f="assistance_offer"),
+                    MM("Relief Offers", c="br", f="offers"),
                     ]
         elif has_role("RELIEF_PROVIDER"):
             # Organisation offering relief services / supplies
@@ -61,7 +61,7 @@ class S3MainMenu(default.S3MainMenu):
         else:
             # Private Citizen
             menu = [MM("Report Need", c="br", f="case_activity"),
-                    MM("Offer Assistance / Supplies", c="br", f="assistance_offer", vars={"mine": "1"}),
+                    MM("Offer Assistance / Supplies", c="br", f="assistance_offer"),
                     ]
 
         return [menu,
@@ -206,15 +206,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             M(crud_strings.label_create, m="create"),
                             )
                         ]
-            elif f in ("assistance_offer", "assistance_type"):
+            elif f in ("assistance_offer", "offers", "assistance_type"):
                 # Relief Offers
-                menu = [M("Our Relief Offers", f="assistance_offer", vars={"ours": "1"},
+                menu = [M("Our Relief Offers", f="assistance_offer",
                           restrict="RELIEF_PROVIDER")(
                             M("Create", m="create"),
                             ),
-                        M("Current Relief Offers", f="assistance_offer")(
+                        M("Current Relief Offers", f="offers")(
                             M("Statistics", m="report"),
-                            M("Map", m="map"),
+                            # TODO enable when implemented
+                            #M("Map", m="map"),
                             ),
                         M("Administration", link=False, restrict="ADMIN")(
                             M("Assistance Types", f="assistance_type"),
@@ -233,12 +234,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
             # Private Citizen: combined menu
             menu = [M("My Needs", f="case_activity")(
                         M("Report Need", m="create"),
+                        # TODO Enable when implemented
+                        #M("Matching Offers", vars={"match": "1"}),
+                        M("Current Relief Offers", f="offers"),
                         ),
-                    M("Current Relief Offers", f="assistance_offer")(
-                        M("Matching My Needs", vars={"match": "1"}),
-                        M("All Offers"),
-                        ),
-                    M("My Relief Offers", f="assistance_offer", vars={"mine": "1"})(
+                    M("My Relief Offers", f="assistance_offer")(
                         M("New Offer", m="create"),
                         ),
                     M("All Current Needs", f="activities")(
