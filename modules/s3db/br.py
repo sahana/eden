@@ -1387,7 +1387,7 @@ class BRAssistanceModel(S3Model):
             msg_record_modified = T("Type updated"),
             msg_record_deleted = T("Type deleted"),
             msg_list_empty = T("No Types of Assistance currently defined"),
-        )
+            )
 
         # Reusable field
         represent = S3Represent(lookup=tablename, translate=True)
@@ -1454,6 +1454,7 @@ class BRAssistanceModel(S3Model):
                      Field("chargeable", "boolean",
                            default = False,
                            label = T("Chargeable"),
+                           represent = s3_yes_no_represent,
                            ),
                      self.gis_location_id(), # Location of the offer (if housing)
                      s3_date(label = T("Available from"),
@@ -1464,17 +1465,27 @@ class BRAssistanceModel(S3Model):
                              label = T("Available until"),
                              # TODO setmax
                              ),
-                     Field("contact_name"),
-                     Field("contact_email"), # TODO validate
-                     Field("contact_phone"), # TODO validate
+                     Field("contact_name",
+                           label = T("Contact Name"),
+                           ),
+                     Field("contact_email",
+                           label = T("Email"),
+                           requires = IS_EMPTY_OR(IS_EMAIL()),
+                           ),
+                     Field("contact_phone",
+                           label = T("Contact Phone"),
+                           requires = IS_EMPTY_OR(IS_PHONE_NUMBER_SINGLE()),
+                           ),
                      Field("availability",
-                           # TODO default
+                           default = "AVL",
+                           label = T("Availability"),
                            requires = IS_IN_SET(offer_availability, zero=None, sort=False),
                            represent = S3Represent(options=dict(offer_availability),
                                                    ),
                            ),
                      Field("status",
-                           # TODO default
+                           default = "NEW",
+                           label = T("Status"),
                            requires = IS_IN_SET(offer_status, zero=None, sort=False),
                            represent = S3Represent(options=dict(offer_status),
                                                    ),
@@ -1482,7 +1493,21 @@ class BRAssistanceModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        # TODO list fields, filters, CRUD strings
+        # TODO list fields, filters
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Assistance Offer"),
+            title_display = T("Assistance Offer Details"),
+            title_list = T("Assistance Offers"),
+            title_update = T("Edit Offer"),
+            label_list_button = T("List Offers"),
+            label_delete_button = T("Delete Offer"),
+            msg_record_created = T("Offer created"),
+            msg_record_modified = T("Offer updated"),
+            msg_record_deleted = T("Offer deleted"),
+            msg_list_empty = T("No Assistance Offers currently registered"),
+            )
 
         # ---------------------------------------------------------------------
         # Status of Assistance
