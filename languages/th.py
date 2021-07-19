@@ -4179,7 +4179,7 @@
 'Open Tasks': 'เปิดงาน',
 'Open Tasks for %(project)s': 'เปิดงานสำหรับ %(project)s',
 'Open Tasks for Project': 'เปิดงานสำหรับโครงการ',
-'Open##the_shelter_is': 'เปิด ## the_shelter_is',
+'Open##status': 'เปิด',
 'Opening Times': 'เวลาเปิด',
 'OpenStreetMap Layer': 'ชั้นข้อมูลOpenStreetMap',
 'OpenStreetMap OAuth Consumer Key': 'OpenStreetMap รหัสผู้บริโภค OAuth',

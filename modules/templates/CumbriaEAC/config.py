@@ -284,7 +284,7 @@ def config(settings):
     settings.cr.shelter_population_dynamic = True
 
     cr_shelter_status_opts = {1 : T("Closed"), # Nominated Centres
-                              #2 : T("Open##the_shelter_is"),
+                              #2 : T("Open##status"),
                               3 : T("Green"),
                               4 : T("Amber"),
                               5 : T("Red"),
@@ -658,7 +658,7 @@ def config(settings):
                 - Control Workflow Flag to track Data Exporting/Anonymising
                 - Add Shelter to Session
             When a Shelter is Closed
-                - Check-out all Clients 
+                - Check-out all Clients
         """
 
         record = form.record
@@ -2533,7 +2533,7 @@ def config(settings):
         for person_id in person_ids:
 
             row = records[person_id]
-            
+
             nok = nok_lookup_get(person_id)
 
             colname = "pr_person.nok_relationship"
@@ -2675,7 +2675,7 @@ def config(settings):
                                                )
                             ),
                            )
-            
+
         elif current.auth.permission.format == "xls":
             # Custom XLS Title Row
             settings.base.xls_title_row = xls_title_row
@@ -3087,7 +3087,7 @@ def config(settings):
             elif r.component_name == "nok":
                 # Next of Kin
                 s3.crud_strings["pr_person"].title_update = ""
-                
+
                 from gluon import IS_NOT_EMPTY
                 from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3LocationSelector
 
@@ -3152,7 +3152,7 @@ def config(settings):
                 return result
 
             elif r.controller in ("hrm", "default"):
-                
+
                 from s3 import S3SQLCustomForm, S3SQLInlineComponent
 
                 if r.method == "lookup":

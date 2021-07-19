@@ -28,7 +28,7 @@
 'New': 'Lägg till',
 'No Projects currently registered': 'Inga projekt registrerade',
 'Open': 'Öppna',
-'Open##the_shelter_is': 'Öppet',
+'Open##status': 'Öppet',
 'Parish': 'Församling',
 'Project': 'Projekt',
 'Projects': 'Projekt',

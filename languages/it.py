@@ -3893,7 +3893,7 @@
 'Opacity': 'Opacità',
 'Opacity (1 for opaque, 0 for fully-transparent)': 'Opacità (1 per opaco, 0 per completamente trasparente)',
 'Open': 'Apri',
-'Open##the_shelter_is': 'Aperto',
+'Open##status': 'Aperto',
 'Open area': 'Area aperta',
 'Open Chart': 'Aprire Grafico',
 'open defecation': 'Aprire defecation',

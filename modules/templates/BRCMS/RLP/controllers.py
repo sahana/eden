@@ -278,6 +278,10 @@ class legal(S3CustomController):
         return output
 
 # =============================================================================
+# TODO register_org
+# =============================================================================
+# TODO approve (org)
+# =============================================================================
 class register(S3CustomController):
     """ Registration page for private citizens """
 
@@ -390,6 +394,7 @@ class register(S3CustomController):
             temptable = s3db.auth_user_temp
             record  = {"user_id": user_id,
                        "consent": formvars.consent,
+                       "mobile": formvars.mobile_phone,
                        }
 
             # Store Custom fields
@@ -593,6 +598,8 @@ class register(S3CustomController):
         db = current.db
         s3db = current.s3db
 
+        settings = current.deployment_settings
+
         # Get custom field data from DB
         temptable = s3db.auth_user_temp
         record = db(temptable.user_id == user_id).select(temptable.custom,
@@ -641,6 +648,7 @@ class register(S3CustomController):
         ctable = s3db.br_case
         case = {"person_id": person_id,
                 "status_id": s3db.br_case_default_status(),
+                "organisation_id": settings.get_org_default_organisation(),
                 }
         case["id"] = ctable.insert(**case)
         set_record_owner(ctable, case, owned_by_user=user_id)
@@ -673,6 +681,9 @@ class register(S3CustomController):
                     address_data["id"] = atable.insert(**address_data)
                     set_record_owner(atable, address_data)
                     s3db_onaccept(atable, address_data, method="create")
+
+        # Assign site-wide CITIZEN role
+        auth.s3_assign_role(user_id, "CITIZEN", for_pe=0)
 
     # -------------------------------------------------------------------------
     @staticmethod

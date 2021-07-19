@@ -1406,8 +1406,9 @@ class BRAssistanceModel(S3Model):
                                                      )
         tablename = "br_assistance_offer"
         define_table(tablename,
-                     assistance_type_id(),
                      self.event_event_id(),
+                     self.br_need_id(),
+                     assistance_type_id(),
                      Field("pe_id", "reference pr_pentity",
                            label = T("Provider##assistance"),
                            represent = pe_represent,
@@ -1420,9 +1421,11 @@ class BRAssistanceModel(S3Model):
                            ),
                      s3_date(label = T("Available from"),
                              default = "now",
+                             # TODO setmin
                              ),
                      s3_date("end_date",
                              label = T("Available until"),
+                             # TODO setmax
                              ),
                      Field("name",
                            label = T("Short Description"),
@@ -1442,14 +1445,16 @@ class BRAssistanceModel(S3Model):
                            ),
                      self.gis_location_id(), # Location of the offer (if housing)
                      Field("contact_name"),
-                     Field("contact_email"),
-                     Field("contact_phone"),
+                     Field("contact_email"), # TODO validate
+                     Field("contact_phone"), # TODO validate
                      Field("availability",
+                           # TODO default
                            requires = IS_IN_SET(offer_availability, zero=None, sort=False),
                            represent = S3Represent(options=dict(offer_availability),
                                                    ),
                            ),
                      Field("status",
+                           # TODO default
                            requires = IS_IN_SET(offer_status, zero=None, sort=False),
                            represent = S3Represent(options=dict(offer_status),
                                                    ),

@@ -10,7 +10,7 @@
 from collections import OrderedDict
 
 from gluon import current, URL, A, DIV, TAG, \
-                  IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_NOT_EMPTY
+                  IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_LENGTH, IS_NOT_EMPTY
 
 from gluon.storage import Storage
 
@@ -18,6 +18,8 @@ from s3 import FS, IS_FLOAT_AMOUNT, ICON, IS_ONE_OF, S3Represent, s3_str
 from s3dal import original_tablename
 
 from templates.RLPPTM.rlpgeonames import rlp_GeoNames
+
+LSJV = "Landesamt für Soziales, Jugend und Versorgung"
 
 # =============================================================================
 def config(settings):
@@ -100,8 +102,16 @@ def config(settings):
     #
     settings.br.case_activity_status = True
     settings.br.case_activity_manager = False
+    settings.br.case_activity_subject = True
     settings.br.case_activity_need_details = True
     settings.br.manage_assistance = False
+
+    settings.br.needs_org_specific = False
+
+    # -------------------------------------------------------------------------
+    # ORG Settings
+    #
+    settings.org.default_organisation = LSJV
 
     # -------------------------------------------------------------------------
     # TODO Realm Rules
@@ -341,11 +351,30 @@ def config(settings):
     settings.customise_cms_post_controller = customise_cms_post_controller
 
     # -------------------------------------------------------------------------
-    # TODO customise br_assistance_offer
+    def customise_br_assistance_offer_controller(**attr):
+
+        # TODO
+        # Default event
+
+        # Default provider:
+        #   ORG USER => organisation (if multiple, make selectable)
+        #   CITIZEN => logged-in person
+
+        # Address => location selector without address L1-L4, L2-L3 required
+
+        # End date => make required, default to 4 weeks from now
+
+        # Contact Email => default from user if CITIZEN, else org
+        # Contact Phone number => required, populate from user if CITIZEN, else org office
+
+        # Status => r/o, writable only for EVENT_MANAGER, default to NEW? or APPROVED?
+        # Comments
+
+        return attr
+
+    settings.customise_br_assistance_offer_controller = customise_br_assistance_offer_controller
 
     # -------------------------------------------------------------------------
-    # TODO customise br_case_activity
-    #
     def customise_br_case_activity_resource(r, tablename):
 
         s3 = current.response.s3
@@ -354,9 +383,24 @@ def config(settings):
         s3db = current.s3db
         table = s3db.br_case_activity
 
+        # Can't change start date, always today
+        field = table.date
+        field.writable = False
+
+        # Need type is mandatory
+        field = table.need_id
+        requires = field.requires
+        if isinstance(requires, IS_EMPTY_OR):
+            field.requires = requires.other
+
+        # Subject is mandatory + limit length
+        field = table.subject
+        field.label = T("Short Description")
+        field.requires = [IS_NOT_EMPTY(), IS_LENGTH(128)]
+
         # CRUD Strings
         crud_strings["br_case_activity"] = Storage(
-            label_create = T("Register Need"),
+            label_create = T("Report Need"),
             title_display = T("Need Details"),
             title_list = T("Needs"),
             title_report = T("Needs Statistic"),
@@ -446,7 +490,7 @@ def config(settings):
             return result
         s3.prep = prep
 
-        # TODO postp to override list-button in read-views to return to mine if mine
+        # TODO postp to override list-button in read-views to return to all if all?
 
         return attr
 
@@ -457,11 +501,51 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # TODO customise org_organisation
+    # - have offices and staff, nothing else
 
     # -------------------------------------------------------------------------
-    # TODO customise pr_person (Case file, Profile)
+    def person_onaccept(form):
+
+        # Get record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get the record
+        table = s3db.pr_person
+        query = (table.id == record_id)
+        record = db(query).select(table.id,
+                                  table.pe_label,
+                                  limitby = (0, 1),
+                                  ).first()
+        if not record:
+            return
+
+        if not record.pe_label:
+            record.update_record(pe_label="C-%07d" % record_id)
+            s3db.update_super(table, record)
+
+    # -------------------------------------------------------------------------
+    def customise_pr_person_resource(r, tablename):
+
+        s3db = current.s3db
+
+        # Custom callback to assign an ID
+        s3db.add_custom_callback("pr_person", "onaccept", person_onaccept)
+
+    settings.customise_pr_person_resource = customise_pr_person_resource
+
     # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
+
+        s3db = current.s3db
 
         s3 = current.response.s3
 
@@ -481,8 +565,14 @@ def config(settings):
             name_fields = [fn for fn in keys if fn in NAMES]
 
             # TODO Customise for br
+            if r.controller == "br":
 
-            if r.controller == "default":
+                if not current.auth.s3_has_role("CASE_MANAGER"):
+                    ctable = s3db.br_case
+                    field = ctable.organisation_id
+                    field.default = settings.get_org_default_organisation()
+
+            elif r.controller == "default":
                 # Personal profile (default/person)
                 if not r.component:
 

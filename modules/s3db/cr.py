@@ -188,7 +188,7 @@ class CRShelterModel(S3Model):
                            # between grammatical moods or genders etc - so
                            # adding a context-comment for T() here to clarify
                            # which "Open" we mean (will not be rendered):
-                           2 : T("Open##the_shelter_is"),
+                           2 : T("Open##status"),
                            }
 
         day_and_night = settings.get_cr_day_and_night()

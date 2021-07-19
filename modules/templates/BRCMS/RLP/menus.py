@@ -60,7 +60,7 @@ class S3MainMenu(default.S3MainMenu):
                     ]
         else:
             # Private Citizen
-            menu = [MM("Get Help", c="br", f="case_activity"),
+            menu = [MM("Report Need", c="br", f="case_activity"),
                     MM("Offer Assistance / Supplies", c="br", f="assistance_offer", vars={"mine": "1"}),
                     ]
 
@@ -74,7 +74,8 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Register", c="default", f="index", link=False,
                    check = not logged_in)(
                     MM("Private Citizen", args=["register"]),
-                    MM("Organisation / Company", args=["register_org"]),
+                    # TODO Enable when implemented
+                    MM("Organisation / Company", args=["register_org"], link=False),
                     ),
                 ]
 
@@ -229,7 +230,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         else:
             # Private Citizen: combined menu
             menu = [M("My Needs", f="case_activity")(
-                        M("Register Need", m="create"),
+                        M("Report Need", m="create"),
                         ),
                     M("Current Relief Offers", f="assistance_offer")(
                         M("Matching My Needs", vars={"match": "1"}),
