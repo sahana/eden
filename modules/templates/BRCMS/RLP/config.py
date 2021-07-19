@@ -744,7 +744,7 @@ def config(settings):
                                "location_id$L1",
                                #"status_id",
                                ]
-                if is_event_manager:
+                if mine or is_event_manager:
                     list_fields.append("status_id")
 
                 # Filters
@@ -769,7 +769,7 @@ def config(settings):
                                  hidden = True,
                                  ),
                     ]
-                if is_event_manager:
+                if mine or is_event_manager:
                     filter_widgets.append(
                         S3OptionsFilter("status_id",
                                         options = lambda: \
