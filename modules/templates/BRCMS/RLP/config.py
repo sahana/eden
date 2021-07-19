@@ -483,7 +483,15 @@ def config(settings):
                                         ),
                         ]
 
-                    if not mine:
+                    if mine:
+                        # Filter for offers of current user
+                        pe_id = auth.user.pe_id if auth.user else None
+                        if pe_id:
+                            query = (FS("pe_id") == pe_id)
+                        else:
+                            query = (FS("pe_id").belongs([]))
+                        resource.add_filter(query)
+                    else:
                         # Add location filter for all-offers perspective
                         filter_widgets.append(
                             S3LocationFilter("location_id",
