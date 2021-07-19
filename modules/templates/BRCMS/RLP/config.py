@@ -448,10 +448,10 @@ def config(settings):
                 list_fields = ["date",
                                "need_id",
                                "subject",
-                               "person_id$address.location_id$L4",
-                               "person_id$address.location_id$L3",
-                               "person_id$address.location_id$L2",
-                               "person_id$address.location_id$L1",
+                               "location_id$L4",
+                               "location_id$L3",
+                               "location_id$L2",
+                               "location_id$L1",
                                #"status_id",
                                ]
                 if is_event_manager:
@@ -461,7 +461,7 @@ def config(settings):
                 from s3 import S3DateFilter, S3TextFilter, S3LocationFilter, S3OptionsFilter, s3_get_filter_opts
                 filter_widgets = [
                     S3TextFilter(["subject",
-                                  "details",
+                                  "need_details",
                                   ],
                                  label = T("Search"),
                                  ),
@@ -471,7 +471,7 @@ def config(settings):
                                                            translate = True,
                                                            ),
                                     ),
-                    S3LocationFilter("person_id$address.location_id",
+                    S3LocationFilter("location_id",
                                      label = T("Place"),
                                      levels = ("L2", "L3"),
                                      ),
@@ -488,6 +488,32 @@ def config(settings):
                                                                ),
                                         hidden = True,
                                         ))
+
+                # Report options
+                if r.method == "report":
+                    facts = ((T("Number of Need Reports"), "count(id)"),
+                             )
+                    axes = ["need_id",
+                            "location_id$L4",
+                            "location_id$L3",
+                            "location_id$L2",
+                            "location_id$L1",
+                            "status_id",
+                            ]
+                    default_rows = "need_id"
+                    default_cols = "location_id$L3"
+
+                    report_options = {
+                        "rows": axes,
+                        "cols": axes,
+                        "fact": facts,
+                        "defaults": {"rows": default_rows,
+                                    "cols": default_cols,
+                                    "fact": "count(id)",
+                                    "totals": True,
+                                    },
+                        }
+                    resource.configure(report_options=report_options)
 
                 resource.configure(filter_widgets = filter_widgets,
                                    list_fields = list_fields,
@@ -529,8 +555,6 @@ def config(settings):
 
             return result
         s3.prep = prep
-
-        # TODO postp to override list-button in read-views to return to all if all?
 
         return attr
 

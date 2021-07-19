@@ -608,6 +608,13 @@ class BRCaseActivityModel(S3Model):
                             readable = case_activity_need,
                             writable = case_activity_need,
                             ),
+                     self.gis_location_id(
+                            # Location of the activity,
+                            # - usually the current tracking location of the beneficiary
+                            # - enable in template if/as necessary
+                            readable = False,
+                            writable = False,
+                            ),
                      Field("subject",
                            label = T("Subject / Occasion"),
                            readable = case_activity_subject,
@@ -935,14 +942,18 @@ class BRCaseActivityModel(S3Model):
         # Get current status and end_date of the record
         atable = s3db.br_case_activity
         stable = s3db.br_case_activity_status
+        ptable = s3db.pr_person
 
-        join = stable.on(atable.status_id == stable.id)
+        join = stable.on(stable.id == atable.status_id)
+        left = ptable.on(ptable.id == atable.person_id)
         query = (atable.id == record_id)
 
         row = db(query).select(atable.id,
                                atable.end_date,
                                stable.is_closed,
+                               ptable.location_id,
                                join = join,
+                               left = left,
                                limitby = (0, 1),
                                ).first()
         if row:
@@ -956,6 +967,11 @@ class BRCaseActivityModel(S3Model):
             elif activity.end_date:
                 # Remove the end-date
                 data["end_date"] = None
+
+            # Set activity location to the person's current tracking location
+            person = row.pr_person
+            if person.location_id:
+                data["location_id"] = person.location_id
 
             if data:
                 activity.update_record(**data)

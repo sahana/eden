@@ -222,7 +222,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ]
             else:
                 # Needs
-                menu = [M("Current Needs", f="case_activity"),
+                menu = [M("Current Needs", f="activities")(
+                            M("Statistic", m="report"),
+                            ),
                         M("Administration", link=False, restrict="ADMIN")(
                             M("Need Types", f="need"),
                             )
@@ -239,7 +241,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("My Relief Offers", f="assistance_offer", vars={"mine": "1"})(
                         M("New Offer", m="create"),
                         ),
-                    M("All Current Needs", f="activities"),
+                    M("All Current Needs", f="activities")(
+                        M("Statistic", m="report"),
+                        ),
                     ]
 
         return M(c="br")(menu)
