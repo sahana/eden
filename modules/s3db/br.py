@@ -1279,6 +1279,8 @@ class BRAssistanceModel(S3Model):
              "br_assistance_status",
              "br_assistance_theme",
              "br_assistance_type",
+             "br_assistance_offer_status",
+             "br_assistance_offer_availability",
              )
 
     def model(self):
@@ -1855,14 +1857,18 @@ class BRAssistanceModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return {"br_assistance_offer_status": offer_status,
+                "br_assistance_offer_availability": offer_availability,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        return {}
+        return {"br_assistance_offer_status": (),
+                "br_assistance_offer_availability": (),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod

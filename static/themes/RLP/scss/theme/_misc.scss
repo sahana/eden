@@ -451,5 +451,15 @@ body.rtl {
         text-align: center;
     }
 }
+.charge-warn {
+    color: $alert-color;
+    font-weight: bold;
+    i.fa {
+        margin-left: 0.2rem;
+    }
+}
+.free-hint {
+    color: #C0C0C0;
+}
 
 // END ========================================================================

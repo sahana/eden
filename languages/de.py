@@ -617,7 +617,7 @@
 'Available Shower': 'Dusche vorhanden',
 'Available databases and tables': 'Verfügbare Datenbanken und Tabellen',
 'Available for Location': 'Verfügbar für Ort',
-'Available from': 'Verfügbar von',
+'Available from': 'Verfügbar ab',
 'Available in Viewer?': 'Verfügbar in Lagedarstellung?',
 'Available of shower handicap facilities': 'Verfügbarkeit einer behindertengerechten Dusche',
 'Available until': 'Verfügbar bis',

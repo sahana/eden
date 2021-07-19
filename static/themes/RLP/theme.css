@@ -2942,3 +2942,18 @@ body.rtl .event-type-header {
   width: 100%;
   text-align: center;
 }
+
+/* line 454, ../scss/theme/_misc.scss */
+.charge-warn {
+  color: #D92C20;
+  font-weight: bold;
+}
+/* line 457, ../scss/theme/_misc.scss */
+.charge-warn i.fa {
+  margin-left: 0.2rem;
+}
+
+/* line 461, ../scss/theme/_misc.scss */
+.free-hint {
+  color: #C0C0C0;
+}

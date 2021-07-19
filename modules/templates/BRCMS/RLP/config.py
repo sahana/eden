@@ -9,7 +9,7 @@
 
 from collections import OrderedDict
 
-from gluon import current, URL, \
+from gluon import current, URL, I, SPAN, \
                   IS_EMPTY_OR, IS_LENGTH, IS_NOT_EMPTY
 
 from gluon.storage import Storage
@@ -360,6 +360,20 @@ def config(settings):
     settings.customise_br_home = customise_br_home
 
     # -------------------------------------------------------------------------
+    def chargeable_warning(v, row=None):
+        """ Visually enhanced representation of chargeable-flag """
+
+        if v:
+            return SPAN(T("yes"),
+                        I(_class = "fa fa-exclamation-triangle"),
+                        _class = "charge-warn",
+                        )
+        else:
+            return SPAN(T("no"),
+                        _class = "free-hint",
+                        )
+
+    # -------------------------------------------------------------------------
     def customise_br_assistance_offer_controller(**attr):
 
         db = current.db
@@ -473,10 +487,31 @@ def config(settings):
                 # - Contact Email => default from user if CITIZEN
                 # - Contact Phone number => default from user if CITIZEN
 
+                field = table.chargeable
+                field.represent = chargeable_warning
+
+                from s3 import S3PriorityRepresent
+
+                # Color-coded availability representation
+                field = table.availability
+                availability_opts = s3db.br_assistance_offer_availability
+                field.represent = S3PriorityRepresent(dict(availability_opts),
+                                                      {"AVL": "green",
+                                                       "OCP": "amber",
+                                                       "RTD": "black",
+                                                       }).represent
+
                 # Status only writable for EVENT_MANAGER
                 # TODO default to NEW? or APPROVED?
                 field = table.status
                 field.writable = is_event_manager
+                # Color-coded status representation
+                status_opts = s3db.br_assistance_offer_status
+                field.represent = S3PriorityRepresent(dict(status_opts),
+                                                      {"NEW": "lightblue",
+                                                       "APR": "green",
+                                                       "BLC": "red",
+                                                       }).represent
 
                 # List configuration
                 if not r.record:
@@ -511,12 +546,16 @@ def config(settings):
                         # Add filter for availability / status
                         filter_widgets.extend([
                             S3OptionsFilter("availability",
-                                            # TODO options-getter
+                                            options = OrderedDict(availability_opts),
                                             hidden = True,
+                                            sort = False,
+                                            cols = 3,
                                             ),
                             S3OptionsFilter("status",
-                                            # TODO options-getter
+                                            options = OrderedDict(status_opts),
                                             hidden = True,
+                                            sort = False,
+                                            cols = 3,
                                             ),
                             ])
                     else:
