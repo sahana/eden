@@ -461,5 +461,13 @@ body.rtl {
 .free-hint {
     color: #C0C0C0;
 }
+#site-intro p {
+    margin-top: 3rem;
+    font-size: 0.9rem;
+    white-space: pre-wrap;
+    line-height: 1rem;
+    border: 2px solid #668b99;
+    padding: 0.8rem;
+}
 
 // END ========================================================================

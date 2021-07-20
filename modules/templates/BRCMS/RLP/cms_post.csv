@@ -5,3 +5,4 @@ WelcomeMessageCitizen,auth,user,"Welcome to the {system_name} Portal
 - To edit your profile go to: {profile}
 
 Thank you",
+HomepageIntro,default,index,Die konkreten Hilfsangebote in diesem Portal stehen nur registrierten Benutzern zur Verfügung - öffentliche Informationen über die Hilfsangebote werden in Kürze bereitgestellt.,
