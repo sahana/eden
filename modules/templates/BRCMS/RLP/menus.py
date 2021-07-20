@@ -234,9 +234,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
             # Private Citizen: combined menu
             menu = [M("My Needs", f="case_activity")(
                         M("Report Need", m="create"),
-                        # TODO Enable when implemented
-                        #M("Matching Offers", vars={"match": "1"}),
-                        M("Current Relief Offers", f="offers"),
+                        M("Matching Offers", f="offers", vars={"match": "1"}),
+                        M("All Relief Offers", f="offers"),
                         ),
                     M("My Relief Offers", f="assistance_offer")(
                         M("New Offer", m="create"),
