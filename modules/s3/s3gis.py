@@ -912,7 +912,82 @@ class GIS(object):
                 }
 
     # -------------------------------------------------------------------------
-    def get_parent_bounds(self, parent=None):
+    @staticmethod
+    def get_neighbours(location_id):
+        """
+            Get adjacent neighbours of the same Lx as the Location (or it's parent)
+        """
+
+        table = current.s3db.gis_location
+        db = current.db
+
+        feature = db(table.id == location_id).select(table.level,
+                                                     table.parent,
+                                                     table.wkt,
+                                                     limitby = (0, 1)
+                                                     ).first()
+        level = feature.level
+        if not level:
+            parent = feature.parent
+            if not parent:
+                # Nothing we can do: Abort
+                return None
+            # Use the parent
+            location_id = parent
+            feature = db(table.id == parent).select(table.level,
+                                                    table.wkt,
+                                                    limitby = (0, 1)
+                                                    ).first()
+            level = feature.level
+
+        wkt = feature.wkt
+
+        query = (table.level == level) & \
+                (table.id != location_id)
+        if current.deployment_settings.get_gis_spatialdb():
+            query &= (table.the_geom.st_intersects(wkt))
+            rows = db(query).select(table.id)
+            neighbours = [row.id for row in rows]
+        else:
+            current.log.warning("S3GIS.get_neighbours called without a spatial DB...this is likely to be slow!")
+            # Need to use Shapely on each in turn
+            from shapely.geos import ReadingError
+            from shapely.wkt import loads as wkt_loads
+
+            try:
+                # Enable C-based speedups available from 1.2.10+
+                from shapely import speedups
+                speedups.enable()
+            except:
+                current.log.info("S3GIS",
+                                 "Upgrade Shapely for Performance enhancements")
+
+            try:
+                polygon = wkt_loads(wkt)
+            except ReadingError:
+                current.log.error("Invalid Polygon!")
+                return None
+
+            # @ToDo: Optimise with BBOX
+            rows = db(query).select(table.id,
+                                    table.wkt,
+                                    )
+            neighbours = []
+            nappend = neighbours.append
+            for row in rows:
+                try:
+                    shape = wkt_loads(wkt)
+                    if shape.intersects(polygon):
+                        nappend(row.id)
+                except ReadingError:
+                    current.log.error("Error reading wkt of location with id",
+                                      value=row.id)
+
+        return neighbours
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_parent_bounds(parent):
         """
             Get bounds from the specified (parent) location and its ancestors.
             This is used to validate lat, lon, and bounds for child locations.
@@ -1925,7 +2000,7 @@ class GIS(object):
 
         try:
             polygon = wkt_loads(wkt)
-        except: # @ToDo: need specific exception
+        except ReadingError:
             current.log.error("Invalid Polygon!")
             return None
 
@@ -1944,7 +2019,8 @@ class GIS(object):
         features = db(query).select(locations.wkt,
                                     locations.lat,
                                     locations.lon,
-                                    table.ALL)
+                                    table.ALL
+                                    )
         output = Rows()
         # @ToDo: provide option to use PostGIS/Spatialite
         # settings = current.deployment_settings
@@ -8765,10 +8841,9 @@ class LayerGoogle(Layer):
                     if script not in s3_scripts:
                         s3_scripts.append(script)
                 else:
-                    # v3 API (3.0 gives us the latest frozen version, currently 3.30)
-                    # Note that it does give a warning: "Google Maps API warning: RetiredVersion"
+                    # v3 API
                     # https://developers.google.com/maps/documentation/javascript/versions
-                    script = "//maps.google.com/maps/api/js?v=3.0&key=%s" % apikey
+                    script = "//maps.google.com/maps/api/js?v=quarterly&key=%s" % apikey
                     if script not in s3_scripts:
                         s3_scripts.append(script)
                     if "StreetviewButton" in ldict:
