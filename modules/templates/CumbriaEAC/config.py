@@ -698,6 +698,7 @@ def config(settings):
 
             return
 
+        # Shelter has been Closed
         tag = db(query).select(table.id,
                                limitby = (0 ,1)
                                ).first()
@@ -2166,15 +2167,24 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_cr_shelter_registration_controller(**attr):
 
+        s3db = current.s3db
         s3 = current.response.s3
+
+        # NoKs shouldn't deduplicate with clients!
+        s3db.configure("pr_person",
+                       deduplicate = None
+                       )
+
+        # Default to True
+        from s3.s3import import S3Importer
+        S3Importer.define_upload_table()
+        s3db.s3_import_upload.replace_option.default = True
 
         # Import pre-process
         def import_prep(data):
             """
                 Checks out all existing clients of the shelter
                 before processing a new data import
-
-                @ToDo: Confirm all Workflow elements correct
             """
             if s3.import_replace:
                 resource, tree = data
@@ -2195,20 +2205,23 @@ def config(settings):
                             except:
                                 pass
                         if shelter_name:
-                            s3db = current.s3db
+                            # Check-out all clients
+                            db = current.db
                             rtable = s3db.cr_shelter_registration
                             stable = s3db.cr_shelter
                             query = (stable.name == shelter_name) & \
-                                    (rtable.shelter_id == stable.id)
-                            resource = s3db.resource("cr_shelter_registration", filter=query)
-                            # Use cascade=True so that the deletion gets
-                            # rolled back if the import fails:
-                            resource.delete(format="xml", cascade=True)
+                                    (rtable.shelter_id == stable.id) & \
+                                    (rtable.registration_status == 2)
+                            rows = db(query).select(rtable.id)
+                            db(rtable.id.belongs([row.id for row in rows])).update(registration_status = 3,# Checked-Out
+                                                                                   check_out_date = current.request.utcnow,
+                                                                                   )
 
         s3.import_prep = import_prep
 
         attr["csv_template"] = ("../../themes/CumbriaEAC/xls", "Client_Registration.xlsm")
         attr["replace_option"] = T("Checkout existing clients for this shelter before import")
+        attr["replace_option_help"] = T("If this option is checked, then it assumes that this spreadsheet includes all currently checked-in clients and so all existing clients should be checked-out.")
 
         return attr
 

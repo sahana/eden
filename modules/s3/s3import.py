@@ -680,10 +680,12 @@ class S3Importer(S3Method):
                 field = table.replace_option
                 field.readable = field.writable = True
                 field.label = replace_option
-                field.comment = DIV(_class="tooltip",
-                                    _title="%s|%s" % \
-                    (replace_option,
-                     current.T("Delete all data of this type which the user has permission to before upload. This is designed for workflows where the data is maintained in an offline spreadsheet and uploaded just for Reads.")))
+                replace_option_help = attr.get("replace_option_help", current.T("Delete all data of this type which the user has permission to before upload. This is designed for workflows where the data is maintained in an offline spreadsheet and uploaded just for Reads."))
+                field.comment = DIV(_class = "tooltip",
+                                    _title = "%s|%s" % (replace_option,
+                                                        replace_option_help,
+                                                        ),
+                                    )
 
         fields = [f for f in table if f.readable or f.writable and not f.compute]
         if EXTRA_FIELDS in attr:
