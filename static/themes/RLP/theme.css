@@ -2957,3 +2957,13 @@ body.rtl .event-type-header {
 .free-hint {
   color: #C0C0C0;
 }
+
+/* line 464, ../scss/theme/_misc.scss */
+#site-intro p {
+  margin-top: 3rem;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  line-height: 1rem;
+  border: 2px solid #668b99;
+  padding: 0.8rem;
+}

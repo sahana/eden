@@ -92,6 +92,8 @@ def config(settings):
     }
     settings.fin.currency_default = "EUR"
 
+    settings.cms.hide_index = False
+
     # -------------------------------------------------------------------------
     settings.pr.hide_third_gender = False
     settings.pr.separate_name_fields = 2

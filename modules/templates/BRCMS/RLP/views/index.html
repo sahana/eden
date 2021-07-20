@@ -7,6 +7,11 @@
      <h2>{{=settings.get_custom("homepage_title")}}</h2>
    </div>
   </div>
+  <div class="row">
+   <div id='site-intro' class='small-12 columns'>
+     {{try:}}<p>{{=intro}}</p>{{except:}}{{pass}}
+   </div>
+  </div>
  </div>
  <div class='large-5 columns end'>
   {{AUTHENTICATED = auth.get_system_roles().AUTHENTICATED}}
