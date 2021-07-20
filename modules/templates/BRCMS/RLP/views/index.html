@@ -9,7 +9,7 @@
   </div>
   <div class="row">
    <div id='site-intro' class='small-12 columns'>
-     {{try:}}<p>{{=intro}}</p>{{except:}}{{pass}}
+     {{try:}}{{if intro:}}<p>{{=intro}}</p>{{pass}}{{except:}}{{pass}}
    </div>
   </div>
  </div>
