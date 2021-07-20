@@ -520,6 +520,14 @@ def config(settings):
                 # List configuration
                 if not r.record:
 
+                    # Filter for matching offers?
+                    match = r.get_vars.get("match") == "1"
+                    if not mine and match:
+                        from .helpers import get_offer_filters
+                        filters = get_offer_filters()
+                        if filters:
+                            resource.add_filter(filters)
+
                     # Filters
                     filter_widgets = [
                         S3TextFilter(["name",
