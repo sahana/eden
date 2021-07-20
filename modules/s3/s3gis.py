@@ -963,7 +963,7 @@ class GIS(object):
         else:
             current.log.warning("S3GIS.get_neighbours called without a spatial DB...this is likely to be slow!")
             # Need to use Shapely on each in turn
-            from shapely.geos import ReadingError
+            from shapely.errors import ReadingError
             from shapely.wkt import loads as wkt_loads
 
             try:
@@ -1968,7 +1968,7 @@ class GIS(object):
             @ToDo: Optimise to not use try/except
         """
 
-        from shapely.geos import ReadingError
+        from shapely.errors import ReadingError
         from shapely.wkt import loads as wkt_loads
 
         try:
@@ -4502,7 +4502,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
         import codecs
 
         from shapely.geometry import point
-        from shapely.geos import ReadingError
+        from shapely.errors import ReadingError
         from shapely.wkt import loads as wkt_loads
 
         try:
@@ -6089,7 +6089,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             @ToDo: provide an option to use PostGIS/Spatialite
         """
 
-        from shapely.geos import ReadingError
+        from shapely.errors import ReadingError
         from shapely.wkt import loads as wkt_loads
 
         try:
