@@ -1090,13 +1090,14 @@ class GIS(object):
         """
 
         db = current.db
-        table = db.gis_location
+        table = current.s3db.gis_location
         feature = db(table.id == feature_id).select(table.id,
                                                     table.name,
                                                     table.level,
                                                     table.path,
                                                     table.parent,
-                                                    limitby = (0, 1)).first()
+                                                    limitby = (0, 1)
+                                                    ).first()
 
         return feature
 
