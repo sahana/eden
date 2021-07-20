@@ -31,9 +31,9 @@ def config(settings):
     #settings.base.system_name_short = T("%(region)s Emergency Relief") % names
     #settings.custom.homepage_title = T("Emergency Relief")
 
-    settings.base.system_name = "Hilfebörse Flut %(region)s" % names
-    settings.base.system_name_short =  "Hilfebörse Flut %(region)s" % names
-    settings.custom.homepage_title = "Hilfebörse Flut"
+    settings.base.system_name = "Fluthilfe %(region)s" % names
+    settings.base.system_name_short =  "Fluthilfe %(region)s" % names
+    settings.custom.homepage_title = "Fluthilfe"
 
     # PrePopulate data
     settings.base.prepopulate.append("BRCMS/RLP")
