@@ -740,10 +740,12 @@ class S3Importer(S3Method):
 
         if form.accepts(r.post_vars, current.session, formname="upload_form"):
 
-            formvars = form.vars
+            form_vars = form.vars
 
             # Create the upload entry
-            table.insert(file = formvars.file)
+            table.insert(file = form_vars.file,
+                         replace_option = form_vars.get("replace_option"),
+                         )
 
             # Process extra fields
             if self.csv_extra_fields:
@@ -757,8 +759,8 @@ class S3Importer(S3Method):
                     field = f.get("field")
                     value = f.get("value")
                     if field:
-                        if field.name in formvars:
-                            data = formvars[field.name]
+                        if field.name in form_vars:
+                            data = form_vars[field.name]
                         else:
                             data = field.default
                         value = data

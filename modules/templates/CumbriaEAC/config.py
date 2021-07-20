@@ -2120,6 +2120,7 @@ def config(settings):
         #table.comments.readable = table.comments.writable = False
 
         if r.method == "import":
+
             def create_onaccept(form):
                 """
                     Importing Clients
@@ -2165,7 +2166,49 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_cr_shelter_registration_controller(**attr):
 
+        s3 = current.response.s3
+
+        # Import pre-process
+        def import_prep(data):
+            """
+                Checks out all existing clients of the shelter
+                before processing a new data import
+
+                @ToDo: Confirm all Workflow elements correct
+            """
+            if s3.import_replace:
+                resource, tree = data
+                if tree is not None:
+                    xml = current.xml
+                    tag = xml.TAG
+                    att = xml.ATTRIBUTE
+
+                    root = tree.getroot()
+                    expr = "/%s/%s[@%s='cr_shelter']/%s[@%s='name']" % \
+                           (tag.root, tag.resource, att.name, tag.data, att.field)
+                    shelters = root.xpath(expr)
+                    for shelter in shelters:
+                        shelter_name = shelter.get("value", None) or shelter.text
+                        if shelter_name:
+                            try:
+                                shelter_name = json.loads(xml.xml_decode(shelter_name))
+                            except:
+                                pass
+                        if shelter_name:
+                            s3db = current.s3db
+                            rtable = s3db.cr_shelter_registration
+                            stable = s3db.cr_shelter
+                            query = (stable.name == shelter_name) & \
+                                    (rtable.shelter_id == stable.id)
+                            resource = s3db.resource("cr_shelter_registration", filter=query)
+                            # Use cascade=True so that the deletion gets
+                            # rolled back if the import fails:
+                            resource.delete(format="xml", cascade=True)
+
+        s3.import_prep = import_prep
+
         attr["csv_template"] = ("../../themes/CumbriaEAC/xls", "Client_Registration.xlsm")
+        attr["replace_option"] = T("Checkout existing clients for this shelter before import")
 
         return attr
 
