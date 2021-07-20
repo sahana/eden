@@ -921,9 +921,21 @@ class GIS(object):
         table = current.s3db.gis_location
         db = current.db
 
-        feature = db(table.id == location_id).select(table.level,
-                                                     table.parent,
-                                                     table.wkt,
+        fields = [table.level,
+                  table.parent,
+                  table.wkt,
+                  ]
+        if current.deployment_settings.get_gis_spatialdb():
+            SPATIAL = True
+        else:
+            SPATIAL = False
+            fields += [table.lat_min,
+                       table.lat_max,
+                       table.lon_min,
+                       table.lon_max,
+                       ]
+
+        feature = db(table.id == location_id).select(*fields,
                                                      limitby = (0, 1)
                                                      ).first()
         level = feature.level
@@ -934,8 +946,8 @@ class GIS(object):
                 return None
             # Use the parent
             location_id = parent
-            feature = db(table.id == parent).select(table.level,
-                                                    table.wkt,
+            fields.remove(table.parent)
+            feature = db(table.id == parent).select(*fields,
                                                     limitby = (0, 1)
                                                     ).first()
             level = feature.level
@@ -944,7 +956,7 @@ class GIS(object):
 
         query = (table.level == level) & \
                 (table.id != location_id)
-        if current.deployment_settings.get_gis_spatialdb():
+        if SPATIAL:
             query &= (table.the_geom.st_intersects(wkt))
             rows = db(query).select(table.id)
             neighbours = [row.id for row in rows]
@@ -968,7 +980,11 @@ class GIS(object):
                 current.log.error("Invalid Polygon!")
                 return None
 
-            # @ToDo: Optimise with BBOX
+            # Optimise with BBOX
+            query &= (table.lat_min <= feature.lat_max) & \
+                     (table.lat_max >= feature.lat_min) & \
+                     (table.lon_min <= feature.lon_max) & \
+                     (table.lon_max >= feature.lon_min)
             rows = db(query).select(table.id,
                                     table.wkt,
                                     )

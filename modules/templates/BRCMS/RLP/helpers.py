@@ -151,7 +151,7 @@ def get_offer_filters(person_id=None):
                 location_ids = []
                 parents = get_parents(location_id, feature=location, ids_only=True)
                 if parents:
-                    location_ids += parents
+                    location_ids = parents
                     neighbours = get_neighbours(parents[0])
                     if neighbours:
                         location_ids += neighbours
