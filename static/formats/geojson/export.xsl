@@ -109,6 +109,12 @@
         <xsl:variable name="uuid" select="./@uuid"/>
         <xsl:variable name="geometry" select="./map[1]/geometry/@value"/>
         <xsl:variable name="attributes" select="./map[1]/@attributes"/>
+        <xsl:variable name="id" select="@id"/>
+        <xsl:variable name="marker" select="./map[1]/@marker"/>
+        <xsl:variable name="marker_url" select="./map[1]/@marker_url"/>
+        <xsl:variable name="marker_height" select="./map[1]/@marker_height"/>
+        <xsl:variable name="marker_width" select="./map[1]/@marker_width"/>
+        <xsl:variable name="style" select="./map[1]/style/@value"/>
         <features>
             <xsl:choose>
                 <xsl:when test="//reference[@resource='gis_location' and @uuid=$uuid]">
@@ -127,7 +133,29 @@
                         </xsl:attribute>
                     </geometry>
                     <properties>
-                        <xsl:call-template name="Properties"/>
+                        <xsl:call-template name="Properties">
+                            <xsl:with-param name="attributes">
+                                <xsl:value-of select="$attributes"/>
+                            </xsl:with-param>
+                            <xsl:with-param name="id">
+                                <xsl:value-of select="$id"/>
+                            </xsl:with-param>
+                            <xsl:with-param name="marker">
+                                <xsl:value-of select="$marker"/>
+                            </xsl:with-param>
+                            <xsl:with-param name="marker_url">
+                                <xsl:value-of select="$marker_url"/>
+                            </xsl:with-param>
+                            <xsl:with-param name="marker_height">
+                                <xsl:value-of select="$marker_height"/>
+                            </xsl:with-param>
+                            <xsl:with-param name="marker_width">
+                                <xsl:value-of select="$marker_width"/>
+                            </xsl:with-param>
+                            <xsl:with-param name="style">
+                                <xsl:value-of select="$style"/>
+                            </xsl:with-param>
+                        </xsl:call-template>
                     </properties>
                 </xsl:when>
                 <xsl:otherwise>
