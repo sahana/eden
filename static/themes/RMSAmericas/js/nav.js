@@ -18,7 +18,7 @@ $(document).ready(function(){
     var hideAppsMenu = function() {
         // Hide the App Switcher
         appsFrame.addClass('hide')
-                 .parent().css('margin-top', '800px');
+                 .parent().css('margin-top', '-500px');
         // Remove Highlight
         appsBtn.css('background-color', '');
     }
@@ -32,7 +32,7 @@ $(document).ready(function(){
     var hideUserMenu = function() {
         // Hide the User Menu
         userDiv.addClass('hide')
-                 .css('margin-top', '800px');
+                 .css('margin-top', '-500px');
     }
 
     appsBtn.on('click', function() {

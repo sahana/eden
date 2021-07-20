@@ -1601,7 +1601,8 @@ def vol_person_controller():
             )
 
     # Upload for configuration (add replace option)
-    s3.importerPrep = lambda: {"ReplaceOption": T("Remove existing data before import")}
+    # - deprecated, use attr["replace_option"] instead
+    #s3.importerPrep = lambda: {"ReplaceOption": T("Remove existing data before import")}
 
     # Import pre-process
     def import_prep(data, group=group):
@@ -1610,12 +1611,13 @@ def vol_person_controller():
             before processing a new data import, used for the import_prep
             hook in response.s3
         """
-        resource, tree = data
-        xml = current.xml
-        tag = xml.TAG
-        att = xml.ATTRIBUTE
         if s3.import_replace:
+            resource, tree = data
             if tree is not None:
+                xml = current.xml
+                tag = xml.TAG
+                att = xml.ATTRIBUTE
+
                 if group == "staff":
                     group = 1
                 elif group == "volunteer":

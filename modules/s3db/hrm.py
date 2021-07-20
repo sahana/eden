@@ -8722,7 +8722,8 @@ def hrm_person_controller(**attr):
                 title_update = T("Staff Member Details")
                 )
     # Upload for configuration (add replace option)
-    s3.importerPrep = lambda: {"ReplaceOption": T("Remove existing data before import")}
+    # - deprecated, use attr["replace_option"] instead
+    #s3.importerPrep = lambda: {"ReplaceOption": T("Remove existing data before import")}
 
     # Import pre-process
     def import_prep(data, group=group):
@@ -8730,12 +8731,13 @@ def hrm_person_controller(**attr):
             Deletes all HR records (of the given group) of the
             organisation/branch before processing a new data import
         """
-        resource, tree = data
-        xml = current.xml
-        tag = xml.TAG
-        att = xml.ATTRIBUTE
         if s3.import_replace:
+            resource, tree = data
             if tree is not None:
+                xml = current.xml
+                tag = xml.TAG
+                att = xml.ATTRIBUTE
+
                 if group == "staff":
                     group = 1
                 elif group == "volunteer":
