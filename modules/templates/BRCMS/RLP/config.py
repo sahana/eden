@@ -33,7 +33,7 @@ def config(settings):
 
     settings.base.system_name = "Fluthilfe %(region)s" % names
     settings.base.system_name_short =  "Fluthilfe %(region)s" % names
-    settings.custom.homepage_title = "Fluthilfe"
+    settings.custom.homepage_title = "Fluthilfe-Portal"
 
     # PrePopulate data
     settings.base.prepopulate.append("BRCMS/RLP")
