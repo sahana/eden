@@ -104,7 +104,7 @@ def get_offer_filters(person_id=None):
     rows = db(query).select(atable.need_id,
                             atable.location_id,
                             ltable.name,
-                            ltable.parent,
+                            #ltable.parent,
                             ltable.level,
                             ltable.path,
                             ptable.pe_id,
@@ -112,6 +112,9 @@ def get_offer_filters(person_id=None):
                             left = left,
                             )
 
+    gis = current.gis
+    get_neighbours = gis_get_neighbours
+    get_parents = gis_get_parents
     filters, exclude_provider = None, None
     for row in rows:
 
@@ -126,29 +129,38 @@ def get_offer_filters(person_id=None):
         # Match by need
         if activity.need_id:
             q = FS("~.need_id") == activity.need_id
-            query = (query & q) if query else q
+            #query = (query & q) if query else q
+            query = q
 
-        # Match by L3
-        if activity.location_id:
+        # Match by Location
+        # - include exact match if Need is at an Lx
+        # - include all higher level Lx
+        # - include all adjacent lowest-level Lx
+        location_id = activity.location_id
+        if location_id:
             location = row.gis_location
-            # TODO match less precise (i.e. higher-Lx) offer locations, too
-            if location.level == "L3":
-                location_id = activity.location_id
+            if location.level:
+                location_ids = [location_id]
+                parents = get_parents(location_id, feature=location, ids_only=True)
+                if parents:
+                    location_ids += parents
+                neighbours = get_neighbours(location_id)
+                if neighbours:
+                    location_ids += neighbours
             else:
-                parents = current.gis.get_parent_per_level(None, None,
-                                                           feature = location,
-                                                           names = False,
-                                                           )
-                location_id = parents.get("L3")
-            if location_id:
-                dbq = (ltable.level == "L4") & \
-                      (ltable.parent == location_id) & \
-                      (ltable.deleted == False)
-                rows = db(dbq).select(ltable.id)
-                location_ids = {location_id} | {row.id for row in rows}
+                location_ids = []
+                parents = get_parents(location_id, feature=location, ids_only=True)
+                if parents:
+                    location_ids = parents
+                    neighbours = get_neighbours(parents[0])
+                    if neighbours:
+                        location_ids += neighbours
+
+            if location_ids:
                 q = FS("~.location_id") == list(location_ids)[0] if len(location_ids) == 1 else \
                     FS("~.location_id").belongs(location_ids)
                 query = (query & q) if query else q
+
         if query:
             filters = (filters | query) if filters else query
 

@@ -643,12 +643,13 @@ class S3XML(S3Codec):
         # Retrieve data prepared earlier in gis.get_location_data()
         if location_data is None:
             location_data = {}
-        latlons = location_data.get("latlons", [])
-        geojsons = location_data.get("geojsons", [])
-        #wkts = location_data.get("wkts", [])
-        attributes = location_data.get("attributes", [])
-        markers = location_data.get("markers", [])
-        styles = location_data.get("styles", [])
+        location_data_get = location_data.get
+        latlons = location_data_get("latlons", [])
+        geojsons = location_data_get("geojsons", [])
+        #wkts = location_data_get("wkts", [])
+        attributes = location_data_get("attributes", [])
+        markers = location_data_get("markers", [])
+        styles = location_data_get("styles", [])
 
         map_data = element.find("map")
         if map_data:
