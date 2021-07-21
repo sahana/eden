@@ -46,7 +46,11 @@ class S3MainMenu(default.S3MainMenu):
             # Organisation managing events
             menu = [MM("Affected Persons", c="br", f="person"),
                     MM("Current Needs", c="br", f="activities"),
-                    MM("Relief Offers", c="br", f="offers"),
+                    MM("Relief Offers", c="br", f="offers", link=False)(
+                        MM("Current Relief Offers"),
+                        MM("Pending Approvals", vars={"pending": "1"}),
+                        MM("Blocked Entries", vars={"blocked": 1}),
+                        ),
                     ]
         elif has_role("CASE_MANAGER"):
             # Organisation managing cases
@@ -196,9 +200,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         f = current.request.function
 
-        has_roles = current.auth.s3_has_roles
+        auth = current.auth
+        is_event_manager = auth.s3_has_role("EVENT_MANAGER")
+        org_role = is_event_manager or auth.s3_has_roles("CASE_MANAGER", "RELIEF_PROVIDER")
 
-        if has_roles(("EVENT_MANAGER", "CASE_MANAGER", "RELIEF_PROVIDER")):
+        if org_role:
             # Org Users: separate menus per function
             if f == "person":
                 # Cases
@@ -217,6 +223,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             M("Statistics", m="report"),
                             # TODO enable when implemented
                             #M("Map", m="map"),
+                            ),
+                        M("Approval", f="offers", link=False, restrict="EVENT_MANAGER")(
+                            M("Pending Approvals", vars={"pending": "1"}),
+                            M("Blocked Entries", vars={"blocked": 1}),
                             ),
                         M("Administration", link=False, restrict="ADMIN")(
                             M("Assistance Types", f="assistance_type"),

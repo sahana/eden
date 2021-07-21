@@ -460,12 +460,6 @@ def config(settings):
                 elif is_event_manager:
                     field.writable = False
 
-                # Need type is mandatory
-                field = table.need_id
-                requires = field.requires
-                if isinstance(requires, IS_EMPTY_OR):
-                    field.requires = requires.other
-
                 # Address mandatory, Lx-only
                 field = table.location_id
                 requires = field.requires
@@ -481,12 +475,19 @@ def config(settings):
                 # TODO End date mandatory
                 # => default to 4 weeks from now
 
-                # At least phone number is required
-                # - TODO default from user if CITIZEN
-                field = table.contact_phone
-                requires = field.requires
-                if isinstance(requires, IS_EMPTY_OR):
-                    field.requires = requires.other
+                if not is_event_manager:
+                    # Need type is mandatory
+                    field = table.need_id
+                    requires = field.requires
+                    if isinstance(requires, IS_EMPTY_OR):
+                        field.requires = requires.other
+
+                    # At least phone number is required
+                    # - TODO default from user if CITIZEN
+                    field = table.contact_phone
+                    requires = field.requires
+                    if isinstance(requires, IS_EMPTY_OR):
+                        field.requires = requires.other
 
                 field = table.chargeable
                 field.represent = chargeable_warning
@@ -503,7 +504,6 @@ def config(settings):
                                                        }).represent
 
                 # Status only writable for EVENT_MANAGER
-                # TODO default to NEW? or APPROVED?
                 field = table.status
                 field.writable = is_event_manager
                 # Color-coded status representation
@@ -567,13 +567,24 @@ def config(settings):
                                             cols = 3,
                                             ),
                             ])
-                    else:
+
+                    # Visibility Filter
+                    if not mine:
                         # Filter out unavailable or unapproved offers
                         today = current.request.utcnow.date()
-                        query = (FS("availability") == "AVL") & \
-                                (FS("status") == "APR") & \
-                                ((FS("end_date") == None) | (FS("end_date") >= today))
-                        resource.add_filter(query)
+                        vquery = (FS("availability") == "AVL") & \
+                                 (FS("status") == "APR") & \
+                                 ((FS("end_date") == None) | (FS("end_date") >= today))
+                    else:
+                        # Show all accessible
+                        vquery = None
+                    if is_event_manager:
+                        if r.get_vars.get("pending") == "1":
+                            vquery = (FS("status") == "NEW")
+                        elif r.get_vars.get("blocked") == "1":
+                            vquery = (FS("status") == "BLC")
+                    if vquery:
+                        resource.add_filter(vquery)
 
                     # List fields
                     list_fields = ["need_id",
