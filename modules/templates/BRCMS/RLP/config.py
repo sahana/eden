@@ -908,8 +908,113 @@ def config(settings):
     # TODO customise event_event
 
     # -------------------------------------------------------------------------
-    # TODO customise org_organisation
-    # - have offices and staff, nothing else
+    def customise_org_organisation_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Enable bigtable features
+        settings.base.bigtable = True
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            auth = current.auth
+            #s3db = current.s3db
+
+            resource = r.resource
+
+            is_org_group_admin = auth.s3_has_role("ORG_GROUP_ADMIN")
+
+            if not r.component:
+                if r.interactive:
+
+                    from s3 import S3SQLCustomForm, \
+                                   S3SQLInlineComponent, \
+                                   S3SQLInlineLink, \
+                                   S3OptionsFilter, \
+                                   S3TextFilter, \
+                                   s3_get_filter_opts
+
+                    # Custom form
+                    if is_org_group_admin:
+                        types = S3SQLInlineLink("organisation_type",
+                                                field = "organisation_type_id",
+                                                search = False,
+                                                label = T("Type"),
+                                                multiple = settings.get_org_organisation_types_multiple(),
+                                                widget = "multiselect",
+                                                )
+                    else:
+                        types = None
+
+                    crud_fields = ["name",
+                                   "acronym",
+                                   types,
+                                   S3SQLInlineComponent(
+                                        "contact",
+                                        fields = [("", "value")],
+                                        filterby = {"field": "contact_method",
+                                                    "options": "EMAIL",
+                                                    },
+                                        label = T("Email"),
+                                        multiple = False,
+                                        name = "email",
+                                        ),
+                                   "phone",
+                                   "website",
+                                   "logo",
+                                   "comments",
+                                   ]
+
+                    # Filters
+                    text_fields = ["name", "acronym", "website", "phone"]
+                    if is_org_group_admin:
+                        text_fields.append("email.value")
+                    filter_widgets = [S3TextFilter(text_fields,
+                                                   label = T("Search"),
+                                                   ),
+                                      ]
+                    if is_org_group_admin:
+                        filter_widgets.extend([
+                            S3OptionsFilter(
+                                "organisation_type__link.organisation_type_id",
+                                label = T("Type"),
+                                options = lambda: s3_get_filter_opts("org_organisation_type"),
+                                ),
+                            ])
+
+                    resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
+                                       filter_widgets = filter_widgets,
+                                       )
+
+                # Custom list fields
+                list_fields = ["name",
+                               "acronym",
+                               #"organisation_type__link.organisation_type_id",
+                               "website",
+                               "phone",
+                               #"email.value"
+                               ]
+                if is_org_group_admin:
+                    list_fields.insert(2, (T("Type"), "organisation_type__link.organisation_type_id"))
+                    list_fields.append((T("Email"), "email.value"))
+                r.resource.configure(list_fields = list_fields,
+                                     )
+
+            return result
+        s3.prep = prep
+
+        # Custom rheader
+        from .rheaders import rlpcm_org_rheader
+        attr = dict(attr)
+        attr["rheader"] = rlpcm_org_rheader
+
+        return attr
+
+    settings.customise_org_organisation_controller = customise_org_organisation_controller
 
     # -------------------------------------------------------------------------
     def person_onaccept(form):
@@ -1032,6 +1137,5 @@ def config(settings):
         return attr
 
     settings.customise_pr_person_controller = customise_pr_person_controller
-
 
 # END =========================================================================

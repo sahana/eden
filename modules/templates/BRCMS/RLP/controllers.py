@@ -1767,12 +1767,26 @@ class approve_org(S3CustomController):
 
                         # Create organisation
                         org = {"name": organisation,
+                               "phone": office_phone,
+                               "website": website,
                                "comments": comments,
                                }
                         org["id"] = organisation_id = otable.insert(**org)
                         update_super(otable, org)
                         set_record_owner(otable, org, owned_by_user=user_id)
                         s3db_onaccept(otable, org, method="create")
+
+                        # Add email contact
+                        if office_email:
+                            ctable = s3db.pr_contact
+                            contact = {"pe_id": org["pe_id"],
+                                       "contact_method": "EMAIL",
+                                       "value": office_email,
+                                       }
+                            ctable = s3db.pr_contact
+                            contact["id"] = ctable.insert(**contact)
+                            set_record_owner(ctable, contact, owned_by_user=user_id)
+                            s3db_onaccept(ctable, contact, method="create")
 
                         # Link organisation to selected organisation type
                         type_id = form_vars.get("organisation_type")
