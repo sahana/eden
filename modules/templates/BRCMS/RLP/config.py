@@ -489,9 +489,11 @@ def config(settings):
                 # TODO End date mandatory
                 # => default to 4 weeks from now
 
-                # TODO Contact defaults
-                # - Contact Email => default from user if CITIZEN
-                # - Contact Phone number => default from user if CITIZEN
+                # At least phone number is required
+                # - TODO default from user if CITIZEN
+                field = table.contact_phone
+                from s3 import IS_PHONE_NUMBER_MULTI
+                field.requires = [IS_NOT_EMPTY(), IS_PHONE_NUMBER_MULTI()]
 
                 field = table.chargeable
                 field.represent = chargeable_warning
