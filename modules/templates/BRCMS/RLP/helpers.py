@@ -85,6 +85,7 @@ def get_offer_filters(person_id=None):
     if not person_id:
         return None
 
+    # Lookup all current needs of the person
     atable = s3db.br_case_activity
     ltable = s3db.gis_location
     ptable = s3db.pr_person
@@ -98,6 +99,8 @@ def get_offer_filters(person_id=None):
             ]
     left = ltable.on(ltable.id == atable.location_id)
     query = (atable.person_id == person_id) & \
+            (atable.need_id != None) & \
+            (atable.location_id != None) & \
             ((atable.date == None) | (atable.date <= today)) & \
             ((atable.end_date == None) | (atable.end_date >= today)) & \
             (atable.deleted == False)
@@ -113,57 +116,83 @@ def get_offer_filters(person_id=None):
                             )
 
     gis = current.gis
-    get_neighbours = gis_get_neighbours
-    get_parents = gis_get_parents
+    get_neighbours = gis.get_neighbours
+    get_parents = gis.get_parents
     filters, exclude_provider = None, None
     for row in rows:
 
-        # Exclude own offers
+        # Provider to exclude
         person = row.pr_person
         exclude_provider = person.pe_id
 
         activity = row.br_case_activity
 
-        query = None
-
         # Match by need
-        if activity.need_id:
-            q = FS("~.need_id") == activity.need_id
-            #query = (query & q) if query else q
-            query = q
+        query = FS("~.need_id") == activity.need_id
 
         # Match by Location
         # - include exact match if Need is at an Lx
         # - include all higher level Lx
         # - include all adjacent lowest-level Lx
         location_id = activity.location_id
-        if location_id:
-            location = row.gis_location
-            if location.level:
-                location_ids = [location_id]
-                parents = get_parents(location_id, feature=location, ids_only=True)
-                if parents:
-                    location_ids += parents
-                neighbours = get_neighbours(location_id)
+
+        location = row.gis_location
+        level = location.level
+
+        if level:
+            # Lx location (the normal case)
+            location_ids = [location_id]
+
+            # Include all parent Lx
+            parents = get_parents(location_id, feature=location, ids_only=True)
+            if parents:
+                location_ids += parents
+
+            # Include all adjacent Lx of the same level
+            neighbours = get_neighbours(location_id)
+            if neighbours:
+                location_ids += neighbours
+        else:
+            # Specific address
+            location_ids = []
+
+            # Include all parent Lx
+            parents = get_parents(location_id, feature=location, ids_only=True)
+            if parents:
+                location_ids = parents
+                # Include all adjacent Lx of the immediate ancestor Lx
+                neighbours = get_neighbours(parents[0])
                 if neighbours:
                     location_ids += neighbours
+
+                # Lookup the immediate ancestor's level
+                q = (ltable.id == parents[0]) & (ltable.deleted == False)
+                row = db(query).select(ltable.level, limitby=(0, 1)).first()
+                if row:
+                    level = row.level
+
+        if location_ids and level and level < "L4":
+            # Include all child Lx of the match locations below level
+            # TODO make this recursive to include grandchildren etc. too
+            q = (ltable.parent.belongs(location_ids)) & \
+                (ltable.level != None) & \
+                (ltable.level > level) & \
+                (ltable.deleted == False)
+            children = db(query).select(ltable.id)
+            location_ids += [c.id for c in children]
+
+        if location_ids:
+            if len(location_ids) == 1:
+                q = FS("~.location_id") == list(location_ids)[0]
             else:
-                location_ids = []
-                parents = get_parents(location_id, feature=location, ids_only=True)
-                if parents:
-                    location_ids = parents
-                    neighbours = get_neighbours(parents[0])
-                    if neighbours:
-                        location_ids += neighbours
+                q = FS("~.location_id").belongs(location_ids)
+            query = (query & q) if query else q
+        else:
+            continue
 
-            if location_ids:
-                q = FS("~.location_id") == list(location_ids)[0] if len(location_ids) == 1 else \
-                    FS("~.location_id").belongs(location_ids)
-                query = (query & q) if query else q
+        filters = (filters | query) if filters else query
 
-        if query:
-            filters = (filters | query) if filters else query
-
+    # Exclude the person's own offers
     if exclude_provider:
         filters &= FS("~.pe_id") != exclude_provider
 
