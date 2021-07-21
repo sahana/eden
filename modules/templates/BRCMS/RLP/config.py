@@ -380,7 +380,8 @@ def config(settings):
         s3 = current.response.s3
 
         is_event_manager = auth.s3_has_role("EVENT_MANAGER")
-        org_role = is_event_manager or auth.s3_has_roles(("CASE_MANAGER", "RELIEF_PROVIDER"))
+        is_relief_provider = auth.s3_has_role("RELIEF_PROVIDER")
+        org_role = is_event_manager or is_relief_provider
 
         # Custom prep
         standard_prep = s3.prep
@@ -391,6 +392,17 @@ def config(settings):
             resource = r.resource
             table = resource.table
 
+            from .helpers import get_current_events, \
+                                 get_managed_orgs, \
+                                 ProviderRepresent
+
+            if is_relief_provider:
+                providers = get_managed_orgs("RELIEF_PROVIDER")
+            elif auth.user:
+                providers = [auth.user.pe_id]
+            else:
+                providers = []
+
             # Check perspective
             mine = r.function == "assistance_offer"
             if mine:
@@ -399,9 +411,8 @@ def config(settings):
                 s3.hide_last_update = False
 
                 # Filter for offers of current user
-                pe_id = auth.user.pe_id if auth.user else None
-                if pe_id:
-                    query = (FS("pe_id") == pe_id)
+                if len(providers) == 1:
+                    query = (FS("pe_id") == providers[0])
                 else:
                     query = (FS("pe_id").belongs([]))
                 resource.add_filter(query)
@@ -418,6 +429,8 @@ def config(settings):
 
                 # Restrict data formats
                 allowed = ("html", "iframe", "popup", "aadata", "plain", "geojson", "pdf", "xls")
+                if r.method == "report":
+                    allowed += ("json",)
                 settings.ui.export_formats = ("pdf", "xls")
                 if r.representation not in allowed:
                     r.error(403, current.ERROR.NOT_PERMITTED)
@@ -440,7 +453,6 @@ def config(settings):
 
                 # Default Event
                 field = table.event_id
-                from .helpers import get_current_events
                 events = get_current_events(r.record)
                 if events:
                     dbset = db(s3db.event_event.id.belongs(events))
@@ -452,16 +464,19 @@ def config(settings):
 
                 # Default Provider
                 field = table.pe_id
-                if not org_role:
-                    pe_id = auth.user.pe_id if auth.user else None
-                    if pe_id:
-                        field.default = pe_id
-                        field.readable = field.writable = False
-                elif auth.s3_has_role("RELIEF_PROVIDER"):
-                    # TODO Get managed orgs (offers only made by RELIEF_PROVIDER)
-                    # if one: set org_pe_id
-                    # otherwise: make selectable
-                    pass
+                field.label = T("Provider")
+                field.readable = not mine or org_role
+                field.represent = ProviderRepresent()
+                if len(providers) == 1:
+                    field.default = providers[0]
+                    field.writable = False
+                elif providers:
+                    etable = s3db.pr_pentity
+                    dbset = db(etable.pe_id.belongs(providers))
+                    field.requires = IS_ONE_OF(dbset, "pr_pentity.pe_id",
+                                               field.represent,
+                                               )
+                    field.writable = mine
                 elif is_event_manager:
                     field.writable = False
 
@@ -595,6 +610,7 @@ def config(settings):
                     list_fields = ["need_id",
                                    "name",
                                    "chargeable",
+                                   #"pe_id",
                                    "location_id$L3",
                                    "location_id$L2",
                                    "location_id$L1",
@@ -604,6 +620,8 @@ def config(settings):
                                    ]
                     if mine or is_event_manager:
                         list_fields.append("status")
+                    if not mine or org_role:
+                        list_fields.insert(4, "pe_id")
 
                     resource.configure(filter_widgets = filter_widgets,
                                        list_fields = list_fields,
@@ -612,6 +630,7 @@ def config(settings):
                     # Report options
                     if r.method == "report":
                         facts = ((T("Number of Relief Offers"), "count(id)"),
+                                 (T("Number of Providers"), "count(pe_id)"),
                                 )
                         axes = ["need_id",
                                 "location_id$L4",
@@ -620,6 +639,7 @@ def config(settings):
                                 "location_id$L1",
                                 "availability",
                                 "chargeable",
+                                (T("Provider Type"), "pe_id$instance_type"),
                                 ]
                         default_rows = "need_id"
                         default_cols = "location_id$L3"
@@ -774,6 +794,8 @@ def config(settings):
 
                 # Restrict data formats
                 allowed = ("html", "iframe", "popup", "aadata", "plain", "geojson", "pdf", "xls")
+                if r.method == "report":
+                    allowed += ("json",)
                 settings.ui.export_formats = ("pdf", "xls")
                 if r.representation not in allowed:
                     r.error(403, current.ERROR.NOT_PERMITTED)

@@ -40,7 +40,7 @@ class S3MainMenu(default.S3MainMenu):
 
         has_role = auth.s3_has_role
         logged_in = auth.s3_logged_in()
-        labels = current.s3db.br_terminology()
+        #labels = current.s3db.br_terminology()
 
         settings = current.deployment_settings
 
@@ -210,7 +210,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         auth = current.auth
         is_event_manager = auth.s3_has_role("EVENT_MANAGER")
-        org_role = is_event_manager or auth.s3_has_roles("CASE_MANAGER", "RELIEF_PROVIDER")
+        org_role = is_event_manager or auth.s3_has_roles(("CASE_MANAGER", "RELIEF_PROVIDER"))
 
         if org_role:
             # Org Users: separate menus per function

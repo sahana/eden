@@ -6,9 +6,71 @@
     @license: MIT
 """
 
-from gluon import current
+from gluon import current, SPAN
 
-from s3 import FS
+from s3 import FS, s3_str
+
+from s3db.pr import pr_PersonEntityRepresent
+
+# =============================================================================
+def get_role_realms(role):
+    """
+        Get all realms for which a role has been assigned
+
+        @param role: the role ID or role UUID
+
+        @returns: list of pe_ids the current user has the role for,
+                  None if the role is assigned site-wide, or an
+                  empty list if the user does not have the role, or
+                  no realm for the role
+    """
+
+    db = current.db
+    auth = current.auth
+    s3db = current.s3db
+
+    if isinstance(role, str):
+        gtable = auth.settings.table_group
+        query = (gtable.uuid == role) & \
+                (gtable.deleted == False)
+        row = db(query).select(gtable.id,
+                               cache = s3db.cache,
+                               limitby = (0, 1),
+                               ).first()
+        role_id = row.id if row else None
+    else:
+        role_id = role
+
+    role_realms = []
+    user = auth.user
+    if user:
+        role_realms = user.realms.get(role_id, role_realms)
+
+    return role_realms
+
+# =============================================================================
+def get_managed_orgs(role):
+    """
+        Get the organisations for which the current user has a role
+
+        @param role: the role id or UUID
+
+        @returns: list of organisation pe_ids
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    role_realms = get_role_realms(role)
+
+    etable = s3db.pr_pentity
+    query = (etable.instance_type == "org_organisation")
+    if role_realms is not None:
+        query = (etable.pe_id.belongs(role_realms)) & query
+
+    rows = db(query).select(etable.pe_id)
+
+    return [row.pe_id for row in rows]
 
 # =============================================================================
 def get_current_events(record):
@@ -197,5 +259,43 @@ def get_offer_filters(person_id=None):
         filters &= FS("~.pe_id") != exclude_provider
 
     return filters
+
+# =============================================================================
+class ProviderRepresent(pr_PersonEntityRepresent):
+
+    def __init__(self):
+        """
+            Constructor
+
+            @param show_label: show the ID tag label for persons
+            @param default_label: the default for the ID tag label
+            @param show_type: show the instance_type
+            @param multiple: assume a value list by default
+        """
+
+        super(ProviderRepresent, self).__init__(show_label = False,
+                                                show_type = False,
+                                                )
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        pentity = row.pr_pentity
+        instance_type = pentity.instance_type
+
+        item = object.__getattribute__(row, instance_type)
+        if instance_type == "pr_person":
+            pe_str = SPAN(current.T("private"), _class="free-hint")
+        elif "name" in item:
+            pe_str = s3_str(item["name"])
+        else:
+            pe_str = "?"
+
+        return pe_str
 
 # END =========================================================================
