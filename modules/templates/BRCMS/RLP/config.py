@@ -621,7 +621,7 @@ def config(settings):
                     if mine or is_event_manager:
                         list_fields.append("status")
                     if not mine or org_role:
-                        list_fields.insert(4, "pe_id")
+                        list_fields.insert(3, "pe_id")
 
                     resource.configure(filter_widgets = filter_widgets,
                                        list_fields = list_fields,
