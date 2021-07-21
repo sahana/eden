@@ -120,7 +120,7 @@ def config(settings):
     settings.org.default_organisation = LSJV
 
     # -------------------------------------------------------------------------
-    # TODO Realm Rules
+    # Realm Rules
     #
     def brcms_realm_entity(table, row):
         """
@@ -135,7 +135,6 @@ def config(settings):
         realm_entity = 0
 
         if tablename == "pr_person":
-
             # Client records are owned by the organisation
             # the case is assigned to
             ctable = s3db.br_case
@@ -155,7 +154,6 @@ def config(settings):
                            "pr_contact_emergency",
                            "pr_image",
                            ):
-
             # Inherit from person via PE
             table = s3db.table(tablename)
             ptable = s3db.pr_person
@@ -167,16 +165,16 @@ def config(settings):
             if person:
                 realm_entity = person.realm_entity
 
-        elif tablename in ("br_appointment",
-                           "br_case_activity",
-                           "br_case_language",
+        #elif tablename == "br_case":
+            # Owned by managing organisation (default)
+
+        elif tablename in ("br_case_activity",
                            "br_assistance_measure",
                            "br_note",
                            "pr_group_membership",
                            "pr_person_details",
                            "pr_person_tag",
                            ):
-
             # Inherit from person via person_id
             table = s3db.table(tablename)
             ptable = s3db.pr_person
@@ -188,31 +186,8 @@ def config(settings):
             if person:
                 realm_entity = person.realm_entity
 
-        elif tablename == "br_case_activity_update":
-
-            # Inherit from case activity
-            table = s3db.table(tablename)
-            atable = s3db.br_case_activity
-            query = (table._id == row.id) & \
-                    (atable.id == table.case_activity_id)
-            activity = db(query).select(atable.realm_entity,
-                                        limitby = (0, 1),
-                                        ).first()
-            if activity:
-                realm_entity = activity.realm_entity
-
-        elif tablename == "br_assistance_measure_theme":
-
-            # Inherit from measure
-            table = s3db.table(tablename)
-            mtable = s3db.br_assistance_measure
-            query = (table._id == row.id) & \
-                    (mtable.id == table.measure_id)
-            activity = db(query).select(mtable.realm_entity,
-                                        limitby = (0, 1),
-                                        ).first()
-            if activity:
-                realm_entity = activity.realm_entity
+        #elif tablename == "br_assistance_offer":
+            # Owned by the provider (pe_id, default)
 
         elif tablename == "pr_group":
 
@@ -225,29 +200,9 @@ def config(settings):
             if group and group.group_type == 7:
                 realm_entity = None
 
-        elif tablename == "project_task":
+        #elif tablename == "event_event":
+            # Owned by the lead organisation (default)
 
-            # Inherit the realm entity from the assignee
-            assignee_pe_id = row.pe_id
-            instance_type = s3db.pr_instance_type(assignee_pe_id)
-            if instance_type:
-                table = s3db.table(instance_type)
-                query = table.pe_id == assignee_pe_id
-                assignee = db(query).select(table.realm_entity,
-                                            limitby = (0, 1),
-                                            ).first()
-                if assignee and assignee.realm_entity:
-                    realm_entity = assignee.realm_entity
-
-            # If there is no assignee, or the assignee has no
-            # realm entity, fall back to the user organisation
-            if realm_entity == 0:
-                auth = current.auth
-                user_org_id = auth.user.organisation_id if auth.user else None
-                if user_org_id:
-                    realm_entity = s3db.pr_get_pe_id("org_organisation",
-                                                     user_org_id,
-                                                     )
         return realm_entity
 
     settings.auth.realm_entity = brcms_realm_entity
@@ -380,6 +335,37 @@ def config(settings):
                         )
 
     # -------------------------------------------------------------------------
+    def offer_date_dt_orderby(field, direction, orderby, left_joins):
+        """
+            When sorting offers by date, use created_on to maintain
+            consistent order of multiple offers on the same date
+        """
+
+        sorting = {"table": field.tablename,
+                   "direction": direction,
+                   }
+        orderby.append("%(table)s.date%(direction)s,%(table)s.created_on%(direction)s" % sorting)
+
+    # -------------------------------------------------------------------------
+    def customise_br_assistance_offer_resource(r, tablename):
+
+        s3db = current.s3db
+
+        table = s3db.br_assistance_offer
+
+        s3db.configure("br_assistance_offer",
+                       # Default sort order: newest first
+                       orderby = "br_assistance_offer.date desc, br_assistance_offer.created_on desc",
+                       )
+
+        # Maintain consistent order for multiple assistance offers
+        # on the same day (by enforcing created_on as secondary order criterion)
+        field = table.date
+        field.represent.dt_orderby = offer_date_dt_orderby
+
+    settings.customise_br_assistance_offer_resource = customise_br_assistance_offer_resource
+
+    # -------------------------------------------------------------------------
     def customise_br_assistance_offer_controller(**attr):
 
         db = current.db
@@ -474,11 +460,17 @@ def config(settings):
                 elif is_event_manager:
                     field.writable = False
 
+                # Need type is mandatory
+                field = table.need_id
+                requires = field.requires
+                if isinstance(requires, IS_EMPTY_OR):
+                    field.requires = requires.other
+
                 # Address mandatory, Lx-only
                 field = table.location_id
                 requires = field.requires
                 if isinstance(requires, IS_EMPTY_OR):
-                    requires = requires.other
+                    field.requires = requires.other
                 field.widget = S3LocationSelector(levels = ("L1", "L2", "L3", "L4"),
                                                   required_levels = ("L1", "L2", "L3"),
                                                   show_address = False,
@@ -492,8 +484,9 @@ def config(settings):
                 # At least phone number is required
                 # - TODO default from user if CITIZEN
                 field = table.contact_phone
-                from s3 import IS_PHONE_NUMBER_MULTI
-                field.requires = [IS_NOT_EMPTY(), IS_PHONE_NUMBER_MULTI()]
+                requires = field.requires
+                if isinstance(requires, IS_EMPTY_OR):
+                    field.requires = requires.other
 
                 field = table.chargeable
                 field.represent = chargeable_warning
@@ -635,6 +628,18 @@ def config(settings):
     settings.customise_br_assistance_offer_controller = customise_br_assistance_offer_controller
 
     # -------------------------------------------------------------------------
+    def activity_date_dt_orderby(field, direction, orderby, left_joins):
+        """
+            When sorting activities by date, use created_on to maintain
+            consistent order of multiple activities on the same date
+        """
+
+        sorting = {"table": field.tablename,
+                   "direction": direction,
+                   }
+        orderby.append("%(table)s.date%(direction)s,%(table)s.created_on%(direction)s" % sorting)
+
+    # -------------------------------------------------------------------------
     def customise_br_case_activity_resource(r, tablename):
 
         s3 = current.response.s3
@@ -646,6 +651,9 @@ def config(settings):
         # Can't change start date, always today
         field = table.date
         field.writable = False
+        # Maintain consistent order for multiple activities
+        # on the same day (by enforcing created_on as secondary order criterion)
+        field.represent.dt_orderby = activity_date_dt_orderby
 
         # Need type is mandatory
         field = table.need_id
@@ -680,6 +688,8 @@ def config(settings):
                        }
         s3db.configure("br_case_activity",
                        subheadings = subheadings,
+                       # Default sort order: newest first
+                       orderby = "br_case_activity.date desc, br_case_activity.created_on desc",
                        )
 
         # CRUD Strings
@@ -821,7 +831,6 @@ def config(settings):
 
                 resource.configure(filter_widgets = filter_widgets,
                                    list_fields = list_fields,
-                                   orderby = "br_case_activity.date desc",
                                    )
 
                 # Report options
@@ -897,6 +906,23 @@ def config(settings):
     def customise_pr_person_resource(r, tablename):
 
         s3db = current.s3db
+
+        # Configure components to inherit realm_entity from
+        # the person record incl. on realm updates
+        s3db.configure("pr_person",
+                       realm_components = ("assistance_measure",
+                                           "case_activity",
+                                           "case_language",
+                                           "address",
+                                           "contact",
+                                           "contact_emergency",
+                                           "group_membership",
+                                           "image",
+                                           "note",
+                                           "person_details",
+                                           "person_tag",
+                                           ),
+                       )
 
         # Custom callback to assign an ID
         s3db.add_custom_callback("pr_person", "onaccept", person_onaccept)

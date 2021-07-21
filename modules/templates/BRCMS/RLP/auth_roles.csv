@@ -65,6 +65,7 @@ CITIZEN,Private Citizen,,,br,assistance_offer,,CREATE|READ,READ|UPDATE|DELETE,
 CITIZEN,Private Citizen,,,br,case_activity,,CREATE|READ,READ|UPDATE|DELETE,
 CITIZEN,Private Citizen,,,br,offers,,READ,,any
 CITIZEN,Private Citizen,,,br,,,READ,,
+CITIZEN,Private Citizen,,,,,br_case,READ,,
 CITIZEN,Private Citizen,,,,,br_assistance_offer,READ,,any
 CITIZEN,Private Citizen,,,,,br_assistance_offer,CREATE,READ|UPDATE|DELETE,
 CITIZEN,Private Citizen,,,,,br_case_activity,READ,,any
