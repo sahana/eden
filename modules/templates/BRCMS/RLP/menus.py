@@ -61,6 +61,7 @@ class S3MainMenu(default.S3MainMenu):
         else:
             # Private Citizen
             menu = [MM("Report Need", c="br", f="case_activity"),
+                    MM("Find Relief Offers", c="br", f="offers"),
                     MM("Offer Assistance / Supplies", c="br", f="assistance_offer"),
                     ]
 

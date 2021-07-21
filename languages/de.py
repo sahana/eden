@@ -2268,6 +2268,7 @@
 'Find Dead Body Report': 'Suche Leichenbericht',
 'Find Hospital': 'Krankenhaus finden',
 'Find Person Record': 'Personendatensatz finden',
+'Find Relief Offers': 'Hilfsangebote finden',
 'Find Test Station': 'Teststelle finden',
 'Find Volunteers': 'Freiwillige finden',
 'Find a Person Record': 'Suche einen Personendatensatz',
