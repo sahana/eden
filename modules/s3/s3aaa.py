@@ -1943,9 +1943,11 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
         languages = deployment_settings.get_L10n_languages()
         if len(languages) > 1:
             language.label = T("Language")
-            language.comment = DIV(_class="tooltip",
-                                   _title="%s|%s" % (T("Language"),
-                                                     T("The language you wish the site to be displayed in.")))
+            language.comment = DIV(_class = "tooltip",
+                                   _title = "%s|%s" % (T("Language"),
+                                                       T("The language you wish the site to be displayed in.")
+                                                       ),
+                                   )
             requires = IS_ISO639_2_LANGUAGE_CODE(sort = True,
                                                  translate = True,
                                                  zero = None,

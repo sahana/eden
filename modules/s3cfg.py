@@ -5189,6 +5189,7 @@ class S3Config(Storage):
             Enables/Disables optional fields according to a user's Organisation
             - must specify either field or tablename/fieldname
                                            (e.g. for virtual fields)
+            @ToDo: Deprecate this (old way IFRC template did some things)
         """
 
         enabled = False

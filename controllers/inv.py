@@ -590,10 +590,6 @@ def inv_item():
             resource.skip_import = True
     s3.import_prep = import_prep
 
-    # Upload for configuration (add replace option)
-    # - deprecated, use attr["replace_option"] instead
-    #s3.importerPrep = lambda: {"ReplaceOption": T("Remove existing data before import")}
-
     output = s3_rest_controller(#csv_extra_fields = [{"label": "Organisation",
                                 #                     "field": s3db.org_organisation_id(comment = None)
                                 #                     },
