@@ -1445,7 +1445,7 @@ Thank you
                     organisation_id = match.first().organisation_id
         elif rows:
             # Single match - this organisation already exists
-            organisation_id = rows.first().organisation_id
+            organisation_id = rows.first().id
 
         return organisation_id
 

@@ -104,7 +104,7 @@ ORG_ADMIN,Organisation Admin,,,,,pr_contact,CREATE|READ|UPDATE|DELETE,,
 ORG_ADMIN,Organisation Admin,,,,,pr_contact_emergency,CREATE|READ|UPDATE|DELETE,,
 ORG_ADMIN,Organisation Admin,,,,,pr_person,CREATE|READ|UPDATE|DELETE,,
 ORG_ADMIN,Organisation Admin,,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,
-ORG_GROUP_ADMIN,Organisation Group Admin,,true,org,,,CREATE|READ|UPDATE|DELETE,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,false,org,,,CREATE|READ|UPDATE|DELETE,,
 RELIEF_PROVIDER,Relief Provider,,,br,activities,,READ,,any
 RELIEF_PROVIDER,Relief Provider,,,br,assistance_offer,,CREATE|READ|UPDATE|DELETE,,
 RELIEF_PROVIDER,Relief Provider,,,br,offers,,READ,,any

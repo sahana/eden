@@ -1,8 +1,17 @@
 Name,Module,Resource,Body,Comments
 RegistrationCitizenIntroDisabled,auth,user,"Use this form to register as a private citizen, so you can use the portal to report your personal needs and find matching offers of assistance and supplies",
+RegistrationOrgIntroDisabled,auth,user,"Use this form to register an an organization / corporation, so you can use the portal to offer assistance and supplies from your organisation",
 WelcomeMessageCitizen,auth,user,"Welcome to the {system_name} Portal
 
 - To edit your profile go to: {profile}
 
 Thank you",
 HomepageIntro,default,index,Die konkreten Hilfsangebote in diesem Portal stehen nur registrierten Benutzern zur Verfügung - öffentliche Informationen über die Hilfsangebote werden in Kürze bereitgestellt.,
+OrgSelfPresentationIntro,org,organisation,"Bitte beschreiben Sie kurz Ihre Organisation, und wie Sie beabsichtigen in der Situation zu helfen. Diese Information ist für die Freigabe Ihres Benutzerkontos zwingend erforderlich.",
+Subject WelcomeProvider,auth,user,Welcome to the {system} Portal,
+Message WelcomeProvider,auth,user,"Your account at the {system} Portal has been approved, you can now login.
+
+- Visit the portal: {homepage}
+- To edit your profile go to: {profile}
+
+Thank you",

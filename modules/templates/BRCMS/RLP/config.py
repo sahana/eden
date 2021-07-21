@@ -94,6 +94,9 @@ def config(settings):
 
     settings.cms.hide_index = False
 
+    # Do not send standard welcome emails (using custom function)
+    settings.auth.registration_welcome_email = False
+
     # -------------------------------------------------------------------------
     settings.pr.hide_third_gender = False
     settings.pr.separate_name_fields = 2
@@ -118,6 +121,8 @@ def config(settings):
     # ORG Settings
     #
     settings.org.default_organisation = LSJV
+
+    settings.custom.org_registration = True
 
     # -------------------------------------------------------------------------
     # Realm Rules

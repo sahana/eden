@@ -1,4 +1,4 @@
 First Name,Last Name,Email,Password,Role,Organisation,Language
 Example,Case Manager,case_manager@example.com,eden,"CASE_MANAGER,ORG_ADMIN",Example Case Management Organisation,de
-LSJV,Admin,lsjv_admin@example.com,eden,"EVENT_MANAGER,ORG_ADMIN","Landesamt für Soziales, Jugend und Versorgung",de
+LSJV,Admin,lsjv_admin@example.com,eden,"EVENT_MANAGER,ORG_ADMIN,ORG_GROUP_ADMIN/0","Landesamt für Soziales, Jugend und Versorgung",de
 Example,Provider,relief_provider@example.com,eden,"RELIEF_PROVIDER,ORG_ADMIN",Example Provider Organisation,de

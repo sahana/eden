@@ -42,6 +42,10 @@ class S3MainMenu(default.S3MainMenu):
         logged_in = auth.s3_logged_in()
         labels = current.s3db.br_terminology()
 
+        settings = current.deployment_settings
+
+        org_registration = lambda i: settings.get_custom("org_registration")
+
         if has_role("EVENT_MANAGER"):
             # Organisation managing events
             menu = [MM("Affected Persons", c="br", f="person"),
@@ -76,11 +80,15 @@ class S3MainMenu(default.S3MainMenu):
                    restrict=["ORG_ADMIN", "ORG_GROUP_ADMIN"],
                    ),
                 MM("Events", c="event", f="event", restrict="EVENT_MANAGER"),
+                MM("Pending Approvals", c="default", f="index", args=["approve_org"],
+                   restrict = "ORG_GROUP_ADMIN",
+                   ),
                 MM("Register", c="default", f="index", link=False,
                    check = not logged_in)(
                     MM("Private Citizen", args=["register"]),
-                    # TODO Enable when implemented
-                    MM("Organisation / Company", args=["register_org"], link=False),
+                    MM("Organisation / Company", args=["register_org"],
+                       check = org_registration,
+                       ),
                     ),
                 ]
 
