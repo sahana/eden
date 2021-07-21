@@ -114,10 +114,6 @@ def person():
                # @ToDo: Allow Members to have a CV without enabling HRM?
                action = s3db.hrm_CV)
 
-    # Upload for configuration (add replace option)
-    # - deprecated, use attr["replace_option"] instead
-    #s3.importerPrep = lambda: {"ReplaceOption": T("Remove existing data before import")}
-
     # Import pre-process
     def import_prep(data):
         """

@@ -3497,6 +3497,24 @@ Thank you"""
         # Enable scalability-optimized strategies
         settings.base.bigtable = True
 
+        EXTERNAL = False
+
+        auth = current.auth
+        has_role = auth.s3_has_role
+        request = current.request
+
+        if "profile" in request.get_vars:
+            PROFILE = True
+        else:
+            len_roles = len(current.session.s3.roles)
+            if (len_roles <= 2) or \
+               (len_roles == 3 and has_role("RIT_MEMBER") and not has_role("ADMIN")):
+                PROFILE = True
+            else:
+                PROFILE = False
+                if request.function == "trainee_person":
+                    EXTERNAL = True
+
         # Custom prep
         standard_prep = s3.prep
         def custom_prep(r):
@@ -3506,26 +3524,12 @@ Thank you"""
                 if not result:
                     return False
 
-            auth = current.auth
-            has_role = auth.s3_has_role
-            EXTERNAL = False
-            if "profile" in current.request.get_vars:
-                profile = True
-            else:
-                len_roles = len(current.session.s3.roles)
-                if (len_roles <= 2) or \
-                   (len_roles == 3 and has_role("RIT_MEMBER") and not has_role("ADMIN")):
-                    profile = True
-                else:
-                    profile = False
-                    if r.function == "trainee_person":
-                        EXTERNAL = True
-                        s3.crud_strings["pr_person"].update(
-                            title_display = T("External Trainee Details"),
-                            title_update = T("External Trainee Details")
-                            )
-            if profile:
+            if PROFILE:
                 # Configure for personal mode
+                s3.crud_strings["pr_person"].update(
+                    title_display = T("Profile"),
+                    title_update = T("Profile")
+                    )
                 # People can edit their own HR data
                 configure = s3db.configure
                 configure("hrm_human_resource",
@@ -3544,6 +3548,12 @@ Thank you"""
                               editable = False,
                               insertable = False,
                               )
+
+            elif EXTERNAL:
+                s3.crud_strings["pr_person"].update(
+                    title_display = T("External Trainee Details"),
+                    title_update = T("External Trainee Details")
+                    )
 
             component_name = r.component_name
             method = r.method
@@ -3566,7 +3576,7 @@ Thank you"""
                     # Lookup organisation_type_id for Red Cross
                     ttable = s3db.org_organisation_type
                     type_ids = db(ttable.name.belongs((RED_CROSS, "Training Center"))).select(ttable.id,
-                                                                                              limitby=(0, 2),
+                                                                                              limitby = (0, 2),
                                                                                               cache = s3db.cache,
                                                                                               )
                     if type_ids:
@@ -3729,7 +3739,7 @@ Thank you"""
         if current.request.controller in ("hrm", "vol"):
             attr["csv_template"] = ("../../themes/RMSAmericas/formats", "hrm_person")
             # Common rheader for all views
-            attr["rheader"] = s3db.hrm_rheader
+            attr["rheader"] = lambda r: s3db.hrm_rheader(r, profile=PROFILE)
 
         return attr
 

@@ -681,9 +681,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                                          "Viet Nam Red Cross",
                                                          )
 
-        check_org_dependent_field = lambda tablename, fieldname: \
-            settings.set_org_dependent_field(tablename, fieldname,
-                                             enable_field = False)
+        #check_org_dependent_field = lambda tablename, fieldname: \
+        #    settings.set_org_dependent_field(tablename, fieldname,
+        #                                     enable_field = False)
 
         return M(c="vol")(
                     M("Volunteers", f="volunteer", m="summary")(
@@ -734,21 +734,22 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       check=is_org_admin)(
                         M("Create", m="create"),
                     ),
-                    M("Volunteer Cluster Type", f="cluster_type",
-                      check = check_org_dependent_field("vol_volunteer_cluster",
-                                                        "vol_cluster_type_id"))(
-                        M("Create", m="create"),
-                    ),
-                    M("Volunteer Cluster", f="cluster",
-                      check = check_org_dependent_field("vol_volunteer_cluster",
-                                                        "vol_cluster_id"))(
-                        M("Create", m="create"),
-                    ),
-                    M("Volunteer Cluster Position", f="cluster_position",
-                      check = check_org_dependent_field("vol_volunteer_cluster",
-                                                        "vol_cluster_position_id"))(
-                        M("Create", m="create"),
-                    ),
+                    # PH only NS to use these
+                    #M("Volunteer Cluster Type", f="cluster_type",
+                    #  check = check_org_dependent_field("vol_volunteer_cluster",
+                    #                                    "vol_cluster_type_id"))(
+                    #    M("Create", m="create"),
+                    #),
+                    #M("Volunteer Cluster", f="cluster",
+                    #  check = check_org_dependent_field("vol_volunteer_cluster",
+                    #                                    "vol_cluster_id"))(
+                    #    M("Create", m="create"),
+                    #),
+                    #M("Volunteer Cluster Position", f="cluster_position",
+                    #  check = check_org_dependent_field("vol_volunteer_cluster",
+                    #                                    "vol_cluster_position_id"))(
+                    #    M("Create", m="create"),
+                    #),
                     M("Reports", f="volunteer", m="report")(
                         M("Volunteer Report", m="report"),
                         M("Hours by Role Report", f="programme_hours", m="report",

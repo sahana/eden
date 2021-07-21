@@ -66,25 +66,32 @@ class S3MainMenuLayout(S3NavigationItem):
             s3.js_foundation.append('''{tooltip:{tooltip_class:'.tooltip-f',tip_template:function(selector,content){return '<span data-selector="'+selector+'" class="'+Foundation.libs.tooltip.settings.tooltip_class.substring(1)+'">'+content+'</span>'}}}''')
 
             # Side-menu control
-            side_menu_control = DIV(A(SVG(PATH(_d = "M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z",
-                                               ),
-                                          _fill = "#5f6368",
-                                          _height = "24px",
-                                          _width = "24px",
+            if current.menu.options is None:
+                # Don't show control as no side-menu
+                side_menu_control = ""
+            else:
+                # Show control
+                side_menu_control = DIV(A(SVG(PATH(_d = "M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z",
+                                                   ),
+                                              _fill = "#5f6368",
+                                              _height = "24px",
+                                              _width = "24px",
+                                              ),
+                                          _role = "button",
                                           ),
-                                      _role = "button",
-                                      ),
-                                    _id = "menu-btn",
-                                    _class = "hd",
-                                    _title = T("Main menu"),
-                                    )
-            side_menu_control["_data-tooltip"] = ""
-            side_menu_control["_aria-haspopup"] = "true"
+                                        _id = "menu-btn",
+                                        _class = "hd",
+                                        _title = T("Main menu"),
+                                        )
+                side_menu_control["_data-tooltip"] = ""
+                side_menu_control["_aria-haspopup"] = "true"
 
             # Module Logo
             if c == "hrm":
                 if f in training_functions:
                     image = "training.png"
+                elif "profile" in request.get_vars:
+                    image = None
                 else:
                     image = "human_talent.png"
             elif c == "org":

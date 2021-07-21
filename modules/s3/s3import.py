@@ -1392,7 +1392,8 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
         table = db[tablename]
 
         output = DIV()
-        details = TABLE(_class="importItem item-%s" % item_id)
+        details = TABLE(_class = "importItem item-%s" % item_id,
+                        )
         header, rows = self._add_item_details(element.findall("data"), table)
         if header is not None:
             output.append(header)
@@ -1417,7 +1418,8 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
             # At this stage we don't have anything to display to see if we can
             # find something to show. This could be the case when a table being
             # imported is a resolver for a many to many relationship
-            refdetail = TABLE(_class="importItem item-%s" % item_id)
+            refdetail = TABLE(_class = "importItem item-%s" % item_id,
+                              )
             references = element.findall("reference")
             for reference in references:
                 tuid = reference.get("tuid")
