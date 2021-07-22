@@ -405,11 +405,12 @@ class BRCaseModel(S3Model):
             if default_closure:
                 join = stable.on((stable.id == atable.status_id) & \
                                  (stable.is_closed == False))
-                query = (atable.deleted == False)
+                query = (atable.person_id == case.person_id) & \
+                        (atable.deleted == False)
                 open_activities = db(query).select(atable.id,
                                                    join = join,
                                                    )
-                activity_ids = {row.id for row in rows}
+                activity_ids = {row.id for row in open_activities}
                 db(atable.id.belongs(activity_ids)).update(status_id = default_closure,
                                                            )
         # Get the person ID
@@ -3456,9 +3457,10 @@ def br_case_activity_default_status(closing=False):
 
     s3db = current.s3db
 
+    stable = s3db.br_case_activity_status
     atable = s3db.br_case_activity
-    field = atable.status_id
 
+    field = atable.status_id
     if closing:
         default = None
         flag = stable.is_default_closed
@@ -3468,7 +3470,6 @@ def br_case_activity_default_status(closing=False):
 
     if not default:
         # Look up the default status
-        stable = s3db.br_case_activity_status
         query = (flag == True) & (stable.deleted != True)
         row = current.db(query).select(stable.id,
                                        cache = s3db.cache,
