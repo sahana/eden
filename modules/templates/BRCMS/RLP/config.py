@@ -1119,6 +1119,7 @@ def config(settings):
             if r.controller == "br":
 
                 ctable = s3db.br_case
+                record = r.record
 
                 if not r.component:
 
@@ -1131,7 +1132,7 @@ def config(settings):
                     # Configure pe_label (r/o, auto-generated onaccept)
                     field = table.pe_label
                     field.label = T("ID")
-                    field.readable = bool(r.record)
+                    field.readable = bool(record)
                     field.writable = False
 
                     # Hide gender
@@ -1154,6 +1155,12 @@ def config(settings):
                                         )
                     else:
                         address = None
+
+                    # If there is a default status for new cases,
+                    # hide the status field in create-form
+                    field = ctable.status_id
+                    if not record and field.default:
+                        field.readable = field.writable = False
 
                     # Configure case.organisation_id
                     field = ctable.organisation_id

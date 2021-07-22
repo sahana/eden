@@ -215,7 +215,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 menu = [M(labels.CURRENT, f="person", vars={"closed": "0"},
                           restrict=("EVENT_MANAGER", "RELIEF_PROVIDER"))(
                             M(crud_strings.label_create, m="create"),
-                            )
+                            ),
+                        M("Archive", link=False)(
+                            M(labels.CLOSED, f="person", vars={"closed": "1"}),
+                            M("Invalid Cases", f="person", vars={"invalid": "1"}, restrict=["ADMIN"]),
+                            ),
                         ]
             elif f in ("assistance_offer", "offers", "assistance_type"):
                 # Relief Offers

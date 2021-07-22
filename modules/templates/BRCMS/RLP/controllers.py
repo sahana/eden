@@ -1633,8 +1633,9 @@ class approve_org(S3CustomController):
                                                                    "email": user.email,
                                                                    }
             ttable = s3db.auth_user_temp
-            temp = db(ttable.user_id == user_id).select(ttable.custom,
-                                                        limitby = (0, 1)
+            temp = db(ttable.user_id == user_id).select(ttable.id,
+                                                        ttable.custom,
+                                                        limitby = (0, 1),
                                                         ).first()
             try:
                 custom = json.loads(temp.custom)
@@ -1860,9 +1861,20 @@ class approve_org(S3CustomController):
                     redirect(URL(c = "default", f = "index", args = ["approve_org"]))
 
                 elif rejected:
-                    user.update_record(registration_key = "rejected")
+                    # Drop the temp record
+                    if temp:
+                        temp.delete_record()
+                    # Mark the user account as rejected and deleted, remove names
+                    user.update_record(first_name = "",
+                                       last_name = "",
+                                       # Keep email to prevent another attempt
+                                       #email = None,
+                                       password = uuid4().hex,
+                                       deleted = True,
+                                       registration_key = "rejected",
+                                       )
                     session.confirmation = T("Registration rejected")
-                    redirect(URL(c="default", f="index", args=["approve"]))
+                    redirect(URL(c="default", f="index", args=["approve_org"]))
 
             output = {"form": form,
                       "title": T("Approve Organization"),

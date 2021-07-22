@@ -1,4 +1,4 @@
-Position,Status,Default,Closed,Comments
-1,Current,true,false,
-2,Resolved,false,true,
-3,Obsolete,false,true,
+Position,Status,Default,Closed,Default Closure,Comments
+1,Current,true,false,false,
+2,Resolved,false,true,false,
+3,Obsolete,false,true,true,
