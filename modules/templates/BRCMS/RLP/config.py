@@ -696,6 +696,11 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_br_case_activity_resource(r, tablename):
 
+        # Case file or self-reporting?
+        record = r.record
+        case_file = r.tablename == "pr_person" and record
+        ours = r.function == "case_activity" and current.auth.s3_has_role("RELIEF_PROVIDER")
+
         s3 = current.response.s3
         crud_strings = s3.crud_strings
 
@@ -720,14 +725,19 @@ def config(settings):
         field.label = T("Short Description")
         field.requires = [IS_NOT_EMPTY(), IS_LENGTH(128)]
 
-        # Location is visible, defaults to logged-in user's tracking location
+        # Location is visible
         from .helpers import get_current_location
         from s3 import S3LocationSelector
 
         field = table.location_id
         field.readable = field.writable = True
         field.label = T("Place")
-        field.default = get_current_location()
+        if case_file:
+            # Defaults to beneficiary tracking location
+            field.default = get_current_location(record.id)
+        else:
+            # Default to current user's tracking location
+            field.default = get_current_location()
         field.widget = S3LocationSelector(levels = ("L1", "L2", "L3", "L4"),
                                           required_levels = ("L1", "L2", "L3"),
                                           show_address = False,
@@ -735,11 +745,37 @@ def config(settings):
                                           show_map = False,
                                           )
 
-        # Subheadings for CRUD form
-        subheadings = {"date": T("Need Details"),
-                       "location_id": T("Need Location"),
-                       "status_id": T("Status"),
-                       }
+        if case_file or ours:
+            # Custom form to change field order
+            from s3 import S3SQLCustomForm
+            crud_fields = ["person_id",
+                           "priority",
+                           "date",
+                           "need_id",
+                           "subject",
+                           "need_details",
+                           "location_id",
+                           "activity_details",
+                           "outcome",
+                           "status_id",
+                           "comments",
+                           ]
+            s3db.configure("br_case_activity",
+                           crud_form = S3SQLCustomForm(*crud_fields),
+                           )
+            # Subheadings for CRUD form
+            subheadings = {"priority": T("Need Details"),
+                           "location_id": T("Need Location"),
+                           "activity_details": T("Support provided"),
+                           "status_id": T("Status"),
+                           }
+        else:
+            # Default form with mods per settings
+            # Subheadings for CRUD form
+            subheadings = {"date": T("Need Details"),
+                           "location_id": T("Need Location"),
+                           "status_id": T("Status"),
+                           }
         s3db.configure("br_case_activity",
                        subheadings = subheadings,
                        # Default sort order: newest first
@@ -772,7 +808,7 @@ def config(settings):
         s3 = current.response.s3
 
         is_event_manager = auth.s3_has_role("EVENT_MANAGER")
-        #org_role = is_event_manager or auth.s3_has_roles(("CASE_MANAGER", "RELIEF_PROVIDER"))
+        is_relief_provider = auth.s3_has_role("RELIEF_PROVIDER")
 
         # Custom prep
         standard_prep = s3.prep
@@ -788,23 +824,32 @@ def config(settings):
             crud_strings = s3.crud_strings["br_case_activity"]
             if mine:
                 # Adjust list title, allow last update info
-                crud_strings["title_list"] = T("My Needs")
+                if is_relief_provider:
+                    crud_strings["title_list"] = T("Our Needs")
+                else:
+                    crud_strings["title_list"] = T("My Needs")
                 s3.hide_last_update = False
 
-                logged_in_person = auth.s3_logged_in_person()
-
-                # Limit to own activities
-                if not r.record:
-                    query = FS("person_id") == logged_in_person
-                    resource.add_filter(query)
-
-                # Set default beneficiary + hide it
+                # Beneficiary requirements
                 field = table.person_id
-                field.default = logged_in_person
-                field.readable = field.writable = False
+                field.writable = False
+                if is_relief_provider:
+                    # Must add in case-file
+                    field.readable = True
+                    insertable = False
+                else:
+                    # Set default beneficiary + hide it
+                    logged_in_person = auth.s3_logged_in_person()
+                    field.default = logged_in_person
+                    field.readable = False
+                    if not r.record:
+                        # Filter to own activities
+                        query = FS("person_id") == logged_in_person
+                        resource.add_filter(query)
+                    insertable = True
 
-                # Allow create/update/delete
-                insertable = editable = deletable = True
+                # Allow update/delete
+                editable = deletable = True
             else:
                 # Adjust list title, hide last update info
                 crud_strings["title_list"] = T("Current Needs")
@@ -819,8 +864,9 @@ def config(settings):
                     r.error(403, current.ERROR.NOT_PERMITTED)
 
                 # Limit to active activities
-                # TODO filter by end-date too
-                query = FS("status_id$is_closed") == False
+                today = current.request.utcnow.date()
+                query = (FS("status_id$is_closed") == False) & \
+                        ((FS("end_date") == None) | (FS("end_date") >= today))
                 resource.add_filter(query)
 
                 # Deny create, only event manager can update/delete
@@ -835,10 +881,11 @@ def config(settings):
 
             if not r.component:
 
-                # Hide irrelevant fields
-                for fn in ("person_id", "activity_details", "outcome", "priority"):
-                    field = table[fn]
-                    field.readable = field.writable = False
+                if not mine or not is_relief_provider:
+                    # Hide irrelevant fields
+                    for fn in ("person_id", "activity_details", "outcome", "priority"):
+                        field = table[fn]
+                        field.readable = field.writable = False
 
                 # List fields
                 list_fields = ["date",
@@ -852,6 +899,8 @@ def config(settings):
                                ]
                 if mine or is_event_manager:
                     list_fields.append("status_id")
+                    if is_relief_provider:
+                        list_fields[1:1] = ("priority", "person_id")
 
                 # Filters
                 from s3 import S3DateFilter, S3TextFilter, S3LocationFilter, S3OptionsFilter, s3_get_filter_opts
@@ -1100,6 +1149,13 @@ def config(settings):
         # Custom prep
         standard_prep = s3.prep
         def prep(r):
+
+            controller = r.controller
+
+            # Never show all cases
+            if controller == "br" and "closed" not in r.get_vars:
+                r.get_vars.closed = "0"
+
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
@@ -1116,7 +1172,7 @@ def config(settings):
             name_fields = [fn for fn in keys if fn in NAMES]
 
             # TODO Customise for br
-            if r.controller == "br":
+            if controller == "br":
 
                 ctable = s3db.br_case
                 record = r.record
@@ -1225,7 +1281,7 @@ def config(settings):
                                        list_fields = list_fields,
                                        )
 
-            elif r.controller == "default":
+            elif controller == "default":
                 # Personal profile (default/person)
                 if not r.component:
 
