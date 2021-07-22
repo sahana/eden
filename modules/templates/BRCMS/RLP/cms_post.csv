@@ -15,3 +15,7 @@ Message WelcomeProvider,auth,user,"Your account at the {system} Portal has been 
 - To edit your profile go to: {profile}
 
 Thank you",
+Message RejectProvider,auth,user,"Your registration has been rejected:
+
+{reason}",
+Subject RejectProvider,auth,user,Your registration at the {system} Portal was unsuccessful,
