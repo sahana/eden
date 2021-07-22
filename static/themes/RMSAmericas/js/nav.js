@@ -51,11 +51,17 @@ $(document).ready(function(){
         if (menuDiv.hasClass('hide')) {
             // Show the Side Menu
             menuDiv.removeClass('hide');
+            // Resize the Content
+            $('#content').removeClass('medium-12 large-12')
+                         .addClass('medium-9 large-10');
             // Highlight the active control
             menuBtn.css('background-color', '#d9dadb');
         } else {
             // Hide the Side Menu
             menuDiv.addClass('hide');
+            // Resize the Content
+            $('#content').removeClass('medium-9 large-10')
+                         .addClass('medium-12 large-12');
             // Remove Highlight
             menuBtn.css('background-color', '');
         }
