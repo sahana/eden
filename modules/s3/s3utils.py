@@ -783,7 +783,7 @@ def s3_url_represent(url):
         return ""
 
     url_, error = IS_URL(allowed_schemes = ["http", "https", None],
-                         prepend_scheme = "https",
+                         prepend_scheme = "http",
                          )(url)
     if error:
         return url

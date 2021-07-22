@@ -1283,7 +1283,7 @@ class register_org(S3CustomController):
                             requires = IS_EMPTY_OR(
                                         IS_URL(mode = "generic",
                                                allowed_schemes = ["http", "https"],
-                                               prepend_scheme = "https",
+                                               prepend_scheme = "http",
                                                )),
                             ),
                       # -- Privacy and Consent --

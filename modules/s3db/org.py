@@ -407,7 +407,7 @@ class OrgOrganisationModel(S3Model):
                            label = T("Website"),
                            represent = s3_url_represent,
                            requires = IS_EMPTY_OR(IS_URL(allowed_schemes = ["http", "https", None],
-                                                         prepend_scheme = "https",
+                                                         prepend_scheme = "http",
                                                          )),
                            ),
                      Field("year", "integer",
