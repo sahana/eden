@@ -229,7 +229,7 @@ def get_offer_filters(person_id=None):
 
                 # Lookup the immediate ancestor's level
                 q = (ltable.id == parents[0]) & (ltable.deleted == False)
-                row = db(query).select(ltable.level, limitby=(0, 1)).first()
+                row = db(q).select(ltable.level, limitby=(0, 1)).first()
                 if row:
                     level = row.level
 
@@ -240,7 +240,7 @@ def get_offer_filters(person_id=None):
                 (ltable.level != None) & \
                 (ltable.level > level) & \
                 (ltable.deleted == False)
-            children = db(query).select(ltable.id)
+            children = db(q).select(ltable.id)
             location_ids += [c.id for c in children]
 
         if location_ids:
