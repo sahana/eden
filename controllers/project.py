@@ -87,10 +87,10 @@ def project():
         if r.interactive:
             htable = s3db.table("hrm_human_resource")
             if htable:
-                htable.person_id.comment = DIV(_class="tooltip",
-                                               _title="%s|%s" % (T("Person"),
-                                                                 T("Select the person assigned to this role for this project."),
-                                                                 )
+                htable.person_id.comment = DIV(_class = "tooltip",
+                                               _title = "%s|%s" % (T("Person"),
+                                                                   T("Select the person assigned to this role for this project."),
+                                                                   )
                                                )
 
             if not component:
@@ -146,7 +146,8 @@ def project():
                     stable = s3db.project_status
                     status = get_vars.get("project.status_id")
                     row = db(stable.name == status).select(stable.id,
-                                                           limitby=(0, 1)).first()
+                                                           limitby = (0, 1)
+                                                           ).first()
                     if row:
                         r.table.status_id.default = row.id
                         r.table.status_id.writable = False
@@ -165,7 +166,8 @@ def project():
                             (otable.role == lead_role) & \
                             (otable.deleted != True)
                     row = db(query).select(otable.id,
-                                           limitby=(0, 1)).first()
+                                           limitby = (0, 1)
+                                           ).first()
                     if row:
                         # Project has already a lead organisation
                         # => exclude lead_role in component add-form

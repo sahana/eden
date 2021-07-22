@@ -15,9 +15,8 @@
 <script src="/{{=appname}}/static/scripts/foundation/foundation/foundation.tab.js"></script>
 <script src="/{{=appname}}/static/scripts/foundation/foundation/foundation.tooltip.js"></script>
 <script src="/{{=appname}}/static/scripts/foundation/foundation/foundation.topbar.js"></script>
-<script>$(document).foundation({{for script in s3.js_foundation:}}{{=XML(script)}}{{pass}})</script>
 {{else:}}
 <script src="/{{=appname}}/static/scripts/foundation/vendor/fastclick.js"></script>
 <script src="/{{=appname}}/static/scripts/foundation/foundation.min.js"></script>
-<script>$(document).foundation({{for script in s3.js_foundation:}}{{=XML(script)}}{{pass}})</script>
 {{pass}}
+<script>$(document).foundation({{if s3.js_foundation:}}{{=XML(s3.js_foundation)}}{{pass}})</script>

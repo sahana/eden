@@ -50,6 +50,12 @@ class index(S3CustomController):
         auth = current.auth
 
         if auth.is_logged_in():
+            has_role = auth.s3_has_role
+            if has_role("wh_manager", include_admin=False) or \
+               has_role("national_wh_manager", include_admin=False):
+                # Redirect to WMS Dashboard
+                redirect(URL(c="inv", f="index"))
+
             login_form = ""
         else:
             auth.settings.label_separator = ""
@@ -290,30 +296,29 @@ def deploy_index():
         documentation for the module
     """
 
-    response = current.response
-
     def prep(r):
         default_url = URL(f="mission", args="summary", vars={})
         return current.s3db.cms_documentation(r, "RIT", default_url)
-    response.s3.prep = prep
+    current.response.s3.prep = prep
     output = current.rest_controller("cms", "post")
 
     # Custom view
-    view = path.join(current.request.folder,
-                     "modules",
-                     "templates",
-                     THEME,
-                     "views",
-                     "deploy",
-                     "index.html",
-                     )
-    try:
-        # Pass view as file not str to work in compiled mode
-        response.view = open(view, "rb")
-    except IOError:
-        from gluon.http import HTTP
-        raise HTTP(404, "Unable to open Custom View: %s" % view)
+    S3CustomController._view(THEME, "deploy_index.html")
+    return output
 
+# =============================================================================
+def inv_index():
+    """
+        Custom module homepage for Warehouse Management module
+        - Dashboard
+    """
+
+    output = {"title": current.T("Dashboard"),
+              "contents": I("coming soon..."),
+              }
+
+    # Custom view
+    S3CustomController._view(THEME, "inv_index.html")
     return output
 
 # END =========================================================================

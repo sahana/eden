@@ -515,13 +515,13 @@ class S3OptionsMenu(object):
                       #args=[request.application]),
                     M("Translation", c="admin", f="translate", check=translate)(
                        M("Select Modules for translation", c="admin", f="translate",
-                         m="create", vars=dict(opt="1")),
+                         m="create", vars={"opt": "1"}),
                        M("Upload translated files", c="admin", f="translate",
-                         m="create", vars=dict(opt="2")),
+                         m="create", vars={"opt": "2"}),
                        M("View Translation Percentage", c="admin", f="translate",
-                         m="create", vars=dict(opt="3")),
+                         m="create", vars={"opt": "3"}),
                        M("Add strings manually", c="admin", f="translate",
-                         m="create", vars=dict(opt="4"))
+                         m="create", vars={"opt": "4"})
                     ),
                     #M("View Test Result Reports", c="admin", f="result"),
                     #M("Portable App", c="admin", f="portable")
@@ -831,7 +831,7 @@ class S3OptionsMenu(object):
         """ Deployments """
 
         deploy_team = current.deployment_settings.get_deploy_team_label()
-        team_menu = "%(team)s Members" % dict(team=deploy_team)
+        team_menu = "%(team)s Members" % {"team": deploy_team}
 
         return M()(M("Missions",
                      c="deploy", f="mission", m="summary")(
@@ -931,10 +931,10 @@ class S3OptionsMenu(object):
                         M("List unidentified",
                           vars={"identification.status": "None"}),
                         M("Report by Age/Gender", m="report",
-                          vars=dict(rows="age_group",
-                                    cols="gender",
-                                    fact="count(pe_label)",
-                                    ),
+                          vars={"rows": "age_group",
+                                "cols": "gender",
+                                "fact": "count(pe_label)",
+                                },
                           ),
                     ),
                     M("Missing Persons", f="person")(
@@ -1173,9 +1173,9 @@ class S3OptionsMenu(object):
                     ),
                     M("PoIs", c="gis", f="poi", check=pois)(),
                     #M("Population Report", f="location", m="report",
-                    # vars=dict(rows="name",
-                    #           fact="sum(population)",
-                    #           ),
+                    # vars={"rows": name",
+                    #       "fact": "sum(population)",
+                    #       },
                     # ),
                     M("Configuration", c="gis", f="config", args=config_args(),
                       _id="gis_menu_config",
@@ -1382,15 +1382,15 @@ class S3OptionsMenu(object):
                     M("Reports", c="inv", f="inv_item")(
                         M("Warehouse Stock", f="inv_item", m="report"),
                         M("Expiration Report", c="inv", f="track_item",
-                          vars=dict(report="exp")),
+                          vars={"report": "exp"}),
                         M("Monetization Report", c="inv", f="inv_item",
-                          vars=dict(report="mon")),
+                          vars={"report": "mon"}),
                         M("Utilization Report", c="inv", f="track_item",
-                          vars=dict(report="util")),
+                          vars={"report": "util"}),
                         M("Summary of Incoming Supplies", c="inv", f="track_item",
-                          vars=dict(report="inc")),
+                          vars={"report": "inc"}),
                         M("Summary of Releases", c="inv", f="track_item",
-                          vars=dict(report="rel")),
+                          vars={"report": "rel"}),
                     ),
                     M(inv_recv_list, c="inv", f="recv", translate=False)( # Already T()
                         M("Create", m="create"),

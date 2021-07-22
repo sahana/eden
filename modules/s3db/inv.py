@@ -1183,8 +1183,10 @@ class S3InventoryTrackingModel(S3Model):
                            widget = radio_widget,
                            label = T("Filing Status"),
                            comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Filing Status"),
-                                                           T("Have all the signed documents for this shipment been filed?"))),
+                                         _title="%s|%s|%s" % (T("Filing Status"),
+                                                              T("Have all the signed documents for this shipment been filed?"),
+                                                              "* %s|* %s" % (T("Requisition"), T("Waybill")),
+                                                              )),
                            readable = document_filing,
                            writable = False,
                            ),
@@ -1442,8 +1444,10 @@ class S3InventoryTrackingModel(S3Model):
                            widget = radio_widget,
                            label = T("Filing Status"),
                            comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Filing Status"),
-                                                           T("Have all the signed documents for this shipment been filed?"))),
+                                         _title="%s|%s|%s" % (T("Filing Status"),
+                                                              T("Have all the signed documents for this shipment been filed?"),
+                                                              "* %s|* %s|* %s" % (T("Requisition"), T("Waybill"), T("GRN")),
+                                                              )),
                            readable = document_filing,
                            writable = False,
                            ),
@@ -2289,7 +2293,7 @@ $.filterOptionsS3({
         def prep(r):
             record = db(sendtable.id == r.id).select(sendtable.status,
                                                      sendtable.req_ref,
-                                                     limitby=(0, 1)
+                                                     limitby = (0, 1)
                                                      ).first()
             if record:
                 status = record.status
@@ -2310,11 +2314,13 @@ $.filterOptionsS3({
                                    )
 
             if r.component:
-                if r.component_name == "doc_document":
+                if r.component_name == "document":
                     # Simplify a little
                     table = s3db.doc_document
+                    table.file.required = True
                     table.url.readable = table.url.writable = False
                     table.date.readable = table.date.writable = False
+
                 elif r.component_name == "track_item":
                     record = r.record
                     values = current.deployment_settings.get_inv_track_pack_values()
