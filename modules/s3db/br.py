@@ -206,7 +206,10 @@ class BRCaseModel(S3Model):
         #
 
         # Case assignment options
-        default_organisation = settings.get_org_default_organisation()
+        if settings.get_br_case_global_default_org():
+            default_organisation = settings.get_org_default_organisation()
+        else:
+            default_organisation = None
         case_manager = settings.get_br_case_manager()
 
         # Household size tracking
@@ -3292,8 +3295,11 @@ def br_case_default_org():
         @returns: tuple (default_org, multiple_orgs)
     """
 
-    default_org = current.deployment_settings.get_org_default_organisation()
-    if default_org:
+    settings = current.deployment_settings
+
+    default_org = settings.get_org_default_organisation()
+    if default_org and settings.get_br_case_global_default_org():
+        # All cases are linked to the global default organisation
         return default_org, False
 
     auth = current.auth

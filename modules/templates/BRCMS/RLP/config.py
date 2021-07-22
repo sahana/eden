@@ -109,6 +109,12 @@ def config(settings):
     # -------------------------------------------------------------------------
     # BR Settings
     #
+    settings.br.case_global_default_org = False
+    settings.br.case_manager = False
+    settings.br.household_size = False # True
+    settings.br.case_address = True
+    settings.br.case_language_details = False
+
     settings.br.case_activity_status = True
     settings.br.case_activity_manager = False
     settings.br.case_activity_subject = True
@@ -116,6 +122,18 @@ def config(settings):
     settings.br.manage_assistance = False
 
     settings.br.needs_org_specific = False
+
+    settings.br.case_contacts_tab = True
+    settings.br.case_id_tab = False
+    settings.br.case_family_tab = False
+    settings.br.case_activities = True
+    settings.br.manage_assistance = False
+    settings.br.assistance_tab = False
+
+    settings.br.service_contacts = False
+    settings.br.case_notes_tab = False
+    settings.br.case_photos_tab = False
+    settings.br.case_documents_tab = False
 
     # -------------------------------------------------------------------------
     # ORG Settings
@@ -1085,6 +1103,9 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
+            resource = r.resource
+            table = resource.table
+
             from s3 import S3SQLCustomForm, \
                            S3SQLInlineComponent, \
                            StringTemplateParser
@@ -1097,10 +1118,105 @@ def config(settings):
             # TODO Customise for br
             if r.controller == "br":
 
-                if not current.auth.s3_has_role("CASE_MANAGER"):
-                    ctable = s3db.br_case
+                ctable = s3db.br_case
+
+                if not r.component:
+
+                    # Module-specific field and form configuration
+                    from s3 import S3SQLInlineComponent
+
+                    # Adapt fields to module context
+                    multiple_orgs = s3db.br_case_read_orgs()[0]
+
+                    # Configure pe_label (r/o, auto-generated onaccept)
+                    field = table.pe_label
+                    field.label = T("ID")
+                    field.readable = bool(r.record)
+                    field.writable = False
+
+                    # Hide gender
+                    field = table.gender
+                    field.default = None
+                    field.readable = field.writable = False
+
+                    # Address
+                    # TODO Configure location selector properly
+                    if settings.get_br_case_address():
+                        address = S3SQLInlineComponent(
+                                        "address",
+                                        label = T("Current Address"),
+                                        fields = [("", "location_id")],
+                                        filterby = {"field": "type",
+                                                    "options": "1",
+                                                    },
+                                        link = False,
+                                        multiple = False,
+                                        )
+                    else:
+                        address = None
+
+                    # Configure case.organisation_id
                     field = ctable.organisation_id
-                    field.default = settings.get_org_default_organisation()
+                    field.comment = None
+                    if not current.auth.s3_has_role("RELIEF_PROVIDER"):
+                        ctable = s3db.br_case
+                        field.default = settings.get_org_default_organisation()
+                        field.readable = field.writable = bool(field.default)
+                    else:
+                        default_org, selectable = s3db.br_case_default_org()
+                        if default_org:
+                            field.writable = selectable
+                            field.readable = selectable or multiple_orgs
+                        field.default = default_org
+                    requires = field.requires
+                    if isinstance(requires, IS_EMPTY_OR):
+                        field.requires = requires.other
+
+                    # Custom CRUD form
+                    crud_fields = ["case.date",
+                                   "case.organisation_id",
+                                   "case.human_resource_id",
+                                   "case.status_id",
+                                   "pe_label",
+                                   # +name fields
+                                   "case.household_size",
+                                   address,
+                                   S3SQLInlineComponent(
+                                            "contact",
+                                            fields = [("", "value")],
+                                            filterby = {"field": "contact_method",
+                                                    "options": "SMS",
+                                                    },
+                                            label = T("Mobile Phone"),
+                                            multiple = False,
+                                            name = "phone",
+                                            ),
+                                   "case.comments",
+                                   "case.invalid",
+                                   ]
+
+                    # Custom list fields
+                    list_fields = ["pe_label",
+                                   # +name fields
+                                   "case.date",
+                                   "case.status_id",
+                                   ]
+
+                    # Add organisation if user can see cases from multiple orgs
+                    if multiple_orgs:
+                        list_fields.insert(-2, "case.organisation_id")
+
+                    # Insert name fields in name-format order
+                    NAMES = ("first_name", "middle_name", "last_name")
+                    from s3 import StringTemplateParser, S3SQLCustomForm
+                    keys = StringTemplateParser.keys(settings.get_pr_name_format())
+                    name_fields = [fn for fn in keys if fn in NAMES]
+                    crud_fields[5:5] = name_fields
+                    list_fields[1:1] = name_fields
+
+                    resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
+                                       list_fields = list_fields,
+                                       )
 
             elif r.controller == "default":
                 # Personal profile (default/person)
@@ -1130,9 +1246,12 @@ def config(settings):
         s3.prep = prep
 
         # Custom rheader
-        if current.request.controller == "default":
-            from .rheaders import rlpcm_profile_rheader
+        c = current.request.controller
+        from .rheaders import rlpcm_profile_rheader, rlpcm_br_rheader
+        if c == "default":
             attr["rheader"] = rlpcm_profile_rheader
+        elif c == "br":
+            attr["rheader"] = rlpcm_br_rheader
 
         return attr
 
