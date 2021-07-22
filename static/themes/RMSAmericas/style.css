@@ -4,21 +4,6 @@
     margin-top: 10px;
 }
 /* Top Navigation Bar */
-.tooltip-f {
-    background: #505355;
-    border-radius: 4px;
-    color: #FFFFFF;
-    display: none;
-    font: 500 12px 'Roboto',arial,sans-serif;
-    letter-spacing: .8px;
-    line-height: 16px;
-    margin-top: 4px;
-    min-height: 14px;
-    padding: 4px 8px;
-    position: absolute;
-    z-index: 1000;
-    -webkit-font-smoothing: antialiased;
-}
 .hd {
     display: inline-block;
     border-radius: 100%;
@@ -33,11 +18,12 @@
 .hd.active {
     background-color: #d9dadb;
 }
+/* Current Module Logo in top-nav */
 .hdm {
     display: inline-block;
     height: 48px;
     width: 48px;
-    margin-left: 4px;
+    margin-left: 5px;
 }
 .hi {
     margin-top: -12px;
@@ -90,4 +76,23 @@
     list-style: none;
     margin: 0;
     padding: 5px;
+}
+/* Tooltips */
+.tooltip-f {
+    background: #505355;
+    border-radius: 4px;
+    color: #FFFFFF;
+    display: none;
+    font: 500 12px 'Roboto',arial,sans-serif;
+    letter-spacing: .8px;
+    line-height: 16px;
+    margin-top: 4px;
+    min-height: 14px;
+    padding: 4px 8px;
+    position: absolute;
+    z-index: 1000;
+    -webkit-font-smoothing: antialiased;
+}
+.tooltip-m {
+    margin-top: -15px;
 }

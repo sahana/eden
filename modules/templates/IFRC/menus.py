@@ -55,8 +55,8 @@ class S3MainMenu(default.S3MainMenu):
             if auth.s3_has_roles(("EVENT_MONITOR", "EVENT_ORGANISER", "EVENT_OFFICE_MANAGER")):
                 # Simplified menu for Bangkok CCST
                 return [homepage("hrm", "org", name=T("Training Events"), f="training_event",
-                                 #vars=dict(group="staff"), check=hrm)(
-                                 vars=dict(group="staff"))(
+                                 #vars={"group": "staff"}, check=hrm)(
+                                 vars={"group": "staff"})(
                             #MM("Training Events", c="hrm", f="training_event"),
                             #MM("Trainings", c="hrm", f="training"),
                             #MM("Training Courses", c="hrm", f="course"),
@@ -129,8 +129,8 @@ class S3MainMenu(default.S3MainMenu):
             homepage("gis")(
             ),
             homepage("hrm", "org", name=T("Staff"),
-                     #vars=dict(group="staff"), check=hrm)(
-                     vars=dict(group="staff"))(
+                     #vars={"group": "staff"}, check=hrm)(
+                     vars={"group": "staff"})(
                 MM("Staff", c="hrm", f="staff", m="summary"),
                 MM("Teams", c="hrm", f="group"),
                 MM("National Societies", c="org", f="organisation",
@@ -363,7 +363,7 @@ class S3MainMenu(default.S3MainMenu):
                         MP("Register", c="default", f="user",
                            m="register", check=self_registration),
                         MP("Login", c="default", f="user",
-                           m="login", vars=dict(_next=login_next)),
+                           m="login", vars={"_next": login_next}),
                         MP("Lost Password", c="default", f="user",
                            m="retrieve_password"),
                         menu_lang
@@ -765,7 +765,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Reports", c="hrm", f="staff", m="report")(
                             M("Staff Report", m="report"),
                             M("Expiring Staff Contracts Report",
-                              vars=dict(expiring="1")),
+                              vars={"expiring": "1"}),
                             M("Training Report", f="training", m="report"),
                         ),
                         M("Training Course Catalog", c="hrm", f="course")(
@@ -866,20 +866,20 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Reports", c="inv", f="inv_item")(
                         M("Warehouse Stock", f="inv_item",m="report"),
                         M("Expiration Report", c="inv", f="track_item",
-                          vars=dict(report="exp")),
+                          vars={"report": "exp"}),
                         # CRMADA want this - requires support in config.py atm (move that to core)
                         #M("Stock Movements", f="inv_item", m="grouped",
                         #  vars={"report": "movements"},
                         #  check=no_direct_stock_edits,
                         #  ),
                         #M("Monetization Report", c="inv", f="inv_item",
-                        #  vars=dict(report="mon")),
+                        #  vars={"report": "mon"}),
                         #M("Utilization Report", c="inv", f="track_item",
-                        #  vars=dict(report="util")),
+                        #  vars={"report": "util"}),
                         #M("Summary of Incoming Supplies", c="inv", f="track_item",
-                        #  vars=dict(report="inc")),
+                        #  vars={"report": "inc"}),
                         # M("Summary of Releases", c="inv", f="track_item",
-                        #  vars=dict(report="rel")),
+                        #  vars={"report": "rel"}),
                     ),
                     #M(inv_recv_list, c="inv", f="recv", check=multi_warehouse)(
                     M(inv_recv_list, c="inv", f="recv")(
@@ -1212,8 +1212,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ),
                     #M("My Tasks", f="task",
                     #  check=[personal_mode, show_tasks],
-                    #  vars=dict(access="personal",
-                    #            mine=1)),
+                    #  vars={"access": "personal",
+                    #        "mine": 1}),
                 )
 
 # END =========================================================================

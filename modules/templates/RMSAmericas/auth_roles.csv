@@ -552,6 +552,7 @@ national_wh_manager,National Warehouse Manager,,inv,supplier,,,READ|CREATE|UPDAT
 national_wh_manager,National Warehouse Manager,,,,inv_recv,,CREATE|READ|UPDATE,,,,,,
 national_wh_manager,National Warehouse Manager,,,,inv_send,,CREATE|READ|UPDATE,,,,,,
 national_wh_manager,National Warehouse Manager,,,,inv_warehouse,,CREATE|READ|UPDATE|DELETE,,,,,,
+national_wh_manager,National Warehouse Manager,,,,project_project,,READ|CREATE,READ|UPDATE,,,,,
 national_wh_manager,National Warehouse Manager,,req,,,,READ|CREATE|UPDATE|DELETE,,,,,,
 national_wh_manager,National Warehouse Manager,,,,req_req,,READ|CREATE|UPDATE|DELETE,,,,,,
 national_wh_manager,National Warehouse Manager,,supply,,,any,READ,,,,,,

@@ -945,7 +945,7 @@ def recv():
     auth.permitted_facilities(table=recvtable, error_msg=error_msg)
 
     tracktable = s3db.inv_track_item
-    atable = s3db.inv_adj_item
+    #atable = s3db.inv_adj_item
 
     # The inv_recv record might be created when the shipment is send and so it
     # might not have the recipient identified. If it is null then set it to
@@ -1072,9 +1072,11 @@ def recv():
 
                 # Default the Supplier/Donor to the Org sending the shipment
                 tracktable.supply_org_id.default = record.organisation_id
+
             elif r.component_name == "document":
                 # Simplify a little
                 table = s3db.doc_document
+                table.file.required = True
                 table.url.readable = table.url.writable = False
                 table.date.readable = table.date.writable = False
         else:
@@ -1809,6 +1811,14 @@ def facility():
 # -----------------------------------------------------------------------------
 def facility_type():
     return s3_rest_controller("org")
+
+# -----------------------------------------------------------------------------
+def project():
+    """
+        Simpler version of Projects for use within Inventory module
+    """
+
+    return s3_rest_controller("project")
 
 # -----------------------------------------------------------------------------
 def incoming():

@@ -180,7 +180,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Report", c="hrm", f="human_resource", m="report")(
                             #M("Staff Report", m="report"),
                             #M("Expiring Staff Contracts Report",
-                            #  vars=dict(expiring="1")),
+                            #  vars={"expiring": "1"}),
                             #M("Hours by Role Report", f="programme_hours", m="report",
                             #  vars=Storage(rows="job_title_id",
                             #               cols="month",
@@ -236,7 +236,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #    M("Create", m="create"),
                         #),
                         #M("Personal Profile", c="hrm", f="person",
-                        #  vars=dict(access="personal"))
+                        #  vars={"access": "personal"})
                     )
 
     # -------------------------------------------------------------------------
@@ -268,142 +268,34 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def inv():
         """ INV / Inventory """
 
-        #auth = current.auth
-        has_role = current.auth.s3_has_role
-        system_roles = current.session.s3.system_roles
-        ADMIN = system_roles.ADMIN
-        ORG_ADMIN = system_roles.ORG_ADMIN
-
-        s3db = current.s3db
-        s3db.inv_recv_crud_strings()
-        inv_recv_list = current.response.s3.crud_strings.inv_recv.title_list
-
-        settings = current.deployment_settings
-        #use_adjust = lambda i: not settings.get_inv_direct_stock_edits()
-        #root_org = auth.root_org_name()
-        #def use_adjust(i):
-        #    if root_org in ("Australian Red Cross", "Honduran Red Cross"):
-        #        # Australian & Honduran RC use proper Logistics workflow
-        #        return True
-        #    else:
-        #        # Others use simplified version
-        #        return False
-        #def use_facilities(i):
-        #    if root_org == "Honduran Red Cross":
-        #        # Honduran RC don't use Facilities
-        #        return False
-        #    else:
-        #        return True
-        def multi_warehouse(i):
-            if not (has_role("national_wh_manager") or \
-                    has_role(ORG_ADMIN)):
-                # Only responsible for 1 warehouse so hide menu entries which should be accessed via Tabs on their warehouse
-                # & other things that HNRC
-                return False
-            else:
-                return True
-        def basic_warehouse(i):
-            if (has_role("national_wh_manager") or \
-                has_role(ORG_ADMIN)):
-                return False
-            else:
-                return True
-        #def use_kits(i):
-        #    if root_org == "Honduran Red Cross":
-        #        # Honduran RC use Kits
-        #        return True
-        #    else:
-        #        return False
-        #def use_types(i):
-        #    if root_org == "Nepal Red Cross Society":
-        #        # Nepal RC use Warehouse Types
-        #        return True
-        #    else:
-        #        return False
-        use_commit = lambda i: settings.get_req_use_commit()
-
         return M()(
-                    M("My Warehouse", c="inv", f="index", check=basic_warehouse)(), # Will redirect in customise_inv_home
-                    M("Warehouses", c="inv", f="warehouse", m="summary", check=multi_warehouse)(
-                        M("Create", m="create"),
-                        M("Import", m="import", p="create"),
+                    M("Stock Management", c="inv", link=False)(
+                        M("Stock Adjustments", f="adj"),
+                        M("Kitting", f="kitting"),
+                        M("Receive a new shipment", f="recv", m="create"),
+                        M("Send a new shipment", f="send", m="create"),
                     ),
-                    M("Warehouse Stock", c="inv", f="inv_item", args="summary")(
-                        M("Search Shipped Items", f="track_item"),
-                        M("Adjust Stock Levels", f="adj"#, check=use_adjust
-                          ),
-                        M("Kitting", f="kitting"#, check=use_kits
-                          ),
-                        M("Import", f="inv_item", m="import", p="create"),
+                    M("Import Inventory", c="inv", f="inv_item", m="import",
+                      restrict=["national_wh_manager"]),
+                    M("Parameters", c="inv", link=False, restrict=["national_wh_manager"])(
+                        M("Warehouses", f="warehouse"),
+                        M("Projects", f="project"),
+                        M("Catalogs", c="supply", f="catalog"),
+                        M("Item Categories", c="supply", f="item_category"),
+                        M("Items", c="supply", f="item"),
+                        M("Suppliers", f="supplier"),
+                        M("Facilities", f="facility"),
+                        M("Stock limit", link=False),
                     ),
-                    M("Reports", c="inv", f="inv_item")(
-                        M("Warehouse Stock", f="inv_item", m="report"),
-                        M("Stock Position", f="inv_item", m="grouped",
-                          vars={"report": "default"},
-                          ),
-                        M("Weight and Volume", f="inv_item", m="grouped",
-                          vars={"report": "weight_and_volume"},
-                          ),
+                    M("Reports", c="inv", link=False)(
+                        M("Short Inventory", f="inv_item", m="report"),
+                        M("Detailed Inventory", f="inv_item", m="report"),
                         M("Stock Movements", f="inv_item", m="grouped",
                           vars={"report": "movements"},
                           ),
-                        M("Expiration Report", c="inv", f="track_item",
-                          vars=dict(report="exp")),
-                        #M("Monetization Report", c="inv", f="inv_item",
-                        #  vars=dict(report="mon")),
-                        #M("Utilization Report", c="inv", f="track_item",
-                        #  vars=dict(report="util")),
-                        #M("Summary of Incoming Supplies", c="inv", f="track_item",
-                        #  vars=dict(report="inc")),
-                        # M("Summary of Releases", c="inv", f="track_item",
-                        #  vars=dict(report="rel")),
-                    ),
-                    M(inv_recv_list, c="inv", f="recv", check=multi_warehouse)(
-                        M("Create", m="create"),
-                    ),
-                    M("Sent Shipments", c="inv", f="send", check=multi_warehouse)(
-                        M("Create", m="create"),
-                        M("Search Shipped Items", f="track_item"),
-                    ),
-                    M("Items", c="supply", f="item", m="summary", check=multi_warehouse)(
-                        M("Create", m="create"),
-                        M("Import", f="catalog_item", m="import", p="create", restrict=[ORG_ADMIN]),
-                    ),
-                    # Catalog Items moved to be next to the Item Categories
-                    #M("Catalog Items", c="supply", f="catalog_item")(
-                    #   M("Create", m="create"),
-                    #),
-                    #M("Brands", c="supply", f="brand",
-                    #  restrict=[ADMIN])(
-                    #    M("Create", m="create"),
-                    #),
-                    M("Catalogs", c="supply", f="catalog", check=multi_warehouse)(
-                        M("Create", m="create"),
-                    ),
-                    M("Item Categories", c="supply", f="item_category",
-                      restrict=[ORG_ADMIN])(
-                        M("Create", m="create"),
-                    ),
-                    M("Suppliers", c="inv", f="supplier")(
-                        M("Create", m="create"),
-                        M("Import", m="import", p="create", restrict=[ORG_ADMIN]),
-                    ),
-                    M("Facilities", c="inv", f="facility")(
-                        M("Create", m="create", t="org_facility"),
-                    ),
-                    M("Facility Types", c="inv", f="facility_type",
-                      restrict=[ADMIN])(
-                        M("Create", m="create"),
-                    ),
-                    #M("Warehouse Types", c="inv", f="warehouse_type", check=use_types,
-                    #  restrict=[ADMIN])(
-                    #    M("Create", m="create"),
-                    #),
-                    M("Requests", c="req", f="req")(
-                        M("Create", m="create"),
-                        M("Requested Items", f="req_item"),
-                    ),
-                    M("Commitments", c="req", f="commit", check=use_commit)(
+                        M("Stock Organisation", f="inv_item", m="grouped",
+                          vars={"report": "default"},
+                          ),
                     ),
                 )
 

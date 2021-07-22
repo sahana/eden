@@ -63,7 +63,7 @@ class S3MainMenuLayout(S3NavigationItem):
             s3.scripts.append("/%s/static/themes/RMSAmericas/js/nav.js" % request.application)
             # Use tooltip-f class to avoid clash with widgets.css
             # Remove nub
-            s3.js_foundation.append('''{tooltip:{tooltip_class:'.tooltip-f',tip_template:function(selector,content){return '<span data-selector="'+selector+'" class="'+Foundation.libs.tooltip.settings.tooltip_class.substring(1)+'">'+content+'</span>'}}}''')
+            s3.js_foundation = '''{tooltip:{tooltip_class:'.tooltip-f',tip_template:function(selector,content){var tooltipClass='';if(!$('div[data-selector="'+selector+'"]').hasClass('hd')){tooltipClass=' tooltip-m'};return '<span data-selector="'+selector+'" class="'+Foundation.libs.tooltip.settings.tooltip_class.substring(1)+tooltipClass+'">'+content+'</span>'}}}'''
 
             # Side-menu control
             if current.menu.options is None:
@@ -90,35 +90,60 @@ class S3MainMenuLayout(S3NavigationItem):
             if c == "hrm":
                 if f in training_functions:
                     image = "training.png"
+                    module_name = T("Training")
+                    module_href = URL(c="hrm", f="training_event")
                 elif "profile" in request.get_vars:
                     image = None
                 else:
                     image = "human_talent.png"
+                    module_name = T("Human Talent")
+                    module_href = URL(c="hrm", f="index")
             elif c == "org":
                 image = "human_talent.png"
+                module_name = T("Human Talent")
+                module_href = URL(c="hrm", f="index")
             elif c in ("inv", "supply", "req"):
                 image = "warehouses.png"
+                module_name = T("Warehouses")
+                module_href = URL(c="inv", f="index")
             elif c == "project":
                 image = "projects.png"
+                module_name = T("Projects")
+                module_href = URL(c="project", f="project",
+                                  args = "summary",
+                                  )
             elif c == "deploy":
                 image = "RIT.png"
+                module_name = T("RIT")
+                module_href = URL(c="deploy", f = "mission",
+                                  args = "summary",
+                                  vars = {"status__belongs": 2},
+                                  )
             elif c == "member":
                 image = "partners.png"
+                module_name = T("Partners")
+                module_href = URL(c="member", f="membership")
             else:
                 image = None
 
             if image:
-                module_logo = DIV(IMG(_src = URL(c="static", f="themes",
-                                                 args = [THEME,
-                                                         "img",
-                                                         image,
-                                                         ]),
-                                       _class = "hi",
-                                       _height = "36",
-                                       _width = "36",
-                                       ),
+                module_logo = DIV(A(IMG(_src = URL(c="static", f="themes",
+                                                   args = [THEME,
+                                                           "img",
+                                                           image,
+                                                           ]),
+                                         _class = "hi",
+                                         _height = "36",
+                                         _width = "36",
+                                         ),
+                                    _href = module_href,
+                                    _role = "button",
+                                    ),
                                   _class = "hdm",
+                                  _title = module_name,
                                   )
+                module_logo["_data-tooltip"] = ""
+                module_logo["_aria-haspopup"] = "true"
             else:
                 module_logo = ""
 
