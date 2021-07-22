@@ -6,7 +6,7 @@
     @license: MIT
 """
 
-from gluon import current, URL, A
+from gluon import current, URL, A, SPAN
 
 from s3 import S3ResourceHeader, s3_rheader_resource, s3_fullname
 

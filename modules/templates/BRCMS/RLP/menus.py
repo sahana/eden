@@ -210,11 +210,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         if org_role:
             # Org Users: separate menus per function
-            if f == "person":
+            if f in ("person", "case_activity"):
                 # Cases
                 menu = [M(labels.CURRENT, f="person", vars={"closed": "0"},
                           restrict=("EVENT_MANAGER", "RELIEF_PROVIDER"))(
                             M(crud_strings.label_create, m="create"),
+                            ),
+                        M("Our Needs", f="case_activity", restrict="RELIEF_PROVIDER")(
+                            M("Statistic", m="report"),
                             ),
                         M("Archive", link=False)(
                             M(labels.CLOSED, f="person", vars={"closed": "1"}),

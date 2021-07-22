@@ -4082,6 +4082,7 @@
 'Other types of water storage containers': 'Andere Arten von Wassertanks',
 'Other ways to obtain food': 'Weitere Möglichkeiten um an Nahrungsmitteln zu gelangen',
 'Other': 'Sonstige',
+'Our Needs': 'Unsere Bedarfe',
 'Our Relief Offers': 'Unsere Hilfsangebote',
 'Outbound Mail settings are configured in models/000_config.py.': 'Abgehende Mail-Einstellungen werden in der Datei models/000_config.py konfiguriert.',
 'Outbox': 'Ausgang',

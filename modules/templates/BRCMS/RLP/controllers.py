@@ -1,17 +1,22 @@
 # -*- coding: utf-8 -*-
 
 import json
+
 from uuid import uuid4
 
 from gluon import Field, HTTP, SQLFORM, URL, current, redirect, \
-                  CRYPT, IS_EMAIL, IS_EMPTY_OR, IS_EXPR, IS_IN_SET, IS_LENGTH, IS_NOT_EMPTY, \
-                  A, BR, DIV, FORM, H3, H4, H5, I, INPUT, LI, TABLE, TAG, TR, TD, UL, XML
+                  CRYPT, IS_EMAIL, IS_EMPTY_OR, IS_EXPR, IS_IN_SET, \
+                  IS_LENGTH, IS_NOT_EMPTY, \
+                  A, BR, DIV, FORM, H3, H4, H5, I, INPUT, LI, TABLE, \
+                  TAG, TD, TR, UL, XML
 
 from gluon.storage import Storage
 
-from s3 import IS_PHONE_NUMBER_SINGLE, IS_PHONE_NUMBER_MULTI, JSONERRORS, \
-               FS, S3CustomController, S3LocationSelector, S3Represent, S3Request, S3WithIntro, S3CRUD, \
-               s3_comments_widget, s3_get_extension, s3_mark_required, s3_str, s3_text_represent, s3_truncate
+from s3 import FS, IS_PHONE_NUMBER_MULTI, IS_PHONE_NUMBER_SINGLE, \
+               JSONERRORS, S3CRUD, S3CustomController, S3LocationSelector, \
+               S3Represent, S3Request, S3WithIntro, \
+               s3_comments_widget, s3_get_extension, s3_mark_required, \
+               s3_str, s3_text_represent, s3_truncate
 
 from templates.RLPPTM.notifications import formatmap
 
