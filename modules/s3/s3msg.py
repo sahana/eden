@@ -501,9 +501,12 @@ class S3Msg(object):
                                     etable.instance_type,
                                     )
             if not rows:
-                # Raise exception here to make the scheduler
-                # task fail permanently until manually reset
-                raise ValueError("No SMS handler defined!")
+                if current.s3task._is_alive():
+                    # Raise exception here to make the scheduler
+                    # task fail permanently until manually reset
+                    raise ValueError("No SMS handler defined!")
+                else:
+                    return False
 
             if len(rows) == 1:
                 lookup_org = False
@@ -524,9 +527,12 @@ class S3Msg(object):
         elif contact_method == "TWITTER":
             twitter_settings = self.get_twitter_api()
             if not twitter_settings:
-                # Raise exception here to make the scheduler
-                # task fail permanently
-                raise ValueError("No Twitter API available!")
+                if current.s3task._is_alive():
+                    # Raise exception here to make the scheduler
+                    # task fail permanently
+                    raise ValueError("No Twitter API available!")
+                else:
+                    return False
 
         def dispatch_to_pe_id(pe_id,
                               subject,

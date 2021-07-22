@@ -571,7 +571,7 @@ def config(settings):
             incident_type_id = form_vars_get("incident_type_id")
             ittable = s3db.event_incident_type
             incident_type = db(ittable.id == incident_type_id).select(ittable.name,
-                                                                      limitby = (0,1)
+                                                                      limitby = (0, 1)
                                                                       ).first().name
             if incident_type == "Chemical Hazard":
                 itable = s3db.event_incident
@@ -645,7 +645,8 @@ def config(settings):
 
             # Redirect to action plan after create
             resource.configure(create_next = URL(c="event", f="incident",
-                                                 args = ["[id]", "plan"]),
+                                                 args = ["[id]", "plan"]
+                                                 ),
                                )
 
             method = r.method
@@ -843,7 +844,8 @@ def config(settings):
                                          URL(c="event", f= "incident",
                                              args = [incident_id, "human_resource", link_id]),
                                              ),
-                                      contact_method = "SMS")
+                                      contact_method = "SMS"
+                                      )
 
     # -------------------------------------------------------------------------
     def customise_event_human_resource_resource(r, tablename):
