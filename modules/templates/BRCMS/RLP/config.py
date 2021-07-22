@@ -97,6 +97,12 @@ def config(settings):
     # Do not send standard welcome emails (using custom function)
     settings.auth.registration_welcome_email = False
 
+    settings.auth.realm_entity_types = ("org_organisation")
+    settings.auth.privileged_roles = {"EVENT_MANAGER": "EVENT_MANAGER",
+                                      "CITIZEN": "ADMIN",
+                                      "RELIEF_PROVIDER": "RELIEF_PROVIDER",
+                                      "MAP_ADMIN": "ADMIN",
+                                      }
     # -------------------------------------------------------------------------
     settings.pr.hide_third_gender = False
     settings.pr.separate_name_fields = 2
