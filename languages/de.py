@@ -4555,6 +4555,7 @@
 'Regional': 'Regional',
 'Regions': 'Regionen',
 'Register As': 'Registrieren als',
+'Register Organization': 'Organisation registrieren',
 'Register Organization / Company': 'Organisation / Firma registrieren',
 'Register Person into this Camp': 'Registrieren der Person in dieses Camp',
 'Register Person into this Shelter': 'Registrieren der Person in diese Unterkunft',

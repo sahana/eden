@@ -41,7 +41,7 @@ from collections import OrderedDict
 
 from gluon import current, redirect, HTTP, URL, \
                   A, BEAUTIFY, CODE, DIV, IMG, PRE, SPAN, TABLE, TAG, TR, XML, \
-                  IS_EMPTY_OR, IS_NOT_IN_DB, IS_TIME
+                  IS_EMPTY_OR, IS_NOT_IN_DB, IS_TIME, IS_URL
 from gluon.storage import Storage
 from gluon.languages import lazyT
 from gluon.tools import addrow
@@ -781,7 +781,13 @@ def s3_url_represent(url):
 
     if not url:
         return ""
-    return A(url, _href=url, _target="_blank")
+
+    url_, error = IS_URL(allowed_schemes = ["http", "https", None],
+                         prepend_scheme = "http",
+                         )(url)
+    if error:
+        return url
+    return A(url_, _href=url_, _target="_blank")
 
 # =============================================================================
 def s3_qrcode_represent(value, row=None, show_value=True):
