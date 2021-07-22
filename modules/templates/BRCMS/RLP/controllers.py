@@ -1016,7 +1016,7 @@ class register_org(S3CustomController):
         utable = auth_settings.table_user
 
         # Page title and intro text
-        title = T("Register Organization / Company")
+        title = T("Register Organization")
 
         # Get intro text from CMS
         db = current.db
@@ -1300,7 +1300,7 @@ class register_org(S3CustomController):
 
         # Subheadings
         subheadings = ((0, T("User Account")),
-                       (5, T("Organisation / Company")),
+                       (5, T("Organisation")),
                        (8, T("Address")),
                        (9, T("Contact Information")),
                        (12, "%s / %s" % (T("Privacy"), T("Terms of Service"))),

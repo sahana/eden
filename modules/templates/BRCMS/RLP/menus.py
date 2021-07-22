@@ -82,7 +82,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Register", c="default", f="index", link=False,
                    check = not logged_in)(
                     MM("Private Citizen", args=["register"]),
-                    MM("Organisation / Company", args=["register_org"],
+                    MM("Organization", args=["register_org"],
                        check = org_registration,
                        ),
                     ),
