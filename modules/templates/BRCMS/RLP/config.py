@@ -1171,7 +1171,6 @@ def config(settings):
             keys = StringTemplateParser.keys(settings.get_pr_name_format())
             name_fields = [fn for fn in keys if fn in NAMES]
 
-            # TODO Customise for br
             if controller == "br":
 
                 ctable = s3db.br_case
@@ -1180,7 +1179,6 @@ def config(settings):
                 if not r.component:
 
                     # Module-specific field and form configuration
-                    from s3 import S3SQLInlineComponent
 
                     # Adapt fields to module context
                     multiple_orgs = s3db.br_case_read_orgs()[0]
@@ -1197,7 +1195,6 @@ def config(settings):
                     field.readable = field.writable = False
 
                     # Address
-                    # TODO Configure location selector properly
                     if settings.get_br_case_address():
                         address = S3SQLInlineComponent(
                                         "address",
@@ -1271,7 +1268,6 @@ def config(settings):
 
                     # Insert name fields in name-format order
                     NAMES = ("first_name", "middle_name", "last_name")
-                    from s3 import StringTemplateParser, S3SQLCustomForm
                     keys = StringTemplateParser.keys(settings.get_pr_name_format())
                     name_fields = [fn for fn in keys if fn in NAMES]
                     crud_fields[5:5] = name_fields

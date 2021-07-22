@@ -380,6 +380,7 @@ class BRCaseModel(S3Model):
         query = (ctable.id == record_id)
         row = db(query).select(ctable.id,
                                ctable.person_id,
+                               ctable.invalid,
                                #ctable.closed_on,
                                stable.is_closed,
                                left = left,
@@ -389,7 +390,7 @@ class BRCaseModel(S3Model):
             return
         case = row.br_case
 
-        if row.br_case_status.is_closed:
+        if row.br_case_status.is_closed or case.invalid:
 
             # TODO Update end date in case
             #if row.br_case_status.is_closed:
