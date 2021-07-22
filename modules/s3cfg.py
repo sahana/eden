@@ -2961,6 +2961,13 @@ class S3Config(Storage):
         """
         return self.br.get("id_card_export_roles")
 
+    def get_br_case_global_default_org(self):
+        """
+            All cases belong to the global default organisation,
+            even if the user could create cases for other orgs
+        """
+        return self.br.get("case_global_default_org", False)
+
     def get_br_case_hide_default_org(self):
         """
             Hide the organisation field in cases if only one allowed

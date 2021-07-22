@@ -206,7 +206,10 @@ class BRCaseModel(S3Model):
         #
 
         # Case assignment options
-        default_organisation = settings.get_org_default_organisation()
+        if settings.get_br_case_global_default_org():
+            default_organisation = settings.get_org_default_organisation()
+        else:
+            default_organisation = None
         case_manager = settings.get_br_case_manager()
 
         # Household size tracking
@@ -386,13 +389,30 @@ class BRCaseModel(S3Model):
             return
         case = row.br_case
 
-        # Update closed_on date TODO
-        #if row.br_case_status.is_closed:
-        #    if not case.closed_on:
-        #        case.update_record(closed_on = current.request.utcnow.date())
-        #elif case.closed_on:
-        #    case.update_record(closed_on = None)
+        if row.br_case_status.is_closed:
 
+            # TODO Update end date in case
+            #if row.br_case_status.is_closed:
+            #    if not case.closed_on:
+            #        case.update_record(closed_on = current.request.utcnow.date())
+            #elif case.closed_on:
+            #    case.update_record(closed_on = None)
+
+            atable = s3db.br_case_activity
+            stable = s3db.br_case_activity_status
+
+            default_closure = br_case_activity_default_status(closing=True)
+            if default_closure:
+                join = stable.on((stable.id == atable.status_id) & \
+                                 (stable.is_closed == False))
+                query = (atable.person_id == case.person_id) & \
+                        (atable.deleted == False)
+                open_activities = db(query).select(atable.id,
+                                                   join = join,
+                                                   )
+                activity_ids = {row.id for row in open_activities}
+                db(atable.id.belongs(activity_ids)).update(status_id = default_closure,
+                                                           )
         # Get the person ID
         person_id = case.person_id
 
@@ -501,6 +521,11 @@ class BRCaseActivityModel(S3Model):
                            default = False,
                            label = T("Closes Activity"),
                            represent = s3_yes_no_represent,
+                           ),
+                     Field("is_default_closed", "boolean",
+                           # typically for "obsolete" type of status
+                           default = False,
+                           label = T("Is default closure status"),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -903,6 +928,7 @@ class BRCaseActivityModel(S3Model):
         """
             Onaccept routine for activity statuses:
             - only one status can be the default
+            - only one status can be the default closure
 
             @param form: the FORM
         """
@@ -915,10 +941,19 @@ class BRCaseActivityModel(S3Model):
         if not record_id:
             return
 
+        update = {}
+
         # Ensure that there is only one default status
         if "is_default" in form_vars and form_vars.is_default:
+            update["is_default"] = False
+
+        # Ensure that there is only one default closure status
+        if "is_default_closed" in form_vars and form_vars.is_default_closed:
+            update["is_default_closed"] = False
+
+        if update:
             table = current.s3db.br_case_activity_status
-            current.db(table.id != record_id).update(is_default = False)
+            current.db(table.id != record_id).update(**update)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3292,8 +3327,11 @@ def br_case_default_org():
         @returns: tuple (default_org, multiple_orgs)
     """
 
-    default_org = current.deployment_settings.get_org_default_organisation()
-    if default_org:
+    settings = current.deployment_settings
+
+    default_org = settings.get_org_default_organisation()
+    if default_org and settings.get_br_case_global_default_org():
+        # All cases are linked to the global default organisation
         return default_org, False
 
     auth = current.auth
@@ -3408,30 +3446,40 @@ def br_case_status_filter_opts(closed=None):
     return OrderedDict((row.id, T(row.name)) for row in rows)
 
 # -----------------------------------------------------------------------------
-def br_case_activity_default_status():
+def br_case_activity_default_status(closing=False):
     """
         Helper to get/set the default status for case activities
+
+        @param closing: return the default closure status
 
         @return: the default status_id
     """
 
     s3db = current.s3db
 
+    stable = s3db.br_case_activity_status
     atable = s3db.br_case_activity
+
     field = atable.status_id
+    if closing:
+        default = None
+        flag = stable.is_default_closed
+    else:
+        default = field.default
+        flag = stable.is_default
 
-    default = field.default
     if not default:
-
         # Look up the default status
-        stable = s3db.br_case_activity_status
-        query = (stable.is_default == True) & \
-                (stable.deleted != True)
-        row = current.db(query).select(stable.id, limitby=(0, 1)).first()
-
+        query = (flag == True) & (stable.deleted != True)
+        row = current.db(query).select(stable.id,
+                                       cache = s3db.cache,
+                                       limitby = (0, 1),
+                                       ).first()
         if row:
-            # Set as field default in case table
-            default = field.default = row.id
+            default = row.id
+            if not closing:
+                # Set as field default in case table
+                field.default = default
 
     return default
 

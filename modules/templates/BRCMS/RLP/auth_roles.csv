@@ -43,27 +43,11 @@ AUTHENTICATED,Authenticated,,,,,pr_contact,CREATE,READ|UPDATE|DELETE,
 AUTHENTICATED,Authenticated,,,,,pr_contact_emergency,CREATE,READ|UPDATE|DELETE,
 AUTHENTICATED,Authenticated,,,,,pr_person,,READ|UPDATE,
 AUTHENTICATED,Authenticated,,,,,pr_person_details,CREATE,READ|UPDATE|DELETE,
-CASE_MANAGER,Case Manager,,,br,activities,,READ,,any
-CASE_MANAGER,Case Manager,,,br,case_activity,,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,br,offers,,READ,,any
-CASE_MANAGER,Case Manager,,,br,person,,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,br,,,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,,,br_assistance_offer,READ,,any
-CASE_MANAGER,Case Manager,,,,,br_case,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,,,br_case_activity,READ,,any
-CASE_MANAGER,Case Manager,,,,,br_case_activity,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,,,doc_document,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,,,gis_location,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,,,hrm_human_resource,READ,,
-CASE_MANAGER,Case Manager,,,,,pr_address,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,,,pr_contact,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,,,pr_contact_emergency,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,,,pr_person,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,
 CITIZEN,Private Citizen,,,br,activities,,READ,,any
 CITIZEN,Private Citizen,,,br,assistance_offer,,CREATE|READ,READ|UPDATE|DELETE,
 CITIZEN,Private Citizen,,,br,case_activity,,CREATE|READ,READ|UPDATE|DELETE,
 CITIZEN,Private Citizen,,,br,offers,,READ,,any
+CITIZEN,Private Citizen,,,br,person,,NONE,,
 CITIZEN,Private Citizen,,,br,,,READ,,
 CITIZEN,Private Citizen,,,,,br_case,READ,,
 CITIZEN,Private Citizen,,,,,br_assistance_offer,READ,,any
@@ -107,16 +91,20 @@ ORG_ADMIN,Organisation Admin,,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,false,org,,,CREATE|READ|UPDATE|DELETE,,
 RELIEF_PROVIDER,Relief Provider,,,br,activities,,READ,,any
 RELIEF_PROVIDER,Relief Provider,,,br,assistance_offer,,CREATE|READ|UPDATE|DELETE,,
+RELIEF_PROVIDER,Relief Provider,,,br,case_activity,,CREATE|READ|UPDATE|DELETE,,
 RELIEF_PROVIDER,Relief Provider,,,br,offers,,READ,,any
-RELIEF_PROVIDER,Relief Provider,,,br,,,READ,,
+RELIEF_PROVIDER,Relief Provider,,,br,person,,CREATE|READ|UPDATE|DELETE,,
+RELIEF_PROVIDER,Relief Provider,,,br,,,CREATE|READ|UPDATE|DELETE,,
 RELIEF_PROVIDER,Relief Provider,,,,,br_assistance_offer,READ,,any
 RELIEF_PROVIDER,Relief Provider,,,,,br_assistance_offer,CREATE|READ|UPDATE|DELETE,,
+RELIEF_PROVIDER,Relief Provider,,,,,br_case,CREATE|READ|UPDATE|DELETE,,
 RELIEF_PROVIDER,Relief Provider,,,,,br_case_activity,READ,,any
+RELIEF_PROVIDER,Relief Provider,,,,,br_case_activity,CREATE|READ|UPDATE|DELETE,,
 RELIEF_PROVIDER,Relief Provider,,,,,doc_document,CREATE|READ|UPDATE|DELETE,,
 RELIEF_PROVIDER,Relief Provider,,,,,gis_location,CREATE|READ|UPDATE|DELETE,,
 RELIEF_PROVIDER,Relief Provider,,,,,hrm_human_resource,READ,,
-RELIEF_PROVIDER,Relief Provider,,,,,pr_address,READ,,
-RELIEF_PROVIDER,Relief Provider,,,,,pr_contact,READ,,
-RELIEF_PROVIDER,Relief Provider,,,,,pr_contact_emergency,READ,,
-RELIEF_PROVIDER,Relief Provider,,,,,pr_person,READ,,
-RELIEF_PROVIDER,Relief Provider,,,,,pr_person_details,READ,,
+RELIEF_PROVIDER,Relief Provider,,,,,pr_address,CREATE|READ|UPDATE|DELETE,,
+RELIEF_PROVIDER,Relief Provider,,,,,pr_contact,CREATE|READ|UPDATE|DELETE,,
+RELIEF_PROVIDER,Relief Provider,,,,,pr_contact_emergency,CREATE|READ|UPDATE|DELETE,,
+RELIEF_PROVIDER,Relief Provider,,,,,pr_person,CREATE|READ|UPDATE|DELETE,,
+RELIEF_PROVIDER,Relief Provider,,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,

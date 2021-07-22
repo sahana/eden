@@ -136,6 +136,8 @@ def get_offer_filters(person_id=None):
 
         @returns: S3ResourceQuery to apply to an br_assistance_offer
                   resource, or None, if matching is not possible
+
+        # TODO move client-side
     """
 
     db = current.db

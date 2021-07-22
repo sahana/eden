@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from gluon import Field, HTTP, SQLFORM, URL, current, redirect, \
                   CRYPT, IS_EMAIL, IS_EMPTY_OR, IS_EXPR, IS_IN_SET, IS_LENGTH, IS_NOT_EMPTY, \
-                  A, BR, DIV, FORM, H3, H4, I, INPUT, LI, TABLE, TAG, TR, TD, UL, XML
+                  A, BR, DIV, FORM, H3, H4, H5, I, INPUT, LI, TABLE, TAG, TR, TD, UL, XML
 
 from gluon.storage import Storage
 
@@ -1633,13 +1633,16 @@ class approve_org(S3CustomController):
                                                                    "email": user.email,
                                                                    }
             ttable = s3db.auth_user_temp
-            temp = db(ttable.user_id == user_id).select(ttable.custom,
-                                                        limitby = (0, 1)
+            temp = db(ttable.user_id == user_id).select(ttable.id,
+                                                        ttable.custom,
+                                                        limitby = (0, 1),
                                                         ).first()
             try:
                 custom = json.loads(temp.custom)
             except JSONERRORS:
                 custom = {}
+
+            from gluon.sqlhtml import BooleanWidget, OptionsWidget, TextWidget
 
             # Organisation Name
             custom_get = custom.get
@@ -1666,7 +1669,6 @@ class approve_org(S3CustomController):
                           requires = IS_IN_SET(org_types),
                           )
             field.tablename = "approve"
-            from gluon.sqlhtml import OptionsWidget
             type_selector = OptionsWidget.widget(field, selected_type)
 
             # Org Description
@@ -1694,6 +1696,25 @@ class approve_org(S3CustomController):
             office_phone = custom_get("office_phone")
             office_email = custom_get("office_email")
             website = custom_get("website")
+
+            # Rejection Message
+            field = Field("reject_notify", "boolean",
+                          default = False,
+                          requires = None,
+                          )
+            field.tablename = "approve"
+            reject_notify = BooleanWidget.widget(field, False)
+            field = Field("reject_message", "text",
+                          requires = None,
+                          )
+            field.tablename = "approve"
+            reject_message = TextWidget.widget(field, "")
+            field = Field("reject_block", "boolean",
+                          default = True,
+                          requires = None,
+                          )
+            field.tablename = "approve"
+            reject_block = BooleanWidget.widget(field, True)
 
             if user.registration_key is None:
                 response.warning = T("Registration has previously been Approved")
@@ -1745,6 +1766,17 @@ class approve_org(S3CustomController):
                                  ),
                               TR(TD("%s:" % T("Website")),
                                  TD(strrepr(website)),
+                                 ),
+                              TR(TD(H5("%s:" % T("Upon Rejection")), _colspan="2"),
+                                 ),
+                              TR(TD("%s:" % T("Notify about Rejection")),
+                                 TD(reject_notify),
+                                 ),
+                              TR(TD("%s:" % T("Message")),
+                                 TD(reject_message),
+                                 ),
+                              TR(TD("%s:" % T("Block Email-Address")),
+                                 TD(reject_block),
                                  ),
                               ),
                         _class = "approve-form",
@@ -1860,9 +1892,41 @@ class approve_org(S3CustomController):
                     redirect(URL(c = "default", f = "index", args = ["approve_org"]))
 
                 elif rejected:
-                    user.update_record(registration_key = "rejected")
+                    if form_vars.get("reject_notify"):
+                        # Notify the applicant about the rejection and reasons
+                        message = form_vars.get("reject_message")
+                        if message and user.email:
+                            from templates.RLPPTM.notifications import CMSNotifications
+                            error = CMSNotifications.send(user.email,
+                                                          "RejectProvider",
+                                                          {"reason": message,
+                                                           },
+                                                          module = "auth",
+                                                          resource = "user",
+                                                          )
+                            if error:
+                                session.warning = "%s: %s" % (T("Rejection Notification NOT sent"), error)
+
+                    if form_vars.get("reject_block"):
+                        # Keep email to prevent another attempt
+                        email = user.email
+                    else:
+                        # Drop email address from rejected account to allow another attempt
+                        email = None
+
+                    # Drop the temp record
+                    if temp:
+                        temp.delete_record()
+                    # Mark the user account as rejected and deleted, remove names
+                    user.update_record(first_name = "",
+                                       last_name = "",
+                                       email = email,
+                                       password = uuid4().hex,
+                                       deleted = True,
+                                       registration_key = "rejected",
+                                       )
                     session.confirmation = T("Registration rejected")
-                    redirect(URL(c="default", f="index", args=["approve"]))
+                    redirect(URL(c="default", f="index", args=["approve_org"]))
 
             output = {"form": form,
                       "title": T("Approve Organization"),
