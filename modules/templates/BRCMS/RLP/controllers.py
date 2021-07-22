@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from gluon import Field, HTTP, SQLFORM, URL, current, redirect, \
                   CRYPT, IS_EMAIL, IS_EMPTY_OR, IS_EXPR, IS_IN_SET, \
-                  IS_LENGTH, IS_NOT_EMPTY, \
+                  IS_LENGTH, IS_NOT_EMPTY, IS_URL, \
                   A, BR, DIV, FORM, H3, H4, H5, I, INPUT, LI, TABLE, \
                   TAG, TD, TR, UL, XML
 
@@ -1280,6 +1280,11 @@ class register_org(S3CustomController):
                             ),
                       Field("website",
                             label = T("Website"),
+                            requires = IS_EMPTY_OR(
+                                        IS_URL(mode = "generic",
+                                               allowed_schemes = ["http", "https"],
+                                               prepend_scheme = "https",
+                                               )),
                             ),
                       # -- Privacy and Consent --
                       Field("consent",
