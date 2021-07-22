@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from gluon import Field, HTTP, SQLFORM, URL, current, redirect, \
                   CRYPT, IS_EMAIL, IS_EMPTY_OR, IS_EXPR, IS_IN_SET, IS_LENGTH, IS_NOT_EMPTY, \
-                  A, BR, DIV, FORM, H3, H4, HR, I, INPUT, LI, TABLE, TAG, TR, TD, UL, XML
+                  A, BR, DIV, FORM, H3, H4, H5, I, INPUT, LI, TABLE, TAG, TR, TD, UL, XML
 
 from gluon.storage import Storage
 
@@ -1767,7 +1767,7 @@ class approve_org(S3CustomController):
                               TR(TD("%s:" % T("Website")),
                                  TD(strrepr(website)),
                                  ),
-                              TR(TD(HR(), _colspan="2"),
+                              TR(TD(H5("%s:" % T("Upon Rejection")), _colspan="2"),
                                  ),
                               TR(TD("%s:" % T("Notify about Rejection")),
                                  TD(reject_notify),

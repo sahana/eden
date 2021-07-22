@@ -5986,6 +5986,7 @@
 'Upload translated files': 'Übersetzte Dateien hochladen',
 'Uploaded Image': 'Hochgeladenes Bild',
 'Uploaded on': 'Hochgeladen am',
+'Upon Rejection': 'Bei Abweisung',
 'Upon Request': 'Eingehende Anfrage',
 'Urban Fire': 'Siedlungsfeuer',
 'Urban area': 'Stadtgebiet / Ballungsgebiet',
