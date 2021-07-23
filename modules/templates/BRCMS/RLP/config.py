@@ -147,6 +147,12 @@ def config(settings):
     settings.org.default_organisation = LSJV
 
     settings.custom.org_registration = True
+    settings.custom.regional = ("Rheinland-Pfalz",
+                                "Nordrhein-Westfalen",
+                                "Hessen",
+                                "Baden-Württemberg",
+                                "Saarland",
+                                )
 
     # -------------------------------------------------------------------------
     # Realm Rules
@@ -511,6 +517,7 @@ def config(settings):
                     field.requires = requires.other
                 field.widget = S3LocationSelector(levels = ("L1", "L2", "L3", "L4"),
                                                   required_levels = ("L1", "L2", "L3"),
+                                                  filter_lx = settings.get_custom("regional"),
                                                   show_address = False,
                                                   show_postcode = False,
                                                   show_map = False,
@@ -746,6 +753,7 @@ def config(settings):
             field.default = get_current_location()
         field.widget = S3LocationSelector(levels = ("L1", "L2", "L3", "L4"),
                                           required_levels = ("L1", "L2", "L3"),
+                                          filter_lx = settings.get_custom("regional"),
                                           show_address = False,
                                           show_postcode = False,
                                           show_map = False,

@@ -533,6 +533,8 @@ class register(S3CustomController):
         auth_settings = auth.settings
         auth_messages = auth.messages
 
+        settings = current.deployment_settings
+
         utable = auth_settings.table_user
         passfield = auth_settings.password_field
 
@@ -566,6 +568,7 @@ class register(S3CustomController):
                             widget = S3LocationSelector(
                                         levels = ("L1", "L2", "L3", "L4"),
                                         required_levels = ("L1", "L2", "L3"),
+                                        filter_lx = settings.get_custom("regional"),
                                         show_address = True,
                                         address_required = True,
                                         show_postcode = True,

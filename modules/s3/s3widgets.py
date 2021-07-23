@@ -5100,6 +5100,7 @@ class S3LocationSelector(S3Selector):
                  required_levels = None,
                  hide_lx = True,
                  reverse_lx = False,
+                 filter_lx = None,
                  show_address = False,
                  address_required = None,
                  show_postcode = None,
@@ -5137,6 +5138,8 @@ class S3LocationSelector(S3Selector):
             @param reverse_lx: render Lx selectors in the order usually used by
                                street Addresses (lowest level first), and below the
                                address line
+            @param filter_lx: filter the top-level selectable Lx by name (tuple of names),
+                              i.e. restrict to regional
             @param show_address: show a field for street address.
                                  If the parameter is set to a string then this is used as the label.
             @param address_required: address field is mandatory
@@ -5171,6 +5174,7 @@ class S3LocationSelector(S3Selector):
         self._initlx = True
         self._levels = levels
         self._required_levels = required_levels
+        self._filter_lx = filter_lx
         self._load_levels = None
 
         self.hide_lx = hide_lx
@@ -5420,6 +5424,7 @@ class S3LocationSelector(S3Selector):
         location_dict = self._locations(levels,
                                         values,
                                         default_bounds = default_bounds,
+                                        filter_lx = self._filter_lx,
                                         lowest_lx = lowest_lx,
                                         config = config,
                                         )
@@ -5719,6 +5724,7 @@ class S3LocationSelector(S3Selector):
     def _locations(levels,
                    values,
                    default_bounds = None,
+                   filter_lx = None,
                    lowest_lx = None,
                    config = None,
                    ):
@@ -5729,6 +5735,7 @@ class S3LocationSelector(S3Selector):
             @param values: the current values
             @param default_bounds: the default bounds (if already known, e.g.
                                    single-country deployment)
+            @param filter_lx: filter the top-level Lx by names
             @param lowest_lx: the lowest un-selectable Lx level (to determine
                               default bounds if not passed in)
             @param config: the current GIS config
@@ -5754,6 +5761,11 @@ class S3LocationSelector(S3Selector):
         # NB (level != None) is to handle Missing Levels
         gtable = s3db.gis_location
 
+        if "L0" not in levels and isinstance(filter_lx, (tuple, list, set)):
+            top_level = min(levels)
+        else:
+            filter_lx = top_level = None
+
         # @todo: DRY this:
         if "L0" in levels:
             query = (gtable.level == "L0")
@@ -5763,6 +5775,8 @@ class S3LocationSelector(S3Selector):
                 query &= ((ttable.tag == "ISO2") & \
                           (ttable.value.belongs(countries)) & \
                           (ttable.location_id == gtable.id))
+            if filter_lx and top_level == "L0":
+                query &= gtable.name.belongs(filter_lx)
             if L0 and "L1" in levels:
                 query |= (gtable.level != None) & \
                          (gtable.parent == L0)
@@ -5781,6 +5795,8 @@ class S3LocationSelector(S3Selector):
         elif L0 and "L1" in levels:
             query = (gtable.level != None) & \
                     (gtable.parent == L0)
+            if filter_lx and top_level == "L1":
+                query &= gtable.name.belongs(filter_lx)
             if L1 and "L2" in levels:
                 query |= (gtable.level != None) & \
                          (gtable.parent == L1)
@@ -5796,6 +5812,8 @@ class S3LocationSelector(S3Selector):
         elif L1 and "L2" in levels:
             query = (gtable.level != None) & \
                     (gtable.parent == L1)
+            if filter_lx and top_level == "L2":
+                query &= gtable.name.belongs(filter_lx)
             if L2 and "L3" in levels:
                 query |= (gtable.level != None) & \
                          (gtable.parent == L2)
@@ -5808,6 +5826,8 @@ class S3LocationSelector(S3Selector):
         elif L2 and "L3" in levels:
             query = (gtable.level != None) & \
                     (gtable.parent == L2)
+            if filter_lx and top_level == "L3":
+                query &= gtable.name.belongs(filter_lx)
             if L3 and "L4" in levels:
                 query |= (gtable.level != None) & \
                          (gtable.parent == L3)
@@ -5817,12 +5837,16 @@ class S3LocationSelector(S3Selector):
         elif L3 and "L4" in levels:
             query = (gtable.level != None) & \
                     (gtable.parent == L3)
+            if filter_lx and top_level == "L4":
+                query &= gtable.name.belongs(filter_lx)
             if L4 and "L5" in levels:
                 query |= (gtable.level != None) & \
                          (gtable.parent == L4)
         elif L4 and "L5" in levels:
             query = (gtable.level != None) & \
                     (gtable.parent == L4)
+            if filter_lx and top_level == "L5":
+                query &= gtable.name.belongs(filter_lx)
         else:
             query = None
 
