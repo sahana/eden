@@ -388,9 +388,16 @@ def config(settings):
 
         table = s3db.br_assistance_offer
 
+        subheadings = {"need_id": T("Offer"),
+                       "location_id": T("Place where help is provided"),
+                       "contact_name": T("Contact Information"),
+                       "availability": T("Availability and Status"),
+                       }
+
         s3db.configure("br_assistance_offer",
                        # Default sort order: newest first
                        orderby = "br_assistance_offer.date desc, br_assistance_offer.created_on desc",
+                       subheadings = subheadings,
                        )
 
         # Maintain consistent order for multiple assistance offers
@@ -536,6 +543,7 @@ def config(settings):
                     # At least phone number is required
                     # - TODO default from user if CITIZEN
                     field = table.contact_phone
+                    field.label = T("Phone #")
                     requires = field.requires
                     if isinstance(requires, IS_EMPTY_OR):
                         field.requires = requires.other

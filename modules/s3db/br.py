@@ -1485,14 +1485,6 @@ class BRAssistanceModel(S3Model):
                            represent = s3_yes_no_represent,
                            ),
                      self.gis_location_id(), # Location of the offer (if housing)
-                     s3_date(label = T("Available from"),
-                             default = "now",
-                             # TODO setmin
-                             ),
-                     s3_date("end_date",
-                             label = T("Available until"),
-                             # TODO setmax
-                             ),
                      Field("contact_name",
                            label = T("Contact Name"),
                            represent = lambda v, row=None: v if v else "-",
@@ -1514,6 +1506,14 @@ class BRAssistanceModel(S3Model):
                            represent = S3Represent(options=dict(offer_availability),
                                                    ),
                            ),
+                     s3_date(label = T("Available from"),
+                             default = "now",
+                             # TODO setmin
+                             ),
+                     s3_date("end_date",
+                             label = T("Available until"),
+                             # TODO setmax
+                             ),
                      Field("status",
                            default = "NEW",
                            label = T("Status"),
