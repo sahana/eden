@@ -388,9 +388,16 @@ def config(settings):
 
         table = s3db.br_assistance_offer
 
+        subheadings = {"need_id": T("Offer"),
+                       "location_id": T("Place where help is provided"),
+                       "contact_name": T("Contact Information"),
+                       "availability": T("Availability and Status"),
+                       }
+
         s3db.configure("br_assistance_offer",
                        # Default sort order: newest first
                        orderby = "br_assistance_offer.date desc, br_assistance_offer.created_on desc",
+                       subheadings = subheadings,
                        )
 
         # Maintain consistent order for multiple assistance offers
@@ -536,6 +543,7 @@ def config(settings):
                     # At least phone number is required
                     # - TODO default from user if CITIZEN
                     field = table.contact_phone
+                    field.label = T("Phone #")
                     requires = field.requires
                     if isinstance(requires, IS_EMPTY_OR):
                         field.requires = requires.other
@@ -1246,7 +1254,7 @@ def config(settings):
                     if isinstance(requires, IS_EMPTY_OR):
                         field.requires = requires.other
 
-                    # Custom CRUD form
+                    # CRUD form
                     crud_fields = ["case.date",
                                    "case.organisation_id",
                                    "case.human_resource_id",
@@ -1269,7 +1277,23 @@ def config(settings):
                                    "case.invalid",
                                    ]
 
-                    # Custom list fields
+                    # Filters
+                    from s3 import S3LocationFilter, \
+                                   S3OptionsFilter, \
+                                   S3TextFilter, \
+                                   s3_get_filter_opts
+                    filter_widgets = [S3TextFilter(["pe_label",
+                                                    "last_name",
+                                                    "first_name",
+                                                    ],
+                                                   label = T("Search"),
+                                                   ),
+                                      S3LocationFilter("address.location_id",
+                                                       levels = ("L2", "L3"),
+                                                       ),
+                                      ]
+
+                    # List fields
                     list_fields = ["pe_label",
                                    # +name fields
                                    "case.date",
@@ -1278,6 +1302,10 @@ def config(settings):
 
                     # Add organisation if user can see cases from multiple orgs
                     if multiple_orgs:
+                        filter_widgets.insert(-1,
+                            S3OptionsFilter("case.organisation_id",
+                                            options = s3_get_filter_opts("org_organisation"),
+                                            ))
                         list_fields.insert(-2, "case.organisation_id")
 
                     # Insert name fields in name-format order
@@ -1288,6 +1316,7 @@ def config(settings):
                     list_fields[1:1] = name_fields
 
                     resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
+                                       filter_widgets = filter_widgets,
                                        list_fields = list_fields,
                                        )
 
