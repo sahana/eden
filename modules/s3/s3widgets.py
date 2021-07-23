@@ -5761,7 +5761,7 @@ class S3LocationSelector(S3Selector):
         # NB (level != None) is to handle Missing Levels
         gtable = s3db.gis_location
 
-        if "L0" not in levels and isinstance(filter_lx, (tuple, list, set)):
+        if isinstance(filter_lx, (tuple, list, set)):
             top_level = min(levels)
         else:
             filter_lx = top_level = None
