@@ -130,6 +130,7 @@ def person():
 
                 # S3SQLCustomForm breaks popup return, so disable
                 s3db.clear_config("pr_person", "crud_form")
+
             if r.component:
                 component_name = r.component_name
                 if component_name == "config":

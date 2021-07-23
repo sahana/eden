@@ -7550,7 +7550,8 @@ def hrm_rheader(r, tabs=None, profile=False):
                                             "pr_person",
                                             _class = "rheader-avatar",
                                             ),
-                        _href = URL(f="person", args=[record_id, "image"],
+                        _href = URL(f="person",
+                                    args = [record_id, "image", "create"],
                                     vars = get_vars,
                                     ),
                         ),
@@ -8883,35 +8884,45 @@ def hrm_person_controller(**attr):
                 elif component_name == "group_membership":
                     hrm_configure_pr_group_membership()
 
+                elif component_name == "image":
+                    if r.method == "create":
+                        # Coming from the rheader...simplify UI
+                        table = s3db.pr_image
+                        f = table.profile
+                        f.default = True
+                        f.readable = f.writable = False
+                        table.image.comment = None
+                        table.type.readable = table.type.writable = False
+                        table.url.readable = table.url.writable = False
+                        table.description.readable = table.description.writable = False
+
                 elif component_name == "salary":
                     hrm_configure_salary(r)
 
                 elif component_name == "user":
                     r.component.configure(deletable = False)
-                    language = db.auth_user.language
-                    languages = settings.get_L10n_languages()
-                    if len(languages) > 1:
-                        language.label = T("Language")
-                        language.comment = DIV(_class = "tooltip",
-                                               _title = "%s|%s" % (T("Language"),
-                                                                   T("The language you wish the site to be displayed in.")
-                                                                   ),
-                                               )
-                        #from s3 import IS_ISO639_2_LANGUAGE_CODE
-                        requires = IS_ISO639_2_LANGUAGE_CODE(sort = True,
-                                                             translate = True,
-                                                             zero = None,
-                                                             )
-                        language.represent = requires.represent
-                        language.requires = requires
-                        # Default the profile language to the one currently active
-                        language.default = T.accepted_language
-                        if settings.get_ui_multiselect_widget():
-                            #from s3 import S3MultiSelectWidget
-                            language.widget = S3MultiSelectWidget(multiple=False)
-                    else:
-                        language.default = list(languages.keys())[0]
-                        language.readable = language.writable = False
+                    current.auth.configure_user_fields()
+                    utable = db.auth_user
+                    # Don't allow password changes here (doesn't require old password)
+                    utable.password.readable = utable.password.writable = False
+                    # User cannot amend their own Org/Site/Link
+                    f = utable.organisation_id
+                    f.writable = False
+                    f.comment = None
+                    f = utable.site_id
+                    f.writable = False
+                    f.comment = None
+                    f = utable.link_user_to
+                    f.writable = False
+                    f.comment = None
+                    def auth_user_onaccept(form):
+                        language = form.vars.get("language")
+                        if language:
+                            T.force(language)
+                            session.s3.language = language
+                    s3db.configure("auth_user",
+                                   onaccept = auth_user_onaccept
+                                   )
 
             if method == "record" or r.component_name == "human_resource":
                 table = s3db.hrm_human_resource
@@ -8932,6 +8943,7 @@ def hrm_person_controller(**attr):
                 #                  filterby="organisation_id",
                 #                  filter_opts=(session.s3.hrm.org,),
                 #                  ))
+
             elif method == "cv" or r.component_name == "training":
                 list_fields = ["course_id",
                                "grade",

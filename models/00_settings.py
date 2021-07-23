@@ -57,11 +57,11 @@ for u in messages:
         globals()[u] = T(messages[u])
 
 # CRUD Labels
-s3.crud_labels = Storage(READ=READ,
-                         UPDATE=UPDATE,
-                         DELETE=DELETE,
-                         COPY=COPY,
-                         NONE=NONE,
+s3.crud_labels = Storage(READ = READ,
+                         UPDATE = UPDATE,
+                         DELETE = DELETE,
+                         COPY = COPY,
+                         NONE = NONE,
                          )
 
 # Error Messages

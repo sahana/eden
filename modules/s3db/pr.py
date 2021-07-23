@@ -4332,7 +4332,6 @@ class PRImageModel(S3Model):
             9:T("other")
         }
 
-
         def get_file(table):
             """ Decorator to return a table-specific file-callback """
 
@@ -4341,8 +4340,15 @@ class PRImageModel(S3Model):
 
                 if len(request.args) < 3:
                     return None
-                query = (table.id == request.args[2])
-                record = db(query).select(table.image, limitby = (0, 1)).first()
+                try:
+                    record_id = int(request.args[2])
+                except ValueError:
+                    # Probably a 'create' method
+                    return None
+                query = (table.id == record_id)
+                record = db(query).select(table.image,
+                                          limitby = (0, 1)
+                                          ).first()
                 return record.image if record else None
 
             return cb
@@ -4380,9 +4386,7 @@ class PRImageModel(S3Model):
                           Field("type", "integer",
                                 default = 1,
                                 label = T("Image Type"),
-                                represent = lambda opt: \
-                                                pr_image_type_opts.get(opt,
-                                                   current.messages.UNKNOWN_OPT),
+                                represent = S3Represent(options = pr_image_type_opts),
                                 requires = IS_IN_SET(pr_image_type_opts,
                                                      zero = None,
                                                      ),

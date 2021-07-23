@@ -251,6 +251,7 @@ class RequestModel(S3Model):
         transit_status =  settings.get_req_show_quantity_transit()
         use_commit = settings.get_req_use_commit()
         use_req_number = settings.get_req_use_req_number()
+        use_workflow = settings.get_req_workflow()
 
         # Request Types
         req_types_deployed = settings.get_req_req_type()
@@ -300,6 +301,18 @@ class RequestModel(S3Model):
                                        vars = {"child": "site_id"},
                                        title = T("Create Facility"),
                                        )
+
+        # Workflow options
+        workflow_opts = {1: T("Draft"),
+                         2: T("Submitted"),
+                         3: T("Approved"),
+                         4: T("Fulfilled"),
+                         5: T("Cancelled"),
+                         }
+        if use_workflow:
+            workflow_default = 1 # Draft
+        else:
+            workflow_default = 3 # Approved
 
         # ---------------------------------------------------------------------
         # Request Reference
@@ -451,6 +464,14 @@ class RequestModel(S3Model):
                                     #default = auth.s3_logged_in_person(),
                                     label = T("Received By"),
                                     ),
+                          # Workflow Status Status
+                          Field("workflow_status",
+                                default = workflow_default,
+                                requires = IS_IN_SET(workflow_opts),
+                                represent = S3Represent(options = workflow_opts),
+                                readable = use_workflow,
+                                writable = False,
+                                ),
                           # Simple Status
                           # - currently just enabled in customise_req_fields() workflow
                           req_status(readable = False,
@@ -4795,8 +4816,9 @@ def req_rheader(r, check_page=False):
         s3 = current.response.s3
         settings = current.deployment_settings
 
-        use_commit = settings.get_req_use_commit()
         is_template = record.is_template
+        use_commit = settings.get_req_use_commit()
+        use_workflow = settings.get_req_workflow()
 
         rtype = record.type
         if rtype == 1 and settings.has_module("inv"):
@@ -4846,6 +4868,32 @@ def req_rheader(r, check_page=False):
                 if (items and site_id) or \
                    (people and organisation_id and settings.get_req_commit_people()):
                     tabs.append((T("Check"), "check"))
+                if use_workflow:
+                    workflow_status = record.workflow_status
+                    if workflow_status == 1: # Draft
+                        submit_btn = A(T("Submit for Approval"),
+                                       _href = URL(c = "req",
+                                                   f = "req",
+                                                   args = [r.id, "submit"]
+                                                   ),
+                                       _id = "req-submit",
+                                       _class = "action-btn",
+                                       )
+                        s3.jquery_ready.append('''S3.confirmClick('.req-submit','%s')''' \
+                                % T("Are you sure you want to submit this request?"))
+                        s3.rfooter = TAG[""](submit_btn)
+                    elif workflow_status == 2: # Submitted
+                        approve_btn = A(T("Approve"),
+                                       _href = URL(c = "req",
+                                                   f = "req",
+                                                   args = [r.id, "approve"]
+                                                   ),
+                                       _id = "req-approve",
+                                       _class = "action-btn",
+                                       )
+                        s3.jquery_ready.append('''S3.confirmClick('.req-approve','%s')''' \
+                                % T("Are you sure you want to approve this request?"))
+                        s3.rfooter = TAG[""](approve_btn)
 
         if not check_page:
             rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -4859,8 +4907,8 @@ def req_rheader(r, check_page=False):
                             _href = URL(f = "send_commit",
                                         args = [r.component_id]
                                         ),
-                            _id = "send_commit",
-                            _class = "action-btn"
+                            _id = "send-commit",
+                            _class = "action-btn",
                             )
             s3.rfooter = TAG[""](prepare_btn)
 
@@ -5177,8 +5225,8 @@ class req_CheckMethod(S3Method):
             #if use_commit:
             #    row.insert(3, TH(table.quantity_commit.label))
             items = TABLE(THEAD(row),
-                          _id="list",
-                          _class="dataTable display",
+                          _id = "list",
+                          _class = "dataTable display",
                           )
             if site_id:
                 stable = s3db.org_site

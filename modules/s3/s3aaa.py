@@ -1713,10 +1713,10 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
 
     # -------------------------------------------------------------------------
     def profile(self,
-                next=DEFAULT,
-                onvalidation=DEFAULT,
-                onaccept=DEFAULT,
-                log=DEFAULT,
+                next = DEFAULT,
+                onvalidation = DEFAULT,
+                onaccept = DEFAULT,
+                log = DEFAULT,
                 ):
         """
             returns a form that lets the user change his/her profile
@@ -2087,13 +2087,14 @@ $.filterOptionsS3({
                 else:
                     requires = IS_ONE_OF(db, "org_site.site_id",
                                          site_represent,
-                                         orderby="org_site.name",
-                                         sort=True)
+                                         orderby = "org_site.name",
+                                         sort = True)
                 #from .s3widgets import S3SiteAutocompleteWidget
                 #field.widget = S3SiteAutocompleteWidget()
-                field.comment = DIV(_class="tooltip",
-                                    _title="%s|%s" % (T("Facility"),
-                                                      T("Select the default site.")))
+                field.comment = DIV(_class = "tooltip",
+                                    _title = "%s|%s" % (T("Facility"),
+                                                        T("Select the default site.")
+                                                        ))
                 if site_required:
                     field.requires = requires
                 else:
@@ -2127,9 +2128,10 @@ $.filterOptionsS3({
                 #    link_user_to.widget = S3MultiSelectWidget()
                 #else:
                 link_user_to.widget = SQLFORM.widgets.checkboxes.widget
-                link_user_to.comment = DIV(_class="tooltip",
-                                           _title="%s|%s" % (link_user_to.label,
-                                                             T("Will create and link your user account to the following records")))
+                link_user_to.comment = DIV(_class = "tooltip",
+                                           _title = "%s|%s" % (link_user_to.label,
+                                                               T("Will create and link your user account to the following records")
+                                                               ))
 
     # -------------------------------------------------------------------------
     def s3_import_prep(self, data):

@@ -41,6 +41,16 @@ class S3MainMenuLayout(S3NavigationItem):
         T = current.T
         auth = current.auth
         has_role = auth.s3_has_role
+        request = current.request
+        c = request.controller
+        f = request.function
+
+        # Inject JavaScript
+        s3 = current.response.s3
+        s3.scripts.append("/%s/static/themes/RMSAmericas/js/nav.js" % request.application)
+        # Use tooltip-f class to avoid clash with widgets.css
+        # Remove nub
+        s3.js_foundation = '''{tooltip:{tooltip_class:'.tooltip-f',tip_template:function(selector,content){var tooltipClass='';if(!$('div[data-selector="'+selector+'"]').hasClass('hd')){tooltipClass=' tooltip-m'};return '<span data-selector="'+selector+'" class="'+Foundation.libs.tooltip.settings.tooltip_class.substring(1)+tooltipClass+'">'+content+'</span>'}}}'''
 
         settings = ""
 
@@ -54,17 +64,6 @@ class S3MainMenuLayout(S3NavigationItem):
             side_menu_control = ""
             module_logo = ""
         else:
-            request = current.request
-            c = request.controller
-            f = request.function
-
-            # Inject JavaScript
-            s3 = current.response.s3
-            s3.scripts.append("/%s/static/themes/RMSAmericas/js/nav.js" % request.application)
-            # Use tooltip-f class to avoid clash with widgets.css
-            # Remove nub
-            s3.js_foundation = '''{tooltip:{tooltip_class:'.tooltip-f',tip_template:function(selector,content){var tooltipClass='';if(!$('div[data-selector="'+selector+'"]').hasClass('hd')){tooltipClass=' tooltip-m'};return '<span data-selector="'+selector+'" class="'+Foundation.libs.tooltip.settings.tooltip_class.substring(1)+tooltipClass+'">'+content+'</span>'}}}'''
-
             # Side-menu control
             if current.menu.options is None:
                 # Don't show control as no side-menu
@@ -326,10 +325,7 @@ class S3MainMenuLayout(S3NavigationItem):
                    _role = "button",
                    )
         user_menu = DIV(UL(LI(A(T("Profile"),
-                                _href = URL(c="hrm", f="person",
-                                            args = str(auth.s3_logged_in_person()),
-                                            vars = {"profile": 1},
-                                            ),
+                                _href = URL(c="default", f="person"),
                                 ),
                               ),
                            LI(A(T("Change Password"),
