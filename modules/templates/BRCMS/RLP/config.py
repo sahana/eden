@@ -466,7 +466,7 @@ def config(settings):
 
                 # Restrict data formats
                 allowed = ("html", "iframe", "popup", "aadata", "plain", "geojson", "pdf", "xls")
-                if r.method == "report":
+                if r.method in ("report", "filter"):
                     allowed += ("json",)
                 settings.ui.export_formats = ("pdf", "xls")
                 if r.representation not in allowed:
@@ -879,7 +879,7 @@ def config(settings):
 
                 # Restrict data formats
                 allowed = ("html", "iframe", "popup", "aadata", "plain", "geojson", "pdf", "xls")
-                if r.method == "report":
+                if r.method in ("report", "filter"):
                     allowed += ("json",)
                 settings.ui.export_formats = ("pdf", "xls")
                 if r.representation not in allowed:
