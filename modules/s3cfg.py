@@ -5798,8 +5798,8 @@ class S3Config(Storage):
         """
         return self.req.get("copyable", False)
 
-    def get_req_document_filing(self):
-        return self.req.get("document_filing", False)
+    #def get_req_document_filing(self):
+    #    return self.req.get("document_filing", False)
 
     def get_req_recurring(self):
         """

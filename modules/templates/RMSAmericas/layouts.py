@@ -401,4 +401,79 @@ class S3AboutMenuLayout(S3NavigationItem):
 # Shortcut
 MA = S3AboutMenuLayout
 
+# =============================================================================
+class S3OrgMenuLayout(S3NavigationItem):
+    """
+        Layout for the organisation-specific menu
+        - used by the custom PDF Form for REQ
+    """
+
+    @staticmethod
+    def layout(item):
+        """
+            @ToDo: Migrate to s3db.org_logo_represent
+        """
+
+        name = "IFRC"
+        logo = None
+
+        # Lookup Root Organisation name & Logo
+        root_org = current.auth.root_org()
+        if root_org:
+            db = current.db
+            s3db = current.s3db
+            language = current.session.s3.language
+            if language == current.deployment_settings.get_L10n_default_language():
+                l10n = None
+            else:
+                ltable = s3db.org_organisation_name
+                query = (ltable.organisation_id == root_org) & \
+                        (ltable.language == language)
+                l10n = db(query).select(ltable.name_l10n,
+                                        ltable.acronym_l10n,
+                                        limitby = (0, 1),
+                                        cache = s3db.cache,
+                                        ).first()
+            table = s3db.org_organisation
+            record = db(table.id == root_org).select(table.name,
+                                                     #table.acronym,
+                                                     table.logo,
+                                                     limitby = (0, 1),
+                                                     cache = s3db.cache,
+                                                     ).first()
+            if l10n:
+                #if l10n.acronym_l10n:
+                    #name = _name = l10n.acronym_l10n
+                #else:
+                name = l10n.name_l10n
+
+            if record:
+                if not l10n:
+                    #if record.acronym:
+                        #name = _name = record.acronym
+                    #else:
+                    name = record.name
+
+                if record.logo:
+                    size = (60, None)
+                    image = s3db.pr_image_library_represent(record.logo, size=size)
+                    url_small = URL(c="default", f="download", args=image)
+                    alt = "%s logo" % name
+                    logo = IMG(_src=url_small, _alt=alt, _width=60)
+
+        if not logo:
+            # Default to generic IFRC
+            logo = IMG(_src = "/%s/static/themes/RMSAmericas/img/logo_small.png" %
+                              current.request.application,
+                       _alt = current.T("Red Cross/Red Crescent"),
+                       _width = 60,
+                       )
+
+        # Note: render using current.menu.org.render()[0] + current.menu.org.render()[1]
+        return (name, logo)
+
+# -----------------------------------------------------------------------------
+# Shortcut
+OM = S3OrgMenuLayout
+
 # END =========================================================================

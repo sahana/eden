@@ -472,14 +472,14 @@ class RequestModel(S3Model):
                                      label = T("Fulfil. Status"),
                                      writable = req_status_writable,
                                      ),
-                          req_status("filing_status",
-                                     label = T("Filing Status"),
-                                     comment = DIV(_class="tooltip",
-                                                   _title="%s|%s" % (T("Filing Status"),
-                                                                     T("Have all the signed documents for this shipment been filed?"))),
-                                     readable = settings.get_req_document_filing(),
-                                     writable = False,
-                                     ),
+                          #req_status("filing_status",
+                          #           label = T("Filing Status"),
+                          #           comment = DIV(_class="tooltip",
+                          #                         _title="%s|%s" % (T("Filing Status"),
+                          #                                           T("Have all the signed documents for this shipment been filed?"))),
+                          #           readable = settings.get_req_document_filing(),
+                          #           writable = False,
+                          #           ),
                           Field("closed", "boolean",
                                 default = False,
                                 label = T("Closed"),
@@ -4828,21 +4828,19 @@ def req_rheader(r, check_page=False):
                 user = current.auth.user
                 site_id = user.site_id if user else None
                 ritable = s3db.req_req_item
-                probably_complete = db(ritable.req_id == record.id).select(
-                                            ritable.id,
-                                            limitby = (0, 1),
-                                            )
+                possibly_complete = db(ritable.req_id == record.id).select(ritable.id,
+                                                                           limitby = (0, 1),
+                                                                           )
             elif people:
                 user = current.auth.user
                 organisation_id = user.organisation_id if user else None
                 rstable = s3db.req_req_skill
-                probably_complete = db(rstable.req_id == record.id).select(
-                                            rstable.id,
-                                            limitby = (0, 1),
-                                            )
+                possibly_complete = db(rstable.req_id == record.id).select(rstable.id,
+                                                                           limitby = (0, 1),
+                                                                           )
             else:
-                probably_complete = True
-            if probably_complete:
+                possibly_complete = True
+            if possibly_complete:
                 if use_commit:
                     tabs.append((T("Commitments"), "commit"))
                 if (items and site_id) or \
@@ -4872,30 +4870,28 @@ def req_rheader(r, check_page=False):
         if settings.get_req_show_quantity_transit() and not is_template:
             transit_status = s3db.req_status_opts.get(record.transit_status,
                                                       "")
-            try:
-                if site_id and \
-                   record.transit_status in [REQ_STATUS_PARTIAL, REQ_STATUS_COMPLETE] and \
-                   record.fulfil_status in [None, REQ_STATUS_NONE, REQ_STATUS_PARTIAL]:
-                    pass
-                    # @ToDo: Create this function!
-                    #site_record = db(stable.site_id == site_id).select(stable.uuid,
-                    #                                                   stable.instance_type,
-                    #                                                   limitby=(0, 1)).first()
-                    #instance_type = site_record.instance_type
-                    #table = s3db[instance_type]
-                    #query = (table.uuid == site_record.uuid)
-                    #instance_id = db(query).select(table.id,
-                    #                               limitby=(0, 1)).first().id
-                    #transit_status = SPAN(transit_status,
-                    #                      A(T("Incoming Shipments"),
-                    #                        _href = URL(c = instance_type.split("_")[0],
-                    #                                    f = "incoming",
-                    #                                    vars = {"viewing" : "%s.%s" % (instance_type, instance_id)}
-                    #                                    )
-                    #                        )
-                    #                      )
-            except:
-                pass
+            # @ToDo: Create the 'incoming' function if we need this!
+            #if site_id and \
+            #   record.transit_status in [REQ_STATUS_PARTIAL, REQ_STATUS_COMPLETE] and \
+            #   record.fulfil_status in [None, REQ_STATUS_NONE, REQ_STATUS_PARTIAL]:
+            #   site_record = db(stable.site_id == site_id).select(stable.uuid,
+            #                                                      stable.instance_type,
+            #                                                      limitby = (0, 1)
+            #                                                      ).first()
+            #   instance_type = site_record.instance_type
+            #   table = s3db[instance_type]
+            #   query = (table.uuid == site_record.uuid)
+            #   instance_id = db(query).select(table.id,
+            #                                  limitby = (0, 1)
+            #                                  ).first().id
+            #   transit_status = SPAN(transit_status,
+            #                         A(T("Incoming Shipments"),
+            #                           _href = URL(c = instance_type.split("_")[0],
+            #                                       f = "incoming",
+            #                                       vars = {"viewing" : "%s.%s" % (instance_type, instance_id)}
+            #                                       )
+            #                           )
+            #                      )
             transit_status = (TH("%s: " % T("Transit Status")),
                               transit_status)
         else:
@@ -4909,7 +4905,9 @@ def req_rheader(r, check_page=False):
                           )
         else:
             headerTR = TR(TD(settings.get_req_form_name(),
-                          _colspan=2, _class="pdf_title"),
+                             _colspan = 2,
+                             _class = "pdf_title",
+                             ),
                           )
         if site_id:
             org_id = db(stable.site_id == site_id).select(stable.organisation_id,

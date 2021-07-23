@@ -683,7 +683,7 @@ def config(settings):
     settings.req.inline_forms = False
     settings.req.req_type = ["Stock"]
     settings.req.use_commit = False
-    settings.req.document_filing = True
+    #settings.req.document_filing = True
     # Should Requests ask whether Transportation is required?
     settings.req.ask_transport = True
     settings.req.pack_values = False
