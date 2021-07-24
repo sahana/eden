@@ -86,6 +86,7 @@ class S3MainMenu(default.S3MainMenu):
                        check = org_registration,
                        ),
                     ),
+                MM("Overview", c="default", f="index", args=["overview"]),
                 ]
 
     # -------------------------------------------------------------------------

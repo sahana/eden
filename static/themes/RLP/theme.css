@@ -2967,3 +2967,27 @@ body.rtl .event-type-header {
   border: 2px solid #668b99;
   padding: 0.8rem;
 }
+
+/* line 473, ../scss/theme/_misc.scss */
+.overview-totals,
+.overview-intro,
+.overview-charts,
+.overview-table {
+  text-align: center;
+}
+/* line 478, ../scss/theme/_misc.scss */
+.overview-totals h2,
+.overview-intro h2,
+.overview-charts h2,
+.overview-table h2 {
+  font-size: 1.2rem !important;
+  background-color: transparent !important;
+}
+
+/* line 484, ../scss/theme/_misc.scss */
+.overview-totals p {
+  font-size: 2.7rem;
+  line-height: 3.5rem;
+  font-weight: bold;
+  color: #406080;
+}

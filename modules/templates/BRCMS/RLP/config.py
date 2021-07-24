@@ -258,6 +258,17 @@ def config(settings):
     settings.auth.realm_entity = brcms_realm_entity
 
     # -------------------------------------------------------------------------
+    def overview_stats_update():
+        """
+            Scheduler task to update the data files for the overview page
+        """
+
+        from .helpers import OverviewData
+        OverviewData.update_data()
+
+    settings.tasks.overview_stats_update = overview_stats_update
+
+    # -------------------------------------------------------------------------
     def customise_cms_post_resource(r, tablename):
 
         s3db = current.s3db

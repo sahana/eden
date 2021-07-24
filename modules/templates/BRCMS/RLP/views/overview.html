@@ -1,0 +1,62 @@
+{{extend "layout.html"}}
+<div id='home'>
+
+ <div class='row'>
+  <div class='small-12 columns overview-intro'>
+
+   <h1>{{=T("Current Needs & Relief Offers at a glance")}}</h1>
+   {{try:}}<div>{{=item}}</div>{{except:}}{{pass}}
+
+   <div class='row'>
+    <div class='small-12 medium-6 columns overview-charts'>
+     <h2>{{=T("Most commonly needed")}}</h2>
+     <div class='homepage-chart' data-type='barchart' data-source='/{{=appname}}/static/data/RLP/rlpcm_needs.json' data-legend='on'></div>
+    </div>
+    <div class='small-12 medium-6 columns overview-charts'>
+     <h2>{{=T("Most commonly offered")}}</h2>
+     <div class='homepage-chart' data-type='barchart' data-source='/{{=appname}}/static/data/RLP/rlpcm_offers.json' data-legend='on'></div>
+    </div>
+   </div>
+
+   <div class='row'>
+    <div class='small-12 medium-6 columns overview-totals'>
+     <h2>{{=T("Current Need Reports")}}</h2>
+     <p>{{try:}}{{=data["nr"]}}{{except:}}-{{pass}}</p>
+    </div>
+    <div class='small-12 medium-6 columns overview-totals'>
+     <h2>{{=T("Current Relief Offers")}}</h2>
+     <p>{{try:}}{{=data["ro"]}}{{except:}}-{{pass}}</p>
+    </div>
+   </div>
+
+   <div class='row'>
+    <div class='small-12 medium-6 columns overview-totals'>
+     <h2>{{=T("Number of People with Needs Reported")}}</h2>
+     <p>{{try:}}{{=data["pn"]}}{{except:}}-{{pass}}</p>
+    </div>
+    <div class='small-12 medium-6 columns overview-totals'>
+     <h2>{{=T("Number of Relief Providers")}}</h2>
+     <p>{{try:}}{{=data["po"]}}{{except:}}-{{pass}}</p>
+    </div>
+   </div>
+
+  </div>
+ </div>
+
+ <div class='row'>
+  <div class='small-12 columns overview-intro'>
+   <h1>{{=T("Site Usage")}}</h1>
+   <div class='row'>
+    <div class='small-12 medium-6 columns overview-totals'>
+     <h2>{{=T("Total Active Users")}}</h2>
+     <p>{{try:}}{{=data["au"]}}{{except:}}-{{pass}}</p>
+    </div>
+    <div class='small-12 medium-6 columns overview-totals'>
+     <h2>{{=T("Total Active Organisations")}}</h2>
+     <p>{{try:}}{{=data["ao"]}}{{except:}}-{{pass}}</p>
+    </div>
+   </div>
+  </div>
+ </div>
+
+</div>
