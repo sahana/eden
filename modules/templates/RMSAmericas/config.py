@@ -87,6 +87,9 @@ def config(settings):
     # Activate entity role manager tabs for OrgAdmins
     settings.auth.entity_role_manager = True
 
+    # Use HRM for the /default/person Profile
+    settings.auth.profile_controller = "hrm"
+
     def ifrc_realm_entity(table, row):
         """
             Assign a Realm Entity to records

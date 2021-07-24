@@ -103,6 +103,7 @@ def config(settings):
                                       "RELIEF_PROVIDER": "RELIEF_PROVIDER",
                                       "MAP_ADMIN": "ADMIN",
                                       }
+
     # -------------------------------------------------------------------------
     settings.pr.hide_third_gender = False
     settings.pr.separate_name_fields = 2

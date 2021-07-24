@@ -139,6 +139,8 @@ def config(settings):
     #settings.auth.ignore_levels_for_presence = ("L0", "L1", "L2", "L3")
     # Uncomment this to enable the creation of new locations if a user logs in from an unknown location. Warning: This may lead to many useless location entries
     #settings.auth.create_unknown_locations = True
+    # Uncomment this to have the /default/person User Profile use the HRM controller
+    #settings.auth.profile_controller = "hrm"
 
     # -------------------------------------------------------------------------
     # Setup

@@ -1010,30 +1010,37 @@ def person():
 
     # Get person_id of current user
     if auth.s3_logged_in():
-        user_person_id = str(auth.s3_logged_in_person())
+        person_id = str(auth.s3_logged_in_person())
     else:
-        user_person_id = None
+        person_id = None
 
     # Fix request args:
     # - leave as-is if this is an options/validate Ajax-request
-    # - otherwise, make sure user_person_id is the first argument
+    # - otherwise, make sure person_id is the first argument
     request_args = request.args
     if not request_args or \
-       request_args[0] != user_person_id and \
+       request_args[0] != person_id and \
        request_args[-1] not in ("options.s3json", "validate.json"):
-        if not user_person_id:
+        if not person_id:
             # Call to profile before login (e.g. from link in welcome email)
             # => redirect to login, then return here
             redirect(URL(f = "user",
                          args = ["login"],
                          vars = {"_next": URL(f="person", args=request_args)},
                          ))
-        request.args = [user_person_id]
+        request.args = [person_id]
 
-    if settings.has_module("hrm"):
-        # Use the HRM controller/rheader
-        request.get_vars["profile"] = 1
-        return s3db.hrm_person_controller()
+    if settings.get_auth_profile_controller() == "hrm":
+        table = s3db.hrm_human_resource
+        query = (table.person_id == person_id) & \
+                (table.deleted == False)
+        hr = db(query).select(table.id,
+                              limitby = (0, 1)
+                              )
+        if hr:
+            # Use the HRM controller/rheader
+            request.get_vars["profile"] = 1
+            return s3db.hrm_person_controller()
 
     # Use the PR controller/rheader
 
@@ -1055,7 +1062,10 @@ def person():
 
         next = URL(c = "default",
                    f = "person",
-                   args = [user_person_id, "user_profile"])
+                   args = [person_id,
+                           "user_profile",
+                           ],
+                   )
         onaccept = lambda form: auth.s3_approve_user(form.vars),
         auth.configure_user_fields()
         form = auth.profile(next = next,

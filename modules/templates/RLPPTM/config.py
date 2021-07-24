@@ -27,6 +27,7 @@ GOVERNMENT = "Regierungsstellen"
 ISSUER_ORG_TYPE = "pe_id$pe_id:org_organisation.org_organisation_organisation_type.organisation_type_id"
 
 ALLOWED_FORMATS = ("html", "iframe", "popup", "aadata", "json")
+
 # =============================================================================
 def config(settings):
 
