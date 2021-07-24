@@ -398,9 +398,10 @@ class HRModel(S3Model):
 
         if settings.get_org_site_autocomplete():
             site_widget = S3SiteAutocompleteWidget()
-            site_comment = DIV(_class="tooltip",
-                               _title="%s|%s" % (T("Requested By Facility"),
-                                                 AUTOCOMPLETE_HELP))
+            site_comment = DIV(_class = "tooltip",
+                               _title = "%s|%s" % (T("Requested By Facility"),
+                                                   AUTOCOMPLETE_HELP,
+                                                   ))
         else:
             site_widget = None
             site_comment = None
@@ -571,9 +572,9 @@ class HRModel(S3Model):
             requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "hrm_human_resource.id",
                                   hrm_human_resource_represent,
-                                  sort=True,
-                                  filterby="type",
-                                  filter_opts=(2,)
+                                  sort = True,
+                                  filterby = "type",
+                                  filter_opts = (2,)
                                   ))
             widget = S3HumanResourceAutocompleteWidget(group="volunteer")
         else:
@@ -581,7 +582,7 @@ class HRModel(S3Model):
             requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "hrm_human_resource.id",
                                   hrm_human_resource_represent,
-                                  sort=True
+                                  sort = True
                                   ))
             widget = S3HumanResourceAutocompleteWidget()
             if contacts:
@@ -592,7 +593,7 @@ class HRModel(S3Model):
                     title_display = T("Human Resource Details"),
                     title_list = T("Staff & Volunteers"),
                     title_update = T("Edit Record"),
-                    title_upload =T("Search Staff & Volunteers"),
+                    title_upload = T("Search Staff & Volunteers"),
                     label_list_button = T("List Staff & Volunteers"),
                     label_delete_button = T("Delete Record"),
                     msg_record_created = T("Human Resource added"),

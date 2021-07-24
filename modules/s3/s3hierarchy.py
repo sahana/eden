@@ -29,7 +29,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3Hierarchy", "S3HierarchyCRUD")
+__all__ = ("S3Hierarchy",
+           "S3HierarchyCRUD",
+           )
 
 import json
 

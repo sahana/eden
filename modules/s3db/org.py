@@ -5383,16 +5383,18 @@ def org_organisation_logo(org,
         #format = None
         #if type == "bmp":
         #    format = "bmp"
-        size = (None, 60)
+        size = (60, None)
         image = s3db.pr_image_library_represent(record.logo, size=size)
-        url_small = URL(c="default", f="download", args=image)
+        url_small = URL(c="default", f="download",
+                        args = image,
+                        )
         if record.acronym is None or record.acronym == "":
             alt = "%s logo" % record.name
         else:
             alt = "%s logo" % record.acronym
-        logo = IMG(_src=url_small,
-                   _alt=alt,
-                   _height=60,
+        logo = IMG(_src = url_small,
+                   _alt = alt,
+                   _width = 60,
                    )
         return logo
     return ""

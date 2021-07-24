@@ -215,7 +215,8 @@ def req_controller(template = False):
         #        pass
         #    s3db.configure("req_req", list_fields=list_fields)
 
-        req_type = (r.record and r.record.type) or \
+        record = r.record
+        req_type = (record and record.type) or \
                    (get_vars.type and int(get_vars.type))
 
         if r.interactive:
@@ -389,8 +390,25 @@ def req_controller(template = False):
                     if settings.get_req_inline_forms():
                         # Use inline form
                         s3db.req_inline_form(req_type, method)
+                    workflow_status = record.workflow_status
+                    if workflow_status in (1, 2, 5): # Draft, Submitted, Cancelled
+                        # Hide individual statuses
+                        table = db.req_req
+                        table.commit_status.readable = table.commit_status.writable = False
+                        table.transit_status.readable = table.transit_status.writable = False
+                        table.fulfil_status.readable = table.fulfil_status.writable = False
                     if method != "read":
                         s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
+                        if workflow_status in (3, 4, 5): # Approved, Completed, Cancelled
+                            # Lock all fields
+                            s3db.configure("req_req",
+                                           editable = False,
+                                           )
+                    if workflow_status not in (1, 2, 5, None): # Draft, Submitted, Cancelled or Legacy
+                        # Block Delete
+                        s3db.configure("req_req",
+                                       deletable = False,
+                                       )
 
                 elif method == "map":
                     # Tell the client to request per-feature markers
@@ -1709,7 +1727,8 @@ def send_req():
         query = bquery & \
                 (ii_item_id_field == rim.item_id)
         inv_items = db(query).select(*iifields,
-                                     orderby=orderby)
+                                     orderby = orderby
+                                     )
 
         if len(inv_items) == 0:
             continue
@@ -1810,7 +1829,8 @@ def send_req():
 
     # Redirect to view the list of items in the Send
     redirect(URL(c="inv", f="send",
-                 args=[send_id, "track_item"])
+                 args = [send_id, "track_item"],
+                 )
              )
 
 # =============================================================================
@@ -1844,6 +1864,16 @@ def commit_item_json():
 
     response.headers["Content-Type"] = "application/json"
     return json_str
+
+# =============================================================================
+def approver():
+    """ Approvers Controller """
+
+    # We need a more complex control: leave to template
+    #if not auth.s3_has_role("ADMIN"):
+    #    s3.filter = auth.filter_by_root_org(s3db.req_approver)
+
+    return s3_rest_controller()
 
 # =============================================================================
 def fema():
@@ -1889,7 +1919,7 @@ def fema():
 
     return req_item()
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 def need():
     """
         RESTful CRUD Controller for Needs

@@ -29,6 +29,7 @@
 
 __all__ = ("RequestPriorityStatusModel",
            "RequestModel",
+           "RequestApproverModel",
            "RequestItemModel",
            "RequestSkillModel",
            "RequestRecurringModel",
@@ -304,9 +305,9 @@ class RequestModel(S3Model):
 
         # Workflow options
         workflow_opts = {1: T("Draft"),
-                         2: T("Submitted"),
+                         2: T("Submitted for Approval"),
                          3: T("Approved"),
-                         4: T("Fulfilled"),
+                         4: T("Completed"),
                          5: T("Cancelled"),
                          }
         if use_workflow:
@@ -466,6 +467,7 @@ class RequestModel(S3Model):
                                     ),
                           # Workflow Status Status
                           Field("workflow_status", "integer",
+                                label = T("Status"),
                                 default = workflow_default,
                                 requires = IS_IN_SET(workflow_opts),
                                 represent = S3Represent(options = workflow_opts),
@@ -504,6 +506,8 @@ class RequestModel(S3Model):
                           Field("closed", "boolean",
                                 default = False,
                                 label = T("Closed"),
+                                readable = not use_workflow,
+                                writable = not use_workflow,
                                 comment = DIV(_class = "tooltip",
                                               _title = "%s|%s" % (T("Closed"),
                                                                   T("No more items may be added to this request"),
@@ -809,6 +813,7 @@ class RequestModel(S3Model):
         table.commit_status.readable = table.commit_status.writable = False
         table.transit_status.readable = table.transit_status.writable = False
         table.fulfil_status.readable = table.fulfil_status.writable = False
+        table.workflow_status.readable = table.workflow_status.writable = False
         table.cancel.readable = table.cancel.writable = False
         table.closed.readable = table.closed.writable = False
         table.date_recv.readable = table.date_recv.writable = False
@@ -1534,9 +1539,10 @@ $.filterOptionsS3({
         tablename = "req_req"
         table = s3db.req_req
         form_vars = form.vars
+        form_vars_get = form_vars.get
 
         record_id = form_vars.id
-        if form_vars.get("is_template", None):
+        if form_vars_get("is_template"):
             is_template = True
             f = "req_template"
         else:
@@ -1556,7 +1562,7 @@ $.filterOptionsS3({
                                                          )
                     db(table.id == record_id).update(req_ref = code)
 
-        req_status = form_vars.get("req_status", None)
+        req_status = form_vars_get("req_status")
         if req_status is not None:
             # Translate Simple Status
             req_status = int(req_status)
@@ -1577,17 +1583,23 @@ $.filterOptionsS3({
                                                  cancel = False,
                                                  )
             elif req_status == REQ_STATUS_CANCEL:
-                db(table.id == record_id).update(cancel = True)
+                db(table.id == record_id).update(cancel = True,
+                                                 workflow_status = 5,
+                                                 )
             elif req_status == REQ_STATUS_NONE:
                 db(table.id == record_id).update(commit_status = REQ_STATUS_NONE,
                                                  fulfil_status = REQ_STATUS_NONE,
                                                  cancel = False,
                                                  )
 
+        cancel = form_vars_get("cancel")
+        if cancel:
+            db(table.id == record_id).update(workflow_status = 5)
+
         if settings.get_req_requester_to_site():
-            requester_id = form_vars.get("requester_id", None)
+            requester_id = form_vars_get("requester_id")
             if requester_id:
-                site_id = form_vars.get("site_id", None)
+                site_id = form_vars_get("site_id")
                 # If the requester has no HR record, then create one
                 hrtable = s3db.hrm_human_resource
                 query = (hrtable.person_id == requester_id)
@@ -1699,6 +1711,48 @@ $.filterOptionsS3({
         query = (table.function_name == "req_add_from_template") & \
                 (table.args == "[%s]" % row.id)
         db(query).delete()
+
+# =============================================================================
+class RequestApproverModel(S3Model):
+    """
+        Model for request approvers
+    """
+
+    names = ("req_approver",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # -----------------------------------------------------------------
+        # Request Approvers
+        #
+        tablename = "req_approver"
+        self.define_table(tablename,
+                          self.org_organisation_id(),
+                          self.pr_person_id(),
+                          s3_comments(),
+                          *s3_meta_fields(),
+                          )
+
+        # CRUD strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Approver"),
+            title_display = T("Approver Details"),
+            title_list = T("Request Approvers"),
+            title_update = T("Edit Approver"),
+            label_list_button = T("List Approvers"),
+            label_delete_button = T("Delete Approver"),
+            msg_record_created = T("Approver added"),
+            msg_record_modified = T("Approver updated"),
+            msg_record_deleted = T("Approver deleted"),
+            msg_list_empty = T("No Approvers currently registered"))
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class RequestItemModel(S3Model):
@@ -4696,8 +4750,7 @@ def req_update_commit_quantities_and_status(req):
                 # If quantity_commit has changed => update it in the DB
                 if quantity_commit != req_skill_set["committed"]:
                     # Update committed quantity
-                    db(rstable.id == req_skill_set["id"]).update(
-                                      quantity_commit = quantity_commit)
+                    db(rstable.id == req_skill_set["id"]).update(quantity_commit = quantity_commit)
 
                 if requested_quantity > quantity_commit:
                     complete = False
@@ -4712,7 +4765,7 @@ def req_update_commit_quantities_and_status(req):
                 commit_status = REQ_STATUS_PARTIAL
 
         if commit_status != req.commit_status:
-            req.update_record(commit_status=commit_status)
+            req.update_record(commit_status = commit_status)
 
     elif req_type == 9: # Other
 
@@ -4851,6 +4904,8 @@ def req_rheader(r, check_page=False):
             items = False
             people = False
 
+        workflow_status = record.workflow_status
+
         tabs = [(T("Edit Details"), None)]
         if items:
             if settings.get_req_multiple_req_items():
@@ -4889,7 +4944,6 @@ def req_rheader(r, check_page=False):
                    (people and organisation_id and settings.get_req_commit_people()):
                     tabs.append((T("Check"), "check"))
                 if use_workflow:
-                    workflow_status = record.workflow_status
                     if workflow_status == 1: # Draft
                         submit_btn = A(T("Submit for Approval"),
                                        _href = URL(c = "req",
@@ -4935,7 +4989,9 @@ def req_rheader(r, check_page=False):
         site_id = record.site_id
         if site_id:
             stable = s3db.org_site
-        if settings.get_req_show_quantity_transit() and not is_template:
+        if workflow_status in (1, 2, 5): # Draft/Submitted/Cancelled
+            transit_status = ("",)
+        elif settings.get_req_show_quantity_transit() and not is_template:
             transit_status = s3db.req_status_opts.get(record.transit_status,
                                                       "")
             # @ToDo: Create the 'incoming' function if we need this!
@@ -4963,7 +5019,7 @@ def req_rheader(r, check_page=False):
             transit_status = (TH("%s: " % T("Transit Status")),
                               transit_status)
         else:
-            transit_status = ("")
+            transit_status = ("",)
 
         table = r.table
 
@@ -4989,22 +5045,28 @@ def req_rheader(r, check_page=False):
 
         if is_template:
             row1 = ""
-            row4 = ""
+            row3 = ""
         else:
-            if use_commit:
-                commit_status = (TH("%s: " % table.commit_status.label),
-                                 table.commit_status.represent(record.commit_status),
-                                 )
+            if workflow_status in (1, 2, 5): # Draft/Submitted/Cancelled
+                row1_status = (TH("%s: " % table.workflow_status.label),
+                               table.workflow_status.represent(workflow_status),
+                               )
+                fulfil_status = ("",)
             else:
-                commit_status = ("",)
+                if use_commit:
+                    row1_status = (TH("%s: " % table.commit_status.label),
+                                   table.commit_status.represent(record.commit_status),
+                                   )
+                else:
+                    row1_status = ("",)
+                fulfil_status = (TH("%s: " % table.fulfil_status.label),
+                                 table.fulfil_status.represent(record.fulfil_status),
+                                 )
             row1 = TR(TH("%s: " % table.date.label),
                       table.date.represent(record.date),
-                      *commit_status
+                      *row1_status
                       )
-            fulfil_status = (TH("%s: " % table.fulfil_status.label),
-                             table.fulfil_status.represent(record.fulfil_status),
-                             )
-            row4 = TR(TH("%s: " % table.date_required.label),
+            row3 = TR(TH("%s: " % table.date_required.label),
                       table.date_required.represent(record.date_required),
                       *fulfil_status
                       )
@@ -5015,10 +5077,10 @@ def req_rheader(r, check_page=False):
                                table.site_id.represent(site_id),
                                *transit_status
                                ),
+                            row3,
                             TR(TH("%s: " % table.requester_id.label),
                                table.requester_id.represent(record.requester_id),
                                ),
-                            row4,
                             TR(TH("%s: " % table.purpose.label),
                                record.purpose or current.messages["NONE"],
                                ),

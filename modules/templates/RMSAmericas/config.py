@@ -689,7 +689,7 @@ def config(settings):
     # Uncomment to disable Inline Forms in Requests module
     settings.req.inline_forms = False
     settings.req.req_type = ["Stock"]
-    settings.req.use_commit = False
+    settings.req.use_commit = True
     #settings.req.document_filing = True
     # Should Requests ask whether Transportation is required?
     settings.req.ask_transport = True
@@ -4650,6 +4650,61 @@ Thank you"""
         return attr
 
     settings.customise_project_location_controller = customise_project_location_controller
+
+    # -------------------------------------------------------------------------
+    def customise_req_approver_resource(r, tablename):
+
+        auth = current.auth
+        if auth.s3_has_role("ADMIN"):
+            # Filter to RC Orgs
+            ns_only("req_approver",
+                    required = True,
+                    branches = True,
+                    updateable = False, # Need to see all Orgs in Registration screens
+                    )
+        else:
+            # Filter to orgs the user has the ORG_ADMIN or national_wh_manager role for
+            db = current.db
+            s3db = current.s3db
+            f = s3db.req_approver.organisation_id
+
+            # Lookup which realms the user has the roles for
+            gtable = db.auth_group
+            mtable = db.auth_membership
+            query = (mtable.user_id == auth.user.id) & \
+                    (mtable.group_id == gtable.id) & \
+                    (gtable.uuid.belongs(("ORG_ADMIN", "national_wh_manager")))
+
+            memberships = db(query).select(mtable.pe_id)
+            pe_ids = [m.pe_id for m in memberships]
+            if None in pe_ids:
+                # Default Realm
+                pe_ids.remove(None)
+                realms = s3db.pr_realm(auth.user["pe_id"])
+                if realms:
+                    pe_ids += realms
+
+            # Find all child Orgs of these
+            child_pe_ids = s3db.pr_get_descendants(pe_ids, entity_types="org_organisation")
+
+            realms = pe_ids + child_pe_ids
+            if len(realms) == 1:
+                otable = s3db.org_organisation
+                org = db(otable.pe_id == realms[0]).select(otable.id,
+                                                           limitby = (0, 1)
+                                                           ).first()
+                f.default = org.organisation_id
+                f.readable = f.writable = False
+            else:
+                from s3 import IS_ONE_OF
+                f.requires = IS_ONE_OF(db, "org_organisation.id",
+                                       s3db.org_OrganisationRepresent(),
+                                       filterby = "pe_id",
+                                       filter_opts = realms,
+                                       orderby = "org_organisation.name",
+                                       sort = True)
+
+    settings.customise_req_approver_resource = customise_req_approver_resource
 
     # -------------------------------------------------------------------------
     def customise_req_commit_controller(**attr):
