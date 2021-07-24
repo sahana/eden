@@ -1030,7 +1030,7 @@ def person():
                          ))
         request.args = [user_person_id]
 
-    if settings.has_module("hrm"):
+    if settings.has_module("hrm") and settings.get_hrm_user_profile():
         # Use the HRM controller/rheader
         request.get_vars["profile"] = 1
         return s3db.hrm_person_controller()

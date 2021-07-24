@@ -158,6 +158,7 @@ def config(settings):
     settings.pr.availability_json_rules = True
 
     # -------------------------------------------------------------------------
+    settings.hrm.user_profile = False
     settings.hrm.record_tab = False
     settings.hrm.staff_experience = False
     settings.hrm.teams = False

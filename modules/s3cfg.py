@@ -4438,6 +4438,13 @@ class S3Config(Storage):
         """
         return self.__lazy("hrm", "trainings_external", default=False)
 
+    def get_hrm_user_profile(self):
+        """
+            Use hrm_person_controller as user profile
+            - more consistent when all users are staff/volunteers
+        """
+        return self.hrm.get("user_profile", True)
+
     def get_hrm_cv_tab(self):
         """
             Whether Human Resources should consolidate tabs into 1x CV page:
