@@ -465,7 +465,7 @@ class RequestModel(S3Model):
                                     label = T("Received By"),
                                     ),
                           # Workflow Status Status
-                          Field("workflow_status",
+                          Field("workflow_status", "integer",
                                 default = workflow_default,
                                 requires = IS_IN_SET(workflow_opts),
                                 represent = S3Represent(options = workflow_opts),
@@ -504,9 +504,10 @@ class RequestModel(S3Model):
                           Field("closed", "boolean",
                                 default = False,
                                 label = T("Closed"),
-                                comment = DIV(_class="tooltip",
-                                              _title="%s|%s" % (T("Closed"),
-                                                                T("No more items may be added to this request"))),
+                                comment = DIV(_class = "tooltip",
+                                              _title = "%s|%s" % (T("Closed"),
+                                                                  T("No more items may be added to this request"),
+                                                                  )),
                                 ),
                           Field("cancel", "boolean",
                                 default = False,
@@ -1120,7 +1121,7 @@ $.filterOptionsS3({
                 row = db(table.id == req_id).select(table.date,
                                                     table.req_ref,
                                                     table.site_id,
-                                                    limitby = (0, 1),
+                                                    limitby = (0, 1)
                                                     ).first()
         try:
             if row.req_ref:
@@ -1181,7 +1182,7 @@ $.filterOptionsS3({
                 db = current.db
                 table = db.req_req
                 req_row = db(table.req_ref == value).select(table.id,
-                                                            limitby=(0, 1),
+                                                            limitby = (0, 1)
                                                             ).first()
                 if req_row:
                     if pdf:
@@ -1205,9 +1206,7 @@ $.filterOptionsS3({
             Generate a PDF of a Request Form (custom REST method)
         """
 
-        db = current.db
-        table = db.req_req
-        record = db(table.id == r.id).select(limitby=(0, 1)).first()
+        record = r.record
 
         if record.type == 1:
             pdf_componentname = "req_item"
@@ -1228,7 +1227,8 @@ $.filterOptionsS3({
                            ]
         else:
             # Not Supported - redirect to normal PDF
-            redirect(URL(args=current.request.args[0], extension="pdf"))
+            redirect(URL(args = current.request.args[0],
+                         extension = "pdf"))
 
         if current.deployment_settings.get_req_use_req_number():
             filename = record.req_ref
@@ -1238,7 +1238,7 @@ $.filterOptionsS3({
         from s3.s3export import S3Exporter
         exporter = S3Exporter().pdf
         return exporter(r.resource,
-                        request=r,
+                        request = r,
                         method = "list",
                         pdf_title = current.deployment_settings.get_req_form_name(),
                         pdf_filename = filename,
@@ -1271,9 +1271,9 @@ $.filterOptionsS3({
         # Make a copy of the request record
         if settings.get_req_use_req_number():
             code = s3db.supply_get_shipping_code(settings.get_req_shortname(),
-                                              record.site_id,
-                                              table.req_ref,
-                                              )
+                                                 record.site_id,
+                                                 table.req_ref,
+                                                 )
         else:
             code = None
         if record.date_required and record.date_required < now:
@@ -1338,7 +1338,9 @@ $.filterOptionsS3({
                            comments = skill.comments,
                            )
 
-        redirect(URL(f="req", args=[new_req_id, "update"]))
+        redirect(URL(f = "req",
+                     args = [new_req_id, "update"],
+                     ))
 
 
     # -------------------------------------------------------------------------
@@ -1362,17 +1364,19 @@ $.filterOptionsS3({
         query = (table.req_id == req_id) & \
                 (table.deleted == False)
         exists = db(query).select(table.id,
-                                  limitby = (0, 1),
+                                  limitby = (0, 1)
                                   ).first()
         if exists:
             # Browse existing commitments
-            redirect(URL(f="req", args=[r.id, "commit"]))
+            redirect(URL(f = "req",
+                         args = [r.id, "commit"],
+                         ))
 
         req_type = record.type
 
         # Create the commitment
-        cid = table.insert(req_id=req_id,
-                           type=req_type,
+        cid = table.insert(req_id = req_id,
+                           type = req_type,
                            )
 
         if req_type == 1:
@@ -1396,9 +1400,9 @@ $.filterOptionsS3({
                            comments = item.comments,
                            )
                     # Mark Item in the Request as Committed
-                    db(ritable.id == commit_item_id).update(quantity_commit=quantity)
+                    db(ritable.id == commit_item_id).update(quantity_commit = quantity)
             # Mark Request as Committed
-            db(s3db.req_req.id == req_id).update(commit_status=REQ_STATUS_COMPLETE)
+            db(s3db.req_req.id == req_id).update(commit_status = REQ_STATUS_COMPLETE)
             msg = T("You have committed to all items in this Request. Please check that all details are correct and update as-required.")
 
         elif req_type == 3:
@@ -1424,26 +1428,32 @@ $.filterOptionsS3({
                            comments = skill.comments,
                            )
                     # Mark Item in the Request as Committed
-                    db(rstable.id == commit_skill_id).update(quantity_commit=quantity)
+                    db(rstable.id == commit_skill_id).update(quantity_commit = quantity)
             # Mark Request as Committed
-            db(s3db.req_req.id == req_id).update(commit_status=REQ_STATUS_COMPLETE)
+            db(s3db.req_req.id == req_id).update(commit_status = REQ_STATUS_COMPLETE)
             msg = T("You have committed for all people in this Request. Please check that all details are correct and update as-required.")
 
         else:
             # Other
             # Mark Request as Committed
-            db(s3db.req_req.id == req_id).update(commit_status=REQ_STATUS_COMPLETE)
+            db(s3db.req_req.id == req_id).update(commit_status = REQ_STATUS_COMPLETE)
             msg = T("You have committed to this Request. Please check that all details are correct and update as-required.")
 
         if "send" in r.args:
-            redirect(URL(f="send_commit", args=[cid]))
+            redirect(URL(f = "send_commit",
+                         args = [cid],
+                         ))
 
         elif "assign" in r.args:
-            redirect(URL(f="commit", args=[cid, "assign"]))
+            redirect(URL(f = "commit",
+                         args = [cid, "assign"],
+                         ))
 
         else:
             current.session.confirmation = msg
-            redirect(URL(c="req", f="commit", args=[cid]))
+            redirect(URL(c="req", f="commit",
+                         args = [cid],
+                         ))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1537,7 +1547,7 @@ $.filterOptionsS3({
             if settings.get_req_use_req_number():
                 record = db(table.id == record_id).select(table.req_ref,
                                                           table.site_id,
-                                                          limitby = (0, 1),
+                                                          limitby = (0, 1)
                                                           ).first()
                 if not record.req_ref:
                     code = s3db.supply_get_shipping_code(settings.get_req_shortname(),
@@ -1554,7 +1564,7 @@ $.filterOptionsS3({
                 # read current status
                 record = db(table.id == record_id).select(table.commit_status,
                                                           table.fulfil_status,
-                                                          limitby=(0, 1),
+                                                          limitby = (0, 1)
                                                           ).first()
                 data = {"cancel": False}
                 if record.commit_status != REQ_STATUS_COMPLETE:
@@ -1585,14 +1595,14 @@ $.filterOptionsS3({
                                           hrtable.organisation_id,
                                           hrtable.site_id,
                                           hrtable.site_contact,
-                                          limitby = (0, 1),
+                                          limitby = (0, 1)
                                           ).first()
                 if exists:
                     if site_id and not exists.site_id:
                         # Check that the Request site belongs to this Org
                         stable = s3db.org_site
                         site = db(stable.site_id == site_id).select(stable.organisation_id,
-                                                                    limitby = (0, 1),
+                                                                    limitby = (0, 1)
                                                                     ).first()
                         # @ToDo: Think about branches
                         if site and site.organisation_id == exists.organisation_id:
@@ -1603,14 +1613,14 @@ $.filterOptionsS3({
                     # Lookup the Org for the site
                     stable = s3db.org_site
                     site = db(stable.site_id == site_id).select(stable.organisation_id,
-                                                                limitby = (0, 1),
+                                                                limitby = (0, 1)
                                                                 ).first()
                     # Is there already a site_contact for this site?
                     ltable = s3db.hrm_human_resource_site
                     query = (ltable.site_id == site_id) & \
                             (ltable.site_contact == True)
                     already = db(query).select(ltable.id,
-                                               limitby = (0, 1),
+                                               limitby = (0, 1)
                                                ).first()
                     if already:
                         site_contact = False
@@ -1621,18 +1631,18 @@ $.filterOptionsS3({
                                            site_id = site_id,
                                            site_contact = site_contact,
                                            )
-                    s3db.hrm_human_resource_onaccept(Storage(id=hr_id))
+                    s3db.hrm_human_resource_onaccept(Storage(id = hr_id))
 
         # Configure the next page to go to based on the request type
         inline_forms = settings.get_req_inline_forms()
         if inline_forms and is_template:
             s3db.configure(tablename,
-                           create_next = URL(c="req",
-                                             f=f,
-                                             args=["[id]", "job"]),
-                           update_next = URL(c="req",
-                                             f=f,
-                                             args=["[id]", "job"]))
+                           create_next = URL(c="req", f=f,
+                                             args = ["[id]", "job"],
+                                             ),
+                           update_next = URL(c="req", f=f,
+                                             args=["[id]", "job"],
+                                             ))
 
         elif not inline_forms:
             if table.type.default:
@@ -1643,36 +1653,36 @@ $.filterOptionsS3({
                 req_type = 1
             if req_type == 1 and settings.has_module("inv"):
                 s3db.configure(tablename,
-                               create_next = URL(c="req",
-                                                 f=f,
-                                                 args=["[id]", "req_item"]),
-                               update_next = URL(c="req",
-                                                 f=f,
-                                                 args=["[id]", "req_item"]))
+                               create_next = URL(c="req", f=f,
+                                                 args = ["[id]", "req_item"],
+                                                 ),
+                               update_next = URL(c="req", f=f,
+                                                 args=["[id]", "req_item"],
+                                                 ))
             elif req_type == 2 and settings.has_module("asset"):
                 s3db.configure(tablename,
-                               create_next = URL(c="req",
-                                                 f=f,
-                                                 args=["[id]", "req_asset"]),
-                               update_next = URL(c="req",
-                                                 f=f,
-                                                 args=["[id]", "req_asset"]))
+                               create_next = URL(c="req", f=f,
+                                                 args = ["[id]", "req_asset"],
+                                                 ),
+                               update_next = URL(c="req", f=f,
+                                                 args = ["[id]", "req_asset"],
+                                                 ))
             elif req_type == 3 and settings.has_module("hrm"):
                 s3db.configure(tablename,
-                               create_next = URL(c="req",
-                                                 f=f,
-                                                 args=["[id]", "req_skill"]),
-                               update_next = URL(c="req",
-                                                 f=f,
-                                                 args=["[id]", "req_skill"]))
+                               create_next = URL(c="req", f=f,
+                                                 args = ["[id]", "req_skill"],
+                                                 ),
+                               update_next = URL(c="req", f=f,
+                                                 args = ["[id]", "req_skill"],
+                                                 ))
             elif req_type == 4 and settings.has_module("cr"):
                 s3db.configure(tablename,
-                               create_next = URL(c="req",
-                                                 f=f,
-                                                 args=["[id]", "req_shelter"]),
-                               update_next = URL(c="req",
-                                                 f=f,
-                                                 args=["[id]", "req_shelter"]))
+                               create_next = URL(c="req", f=f,
+                                                 args = ["[id]", "req_shelter"],
+                                                 ),
+                               update_next = URL(c="req", f=f,
+                                                 args = ["[id]", "req_shelter"],
+                                                 ))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1800,11 +1810,12 @@ class RequestItemModel(S3Model):
                                                     IS_ONE_OF(db,
                                                               "req_req_item.id",
                                                               req_item_represent,
-                                                              orderby="req_req_item.id",
-                                                              sort=True)),
-                                      comment = DIV(_class="tooltip",
-                                                    _title="%s|%s" % (T("Request Item"),
-                                                                      T("Select Items from the Request"))),
+                                                              orderby = "req_req_item.id",
+                                                              sort = True)),
+                                      comment = DIV(_class = "tooltip",
+                                                    _title = "%s|%s" % (T("Request Item"),
+                                                                        T("Select Items from the Request")),
+                                                                        ),
                                       script = '''
 $.filterOptionsS3({
  'trigger':'req_item_id',
@@ -1820,9 +1831,9 @@ $.filterOptionsS3({
         if settings.get_req_prompt_match():
             # Shows the inventory items which match a requested item
             # @ToDo: Make this page a component of req_item
-            create_next = URL(c="req",
-                              f="req_item_inv_item",
-                              args=["[id]"])
+            create_next = URL(c="req", f="req_item_inv_item",
+                              args = ["[id]"],
+                              )
         else:
             create_next = None
 
@@ -1923,7 +1934,7 @@ $.filterOptionsS3({
             record_id = form_vars.get("id")
             table = current.s3db.req_req_item
             record = db(table.id == record_id).select(table.req_id,
-                                                      limitby = (0, 1),
+                                                      limitby = (0, 1)
                                                       ).first()
             if record:
                 req_id = record.req_id
@@ -1946,7 +1957,7 @@ $.filterOptionsS3({
                     (rictable.req_id == req_id) & \
                     (rictable.item_category_id == item_category_id)
             exists = db(query).select(rictable.id,
-                                      limitby = (0, 1),
+                                      limitby = (0, 1)
                                       )
             if not exists:
                 rictable.insert(req_id = req_id,
@@ -1969,7 +1980,7 @@ $.filterOptionsS3({
         sitable = db.supply_item
         ritable = db.req_req_item
         item = db(ritable.id == row.id).select(ritable.deleted_fk,
-                                               limitby = (0, 1),
+                                               limitby = (0, 1)
                                                ).first()
         fks = json.loads(item.deleted_fk)
         req_id = fks["req_id"]
@@ -1983,7 +1994,9 @@ $.filterOptionsS3({
                     (ritable.req_id == req_id) & \
                     (ritable.item_id == sitable.id) & \
                     (sitable.item_category_id == item_category_id)
-            others = db(query).select(ritable.id, limitby=(0, 1)).first()
+            others = db(query).select(ritable.id,
+                                      limitby = (0, 1)
+                                      ).first()
             if not others:
                 # Delete req_item_category link table
                 rictable = db.req_req_item_category
@@ -2074,7 +2087,9 @@ $.filterOptionsS3({
         else:
             return
 
-        duplicate = db(query).select(itable.id, limitby=(0, 1)).first()
+        duplicate = db(query).select(itable.id,
+                                     limitby = (0, 1)
+                                     ).first()
         if duplicate:
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
@@ -2248,7 +2263,7 @@ class RequestSkillModel(S3Model):
             record_id = form_vars.get("id")
             table = s3db.req_req_item
             record = db(table.id == record_id).select(table.req_id,
-                                                      limitby = (0, 1),
+                                                      limitby = (0, 1)
                                                       ).first()
             if record:
                 req_id = record.req_id
@@ -2259,7 +2274,9 @@ class RequestSkillModel(S3Model):
 
         rtable = s3db.req_req
         query = (rtable.id == req_id)
-        record = db(query).select(rtable.purpose, limitby=(0, 1)).first()
+        record = db(query).select(rtable.purpose,
+                                  limitby = (0, 1)
+                                  ).first()
 
         table = s3db.req_req_skill
         query = (table.req_id == req_id)
@@ -2316,18 +2333,19 @@ class RequestSkillModel(S3Model):
                                       rtable.requester_id,
                                       rtable.site_id,
                                       otable.location_id,
-                                      limitby = (0, 1),
+                                      limitby = (0, 1)
                                       ).first()
             if not record:
                 return
 
             name = record.req_req.req_ref or "Req: %s" % req_id
             table = s3db.project_task
-            task = table.insert(name=name,
-                                description=record.req_req.purpose,
-                                priority=record.req_req.priority,
-                                location_id=record.org_site.location_id,
-                                site_id=record.req_req.site_id)
+            task = table.insert(name = name,
+                                description = record.req_req.purpose,
+                                priority = record.req_req.priority,
+                                location_id = record.org_site.location_id,
+                                site_id = record.req_req.site_id,
+                                )
 
             # Add the Request as a Component to the Task
             table = s3db.table("req_task_req", None)
@@ -2353,7 +2371,9 @@ class RequestSkillModel(S3Model):
         hstable = db.hrm_skill
         query = (rstable.id == record_id) & \
                 (rstable.skill_id == hstable.id)
-        record = db(query).select(hstable.name, limitby=(0, 1)).first()
+        record = db(query).select(hstable.name,
+                                  limitby = (0, 1)
+                                  ).first()
         try:
             return record.name
         except AttributeError:
@@ -3964,7 +3984,7 @@ class CommitModel(S3Model):
             # Set location_id to location of site
             stable = s3db.org_site
             site = db(stable.site_id == site_id).select(stable.location_id,
-                                                        limitby = (0, 1),
+                                                        limitby = (0, 1)
                                                         ).first()
             if site and site.location_id:
                 cdata["location_id"] = site.location_id
@@ -3977,7 +3997,7 @@ class CommitModel(S3Model):
                                rtable.type,
                                rtable.req_status,
                                rtable.commit_status,
-                               limitby = (0, 1),
+                               limitby = (0, 1)
                                ).first()
         if not req:
             return
@@ -4004,14 +4024,14 @@ class CommitModel(S3Model):
         # Find the request
         ctable = s3db.req_commit
         fks = db(ctable.id == commit_id).select(ctable.deleted_fk,
-                                                limitby = (0, 1),
+                                                limitby = (0, 1)
                                                 ).first().deleted_fk
         req_id = json.loads(fks)["req_id"]
         rtable = s3db.req_req
         req = db(rtable.id == req_id).select(rtable.id,
                                              rtable.type,
                                              rtable.commit_status,
-                                             limitby = (0, 1),
+                                             limitby = (0, 1)
                                              ).first()
         if not req:
             return
@@ -4105,7 +4125,7 @@ class CommitItemModel(S3Model):
                                rtable.type,
                                rtable.req_status,
                                rtable.commit_status,
-                               limitby = (0, 1),
+                               limitby = (0, 1)
                                ).first()
         if not req:
             return
@@ -4126,7 +4146,7 @@ class CommitItemModel(S3Model):
         # Get the commit_id
         table = s3db.req_commit_item
         row = db(table.id == row.id).select(table.deleted_fk,
-                                            limitby = (0, 1),
+                                            limitby = (0, 1)
                                             ).first()
         try:
             deleted_fk = json.loads(row.deleted_fk)
@@ -4143,7 +4163,7 @@ class CommitItemModel(S3Model):
                                    rtable.type,
                                    rtable.req_status,
                                    rtable.commit_status,
-                                   limitby = (0, 1),
+                                   limitby = (0, 1)
                                    ).first()
             if req:
                 req_update_commit_quantities_and_status(req)
@@ -4182,7 +4202,7 @@ class CommitItemModel(S3Model):
                                   req_table.requester_id,
                                   req_table.site_id,
                                   req_table.req_ref,
-                                  limitby = (0, 1),
+                                  limitby = (0, 1)
                                   ).first()
 
         # @ToDo: Identify if we have stock items which match the commit items
@@ -4415,7 +4435,7 @@ class CommitSkillModel(S3Model):
                                rtable.type,
                                rtable.req_status,
                                rtable.commit_status,
-                               limitby = (0, 1),
+                               limitby = (0, 1)
                                ).first()
         if not req:
             return
@@ -4437,7 +4457,7 @@ class CommitSkillModel(S3Model):
         # Get the commit_id
         table = s3db.req_commit_skill
         row = db(table.id == row.id).select(table.deleted_fk,
-                                            limitby = (0, 1),
+                                            limitby = (0, 1)
                                             ).first()
         try:
             deleted_fk = json.loads(row.deleted_fk)
@@ -4455,7 +4475,7 @@ class CommitSkillModel(S3Model):
                                    rtable.type,
                                    rtable.req_status,
                                    rtable.commit_status,
-                                   limitby = (0, 1),
+                                   limitby = (0, 1)
                                    ).first()
             if req:
                 req_update_commit_quantities_and_status(req)
@@ -4851,14 +4871,14 @@ def req_rheader(r, check_page=False):
                 site_id = user.site_id if user else None
                 ritable = s3db.req_req_item
                 possibly_complete = db(ritable.req_id == record.id).select(ritable.id,
-                                                                           limitby = (0, 1),
+                                                                           limitby = (0, 1)
                                                                            )
             elif people:
                 user = current.auth.user
                 organisation_id = user.organisation_id if user else None
                 rstable = s3db.req_req_skill
                 possibly_complete = db(rstable.req_id == record.id).select(rstable.id,
-                                                                           limitby = (0, 1),
+                                                                           limitby = (0, 1)
                                                                            )
             else:
                 possibly_complete = True
@@ -4959,30 +4979,32 @@ def req_rheader(r, check_page=False):
                           )
         if site_id:
             org_id = db(stable.site_id == site_id).select(stable.organisation_id,
-                                                          limitby = (0, 1),
+                                                          limitby = (0, 1)
                                                           ).first().organisation_id
             logo = s3db.org_organisation_logo(org_id)
             if logo:
-                headerTR.append(TD(logo, _colspan=2))
+                headerTR.append(TD(logo,
+                                   _colspan = 2,
+                                   ))
 
         if is_template:
-            commit_status = ("")
-            fulfil_status = ("")
             row1 = ""
-            row3 = ""
+            row4 = ""
         else:
             if use_commit:
                 commit_status = (TH("%s: " % table.commit_status.label),
-                                 table.commit_status.represent(record.commit_status))
+                                 table.commit_status.represent(record.commit_status),
+                                 )
             else:
-                commit_status = ("")
-            fulfil_status = (TH("%s: " % table.fulfil_status.label),
-                             table.fulfil_status.represent(record.fulfil_status))
+                commit_status = ("",)
             row1 = TR(TH("%s: " % table.date.label),
                       table.date.represent(record.date),
                       *commit_status
                       )
-            row3 = TR(TH("%s: " % table.date_required.label),
+            fulfil_status = (TH("%s: " % table.fulfil_status.label),
+                             table.fulfil_status.represent(record.fulfil_status),
+                             )
+            row4 = TR(TH("%s: " % table.date_required.label),
                       table.date_required.represent(record.date_required),
                       *fulfil_status
                       )
@@ -4996,12 +5018,14 @@ def req_rheader(r, check_page=False):
                             TR(TH("%s: " % table.requester_id.label),
                                table.requester_id.represent(record.requester_id),
                                ),
-                            row3,
+                            row4,
                             TR(TH("%s: " % table.purpose.label),
-                               record.purpose
+                               record.purpose or current.messages["NONE"],
                                ),
                             TR(TH("%s: " % table.comments.label),
-                               TD(record.comments or "", _colspan=3)
+                               TD(record.comments or "",
+                                  _colspan = 3,
+                                  ),
                                ),
                             ),
                       rheader_tabs,
@@ -5071,7 +5095,7 @@ def req_match(rheader=None):
 
     table = s3db[tablename]
     row = current.db(table.id == record_id).select(table.site_id,
-                                                   limitby = (0, 1),
+                                                   limitby = (0, 1)
                                                    ).first()
     if row:
         site_id = row.site_id
@@ -5235,13 +5259,13 @@ class req_CheckMethod(S3Method):
                         (stable.location_id == ltable.id)
                 location_r = db(query).select(ltable.lat,
                                               ltable.lon,
-                                              limitby = (0, 1),
+                                              limitby = (0, 1)
                                               ).first()
                 query = (stable.id == r.record.site_id ) & \
                         (stable.location_id == ltable.id)
                 req_location_r = db(query).select(ltable.lat,
                                                   ltable.lon,
-                                                  limitby = (0, 1),
+                                                  limitby = (0, 1)
                                                   ).first()
 
                 try:
@@ -5666,7 +5690,7 @@ class req_ReqItemRepresent(S3Represent):
         rows = current.db(query).select(ritable.id,
                                         sitable.name,
                                         left = left,
-                                        limitby = (0, count),
+                                        limitby = (0, count)
                                         )
         self.queries += 1
         return rows
@@ -5721,7 +5745,7 @@ class req_CommitRepresent(S3Represent):
                                         table.date,
                                         table.organisation_id,
                                         table.site_id,
-                                        limitby = (0, count),
+                                        limitby = (0, count)
                                         )
         self.queries += 1
 
@@ -5850,7 +5874,9 @@ def req_add_from_template(req_id):
     fields = [table[field] for field in fieldnames]
 
     # Load Template
-    template = db(table.id == req_id).select(limitby=(0, 1), *fields).first()
+    template = db(table.id == req_id).select(limitby = (0, 1),
+                                             *fields
+                                             ).first()
     data = {"is_template": False}
     try:
         for field in fieldnames:

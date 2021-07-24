@@ -45,6 +45,9 @@ def config(settings):
     # Uncomment to show a default cancel button in standalone create/update forms
     settings.ui.default_cancel_button = True
 
+    # Limit Export Formats
+    settings.ui.export_formats = ("xls","pdf")
+
     # @todo: configure custom icons
     #settings.ui.custom_icons = {
     #    "male": "icon-male",
