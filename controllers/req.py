@@ -681,8 +681,8 @@ $.filterOptionsS3({
                                                _class="action-btn",
                                                _id="commit-btn",
                                                )
-                                s3.jquery_ready.append(
-'''S3.confirmClick('#commit-btn','%s')''' % T("Do you want to commit to this request?"))
+                                s3.jquery_ready.append('''S3.confirmClick('#commit-btn','%s')''' \
+                                                % T("Do you want to commit to this request?"))
                             elif r.record.type == 1:
                                 # Items
                                 s3.actions.append(
@@ -693,8 +693,8 @@ $.filterOptionsS3({
                                                   ),
                                        "_class": "action-btn send-btn",
                                        })
-                                s3.jquery_ready.append(
-'''S3.confirmClick('.send-btn','%s')''' % T("Are you sure you want to send this shipment?"))
+                                s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' \
+                                            % T("Are you sure you want to send this shipment?"))
 
                     elif r.component.alias == "job":
                         record_id = r.id
@@ -748,8 +748,8 @@ $.filterOptionsS3({
                                             ),
                                  "_class": "action-btn commit-btn",
                                  })
-                            s3.jquery_ready.append(
-'''S3.confirmClick('.commit-btn','%s')''' % T("Do you want to commit to this request?"))
+                            s3.jquery_ready.append('''S3.confirmClick('.commit-btn','%s')''' \
+                                            % T("Do you want to commit to this request?"))
                         # This is only appropriate for item requests
                         #query = (table.type == 1)
                         #rows = db(query).select(table.id)
@@ -785,8 +785,8 @@ $.filterOptionsS3({
                                             ),
                                  "_class": "action-btn copy_all",
                                  })
-                            confirm = T("Are you sure you want to create a new request as a copy of this one?")
-                            s3.jquery_ready.append('''S3.confirmClick('.copy_all','%s')''' % confirm)
+                            s3.jquery_ready.append('''S3.confirmClick('.copy_all','%s')''' % \
+                                T("Are you sure you want to create a new request as a copy of this one?"))
                         req_types = settings.get_req_req_type()
                         if not template:
                             if "Stock" in req_types:
@@ -811,8 +811,8 @@ $.filterOptionsS3({
                                     if restrict is not None:
                                         action["restrict"] = restrict
                                     s3.actions.append(action)
-                                    confirm = T("Are you sure you want to commit to this request and send a shipment?")
-                                    s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
+                                    s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % \
+                                        T("Are you sure you want to commit to this request and send a shipment?"))
                                 elif auth.user and auth.user.site_id:
                                     action = {# Better to force users to go through the Check process
                                               #"label": s3_str(T("Send")),
@@ -831,8 +831,8 @@ $.filterOptionsS3({
                                     if restrict is not None:
                                         action["restrict"] = restrict
                                     s3.actions.append(action)
-                                    confirm = T("Are you sure you want to send a shipment for this request?")
-                                    s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
+                                    s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % \
+                                        T("Are you sure you want to send a shipment for this request?"))
                             if "People" in req_types and settings.get_req_commit_people():
                                 if len(req_types) != 1 and (get_vars.type != "3"):
                                     # Restrict these Action Buttons to just those which are Skills Requests
@@ -1397,7 +1397,7 @@ def commit_rheader(r):
                                 _href = URL(f = "send_commit",
                                             args = [record.id]
                                             ),
-                                _id = "send_commit",
+                                _id = "send-commit",
                                 _class = "action-btn"
                                 )
 
@@ -1407,11 +1407,11 @@ def commit_rheader(r):
 #                              _href = URL(f = "send_commit",
 #                                          args = [record.id]
 #                                          ),
-#                              _id = "send_commit",
+#                              _id = "send-commit",
 #                              _class = "action-btn"
 #                              )
 #
-#                send_btn_confirm = SCRIPT("S3.confirmClick('#send_commit', '%s')" %
+#                send_btn_confirm = SCRIPT("S3.confirmClick('#send-commit', '%s')" %
 #                                          T("Do you want to send these Committed items?") )
 #                s3.rfooter = TAG[""](send_btn,send_btn_confirm)
                 #rheader.append(send_btn)

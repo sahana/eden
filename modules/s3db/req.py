@@ -251,6 +251,7 @@ class RequestModel(S3Model):
         transit_status =  settings.get_req_show_quantity_transit()
         use_commit = settings.get_req_use_commit()
         use_req_number = settings.get_req_use_req_number()
+        use_workflow = settings.get_req_workflow()
 
         # Request Types
         req_types_deployed = settings.get_req_req_type()
@@ -300,6 +301,18 @@ class RequestModel(S3Model):
                                        vars = {"child": "site_id"},
                                        title = T("Create Facility"),
                                        )
+
+        # Workflow options
+        workflow_opts = {1: T("Draft"),
+                         2: T("Submitted"),
+                         3: T("Approved"),
+                         4: T("Fulfilled"),
+                         5: T("Cancelled"),
+                         }
+        if use_workflow:
+            workflow_default = 1 # Draft
+        else:
+            workflow_default = 3 # Approved
 
         # ---------------------------------------------------------------------
         # Request Reference
@@ -451,6 +464,14 @@ class RequestModel(S3Model):
                                     #default = auth.s3_logged_in_person(),
                                     label = T("Received By"),
                                     ),
+                          # Workflow Status Status
+                          Field("workflow_status",
+                                default = workflow_default,
+                                requires = IS_IN_SET(workflow_opts),
+                                represent = S3Represent(options = workflow_opts),
+                                readable = use_workflow,
+                                writable = False,
+                                ),
                           # Simple Status
                           # - currently just enabled in customise_req_fields() workflow
                           req_status(readable = False,
@@ -472,14 +493,14 @@ class RequestModel(S3Model):
                                      label = T("Fulfil. Status"),
                                      writable = req_status_writable,
                                      ),
-                          req_status("filing_status",
-                                     label = T("Filing Status"),
-                                     comment = DIV(_class="tooltip",
-                                                   _title="%s|%s" % (T("Filing Status"),
-                                                                     T("Have all the signed documents for this shipment been filed?"))),
-                                     readable = settings.get_req_document_filing(),
-                                     writable = False,
-                                     ),
+                          #req_status("filing_status",
+                          #           label = T("Filing Status"),
+                          #           comment = DIV(_class="tooltip",
+                          #                         _title="%s|%s" % (T("Filing Status"),
+                          #                                           T("Have all the signed documents for this shipment been filed?"))),
+                          #           readable = settings.get_req_document_filing(),
+                          #           writable = False,
+                          #           ),
                           Field("closed", "boolean",
                                 default = False,
                                 label = T("Closed"),
@@ -4795,8 +4816,9 @@ def req_rheader(r, check_page=False):
         s3 = current.response.s3
         settings = current.deployment_settings
 
-        use_commit = settings.get_req_use_commit()
         is_template = record.is_template
+        use_commit = settings.get_req_use_commit()
+        use_workflow = settings.get_req_workflow()
 
         rtype = record.type
         if rtype == 1 and settings.has_module("inv"):
@@ -4828,26 +4850,50 @@ def req_rheader(r, check_page=False):
                 user = current.auth.user
                 site_id = user.site_id if user else None
                 ritable = s3db.req_req_item
-                probably_complete = db(ritable.req_id == record.id).select(
-                                            ritable.id,
-                                            limitby = (0, 1),
-                                            )
+                possibly_complete = db(ritable.req_id == record.id).select(ritable.id,
+                                                                           limitby = (0, 1),
+                                                                           )
             elif people:
                 user = current.auth.user
                 organisation_id = user.organisation_id if user else None
                 rstable = s3db.req_req_skill
-                probably_complete = db(rstable.req_id == record.id).select(
-                                            rstable.id,
-                                            limitby = (0, 1),
-                                            )
+                possibly_complete = db(rstable.req_id == record.id).select(rstable.id,
+                                                                           limitby = (0, 1),
+                                                                           )
             else:
-                probably_complete = True
-            if probably_complete:
+                possibly_complete = True
+            if possibly_complete:
                 if use_commit:
                     tabs.append((T("Commitments"), "commit"))
                 if (items and site_id) or \
                    (people and organisation_id and settings.get_req_commit_people()):
                     tabs.append((T("Check"), "check"))
+                if use_workflow:
+                    workflow_status = record.workflow_status
+                    if workflow_status == 1: # Draft
+                        submit_btn = A(T("Submit for Approval"),
+                                       _href = URL(c = "req",
+                                                   f = "req",
+                                                   args = [r.id, "submit"]
+                                                   ),
+                                       _id = "req-submit",
+                                       _class = "action-btn",
+                                       )
+                        s3.jquery_ready.append('''S3.confirmClick('.req-submit','%s')''' \
+                                % T("Are you sure you want to submit this request?"))
+                        s3.rfooter = TAG[""](submit_btn)
+                    elif workflow_status == 2: # Submitted
+                        approve_btn = A(T("Approve"),
+                                       _href = URL(c = "req",
+                                                   f = "req",
+                                                   args = [r.id, "approve"]
+                                                   ),
+                                       _id = "req-approve",
+                                       _class = "action-btn",
+                                       )
+                        s3.jquery_ready.append('''S3.confirmClick('.req-approve','%s')''' \
+                                % T("Are you sure you want to approve this request?"))
+                        s3.rfooter = TAG[""](approve_btn)
 
         if not check_page:
             rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -4861,8 +4907,8 @@ def req_rheader(r, check_page=False):
                             _href = URL(f = "send_commit",
                                         args = [r.component_id]
                                         ),
-                            _id = "send_commit",
-                            _class = "action-btn"
+                            _id = "send-commit",
+                            _class = "action-btn",
                             )
             s3.rfooter = TAG[""](prepare_btn)
 
@@ -4872,30 +4918,28 @@ def req_rheader(r, check_page=False):
         if settings.get_req_show_quantity_transit() and not is_template:
             transit_status = s3db.req_status_opts.get(record.transit_status,
                                                       "")
-            try:
-                if site_id and \
-                   record.transit_status in [REQ_STATUS_PARTIAL, REQ_STATUS_COMPLETE] and \
-                   record.fulfil_status in [None, REQ_STATUS_NONE, REQ_STATUS_PARTIAL]:
-                    pass
-                    # @ToDo: Create this function!
-                    #site_record = db(stable.site_id == site_id).select(stable.uuid,
-                    #                                                   stable.instance_type,
-                    #                                                   limitby=(0, 1)).first()
-                    #instance_type = site_record.instance_type
-                    #table = s3db[instance_type]
-                    #query = (table.uuid == site_record.uuid)
-                    #instance_id = db(query).select(table.id,
-                    #                               limitby=(0, 1)).first().id
-                    #transit_status = SPAN(transit_status,
-                    #                      A(T("Incoming Shipments"),
-                    #                        _href = URL(c = instance_type.split("_")[0],
-                    #                                    f = "incoming",
-                    #                                    vars = {"viewing" : "%s.%s" % (instance_type, instance_id)}
-                    #                                    )
-                    #                        )
-                    #                      )
-            except:
-                pass
+            # @ToDo: Create the 'incoming' function if we need this!
+            #if site_id and \
+            #   record.transit_status in [REQ_STATUS_PARTIAL, REQ_STATUS_COMPLETE] and \
+            #   record.fulfil_status in [None, REQ_STATUS_NONE, REQ_STATUS_PARTIAL]:
+            #   site_record = db(stable.site_id == site_id).select(stable.uuid,
+            #                                                      stable.instance_type,
+            #                                                      limitby = (0, 1)
+            #                                                      ).first()
+            #   instance_type = site_record.instance_type
+            #   table = s3db[instance_type]
+            #   query = (table.uuid == site_record.uuid)
+            #   instance_id = db(query).select(table.id,
+            #                                  limitby = (0, 1)
+            #                                  ).first().id
+            #   transit_status = SPAN(transit_status,
+            #                         A(T("Incoming Shipments"),
+            #                           _href = URL(c = instance_type.split("_")[0],
+            #                                       f = "incoming",
+            #                                       vars = {"viewing" : "%s.%s" % (instance_type, instance_id)}
+            #                                       )
+            #                           )
+            #                      )
             transit_status = (TH("%s: " % T("Transit Status")),
                               transit_status)
         else:
@@ -4909,7 +4953,9 @@ def req_rheader(r, check_page=False):
                           )
         else:
             headerTR = TR(TD(settings.get_req_form_name(),
-                          _colspan=2, _class="pdf_title"),
+                             _colspan = 2,
+                             _class = "pdf_title",
+                             ),
                           )
         if site_id:
             org_id = db(stable.site_id == site_id).select(stable.organisation_id,
@@ -5179,8 +5225,8 @@ class req_CheckMethod(S3Method):
             #if use_commit:
             #    row.insert(3, TH(table.quantity_commit.label))
             items = TABLE(THEAD(row),
-                          _id="list",
-                          _class="dataTable display",
+                          _id = "list",
+                          _class = "dataTable display",
                           )
             if site_id:
                 stable = s3db.org_site

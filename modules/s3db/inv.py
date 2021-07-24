@@ -4161,7 +4161,7 @@ def inv_send_rheader(r):
                                       )
 
                         s3.jquery_ready.append('''S3.confirmClick("#send_process","%s")''' \
-                                   % T("Do you want to send this shipment?"))
+                                                % T("Do you want to send this shipment?"))
                     #if not r.component and not r.method == "form":
                     #    ritable = s3db.req_req_item
                     #    rcitable = s3db.req_commit_item
@@ -4189,7 +4189,7 @@ def inv_send_rheader(r):
                                     )
                                   )
                     s3.jquery_ready.append('''S3.confirmClick("#return_process","%s")''' \
-                        % T("Do you want to complete the return process?") )
+                                    % T("Do you want to complete the return process?") )
                 else:
                     msg = T("You need to check all item quantities before you can complete the return process")
                     rfooter.append(SPAN(msg))
@@ -4206,27 +4206,27 @@ def inv_send_rheader(r):
                                                     args = [record.id],
                                                     vars = None,
                                                     ),
-                                        _id = "send_return",
+                                        _id = "send-return",
                                         _class = "action-btn",
                                         _title = T("Only use this button to accept back into stock some items that were returned from a delivery to beneficiaries who do not record the shipment details directly into the system")
                                         )
                                       )
 
-                        jappend('''S3.confirmClick("#send_return","%s")''' \
-                            % T("Confirm that some items were returned from a delivery to beneficiaries and they will be accepted back into stock."))
+                        jappend('''S3.confirmClick("#send-return","%s")''' % \
+                            T("Confirm that some items were returned from a delivery to beneficiaries and they will be accepted back into stock."))
                         action.append(A(T("Confirm Shipment Received"),
                                         _href = URL(f = "send",
                                                     args = [record.id],
                                                     vars = {"received": 1},
                                                     ),
-                                        _id = "send_receive",
+                                        _id = "send-receive",
                                         _class = "action-btn",
                                         _title = T("Only use this button to confirm that the shipment has been received by a destination which will not record the shipment directly into the system")
                                         )
                                       )
 
-                        jappend('''S3.confirmClick("#send_receive","%s")''' \
-                            % T("Confirm that the shipment has been received by a destination which will not record the shipment directly into the system and confirmed as received.") )
+                        jappend('''S3.confirmClick("#send-receive","%s")''' % \
+                            T("Confirm that the shipment has been received by a destination which will not record the shipment directly into the system and confirmed as received.") )
                     if s3_has_permission("delete",
                                          "inv_send",
                                          record_id=record.id):
@@ -4235,12 +4235,12 @@ def inv_send_rheader(r):
                                                     f = "send_cancel",
                                                     args = [record.id]
                                                     ),
-                                        _id = "send_cancel",
+                                        _id = "send-cancel",
                                         _class = "action-btn"
                                         )
                                       )
 
-                        jappend('''S3.confirmClick("#send_cancel","%s")''' \
+                        jappend('''S3.confirmClick("#send-cancel","%s")''' \
                             % T("Do you want to cancel this sent shipment? The items will be returned to the Warehouse. This action CANNOT be undone!") )
             if not r.method == "form":
             #    msg = ""

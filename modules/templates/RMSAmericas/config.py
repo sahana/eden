@@ -273,6 +273,7 @@ def config(settings):
         ("en", "English"),
         ("pt-br", "Portuguese (Brazil)"),
         ("es", "Spanish"),
+        ("fr", "French"),
         ])
     # Default Language
     settings.L10n.default_language = "en"
@@ -683,7 +684,7 @@ def config(settings):
     settings.req.inline_forms = False
     settings.req.req_type = ["Stock"]
     settings.req.use_commit = False
-    settings.req.document_filing = True
+    #settings.req.document_filing = True
     # Should Requests ask whether Transportation is required?
     settings.req.ask_transport = True
     settings.req.pack_values = False
@@ -691,6 +692,8 @@ def config(settings):
     settings.req.prompt_match = False
     # Uncomment to disable Recurring Request
     settings.req.recurring = False # HNRC
+    # Use Workflow
+    settings.req.workflow = True
 
     # =========================================================================
     # Template Modules
@@ -3810,7 +3813,7 @@ Thank you"""
             return True
         s3.prep = custom_prep
 
-        if current.request.controller in ("hrm", "vol"):
+        if current.request.controller in ("default", "hrm", "vol"):
             attr["csv_template"] = ("../../themes/RMSAmericas/formats", "hrm_person")
             # Common rheader for all views
             attr["rheader"] = lambda r: s3db.hrm_rheader(r, profile=PROFILE)

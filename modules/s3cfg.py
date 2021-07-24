@@ -5798,8 +5798,8 @@ class S3Config(Storage):
         """
         return self.req.get("copyable", False)
 
-    def get_req_document_filing(self):
-        return self.req.get("document_filing", False)
+    #def get_req_document_filing(self):
+    #    return self.req.get("document_filing", False)
 
     def get_req_recurring(self):
         """
@@ -5955,6 +5955,12 @@ class S3Config(Storage):
             To restrict adding new commits to the Completed commits.
         """
         return self.req.get("req_restrict_on_complete", False)
+
+    def get_req_workflow(self):
+        """
+            Whether to use Workflow for Requests
+        """
+        return self.req.get("workflow", False)
 
     # -------------------------------------------------------------------------
     # Supply

@@ -1030,6 +1030,13 @@ def person():
                          ))
         request.args = [user_person_id]
 
+    if settings.has_module("hrm"):
+        # Use the HRM controller/rheader
+        request.get_vars["profile"] = 1
+        return s3db.hrm_person_controller()
+
+    # Use the PR controller/rheader
+
     set_method = s3db.set_method
 
     # Custom Method for User
