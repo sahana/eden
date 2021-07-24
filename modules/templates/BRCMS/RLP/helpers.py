@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+" -*- coding: utf-8 -*-"
 
 """
     Helper functions and classes for RLPCM template
@@ -6,13 +6,16 @@
     @license: MIT
 """
 
+import datetime
+import json
+import os
+
 from gluon import current, SPAN
 
 from s3 import FS, s3_str
-
 from s3db.pr import pr_PersonEntityRepresent
 
-# =============================================================================
+" ============================================================================="
 def get_role_realms(role):
     """
         Get all realms for which a role has been assigned
@@ -48,7 +51,7 @@ def get_role_realms(role):
 
     return role_realms
 
-# =============================================================================
+" ============================================================================="
 def get_managed_orgs(role):
     """
         Get the organisations for which the current user has a role
@@ -72,7 +75,7 @@ def get_managed_orgs(role):
 
     return [row.pe_id for row in rows]
 
-# =============================================================================
+" ============================================================================="
 def get_current_events(record):
     """
         Look up all current events
@@ -96,7 +99,7 @@ def get_current_events(record):
                             )
     return [row.id for row in rows]
 
-# =============================================================================
+" ============================================================================="
 def get_current_location(person_id=None):
     """
         Look up the current tracking location of a person
@@ -126,7 +129,7 @@ def get_current_location(person_id=None):
     else:
         return location.parent
 
-# =============================================================================
+" ============================================================================="
 def get_offer_filters(person_id=None):
     """
         Get filters for br_assistance_offer matching a person's
@@ -262,7 +265,7 @@ def get_offer_filters(person_id=None):
 
     return filters
 
-# =============================================================================
+" ============================================================================="
 class ProviderRepresent(pr_PersonEntityRepresent):
 
     def __init__(self):
@@ -300,4 +303,263 @@ class ProviderRepresent(pr_PersonEntityRepresent):
 
         return pe_str
 
-# END =========================================================================
+" ============================================================================="
+class OverviewData(object):
+    """
+        Data extraction for overview page
+    """
+
+    # Color palette for categories
+    # - same category should use the same color in all contexts
+    palette = [
+        "ffff00", "ff5500", "55aaff", "aaaa00", "939393", "8b2e8b",
+        "1f6c6d", "b31c1c", "ff995e", "457624", "550000", "005500",
+        "00007f", "006898", "7777b3", "e1cb74", "100000", "001000",
+        "000010", "5500ff", "ffaaff", "00aa7f", "ffaa7f", "3f3f3f",
+        "00aaff", "74aa1d", "b30000", "7e547e", "274214", "55007f",
+        "0c9cd0", "e03158", "fba629", "8abc3f", "afb8bf",
+        ]
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def get_color(cls, category):
+        """
+            Get a color from the palette
+
+            @param category: an integer representing the category
+
+            @returns: CSS hex color (string)
+        """
+
+        palette = cls.palette
+        return "#%s" % (palette[category % len(palette)])
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def needs_by_category(cls):
+        """
+            Count current case activities by need type
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        atable = s3db.br_case_activity
+        stable = s3db.br_case_activity_status
+
+        join = stable.on((stable.id == atable.status_id) & \
+                         (stable.is_closed == False))
+
+        today = current.request.utcnow.date()
+        query = ((atable.date == None) | (atable.date <= today)) & \
+                ((atable.end_date == None) | (atable.end_date >= today)) & \
+                (atable.person_id != None) & \
+                (atable.need_id != None) & \
+                (atable.deleted == False)
+
+        number = atable.id.count()
+        rows = db(query).select(atable.need_id,
+                                number,
+                                join = join,
+                                groupby = atable.need_id,
+                                orderby = ~number,
+                                limitby = (0, 5),
+                                )
+
+        represent = atable.need_id.represent
+        labels = represent.bulk([row.br_case_activity.need_id for row in rows])
+
+        values = []
+        for row in rows:
+            value = row[number]
+            need_id = row.br_case_activity.need_id
+            need = labels.get(need_id)
+            values.append({"label": str(need),
+                           "color": cls.get_color(need_id),
+                           "value": value if value else 0,
+                           })
+
+        return [{"key": s3_str(current.T("Current Need Reports")),
+                 "values": values,
+                 },
+                ]
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def offers_by_category(cls):
+        """
+            Count current assistance offers by need type
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        atable = s3db.br_assistance_offer
+
+        today = current.request.utcnow.date()
+        query = (atable.status == "APR") & \
+                (atable.availability == "AVL") & \
+                ((atable.date == None) | (atable.date <= today)) & \
+                ((atable.end_date == None) | (atable.end_date >= today)) & \
+                (atable.pe_id != None) & \
+                (atable.need_id != None) & \
+                (atable.deleted == False)
+
+        number = atable.id.count()
+        rows = db(query).select(atable.need_id,
+                                number,
+                                groupby = atable.need_id,
+                                orderby = ~number,
+                                limitby = (0, 5),
+                                )
+
+        represent = atable.need_id.represent
+        labels = represent.bulk([row.br_assistance_offer.need_id for row in rows])
+
+        values = []
+        for row in rows:
+            value = row[number]
+            need_id = row.br_assistance_offer.need_id
+            need = labels.get(need_id)
+            values.append({"label": str(need),
+                           "color": cls.get_color(need_id),
+                           "value": value if value else 0,
+                           })
+
+        return [{"key": s3_str(current.T("Current Relief Offers")),
+                 "values": values,
+                 },
+                ]
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def usage_statistics(cls):
+        """
+            Establish site usage statistics
+
+            @returns: the usage stats, a dict:
+
+                     {"au": 0,   # Number of active users
+                      "ao": 0,   # Number of active organisations
+                      "nr": 0,   # Number of active need reports
+                      "ro": 0,   # Number of active assistance offers
+                      "pn": 0,   # Number of people with needs reported
+                      "po": 0,  # Number of users offering help
+                      }
+        """
+
+        db = current.db
+
+        auth = current.auth
+        s3db = current.s3db
+
+        data = {}
+
+        today = current.request.utcnow
+        two_days_back = today - datetime.timedelta(days=2)
+
+        utable = auth.settings.table_user
+        gtable = auth.settings.table_group
+        mtable = auth.settings.table_membership
+
+        active_user = ((utable.registration_key == None) | (utable.registration_key == "")) & \
+                      (utable.timestmp > two_days_back) & \
+                      (utable.deleted == False)
+
+        # Get the number of active users
+        join = [mtable.on((mtable.user_id == utable.id) &
+                          (mtable.deleted == False)),
+                gtable.on((gtable.id == mtable.group_id) & \
+                          (gtable.uuid.belongs(("CITIZEN", "RELIEF_PROVIDER"))))
+                          ]
+        query = active_user
+        number = utable.id.count()
+        row = db(query).select(number, join=join).first()
+        if row:
+            data["au"] = row[number]
+
+        # Get the number of active organisations
+        htable = s3db.hrm_human_resource
+        ptable = s3db.pr_person
+        ltable = s3db.pr_person_user
+
+        join = [ptable.on(ptable.id == htable.person_id),
+                ltable.on((ltable.pe_id == ptable.pe_id) & \
+                          (ltable.deleted == False)),
+                utable.on((utable.id == ltable.user_id) & \
+                          active_user),
+                mtable.on((mtable.user_id == utable.id) &
+                          (mtable.deleted == False)),
+                gtable.on((gtable.id == mtable.group_id) & \
+                          (gtable.uuid == "RELIEF_PROVIDER")),
+                ]
+        number = htable.organisation_id.count()
+        row = db(query).select(number, join=join).first()
+        if row:
+            data["ao"] = row[number]
+
+        # Count current need reports and distinct beneficiaries
+        atable = s3db.br_case_activity
+        stable = s3db.br_case_activity_status
+        join = stable.on((stable.id == atable.status_id) & \
+                         (stable.is_closed == False))
+        query = ((atable.date == None) | (atable.date <= today)) & \
+                ((atable.end_date == None) | (atable.end_date >= today)) & \
+                (atable.deleted == False)
+        number = atable.id.count()
+        persons = atable.person_id.count(distinct=True)
+        row = db(query).select(number, persons, join=join).first()
+        if row:
+            data["nr"] = row[number]
+            data["pn"] = row[persons]
+
+        # Count current assistance offers and distinct providers
+        otable = s3db.br_assistance_offer
+        query = (otable.status == "APR") & \
+                (otable.availability != "RTD") & \
+                ((otable.date == None) | (otable.date <= today)) & \
+                ((otable.end_date == None) | (otable.end_date >= today)) & \
+                (otable.deleted == False)
+        number = otable.id.count()
+        persons = otable.pe_id.count(distinct=True)
+        row = db(query).select(number, persons).first()
+        if row:
+            data["ro"] = row[number]
+            data["po"] = row[persons]
+
+        return data
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def update_data(cls):
+        """
+            Update data files for overview page
+
+            NB requires write-permission for static/data/RLP folder+files
+        """
+
+        current.log.debug("Updating overview data")
+
+        SEPARATORS = (",", ":")
+
+        os_path_join = os.path.join
+        json_dump = json.dump
+
+        base = os_path_join(current.request.folder, "static", "data", "RLP")
+
+        path = os_path_join(base, "rlpcm_needs.json")
+        data = cls.needs_by_category()
+        with open(path, "w") as outfile:
+            json_dump(data, outfile, separators=SEPARATORS)
+
+        path = os_path_join(base, "rlpcm_offers.json")
+        data = cls.offers_by_category()
+        with open(path, "w") as outfile:
+            json_dump(data, outfile, separators=SEPARATORS)
+
+        path = os_path_join(base, "rlpcm_usage.json")
+        data = cls.usage_statistics()
+        with open(path, "w") as outfile:
+            json_dump(data, outfile, separators=SEPARATORS)
+
+" END ========================================================================="

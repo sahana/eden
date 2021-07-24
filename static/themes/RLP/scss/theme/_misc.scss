@@ -470,4 +470,22 @@ body.rtl {
     padding: 0.8rem;
 }
 
+.overview-totals,
+.overview-intro,
+.overview-charts,
+.overview-table {
+    text-align: center;
+    h2 {
+        font-size: 1.2rem !important;
+        background-color: transparent !important;
+    }
+}
+
+.overview-totals p {
+    font-size: 2.7rem;
+    line-height: 3.5rem;
+    font-weight: bold;
+    color: #406080;
+}
+
 // END ========================================================================
