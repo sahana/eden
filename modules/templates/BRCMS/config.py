@@ -180,7 +180,6 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Human Resource Module Settings
     #
-    settings.hrm.user_profile = False
     settings.hrm.teams_orgs = True
     settings.hrm.staff_departments = False
 
