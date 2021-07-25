@@ -461,13 +461,21 @@ body.rtl {
 .free-hint {
     color: #C0C0C0;
 }
-#site-intro p {
-    margin-top: 3rem;
-    font-size: 0.9rem;
-    white-space: pre-wrap;
-    line-height: 1rem;
-    border: 2px solid #668b99;
-    padding: 0.8rem;
+#site-intro {
+    margin-top: 2rem;
+    .callout-box {
+        margin: 1rem 0;
+        font-size: 0.9rem;
+        line-height: 1.2rem;
+        border: 2px solid #668b99;
+        padding: 0.8rem;
+    }
+}
+#site-actions {
+    .button i.fa {
+        font-size: 1.2rem;
+        margin: 0 0.5rem;
+    }
 }
 
 .overview-totals,
