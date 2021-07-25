@@ -672,21 +672,53 @@ def config(settings):
                         resource.add_filter(vquery)
 
                     # List fields
-                    list_fields = ["need_id",
-                                   "name",
-                                   "chargeable",
-                                   #"pe_id",
-                                   "location_id$L3",
-                                   "location_id$L2",
-                                   "location_id$L1",
-                                   "availability",
-                                   "date",
-                                   "end_date",
-                                   ]
+                    if not mine:
+                        from s3 import s3_fieldmethod
+                        from .helpers import OfferDetails
+                        table.place = s3_fieldmethod("place",
+                                                     OfferDetails.place,
+                                                     represent = OfferDetails.place_represent,
+                                                     )
+                        table.contact = s3_fieldmethod("contact",
+                                                       OfferDetails.contact,
+                                                       represent = OfferDetails.contact_represent,
+                                                       )
+                        resource.configure(extra_fields = ["location_id$L3",
+                                                           "location_id$L2",
+                                                           "location_id$L1",
+                                                           "contact_name",
+                                                           "contact_phone",
+                                                           "contact_email",
+                                                           ])
+                        list_fields = ["need_id",
+                                       "name",
+                                       (T("Place"), "place"),
+                                       "pe_id",
+                                       (T("Contact"), "contact"),
+                                       "chargeable",
+                                       "description",
+                                       "availability",
+                                       "date",
+                                       "end_date",
+                                       #"status"
+                                       ]
+                    else:
+                        list_fields = ["need_id",
+                                       "name",
+                                       "chargeable",
+                                       #"pe_id",
+                                       "location_id$L3",
+                                       "location_id$L2",
+                                       "location_id$L1",
+                                       "availability",
+                                       "date",
+                                       "end_date",
+                                       #"status"
+                                       ]
+                        if org_role:
+                            list_fields.insert(3, "pe_id")
                     if mine or is_event_manager:
                         list_fields.append("status")
-                    if not mine or org_role:
-                        list_fields.insert(3, "pe_id")
 
                     resource.configure(filter_widgets = filter_widgets,
                                        list_fields = list_fields,
