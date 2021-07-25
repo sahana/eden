@@ -28,6 +28,7 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 """
+from lxml.html import submit_form
 
 __all__ = ("formstyle_bootstrap",
            "formstyle_foundation",
@@ -142,7 +143,11 @@ def formstyle_foundation(form, fields, *args, **kwargs):
     def render_row(row_id, label, widget, comment, hidden=False):
 
         if hasattr(widget, "element"):
-            submit = widget.element("input", _type="submit")
+            try:
+                submit = widget.element("input", _type="submit")
+            except TypeError:
+                # e.g. plain Reference
+                submit = None
             if submit:
                 submit.add_class("small primary button")
 

@@ -3299,10 +3299,10 @@ class OrgSiteModel(S3Model):
         settings = current.deployment_settings
         org_site_label = settings.get_org_site_label()
         if settings.get_org_site_autocomplete():
-            widget=S3SiteAutocompleteWidget()
-            comment=DIV(_class="tooltip",
-                        _title="%s|%s" % (org_site_label,
-                                          messages.AUTOCOMPLETE_HELP))
+            widget = S3SiteAutocompleteWidget()
+            comment = DIV(_class = "tooltip",
+                          _title = "%s|%s" % (org_site_label,
+                                              messages.AUTOCOMPLETE_HELP))
         else:
             widget = None
             comment = None

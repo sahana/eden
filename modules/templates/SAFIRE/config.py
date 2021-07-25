@@ -588,6 +588,7 @@ def config(settings):
                                     limitby = (0, 1)
                                     ).first()
             if duty:
+                # @ToDo: i18n
                 current.msg.send_sms_via_api(duty.value,
                     "You have been assigned an Incident: %s%s" % (settings.get_base_public_url(),
                                                                   URL(c="event", f= "incident",
@@ -836,6 +837,7 @@ def config(settings):
                 label = T("Ticket")
             else:
                 label = T("Incident")
+            # @ToDo: i18n
             current.msg.send_by_pe_id(pe_id,
                                       subject = "",
                                       message = "You have been assigned to an %s: %s%s" % \
@@ -1155,6 +1157,7 @@ def config(settings):
 
         if pe_id:
             # Notify Assignee
+            # @ToDo: i18n
             message = "You have been assigned a Task: %s%s" % \
                         (settings.get_base_public_url(),
                          URL(c="event", f= "incident",

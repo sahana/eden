@@ -168,7 +168,8 @@ def config(settings):
         #    link_table = realm_entity_link_table[tablename]
         #    table = s3db[link_table.tablename]
         #    rows = db(table[link_table.link_key] == row.id).select(table.id,
-        #                                                           limitby=(0, 1))
+        #                                                           limitby = (0, 1)
+        #                                                           )
         #    if rows:
         #        # Update not Create
         #        row = rows.first()
@@ -918,7 +919,7 @@ def config(settings):
         ttable = s3db.org_organisation_type
         try:
             type_id = db(ttable.name == RED_CROSS).select(ttable.id,
-                                                          limitby=(0, 1),
+                                                          limitby = (0, 1),
                                                           cache = s3db.cache,
                                                           ).first().id
         except AttributeError:
@@ -1074,7 +1075,7 @@ def config(settings):
     #        s3db = current.s3db
     #        otable = s3db.org_organisation
     #        org = db(otable.id == user_org_id).select(otable.pe_id,
-    #                                                  limitby=(0, 1)
+    #                                                  limitby = (0, 1)
     #                                                  ).first()
     #        if org:
     #            pe_id = org.pe_id
@@ -1160,7 +1161,7 @@ def config(settings):
                     (table.human_resource_id == htable.id)
 
         hr = db(query).select(htable.person_id,
-                              limitby=(0, 1)
+                              limitby = (0, 1)
                               ).first()
         person_id = hr.person_id
 
@@ -1169,7 +1170,7 @@ def config(settings):
         query = (ptable.id == person_id) & \
                 (ltable.pe_id == ptable.pe_id)
         link = db(query).select(ltable.user_id,
-                                limitby=(0, 1)
+                                limitby = (0, 1)
                                 ).first()
         if link:
             # Add them to the RIT role
@@ -1344,7 +1345,7 @@ def config(settings):
             #ttable = s3db.org_organisation_type
             #try:
             #    type_id = db(ttable.name == "Training Center").select(ttable.id,
-            #                                                          limitby=(0, 1),
+            #                                                          limitby = (0, 1),
             #                                                          ).first().id
             #except:
             #    # No/incorrect prepop done - skip (e.g. testing impacts of CSS changes in this theme)
@@ -1489,7 +1490,7 @@ def config(settings):
                 (ltable.organisation_type_id == ttable.id) & \
                 (ltable.organisation_id == organisation_id)
         RC = db(query).select(ltable.id,
-                              limitby=(0, 1),
+                              limitby = (0, 1),
                               ).first()
         if not RC:
             return
@@ -2181,7 +2182,8 @@ Thank you"""
                                                      table.person_id,
                                                      table.course_id,
                                                      table.grade,
-                                                     limitby=(0, 1)).first()
+                                                     limitby = (0, 1)
+                                                     ).first()
         try:
             course_id = record.course_id
         except AttributeError:
@@ -2191,8 +2193,8 @@ Thank you"""
         # Lookup the RIT Course ID
         ctable = db.hrm_course
         row = db(ctable.name == "Regional Intervention Teams").select(ctable.id,
-                                                                      cache = s3db.cache,
-                                                                      limitby=(0, 1)
+                                                                      limitby = (0, 1),
+                                                                      cache = s3db.cache
                                                                       ).first()
         try:
             rit_course_id = row.id
@@ -2212,7 +2214,7 @@ Thank you"""
         person_id = record.person_id
         htable = s3db.hrm_human_resource
         hr = db(htable.person_id == person_id).select(htable.id,
-                                                      limitby=(0, 1)
+                                                      limitby = (0, 1)
                                                       ).first()
         try:
             human_resource_id = hr.id
@@ -2222,7 +2224,7 @@ Thank you"""
 
         dtable = s3db.deploy_application
         exists = db(dtable.human_resource_id == human_resource_id).select(dtable.id,
-                                                                          limitby=(0, 1)
+                                                                          limitby = (0, 1)
                                                                           ).first()
         if not exists:
             # Add them to the list
@@ -2234,7 +2236,7 @@ Thank you"""
         query = (ptable.id == person_id) & \
                 (ltable.pe_id == ptable.pe_id)
         link = db(query).select(ltable.user_id,
-                                limitby=(0, 1)
+                                limitby = (0, 1)
                                 ).first()
         if link:
             current.auth.s3_assign_role(link.user_id, "RIT_MEMBER")
@@ -2495,7 +2497,7 @@ Thank you"""
             ttable = s3db.org_organisation_type
             try:
                 type_id = db(ttable.name == "Training Center").select(ttable.id,
-                                                                      limitby=(0, 1),
+                                                                      limitby = (0, 1),
                                                                       ).first().id
             except AttributeError:
                 # No/incorrect prepop done - skip (e.g. testing impacts of CSS changes in this theme)
@@ -2616,7 +2618,7 @@ Thank you"""
             org = db(otable.id == org_id).select(otable.name,
                                                  otable.acronym, # Present for consistent cache key
                                                  otable.logo,
-                                                 limitby=(0, 1),
+                                                 limitby = (0, 1),
                                                  ).first()
             #if settings.get_L10n_translate_org_organisation():
             #org_name = org_represent(org_id)
@@ -3893,7 +3895,7 @@ Thank you"""
             else:
                 record_id = r.component_id
             record = current.db(table.id == record_id).select(table.value,
-                                                              limitby=(0, 1)
+                                                              limitby = (0, 1)
                                                               ).first()
             if record.value:
                 # Redirect to Read-only mode
@@ -3958,7 +3960,7 @@ Thank you"""
                                                      ptable.name,
                                                      ptable.start_date,
                                                      ptable.end_date,
-                                                     limitby=(0, 1)
+                                                     limitby = (0, 1)
                                                      ).first()
         if not project:
             return
@@ -3973,7 +3975,7 @@ Thank you"""
                                   btable.currency,
                                   # Assume Monthly
                                   #btable.monitoring_frequency,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1)
                                   ).first()
         if not budget:
             return
@@ -3985,7 +3987,7 @@ Thank you"""
         query = (btable.name == project_name) & \
                 (btable.id != budget.id)
         duplicate = db(query).select(btable.id,
-                                     limitby=(0, 1)
+                                     limitby = (0, 1)
                                      ).first()
 
         if not duplicate:
@@ -3998,7 +4000,8 @@ Thank you"""
 
         mtable = s3db.budget_monitoring
         exists = db(mtable.budget_entity_id == budget_entity_id).select(mtable.id,
-                                                                        limitby=(0, 1))
+                                                                        limitby = (0, 1)
+                                                                        )
         if not exists:
             # Create Monitoring Data entries
             start_date = project.start_date
@@ -4362,7 +4365,7 @@ Thank you"""
                         # No r.component.record :/
                         ctable = s3db.project_organisation
                         crecord = current.db(ctable.id == component_id).select(ctable.role,
-                                                                               limitby=(0, 1)
+                                                                               limitby = (0, 1)
                                                                                ).first()
                         if crecord.role == settings.get_project_organisation_lead_role():
                             ns_only("project_organisation",
@@ -4531,7 +4534,7 @@ Thank you"""
             else:
                 record_id = r.component_id
             record = current.db(table.id == record_id).select(table.value,
-                                                              limitby=(0, 1)
+                                                              limitby = (0, 1)
                                                               ).first()
             if record.value:
                 # Redirect to Read-only mode
@@ -4635,14 +4638,16 @@ Thank you"""
                 # Assume authorised to see details
                 popup_url = URL(f="project", args=[project_id])
                 details_btn = A(T("Open"),
-                                _href=popup_url,
-                                _class="btn",
-                                _id="details-btn",
-                                _target="_blank")
-                output = dict(item = item,
-                              title = title,
-                              details_btn = details_btn,
-                              )
+                                _href = popup_url,
+                                _class = "btn",
+                                _id = "details-btn",
+                                _target = "_blank",
+                                )
+
+                output = {"item": item,
+                          "title": title,
+                          "details_btn": details_btn,
+                          }
 
             return output
 
@@ -4654,19 +4659,46 @@ Thank you"""
     # -------------------------------------------------------------------------
     def customise_req_approver_resource(r, tablename):
 
+        db = current.db
+        s3db = current.s3db
         auth = current.auth
+
+        f = s3db.req_approver.pe_id
+
         if auth.s3_has_role("ADMIN"):
-            # Filter to RC Orgs
-            ns_only("req_approver",
-                    required = True,
-                    branches = True,
-                    updateable = False, # Need to see all Orgs in Registration screens
-                    )
+            # Filter to Red Cross entities
+
+            ttable = s3db.org_organisation_type
+            try:
+                type_id = db(ttable.name == RED_CROSS).select(ttable.id,
+                                                              limitby = (0, 1),
+                                                              cache = s3db.cache,
+                                                              ).first().id
+            except AttributeError:
+                # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+                return
+
+            otable = s3db.org_organisation
+            btable = s3db.org_organisation_branch
+            ltable = db.org_organisation_organisation_type
+            
+            rows = db(ltable.organisation_type_id == type_id).select(ltable.organisation_id)
+            all_rc_organisation_ids = [row.organisation_id for row in rows]
+            query = (btable.deleted != True) & \
+                    (btable.branch_id.belongs(all_rc_organisation_ids))
+            branches = db(query).select(btable.branch_id)
+            root_ns_organisation_ids = list(set(all_rc_organisation_ids) - set(row.branch_id for row in branches))
+            root_ns = db(otable.id.belongs(root_ns_organisation_ids)).select(otable.pe_id)
+            pe_ids = [row.pe_id for row in root_ns]
+
+            # Find all child Orgs/Sites of these
+            entity_types = ["org_organisation"] + list(auth.org_site_types.keys())
+            child_pe_ids = s3db.pr_get_descendants(pe_ids, entity_types=entity_types)
+
+            entities = pe_ids + child_pe_ids
+            
         else:
-            # Filter to orgs the user has the ORG_ADMIN or national_wh_manager role for
-            db = current.db
-            s3db = current.s3db
-            f = s3db.req_approver.organisation_id
+            # Filter to entities the user has the ORG_ADMIN or national_wh_manager role for
 
             # Lookup which realms the user has the roles for
             gtable = db.auth_group
@@ -4678,31 +4710,29 @@ Thank you"""
             memberships = db(query).select(mtable.pe_id)
             pe_ids = [m.pe_id for m in memberships]
             if None in pe_ids:
-                # Default Realm
+                # Default Realm(s)
                 pe_ids.remove(None)
                 realms = s3db.pr_realm(auth.user["pe_id"])
                 if realms:
                     pe_ids += realms
 
-            # Find all child Orgs of these
-            child_pe_ids = s3db.pr_get_descendants(pe_ids, entity_types="org_organisation")
+            # Find all child Orgs/Sites of these
+            entity_types = ["org_organisation"] + list(auth.org_site_types.keys())
+            child_pe_ids = s3db.pr_get_descendants(pe_ids, entity_types=entity_types)
 
-            realms = pe_ids + child_pe_ids
-            if len(realms) == 1:
-                otable = s3db.org_organisation
-                org = db(otable.pe_id == realms[0]).select(otable.id,
-                                                           limitby = (0, 1)
-                                                           ).first()
-                f.default = org.organisation_id
+            entities = pe_ids + child_pe_ids
+            if len(entities) == 1:
+                f.default = entities[0]
                 f.readable = f.writable = False
-            else:
-                from s3 import IS_ONE_OF
-                f.requires = IS_ONE_OF(db, "org_organisation.id",
-                                       s3db.org_OrganisationRepresent(),
-                                       filterby = "pe_id",
-                                       filter_opts = realms,
-                                       orderby = "org_organisation.name",
-                                       sort = True)
+                return
+
+        from s3 import IS_ONE_OF
+        f.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
+                               s3db.pr_PersonEntityRepresent(show_type = False),
+                               filterby = "pe_id",
+                               filter_opts = entities,
+                               sort = True
+                               )
 
     settings.customise_req_approver_resource = customise_req_approver_resource
 
@@ -4723,13 +4753,14 @@ Thank you"""
         s3db = current.s3db
 
         # Request is mandatory
-        field = s3db.req_commit.req_id
-        field.requires = field.requires.other
+        #field = s3db.req_commit.req_id
+        #field.requires = field.requires.other
 
         table = s3db.req_req
         table.req_ref.represent = lambda v, show_link=True, pdf=True: \
                 s3db.req_ref_represent(v, show_link, pdf)
         table.site_id.label = T("Deliver To")
+
         # Hide Drivers list_field
         list_fields = s3db.get_config("req_req", "list_fields")
         try:
@@ -4737,6 +4768,9 @@ Thank you"""
         except ValueError:
             # Already removed
             pass
+
+        if r.record and r.record.workflow_status == 3:
+            table.approved_by_id.readable = True
 
         # Custom Request Form
         s3db.set_method("req", "req",

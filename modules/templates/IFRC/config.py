@@ -2839,15 +2839,14 @@ def config(settings):
                         URL(c="hrm", f="training_event", vars={"dashboard": 1}),
                         )
         subject_T = T("Check the Event Dashboard")
-        message = "This is your monthly reminder to check the Event Dashboard by visiting this link: %(url)s" % {"url": url}
-        message_T = T(message)
+        message_T = T("This is your monthly reminder to check the Event Dashboard by visiting this link")
 
         # Send Localised Mail(s)
         send_email = current.msg.send_by_pe_id
         for language in languages:
             T.force(language)
             subject = s3_str(subject_T)
-            message = s3_str(message_T)
+            message = "%s: %s" % (message_T, url)
             users = languages[language]
             for pe_id in users:
                 send_email(pe_id,

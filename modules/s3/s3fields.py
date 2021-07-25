@@ -53,7 +53,7 @@ class FieldS3(Field):
         S3 extensions of the gluon.sql.Field class
             - add "sortby" attribute (used by IS_ONE_OF)
 
-        @todo: add parameters supported by newer PyDAL
+        @ToDo: Deprecate now that Field supports this natively via **others
     """
 
     def __init__(self, fieldname,

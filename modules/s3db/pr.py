@@ -508,7 +508,7 @@ class PRPersonEntityModel(S3Model):
 
         # Representation without PE recognition label
         table = resource.table
-        table.pe_id.represent = pr_PersonEntityRepresent(show_label=False)
+        table.pe_id.represent = pr_PersonEntityRepresent(show_label = False)
 
         # Query comes in pre-filtered to accessible & deletion_status
         # Respect response.s3.filter
