@@ -7818,15 +7818,15 @@ class S3HierarchyWidget(FormWidget):
            not cascade_option_in_tree:
             # Render bulk-select options as separate header
             header = DIV(SPAN(A("Select All",
-                                _class="s3-hierarchy-select-all",
+                                _class = "s3-hierarchy-select-all",
                                 ),
                               " | ",
                               A("Deselect All",
-                                _class="s3-hierarchy-deselect-all",
+                                _class = "s3-hierarchy-deselect-all",
                                 ),
-                              _class="s3-hierarchy-bulkselect",
+                              _class = "s3-hierarchy-bulkselect",
                               ),
-                         _class="s3-hierarchy-header",
+                         _class = "s3-hierarchy-header",
                          )
         else:
             header = ""

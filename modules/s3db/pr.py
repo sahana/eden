@@ -508,7 +508,7 @@ class PRPersonEntityModel(S3Model):
 
         # Representation without PE recognition label
         table = resource.table
-        table.pe_id.represent = pr_PersonEntityRepresent(show_label=False)
+        table.pe_id.represent = pr_PersonEntityRepresent(show_label = False)
 
         # Query comes in pre-filtered to accessible & deletion_status
         # Respect response.s3.filter
@@ -9485,10 +9485,11 @@ def pr_get_pe_id(entity, record_id=None):
 # =============================================================================
 #
 def pr_define_role(pe_id,
-                   role=None,
-                   role_type=None,
-                   entity_type=None,
-                   sub_type=None):
+                   role = None,
+                   role_type = None,
+                   entity_type = None,
+                   sub_type = None
+                   ):
     """
         Back-end method to define a new affiliates-role for a person entity
 
@@ -9641,7 +9642,8 @@ def pr_get_role_paths(pe_id, roles=None, role_types=None):
 
     rows = current.db(query).select(rtable.role,
                                     rtable.path,
-                                    rtable.pe_id)
+                                    rtable.pe_id,
+                                    )
 
     role_paths = Storage()
     for role in rows:
@@ -9661,7 +9663,8 @@ def pr_get_role_paths(pe_id, roles=None, role_types=None):
 def pr_get_role_branches(pe_id,
                          roles = None,
                          role_types = None,
-                         entity_type = None):
+                         entity_type = None
+                         ):
     """
         Get all descendants of the immediate ancestors of the entity
         within these roles/role types
@@ -9736,7 +9739,8 @@ def pr_get_path(pe_id):
     roles = current.db(query).select(rtable.id,
                                      rtable.pe_id,
                                      rtable.path,
-                                     rtable.role_type)
+                                     rtable.role_type,
+                                     )
     multipath = S3MultiPath()
     append = multipath.append
     for role in roles:
@@ -9800,7 +9804,8 @@ def pr_instance_type(pe_id):
     if pe_id:
         etable = current.s3db.pr_pentity
         row = current.db(etable.pe_id == pe_id).select(etable.instance_type,
-                                                       limitby=(0, 1)).first()
+                                                       limitby = (0, 1)
+                                                       ).first()
         if row:
             return row.instance_type
     return None
@@ -10005,9 +10010,9 @@ def pr_get_descendants(pe_ids, entity_types=None, skip=None, ids=True):
         Find descendant entities of a person entity in the OU hierarchy
         (performs a real search, not a path lookup).
 
-        @param pe_ids: person entity ID or list of IDs
+        @param pe_ids: person entity ID or list of PE IDs
         @param entity_types: optional filter to a specific entity_type
-        @param ids: whether to return a list of ids or nodes (internal)
+        @param ids: whether to return a list of pe ids or nodes (internal)
         @param skip: list of person entity IDs to skip during
                      descending (internal)
 
@@ -10058,9 +10063,9 @@ def pr_get_descendants(pe_ids, entity_types=None, skip=None, ids=True):
     # Recurse
     if node_ids:
         descendants = pr_get_descendants(node_ids,
-                                         skip=skip,
-                                         entity_types=entity_types,
-                                         ids=False)
+                                         skip = skip,
+                                         entity_types = entity_types,
+                                         ids = False)
         result.update(descendants)
 
     if ids:
@@ -10349,15 +10354,16 @@ def pr_import_prep(data):
             continue
 
         record = db(table.name == org).select(table.pe_id,
-                                              limitby=(0, 1)
+                                              limitby = (0, 1)
                                               ).first()
         if not record:
             # Add a new record
             record_id = table.insert(**{"name": org})
-            update_super(table, Storage(id=record_id))
+            update_super(table, Storage(id = record_id))
             set_record_owner(table, record_id)
             record = db(table.id == record_id).select(table.pe_id,
-                                                      limitby=(0, 1)).first()
+                                                      limitby = (0, 1)
+                                                      ).first()
         pe_id = record.pe_id
         # Replace string with pe_id
         element.text = str(pe_id)
@@ -10389,7 +10395,7 @@ def pr_address_list_layout(list_id, item_id, resource, rfields, record):
                         " ",
                         SPAN(addr_street),
                         " ",
-                        _class="card_1_line",
+                        _class = "card_1_line",
                         )
 
     addr_postcode = raw["gis_location.addr_postcode"] or ""
@@ -10398,7 +10404,7 @@ def pr_address_list_layout(list_id, item_id, resource, rfields, record):
                           " ",
                           SPAN(addr_postcode),
                           " ",
-                          _class="card_1_line",
+                          _class = "card_1_line",
                           )
     locations = []
     for level in ("L5", "L4", "L3", "L2", "L1", "L0"):
@@ -10411,7 +10417,7 @@ def pr_address_list_layout(list_id, item_id, resource, rfields, record):
                      " ",
                      SPAN(location),
                      " ",
-                     _class="card_1_line",
+                     _class = "card_1_line",
                      )
     else:
         location = ""
@@ -10421,48 +10427,51 @@ def pr_address_list_layout(list_id, item_id, resource, rfields, record):
     table = current.s3db.pr_address
     if permit("update", table, record_id=record_id):
         edit_btn = A(ICON("edit"),
-                     _href=URL(c="pr", f="address",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": list_id,
-                                     "record": record_id}),
-                     _class="s3_modal",
-                     _title=current.T("Edit Address"),
+                     _href = URL(c="pr", f="address",
+                                 args = [record_id, "update.popup"],
+                                 vars = {"refresh": list_id,
+                                         "record": record_id,
+                                         },
+                                 ),
+                     _class = "s3_modal",
+                     _title = current.T("Edit Address"),
                      )
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
         delete_btn = A(ICON("delete"),
-                       _class="dl-item-delete",
+                       _class = "dl-item-delete",
                        )
     else:
         delete_btn = ""
     edit_bar = DIV(edit_btn,
                    delete_btn,
-                   _class="edit-bar fright",
+                   _class = "edit-bar fright",
                    )
 
     # Render the item
     item = DIV(DIV(ICON("icon"), # Placeholder only
                    SPAN(" %s" % title,
-                        _class="card-title"),
+                        _class = "card-title",
+                        ),
                    edit_bar,
-                   _class="card-header",
+                   _class = "card-header",
                    ),
                DIV(DIV(DIV(addr_street,
                            addr_postcode,
                            location,
                            P(SPAN(comments),
                              " ",
-                             _class="card_manylines",
+                             _class = "card_manylines",
                              ),
-                           _class="media",
+                           _class = "media",
                            ),
-                       _class="media-body",
+                       _class = "media-body",
                        ),
-                   _class="media",
+                   _class = "media",
                    ),
-               _class=item_class,
-               _id=item_id,
+               _class = item_class,
+               _id = item_id,
                )
 
     return item
@@ -10493,24 +10502,26 @@ def pr_contact_list_layout(list_id, item_id, resource, rfields, record):
     table = current.s3db.pr_contact
     if permit("update", table, record_id=record_id):
         edit_btn = A(ICON("edit"),
-                     _href=URL(c="pr", f="contact",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": list_id,
-                                     "record": record_id}),
-                     _class="s3_modal",
-                     _title=current.T("Edit Contact"),
+                     _href = URL(c="pr", f="contact",
+                                 args = [record_id, "update.popup"],
+                                 vars = {"refresh": list_id,
+                                         "record": record_id,
+                                         },
+                                 ),
+                     _class = "s3_modal",
+                     _title = current.T("Edit Contact"),
                      )
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
         delete_btn = A(ICON("delete"),
-                       _class="dl-item-delete",
+                       _class = "dl-item-delete",
                        )
     else:
         delete_btn = ""
     edit_bar = DIV(edit_btn,
                    delete_btn,
-                   _class="edit-bar fright",
+                   _class = "edit-bar fright",
                    )
 
     if contact_method in("SMS", "HOME_PHONE", "WORK_PHONE"):
@@ -10532,28 +10543,29 @@ def pr_contact_list_layout(list_id, item_id, resource, rfields, record):
     # Render the item
     item = DIV(DIV(ICON("icon"), # Placeholder only
                    SPAN(" %s" % title,
-                        _class="card-title"),
+                        _class = "card-title",
+                        ),
                    edit_bar,
-                   _class="card-header",
+                   _class = "card-header",
                    ),
                DIV(DIV(DIV(P(ICON(icon),
                              " ",
                              SPAN(value),
                              " ",
-                             _class="card_1_line",
+                             _class = "card_1_line",
                              ),
                            P(SPAN(comments),
                              " ",
-                             _class="card_manylines",
+                             _class = "card_manylines",
                              ),
-                           _class="media",
+                           _class = "media",
                            ),
-                       _class="media-body",
+                       _class = "media-body",
                        ),
-                   _class="media",
+                   _class = "media",
                    ),
-               _class=item_class,
-               _id=item_id,
+               _class = item_class,
+               _id = item_id,
                )
 
     return item
@@ -10581,9 +10593,9 @@ class pr_EmergencyContactListLayout(S3DataListLayout):
 
         header = DIV(ICON("icon"),
                      SPAN(record["pr_contact_emergency.name"],
-                          _class="card-title",
+                          _class = "card-title",
                           ),
-                     _class="card-header",
+                     _class = "card-header",
                      )
 
         toolbox = self.render_toolbox(list_id, resource, record)
@@ -10604,7 +10616,7 @@ class pr_EmergencyContactListLayout(S3DataListLayout):
             @param record: the record as dict
         """
 
-        body = DIV(_class="media")
+        body = DIV(_class = "media")
         append = body.append
 
         fields = ("pr_contact_emergency.relationship",
@@ -10639,7 +10651,7 @@ class pr_EmergencyContactListLayout(S3DataListLayout):
                 _class = "card_1_line"
             return P(ICON(self.ICONS.get(rfield.fname, "icon")),
                      SPAN(value),
-                     _class=_class,
+                     _class = _class,
                      )
         else:
             return None
@@ -10658,7 +10670,7 @@ class pr_EmergencyContactListLayout(S3DataListLayout):
         tablename = resource.tablename
         record_id = record[str(resource._id)]
 
-        toolbox = DIV(_class="edit-bar fright")
+        toolbox = DIV(_class = "edit-bar fright")
 
         update_url = URL(c="pr",
                          f="contact_emergency",
@@ -10717,9 +10729,9 @@ class pr_PersonListLayout(S3DataListLayout):
                                       )
         header = DIV(ICON("icon"),
                      SPAN(fullname,
-                          _class="card-title",
+                          _class = "card-title",
                           ),
-                     _class="card-header",
+                     _class = "card-header",
                      )
 
         toolbox = self.render_toolbox(list_id, resource, record)
@@ -10740,7 +10752,7 @@ class pr_PersonListLayout(S3DataListLayout):
             @param record: the record as dict
         """
 
-        body = DIV(_class="media")
+        body = DIV(_class = "media")
         append = body.append
 
         fields = ("pr_person_details.nationality",
@@ -10789,7 +10801,7 @@ class pr_PersonListLayout(S3DataListLayout):
             return P(ICON(self.ICONS.get(icon, "icon")),
                      LABEL("%s: " % rfield.label),
                      SPAN(record[rfield.colname]),
-                     _class=_class,
+                     _class = _class,
                      )
         else:
             return None
@@ -10806,11 +10818,11 @@ class pr_PersonListLayout(S3DataListLayout):
 
         record_id = record[str(resource._id)]
 
-        toolbox = DIV(_class="edit-bar fright")
+        toolbox = DIV(_class = "edit-bar fright")
 
         if current.auth.s3_has_permission("update",
                                           resource.table,
-                                          record_id=record_id):
+                                          record_id = record_id):
 
             controller = current.request.controller
             if controller not in ("deploy", "hrm", "member", "vol"):
@@ -10826,10 +10838,11 @@ class pr_PersonListLayout(S3DataListLayout):
                              )
 
             btn = A(ICON("edit"),
-                    _href=update_url,
-                    _class="s3_modal",
-                    _title=S3Method.crud_string(resource.tablename,
-                                                "title_update"))
+                    _href = update_url,
+                    _class = "s3_modal",
+                    _title = S3Method.crud_string(resource.tablename,
+                                                  "title_update")
+                    )
             toolbox.append(btn)
 
         return toolbox
@@ -10945,19 +10958,19 @@ class pr_PersonSearchAutocomplete(S3Method):
                 orderby = "pr_person.first_name"
 
             # Extract results
-            rows = resource.select(fields=fields,
-                                   start=0,
-                                   limit=limit,
-                                   orderby=orderby,
+            rows = resource.select(fields = fields,
+                                   start = 0,
+                                   limit = limit,
+                                   orderby = orderby,
                                    ).rows
 
             # Build output
             items = []
             iappend = items.append
             for row in rows:
-                name = Storage(first_name=row["pr_person.first_name"],
-                               middle_name=row["pr_person.middle_name"],
-                               last_name=row["pr_person.last_name"],
+                name = Storage(first_name = row["pr_person.first_name"],
+                               middle_name = row["pr_person.middle_name"],
+                               last_name = row["pr_person.last_name"],
                                )
                 name = s3_fullname(name)
                 item = {"id": row["pr_person.id"],
@@ -11030,23 +11043,31 @@ def pr_filter_list_layout(list_id, item_id, resource, rfields, record):
 
     # Render the item
     item = DIV(DIV(DIV(actions,
-                       _class="action-bar fleft"),
+                       _class = "action-bar fleft",
+                       ),
                    SPAN(T("%(resource)s Filter") % \
-                        dict(resource=resource_name),
-                        _class="card-title"),
+                        {"resource": resource_name},
+                        _class = "card-title",
+                        ),
                     DIV(A(ICON("delete"),
-                          _title=T("Delete this Filter"),
-                          _class="dl-item-delete"),
-                        _class="edit-bar fright"),
-                   _class="card-header"),
+                          _title = T("Delete this Filter"),
+                          _class = "dl-item-delete",
+                          ),
+                        _class = "edit-bar fright",
+                        ),
+                   _class = "card-header",
+                   ),
                DIV(DIV(H5(title,
-                          _id="filter-title-%s" % record_id,
-                          _class="media-heading jeditable"),
+                          _id = "filter-title-%s" % record_id,
+                          _class = "media-heading jeditable",
+                          ),
                        DIV(query),
-                       _class="media-body"),
-                   _class="media"),
-               _class=item_class,
-               _id=item_id,
+                       _class = "media-body",
+                       ),
+                   _class = "media",
+                   ),
+               _class = item_class,
+               _id = item_id,
                )
 
     return item
@@ -11080,31 +11101,39 @@ def filter_actions(resource, url, filters):
             else:
                 args = []
             e = action.get("format", None)
-            link = URL(c=c, f=f, args=args, extension=e,
-                       vars=filters)
+            link = URL(c=c, f=f,
+                       args = args,
+                       extension = e,
+                       vars = filters,
+                       )
             append(A(ICON(action.get("icon", "other")),
-                     _title=T(action.get("label", "Open")),
-                     _href=link))
+                     _title = T(action.get("label", "Open")),
+                     _href = link,
+                     ))
     else:
         # Default to using Summary Tabs
         links = summary_urls(resource, url, filters)
         if links:
             if "map" in links:
                 append(A(ICON("globe"),
-                         _title=T("Open Map"),
-                         _href=links["map"]))
+                         _title = T("Open Map"),
+                         _href = links["map"],
+                         ))
             if "table" in links:
                 append(A(ICON("table"),
-                         _title=T("Open Table"),
-                         _href=links["table"]))
+                         _title = T("Open Table"),
+                         _href = links["table"],
+                         ))
             if "chart" in links:
                 append(A(ICON("bar-chart"),
-                         _title=T("Open Chart"),
-                         _href=links["chart"]))
+                         _title = T("Open Chart"),
+                         _href = links["chart"],
+                         ))
             if "report" in links:
                 append(A(ICON("bar-chart"),
-                         _title=T("Open Report"),
-                         _href=links["report"]))
+                         _title = T("Open Report"),
+                         _href = links["report"],
+                         ))
 
     return actions
 

@@ -29,7 +29,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3Hierarchy", "S3HierarchyCRUD")
+__all__ = ("S3Hierarchy",
+           "S3HierarchyCRUD",
+           )
 
 import json
 
@@ -434,11 +436,11 @@ class S3Hierarchy(object):
 
     # -------------------------------------------------------------------------
     def __init__(self,
-                 tablename=None,
-                 hierarchy=None,
-                 represent=None,
-                 filter=None,
-                 leafonly=True,
+                 tablename = None,
+                 hierarchy = None,
+                 represent = None,
+                 filter = None,
+                 leafonly = True,
                  ):
         """
             Constructor
@@ -652,7 +654,8 @@ class S3Hierarchy(object):
         query = (htable.tablename == tablename)
         row = current.db(query).select(htable.dirty,
                                        htable.hierarchy,
-                                       limitby=(0, 1)).first()
+                                       limitby = (0, 1)
+                                       ).first()
         if row and not row.dirty:
             data = row.hierarchy
             theset = self.__theset
@@ -662,14 +665,14 @@ class S3Hierarchy(object):
                                          "c": item["c"],
                                          "s": set(item["s"]) \
                                               if item["s"] else set()}
-            self.__status(dirty=False,
-                          dbupdate=None,
-                          dbstatus=True)
+            self.__status(dirty = False,
+                          dbupdate = None,
+                          dbstatus = True)
             return
         else:
-            self.__status(dirty=True,
-                          dbupdate=None,
-                          dbstatus=False if row else None)
+            self.__status(dirty = True,
+                          dbupdate = None,
+                          dbstatus = False if row else None)
         return
 
     # -------------------------------------------------------------------------
@@ -702,7 +705,8 @@ class S3Hierarchy(object):
         htable = current.s3db.s3_hierarchy
         query = (htable.tablename == tablename)
         row = current.db(query).select(htable.id,
-                                       limitby=(0, 1)).first()
+                                       limitby = (0, 1)
+                                       ).first()
 
         if row:
             # Update record

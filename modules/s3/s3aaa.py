@@ -357,9 +357,11 @@ Thank you"""
                 Field("role", length=255, unique=True,
                       default="",
                       requires = IS_NOT_IN_DB(db, "%s.role" % gname),
-                      label=messages.label_role),
+                      label = messages.label_role,
+                      ),
                 Field("description", "text",
-                      label=messages.label_description),
+                      label = messages.label_description,
+                      ),
                 # Additional meta fields required for sync:
                 S3MetaFields.created_on(),
                 S3MetaFields.modified_on(),
@@ -367,7 +369,7 @@ Thank you"""
                 #S3MetaFields.deleted_fk(),
                 #S3MetaFields.deleted_rb(),
                 migrate = migrate,
-                fake_migrate=fake_migrate,
+                fake_migrate = fake_migrate,
                 )
             gtable = settings.table_group = db[gname]
 
@@ -378,22 +380,24 @@ Thank you"""
                 Field("user_id", utable,
                       requires = IS_IN_DB(db, "%s.id" % uname,
                                           "%(id)s: %(first_name)s %(last_name)s"),
-                      label=messages.label_user_id),
+                      label = messages.label_user_id,
+                      ),
                 Field("group_id", gtable,
                       requires = IS_IN_DB(db, "%s.id" % gname,
                                           "%(id)s: %(role)s"),
                       represent = S3Represent(lookup=gname, fields=["role"]),
-                      label=messages.label_group_id),
+                      label = messages.label_group_id,
+                      ),
                 # Realm
                 Field("pe_id", "integer"),
                 migrate = migrate,
-                fake_migrate=fake_migrate,
+                fake_migrate = fake_migrate,
                 *S3MetaFields.sync_meta_fields())
             settings.table_membership = db[settings.table_membership_name]
 
         # Define Eden permission table
-        self.permission.define_table(migrate=migrate,
-                                     fake_migrate=fake_migrate)
+        self.permission.define_table(migrate = migrate,
+                                     fake_migrate = fake_migrate)
 
         #security_policy = deployment_settings.get_security_policy()
         #if security_policy not in (1, 2, 3, 4, 5, 6, 7, 8) and \
@@ -454,7 +458,7 @@ Thank you"""
                       requires = IS_NOT_EMPTY(),
                       ),
                 migrate = migrate,
-                fake_migrate=fake_migrate,
+                fake_migrate = fake_migrate,
                 *S3MetaFields.sync_meta_fields())
             settings.table_event = db[settings.table_event_name]
 
@@ -5405,7 +5409,7 @@ Please go to %(url)s to approve this user."""
     def s3_set_record_owner(self,
                             table,
                             record,
-                            force_update=False,
+                            force_update = False,
                             **fields):
         """
             Set the record owned_by_user, owned_by_group and realm_entity
@@ -5781,10 +5785,11 @@ Please go to %(url)s to approve this user."""
 
     # -------------------------------------------------------------------------
     def permitted_facilities(self,
-                             table=None,
-                             error_msg=None,
-                             redirect_on_error=True,
-                             facility_type=None):
+                             table = None,
+                             error_msg = None,
+                             redirect_on_error = True,
+                             facility_type = None
+                             ):
         """
             If there are no facilities that the user has permission for,
             prevents create & update of records in table & gives a
@@ -5847,9 +5852,10 @@ Please go to %(url)s to approve this user."""
 
     # -------------------------------------------------------------------------
     def permitted_organisations(self,
-                                table=None,
-                                error_msg=None,
-                                redirect_on_error=True):
+                                table = None,
+                                error_msg = None,
+                                redirect_on_error = True
+                                ):
         """
             If there are no organisations that the user has update
             permission for, prevents create & update of a record in

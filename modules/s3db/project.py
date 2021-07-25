@@ -11012,14 +11012,14 @@ class S3ProjectTaskModel(S3Model):
                                 readable = staff,
                                 writable = staff,
                                 label = T("Assigned to"),
-                                filterby = "instance_type",
+                                filterby = "instance_type", # Not using instance_types as not a Super-Entity
                                 filter_opts = ("pr_person", "pr_group", "org_organisation"),
                                 represent = assignee_represent,
                                 # @ToDo: Widget
                                 #widget = S3PentityWidget(),
-                                #comment = DIV(_class="tooltip",
-                                #              _title="%s|%s" % (T("Assigned to"),
-                                #                                messages.AUTOCOMPLETE_HELP))
+                                #comment = DIV(_class = "tooltip",
+                                #              _title = "%s|%s" % (T("Assigned to"),
+                                #                                  messages.AUTOCOMPLETE_HELP))
                                 ),
                      s3_datetime("date_due",
                                  label = T("Date Due"),
