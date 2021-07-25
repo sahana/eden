@@ -2227,6 +2227,11 @@ S3.search = {};
         });
 
         // Set filter widgets to fire optionChanged event
+        $('.text-filter').on('keyup.autosubmit', function(e) {
+            if (e.keyCode == 27) { // Pressing ESC to clear text filter input
+                $(this).val('').closest('form').trigger('optionChanged');
+            }
+        });
         $('.text-filter, .range-filter-input').on('input.autosubmit', function() {
             $(this).closest('form').trigger('optionChanged');
         });

@@ -112,12 +112,17 @@ class index(S3CustomController):
                           _class="info button",
                           ),
                         ),
+                     LI(A(ICON("organisation"), T("Organizations"),
+                          _href = URL(c="org", f="organisation"),
+                          _class="info button",
+                          ),
+                        ),
                      LI(A(ICON("book"), T("Guides & Videos"),
                           _href = URL(c="default", f="help"),
                           _class="info button",
                           ),
                         ),
-                     _class="button-group even-2 stack-for-small",
+                     _class="button-group even-3 stack-for-small",
                      )
 
         output = {"login_div": login_div,

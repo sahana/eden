@@ -61,6 +61,7 @@ class S3MainMenu(default.S3MainMenu):
             menu = [MM("Current Needs", c="br", f="activities"),
                     MM("Our Relief Offers", c="br", f="assistance_offer"),
                     MM("Affected Persons", c="br", f="person"),
+                    MM("Find Relief Offers", c="br", f="offers"),
                     ]
         else:
             # Private Citizen
@@ -69,16 +70,11 @@ class S3MainMenu(default.S3MainMenu):
                     MM("Offer Assistance / Supplies", c="br", f="assistance_offer"),
                     ]
 
-        return [menu,
+        has_roles = auth.s3_has_roles
+        is_org_user = not has_roles(("ADMIN", "ORG_GROUP_ADMIN")) and \
+                      has_roles(("RELIEF_PROVIDER", "ORG_ADMIN"))
 
-                # TODO adapt label if managing only one org
-                MM("Organizations", c="org", f="organisation",
-                   restrict=["ORG_ADMIN", "ORG_GROUP_ADMIN"],
-                   ),
-                MM("Events", c="event", f="event", restrict="EVENT_MANAGER"),
-                MM("Pending Approvals", c="default", f="index", args=["approve_org"],
-                   restrict = "ORG_GROUP_ADMIN",
-                   ),
+        return [menu,
                 MM("Register", c="default", f="index", link=False,
                    check = not logged_in)(
                     MM("Private Citizen", args=["register"]),
@@ -86,6 +82,15 @@ class S3MainMenu(default.S3MainMenu):
                        check = org_registration,
                        ),
                     ),
+                MM("Organizations", c="org", f="organisation", check = not is_org_user),
+                MM("Organizations", c="org", f="organisation", check = is_org_user)(
+                    MM("My Organizations", vars={"mine": "1"}),
+                    MM("All Organizations"),
+                    ),
+                MM("Events", c="event", f="event", restrict="EVENT_MANAGER"),
+                MM("Pending Approvals", c="default", f="index", args=["approve_org"],
+                   restrict = "ORG_GROUP_ADMIN",
+                   ),
                 MM("Overview", c="default", f="index", args=["overview"]),
                 ]
 
@@ -207,31 +212,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         auth = current.auth
         is_event_manager = auth.s3_has_role("EVENT_MANAGER")
-        org_role = is_event_manager or auth.s3_has_roles(("CASE_MANAGER", "RELIEF_PROVIDER"))
+        is_relief_provider = auth.s3_has_role("RELIEF_PROVIDER", include_admin=False)
+        org_role = is_event_manager or is_relief_provider
 
         if org_role:
             # Org Users: separate menus per function
-            if f in ("person", "case_activity"):
-                # Cases
-                menu = [M(labels.CURRENT, f="person", vars={"closed": "0"},
-                          restrict=("EVENT_MANAGER", "RELIEF_PROVIDER"))(
-                            M(crud_strings.label_create, m="create"),
-                            ),
-                        M("Our Needs", f="case_activity", restrict="RELIEF_PROVIDER")(
-                            M("Statistic", m="report"),
-                            ),
-                        M("Archive", link=False)(
-                            M(labels.CLOSED, f="person", vars={"closed": "1"}),
-                            M("Invalid Cases", f="person", vars={"invalid": "1"}, restrict=["ADMIN"]),
-                            ),
-                        ]
-            elif f in ("assistance_offer", "offers", "assistance_type"):
+            if is_event_manager and f in ("offers", "assistance_type"):
                 # Relief Offers
-                menu = [M("Our Relief Offers", f="assistance_offer",
-                          restrict="RELIEF_PROVIDER")(
-                            M("Create", m="create"),
-                            ),
-                        M("Current Relief Offers", f="offers")(
+                menu = [M("Current Relief Offers", f="offers")(
                             M("Statistics", m="report"),
                             # TODO enable when implemented
                             #M("Map", m="map"),
@@ -244,6 +232,32 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Administration", link=False, restrict="ADMIN")(
                             M("Assistance Types", f="assistance_type"),
                             )
+                        ]
+            elif f in ("person", "case_activity", "offers"):
+                # Cases, needs and relief offers
+                menu = [M(labels.CURRENT, f="person", vars={"closed": "0"},
+                          restrict=("EVENT_MANAGER", "RELIEF_PROVIDER"))(
+                            M(crud_strings.label_create, m="create"),
+                            ),
+                        M("Our Needs", f="case_activity", check=lambda i: is_relief_provider)(
+                            M("Statistic", m="report"),
+                            ),
+                        M("Current Relief Offers", f="offers", check=lambda i: not is_event_manager)(
+                            M("Statistics", m="report"),
+                            # TODO enable when implemented
+                            #M("Map", m="map"),
+                            ),
+                        M("Archive", link=False)(
+                            M(labels.CLOSED, f="person", vars={"closed": "1"}),
+                            M("Invalid Cases", f="person", vars={"invalid": "1"}, restrict=["ADMIN"]),
+                            ),
+                        ]
+            elif f in ("assistance_offer", "assistance_type"):
+                # Our Offers
+                menu = [M("Our Relief Offers", f="assistance_offer",
+                          restrict="RELIEF_PROVIDER")(
+                            M("Create", m="create"),
+                            ),
                         ]
             else:
                 # Needs
@@ -290,16 +304,23 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def org():
         """ ORG / Organization Registry """
 
-        sysroles = current.auth.get_system_roles()
+        auth = current.auth
 
+        sysroles = auth.get_system_roles()
         ADMIN = sysroles.ADMIN
         ORG_GROUP_ADMIN = sysroles.ORG_GROUP_ADMIN
 
+        has_roles = auth.s3_has_roles
+        is_org_user = not has_roles((ADMIN, ORG_GROUP_ADMIN)) and \
+                      has_roles(("RELIEF_PROVIDER", "ORG_ADMIN"))
+
         return M(c="org")(
-                    M("Organizations", f="organisation")(
+                    M("Organizations", c="org", f="organisation")(
                         M("Create", m="create", restrict=(ADMIN, ORG_GROUP_ADMIN)),
+                        M("My Organizations", vars={"mine": "1"}, check=is_org_user),
+                        M("All Organizations", check=is_org_user),
                         ),
-                    M("Administration", restrict=(ADMIN, ORG_GROUP_ADMIN))(
+                    M("Administration", restrict=ADMIN)(
                         M("Organization Types", f="organisation_type"),
                         M("Sectors", f="sector"),
                         )

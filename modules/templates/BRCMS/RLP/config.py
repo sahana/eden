@@ -1104,6 +1104,24 @@ def config(settings):
             resource = r.resource
 
             is_org_group_admin = auth.s3_has_role("ORG_GROUP_ADMIN")
+            mine = False
+
+            if not is_org_group_admin:
+
+                if r.get_vars.get("mine") == "1":
+                    mine = True
+                    # Filter to those the user can update
+                    aquery = current.auth.s3_accessible_query("update", "org_organisation")
+                    if aquery:
+                        resource.add_filter(aquery)
+
+                # Restrict data formats
+                allowed = ("html", "iframe", "popup", "aadata", "plain", "geojson", "pdf", "xls")
+                if r.method in ("report", "filter"):
+                    allowed += ("json",)
+                settings.ui.export_formats = ("pdf", "xls")
+                if r.representation not in allowed:
+                    r.error(403, current.ERROR.NOT_PERMITTED)
 
             if not r.component:
                 if r.interactive:
@@ -1147,9 +1165,17 @@ def config(settings):
                                    ]
 
                     # Filters
-                    text_fields = ["name", "acronym", "website", "phone"]
+                    text_fields = ["name",
+                                   "acronym",
+                                   "website",
+                                   "phone",
+                                   ]
                     if is_org_group_admin:
                         text_fields.append("email.value")
+                    if not mine:
+                        text_fields.extend(["office.location_id$L3",
+                                            "office.location_id$L1",
+                                            ])
                     filter_widgets = [S3TextFilter(text_fields,
                                                    label = T("Search"),
                                                    ),
@@ -1169,14 +1195,19 @@ def config(settings):
 
                 # Custom list fields
                 list_fields = ["name",
-                               "acronym",
                                #"organisation_type__link.organisation_type_id",
+                               #"office.location_id$L3",
+                               #"office.location_id$L1",
                                "website",
                                "phone",
                                #"email.value"
                                ]
+                if not mine:
+                    list_fields[1:1] = ("office.location_id$L3",
+                                        "office.location_id$L1",
+                                        )
                 if is_org_group_admin:
-                    list_fields.insert(2, (T("Type"), "organisation_type__link.organisation_type_id"))
+                    list_fields.insert(1, (T("Type"), "organisation_type__link.organisation_type_id"))
                     list_fields.append((T("Email"), "email.value"))
                 r.resource.configure(list_fields = list_fields,
                                      )

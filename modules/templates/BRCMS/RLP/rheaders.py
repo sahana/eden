@@ -212,8 +212,9 @@ def rlpcm_org_rheader(r, tabs=None):
             if not tabs:
                 tabs = [(T("Organisation"), None),
                         (T("Offices"), "office"),
-                        (T("Staff"), "human_resource"),
                         ]
+                if auth.s3_has_permission("update", "org_organisation", record_id=record.id):
+                    tabs.append((T("Staff"), "human_resource"))
 
             # Check for active user accounts:
             rheader_fields = []

@@ -6501,4 +6501,5 @@
 'Åland Islands': 'Ålandinseln',
 'Overview & Statistics': 'Übersicht & Statistik',
 'Guides & Videos': 'Anleitungen & Videos',
+'All Organizations': 'Alle Organisationen',
 }
