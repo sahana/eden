@@ -602,10 +602,15 @@ def config(settings):
                 # List configuration
                 if not r.record:
 
+                    from .helpers import OfferAvailabilityFilter, \
+                                         get_offer_filters
+
+                    # Apply availability filter
+                    OfferAvailabilityFilter.apply_filter(resource, r.get_vars)
+
                     # Filter for matching offers?
                     match = r.get_vars.get("match") == "1"
                     if not mine and match:
-                        from .helpers import get_offer_filters
                         filters = get_offer_filters()
                         if filters:
                             resource.add_filter(filters)
@@ -651,6 +656,10 @@ def config(settings):
                                             sort = False,
                                             cols = 3,
                                             ),
+                            OfferAvailabilityFilter("date",
+                                                    label = T("Available"),
+                                                    hidden = True,
+                                                    ),
                             ])
 
                     # Visibility Filter
