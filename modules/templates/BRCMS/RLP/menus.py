@@ -239,6 +239,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Approval", f="offers", link=False, restrict="EVENT_MANAGER")(
                             M("Pending Approvals", vars={"pending": "1"}),
                             M("Blocked Entries", vars={"blocked": 1}),
+                            M("All Offers", vars={"all": 1}),
                             ),
                         M("Administration", link=False, restrict="ADMIN")(
                             M("Assistance Types", f="assistance_type"),

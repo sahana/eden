@@ -12,7 +12,7 @@ import os
 
 from gluon import current, A, DIV, SPAN
 
-from s3 import FS, ICON, s3_str
+from s3 import FS, ICON, S3DateFilter, s3_str
 from s3db.pr import pr_PersonEntityRepresent
 
 # =============================================================================
@@ -652,5 +652,42 @@ class OfferDetails(object):
             return output
         else:
             return value if value else "-"
+
+# =============================================================================
+class OfferAvailabilityFilter(S3DateFilter):
+    """
+        Date-Range filter with custom variable
+        - without this then we parse as a vfilter which clutters error console
+          & is inefficient (including preventing a bigtable optimisation)
+    """
+
+    @classmethod
+    def _variable(cls, selector, operator):
+
+        return super()._variable("$$available", operator)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def apply_filter(resource, get_vars):
+        """
+            Filter out offers that
+            - become available only after a start date, or
+            - become unavailable before an end date
+
+            (reversed logic compared to a normal range filter)
+        """
+
+        parse_dt = current.calendar.parse_date
+
+        from_date = parse_dt(get_vars.get("$$available__ge"))
+        to_date = parse_dt(get_vars.get("$$available__le"))
+
+        if from_date:
+            query = (FS("date") == None) | (FS("date") <= from_date)
+            resource.add_filter(query)
+
+        if to_date:
+            query = (FS("end_date") == None) | (FS("end_date") >= to_date)
+            resource.add_filter(query)
 
 # END =========================================================================
