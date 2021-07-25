@@ -13,7 +13,7 @@ from gluon import Field, HTTP, SQLFORM, URL, current, redirect, \
 
 from gluon.storage import Storage
 
-from s3 import FS, IS_PHONE_NUMBER_MULTI, IS_PHONE_NUMBER_SINGLE, \
+from s3 import FS, ICON, IS_PHONE_NUMBER_MULTI, IS_PHONE_NUMBER_SINGLE, \
                JSONERRORS, S3CRUD, S3CustomController, S3LocationSelector, \
                S3Represent, S3Report, S3Request, S3WithIntro, \
                s3_comments_widget, s3_get_extension, s3_mark_required, \
@@ -107,11 +107,25 @@ class index(S3CustomController):
             auth.messages.submit_button = T("Login")
             login_form = auth.login(inline=True)
 
+        buttons = UL(LI(A(ICON("bar-chart"), T("Overview & Statistics"),
+                          _href = URL(c="default", f="index", args=["overview"]),
+                          _class="info button",
+                          ),
+                        ),
+                     LI(A(ICON("book"), T("Guides & Videos"),
+                          _href = URL(c="default", f="help"),
+                          _class="info button",
+                          ),
+                        ),
+                     _class="button-group even-2 stack-for-small",
+                     )
+
         output = {"login_div": login_div,
                   "login_form": login_form,
                   "announcements": announcements,
                   "announcements_title": announcements_title,
                   "intro": self.get_cms_intro(("default", "index", "HomepageIntro"), cmsxml=True),
+                  "buttons": buttons,
                   }
 
         # Custom view and homepage styles

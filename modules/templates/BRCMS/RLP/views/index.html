@@ -1,30 +1,39 @@
 {{extend "layout.html"}}
 <div class='row home-top' style='margin-top:20px'>
- <div class='large-4 large-offset-1 columns'>
-  <div class="row hide-for-small">
-   <div id='site-title' class='small-12 columns'>
-     <img src='{{=URL(c="static", f="themes", args=["RLP", "img", "logo_lsjv.png"])}}' alt='Rheinland-Pfalz' />
-     <h2>{{=settings.get_custom("homepage_title")}}</h2>
+ <div class='small-12 columns'>
+  <div class='row'>
+   <div class='large-4 large-offset-1 columns'>
+    <div class="row hide-for-small">
+     <div id='site-title' class='small-12 columns'>
+      <img src='{{=URL(c="static", f="themes", args=["RLP", "img", "logo_lsjv.png"])}}' alt='Rheinland-Pfalz' />
+      <h2>{{=settings.get_custom("homepage_title")}}</h2>
+     </div>
+    </div>
+   </div>
+   <div class='large-5 columns end'>
+    {{AUTHENTICATED = auth.get_system_roles().AUTHENTICATED}}
+    {{if AUTHENTICATED not in session.s3.roles:}}
+    <div id='login_box' class='panel'>
+     <div id='login_form'>
+      {{=login_div}}
+      {{include "auth/_login.html"}}
+     </div>
+    </div>
+    {{else:}}
+     {{if announcements_title:}}<h4 class='announcements-title'>{{=announcements_title}}</h4>{{pass}}
+     {{if announcements:}}{{=announcements}}{{pass}}
+    {{pass}}
    </div>
   </div>
-  <div class="row">
-   <div id='site-intro' class='small-12 columns'>
-     {{try:}}{{if intro:}}<p>{{=intro}}</p>{{pass}}{{except:}}{{pass}}
+  {{try:}}<div class='row'>
+   <div id='site-actions' class='small-12 medium-10 large-8 small-centered columns'>
+     {{=buttons}}
    </div>
+  </div>{{except:}}{{pass}}
+  {{try:}}<div class='row'>
+   <div id='site-intro' class='medium-12 large-8 large-centered columns'>
+     {{=intro}}
+   </div>{{except:}}{{pass}}
   </div>
- </div>
- <div class='large-5 columns end'>
-  {{AUTHENTICATED = auth.get_system_roles().AUTHENTICATED}}
-  {{if AUTHENTICATED not in session.s3.roles:}}
-  <div id='login_box' class='panel'>
-   <div id='login_form'>
-    {{=login_div}}
-    {{include "auth/_login.html"}}
-   </div>
-  </div>
-  {{else:}}
-   {{if announcements_title:}}<h4 class='announcements-title'>{{=announcements_title}}</h4>{{pass}}
-   {{if announcements:}}{{=announcements}}{{pass}}
-  {{pass}}
  </div>
 </div>

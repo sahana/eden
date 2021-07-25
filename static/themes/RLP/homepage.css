@@ -8,6 +8,7 @@
 #site-title {
     text-align: center;
     padding-top: 2rem;
+    margin-bottom: 3rem;
 }
 #site-title h2, h3 {
     font-weight: normal!important;
