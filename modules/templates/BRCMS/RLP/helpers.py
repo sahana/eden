@@ -1,4 +1,4 @@
-" -*- coding: utf-8 -*-"
+# -*- coding: utf-8 -*-
 
 """
     Helper functions and classes for RLPCM template
@@ -10,12 +10,12 @@ import datetime
 import json
 import os
 
-from gluon import current, SPAN
+from gluon import current, A, DIV, SPAN
 
-from s3 import FS, s3_str
+from s3 import FS, ICON, s3_str
 from s3db.pr import pr_PersonEntityRepresent
 
-" ============================================================================="
+# =============================================================================
 def get_role_realms(role):
     """
         Get all realms for which a role has been assigned
@@ -51,7 +51,7 @@ def get_role_realms(role):
 
     return role_realms
 
-" ============================================================================="
+# =============================================================================
 def get_managed_orgs(role):
     """
         Get the organisations for which the current user has a role
@@ -75,7 +75,7 @@ def get_managed_orgs(role):
 
     return [row.pe_id for row in rows]
 
-" ============================================================================="
+# =============================================================================
 def get_current_events(record):
     """
         Look up all current events
@@ -99,7 +99,7 @@ def get_current_events(record):
                             )
     return [row.id for row in rows]
 
-" ============================================================================="
+# =============================================================================
 def get_current_location(person_id=None):
     """
         Look up the current tracking location of a person
@@ -129,7 +129,7 @@ def get_current_location(person_id=None):
     else:
         return location.parent
 
-" ============================================================================="
+# =============================================================================
 def get_offer_filters(person_id=None):
     """
         Get filters for br_assistance_offer matching a person's
@@ -265,7 +265,7 @@ def get_offer_filters(person_id=None):
 
     return filters
 
-" ============================================================================="
+# =============================================================================
 class ProviderRepresent(pr_PersonEntityRepresent):
 
     def __init__(self):
@@ -303,7 +303,7 @@ class ProviderRepresent(pr_PersonEntityRepresent):
 
         return pe_str
 
-" ============================================================================="
+# =============================================================================
 class OverviewData(object):
     """
         Data extraction for overview page
@@ -562,4 +562,95 @@ class OverviewData(object):
         with open(path, "w") as outfile:
             json_dump(data, outfile, separators=SEPARATORS)
 
-" END ========================================================================="
+# =============================================================================
+class OfferDetails(object):
+    """
+        Field methods for compact representation of place and
+        contact information of offers
+    """
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def place(row):
+
+        if hasattr(row, "gis_location"):
+            location = row.gis_location
+        else:
+            location = row
+
+        return tuple(location.get(level)
+                     for level in ("L3", "L2", "L1"))
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def place_represent(value, row=None):
+
+        if isinstance(value, tuple) and len(value) == 3:
+            l3 = value[0]
+            lx = tuple(n if n else "-" for n in value[1:])
+            output = DIV(_class = "place-repr",
+                         )
+            if l3:
+                output.append(DIV(l3,
+                                  _class = "place-name",
+                                  ))
+            if lx:
+                output.append(DIV("%s / %s" % lx,
+                                  _class = "place-info",
+                                  ))
+            return output
+        else:
+            return value if value else "-"
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def contact(row):
+
+        if hasattr(row, "br_assistance_offer"):
+            offer = row.br_assistance_offer
+        else:
+            offer = row
+
+        return tuple(offer.get(detail)
+                     for detail in ("contact_name",
+                                    "contact_phone",
+                                    "contact_email",
+                                    ))
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def contact_represent(value, row=None):
+
+        if isinstance(value, tuple) and len(value) == 3:
+            name, phone, email = value
+
+            output = DIV(_class = "contact-repr",
+                         )
+            if name:
+                output.append(SPAN(name,
+                                   _class = "contact-name",
+                                   ))
+
+            if email or phone:
+                details = DIV(_class="contact-details")
+                if phone:
+                    details.append(DIV(ICON("phone"),
+                                       SPAN(phone,
+                                            _class = "contact-phone"),
+                                       _class = "contact-info",
+                                       ))
+                if email:
+                    details.append(DIV(ICON("mail"),
+                                       SPAN(A(email,
+                                              _href="mailto:%s" % email,
+                                              ),
+                                            _class = "contact-email"),
+                                       _class = "contact-info",
+                                       ))
+                output.append(details)
+
+            return output
+        else:
+            return value if value else "-"
+
+# END =========================================================================

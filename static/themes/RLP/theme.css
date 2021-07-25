@@ -2373,23 +2373,36 @@ body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   margin-right: 20px;
 }
 
-/* line 795, ../scss/theme/_widgets.scss */
+/* line 796, ../scss/theme/_widgets.scss */
+.place-repr .place-name {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.2rem;
+}
+/* line 801, ../scss/theme/_widgets.scss */
+.place-repr .place-info {
+  white-space: pre-line;
+  font-size: 0.8rem;
+}
+
+/* line 806, ../scss/theme/_widgets.scss */
 .contact-repr {
   background-color: #FFF0C1;
   border: 1px solid #E0E0E0;
   padding: 0.25rem 0.5rem;
 }
-/* line 799, ../scss/theme/_widgets.scss */
+/* line 810, ../scss/theme/_widgets.scss */
 .contact-repr .contact-name {
   display: block;
   font-weight: bold;
   margin-bottom: 0.2rem;
 }
-/* line 804, ../scss/theme/_widgets.scss */
+/* line 815, ../scss/theme/_widgets.scss */
 .contact-repr .contact-info {
+  white-space: nowrap;
   font-size: 0.8rem;
 }
-/* line 806, ../scss/theme/_widgets.scss */
+/* line 818, ../scss/theme/_widgets.scss */
 .contact-repr .contact-info .fa {
   padding-right: 0.4rem;
 }
