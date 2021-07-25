@@ -452,6 +452,8 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
+            get_vars = r.get_vars
+
             resource = r.resource
             table = resource.table
 
@@ -488,6 +490,20 @@ def config(settings):
             else:
                 # Adjust list title, hide last update info
                 title_list = T("Current Relief Offers")
+                match = get_vars.get("match") == "1"
+                show_pending = show_blocked = show_all = False
+                if is_event_manager:
+                    if get_vars.get("pending") == "1":
+                        show_pending = True
+                        title_list = T("Pending Approvals")
+                    elif get_vars.get("blocked") == "1":
+                        show_blocked = True
+                        title_list = T("Blocked Entries")
+                    elif get_vars.get("all") == "1":
+                        show_all = True
+                        title_list = T("All Offers")
+                elif match:
+                    title_list = T("Matching Offers")
                 s3.hide_last_update = not is_event_manager
 
                 # Restrict data formats
@@ -606,10 +622,9 @@ def config(settings):
                                          get_offer_filters
 
                     # Apply availability filter
-                    OfferAvailabilityFilter.apply_filter(resource, r.get_vars)
+                    OfferAvailabilityFilter.apply_filter(resource, get_vars)
 
                     # Filter for matching offers?
-                    match = r.get_vars.get("match") == "1"
                     if not mine and match:
                         filters = get_offer_filters()
                         if filters:
@@ -656,27 +671,33 @@ def config(settings):
                                             sort = False,
                                             cols = 3,
                                             ),
+                            ])
+                    if not mine:
+                        # Add availability date range filter for all-offers perspective
+                        filter_widgets.append(
                             OfferAvailabilityFilter("date",
                                                     label = T("Available"),
                                                     hidden = True,
-                                                    ),
-                            ])
+                                                    ))
 
                     # Visibility Filter
-                    if not mine:
-                        # Filter out unavailable or unapproved offers
+                    if mine:
+                        # Show all accessible
+                        vquery = None
+                    else:
+                        # Filter out unavailable, unapproved and past offers
                         today = current.request.utcnow.date()
                         vquery = (FS("availability") == "AVL") & \
                                  (FS("status") == "APR") & \
                                  ((FS("end_date") == None) | (FS("end_date") >= today))
-                    else:
-                        # Show all accessible
-                        vquery = None
-                    if is_event_manager:
-                        if r.get_vars.get("pending") == "1":
-                            vquery = (FS("status") == "NEW")
-                        elif r.get_vars.get("blocked") == "1":
-                            vquery = (FS("status") == "BLC")
+                        # Event manager can override this with URL options
+                        if is_event_manager:
+                            if show_pending:
+                                vquery = (FS("status") == "NEW")
+                            elif show_blocked:
+                                vquery = (FS("status") == "BLC")
+                            elif show_all:
+                                vquery = None
                     if vquery:
                         resource.add_filter(vquery)
 
