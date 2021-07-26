@@ -97,7 +97,7 @@ def config(settings):
     # Do not send standard welcome emails (using custom function)
     settings.auth.registration_welcome_email = False
 
-    settings.auth.realm_entity_types = ("org_organisation")
+    settings.auth.realm_entity_types = ("org_organisation",)
     settings.auth.privileged_roles = {"EVENT_MANAGER": "EVENT_MANAGER",
                                       "CITIZEN": "ADMIN",
                                       "RELIEF_PROVIDER": "RELIEF_PROVIDER",
@@ -808,7 +808,8 @@ def config(settings):
         # Case file or self-reporting?
         record = r.record
         case_file = r.tablename == "pr_person" and record
-        ours = r.function == "case_activity" and current.auth.s3_has_role("RELIEF_PROVIDER")
+        ours = r.function == "case_activity" and \
+                             current.auth.s3_has_roles(("RELIEF_PROVIDER", "CASE_MANAGER"))
 
         s3 = current.response.s3
         crud_strings = s3.crud_strings
@@ -913,12 +914,12 @@ def config(settings):
     def customise_br_case_activity_controller(**attr):
 
         auth = current.auth
-        #s3db = current.s3db
+        s3db = current.s3db
 
         s3 = current.response.s3
 
         is_event_manager = auth.s3_has_role("EVENT_MANAGER")
-        is_relief_provider = auth.s3_has_role("RELIEF_PROVIDER")
+        is_case_manager = auth.s3_has_roles(("RELIEF_PROVIDER", "CASE_MANAGER"))
 
         # Custom prep
         standard_prep = s3.prep
@@ -934,7 +935,7 @@ def config(settings):
             crud_strings = s3.crud_strings["br_case_activity"]
             if mine:
                 # Adjust list title, allow last update info
-                if is_relief_provider:
+                if is_case_manager:
                     crud_strings["title_list"] = T("Our Needs")
                 else:
                     crud_strings["title_list"] = T("My Needs")
@@ -943,7 +944,7 @@ def config(settings):
                 # Beneficiary requirements
                 field = table.person_id
                 field.writable = False
-                if is_relief_provider:
+                if is_case_manager:
                     # Must add in case-file
                     field.readable = True
                     insertable = False
@@ -991,7 +992,7 @@ def config(settings):
 
             if not r.component:
 
-                if not mine or not is_relief_provider:
+                if not mine or not is_case_manager:
                     # Hide irrelevant fields
                     for fn in ("person_id", "activity_details", "outcome", "priority"):
                         field = table[fn]
@@ -1009,8 +1010,12 @@ def config(settings):
                                ]
                 if mine or is_event_manager:
                     list_fields.append("status_id")
-                    if is_relief_provider:
+                    if is_case_manager:
                         list_fields[1:1] = ("priority", "person_id")
+
+                        # Represent person_id as link to case file
+                        field = table.person_id
+                        field.represent = s3db.pr_PersonRepresent(show_link=True)
 
                 # Filters
                 from s3 import S3DateFilter, S3TextFilter, S3LocationFilter, S3OptionsFilter, s3_get_filter_opts
