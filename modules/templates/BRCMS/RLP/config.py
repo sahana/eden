@@ -1194,21 +1194,37 @@ def config(settings):
                                        )
 
                 # Custom list fields
-                list_fields = ["name",
-                               #"organisation_type__link.organisation_type_id",
-                               #"office.location_id$L3",
-                               #"office.location_id$L1",
-                               "website",
-                               "phone",
-                               #"email.value"
-                               ]
-                if not mine:
-                    list_fields[1:1] = ("office.location_id$L3",
-                                        "office.location_id$L1",
-                                        )
                 if is_org_group_admin:
-                    list_fields.insert(1, (T("Type"), "organisation_type__link.organisation_type_id"))
-                    list_fields.append((T("Email"), "email.value"))
+                    list_fields = ["name",
+                                   "organisation_type__link.organisation_type_id",
+                                   (T("Description"), "comments"),
+                                   "office.location_id$L3",
+                                   "office.location_id$L1",
+                                   "website",
+                                   "phone",
+                                   (T("Email"), "email.value"),
+                                   ]
+                elif not mine:
+                    list_fields = ["name",
+                                   "organisation_type__link.organisation_type_id",
+                                   (T("Description"), "comments"),
+                                   #"office.location_id$L3",
+                                   #"office.location_id$L1",
+                                   "website",
+                                   "phone",
+                                   ]
+                    if auth.user:
+                        list_fields[3:3] = ("office.location_id$L3",
+                                            "office.location_id$L1",
+                                            )
+
+                else:
+                    list_fields = ["name",
+                                   (T("Description"), "comments"),
+                                   "website",
+                                   "phone",
+                                   (T("Email"), "email.value"),
+                                   ]
                 r.resource.configure(list_fields = list_fields,
                                      )
 
