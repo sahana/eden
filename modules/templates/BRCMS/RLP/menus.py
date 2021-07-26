@@ -56,10 +56,10 @@ class S3MainMenu(default.S3MainMenu):
                         ),
                     MM("Affected Persons", c="br", f="person"),
                     ]
-        elif has_role("RELIEF_PROVIDER"):
+        elif has_role("RELIEF_PROVIDER") or has_role("CASE_MANAGER"):
             # Organisation offering relief services / supplies
             menu = [MM("Current Needs", c="br", f="activities"),
-                    MM("Our Relief Offers", c="br", f="assistance_offer"),
+                    MM("Our Relief Offers", c="br", f="assistance_offer", restrict="RELIEF_PROVIDER"),
                     MM("Affected Persons", c="br", f="person"),
                     MM("Find Relief Offers", c="br", f="offers"),
                     ]
@@ -213,7 +213,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         auth = current.auth
         is_event_manager = auth.s3_has_role("EVENT_MANAGER")
         is_relief_provider = auth.s3_has_role("RELIEF_PROVIDER", include_admin=False)
-        org_role = is_event_manager or is_relief_provider
+        is_case_manager = auth.s3_has_role("CASE_MANAGER", include_admin=False)
+        org_role = is_event_manager or is_relief_provider or is_case_manager
 
         if org_role:
             # Org Users: separate menus per function
@@ -236,10 +237,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
             elif f in ("person", "case_activity", "offers"):
                 # Cases, needs and relief offers
                 menu = [M(labels.CURRENT, f="person", vars={"closed": "0"},
-                          restrict=("EVENT_MANAGER", "RELIEF_PROVIDER"))(
+                          restrict=("EVENT_MANAGER", "RELIEF_PROVIDER", "CASE_MANAGER"))(
                             M(crud_strings.label_create, m="create"),
                             ),
-                        M("Our Needs", f="case_activity", check=lambda i: is_relief_provider)(
+                        M("Our Needs", f="case_activity", check=lambda i: is_relief_provider or is_case_manager)(
                             M("Statistic", m="report"),
                             ),
                         M("Current Relief Offers", f="offers", check=lambda i: not is_event_manager)(
@@ -254,8 +255,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ]
             elif f in ("assistance_offer", "assistance_type"):
                 # Our Offers
-                menu = [M("Our Relief Offers", f="assistance_offer",
-                          restrict="RELIEF_PROVIDER")(
+                menu = [M("Our Relief Offers", f="assistance_offer", restrict="RELIEF_PROVIDER")(
                             M("Create", m="create"),
                             ),
                         ]

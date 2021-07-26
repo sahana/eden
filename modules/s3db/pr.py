@@ -1049,8 +1049,8 @@ class PRPersonModel(S3Model):
                                     "key": "user_id",
                                     "fkey": "id",
                                     "pkey": "pe_id",
-                                    "actuate": "replace", 
-                                    "multiple": False, 
+                                    "actuate": "replace",
+                                    "multiple": False,
                                     },
                        # Shelter (Camp) Registry
                        cr_shelter_registration = {"joinby": "person_id",
