@@ -1972,6 +1972,7 @@ def need_response_line():
 
 # -----------------------------------------------------------------------------
 def facility():
+
     # Open record in this controller after creation
     s3db.configure("org_facility",
                    create_next = URL(c="req", f="facility",
@@ -1979,5 +1980,21 @@ def facility():
                    )
 
     return s3db.org_facility_controller()
+
+# -----------------------------------------------------------------------------
+def project_req():
+    """ RESTful CRUD controller for options.s3json lookups """
+
+    if auth.permission.format != "s3json":
+        return ""
+
+    # Pre-process
+    def prep(r):
+        if r.method != "options":
+            return False
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
 
 # END =========================================================================

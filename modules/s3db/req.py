@@ -769,6 +769,9 @@ class RequestModel(S3Model):
                                                },
 
                        # Projects
+                       req_project_req = {"joinby": "req_id",
+                                          "multiple": False,
+                                          },
                        project_project = {"link": "req_project_req",
                                           "joinby": "req_id",
                                           "key": "project_id",

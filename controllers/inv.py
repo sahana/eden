@@ -1823,11 +1823,13 @@ def project():
     crud_form = s3base.S3SQLCustomForm("organisation_id",
                                        "code",
                                        "name",
+                                       "end_date",
                                        )
 
     list_fields = ["organisation_id",
                    "code",
                    "name",
+                   "end_date",
                    ]
 
     s3db.configure("project_project",
