@@ -335,7 +335,6 @@ def warehouse():
                 s3db.org_site_staff_config(r)
 
             elif component_name == "req":
-                s3db.req_prep(r)
                 if r.method != "update" and r.method != "read":
                     # Hide fields which don't make sense in a Create form
                     # inc list_create (list_fields over-rides)
@@ -1817,6 +1816,25 @@ def project():
     """
         Simpler version of Projects for use within Inventory module
     """
+
+    # Load default Model
+    s3db.project_project
+
+    crud_form = s3base.S3SQLCustomForm("organisation_id",
+                                       "code",
+                                       "name",
+                                       )
+
+    list_fields = ["organisation_id",
+                   "code",
+                   "name",
+                   ]
+
+    s3db.configure("project_project",
+                   crud_form = crud_form,
+                   filter_widgets = None,
+                   list_fields = list_fields,
+                   )
 
     return s3_rest_controller("project")
 

@@ -690,6 +690,12 @@ class S3ProjectModel(S3Model):
                        req_project_needs = {"joinby": "project_id",
                                             "multiple": False,
                                             },
+                       # Requests
+                       req_req = {"link": "req_project_req",
+                                  "joinby": "project_id",
+                                  "key": "req_id",
+                                  "actuate": "hide",
+                                  },
                        )
 
         if multi_orgs:

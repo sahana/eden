@@ -201,7 +201,6 @@ def req_controller(template = False):
     def prep(r):
 
         table = r.table
-        s3db.req_prep(r)
 
         #if len(settings.get_req_req_type()) == 1:
         #    # Remove type from list_fields
@@ -218,6 +217,7 @@ def req_controller(template = False):
         record = r.record
         req_type = (record and record.type) or \
                    (get_vars.type and int(get_vars.type))
+        workflow_status = record and record.workflow_status
 
         if r.interactive:
             # Set the req_item site_id (Requested From), called from action buttons on req/req_item_inv_item/x page
@@ -306,9 +306,23 @@ def req_controller(template = False):
                     ctable = r.component.table
                     ctable.site_id.writable = ctable.site_id.readable = False
                     s3.req_hide_quantities(ctable)
+                    if workflow_status in (3, 4, 5): # Approved, Completed, Cancelled
+                        # Lock all fields
+                        s3db.configure("req_req_item",
+                                       deletable = False,
+                                       editable = False,
+                                       insertable = False,
+                                       )
 
                 elif r.component_name == "req_skill":
                     s3.req_hide_quantities(r.component.table)
+                    if workflow_status in (3, 4, 5): # Approved, Completed, Cancelled
+                        # Lock all fields
+                        s3db.configure("req_req_skill",
+                                       deletable = False,
+                                       editable = False,
+                                       insertable = False,
+                                       )
 
                 elif r.component.alias == "job":
                     s3task.configure_tasktable_crud(
@@ -390,7 +404,6 @@ def req_controller(template = False):
                     if settings.get_req_inline_forms():
                         # Use inline form
                         s3db.req_inline_form(req_type, method)
-                    workflow_status = record.workflow_status
                     if workflow_status in (1, 2, 5): # Draft, Submitted, Cancelled
                         # Hide individual statuses
                         table = db.req_req

@@ -4054,6 +4054,17 @@ Thank you"""
                               user_org_default_filter,
                               tablename = "project_project")
 
+        if current.request.controller == "inv":
+            # Very simple functionality all that is required
+            # Lead Organisation needs to be an NS (not a branch)
+            ns_only(tablename,
+                    required = True,
+                    branches = False,
+                    # default
+                    #limit_filter_opts = True,
+                    )
+            return attr
+
         # Load standard model
         s3db = current.s3db
         table = s3db[tablename]
@@ -4761,6 +4772,16 @@ Thank you"""
                 s3db.req_ref_represent(v, show_link, pdf)
         table.site_id.label = T("Deliver To")
 
+        # Link to Projects
+        from s3 import S3SQLCustomForm
+        s3db.project_project.code.label = T("Project Code")
+        crud_fields = [f for f in table.fields if table[f].readable]
+        crud_fields.insert(0, "project.code")
+        crud_form = S3SQLCustomForm(*crud_fields)
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
+
         # Hide Drivers list_field
         list_fields = s3db.get_config("req_req", "list_fields")
         try:
@@ -4769,7 +4790,10 @@ Thank you"""
             # Already removed
             pass
 
-        if r.record and r.record.workflow_status == 3:
+        if r.record and \
+           r.tablename == tablename and \
+           r.record.workflow_status == 3:
+            # Never opens in Component Tab, always breaks out
             table.approved_by_id.readable = True
 
         # Custom Request Form

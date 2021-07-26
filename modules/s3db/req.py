@@ -48,6 +48,7 @@ __all__ = ("RequestPriorityStatusModel",
            "RequestNeedsResponseModel",
            "RequestNeedsResponseLineModel",
            "RequestNeedsResponseOrganisationModel",
+           "RequestProjectModel",
            "RequestTagModel",
            "RequestTaskModel",
            "CommitModel",
@@ -61,6 +62,7 @@ __all__ = ("RequestPriorityStatusModel",
            "req_add_from_template",
            "req_RequesterRepresent",
            "req_ReqItemRepresent",
+           #"req_is_approver",
            )
 
 from gluon import *
@@ -215,7 +217,6 @@ class RequestModel(S3Model):
              "req_hide_quantities",
              "req_inline_form",
              "req_create_form_mods",
-             "req_prep",
              "req_ref_represent",
              "req_tabs",
              )
@@ -767,6 +768,13 @@ class RequestModel(S3Model):
                                                "key": "item_category_id",
                                                },
 
+                       # Projects
+                       project_project = {"link": "req_project_req",
+                                          "joinby": "req_id",
+                                          "key": "project_id",
+                                          "actuate": "hide",
+                                          "multiple": False,
+                                          },
                        **{# Scheduler Jobs (for recurring requests)
                           S3Task.TASK_TABLENAME: {"name": "job",
                                                   "joinby": "req_id",
@@ -783,7 +791,6 @@ class RequestModel(S3Model):
         return {"req_create_form_mods": self.req_create_form_mods,
                 "req_hide_quantities": self.req_hide_quantities,
                 "req_inline_form": self.req_inline_form,
-                "req_prep": self.req_prep,
                 "req_req_id": req_id,
                 "req_req_ref": req_ref,
                 "req_ref_represent": self.req_ref_represent,
@@ -818,8 +825,19 @@ class RequestModel(S3Model):
         s3 = current.response.s3
         settings = current.deployment_settings
 
-        # Hide fields which don't make sense in a Create form
         table = db.req_req
+
+        if not settings.get_req_inline_forms():
+            # Amend the Save button
+            default_type = table.type.default
+            if default_type:
+                req_submit_button = {1: T("Save and add Items"),
+                                     3: T("Save and add People"),
+                                     9: T("Save"),
+                                     }
+                s3.crud.submit_button = req_submit_button[default_type]
+
+        # Hide fields which don't make sense in a Create form
         table.req_ref.readable = False
         table.commit_status.readable = table.commit_status.writable = False
         table.transit_status.readable = table.transit_status.writable = False
@@ -1096,24 +1114,6 @@ $.filterOptionsS3({
 
         # Reset to standard submit button
         s3.crud.submit_button = T("Save")
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def req_prep(r):
-        """
-            Function to be called from REST prep functions
-             - main module & components (sites)
-        """
-
-        if not r.component or r.component.name =="req":
-            default_type = current.db.req_req.type.default
-            if default_type:
-                T = current.T
-                req_submit_button = {1: T("Save and add Items"),
-                                     3: T("Save and add People"),
-                                     9: T("Save"),
-                                     }
-                current.response.s3.crud.submit_button = req_submit_button[default_type]
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1506,12 +1506,14 @@ $.filterOptionsS3({
                                                     itable.pe_id,
                                                     limitby = (0, 1)
                                                     ).first()
-        ancestors = s3db.pr_get_ancestors(site.pe_id)
+        pe_id = site.pe_id
+        ancestors = s3db.pr_get_ancestors(pe_id)
+        pe_ids = ancestors + [pe_id]
         atable = s3db.req_approver
         ptable = s3db.pr_person
         ltable = s3db.pr_person_user
         utable = db.auth_user
-        query = (atable.pe_id.belongs(ancestors)) & \
+        query = (atable.pe_id.belongs(pe_ids)) & \
                 (atable.person_id == ptable.id) & \
                 (ptable.pe_id == ltable.pe_id) & \
                 (ltable.user_id == utable.id)
@@ -1590,9 +1592,7 @@ $.filterOptionsS3({
         req_id = r.id
 
         # Check we have permission to approve the Request
-        # @ToDo: Check the req_approver table
-        auth = current.auth
-        if not auth.s3_has_permission("update", rtable, record_id=req_id):
+        if not req_is_approver(record.site_id):
             r.unauthorised()
 
         db = current.db
@@ -1603,7 +1603,7 @@ $.filterOptionsS3({
         T = current.T
 
         # Update the Status and Approver
-        db(rtable.id == req_id).update(approved_by_id = auth.s3_logged_in_person(),
+        db(rtable.id == req_id).update(approved_by_id = current.auth.s3_logged_in_person(),
                                        workflow_status = 3, # Approved
                                        )
 
@@ -3907,12 +3907,44 @@ class RequestTagModel(S3Model):
         return {}
 
 # =============================================================================
+class RequestProjectModel(S3Model):
+    """
+        Link Requests to Projects
+    """
+
+    names = ("req_project_req",
+             )
+
+    def model(self):
+
+        # -----------------------------------------------------------------
+        # Link Skill Requests to Tasks
+        #
+        tablename = "req_project_req"
+        self.define_table(tablename,
+                          self.project_project_id(empty = False),
+                          self.req_req_id(empty = False),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("project_id",
+                                                            "req_id",
+                                                            ),
+                                                 ),
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
 class RequestTaskModel(S3Model):
     """
         Link Requests for Skills to Tasks
     """
 
-    names = ("req_task",
+    names = ("req_task_req",
              )
 
     def model(self):
@@ -5068,6 +5100,7 @@ def req_rheader(r, check_page=False):
             items = False
             people = False
 
+        site_id = record.site_id
         workflow_status = record.workflow_status
 
         tabs = [(T("Edit Details"), None)]
@@ -5087,7 +5120,7 @@ def req_rheader(r, check_page=False):
             # Hide these if no Items/Skills on one of these requests yet
             if items:
                 user = current.auth.user
-                site_id = user.site_id if user else None
+                user_site_id = user.site_id if user else None
                 ritable = s3db.req_req_item
                 possibly_complete = db(ritable.req_id == record.id).select(ritable.id,
                                                                            limitby = (0, 1)
@@ -5104,7 +5137,7 @@ def req_rheader(r, check_page=False):
             if possibly_complete:
                 if use_commit:
                     tabs.append((T("Commitments"), "commit"))
-                if (items and site_id) or \
+                if (items and user_site_id) or \
                    (people and organisation_id and settings.get_req_commit_people()):
                     tabs.append((T("Check"), "check"))
                 if use_workflow:
@@ -5121,18 +5154,18 @@ def req_rheader(r, check_page=False):
                                 % T("Are you sure you want to submit this request?"))
                         s3.rfooter = TAG[""](submit_btn)
                     elif workflow_status == 2: # Submitted
-                        # @ToDo: Only show button for users who have permission
-                        approve_btn = A(T("Approve"),
-                                       _href = URL(c = "req",
-                                                   f = "req",
-                                                   args = [r.id, "approve_req"]
-                                                   ),
-                                       _id = "req-approve",
-                                       _class = "action-btn",
-                                       )
-                        s3.jquery_ready.append('''S3.confirmClick('.req-approve','%s')''' \
-                                % T("Are you sure you want to approve this request?"))
-                        s3.rfooter = TAG[""](approve_btn)
+                        if req_is_approver(site_id):
+                            approve_btn = A(T("Approve"),
+                                           _href = URL(c = "req",
+                                                       f = "req",
+                                                       args = [r.id, "approve_req"]
+                                                       ),
+                                           _id = "req-approve",
+                                           _class = "action-btn",
+                                           )
+                            s3.jquery_ready.append('''S3.confirmClick('.req-approve','%s')''' \
+                                    % T("Are you sure you want to approve this request?"))
+                            s3.rfooter = TAG[""](approve_btn)
 
         if not check_page:
             rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -5151,7 +5184,6 @@ def req_rheader(r, check_page=False):
                             )
             s3.rfooter = TAG[""](prepare_btn)
 
-        site_id = record.site_id
         if site_id:
             stable = s3db.org_site
         if workflow_status in (1, 2, 5): # Draft/Submitted/Cancelled
@@ -5383,6 +5415,11 @@ def req_match(rheader=None):
     def prep(r):
         # Plugin OrgRoleManager when appropriate
         S3OrgRoleManager.set_method(r, entity=tablename, record_id=record_id)
+
+        if settings.get_req_workflow():
+            # Only show Approved Requests
+            r.resource.add_filter(FS("workflow_status")== 3)
+
         return True
     s3.prep = prep
 
@@ -6158,5 +6195,51 @@ def req_add_from_template(req_id):
             table.insert(**data)
 
     return new_req_id
+
+# =============================================================================
+def req_is_approver(site_id):
+    """
+        Check if User has permission to Approve a Request
+    """
+
+    auth = current.auth
+
+    if auth.s3_has_role("ADMIN"):
+        return True
+
+    db = current.db
+    s3db = current.s3db
+    atable = s3db.req_approver
+    query = (atable.person_id == auth.s3_logged_in_person()) & \
+            (atable.deleted == False)
+    entities = db(query).select(atable.pe_id)
+    if not entities:
+        # Not an Approver for any
+        return False
+
+    pe_ids = [row.pe_id for row in entities]
+
+    stable = s3db.org_site
+    site_entity = db(stable.site_id == site_id).select(stable.instance_type,
+                                                       limitby = (0, 1)
+                                                       ).first()
+    itable = s3db.table(site_entity.instance_type)
+    site = db(itable.site_id == site_id).select(itable.pe_id,
+                                                limitby = (0, 1)
+                                                ).first()
+
+    pe_id = site.pe_id
+    if pe_id in pe_ids:
+        # Directly permitted
+        return True
+
+    # Check for child entities
+    entity_types = ["org_organisation"] + list(auth.org_site_types.keys())
+    child_pe_ids = s3db.pr_get_descendants(pe_ids, entity_types=entity_types)
+    if pe_id in child_pe_ids:
+        # Permitted via child entity
+        return True
+
+    return False
 
 # END =========================================================================
