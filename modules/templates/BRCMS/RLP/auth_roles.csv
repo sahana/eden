@@ -3,8 +3,8 @@ ANONYMOUS,Anonymous,Unauthenticated users,,gis,display_feature,,READ,,
 ANONYMOUS,Anonymous,Unauthenticated users,,gis,geocode_r,,READ,,
 ANONYMOUS,Anonymous,Unauthenticated users,,gis,hdata,,READ,,
 ANONYMOUS,Anonymous,Unauthenticated users,,gis,ldata,,READ,,
-ANONYMOUS,Anonymous,Unauthenticated users,,,,gis_location,READ,,
 ANONYMOUS,Anonymous,Unauthenticated users,,org,organisation,,READ,,
+ANONYMOUS,Anonymous,Unauthenticated users,,,,gis_location,READ,,
 ANONYMOUS,Anonymous,Unauthenticated users,,,,org_organisation,READ,,
 AUTHENTICATED,Authenticated,,,gis,location,,CREATE|READ,READ|UPDATE|DELETE,
 AUTHENTICATED,Authenticated,,,gis,,,READ,READ|UPDATE|DELETE,
@@ -45,17 +45,38 @@ AUTHENTICATED,Authenticated,,,,,pr_contact,CREATE,READ|UPDATE|DELETE,
 AUTHENTICATED,Authenticated,,,,,pr_contact_emergency,CREATE,READ|UPDATE|DELETE,
 AUTHENTICATED,Authenticated,,,,,pr_person,,READ|UPDATE,
 AUTHENTICATED,Authenticated,,,,,pr_person_details,CREATE,READ|UPDATE|DELETE,
+CASE_MANAGER,Case Manager,,,br,activities,,READ,,any
+CASE_MANAGER,Case Manager,,,br,case_activity,,CREATE|READ|UPDATE|DELETE,,
+CASE_MANAGER,Case Manager,,,br,offers,,READ,,any
+CASE_MANAGER,Case Manager,,,br,person,,CREATE|READ|UPDATE|DELETE,,
+CASE_MANAGER,Case Manager,,,br,,,CREATE|READ|UPDATE|DELETE,,
+CASE_MANAGER,Case Manager,,,,,br_assistance_offer,READ,,any
+CASE_MANAGER,Case Manager,,,,,br_case,CREATE|READ|UPDATE|DELETE,,
+CASE_MANAGER,Case Manager,,,,,br_case_activity,READ,,any
+CASE_MANAGER,Case Manager,,,,,br_case_activity,CREATE|READ|UPDATE|DELETE,,
+CASE_MANAGER,Case Manager,,,,,br_direct_offer,READ,,any
+CASE_MANAGER,Case Manager,,,,,doc_document,CREATE|READ|UPDATE|DELETE,,
+CASE_MANAGER,Case Manager,,,,,gis_location,CREATE|READ|UPDATE|DELETE,,
+CASE_MANAGER,Case Manager,,,,,hrm_human_resource,READ,,
+CASE_MANAGER,Case Manager,,,,,pr_address,CREATE|READ|UPDATE|DELETE,,
+CASE_MANAGER,Case Manager,,,,,pr_contact,CREATE|READ|UPDATE|DELETE,,
+CASE_MANAGER,Case Manager,,,,,pr_contact_emergency,CREATE|READ|UPDATE|DELETE,,
+CASE_MANAGER,Case Manager,,,,,pr_person,CREATE|READ|UPDATE|DELETE,,
+CASE_MANAGER,Case Manager,,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,
 CITIZEN,Private Citizen,,,br,activities,,READ,,any
+CITIZEN,Private Citizen,,,br,activities,,CREATE,,
 CITIZEN,Private Citizen,,,br,assistance_offer,,CREATE|READ,READ|UPDATE|DELETE,
 CITIZEN,Private Citizen,,,br,case_activity,,CREATE|READ,READ|UPDATE|DELETE,
 CITIZEN,Private Citizen,,,br,offers,,READ,,any
 CITIZEN,Private Citizen,,,br,person,,NONE,,
 CITIZEN,Private Citizen,,,br,,,READ,,
-CITIZEN,Private Citizen,,,,,br_case,READ,,
 CITIZEN,Private Citizen,,,,,br_assistance_offer,READ,,any
 CITIZEN,Private Citizen,,,,,br_assistance_offer,CREATE,READ|UPDATE|DELETE,
+CITIZEN,Private Citizen,,,,,br_case,READ,,
 CITIZEN,Private Citizen,,,,,br_case_activity,READ,,any
 CITIZEN,Private Citizen,,,,,br_case_activity,CREATE,READ|UPDATE|DELETE,
+CITIZEN,Private Citizen,,,,,br_direct_offer,READ,,any
+CITIZEN,Private Citizen,,,,,br_direct_offer,CREATE,READ|UPDATE|DELETE,
 EVENT_MANAGER,Event Manager,,,br,activities,,READ|UPDATE|DELETE,,any
 EVENT_MANAGER,Event Manager,,,br,offers,,READ|UPDATE|DELETE,,any
 EVENT_MANAGER,Event Manager,,,br,person,,READ|UPDATE|DELETE,,
@@ -65,6 +86,7 @@ EVENT_MANAGER,Event Manager,,,,,br_assistance_offer,READ|UPDATE|DELETE,,any
 EVENT_MANAGER,Event Manager,,,,,br_case,READ|UPDATE|DELETE,,
 EVENT_MANAGER,Event Manager,,,,,br_case_activity,READ|UPDATE|DELETE,,any
 EVENT_MANAGER,Event Manager,,,,,br_case_activity,READ|UPDATE|DELETE,,
+EVENT_MANAGER,Event Manager,,,,,br_direct_offer,READ|UPDATE|DELETE,,any
 EVENT_MANAGER,Event Manager,,,,,doc_document,READ,,any
 EVENT_MANAGER,Event Manager,,,,,doc_document,CREATE|READ|UPDATE|DELETE,,
 EVENT_MANAGER,Event Manager,,,,,event_event,CREATE|READ|UPDATE|DELETE,,
@@ -101,6 +123,8 @@ RELIEF_PROVIDER,Relief Provider,,,,,br_assistance_offer,CREATE|READ|UPDATE|DELET
 RELIEF_PROVIDER,Relief Provider,,,,,br_case,CREATE|READ|UPDATE|DELETE,,
 RELIEF_PROVIDER,Relief Provider,,,,,br_case_activity,READ,,any
 RELIEF_PROVIDER,Relief Provider,,,,,br_case_activity,CREATE|READ|UPDATE|DELETE,,
+RELIEF_PROVIDER,Relief Provider,,,,,br_direct_offer,READ,,any
+RELIEF_PROVIDER,Relief Provider,,,,,br_direct_offer,CREATE,READ|UPDATE|DELETE,
 RELIEF_PROVIDER,Relief Provider,,,,,doc_document,CREATE|READ|UPDATE|DELETE,,
 RELIEF_PROVIDER,Relief Provider,,,,,gis_location,CREATE|READ|UPDATE|DELETE,,
 RELIEF_PROVIDER,Relief Provider,,,,,hrm_human_resource,READ,,
@@ -109,20 +133,3 @@ RELIEF_PROVIDER,Relief Provider,,,,,pr_contact,CREATE|READ|UPDATE|DELETE,,
 RELIEF_PROVIDER,Relief Provider,,,,,pr_contact_emergency,CREATE|READ|UPDATE|DELETE,,
 RELIEF_PROVIDER,Relief Provider,,,,,pr_person,CREATE|READ|UPDATE|DELETE,,
 RELIEF_PROVIDER,Relief Provider,,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,br,activities,,READ,,any
-CASE_MANAGER,Case Manager,,,br,case_activity,,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,br,offers,,READ,,any
-CASE_MANAGER,Case Manager,,,br,person,,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,br,,,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,,,br_assistance_offer,READ,,any
-CASE_MANAGER,Case Manager,,,,,br_case,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,,,br_case_activity,READ,,any
-CASE_MANAGER,Case Manager,,,,,br_case_activity,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,,,doc_document,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,,,gis_location,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,,,hrm_human_resource,READ,,
-CASE_MANAGER,Case Manager,,,,,pr_address,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,,,pr_contact,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,,,pr_contact_emergency,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,,,pr_person,CREATE|READ|UPDATE|DELETE,,
-CASE_MANAGER,Case Manager,,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,

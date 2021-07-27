@@ -144,6 +144,39 @@ def rlpcm_br_rheader(r, tabs=None):
                                           ),
                                 )
                            )
+        elif tablename == "br_case_activity":
+
+            if not tabs:
+                if r.function in ("case_activity", "offers"):
+                    tabs = [(T("Basic Details"), None),
+                            (T("Direct Offers"), "offers/"),
+                            ]
+                elif r.function in ("activities"):
+                    tabs = [(T("Basic Details"), None, {"native": True}),
+                            (T("Direct Offers"), "direct_offer"),
+                            ]
+
+            rheader_fields = [["need_id"],
+                              ["date"],
+                              ]
+            rheader = S3ResourceHeader(rheader_fields, tabs, title="subject")(
+                            r,
+                            table = resource.table,
+                            record = record,
+                            )
+        elif tablename == "br_assistance_offer":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None, {"native": True}),
+                        ]
+                if r.function == "assistance_offer":
+                    tabs.append((T("Direct Offers"), "direct_offer"))
+            rheader_fields = [["date"]]
+            rheader = S3ResourceHeader(rheader_fields, tabs, title="name")(
+                            r,
+                            table = resource.table,
+                            record = record,
+                            )
         else:
             rheader = None
 

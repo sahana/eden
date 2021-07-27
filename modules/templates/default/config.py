@@ -704,6 +704,10 @@ def config(settings):
     # Disable tracking of effort (=hours spent) for assistance measures
     #settings.br.assistance_track_effort = False
 
+    # --- Offers of Assistance ---
+    # Disable reference numbers in offers of assistance
+    #settings.br.assistance_offer_refno = False
+
     # -------------------------------------------------------------------------
     # CMS
     # Uncomment this to hide CMS from module index pages

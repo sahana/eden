@@ -1532,6 +1532,31 @@ class S3Request(object):
                     self.tablename)
 
     # -------------------------------------------------------------------------
+    @property
+    def viewing(self):
+        """
+            Parse the "viewing" URL parameter, frequently used for
+            perspective discrimination and processing in prep
+
+            @returns: tuple (tablename, record_id) if "viewing" is set,
+                      None otherwise
+        """
+
+        get_vars = self.get_vars
+        if "viewing" in get_vars:
+            try:
+                tablename, record_id = get_vars.get("viewing").split(".")
+            except (AttributeError, ValueError):
+                return None
+            try:
+                record_id = int(record_id)
+            except (TypeError, ValueError):
+                return None
+            return tablename, record_id
+
+        return None
+
+    # -------------------------------------------------------------------------
     def stylesheet(self, method=None, skip_error=False):
         """
             Find the XSLT stylesheet for this request
@@ -1895,14 +1920,19 @@ class S3Method(object):
             record_id = r.component_id
 
             if method == "create":
-                # Must have permission to update the master record
-                # in order to create a new component record...
-                master_access = has_permission("update",
-                                               r.table,
-                                               record_id=r.id)
-
-                if not master_access:
-                    return False
+                # Is creating a new component record allowed without
+                # permission to update the master record?
+                writable = current.s3db.get_config(r.tablename,
+                                                   "ignore_master_access",
+                                                   )
+                if not isinstance(writable, (tuple, list)) or \
+                   r.component_name not in writable:
+                    master_access = has_permission("update",
+                                                   r.table,
+                                                   record_id = r.id,
+                                                   )
+                    if not master_access:
+                        return False
 
         return has_permission(method, table, record_id=record_id)
 

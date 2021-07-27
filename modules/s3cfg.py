@@ -3232,6 +3232,15 @@ class S3Config(Storage):
         """
         return self.br.get("assistance_track_effort", True)
 
+    def get_br_assistance_offer_refno(self):
+        """
+            Use reference numbers in offers of assistance
+            False - do not use reference numbers
+            True - use reference numbers, manual input
+            "auto" - auto-generate reference numbers
+        """
+        return self.br.get("assistance_offer_refno", "auto")
+
     # -------------------------------------------------------------------------
     # CAP: Common Alerting Protocol
     #

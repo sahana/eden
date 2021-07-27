@@ -12,7 +12,7 @@ import os
 
 from gluon import current, A, DIV, SPAN
 
-from s3 import FS, ICON, S3DateFilter, s3_str
+from s3 import FS, ICON, S3DateFilter, s3_str, s3_yes_no_represent
 from s3db.pr import pr_PersonEntityRepresent
 
 # =============================================================================
@@ -268,7 +268,7 @@ def get_offer_filters(person_id=None):
 # =============================================================================
 class ProviderRepresent(pr_PersonEntityRepresent):
 
-    def __init__(self):
+    def __init__(self, as_string=False):
         """
             Constructor
 
@@ -277,6 +277,8 @@ class ProviderRepresent(pr_PersonEntityRepresent):
             @param show_type: show the instance_type
             @param multiple: assume a value list by default
         """
+
+        self.as_string = as_string
 
         super(ProviderRepresent, self).__init__(show_label = False,
                                                 show_type = False,
@@ -295,7 +297,10 @@ class ProviderRepresent(pr_PersonEntityRepresent):
 
         item = object.__getattribute__(row, instance_type)
         if instance_type == "pr_person":
-            pe_str = SPAN(current.T("private"), _class="free-hint")
+            if self.as_string:
+                pe_str = current.T("private")
+            else:
+                pe_str = SPAN(current.T("private"), _class="free-hint")
         elif "name" in item:
             pe_str = s3_str(item["name"])
         else:
@@ -689,5 +694,164 @@ class OfferAvailabilityFilter(S3DateFilter):
         if to_date:
             query = (FS("end_date") == None) | (FS("end_date") >= to_date)
             resource.add_filter(query)
+
+# =============================================================================
+def notify_direct_offer(record_id):
+    # TODO docstring
+
+    T = current.T
+
+    db = current.db
+    s3db = current.s3db
+
+    table = s3db.br_direct_offer
+
+    today = current.request.utcnow.date()
+    atable = s3db.br_case_activity
+    stable = s3db.br_case_activity_status
+    aotable = s3db.br_assistance_offer
+    join = [atable.on((atable.id == table.case_activity_id) & \
+                      (atable.deleted == False)),
+            stable.on((stable.id == atable.status_id) & \
+                      (stable.is_closed == False)),
+            aotable.on((aotable.id == table.offer_id) & \
+                       (aotable.status != "BLC") & \
+                       ((aotable.end_date == None) | (aotable.end_date >= today)) & \
+                       (aotable.deleted == False)),
+            ]
+    query = (table.id == record_id) & \
+            (table.notify == True) & \
+            (table.notified_on == None) & \
+            (table.deleted == False)
+    row = db(query).select(table.id,
+                           table.case_activity_id,
+                           table.offer_id,
+                           atable.person_id,
+                           join = join,
+                           limitby = (0, 1),
+                           ).first()
+    if not row:
+        return None
+
+    direct_offer = row.br_direct_offer
+    case_activity = row.br_case_activity
+
+    # Determine recipient
+    recipient = None
+    user_id = current.auth.s3_get_user_id(case_activity.person_id)
+    if user_id:
+        # Look up the user's email address
+        ltable = s3db.pr_person_user
+        ctable = s3db.pr_contact
+        join = ctable.on((ctable.pe_id == ltable.pe_id) & \
+                         (ctable.contact_method == "EMAIL") & \
+                         (ctable.deleted == False))
+        query = (ltable.user_id == user_id) & \
+                (ltable.deleted == False)
+        row = db(query).select(ctable.value,
+                               join = join,
+                               orderby = ctable.priority,
+                               limitby = (0, 1),
+                               ).first()
+        if row:
+            recipient = row.value
+    else:
+        # Look up the case org
+        ctable = s3db.br_case
+        query = (ctable.person_id == case_activity.person_id) & \
+                (ctable.deleted == False)
+        row = db(query).select(ctable.organisation_id,
+                               limitby = (0, 1),
+                               ).first()
+        if row:
+            organisation_id = row.organisation_id
+        else:
+            return T("Case Organisation not found")
+
+        # Look up the email addresses of CASE_MANAGERs
+        from templates.RLPPTM.helpers import get_role_emails
+        recipient = get_role_emails("CASE_MANAGER",
+                                    organisation_id = organisation_id,
+                                    )
+        if not recipient:
+            # Fall back
+            recipient = get_role_emails("RELIEF_PROVIDER",
+                                        organisation_id = organisation_id,
+                                        )
+
+    if not recipient:
+        return T("No suitable recipient for notification found")
+
+    if isinstance(recipient, list) and len(recipient) == 1:
+        recipient = recipient[0]
+
+    # Lookup data for notification
+    ltable = s3db.gis_location
+    left = ltable.on(ltable.id == aotable.location_id)
+    query = (aotable.id == direct_offer.offer_id)
+    row = db(query).select(aotable.id,
+                           aotable.pe_id,
+                           aotable.refno,
+                           aotable.name,
+                           aotable.description,
+                           aotable.chargeable,
+                           aotable.contact_name,
+                           aotable.contact_phone,
+                           aotable.contact_email,
+                           aotable.date,
+                           aotable.end_date,
+                           aotable.availability,
+                           ltable.id,
+                           ltable.L3,
+                           ltable.L1,
+                           left = left,
+                           limitby = (0, 1),
+                           ).first()
+
+    offer = row.br_assistance_offer
+    location = row.gis_location
+
+    provider = ProviderRepresent(as_string=True)(offer.pe_id)
+    availability_opts = dict(s3db.br_assistance_offer_availability)
+    availability = availability_opts.get(offer.availability, "-")
+
+    public_url = current.deployment_settings.get_base_public_url()
+    appname = current.request.application
+    base_url = "%s/%s" % (public_url, appname)
+    data = {"provider": s3_str(provider),
+            "title": offer.name or "-",
+            "details": offer.description or "-",
+            "refno": offer.refno or "-",
+            "name": offer.contact_name or "-",
+            "phone": offer.contact_phone or "-",
+            "email": offer.contact_email or "-",
+            "chargeable": s3_yes_no_represent(offer.chargeable),
+            "available_from": aotable.date.represent(offer.date),
+            "available_until": aotable.end_date.represent(offer.end_date),
+            "availability": s3_str(availability),
+            "offer_url": "%s/br/offers/%s" % (base_url, direct_offer.offer_id),
+            "need_url":  "%s/br/case_activity/%s" % (base_url, direct_offer.case_activity_id),
+            }
+    if location.id:
+        data["place"] = "%s (%s)" % (location.L3 or "-",
+                                     location.L1 or "-",
+                                     )
+
+    # Send notification
+    from templates.RLPPTM.notifications import CMSNotifications
+    error = CMSNotifications.send(recipient,
+                                  "DirectOfferNotification",
+                                  data,
+                                  #cc = None,
+                                  module = "br",
+                                  resource = "direct_offer",
+                                  )
+    if not error:
+        # Set notified_on
+        direct_offer.update_record(notified_on = datetime.datetime.utcnow,
+                                   modified_on = table.modified_on,
+                                   modified_by = table.modified_by,
+                                   )
+    return error
 
 # END =========================================================================
