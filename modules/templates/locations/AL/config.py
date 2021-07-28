@@ -15,13 +15,13 @@ def config(settings):
 
     # Restrict to specific country/countries
     settings.gis.countries.append("AL")
-    # Dosable the Postcode selector in the LocationSelector
-    #settings.gis.postcode_selector = False
 
     # L10n (Localization) settings
     settings.L10n.languages["sq"] = "Albanian"
     # Default Language (put this in custom template if-required)
     #settings.L10n.default_language = "sq"
+    # Uncomment this to Translate Location Names
+    settings.L10n.translate_gis_location = True
     # Default timezone for users
     settings.L10n.timezone = "Europe/Tirane"
     # Default Country Code for telephone numbers
