@@ -1368,11 +1368,20 @@ def config(settings):
 
         table = s3db.br_direct_offer
 
-        # Custom label for case activity
+        field = table.offer_id
+        from s3 import S3WithIntro
+        from gluon.sqlhtml import OptionsWidget
+        field.widget = S3WithIntro(OptionsWidget.widget,
+                                   intro = ("br",
+                                            "direct_offer",
+                                            "DirectOfferSelectorIntro",
+                                            ),
+                                   )
+
+        # Custom label+represent for case activity
+        # - always link to activities-perspective ("Current Needs")
         field = table.case_activity_id
         field.label = T("Need")
-
-        # Always link to activities-perspective ("Current Needs")
         field.represent = s3db.br_CaseActivityRepresent(show_as = "subject",
                                                         show_link = True,
                                                         linkto = URL(c = "br",
