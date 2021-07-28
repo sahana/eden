@@ -153,6 +153,7 @@
         <xsl:variable name="item_code" select="col[@field='Item Code']"/>
         <xsl:variable name="category" select="col[@field='Category']/text()"/>
         <xsl:variable name="catalog" select="col[@field='Catalog']/text()"/>
+        <xsl:variable name="currency" select="col[@field='Currency']/text()"/>
         <xsl:variable name="um" select="col[@field='Unit of Measure']/text()"/>
         <xsl:variable name="pack" select="col[@field='Pack']"/>
         <xsl:variable name="distributed">
@@ -178,7 +179,9 @@
             <data field="code"><xsl:value-of select="$item_code"/></data>
             <data field="um"><xsl:value-of select="$um"/></data>
             <data field="unit_value"><xsl:value-of select="col[@field='Unit Value']"/></data>
-            <data field="currency"><xsl:value-of select="col[@field='Currency']"/></data>
+            <xsl:if test="$currency!=''">
+                <data field="currency"><xsl:value-of select="$currency"/></data>
+            </xsl:if>
             <data field="model"><xsl:value-of select="col[@field='Model']"/></data>
             <data field="year"><xsl:value-of select="col[@field='Year']"/></data>
             <data field="weight"><xsl:value-of select="col[@field='Weight']"/></data>
