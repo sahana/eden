@@ -19,7 +19,13 @@ Message RejectProvider,auth,user,"Your registration has been rejected:
 
 {reason}",
 Subject RejectProvider,auth,user,Your registration at the {system} Portal was unsuccessful,
-Message DirectOfferNotification,br,direct_offer,"Zu ihrer Bedarfsmeldung wurde folgendes Angebot gemeldet:
+Message DirectOfferNotification,br,direct_offer,"Zu ihrer Bedarfsmeldung:
+
+*** {subject} ***
+
+wurde folgendes Angebot gemeldet:
+
+---
 
 Anbieter: {provider}
 
@@ -40,6 +46,8 @@ Kontakt:
 Name: {name}
 Telefon: {phone}
 Email: {email}
+
+---
 
 Sie können dieses Angebot online einsehen unter:
 {offer_url}

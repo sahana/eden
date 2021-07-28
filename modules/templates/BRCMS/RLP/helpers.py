@@ -727,6 +727,7 @@ def notify_direct_offer(record_id):
                            table.case_activity_id,
                            table.offer_id,
                            atable.person_id,
+                           atable.subject,
                            join = join,
                            limitby = (0, 1),
                            ).first()
@@ -819,18 +820,19 @@ def notify_direct_offer(record_id):
     appname = current.request.application
     base_url = "%s/%s" % (public_url, appname)
     data = {"provider": s3_str(provider),
-            "title": offer.name or "-",
-            "details": offer.description or "-",
-            "refno": offer.refno or "-",
-            "name": offer.contact_name or "-",
-            "phone": offer.contact_phone or "-",
-            "email": offer.contact_email or "-",
+            "title": offer.name,
+            "details": offer.description,
+            "refno": offer.refno,
+            "name": offer.contact_name,
+            "phone": offer.contact_phone,
+            "email": offer.contact_email,
             "chargeable": s3_yes_no_represent(offer.chargeable),
             "available_from": aotable.date.represent(offer.date),
             "available_until": aotable.end_date.represent(offer.end_date),
             "availability": s3_str(availability),
             "offer_url": "%s/br/offers/%s" % (base_url, direct_offer.offer_id),
             "need_url":  "%s/br/case_activity/%s" % (base_url, direct_offer.case_activity_id),
+            "subject": case_activity.subject,
             }
     if location.id:
         data["place"] = "%s (%s)" % (location.L3 or "-",
@@ -842,7 +844,6 @@ def notify_direct_offer(record_id):
     error = CMSNotifications.send(recipient,
                                   "DirectOfferNotification",
                                   data,
-                                  #cc = None,
                                   module = "br",
                                   resource = "direct_offer",
                                   )
