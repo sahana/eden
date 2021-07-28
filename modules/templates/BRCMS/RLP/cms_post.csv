@@ -19,7 +19,13 @@ Message RejectProvider,auth,user,"Your registration has been rejected:
 
 {reason}",
 Subject RejectProvider,auth,user,Your registration at the {system} Portal was unsuccessful,
-Message DirectOfferNotification,br,direct_offer,"Zu ihrer Bedarfsmeldung wurde folgendes Angebot gemeldet:
+Message DirectOfferNotification,br,direct_offer,"Zu ihrer Bedarfsmeldung:
+
+*** {subject} ***
+
+wurde folgendes Angebot gemeldet:
+
+---
 
 Anbieter: {provider}
 
@@ -41,6 +47,8 @@ Name: {name}
 Telefon: {phone}
 Email: {email}
 
+---
+
 Sie können dieses Angebot online einsehen unter:
 {offer_url}
 
@@ -48,3 +56,4 @@ Ihre Bedarfsmeldung können Sie hier einsehen und bearbeiten:
 {need_url}
 ",
 Subject DirectOfferNotification,br,direct_offer,{system}: Angebot zu Ihrer Bedarfsmeldung,
+DirectOfferSelectorIntro,br,direct_offer,"Sie können aus ihren bestehenden Hilfsangeboten in dieser Bedarfskategorie auswählen, oder ein neues Angebot erstellen. Wenn Sie ein neues Angebot erstellen, wird dieses erst gemeldet wenn es durch den Administrator freigegen ist. In jedem Fall bleibt ihr Angebot für alle Benutzer sichtbar und ist nicht auf diese Bedarfsmeldung beschränkt.",
