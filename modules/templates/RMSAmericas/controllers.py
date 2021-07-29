@@ -130,13 +130,19 @@ class apps(S3CustomController):
                       "wh_manager",
                       "national_wh_manager",
                       )):
-            apps_append(_div(label = T("Warehouses"),
-                             url = URL(c = "inv",
-                                       f = "index",
-                                       ),
-                             image = "warehouses.png",
-                             _class = "alw",
-                             ))
+            wh_url = URL(c = "inv",
+                         f = "index",
+                         )
+        else:
+            # Normal users see Warehouses module, but have a different page
+            wh_url = URL(c = "req",
+                         f = "req",
+                         )
+        apps_append(_div(label = T("Warehouses"),
+                         url = wh_url,
+                         image = "warehouses.png",
+                         _class = "alw",
+                         ))
 
         if has_roles(("project_reader",
                       "project_manager",

@@ -358,6 +358,8 @@ $.filterOptionsS3({
 
         configure(tablename,
                   deduplicate = self.supply_item_category_duplicate,
+                  #hierarchy = "parent_item_category_id",
+                  #hierarchy_link = "parent",
                   onvalidation = self.supply_item_category_onvalidate,
                   )
 

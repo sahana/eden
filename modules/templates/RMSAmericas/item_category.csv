@@ -1,0 +1,19 @@
+Catalogue,Parent Category,Category,Code
+IFRC,,RELIEF,4
+IFRC,RELIEF,Household,8
+IFRC,Household,Bedding and clothes,7
+IFRC,Household,"Household equipment, kits and sets",53
+IFRC,RELIEF,Shelter and construction materials,23
+IFRC,Shelter and construction materials,"Family tents, Tarpaulins, accessories",38
+IFRC,Shelter and construction materials,Shelter and construction Kits,104
+IFRC,,WASH,6
+IFRC,WASH,Sanitation,22
+IFRC,Sanitation,De-sluging pumps,27
+IFRC,WASH,Water,30
+IFRC,Water,Motor pumps,84
+IFRC,Water,"Valves and taps, tap stands",118
+IFRC,Water,Water tanks,127
+IFRC,Water,Water testing,128
+IFRC,Water,Water treatment equipment,129
+IFRC,WASH,Water and Sanitation ERU,31
+IFRC,Water and Sanitation ERU,Water and Sanitation Disaster Response,126

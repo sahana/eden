@@ -654,7 +654,6 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Inventory Management
-
     settings.customise_inv_home = inv_index # Imported from controllers.py
 
     # Hide Staff Management Tabs for Facilities in Inventory Module
@@ -684,19 +683,23 @@ def config(settings):
                                37: T("In Transit"),  # Loaning warehouse space to another agency
                                }
 
+    # Disable Alternate Items
+    settings.supply.use_alt_name = False
 
     # -------------------------------------------------------------------------
     # Request Management
     # Uncomment to disable Inline Forms in Requests module
     settings.req.inline_forms = False
     settings.req.req_type = ["Stock"]
-    settings.req.use_commit = True
+    # No need to use Commits
+    #settings.req.use_commit = True
     #settings.req.document_filing = True
     # Should Requests ask whether Transportation is required?
     settings.req.ask_transport = True
     settings.req.pack_values = False
-    # HMRC disable Request Matching as don't want users making requests to see what stock is available
-    #settings.req.prompt_match = False
+    # HNRC disable Request Matching as don't want users making requests to see what stock is available
+    # PIRAC want this to be done by the Logistics Approver
+    settings.req.prompt_match = False
     # Uncomment to disable Recurring Request
     settings.req.recurring = False # HNRC
     # Use Workflow
@@ -820,6 +823,11 @@ def config(settings):
                 #description = "Receiving and Sending Items",
                 restricted = True,
                 #module_type = 4
+            )),
+        ("proc", Storage(
+                name_nice = T("Procurement"),
+                restricted = True,
+                #module_type = None, # Not displayed
             )),
         #("asset", Storage(
         #        name_nice = T("Assets"),
@@ -3859,17 +3867,6 @@ Thank you"""
     settings.customise_pr_physical_description_resource = customise_pr_physical_description_resource
 
     # -------------------------------------------------------------------------
-    def customise_supply_item_category_resource(r, tablename):
-
-        #root_org = current.auth.root_org_name()
-        #if root_org == HNRC:
-        # Not using Assets Module
-        field = current.s3db.supply_item_category.can_be_asset
-        field.readable = field.writable = False
-
-    settings.customise_supply_item_category_resource = customise_supply_item_category_resource
-
-    # -------------------------------------------------------------------------
     def customise_project_window_resource(r, tablename):
 
         r.resource.configure(deletable = False,
@@ -4048,14 +4045,12 @@ Thank you"""
 
         tablename = "project_project"
 
-        # Default Filter
-        from s3 import s3_set_default_filter
-        s3_set_default_filter("~.organisation_id",
-                              user_org_default_filter,
-                              tablename = "project_project")
-
         if current.request.controller == "inv":
             # Very simple functionality all that is required
+            from gluon import IS_NOT_EMPTY
+            f = current.s3db.project_project.code
+            f.label = T("Code")
+            f.requires = IS_NOT_EMPTY()
             # Lead Organisation needs to be an NS (not a branch)
             ns_only(tablename,
                     required = True,
@@ -4064,6 +4059,12 @@ Thank you"""
                     #limit_filter_opts = True,
                     )
             return attr
+
+        # Default Filter
+        from s3 import s3_set_default_filter
+        s3_set_default_filter("~.organisation_id",
+                              user_org_default_filter,
+                              tablename = "project_project")
 
         # Load standard model
         s3db = current.s3db
@@ -4668,6 +4669,16 @@ Thank you"""
     settings.customise_project_location_controller = customise_project_location_controller
 
     # -------------------------------------------------------------------------
+    def customise_proc_order_item_resource(r, tablename):
+
+        s3db = current.s3db
+        table = s3db.proc_order_item
+        f = table.order_id
+        f.readable = f.writable = False
+
+    settings.customise_proc_order_item_resource = customise_proc_order_item_resource
+
+    # -------------------------------------------------------------------------
     def customise_req_approver_resource(r, tablename):
 
         db = current.db
@@ -4737,6 +4748,15 @@ Thank you"""
                 f.readable = f.writable = False
                 return
 
+            # Default to NS (most-common use-case)
+            otable = s3db.org_organisation
+            org = db(otable.id == auth.root_org()).select(otable.pe_id,
+                                                          limitby = (0, 1)
+                                                          ).first()
+            org_pe_id = org.pe_id
+            if org_pe_id in entities:
+                f.default = org_pe_id
+
         from s3 import IS_ONE_OF
         f.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
                                s3db.pr_PersonEntityRepresent(show_type = False),
@@ -4748,15 +4768,15 @@ Thank you"""
     settings.customise_req_approver_resource = customise_req_approver_resource
 
     # -------------------------------------------------------------------------
-    def customise_req_commit_controller(**attr):
+    #def customise_req_commit_controller(**attr):
 
         # Request is mandatory
-        field = current.s3db.req_commit.req_id
-        field.requires = field.requires.other
+    #    field = current.s3db.req_commit.req_id
+    #    field.requires = field.requires.other
 
-        return attr
+    #    return attr
 
-    settings.customise_req_commit_controller = customise_req_commit_controller
+    #settings.customise_req_commit_controller = customise_req_commit_controller
 
     # -------------------------------------------------------------------------
     def customise_req_project_req_resource(r, tablename):
@@ -4784,18 +4804,36 @@ Thank you"""
     # -------------------------------------------------------------------------
     def customise_req_req_resource(r, tablename):
 
+        from gluon import IS_NOT_EMPTY
+
         s3db = current.s3db
 
-        # Request is mandatory
-        #field = s3db.req_commit.req_id
-        #field.requires = field.requires.other
-
         table = s3db.req_req
-        table.req_ref.represent = lambda v, show_link=True, pdf=True: \
-                s3db.req_ref_represent(v, show_link, pdf)
+        f = table.req_ref
+        f.represent = lambda v, show_link=True, pdf=True: \
+            s3db.req_ref_represent(v, show_link, pdf)
+        f.requires = IS_NOT_EMPTY()
+        f.widget = None
+        table.priority.readable = table.priority.writable = False
+        table.date.label = T("Date of Issue")
+        table.date_required.label = T("Requested Delivery Date")
         table.site_id.label = T("Deliver To")
 
+        LOGS_ADMIN = current.auth.s3_has_roles(("ORG_ADMIN",
+                                                "wh_manager",
+                                                "national_wh_manager",
+                                                ))
+        if not LOGS_ADMIN:
+            table.requester_id.writable = False
+
+        MINE = r.get_vars.get("mine")
+
         if r.tablename == tablename:
+            if MINE:
+                # Filter
+                from s3 import FS
+                r.resource.add_filter(FS("requester_id") == current.auth.s3_logged_in_person())
+
             if r.record and \
                r.record.workflow_status == 3:
                 # Never opens in Component Tab, always breaks out
@@ -4804,7 +4842,7 @@ Thank you"""
             # Link to Projects
             from s3 import IS_ONE_OF, S3Represent, S3SQLCustomForm
             from s3layouts import S3PopupLink
-            ptable= s3db.project_project
+            ptable = s3db.project_project
             f = s3db.req_project_req.project_id
             f.label = T("Project Code")
             project_represent = S3Represent(lookup="project_project", fields=["code"])
@@ -4823,7 +4861,7 @@ Thank you"""
                                     vars = {"caller": "req_req_sub_project_req_project_id",
                                             "parent": "project_req",
                                             },
-                                    ),
+                                    )
             crud_fields = [f for f in table.fields if table[f].readable]
             crud_fields.insert(0, "project_req.project_id")
             crud_form = S3SQLCustomForm(*crud_fields)
@@ -4837,15 +4875,58 @@ Thank you"""
                             action = PrintableShipmentForm,
                             )
 
-        # Hide Drivers list_field
-        list_fields = s3db.get_config("req_req", "list_fields")
-        try:
-            list_fields.remove((T("Drivers"), "drivers"))
-        except ValueError:
-            # Already removed
-            pass
+        from s3 import S3OptionsFilter
+        filter_widgets = [S3OptionsFilter("workflow_status",
+                                          cols = 5,
+                                          ),
+                          ]
+
+        list_fields = ["req_ref",
+                       "date",
+                       "site_id",
+                       (T("Details"), "details"),
+                       "workflow_status",
+                       #"commit_status",
+                       "transit_status",
+                       "fulfil_status",
+                       ]
+        if LOGS_ADMIN and not MINE:
+            list_fields.insert(2, "date_required")
+            list_fields.insert(4, "requester_id")
+
+            filter_widgets += [
+                               ]
+
+        s3db.configure(tablename,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
 
     settings.customise_req_req_resource = customise_req_req_resource
+
+    # -------------------------------------------------------------------------
+    def customise_supply_item_category_resource(r, tablename):
+
+        #root_org = current.auth.root_org_name()
+        #if root_org == HNRC:
+        # Not using Assets Module
+        field = current.s3db.supply_item_category.can_be_asset
+        field.readable = field.writable = False
+
+    settings.customise_supply_item_category_resource = customise_supply_item_category_resource
+
+    # -------------------------------------------------------------------------
+    def customise_supply_item_resource(r, tablename):
+
+        table = current.s3db.supply_item
+        table.brand_id.readable = table.brand_id.writable = False
+        table.model.readable = table.model.writable = False
+        table.year.readable = table.year.writable = False
+        table.length.readable = table.length.writable = False
+        table.width.readable = table.width.writable = False
+        table.height.readable = table.height.writable = False
+
+    settings.customise_supply_item_resource = customise_supply_item_resource
 
 # =============================================================================
 class PrintableShipmentForm(S3Method):
