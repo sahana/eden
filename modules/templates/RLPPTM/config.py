@@ -2437,19 +2437,30 @@ def config(settings):
             from .helpers import configure_binary_tags
             configure_binary_tags(r.resource, ("commercial",))
 
+            # Expose orderable item categories
+            ltable = s3db.req_requester_category
+            field = ltable.item_category_id
+            field.represent = S3Represent(lookup = "supply_item_category",
+                                          )
+
             # Custom form
-            from s3 import S3SQLCustomForm
+            from s3 import S3SQLCustomForm, S3SQLInlineLink
             crud_form = S3SQLCustomForm("name",
                                         "group.value",
                                         (T("Commercial Providers"), "commercial.value"),
+                                        S3SQLInlineLink("item_category",
+                                                        field = "item_category_id",
+                                                        label = T("Orderable Item Categories"),
+                                                        ),
                                         "comments",
                                         )
 
-            # Include tags in list view
+            # Include tags and orderable item categories in list view
             list_fields = ["id",
                            "name",
                            "group.value",
                            (T("Commercial Providers"), "commercial.value"),
+                           (T("Orderable Item Categories"), "requester_category.item_category_id"),
                            "comments",
                            ]
 
@@ -4433,7 +4444,7 @@ def config(settings):
 
         table = s3db.supply_item
 
-        unused = ("item_category_id",
+        unused = (#"item_category_id",
                   "brand_id",
                   "kit",
                   "model",

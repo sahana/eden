@@ -231,6 +231,11 @@ class OrgOrganisationModel(S3Model):
                        org_organisation_type_tag = {"name": "tag",
                                                     "joinby": "organisation_type_id",
                                                     },
+                       # Requestable Item Categories
+                       supply_item_category = {"link": "req_requester_category",
+                                               "joinby": "organisation_type_id",
+                                               "key": "item_category_id",
+                                               },
                        )
 
         if settings.get_org_regions():

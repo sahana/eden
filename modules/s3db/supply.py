@@ -1182,32 +1182,55 @@ $.filterOptionsS3({
         """
 
         db = current.db
+        s3db = current.s3db
+
+        sitable = s3db.supply_item
+        citable = s3db.supply_catalog_item
 
         form_vars = form.vars
         item_id = form_vars.id
-        catalog_id = form_vars.catalog_id
-        catalog_item_id = None
 
-        citable = db.supply_catalog_item
+        item_category_id = form_vars.get("item_category_id")
+
+        if "catalog_id" in form_vars:
+            catalog_id = form_vars.catalog_id
+        elif item_category_id:
+            # Look up the catalog from the category
+            ictable = s3db.supply_item_category
+            query = (ictable.id == item_category_id) & \
+                    (ictable.deleted == False)
+            row = db(query).select(ictable.catalog_id,
+                                   limitby = (0, 1),
+                                   ).first()
+            if row:
+                catalog_id = row.catalog_id
+        if not catalog_id:
+            # Check for default catalog
+            catalog_id = sitable.catalog_id.default
+
+        # Look up existing catalog item, if one exists
         query = (citable.item_id == item_id) & \
                 (citable.deleted == False)
         rows = db(query).select(citable.id)
         if not len(rows):
-            # Create supply_catalog_item
-            catalog_item_id = \
-                citable.insert(catalog_id = catalog_id,
-                               item_category_id = form_vars.item_category_id,
-                               item_id = item_id
-                               )
+            # Create new catalog item
+            catalog_item = {"catalog_id": catalog_id,
+                            "item_category_id": item_category_id,
+                            "item_id": item_id,
+                            }
+            catalog_item["id"] = citable.insert(**catalog_item)
+            current.auth.s3_set_record_owner(citable, catalog_item)
+            s3db.onaccept(citable, catalog_item, method="create")
+
         elif len(rows) == 1:
-            # Update if the catalog/category has changed - if there is only supply_catalog_item
-            catalog_item_id = rows.first().id
-            catalog_item_id = \
-                db(citable.id == catalog_item_id).update(catalog_id = catalog_id,
-                                                         item_category_id = form_vars.item_category_id,
-                                                         item_id = item_id,
-                                                         )
-        #current.auth.s3_set_record_owner(citable, catalog_item_id, force_update=True)
+            # Update the existing catalog item if the catalog/category has
+            # changed (if there is only one catalog item)
+            catalog_item = rows.first()
+            catalog_item.update_record(catalog_id = catalog_id,
+                                       item_category_id = item_category_id,
+                                       item_id = item_id,
+                                       )
+            #current.auth.s3_set_record_owner(citable, catalog_item, force_update=True)
 
         # Update UM
         um = form_vars.um or db.supply_item.um.default
