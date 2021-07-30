@@ -51,6 +51,7 @@ __all__ = ("RequestPriorityStatusModel",
            "RequestProjectModel",
            "RequestTagModel",
            "RequestTaskModel",
+           "RequestRequesterCategoryModel",
            "CommitModel",
            "CommitItemModel",
            "CommitPersonModel",
@@ -3966,6 +3967,45 @@ class RequestTaskModel(S3Model):
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary = ("task_id",
                                                             "req_id",
+                                                            ),
+                                                 ),
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class RequestRequesterCategoryModel(S3Model):
+    """
+        Model to control which types of requester can request which items
+        - used by RLPPTM
+    """
+
+    names = ("req_requester_category",
+             )
+
+    def model(self):
+
+        # -----------------------------------------------------------------
+        # Link supply item categories to requester attributes (e.g. org type)
+        #
+        tablename = "req_requester_category"
+        self.define_table(tablename,
+                          self.supply_item_category_id(
+                              empty = False,
+                              ondelete = "CASCADE",
+                              ),
+                          self.org_organisation_type_id(
+                              empty = False,
+                              ondelete = "CASCADE",
+                              ),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("item_category_id",
+                                                            "organisation_type_id",
                                                             ),
                                                  ),
                        )

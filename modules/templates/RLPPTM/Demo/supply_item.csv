@@ -1,23 +1,23 @@
-Catalog,Item Name,Item Code,Unit of Measure
-Material für Teststellen,Antigen-Schnelltests,POCTST,Stück
-Material für Teststellen,Communitymaske,COMMSK,Stück
-Material für Teststellen,Desinfektionsmittel,DESINF,Flasche
-Material für Teststellen,Einmal-Handschuhe Gr.L,EHL,Stück
-Material für Teststellen,Einmal-Handschuhe Gr.M,EHM,Stück
-Material für Teststellen,Einmal-Handschuhe Gr.S,EHS,Stück
-Material für Teststellen,Einmal-Handschuhe Gr.XL,EHXL,Stück
-Material für Teststellen,Einmal-Handschuhe Gr.XS,EHXS,Stück
-Material für Teststellen,Face-Shields,FACSHL,Stück
-Material für Teststellen,Ganzkörper-Schutzanzug,SCHANZ,Stück
-Material für Teststellen,Kopfhaube/OP-Hauben,KHAUBE,Stück
-Material für Teststellen,"OP-Kittel, steril Standard",OPKSTD,Stück
-Material für Teststellen,"OP-Kittel, steril Verstärkt",OPKVST,Stück
-Material für Teststellen,OP-Masken (Mundnasen-Schutz),OPMASK,Stück
-Material für Teststellen,PE-Überzieh-Schuhe,UBZSCH,Stück
-Material für Teststellen,Probeentnahme Material,PREMAT,Paket
-Material für Teststellen,Schutzbrille,SCHBRL,Stück
-Material für Teststellen,Schutzkittel,SCHKTL,Stück
-Material für Teststellen,Schutzmaske FFP1,SMFFP1,Stück
-Material für Teststellen,Schutzmaske FFP2,SMFFP2,Stück
-Material für Teststellen,Schutzmaske FFP3,SMFFP3,Stück
-Material für Teststellen,Vollgesichtsmaske,VGMASK,Stück
+Catalog,Category,Category Code,Item Name,Item Code,Unit of Measure
+Material für Teststellen,Schnelltests,TESTS,Antigen-Schnelltests,POCTST,Stück
+Material für Teststellen,Schutzausrüstung,PPE,Communitymaske,COMMSK,Stück
+Material für Teststellen,Sonstiges,OTHER,Desinfektionsmittel,DESINF,Flasche
+Material für Teststellen,Schutzausrüstung,PPE,Einmal-Handschuhe Gr.L,EHL,Stück
+Material für Teststellen,Schutzausrüstung,PPE,Einmal-Handschuhe Gr.M,EHM,Stück
+Material für Teststellen,Schutzausrüstung,PPE,Einmal-Handschuhe Gr.S,EHS,Stück
+Material für Teststellen,Schutzausrüstung,PPE,Einmal-Handschuhe Gr.XL,EHXL,Stück
+Material für Teststellen,Schutzausrüstung,PPE,Einmal-Handschuhe Gr.XS,EHXS,Stück
+Material für Teststellen,Schutzausrüstung,PPE,Face-Shields,FACSHL,Stück
+Material für Teststellen,Schutzausrüstung,PPE,Ganzkörper-Schutzanzug,SCHANZ,Stück
+Material für Teststellen,Schutzausrüstung,PPE,Kopfhaube/OP-Hauben,KHAUBE,Stück
+Material für Teststellen,Schutzausrüstung,PPE,"OP-Kittel, steril Standard",OPKSTD,Stück
+Material für Teststellen,Schutzausrüstung,PPE,"OP-Kittel, steril Verstärkt",OPKVST,Stück
+Material für Teststellen,Schutzausrüstung,PPE,OP-Masken (Mundnasen-Schutz),OPMASK,Stück
+Material für Teststellen,Schutzausrüstung,PPE,PE-Überzieh-Schuhe,UBZSCH,Stück
+Material für Teststellen,Sonstiges,OTHER,Probeentnahme Material,PREMAT,Paket
+Material für Teststellen,Schutzausrüstung,PPE,Schutzbrille,SCHBRL,Stück
+Material für Teststellen,Schutzausrüstung,PPE,Schutzkittel,SCHKTL,Stück
+Material für Teststellen,Schutzausrüstung,PPE,Schutzmaske FFP1,SMFFP1,Stück
+Material für Teststellen,Schutzausrüstung,PPE,Schutzmaske FFP2,SMFFP2,Stück
+Material für Teststellen,Schutzausrüstung,PPE,Schutzmaske FFP3,SMFFP3,Stück
+Material für Teststellen,Schutzausrüstung,PPE,Vollgesichtsmaske,VGMASK,Stück
