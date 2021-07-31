@@ -4721,6 +4721,7 @@
 'Request Type': 'Anfragetyp',
 'Request Updated': 'Anfrage aktualisiert',
 'Request added': 'Anfrage hinzugefügt',
+'Request contains items that cannot be ordered for this site': 'Anfrage enthält Artikel die nicht für diese Stelle bestellt werden können',
 'Request deleted': 'Anfrage gelöscht',
 'Request for Role Upgrade': 'Rollenupgrade anfordern',
 'Request password reset': 'Passwort-Rücksetzung anfragen',

@@ -3957,6 +3957,67 @@ def config(settings):
     settings.customise_inv_warehouse_controller = customise_inv_warehouse_controller
 
     # -------------------------------------------------------------------------
+    def req_onvalidation(form):
+        """
+            Onvalidation of req:
+                - prevent the situation that the site is changed in an
+                  existing request while it contains items not orderable
+                  by the new site
+        """
+
+        form_vars = form.vars
+
+        # Read form data
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            record_id = None
+
+        db = current.db
+        s3db = current.s3db
+
+        import json
+        from s3 import JSONERRORS
+
+        if "site_id" in form_vars: # if site is selectable
+            site_id = form_vars.site_id
+
+            if "sub_defaultreq_item" in form_vars:
+                # Items inline
+                try:
+                    items = json.loads(form_vars.sub_defaultreq_item)
+                except JSONERRORS:
+                    item_ids = []
+                else:
+                    item_ids = [item["item_id"]["value"]
+                                for item in items["data"] if not item.get("_delete")
+                                ]
+            elif record_id:
+                # Items in database
+                ritable = s3db.req_req_item
+                query = (ritable.req_id == record_id) & \
+                        (ritable.deleted == False)
+                rows = db(query).select(ritable.item_id)
+                item_ids = [row.item_id for row in rows]
+            else:
+                item_ids = []
+
+            if item_ids:
+                # Check if there are any items not in orderable categories
+                from .requests import get_orderable_item_categories
+                categories = get_orderable_item_categories(site=site_id)
+
+                itable = s3db.supply_item
+                query = (itable.id.belongs(item_ids)) & \
+                        (~(itable.item_category_id.belongs(categories)))
+                row = db(query).select(itable.id, limitby = (0, 1)).first()
+                if row:
+                    form.errors.site_id = T("Request contains items that cannot be ordered for this site")
+
+    # -------------------------------------------------------------------------
     def customise_req_req_resource(r, tablename):
 
         db = current.db
@@ -4139,6 +4200,14 @@ def config(settings):
                         field.writable = False
                     elif not sites:
                         resource.configure(insertable = False)
+                    else:
+                        # User can order for more than one site
+                        # => add custom callback to make sure all items in the request
+                        #    are orderable for the site selected
+                        s3db.add_custom_callback("req_req",
+                                                 "onvalidation",
+                                                 req_onvalidation,
+                                                 )
 
                     # Filter selectable items to orderable categories
                     categories = get_orderable_item_categories(orgs=requester_orgs)
