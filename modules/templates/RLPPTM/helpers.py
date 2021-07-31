@@ -868,20 +868,20 @@ def add_organisation_default_tags(organisation_id):
     # Add default tags
     otable = s3db.org_organisation
     ttable = s3db.org_organisation_tag
-    rttable = ttable.with_alias("requester")
+    dttable = ttable.with_alias("delivery")
     ittable = ttable.with_alias("orgid")
 
-    left = [rttable.on((rttable.organisation_id == otable.id) & \
-                        (rttable.tag == "REQUESTER") & \
-                        (rttable.deleted == False)),
+    left = [dttable.on((dttable.organisation_id == otable.id) & \
+                       (dttable.tag == "DELIVERY") & \
+                       (dttable.deleted == False)),
             ittable.on((ittable.organisation_id == otable.id) & \
-                        (ittable.tag == "OrgID") & \
-                        (ittable.deleted == False)),
+                       (ittable.tag == "OrgID") & \
+                       (ittable.deleted == False)),
             ]
     query = (otable.id == organisation_id)
     row = db(query).select(otable.id,
                            otable.uuid,
-                           rttable.id,
+                           dttable.id,
                            ittable.id,
                            left = left,
                            limitby = (0, 1),
@@ -889,13 +889,13 @@ def add_organisation_default_tags(organisation_id):
     if row:
         org = row.org_organisation
 
-        # Add REQUESTER-tag
-        rtag = row.requester
-        if not rtag.id:
+        # Add DELIVERY-tag
+        dtag = row.delivery
+        if not dtag.id:
             ttable.insert(organisation_id = org.id,
-                            tag = "REQUESTER",
-                            value = "N",
-                            )
+                          tag = "DELIVERY",
+                          value = "DIRECT",
+                          )
 
         # Add OrgID-tag
         itag = row.orgid
@@ -907,9 +907,9 @@ def add_organisation_default_tags(organisation_id):
                 uid = int(uuid.uuid4().urn[9:14], 16)
             value = "%06d%04d" % (uid, org.id)
             ttable.insert(organisation_id = org.id,
-                            tag = "OrgID",
-                            value = value,
-                            )
+                          tag = "OrgID",
+                          value = value,
+                          )
 
 # -----------------------------------------------------------------------------
 def add_facility_default_tags(facility_id, approve=False):

@@ -2137,9 +2137,9 @@ def config(settings):
         s3db = current.s3db
 
         s3db.add_components("org_organisation",
-                            org_organisation_tag = ({"name": "requester",
+                            org_organisation_tag = ({"name": "delivery",
                                                      "joinby": "organisation_id",
-                                                     "filterby": {"tag": "REQUESTER"},
+                                                     "filterby": {"tag": "DELIVERY"},
                                                      "multiple": False,
                                                      },
                                                     ),
@@ -2225,9 +2225,15 @@ def config(settings):
 
             is_org_group_admin = auth.s3_has_role("ORG_GROUP_ADMIN")
 
-            # Configure binary tags
-            from .helpers import configure_binary_tags
-            configure_binary_tags(resource, ("requester",))
+            # Configure delivery-tag
+            from .requests import delivery_tag_opts
+            delivery_opts = delivery_tag_opts()
+            component = resource.components.get("delivery")
+            ctable = component.table
+            field = ctable.value
+            field.default = "DIRECT"
+            field.requires = IS_IN_SET(delivery_opts, zero=None)
+            field.represent = lambda v, row=None: delivery_opts.get(v, "-")
 
             # Add invite-method for ORG_GROUP_ADMIN role
             from .helpers import InviteUserOrg
@@ -2296,7 +2302,7 @@ def config(settings):
                                                    label = T("Project Partner for"),
                                                    cols = 1,
                                                    )
-                        requester = (T("Can order equipment"), "requester.value")
+                        delivery = (T("Delivery##supplying"), "delivery.value")
                         types = S3SQLInlineLink("organisation_type",
                                                 field = "organisation_type_id",
                                                 search = False,
@@ -2305,14 +2311,14 @@ def config(settings):
                                                 widget = "multiselect",
                                                 )
                     else:
-                        groups = projects = requester = types = None
+                        groups = projects = delivery = types = None
 
                     crud_fields = [groups,
-                                   projects,
-                                   requester,
                                    "name",
                                    "acronym",
                                    types,
+                                   projects,
+                                   delivery,
                                    S3SQLInlineComponent(
                                         "contact",
                                         fields = [("", "value")],
@@ -2732,11 +2738,12 @@ def config(settings):
                             ),
             ]
         if is_org_group_admin:
-            binary_tag_opts = OrderedDict([("Y", T("Yes")), ("N", T("No"))])
+            from .requests import delivery_tag_opts
+            delivery_opts = delivery_tag_opts()
             filter_widgets.extend([
-                S3OptionsFilter("organisation_id$requester.value",
-                                label = T("Can order equipment"),
-                                options = binary_tag_opts,
+                S3OptionsFilter("organisation_id$delivery.value",
+                                label = T("Delivery##supplying"),
+                                options = delivery_opts,
                                 hidden = True,
                                 ),
                 S3OptionsFilter("organisation_id$organisation_type__link.organisation_type_id",
@@ -2747,6 +2754,7 @@ def config(settings):
                                 ),
                 ])
             if r.method == "report":
+                binary_tag_opts = OrderedDict([("Y", T("Yes")), ("N", T("No"))])
                 filter_widgets.extend([
                     S3OptionsFilter("organisation_id$project_organisation.project_id",
                                     options = lambda: s3_get_filter_opts("project_project"),
@@ -3861,6 +3869,42 @@ def config(settings):
     settings.customise_inv_track_item_resource = customise_inv_track_item_resource
 
     # -------------------------------------------------------------------------
+    def warehouse_tag_onaccept(form):
+        """
+            Onaccept of site tags for warehouses:
+                - make sure only one warehouse has the CENTRAL=Y tag
+        """
+
+        # Get record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        db = current.db
+        table = current.s3db.org_site_tag
+
+        tag = form_vars.get("tag")
+        if not tag and record_id:
+            record = db(table.id == record_id).select(table.id,
+                                                      table.tag,
+                                                      limitby = (0, 1),
+                                                      ).first()
+            tag = record.tag if record else None
+
+        value = form_vars.get("value")
+        site_id = form_vars.get("site_id")
+
+        if site_id and tag == "CENTRAL" and value == "Y":
+            query = (table.site_id != site_id) & \
+                    (table.tag == "CENTRAL") & \
+                    (table.value == "Y")
+            db(query).update(value = "N")
+
+    # -------------------------------------------------------------------------
     def customise_inv_warehouse_resource(r, tablename):
 
         T = current.T
@@ -3874,6 +3918,22 @@ def config(settings):
         field.comment = None
         field = table.warehouse_type_id
         field.comment = None
+
+        # Add CENTRAL-tag as component
+        s3db.add_components("org_site",
+                            org_site_tag = ({"name": "central",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "CENTRAL"},
+                                             "multiple": False,
+                                             },
+                                            ),
+                            )
+
+        # Custom callback to ensure that there is only one with CENTRAL=Y
+        s3db.add_custom_callback("org_site_tag",
+                                 "onaccept",
+                                 warehouse_tag_onaccept,
+                                 )
 
         # Custom label, represent and tooltip for obsolete-flag
         field = table.obsolete
@@ -3905,6 +3965,7 @@ def config(settings):
                            "name",
                            "code",
                            "warehouse_type_id",
+                           (T("Central Warehouse"), "central.value"),
                            "location_id",
                            "email",
                            "phone1",
@@ -3922,6 +3983,7 @@ def config(settings):
                        "name",
                        "code",
                        "warehouse_type_id",
+                       (T("Central Warehouse"), "central.value"),
                        "location_id",
                        "email",
                        "phone1",
@@ -3938,6 +4000,19 @@ def config(settings):
     def customise_inv_warehouse_controller(**attr):
 
         s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            result = standard_prep(r) if callable(standard_prep) else True
+
+            # Configure central-tag
+            from .helpers import configure_binary_tags
+            configure_binary_tags(r.resource, ("central",))
+
+            return result
+        s3.prep = prep
 
         #standard_postp = s3.postp
         #def postp(r, output):
@@ -4120,6 +4195,8 @@ def config(settings):
         # Custom prep
         standard_prep = s3.prep
         def prep(r):
+
+            add_org_tags()
 
             r.get_vars["type"] = "1"
 

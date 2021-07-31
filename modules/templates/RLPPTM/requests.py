@@ -13,6 +13,18 @@ from gluon import current, redirect, URL, A, B
 from s3 import S3Method, S3Represent, s3_str
 
 # =============================================================================
+def delivery_tag_opts():
+    """
+        Options for the DELIVERY-tag of organisations
+    """
+
+    T = current.T
+
+    return OrderedDict((("DIRECT", T("Direct")),
+                        ("VIA_DC", T("Via Distribution Center")),
+                        ))
+
+# =============================================================================
 def req_filter_widgets():
     """
         Filter widgets for requests
@@ -67,6 +79,10 @@ def req_filter_widgets():
                          ),
             S3OptionsFilter("site_id",
                             hidden = True
+                            ),
+            S3OptionsFilter("site_id$organisation_id$delivery.value",
+                            label = T("Delivery##supplying"),
+                            options = delivery_tag_opts(),
                             ),
             ]
         filter_widgets[2:2] = coordinator_filters
@@ -303,6 +319,30 @@ def is_active(site_id):
                                    ).first()
     return bool(row)
 
+# -----------------------------------------------------------------------------
+def direct_delivery(site_id):
+    """
+        Verify whether a site is marked for direct delivery
+
+        @param site_id: the site ID
+
+        @returns: True|False
+    """
+
+    if not site_id:
+        return False
+
+    s3db = current.s3db
+    stable = s3db.org_site
+    ttable = s3db.org_organisation_tag
+    query = (stable.site_id == site_id) & \
+            (ttable.organisation_id == stable.organisation_id) & \
+            (ttable.tag == "DELIVERY") & \
+            (ttable.value == "DIRECT") & \
+            (ttable.deleted == False)
+    row = current.db(query).select(ttable.id, limitby=(0, 1)).first()
+    return bool(row)
+
 # =============================================================================
 class RegisterShipment(S3Method):
     """
@@ -364,7 +404,10 @@ class RegisterShipment(S3Method):
         if not is_active(req.site_id):
             r.error(400, T("Requesting site no longer active"))
 
-        distribution_site_id = cls.distribution_site(req.site_id)
+        if direct_delivery(req.site_id):
+            distribution_site_id = cls.central_warehouse()
+        else:
+            distribution_site_id = cls.distribution_site(req.site_id)
         if not distribution_site_id:
             current.session.warning = T("No suitable distribution center found")
 
@@ -417,12 +460,44 @@ class RegisterShipment(S3Method):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def central_warehouse():
+        """
+            Find the central warehouse for direct delivery
+
+            @returns: site_id
+        """
+
+        db = current.db
+        s3db = current.s3db
+        auth = current.auth
+
+        wtable = s3db.inv_warehouse
+        ttable = s3db.org_site_tag
+
+        join = ttable.on((ttable.site_id == wtable.site_id) & \
+                         (ttable.tag == "CENTRAL") & \
+                         (ttable.value == "Y") & \
+                         (ttable.deleted == False))
+        query = auth.s3_accessible_query("read", wtable) & \
+                (wtable.deleted == False) & \
+                (wtable.obsolete == False)
+        row = db(query).select(wtable.site_id,
+                               join = join,
+                               limitby = (0, 1),
+                               ).first()
+
+        return row.site_id if row else None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def distribution_site(req_site_id):
         """
             Find a distribution site (warehouse) in the same L2/L3 as
             the requester site; conducts a path-based search
 
             @param req_site_id: the requester site ID
+
+            @returns: site_id
         """
 
         db = current.db
