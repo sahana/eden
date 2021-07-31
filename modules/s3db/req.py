@@ -1903,7 +1903,19 @@ class RequestApproverModel(S3Model):
                                           # @ToDo: Widget
                                           #widget = S3PentityWidget(),
                                           ),
+                          Field("title", # 'position' is a Reserved word in SQL
+                                label = T("Position"),
+                                ),
                           self.pr_person_id(),
+                          Field("matcher", "boolean",
+                                default = False,
+                                label = T("Matcher"),
+                                represent = s3_yes_no_represent,
+                                comment = DIV(_class = "tooltip",
+                                              _title = "%s|%s" % (T("Matcher"),
+                                                                  T("Is this person the one to match request items to specific warehouses &/or purchase them."),
+                                                                  ))
+                                ),
                           s3_comments(),
                           *s3_meta_fields(),
                           )

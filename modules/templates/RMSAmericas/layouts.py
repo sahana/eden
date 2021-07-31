@@ -101,10 +101,16 @@ class S3MainMenuLayout(S3NavigationItem):
                 image = "human_talent.png"
                 module_name = T("Human Talent")
                 module_href = URL(c="hrm", f="index")
-            elif c in ("inv", "supply", "req"):
+            elif c in ("inv", "proc", "supply", "req"):
                 image = "warehouses.png"
                 module_name = T("Warehouses")
-                module_href = URL(c="inv", f="index")
+                if auth.s3_has_roles(("ORG_ADMIN",
+                                      "wh_manager",
+                                      "national_wh_manager",
+                                      )):
+                    module_href = URL(c="inv", f="index")
+                else:
+                    module_href = URL(c="req", f="req")
             elif c == "project":
                 image = "projects.png"
                 module_name = T("Projects")

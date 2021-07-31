@@ -271,36 +271,70 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def inv():
         """ INV / Inventory """
 
-        return M()(
-                    M("Stock Management", c="inv", link=False)(
-                        M("Stock Adjustments", f="adj"),
-                        M("Kitting", f="kitting"),
-                        M("Receive a new shipment", f="recv", m="create"),
-                        M("Send a new shipment", f="send", m="create"),
-                    ),
-                    M("Import Inventory", c="inv", f="inv_item", m="import",
-                      restrict=["national_wh_manager"]),
-                    M("Parameters", c="inv", link=False, restrict=["national_wh_manager"])(
-                        M("Warehouses", f="warehouse"),
-                        M("Projects", f="project"),
-                        M("Catalogs", c="supply", f="catalog"),
-                        M("Item Categories", c="supply", f="item_category"),
-                        M("Items", c="supply", f="item"),
-                        M("Suppliers", f="supplier"),
-                        M("Facilities", f="facility"),
-                        M("Stock limit", link=False),
-                    ),
-                    M("Reports", c="inv", link=False)(
-                        M("Short Inventory", f="inv_item", m="report"),
-                        M("Detailed Inventory", f="inv_item", m="report"),
-                        M("Stock Movements", f="inv_item", m="grouped",
-                          vars={"report": "movements"},
-                          ),
-                        M("Stock Organisation", f="inv_item", m="grouped",
-                          vars={"report": "default"},
-                          ),
-                    ),
-                )
+        if current.auth.s3_has_roles(("ORG_ADMIN",
+                                      "wh_manager",
+                                      "national_wh_manager",
+                                      )):
+            return M()(
+                        M("Stock Management", c="inv", link=False)(
+                            M("Stock Adjustments", f="adj"),
+                            M("Kitting", f="kitting"),
+                            M("Receive a new shipment", f="recv", m="create"),
+                            M("Send a new shipment", f="send", m="create"),
+                        ),
+                        M("Purchases", c="proc", link=False)(
+                            M("Items", f="order_item"),
+                        ),
+                        M("Requests", c="req", link=False)(
+                            M("My Requests", f="req",
+                              vars = {"mine": 1},
+                              ),
+                        ),
+                        M("Import Inventory", c="inv", f="inv_item", m="import",
+                          restrict=["national_wh_manager"]),
+                        M("Parameters", c="inv", link=False,
+                          restrict=["national_wh_manager"])(
+                            M("Warehouses", f="warehouse"),
+                            M("Projects", f="project"),
+                            M("Catalogs", c="supply", f="catalog"),
+                            M("Item Categories", c="supply", f="item_category"),
+                            M("Items", c="supply", f="item"),
+                            M("Suppliers", f="supplier"),
+                            M("Facilities", f="facility"),
+                            M("Stock limit", link=False),
+                        ),
+                        M("Reports", c="inv", link=False)(
+                            M("Short Inventory", f="inv_item", m="report"),
+                            M("Detailed Inventory", f="inv_item"),
+                            M("Stock Movements", f="inv_item", m="grouped",
+                              vars = {"report": "movements"},
+                              ),
+                            M("Stock Organisation", f="inv_item", m="grouped",
+                              vars = {"report": "default"},
+                              ),
+                        ),
+                    )
+        else:
+            # Normal users see their own Requests & Inventory Reports
+            return M()(
+                        M("Requests", c="req", link=False)(
+                            M("My Requests", f="req",
+                              vars = {"mine": 1},
+                              ),
+                        ),
+                        M("Reports", c="inv", link=False)(
+                            M("Short Inventory", f="inv_item", m="report"),
+                            M("Detailed Inventory", f="inv_item"),
+                        ),
+                    )
+            
+
+    # -------------------------------------------------------------------------
+    def proc(self):
+        """ Procurements """
+
+        # Same as Inventory
+        return self.inv()
 
     # -------------------------------------------------------------------------
     def req(self):
