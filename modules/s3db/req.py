@@ -316,7 +316,11 @@ class RequestModel(S3Model):
         if use_workflow:
             workflow_default = 1 # Draft
         else:
-            workflow_default = 3 # Approved
+            # Setting any default status causes interference with
+            # editable/deletable settings (e.g. default=3 would make
+            # new requests r/o immediately) - so not using workflow
+            # means no default status either:
+            workflow_default = None
 
         # ---------------------------------------------------------------------
         # Request Reference

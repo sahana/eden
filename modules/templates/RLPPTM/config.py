@@ -3995,7 +3995,6 @@ def config(settings):
             field = table.requester_id
             field.represent = s3db.pr_PersonRepresent(show_link = False,
                                                       )
-
         # Filter out obsolete items
         ritable = s3db.req_req_item
         sitable = s3db.supply_item
@@ -4065,10 +4064,13 @@ def config(settings):
 
             is_supply_coordinator = has_role("SUPPLY_COORDINATOR")
 
+            from .requests import get_managed_requester_orgs, \
+                                  get_orderable_item_categories, \
+                                  req_filter_widgets
+
             # User must be either SUPPLY_COORDINATOR or ORG_ADMIN of a
             # requester organisation to access this controller
             if not is_supply_coordinator:
-                from .requests import get_managed_requester_orgs
                 requester_orgs = get_managed_requester_orgs(cache=False)
                 if not requester_orgs:
                     r.unauthorised()
@@ -4081,6 +4083,9 @@ def config(settings):
             resource = r.resource
             table = resource.table
 
+            ritable = s3db.req_req_item
+            sitable = s3db.supply_item
+
             # Date is only writable for ADMIN
             field = table.date
             field.default = current.request.utcnow
@@ -4089,7 +4094,6 @@ def config(settings):
             record = r.record
             if record:
                 # Check if there is any shipment for this request
-                ritable = s3db.req_req_item
                 titable = s3db.inv_track_item
                 join = titable.on((titable.req_item_id == ritable.id) & \
                                   (titable.deleted == False))
@@ -4107,43 +4111,55 @@ def config(settings):
                                               deletable = False,
                                               )
             if not r.component:
-                if r.interactive:
-                    # Hide priority, date_required and date_recv
-                    field = table.priority
-                    field.readable = field.writable = False
-                    field = table.date_required
-                    field.readable = field.writable = False
-                    field = table.date_recv
-                    field.readable = field.writable = False
+                # Hide priority, date_required and date_recv
+                field = table.priority
+                field.readable = field.writable = False
+                field = table.date_required
+                field.readable = field.writable = False
+                field = table.date_recv
+                field.readable = field.writable = False
 
-                    if not is_supply_coordinator:
-                        # Limit to sites of managed requester organisations
-                        stable = s3db.org_site
-                        dbset = db((stable.organisation_id.belongs(requester_orgs)) & \
-                                   (stable.obsolete == False))
-                        field = table.site_id
-                        field.requires = IS_ONE_OF(dbset, "org_site.site_id",
-                                                   field.represent,
-                                                   )
-                        # If only one site selectable, set default and make r/o
-                        sites = dbset.select(stable.site_id, limitby=(0, 2))
-                        if len(sites) == 1:
-                            field.default = sites.first().site_id
-                            field.writable = False
-                        elif not sites:
-                            resource.configure(insertable = False)
-                    else:
+                if is_supply_coordinator:
+                    # Coordinators do not make requests
+                    resource.configure(insertable = False)
+
+                else:
+                    # Limit to sites of managed requester organisations
+                    stable = s3db.org_site
+                    dbset = db((stable.organisation_id.belongs(requester_orgs)) & \
+                               (stable.obsolete == False))
+                    field = table.site_id
+                    field.requires = IS_ONE_OF(dbset, "org_site.site_id",
+                                               field.represent,
+                                               )
+                    # If only one site selectable, set default and make r/o
+                    sites = dbset.select(stable.site_id, limitby=(0, 2))
+                    if len(sites) == 1:
+                        field.default = sites.first().site_id
+                        field.writable = False
+                    elif not sites:
                         resource.configure(insertable = False)
 
-                    # Requester is always the current user
-                    # => set as default and make r/o
-                    user_person_id = auth.s3_logged_in_person()
-                    if user_person_id:
-                        field = table.requester_id
-                        field.default = user_person_id
-                        field.writable = False
+                    # Filter selectable items to orderable categories
+                    categories = get_orderable_item_categories(orgs=requester_orgs)
+                    item_query = (sitable.item_category_id.belongs(categories)) & \
+                                 ((sitable.obsolete == False) | \
+                                 (sitable.obsolete == None))
+                    field = ritable.item_id
+                    field.requires = IS_ONE_OF(db(item_query), "supply_item.id",
+                                               field.represent,
+                                               sort = True,
+                                               )
 
-                    from .requests import req_filter_widgets
+                # Requester is always the current user
+                # => set as default and make r/o
+                user_person_id = auth.s3_logged_in_person()
+                if user_person_id:
+                    field = table.requester_id
+                    field.default = user_person_id
+                    field.writable = False
+
+                if r.interactive:
                     resource.configure(filter_widgets = req_filter_widgets(),
                                        )
 
@@ -4167,6 +4183,19 @@ def config(settings):
                                          req_req_item_create_onaccept,
                                          method = "create",
                                          )
+
+            elif r.component_name == "req_item" and record:
+
+                # Filter selectable items to orderable categories
+                categories = get_orderable_item_categories(site = record.site_id)
+                item_query = (sitable.item_category_id.belongs(categories)) & \
+                             ((sitable.obsolete == False) | \
+                              (sitable.obsolete == None))
+                field = ritable.item_id
+                field.requires = IS_ONE_OF(db(item_query), "supply_item.id",
+                                           field.represent,
+                                           sort = True,
+                                           )
             return result
         s3.prep = prep
 
