@@ -523,15 +523,21 @@ class RegisterShipment(S3Method):
         if len(path) > 2:
             # Find warehouses in the same L2
             wtable = s3db.inv_warehouse
+            ttable = s3db.org_site_tag
             join = ltable.on((ltable.id == wtable.location_id) & \
                              (ltable.path.like("%s%%" % "/".join(path[:3]))))
+            left = ttable.on((ttable.site_id == wtable.site_id) & \
+                             (ttable.tag == "CENTRAL") & \
+                             (ttable.deleted == False))
             query = auth.s3_accessible_query("read", wtable) & \
+                    ((ttable.value == "N") | (ttable.id == None)) & \
                     (wtable.deleted == False) & \
                     (wtable.obsolete == False)
             rows = db(query).select(wtable.id,
                                     wtable.site_id,
                                     ltable.path,
                                     join = join,
+                                    left = left,
                                     )
             if len(rows) == 1:
                 # Single match in L2
