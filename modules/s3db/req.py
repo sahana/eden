@@ -316,10 +316,7 @@ class RequestModel(S3Model):
         if use_workflow:
             workflow_default = 1 # Draft
         else:
-            # Setting any default status causes interference with
-            # editable/deletable settings (e.g. default=3 would make
-            # new requests r/o immediately) - so not using workflow
-            # means no default status either:
+            # Don't make assumptions
             workflow_default = None
 
         # ---------------------------------------------------------------------
@@ -5245,7 +5242,7 @@ def req_rheader(r, check_page=False):
 
         if site_id:
             stable = s3db.org_site
-        if workflow_status in (1, 2, 5): # Draft/Submitted/Cancelled
+        if use_workflow and workflow_status in (1, 2, 5): # Draft/Submitted/Cancelled
             transit_status = ("",)
         elif settings.get_req_show_quantity_transit() and not is_template:
             transit_status = s3db.req_status_opts.get(record.transit_status,
@@ -5303,7 +5300,7 @@ def req_rheader(r, check_page=False):
             row1 = ""
             row3 = ""
         else:
-            if workflow_status in (1, 2, 5): # Draft/Submitted/Cancelled
+            if use_workflow and workflow_status in (1, 2, 5): # Draft/Submitted/Cancelled
                 row1_status = (TH("%s: " % table.workflow_status.label),
                                table.workflow_status.represent(workflow_status),
                                )
