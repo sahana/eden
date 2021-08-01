@@ -67,7 +67,10 @@ class S3MainMenu(default.S3MainMenu):
             # Private Citizen
             menu = [MM("Report Need", c="br", f="case_activity"),
                     MM("Find Relief Offers", c="br", f="offers"),
-                    MM("Offer Assistance / Supplies", c="br", f="assistance_offer"),
+                    MM("Offer Assistance / Supplies", c="br", link=False)(
+                        MM("Current Needs", f="activities"),
+                        MM("My Relief Offers", f="assistance_offer"),
+                        ),
                     ]
 
         has_roles = auth.s3_has_roles

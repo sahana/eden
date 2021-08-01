@@ -9,7 +9,7 @@
 
 from collections import OrderedDict
 
-from gluon import current, URL, I, SPAN, TAG, \
+from gluon import current, redirect, URL, I, SPAN, TAG, \
                   IS_EMPTY_OR, IS_LENGTH, IS_NOT_EMPTY
 
 from gluon.storage import Storage
@@ -1855,6 +1855,18 @@ def config(settings):
         c = current.request.controller
         from .rheaders import rlpcm_profile_rheader, rlpcm_br_rheader
         if c == "default":
+            # Logout post-anonymize if the user has removed their account
+            auth = current.auth
+            user = auth.user
+            if user:
+                utable = auth.settings.table_user
+                account = current.db(utable.id == user.id).select(utable.deleted,
+                                                                  limitby=(0, 1),
+                                                                  ).first()
+                if not account or account.deleted:
+                    redirect(URL(c="default", f="user", args=["logout"]))
+            else:
+                redirect(URL(c="default", f="index"))
             attr["rheader"] = rlpcm_profile_rheader
         elif c == "br":
             attr["rheader"] = rlpcm_br_rheader

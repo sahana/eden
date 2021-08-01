@@ -259,6 +259,10 @@ def get_offer_filters(person_id=None):
 
         filters = (filters | query) if filters else query
 
+    if not filters:
+        # Show no results if the user has no needs reported
+        return FS("id").belongs(set())
+
     # Exclude the person's own offers
     if exclude_provider:
         filters &= FS("~.pe_id") != exclude_provider
