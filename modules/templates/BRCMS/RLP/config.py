@@ -9,7 +9,7 @@
 
 from collections import OrderedDict
 
-from gluon import current, URL, I, SPAN, \
+from gluon import current, URL, I, SPAN, TAG, \
                   IS_EMPTY_OR, IS_LENGTH, IS_NOT_EMPTY
 
 from gluon.storage import Storage
@@ -1649,6 +1649,11 @@ def config(settings):
 
             if controller == "br":
 
+                # Configure anonymizer rules
+                from .anonymize import rlpcm_person_anonymize
+                resource.configure(anonymize = rlpcm_person_anonymize(),
+                                   )
+
                 ctable = s3db.br_case
                 record = r.record
 
@@ -1776,6 +1781,23 @@ def config(settings):
 
             elif controller == "default":
                 # Personal profile (default/person)
+
+                # Configure Anonymizer
+                from s3 import S3Anonymize
+                s3db.set_method("pr", "person",
+                                method = "anonymize",
+                                action = S3Anonymize,
+                                )
+                if r.method == "anonymize" and \
+                   r.http == "POST" and r.representation == "json":
+                    # Override standard prep blocking non-interactive requests
+                    result = True
+
+                # Configure anonymizer rules
+                from .anonymize import rlpcm_person_anonymize
+                resource.configure(anonymize = rlpcm_person_anonymize(),
+                                   )
+
                 if not r.component:
 
                     # Last name is required
@@ -1800,6 +1822,34 @@ def config(settings):
                                          )
             return result
         s3.prep = prep
+
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.controller in ("br", "default") and \
+               not r.component and isinstance(output, dict):
+
+                if r.record and r.method in (None, "update", "read"):
+
+                    # Custom CRUD buttons
+                    if "buttons" not in output:
+                        buttons = output["buttons"] = {}
+                    else:
+                        buttons = output["buttons"]
+
+                    # Anonymize-button
+                    from s3 import S3AnonymizeWidget
+                    anonymize = S3AnonymizeWidget.widget(r, _class="action-btn anonymize-btn")
+
+                    # Render in place of the delete-button
+                    buttons["delete_btn"] = TAG[""](anonymize,
+                                                    )
+            return output
+        s3.postp = custom_postp
 
         # Custom rheader
         c = current.request.controller
