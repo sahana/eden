@@ -451,6 +451,10 @@ class S3AWSCloudModel(S3CloudModel):
                                       limitby = (0, 1)
                                       ).first()
 
+        if not deployment:
+            # Not a Cloud deployment
+            return
+
         server_name = deployment["setup_server.name"]
         cloud = deployment["setup_aws_cloud"]
         access_key = cloud.access_key
