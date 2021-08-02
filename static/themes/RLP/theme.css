@@ -2885,102 +2885,107 @@ body.rtl .event-type-header {
 .service-list {
   font-size: 0.8rem;
   list-style-type: disc;
-  list-style-position: inside;
+  list-style-position: outside;
   padding: 0;
   margin: 0;
+  vertical-align: top;
+}
+/* line 397, ../scss/theme/_misc.scss */
+.service-list li {
+  margin: 0 0 0 0.4rem;
 }
 
-/* line 398, ../scss/theme/_misc.scss */
+/* line 402, ../scss/theme/_misc.scss */
 .approve-form select {
   margin: 0;
 }
 
-/* line 402, ../scss/theme/_misc.scss */
+/* line 406, ../scss/theme/_misc.scss */
 .approve-workflow {
   margin-left: 0.5rem;
 }
-/* line 403, ../scss/theme/_misc.scss */
+/* line 407, ../scss/theme/_misc.scss */
 .approve-workflow.workflow-red {
   color: #c42626;
 }
-/* line 406, ../scss/theme/_misc.scss */
+/* line 410, ../scss/theme/_misc.scss */
 .approve-workflow.workflow-amber {
   color: #ec8d27;
 }
-/* line 409, ../scss/theme/_misc.scss */
+/* line 413, ../scss/theme/_misc.scss */
 .approve-workflow.workflow-green {
   color: green;
 }
-/* line 412, ../scss/theme/_misc.scss */
+/* line 416, ../scss/theme/_misc.scss */
 .approve-workflow.workflow-advice {
   border: 1px solid #c42626;
   background-color: #ffdede;
   padding: 0.3rem 0.7rem;
 }
-/* line 417, ../scss/theme/_misc.scss */
+/* line 421, ../scss/theme/_misc.scss */
 .approve-workflow .fa {
   margin-right: 0.2rem;
 }
 
-/* line 423, ../scss/theme/_misc.scss */
+/* line 427, ../scss/theme/_misc.scss */
 .text-body.cms-item-body {
   background-color: #FFF8E6;
   padding: 0.7rem;
   max-width: 48rem;
 }
 
-/* line 429, ../scss/theme/_misc.scss */
+/* line 433, ../scss/theme/_misc.scss */
 .form-row .cwa-details,
 .form-row .cwa-qrcode {
   display: inline-block;
   vertical-align: top;
 }
 
-/* line 435, ../scss/theme/_misc.scss */
+/* line 439, ../scss/theme/_misc.scss */
 .form-row .cwa-details table {
   border: none;
   margin-right: 2.5rem;
 }
-/* line 438, ../scss/theme/_misc.scss */
+/* line 442, ../scss/theme/_misc.scss */
 .form-row .cwa-details table tr td {
   padding: 0.5rem;
 }
-/* line 440, ../scss/theme/_misc.scss */
+/* line 444, ../scss/theme/_misc.scss */
 .form-row .cwa-details table tr td.cwa-data {
   font-weight: bold;
 }
 
-/* line 446, ../scss/theme/_misc.scss */
+/* line 450, ../scss/theme/_misc.scss */
 .form-row .cwa-qrcode {
   margin: 1px solid black;
   padding-bottom: 0.2rem;
 }
-/* line 449, ../scss/theme/_misc.scss */
+/* line 453, ../scss/theme/_misc.scss */
 .form-row .cwa-qrcode .cwa-qrcode-title {
   width: 100%;
   text-align: center;
 }
 
-/* line 454, ../scss/theme/_misc.scss */
+/* line 458, ../scss/theme/_misc.scss */
 .charge-warn {
   color: #D92C20;
   font-weight: bold;
 }
-/* line 457, ../scss/theme/_misc.scss */
+/* line 461, ../scss/theme/_misc.scss */
 .charge-warn i.fa {
   margin-left: 0.2rem;
 }
 
-/* line 461, ../scss/theme/_misc.scss */
+/* line 465, ../scss/theme/_misc.scss */
 .free-hint {
   color: #C0C0C0;
 }
 
-/* line 464, ../scss/theme/_misc.scss */
+/* line 468, ../scss/theme/_misc.scss */
 #site-intro {
   margin-top: 2rem;
 }
-/* line 466, ../scss/theme/_misc.scss */
+/* line 470, ../scss/theme/_misc.scss */
 #site-intro .callout-box {
   margin: 1rem 0;
   font-size: 0.9rem;
@@ -2989,20 +2994,20 @@ body.rtl .event-type-header {
   padding: 0.8rem;
 }
 
-/* line 475, ../scss/theme/_misc.scss */
+/* line 479, ../scss/theme/_misc.scss */
 #site-actions .button i.fa {
   font-size: 1.2rem;
   margin: 0 0.5rem;
 }
 
-/* line 481, ../scss/theme/_misc.scss */
+/* line 485, ../scss/theme/_misc.scss */
 .overview-totals,
 .overview-intro,
 .overview-charts,
 .overview-table {
   text-align: center;
 }
-/* line 486, ../scss/theme/_misc.scss */
+/* line 490, ../scss/theme/_misc.scss */
 .overview-totals h2,
 .overview-intro h2,
 .overview-charts h2,
@@ -3011,7 +3016,7 @@ body.rtl .event-type-header {
   background-color: transparent !important;
 }
 
-/* line 492, ../scss/theme/_misc.scss */
+/* line 496, ../scss/theme/_misc.scss */
 .overview-totals p {
   font-size: 2.7rem;
   line-height: 3.5rem;

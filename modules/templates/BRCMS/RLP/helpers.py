@@ -10,9 +10,9 @@ import datetime
 import json
 import os
 
-from gluon import current, A, DIV, SPAN
+from gluon import current, A, DIV, LI, SPAN, UL
 
-from s3 import FS, ICON, S3DateFilter, s3_str, s3_yes_no_represent
+from s3 import FS, ICON, S3DateFilter, S3Represent, s3_str, s3_yes_no_represent
 from s3db.pr import pr_PersonEntityRepresent
 
 # =============================================================================
@@ -631,6 +631,9 @@ class OfferDetails(object):
     def contact_represent(value, row=None):
 
         if isinstance(value, tuple) and len(value) == 3:
+
+            if not any(value):
+                return ""
             name, phone, email = value
 
             output = DIV(_class = "contact-repr",
@@ -700,8 +703,91 @@ class OfferAvailabilityFilter(S3DateFilter):
             resource.add_filter(query)
 
 # =============================================================================
+class ShelterDetails(OfferDetails):
+    """
+        Field methods for compact representation of place and
+        contact information of shelters
+    """
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def contact(row):
+
+        if hasattr(row, "cr_shelter"):
+            offer = row.cr_shelter
+        else:
+            offer = row
+
+        return tuple(offer.get(detail)
+                     for detail in ("contact_name",
+                                    "phone",
+                                    "email",
+                                    ))
+
+# =============================================================================
+class ServiceListRepresent(S3Represent):
+
+    always_list = True
+
+    def render_list(self, value, labels, show_link=True):
+        """
+            Helper method to render list-type representations from
+            bulk()-results.
+
+            @param value: the list
+            @param labels: the labels as returned from bulk()
+            @param show_link: render references as links, should
+                              be the same as used with bulk()
+        """
+
+        show_link = show_link and self.show_link
+
+        values = [v for v in value if v is not None]
+        if not len(values):
+            return ""
+
+        if show_link:
+            labels_ = (labels[v] if v in labels else self.default for v in values)
+        else:
+            labels_ = sorted(s3_str(labels[v]) if v in labels else self.default for v in values)
+
+        if current.auth.permission.format == "xls":
+            return ", ".join(labels_)
+
+        html = UL(_class="service-list")
+        for label in labels_:
+            html.append(LI(label))
+
+        return html
+
+# =============================================================================
+def restrict_data_formats(r):
+    """
+        Restrict data exports (prevent S3XML/S3JSON of records)
+
+        @param r: the S3Request
+    """
+
+    settings = current.deployment_settings
+
+    allowed = ("html", "iframe", "popup", "aadata", "plain", "geojson", "pdf", "xls")
+    if r.method in ("report", "timeplot", "filter"):
+        allowed += ("json",)
+    if r.method == "options":
+        allowed += ("s3json",)
+    settings.ui.export_formats = ("pdf", "xls")
+    if r.representation not in allowed:
+        r.error(403, current.ERROR.NOT_PERMITTED)
+
+# =============================================================================
 def notify_direct_offer(record_id):
-    # TODO docstring
+    """
+        Send notification to activity manager about a direct offer
+
+        @param record_id: the direct offer record ID
+
+        @returns: error message if failed, otherwise None
+    """
 
     T = current.T
 
