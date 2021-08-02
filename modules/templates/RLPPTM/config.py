@@ -4638,6 +4638,11 @@ def config(settings):
         field = table.code
         field.requires = [IS_NOT_EMPTY(), field.requires]
 
+        # Represent categories by name, not code
+        field = table.item_category_id
+        field.comment = None
+        field.represent = s3db.supply_ItemCategoryRepresent(use_code=False)
+
         # Use a localized default for um
         field = table.um
         field.default = s3_str(T("piece"))

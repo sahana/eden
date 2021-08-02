@@ -2131,8 +2131,7 @@ class supply_ItemCategoryRepresent(S3Represent):
         """
 
         translate = self.translate
-        if translate:
-            T = current.T
+        t_ = current.T if translate else lambda v: v
 
         use_code = self.use_code
 
@@ -2146,7 +2145,7 @@ class supply_ItemCategoryRepresent(S3Represent):
         elif not name:
             name = code
         else:
-            name = T(name)
+            name = t_(name)
 
         if parent:
             if use_code:
@@ -2155,12 +2154,12 @@ class supply_ItemCategoryRepresent(S3Represent):
             else:
                 sep = " - "
             if translate:
-                parent = T(parent)
+                parent = t_(parent)
             name = "%s%s%s" % (name, sep, parent)
             grandparent = row["supply_grandparent_item_category.name"]
             if grandparent:
                 if translate:
-                    grandparent = T(grandparent)
+                    grandparent = t_(grandparent)
                 name = "%s%s%s" % (name, sep, grandparent)
                 # Check for Great-grandparent
                 # Trade-off "all in 1 row" vs "too many joins"
@@ -2193,11 +2192,11 @@ class supply_ItemCategoryRepresent(S3Represent):
                             greatgrandparent = row["supply_item_category.name"] or row["supply_item_category.code"]
                             greatgreatgrandparent = row["supply_parent_item_category.name"] or row["supply_parent_item_category.code"]
                         if translate:
-                            greatgrandparent = T(greatgrandparent)
+                            greatgrandparent = t_(greatgrandparent)
                         name = "%s%s%s" % (name, sep, greatgrandparent)
                         if greatgreatgrandparent:
                             if translate:
-                                greatgreatgrandparent = T(greatgreatgrandparent)
+                                greatgreatgrandparent = t_(greatgreatgrandparent)
                             name = "%s%s%s" % (name, sep, greatgreatgrandparent)
                             if use_code:
                                 greatgreatgreatgrandparent = row["supply_grandparent_item_category.code"]
@@ -2208,7 +2207,7 @@ class supply_ItemCategoryRepresent(S3Represent):
 
         if catalog:
             if translate:
-                catalog = T(catalog)
+                catalog = t_(catalog)
             name = "%s > %s" % (catalog, name)
 
         return s3_str(name)

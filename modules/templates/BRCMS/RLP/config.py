@@ -1765,6 +1765,13 @@ def config(settings):
                 r.resource.configure(list_fields = list_fields,
                                      )
 
+            elif r.component_name == "office":
+
+                ctable = r.component.table
+
+                field = ctable.phone1
+                field.label = T("Phone #")
+
             return result
         s3.prep = prep
 
