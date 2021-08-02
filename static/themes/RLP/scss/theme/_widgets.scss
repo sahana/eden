@@ -193,6 +193,9 @@ input.date.hasDatepicker {
     label[title] .optlabel {
         border-bottom: dotted 1px #ccc;
     }
+    .optLabel {
+        display: inline-block;
+    }
 }
 table.s3-groupedopts-widget {
     td {
@@ -665,6 +668,7 @@ form.anonymize-form,
         border: 1px solid #aaa;
         overflow: hidden;
         padding: 0.7rem;
+        margin-bottom: 1.5rem;
         &.announcement-important {
             .announcement-icon {
                 color: #0088ca;
