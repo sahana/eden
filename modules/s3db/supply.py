@@ -1192,6 +1192,7 @@ $.filterOptionsS3({
 
         item_category_id = form_vars.get("item_category_id")
 
+        catalog_id = None
         if "catalog_id" in form_vars:
             catalog_id = form_vars.catalog_id
         elif item_category_id:
