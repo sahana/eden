@@ -57,3 +57,4 @@ Ihre Bedarfsmeldung können Sie hier einsehen und bearbeiten:
 ",
 Subject DirectOfferNotification,br,direct_offer,{system}: Angebot zu Ihrer Bedarfsmeldung,
 DirectOfferSelectorIntro,br,direct_offer,"Sie können aus ihren bestehenden Hilfsangeboten in dieser Bedarfskategorie auswählen, oder ein neues Angebot erstellen. Wenn Sie ein neues Angebot erstellen, wird dieses erst gemeldet wenn es durch den Administrator freigegen ist. In jedem Fall bleibt ihr Angebot für alle Benutzer sichtbar und ist nicht auf diese Bedarfsmeldung beschränkt.",
+OfferDetailsIntro,br,assistance_offer,"Machen Sie möglichst genaue Detailangaben zu Ihrem Angebot, insbesondere bei Unterkünften und technischem Gerät, damit es schneller gefunden wird und direkt beurteilt werden kann ob es für einen bestimmten Bedarf passt.",

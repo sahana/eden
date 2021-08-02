@@ -484,6 +484,16 @@ def config(settings):
         field.label = T("Provider")
         field.represent = ProviderRepresent()
 
+        if r.function == "assistance_offer":
+            from s3 import S3WithIntro
+            field = table.description
+            field.widget = S3WithIntro(field.widget,
+                                       intro = ("br",
+                                                "assistance_offer",
+                                                "OfferDetailsIntro",
+                                                ),
+                                       )
+
         field = table.contact_phone
         field.label = T("Phone #")
 
