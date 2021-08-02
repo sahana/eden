@@ -22,6 +22,8 @@ def config(settings):
     #settings.L10n.default_language = "sq"
     # Uncomment this to Translate Location Names
     settings.L10n.translate_gis_location = True
+    # Uncomment this to Translate Supply Names (Catalog, Category, Item)
+    settings.L10n.translate_supply_item = True
     # Default timezone for users
     settings.L10n.timezone = "Europe/Tirane"
     # Default Country Code for telephone numbers

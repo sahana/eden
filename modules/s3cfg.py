@@ -1984,6 +1984,12 @@ class S3Config(Storage):
     def get_L10n_thousands_grouping(self):
         return self.L10n.get("thousands_grouping", 3)
 
+    def get_L10n_translate_cap_area(self):
+        """
+            Whether to translate CAP Area names
+        """
+        return self.L10n.get("translate_cap_area", False)
+
     def get_L10n_translate_cms_series(self):
         """
             Whether to translate CMS Series names
@@ -2019,11 +2025,14 @@ class S3Config(Storage):
         """
         return self.L10n.get("translate_org_site", False)
 
-    def get_L10n_translate_cap_area(self):
+    def get_L10n_translate_supply_item(self):
         """
-            Whether to translate CAP Area names
+            Whether to translate Supply names:
+                - Catalogs
+                - Categories
+                - Items
         """
-        return self.L10n.get("translate_cap_area", False)
+        return self.L10n.get("translate_supply_item", False)
 
     def get_L10n_pootle_url(self):
         """ URL for Pootle server """
