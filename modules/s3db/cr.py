@@ -247,14 +247,25 @@ class CRShelterModel(S3Model):
                      shelter_environment_id(readable = False,
                                             writable = False,),# Enable in template if-required
                      location_id(),
+                     self.pr_person_id(
+                        label = T("Contact Person / Camp Owner"),
+                        ),
+                     # Alternative for person_id: simple name field
+                     Field("contact_name",
+                           label = T("Contact Name"),
+                           represent = lambda v, row=None: v if v else "-",
+                           readable = False,
+                           writable = False,
+                           ),
                      Field("phone",
                            label = T("Phone"),
                            requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI()),
+                           represent = lambda v, row=None: v if v else "-",
                            ),
                      Field("email", "string",
                            label = T("Email"),
+                           represent = lambda v, row=None: v if v else "-",
                            ),
-                     self.pr_person_id(label = T("Contact Person / Camp Owner")),
                      #Static field
                      Field("population", "integer",
                            label = T("Estimated Population"),

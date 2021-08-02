@@ -90,11 +90,14 @@ class S3MainMenu(default.S3MainMenu):
                     MM("My Organizations", vars={"mine": "1"}),
                     MM("All Organizations"),
                     ),
-                MM("Events", c="event", f="event", restrict="EVENT_MANAGER"),
-                MM("Pending Approvals", c="default", f="index", args=["approve_org"],
-                   restrict = "ORG_GROUP_ADMIN",
-                   ),
-                MM("Overview", c="default", f="index", args=["overview"]),
+                MM("More", link=False, check=logged_in)(
+                    MM("Emergency Shelters", c="cr", f="shelter"),
+                    MM("Overview & Statistics", c="default", f="index", args=["overview"]),
+                    MM("Events", c="event", f="event", restrict="EVENT_MANAGER"),
+                    MM("Pending Approvals", c="default", f="index", args=["approve_org"],
+                       restrict = "ORG_GROUP_ADMIN",
+                       ),
+                    ),
                 ]
 
     # -------------------------------------------------------------------------
@@ -287,6 +290,23 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ]
 
         return M(c="br")(menu)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cr():
+        """ CR / Shelter Registry """
+
+        ADMIN = current.auth.get_system_roles().ADMIN
+
+        return M(c="cr")(
+                    M("Shelters", f="shelter")(
+                        M("Create", m="create"),
+                        ),
+                    M("Administration", link=False, restrict=(ADMIN,))(
+                        M("Shelter Types", f="shelter_type"),
+                        M("Shelter Services", f="shelter_service"),
+                        ),
+                )
 
     # -------------------------------------------------------------------------
     @staticmethod

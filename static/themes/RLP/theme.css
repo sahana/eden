@@ -1647,39 +1647,43 @@ input.date.hasDatepicker {
 .s3-groupedopts-widget label[title] .optlabel {
   border-bottom: dotted 1px #ccc;
 }
+/* line 196, ../scss/theme/_widgets.scss */
+.s3-groupedopts-widget .optLabel {
+  display: inline-block;
+}
 
-/* line 197, ../scss/theme/_widgets.scss */
+/* line 200, ../scss/theme/_widgets.scss */
 table.s3-groupedopts-widget {
   margin-bottom: 0;
 }
-/* line 198, ../scss/theme/_widgets.scss */
+/* line 201, ../scss/theme/_widgets.scss */
 table.s3-groupedopts-widget td {
   white-space: nowrap;
 }
-/* line 200, ../scss/theme/_widgets.scss */
+/* line 203, ../scss/theme/_widgets.scss */
 table.s3-groupedopts-widget td input.s3-groupedopts-option {
   vertical-align: text-top;
   margin: 0 0.3rem 0 0;
 }
-/* line 204, ../scss/theme/_widgets.scss */
+/* line 207, ../scss/theme/_widgets.scss */
 table.s3-groupedopts-widget td label {
   white-space: pre-wrap;
   margin: 0 0.5rem;
 }
 
-/* line 212, ../scss/theme/_widgets.scss */
+/* line 215, ../scss/theme/_widgets.scss */
 div.s3-groupedopts-widget .s3-groupedopts-item {
   display: inline-block;
   padding-top: 0.15rem;
 }
-/* line 216, ../scss/theme/_widgets.scss */
+/* line 219, ../scss/theme/_widgets.scss */
 div.s3-groupedopts-widget input.s3-groupedopts-option {
   vertical-align: text-top;
   margin: 0 0.3rem 0 0;
 }
 
 /* ImageCropWidget */
-/* line 223, ../scss/theme/_widgets.scss */
+/* line 226, ../scss/theme/_widgets.scss */
 .imagecrop-btn {
   font-size: 1em;
   margin-left: 0.2em;
@@ -1687,7 +1691,7 @@ div.s3-groupedopts-widget input.s3-groupedopts-option {
 }
 
 /* Widget Intro-Wrapper */
-/* line 230, ../scss/theme/_widgets.scss */
+/* line 233, ../scss/theme/_widgets.scss */
 .s3-widget-intro {
   max-width: 42rem;
   padding: 0.2rem 0 0.5rem 0;
@@ -1695,18 +1699,18 @@ div.s3-groupedopts-widget input.s3-groupedopts-option {
 }
 
 /* pr_Contacts widgets */
-/* line 237, ../scss/theme/_widgets.scss */
+/* line 240, ../scss/theme/_widgets.scss */
 .pr-contacts-wrapper h3 {
   margin-top: 0.5rem;
   padding-bottom: 0 !important;
 }
 
-/* line 242, ../scss/theme/_widgets.scss */
+/* line 245, ../scss/theme/_widgets.scss */
 .pr-contacts-editable input, .pr-contacts-editable select {
   min-height: 1.2rem;
   margin: 2px 0;
 }
-/* line 246, ../scss/theme/_widgets.scss */
+/* line 249, ../scss/theme/_widgets.scss */
 .pr-contacts-editable button {
   font-size: 0.6875rem;
   border: 0;
@@ -1720,30 +1724,30 @@ div.s3-groupedopts-widget input.s3-groupedopts-option {
   margin: 2px;
 }
 
-/* line 251, ../scss/theme/_widgets.scss */
+/* line 254, ../scss/theme/_widgets.scss */
 .pr-contact-actions {
   margin-bottom: 0.5rem;
 }
 
-/* line 254, ../scss/theme/_widgets.scss */
+/* line 257, ../scss/theme/_widgets.scss */
 .pr-contact,
 .pr-emergency-contact {
   padding: 0.5rem;
 }
 
-/* line 258, ../scss/theme/_widgets.scss */
+/* line 261, ../scss/theme/_widgets.scss */
 .pr-contact-priority,
 .pr-contact-details {
   display: inline-block;
 }
 
-/* line 262, ../scss/theme/_widgets.scss */
+/* line 265, ../scss/theme/_widgets.scss */
 .pr-contact-subtitle {
   font-size: 0.8rem;
   font-style: italic;
 }
 
-/* line 266, ../scss/theme/_widgets.scss */
+/* line 269, ../scss/theme/_widgets.scss */
 .pr-contact-priority {
   border: thin solid #2ba6cb;
   border-radius: 2px;
@@ -1754,7 +1758,7 @@ div.s3-groupedopts-widget input.s3-groupedopts-option {
   padding: 0 0.25rem 0.125rem;
   vertical-align: top;
 }
-/* line 275, ../scss/theme/_widgets.scss */
+/* line 278, ../scss/theme/_widgets.scss */
 .pr-contact-priority input[type=submit] {
   color: black;
   line-height: 1.2rem;
@@ -1762,38 +1766,38 @@ div.s3-groupedopts-widget input.s3-groupedopts-option {
 }
 
 /* Checkboxes Widget */
-/* line 283, ../scss/theme/_widgets.scss */
+/* line 286, ../scss/theme/_widgets.scss */
 .controls .checkboxes-widget-s3 {
   display: inline-flex;
 }
 
 /* Comment feeds */
-/* line 288, ../scss/theme/_widgets.scss */
+/* line 291, ../scss/theme/_widgets.scss */
 .comment-box {
   background: none repeat scroll 0 0 #f5f5f5;
 }
 
 /* Text representation */
-/* line 293, ../scss/theme/_widgets.scss */
+/* line 296, ../scss/theme/_widgets.scss */
 .text-body {
   white-space: pre-wrap;
 }
 
 /* Iframe Map (Location Represent links) TODO move into page or forms? */
-/* line 298, ../scss/theme/_widgets.scss */
+/* line 301, ../scss/theme/_widgets.scss */
 #close-iframe-map {
   padding: 7px;
   margin-top: 5px;
 }
 
 /* Truncated Texts */
-/* line 304, ../scss/theme/_widgets.scss */
+/* line 307, ../scss/theme/_widgets.scss */
 .s3-truncate-more,
 .s3-truncate-less {
   font-style: italic;
 }
 
-/* line 308, ../scss/theme/_widgets.scss */
+/* line 311, ../scss/theme/_widgets.scss */
 .s3-truncate-more:before,
 .s3-truncate-less:before {
   font-style: italic;
@@ -1801,12 +1805,12 @@ div.s3-groupedopts-widget input.s3-groupedopts-option {
 }
 
 /* AddPersonWidget */
-/* line 315, ../scss/theme/_widgets.scss */
+/* line 318, ../scss/theme/_widgets.scss */
 .box_bottom {
   clear: left;
 }
 
-/* line 318, ../scss/theme/_widgets.scss */
+/* line 321, ../scss/theme/_widgets.scss */
 .ui-menu-item .pe-label {
   font-size: 0.7rem;
   color: #A0A0A0;
@@ -1814,36 +1818,36 @@ div.s3-groupedopts-widget input.s3-groupedopts-option {
 }
 
 /* QR Input */
-/* line 325, ../scss/theme/_widgets.scss */
+/* line 328, ../scss/theme/_widgets.scss */
 .qrinput {
   display: inline-block;
 }
-/* line 327, ../scss/theme/_widgets.scss */
+/* line 330, ../scss/theme/_widgets.scss */
 .qrinput .qrscan-btn {
   padding: 0.4rem 0.8rem;
   text-align: center;
   margin: 0 0.5rem;
   vertical-align: top;
 }
-/* line 332, ../scss/theme/_widgets.scss */
+/* line 335, ../scss/theme/_widgets.scss */
 .qrinput .qrscan-btn .fa {
   font-size: 16px;
   margin: 0 0.2rem;
   vertical-align: middle;
 }
-/* line 338, ../scss/theme/_widgets.scss */
+/* line 341, ../scss/theme/_widgets.scss */
 .qrinput .postfix.clear-btn {
   cursor: pointer;
   display: inline-block;
   width: 1.2rem;
   vertical-align: top;
 }
-/* line 340, ../scss/theme/_widgets.scss */
+/* line 343, ../scss/theme/_widgets.scss */
 .qrinput .postfix.clear-btn .fa {
   color: #B0B0B0;
 }
 
-/* line 348, ../scss/theme/_widgets.scss */
+/* line 351, ../scss/theme/_widgets.scss */
 .qrinput-success {
   text-align: center;
   font-size: 4rem;
@@ -1852,158 +1856,158 @@ div.s3-groupedopts-widget input.s3-groupedopts-option {
 }
 
 /* Location Selector */
-/* line 356, ../scss/theme/_widgets.scss */
+/* line 359, ../scss/theme/_widgets.scss */
 .geocode_fail,
 .geocode_success {
   margin: 0.2rem 0.7rem;
 }
 
 /* Anonymize-Widget */
-/* line 362, ../scss/theme/_widgets.scss */
+/* line 365, ../scss/theme/_widgets.scss */
 form.anonymize-form,
 .anonymize-success {
   padding: 1rem;
 }
 
-/* line 366, ../scss/theme/_widgets.scss */
+/* line 369, ../scss/theme/_widgets.scss */
 .anonymize-select,
 .anonymize-confirm {
   margin-left: 1rem;
 }
 
-/* line 370, ../scss/theme/_widgets.scss */
+/* line 373, ../scss/theme/_widgets.scss */
 .anonymize-buttons {
   margin-top: 1rem;
 }
 
-/* line 373, ../scss/theme/_widgets.scss */
+/* line 376, ../scss/theme/_widgets.scss */
 .anonymize-btn {
   background-color: #D92C20;
 }
-/* line 375, ../scss/theme/_widgets.scss */
+/* line 378, ../scss/theme/_widgets.scss */
 .anonymize-btn:hover {
   background-color: #ae231a;
 }
 
-/* line 379, ../scss/theme/_widgets.scss */
+/* line 382, ../scss/theme/_widgets.scss */
 .s3-anonymize {
   display: inline-block;
   margin: 0.2rem;
 }
 
 /* Role Manager */
-/* line 386, ../scss/theme/_widgets.scss */
+/* line 389, ../scss/theme/_widgets.scss */
 .rm-form .controls {
   width: 100%;
 }
-/* line 389, ../scss/theme/_widgets.scss */
+/* line 392, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign .action-lnk,
 .rm-form .rm-rules .action-lnk {
   display: inline-block;
   color: #871D33;
   font-style: normal;
 }
-/* line 395, ../scss/theme/_widgets.scss */
+/* line 398, ../scss/theme/_widgets.scss */
 .rm-form .rm-toggle-all {
   margin-top: 0.2rem;
   margin-bottom: 0.5rem;
 }
-/* line 399, ../scss/theme/_widgets.scss */
+/* line 402, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign {
   width: 80%;
   border-collapse: separate;
   border-spacing: 0;
 }
-/* line 403, ../scss/theme/_widgets.scss */
+/* line 406, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign th {
   min-width: 10rem;
 }
-/* line 406, ../scss/theme/_widgets.scss */
+/* line 409, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign th:first-child {
   width: 25%;
 }
-/* line 409, ../scss/theme/_widgets.scss */
+/* line 412, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign td {
   padding: 0.5rem;
 }
-/* line 412, ../scss/theme/_widgets.scss */
+/* line 415, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign tfoot td {
   border-top: 1px solid #C0C0C0;
 }
-/* line 415, ../scss/theme/_widgets.scss */
+/* line 418, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-item-name,
 .rm-form .rm-assign .rm-item-title {
   display: block;
 }
-/* line 419, ../scss/theme/_widgets.scss */
+/* line 422, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-item-title {
   font-size: 0.8rem;
   font-style: italic;
   color: #A0A0A0;
 }
-/* line 425, ../scss/theme/_widgets.scss */
+/* line 428, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-duplicate td {
   border-top: 1px solid red;
   border-bottom: 1px solid red;
 }
-/* line 428, ../scss/theme/_widgets.scss */
+/* line 431, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 1px solid red;
 }
-/* line 431, ../scss/theme/_widgets.scss */
+/* line 434, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 1px solid red;
 }
-/* line 437, ../scss/theme/_widgets.scss */
+/* line 440, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules {
   width: 100%;
 }
-/* line 439, ../scss/theme/_widgets.scss */
+/* line 442, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header {
   cursor: pointer;
   background-color: #F0F0F0;
 }
-/* line 442, ../scss/theme/_widgets.scss */
+/* line 445, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0.3rem;
   display: inline-block;
 }
-/* line 446, ../scss/theme/_widgets.scss */
+/* line 449, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header .rm-module-toggle {
   width: 0.5rem;
 }
-/* line 449, ../scss/theme/_widgets.scss */
+/* line 452, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header .rm-module-prefix {
   width: 6.5rem;
 }
-/* line 452, ../scss/theme/_widgets.scss */
+/* line 455, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header .rm-module-numrules {
   font-weight: normal;
 }
-/* line 456, ../scss/theme/_widgets.scss */
+/* line 459, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules.hasrules .rm-module-header {
   background-color: #D0D0D0;
 }
-/* line 460, ../scss/theme/_widgets.scss */
+/* line 463, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules th, .rm-form .rm-module-rules td {
   padding: 0.5rem;
 }
-/* line 464, ../scss/theme/_widgets.scss */
+/* line 467, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-default-rule td,
 .rm-form .rm-module-rules .rm-default-permissions td {
   font-style: italic;
   color: #a0a0a0;
 }
-/* line 469, ../scss/theme/_widgets.scss */
+/* line 472, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-rule-target {
   width: 20%;
 }
-/* line 473, ../scss/theme/_widgets.scss */
+/* line 476, ../scss/theme/_widgets.scss */
 .rm-form input.rm-invalid {
   background-color: #FFA0A0;
 }
 
-/* line 477, ../scss/theme/_widgets.scss */
+/* line 480, ../scss/theme/_widgets.scss */
 .rm-fixed,
 .rm-hint {
   display: block;
@@ -2013,39 +2017,39 @@ form.anonymize-form,
 }
 
 /* Organizer */
-/* line 487, ../scss/theme/_widgets.scss */
+/* line 490, ../scss/theme/_widgets.scss */
 .s3-organizer-popup label {
   font-size: 0.7rem;
   font-weight: bold;
 }
-/* line 491, ../scss/theme/_widgets.scss */
+/* line 494, ../scss/theme/_widgets.scss */
 .s3-organizer-popup p {
   font-size: 0.8rem;
   font-weight: normal;
   margin-bottom: 0.3rem;
 }
-/* line 496, ../scss/theme/_widgets.scss */
+/* line 499, ../scss/theme/_widgets.scss */
 .s3-organizer-popup .action-btn {
   margin-left: 0;
   margin-right: 0.3rem;
 }
 
-/* line 502, ../scss/theme/_widgets.scss */
+/* line 505, ../scss/theme/_widgets.scss */
 .s3-organizer-create .action-btn {
   display: block;
 }
 
 /* Consent Widget */
-/* line 508, ../scss/theme/_widgets.scss */
+/* line 511, ../scss/theme/_widgets.scss */
 .consent-widget {
   border: 1px solid #E0E0E0;
   padding: 0.5rem 1rem;
 }
-/* line 511, ../scss/theme/_widgets.scss */
+/* line 514, ../scss/theme/_widgets.scss */
 .consent-widget .consent-option {
   margin-top: 0.3rem;
 }
-/* line 514, ../scss/theme/_widgets.scss */
+/* line 517, ../scss/theme/_widgets.scss */
 .consent-widget .consent-explanation {
   white-space: pre-wrap;
   padding: 0.3rem 1.7rem;
@@ -2053,20 +2057,20 @@ form.anonymize-form,
   font-style: italic;
   color: #7F7F7F;
 }
-/* line 521, ../scss/theme/_widgets.scss */
+/* line 524, ../scss/theme/_widgets.scss */
 .consent-widget .consent-title {
   font-weight: bold;
 }
-/* line 524, ../scss/theme/_widgets.scss */
+/* line 527, ../scss/theme/_widgets.scss */
 .consent-widget .consent-checkbox {
   vertical-align: bottom;
   margin-right: 0.5rem !important;
 }
-/* line 528, ../scss/theme/_widgets.scss */
+/* line 531, ../scss/theme/_widgets.scss */
 .consent-widget .req {
   padding: 0 0.2rem;
 }
-/* line 531, ../scss/theme/_widgets.scss */
+/* line 534, ../scss/theme/_widgets.scss */
 .consent-widget .req_key {
   font-size: 0.7rem;
   font-weight: normal;
@@ -2075,7 +2079,7 @@ form.anonymize-form,
 }
 
 /* Priority Representation */
-/* line 540, ../scss/theme/_widgets.scss */
+/* line 543, ../scss/theme/_widgets.scss */
 .prio {
   padding: 0 0.4rem;
   border: 1px solid #333;
@@ -2085,91 +2089,91 @@ form.anonymize-form,
   font-size: 0.8rem;
 }
 
-/* line 548, ../scss/theme/_widgets.scss */
+/* line 551, ../scss/theme/_widgets.scss */
 .prio-red {
   color: #E0E0E0;
   background-color: #d10000;
 }
 
-/* line 552, ../scss/theme/_widgets.scss */
+/* line 555, ../scss/theme/_widgets.scss */
 .prio-amber {
   background-color: #ffaa00;
 }
 
-/* line 555, ../scss/theme/_widgets.scss */
+/* line 558, ../scss/theme/_widgets.scss */
 .prio-lightgreen {
   color: #E0E0E0;
   background-color: #009f00;
 }
 
-/* line 559, ../scss/theme/_widgets.scss */
+/* line 562, ../scss/theme/_widgets.scss */
 .prio-green {
   color: #E0E0E0;
   background-color: #006100;
 }
 
-/* line 563, ../scss/theme/_widgets.scss */
+/* line 566, ../scss/theme/_widgets.scss */
 .prio-blue {
   color: white;
   background-color: #10427b;
 }
 
-/* line 567, ../scss/theme/_widgets.scss */
+/* line 570, ../scss/theme/_widgets.scss */
 .prio-lightblue {
   background-color: #b7ddff;
 }
 
-/* line 570, ../scss/theme/_widgets.scss */
+/* line 573, ../scss/theme/_widgets.scss */
 .prio-grey {
   background-color: silver;
 }
 
-/* line 573, ../scss/theme/_widgets.scss */
+/* line 576, ../scss/theme/_widgets.scss */
 .prio-black {
   color: #E0E0E0;
   background-color: #1f1f1f;
 }
 
 /* Weekly Hours Widget */
-/* line 579, ../scss/theme/_widgets.scss */
+/* line 582, ../scss/theme/_widgets.scss */
 .wh-raster {
   margin-top: 0.3rem;
 }
-/* line 581, ../scss/theme/_widgets.scss */
+/* line 584, ../scss/theme/_widgets.scss */
 .wh-raster tr {
   border-bottom: 1px solid #ccc;
 }
-/* line 584, ../scss/theme/_widgets.scss */
+/* line 587, ../scss/theme/_widgets.scss */
 .wh-raster td {
   border-left: 1px solid #ccc;
 }
-/* line 586, ../scss/theme/_widgets.scss */
+/* line 589, ../scss/theme/_widgets.scss */
 .wh-raster td.wh-tick {
   border-left-width: 2px;
 }
-/* line 591, ../scss/theme/_widgets.scss */
+/* line 594, ../scss/theme/_widgets.scss */
 .wh-raster thead td {
   min-width: 1.8rem;
   padding-right: 0.6rem !important;
   font-size: 0.6rem;
   font-weight: normal;
 }
-/* line 600, ../scss/theme/_widgets.scss */
+/* line 603, ../scss/theme/_widgets.scss */
 .wh-raster tbody td.wh-hour {
   text-align: center;
   font-weight: normal;
 }
-/* line 603, ../scss/theme/_widgets.scss */
+/* line 606, ../scss/theme/_widgets.scss */
 .wh-raster tbody td.wh-hour.wh-on {
   color: darkgreen;
 }
-/* line 607, ../scss/theme/_widgets.scss */
+/* line 610, ../scss/theme/_widgets.scss */
 .wh-raster tbody td.wh-day {
   text-align: left;
   font-size: 0.7rem;
   padding: 0.2rem 0.4rem;
 }
-/* line 614, ../scss/theme/_widgets.scss */
+/* line 617, ../scss/theme/_widgets.scss */
 .wh-raster .wh-hour {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -2178,231 +2182,232 @@ form.anonymize-form,
   -ms-user-select: none;
   user-select: none;
 }
-/* line 622, ../scss/theme/_widgets.scss */
+/* line 625, ../scss/theme/_widgets.scss */
 .wh-raster .wh-hour.wh-on {
   background-color: lightgreen;
 }
-/* line 625, ../scss/theme/_widgets.scss */
+/* line 628, ../scss/theme/_widgets.scss */
 .wh-raster .wh-hour.wh-off {
   background-color: transparent;
 }
 
 /* Weekly Hours Representation */
-/* line 632, ../scss/theme/_widgets.scss */
+/* line 635, ../scss/theme/_widgets.scss */
 .wh-schedule {
   list-style: none;
   white-space: pre;
   margin: 0;
   font-size: 0.7rem;
 }
-/* line 637, ../scss/theme/_widgets.scss */
+/* line 640, ../scss/theme/_widgets.scss */
 .wh-schedule .wh-dayname {
   width: 1.5rem;
   display: inline-block;
 }
-/* line 641, ../scss/theme/_widgets.scss */
+/* line 644, ../scss/theme/_widgets.scss */
 .wh-schedule .wh-dayname::after {
   content: ":";
 }
 
-/* line 646, ../scss/theme/_widgets.scss */
+/* line 649, ../scss/theme/_widgets.scss */
 .announcements-title {
   font-variant: all-small-caps;
   font-weight: bold;
 }
 
-/* line 650, ../scss/theme/_widgets.scss */
+/* line 653, ../scss/theme/_widgets.scss */
 .announcements {
   margin: 0;
   padding: 0 0 0 1rem;
   border-left: 1px solid #871D33;
   list-style: none outside none;
 }
-/* line 655, ../scss/theme/_widgets.scss */
+/* line 658, ../scss/theme/_widgets.scss */
 .announcements ul, .announcements ol {
   padding-left: 20px;
   list-style: none outside none;
 }
-/* line 659, ../scss/theme/_widgets.scss */
+/* line 662, ../scss/theme/_widgets.scss */
 .announcements li {
   padding: 10px 0 0;
 }
-/* line 662, ../scss/theme/_widgets.scss */
+/* line 665, ../scss/theme/_widgets.scss */
 .announcements .announcement-box {
   display: block;
   background: #fff7d9;
   border: 1px solid #aaa;
   overflow: hidden;
   padding: 0.7rem;
+  margin-bottom: 1.5rem;
 }
-/* line 669, ../scss/theme/_widgets.scss */
+/* line 673, ../scss/theme/_widgets.scss */
 .announcements .announcement-box.announcement-important .announcement-icon {
   color: #0088ca;
 }
-/* line 673, ../scss/theme/_widgets.scss */
+/* line 677, ../scss/theme/_widgets.scss */
 .announcements .announcement-box.announcement-critical {
   border: 1px solid #ca0000;
   background-color: #ffebea;
 }
-/* line 676, ../scss/theme/_widgets.scss */
+/* line 680, ../scss/theme/_widgets.scss */
 .announcements .announcement-box.announcement-critical .announcement-icon {
   color: #ca0000;
   animation: blinker 0.7s step-start 4;
 }
-/* line 682, ../scss/theme/_widgets.scss */
+/* line 686, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-header .announcement-icon {
   display: inline-block;
   font-size: 1.3rem;
   padding: 0 0.7rem 0 0;
 }
-/* line 687, ../scss/theme/_widgets.scss */
+/* line 691, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-header h4 {
   display: inline-block;
 }
-/* line 691, ../scss/theme/_widgets.scss */
+/* line 695, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text {
   font-size: 0.9rem;
   line-height: 1.3;
 }
-/* line 694, ../scss/theme/_widgets.scss */
+/* line 698, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text h4 {
   font-size: 1.2rem;
 }
-/* line 697, ../scss/theme/_widgets.scss */
+/* line 701, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text ul {
   list-style: disc outside none;
 }
-/* line 700, ../scss/theme/_widgets.scss */
+/* line 704, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text ol {
   list-style: decimal outside none;
 }
-/* line 703, ../scss/theme/_widgets.scss */
+/* line 707, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text li {
   padding: 0;
 }
-/* line 706, ../scss/theme/_widgets.scss */
+/* line 710, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text div {
   white-space: pre-line;
 }
-/* line 709, ../scss/theme/_widgets.scss */
+/* line 713, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text .announcement-header {
   margin: 0 0 0.8rem 0;
 }
-/* line 712, ../scss/theme/_widgets.scss */
+/* line 716, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text announcement-body {
   white-space: pre-line;
 }
-/* line 714, ../scss/theme/_widgets.scss */
+/* line 718, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-text announcement-body p {
   margin-left: 1rem;
 }
-/* line 719, ../scss/theme/_widgets.scss */
+/* line 723, ../scss/theme/_widgets.scss */
 .announcements .announcement-box .announcement-date {
   font-size: 0.7rem;
   margin-top: 0.4rem;
 }
 
-/* line 729, ../scss/theme/_widgets.scss */
+/* line 733, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header .ui-multiselect-filter {
   direction: rtl;
   float: right;
   margin-right: 3px;
   margin-left: 10px;
 }
-/* line 735, ../scss/theme/_widgets.scss */
+/* line 739, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header ul li {
   float: right;
   padding: 0 3px 0 10px;
 }
-/* line 739, ../scss/theme/_widgets.scss */
+/* line 743, ../scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header li.ui-multiselect-close {
   float: left;
   text-align: left;
   padding-left: 0;
 }
-/* line 746, ../scss/theme/_widgets.scss */
+/* line 750, ../scss/theme/_widgets.scss */
 body.rtl .range-filter-widget input.date-filter-input {
   margin-right: 0;
   margin-left: 2px;
 }
-/* line 751, ../scss/theme/_widgets.scss */
+/* line 755, ../scss/theme/_widgets.scss */
 body.rtl #list-btn-add {
   float: left;
   margin-right: 0;
   margin-left: 0.35rem;
 }
-/* line 757, ../scss/theme/_widgets.scss */
+/* line 761, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0;
   margin-left: 0.3rem;
 }
-/* line 763, ../scss/theme/_widgets.scss */
+/* line 767, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 0;
   border-right: 1px solid red;
 }
-/* line 767, ../scss/theme/_widgets.scss */
+/* line 771, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 0;
   border-left: 1px solid red;
 }
 
-/* line 776, ../scss/theme/_widgets.scss */
+/* line 780, ../scss/theme/_widgets.scss */
 .map-popup {
   min-width: 20rem;
 }
-/* line 778, ../scss/theme/_widgets.scss */
+/* line 782, ../scss/theme/_widgets.scss */
 .map-popup h4 {
   font-size: 1rem;
 }
-/* line 781, ../scss/theme/_widgets.scss */
+/* line 785, ../scss/theme/_widgets.scss */
 .map-popup .map-popup-details {
   font-size: 0.8rem;
 }
-/* line 783, ../scss/theme/_widgets.scss */
+/* line 787, ../scss/theme/_widgets.scss */
 .map-popup .map-popup-details td {
   padding: 0.1rem 0.3rem 0 0;
 }
-/* line 785, ../scss/theme/_widgets.scss */
+/* line 789, ../scss/theme/_widgets.scss */
 .map-popup .map-popup-details td.map-popup-label {
   font-weight: bold;
 }
 
-/* line 791, ../scss/theme/_widgets.scss */
+/* line 795, ../scss/theme/_widgets.scss */
 .olPopupCloseBox {
   margin-right: 20px;
 }
 
-/* line 796, ../scss/theme/_widgets.scss */
+/* line 800, ../scss/theme/_widgets.scss */
 .place-repr .place-name {
   display: block;
   font-weight: bold;
   margin-bottom: 0.2rem;
 }
-/* line 801, ../scss/theme/_widgets.scss */
+/* line 805, ../scss/theme/_widgets.scss */
 .place-repr .place-info {
   white-space: pre-line;
   font-size: 0.8rem;
 }
 
-/* line 806, ../scss/theme/_widgets.scss */
+/* line 810, ../scss/theme/_widgets.scss */
 .contact-repr {
   background-color: #FFF0C1;
   border: 1px solid #E0E0E0;
   padding: 0.25rem 0.5rem;
 }
-/* line 810, ../scss/theme/_widgets.scss */
+/* line 814, ../scss/theme/_widgets.scss */
 .contact-repr .contact-name {
   display: block;
   font-weight: bold;
   margin-bottom: 0.2rem;
 }
-/* line 815, ../scss/theme/_widgets.scss */
+/* line 819, ../scss/theme/_widgets.scss */
 .contact-repr .contact-info {
   white-space: nowrap;
   font-size: 0.8rem;
 }
-/* line 818, ../scss/theme/_widgets.scss */
+/* line 822, ../scss/theme/_widgets.scss */
 .contact-repr .contact-info .fa {
   padding-right: 0.4rem;
 }

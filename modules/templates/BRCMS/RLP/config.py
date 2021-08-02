@@ -113,6 +113,10 @@ def config(settings):
     # UI Settings
     settings.ui.calendar_clear_icon = True
 
+    settings.ui.custom_icons = {"shelter": "fa-bed",
+                                "_base": "fa",
+                                }
+
     # -------------------------------------------------------------------------
     # BR Settings
     #
@@ -141,6 +145,11 @@ def config(settings):
     settings.br.case_notes_tab = False
     settings.br.case_photos_tab = False
     settings.br.case_documents_tab = False
+
+    # -------------------------------------------------------------------------
+    # CR Settings
+    #
+    settings.cr.people_registration = False
 
     # -------------------------------------------------------------------------
     # HRM Settings
@@ -409,7 +418,10 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def offer_onaccept(form):
-        # TODO docstring
+        """
+            Custom onaccept-routine for offers of assistance
+                - trigger direct offer notifications on approval
+        """
 
         # Get record ID
         form_vars = form.vars
@@ -528,7 +540,10 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def configure_offer_details(table):
-        # TODO docstring/comments
+        """
+            Configure offer details for more compact list_fields
+                - better usability on mobile devices
+        """
 
         s3db = current.s3db
 
@@ -1310,7 +1325,10 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def direct_offer_create_onaccept(form):
-        # TODO docstring
+        """
+            Custom onaccept-routine for direct offers
+                - trigger notifications if offer is already approved
+        """
 
         # Get the record ID
         form_vars = form.vars
@@ -1399,6 +1417,135 @@ def config(settings):
                                  )
 
     settings.customise_br_direct_offer_resource = customise_br_direct_offer_resource
+
+    # -------------------------------------------------------------------------
+    def shelter_available_capacity(row):
+
+        if hasattr(row, "cr_shelter"):
+            row = row.cr_shelter
+
+        try:
+            total_capacity = row.capacity_day
+            total_population = row.population
+        except AttributeError:
+            return "?"
+
+        return max(0, total_capacity - total_population)
+
+    # -------------------------------------------------------------------------
+    def customise_cr_shelter_resource(r, tablename):
+
+        s3db = current.s3db
+
+        table = s3db.cr_shelter
+
+        from s3 import S3LocationFilter, \
+                       S3LocationSelector, \
+                       S3OptionsFilter, \
+                       S3SQLCustomForm, \
+                       S3SQLInlineLink, \
+                       S3TextFilter, \
+                       s3_fieldmethod, \
+                       s3_get_filter_opts
+
+        # Field Configuration
+        field = table.population
+        field.label = T("Current Population##shelter")
+
+        field = table.contact_name
+        field.readable = field.writable = True
+
+        field = table.location_id
+        requires = field.requires
+        if isinstance(requires, IS_EMPTY_OR):
+            field.requires = requires.other
+        field.widget = S3LocationSelector(levels = ("L1", "L2", "L3", "L4"),
+                                          required_levels = ("L1", "L2", "L3"),
+                                          show_address = True,
+                                          show_postcode = True,
+                                          show_map = True,
+                                          )
+
+        # Custom virtual field to show available capacity
+        table.available_capacity = s3_fieldmethod("available_capacity",
+                                                  shelter_available_capacity,
+                                                  )
+
+        # CRUD Form
+        crud_fields = ["organisation_id",
+                       "name",
+                       "shelter_type_id",
+                       "location_id",
+                       S3SQLInlineLink(
+                           "shelter_service",
+                           field = "service_id",
+                           label = T("Services"),
+                           cols = 3,
+                           ),
+                       "contact_name",
+                       "phone",
+                       "email",
+                       # TODO show these only for manager?
+                       "capacity_day",
+                       "population",
+                       "status",
+                       ]
+
+        # Filter widgets
+        filter_widgets = [S3TextFilter(["name",
+                                        ],
+                                       label = T("Search"),
+                                       ),
+                          S3OptionsFilter("shelter_service__link.service_id",
+                                          options = lambda: s3_get_filter_opts("cr_shelter_service",
+                                                                               ),
+                                          ),
+                          S3OptionsFilter("shelter_type_id",
+                                          options = lambda: s3_get_filter_opts("cr_shelter_type",
+                                                                               ),
+                                          ),
+                          S3LocationFilter("location_id",
+                                           levels = ["L2", "L3"],
+                                           hidden = True,
+                                           ),
+                          S3OptionsFilter("organisation_id",
+                                          hidden = True,
+                                          ),
+                          ]
+
+        # List fields
+        list_fields = ["organisation_id",
+                       "name",
+                       "shelter_type_id",
+                       "shelter_service__link.service_id",
+                       "location_id$L3",
+                       "contact_name",
+                       "phone",
+                       "email",
+                       (T("Available Capacity"), "available_capacity"),
+                       "status",
+                       ]
+
+        s3db.configure("cr_shelter",
+                       crud_form = S3SQLCustomForm(*crud_fields),
+                       extra_fields = ["capacity_day", "population"],
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_cr_shelter_resource = customise_cr_shelter_resource
+
+    # -------------------------------------------------------------------------
+    def customise_cr_shelter_controller(**attr):
+
+        # Custom rheader
+        from .rheaders import rlpcm_cr_rheader
+        attr = dict(attr)
+        attr["rheader"] = rlpcm_cr_rheader
+
+        return attr
+
+    settings.customise_cr_shelter_controller = customise_cr_shelter_controller
 
     # -------------------------------------------------------------------------
     # TODO customise event_event
@@ -1763,7 +1910,7 @@ def config(settings):
                     if multiple_orgs:
                         filter_widgets.insert(-1,
                             S3OptionsFilter("case.organisation_id",
-                                            options = s3_get_filter_opts("org_organisation"),
+                                            options = lambda: s3_get_filter_opts("org_organisation"),
                                             ))
                         list_fields.insert(-2, "case.organisation_id")
 
