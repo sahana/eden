@@ -400,6 +400,7 @@ $.filterOptionsS3({
                      Field("um", length=128, notnull=True,
                            default = "piece",
                            label = T("Unit of Measure"),
+                           represent = translate_represent,
                            requires = [IS_NOT_EMPTY(),
                                        IS_LENGTH(128),
                                        ],
@@ -700,6 +701,7 @@ $.filterOptionsS3({
                            notnull=True, # Ideally this would reference another table for normalising Pack names
                            default = T("piece"),
                            label = T("Name"),
+                           represent = translate_represent,
                            requires = [IS_NOT_EMPTY(),
                                        IS_LENGTH(128),
                                        ],
@@ -740,7 +742,8 @@ $.filterOptionsS3({
 
         # ---------------------------------------------------------------------
         # Reusable Field
-        item_pack_represent = supply_ItemPackRepresent(lookup="supply_item_pack")
+        item_pack_represent = supply_ItemPackRepresent(lookup = "supply_item_pack",
+                                                       translate = translate)
         item_pack_id = S3ReusableField("item_pack_id", "reference %s" % tablename,
                     label = T("Pack"),
                     ondelete = "RESTRICT",
