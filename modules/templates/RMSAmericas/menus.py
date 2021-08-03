@@ -282,18 +282,21 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             M("Receive a new shipment", f="recv", m="create"),
                             M("Send a new shipment", f="send", m="create"),
                         ),
-                        M("Purchases", c="proc", link=False)(
-                            M("Items", f="order_item"),
+                        M("Purchases", c="proc", f="order_item",
+                          restrict=["ORG_ADMIN",
+                                    "national_wh_manager"])(
                         ),
-                        M("Requests", c="req", link=False)(
-                            M("My Requests", f="req",
+                        M("Requests", c="req", f="req")(
+                            M("My Requests",
                               vars = {"mine": 1},
                               ),
                         ),
                         M("Import Inventory", c="inv", f="inv_item", m="import",
-                          restrict=["national_wh_manager"]),
+                          restrict=["ORG_ADMIN",
+                                    "national_wh_manager"]),
                         M("Parameters", c="inv", link=False,
-                          restrict=["national_wh_manager"])(
+                          restrict=["ORG_ADMIN",
+                                    "national_wh_manager"])(
                             M("Warehouses", f="warehouse"),
                             M("Projects", f="project"),
                             M("Catalogs", c="supply", f="catalog"),

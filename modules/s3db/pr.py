@@ -9763,7 +9763,7 @@ def pr_get_ancestors(pe_id):
 
         @param pe_id: the person entity ID
 
-        @return: a list of PE-IDs
+        @return: a list of PE IDs
     """
 
     s3db = current.s3db
@@ -9887,9 +9887,9 @@ def pr_ancestors(entities):
         Find all ancestor entities of the given entities in the
         OU hierarchy.
 
-        @param entities:
+        @param entities: List of PE IDs
 
-        @return: Storage of lists of PE-IDs
+        @return: Storage of lists of PE IDs
     """
 
     if not entities:

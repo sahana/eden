@@ -64,6 +64,7 @@ __all__ = ("RequestPriorityStatusModel",
            "req_RequesterRepresent",
            "req_ReqItemRepresent",
            #"req_is_approver",
+           "req_approvers",
            )
 
 from gluon import *
@@ -769,6 +770,10 @@ class RequestModel(S3Model):
                                                "joinby": "req_id",
                                                "key": "item_category_id",
                                                },
+                       # Approvers
+                       req_approver_req = {"name": "approver",
+                                           "joinby": "req_id",
+                                           },
 
                        # Projects
                        req_project_req = {"joinby": "req_id",
@@ -1582,6 +1587,8 @@ $.filterOptionsS3({
     def req_approve(r, **attr):
         """
             Approve a Request (custom REST method)
+
+            NB This is currently hardcoded to Items Requests not Person Requests
         """
 
         record = r.record
@@ -1596,21 +1603,54 @@ $.filterOptionsS3({
 
         req_id = r.id
 
+        approvers = req_approvers(record.site_id)
+        person_id = current.auth.s3_logged_in_person()
+
         # Check we have permission to approve the Request
-        if not req_is_approver(record.site_id):
+        if person_id not in approvers:
             r.unauthorised()
 
         db = current.db
 
-        # @ToDo: Notify the Warehouse Officer
-        # - also set assigned_to_id
-        # How do we find the correct Officer?
+        # Check if this person has already approved the Request
+        artable = s3db.req_approver_req
+        approved = db(artable.req_id == req_id).select(artable.person_id)
+        approved = [row.person_id for row in approved]
+        if person_id in approved:
+            current.session.warning = current.T("You have already Approved this Request")
+            redirect(URL(args = req_id))
+
+        ritable = s3db.req_req_item
+        query = (ritable.req_id == req_id) & \
+                (ritable.deleted == False)
+        request_items = db(query).select(ritable.site_id)
+        request_items = [row.site_id for row in request_items]
+
+        approver = approvers[person_id]
+
+        if approver["matcher"]:
+            # This person is responsible for Matching Items to Warehouses
+            if None in request_items:
+                # @ToDo: Check for Purchases
+                current.session.warning = current.T("You need to Match Items in this Request")
+                redirect(URL(args = [req_id, "req_item"]))
+
+        # Add record to show that we have approved request
+        artable.insert(req_id = req_id,
+                       person_id = person_id,
+                       title = approver["title"],
+                       )
+
         T = current.T
 
-        # Update the Status and Approver
-        db(rtable.id == req_id).update(approved_by_id = current.auth.s3_logged_in_person(),
-                                       workflow_status = 3, # Approved
-                                       )
+        # Have all Approvers approved the Request?
+        if len(approvers) == len(approved) + 1:
+            # Update the Status
+            db(rtable.id == req_id).update(workflow_status = 3, # Approved
+                                           )
+            # Notify the Warehouse Officer(s)
+            #for site_id in request_items:
+            #    # @ToDo
 
         current.session.confirmation = T("Request Approved")
         redirect(URL(args = req_id))
@@ -1874,11 +1914,16 @@ class RequestApproverModel(S3Model):
     """
 
     names = ("req_approver",
+             "req_approver_req",
              )
 
     def model(self):
 
         T = current.T
+
+        define_table = self.define_table
+
+        person_id = self.pr_person_id
 
         # -----------------------------------------------------------------
         # Request Approvers
@@ -1887,35 +1932,35 @@ class RequestApproverModel(S3Model):
         entity_represent = self.pr_PersonEntityRepresent(show_type = False)
 
         tablename = "req_approver"
-        self.define_table(tablename,
-                          # Could be a Site or Organisation
-                          self.super_link("pe_id", "pr_pentity",
-                                          label = T("Organization/Site"),
-                                          empty = False,
-                                          filterby = "instance_type", # Not using instance_types as not a Super-Entity
-                                          filter_opts = instance_types,
-                                          represent = entity_represent,
-                                          readable = True,
-                                          writable = True,
-                                          # @ToDo: Widget
-                                          #widget = S3PentityWidget(),
-                                          ),
-                          Field("title", # 'position' is a Reserved word in SQL
-                                label = T("Position"),
-                                ),
-                          self.pr_person_id(),
-                          Field("matcher", "boolean",
-                                default = False,
-                                label = T("Matcher"),
-                                represent = s3_yes_no_represent,
-                                comment = DIV(_class = "tooltip",
-                                              _title = "%s|%s" % (T("Matcher"),
-                                                                  T("Is this person the one to match request items to specific warehouses &/or purchase them."),
-                                                                  ))
-                                ),
-                          s3_comments(),
-                          *s3_meta_fields(),
-                          )
+        define_table(tablename,
+                     # Could be a Site or Organisation
+                     self.super_link("pe_id", "pr_pentity",
+                                     label = T("Organization/Site"),
+                                     empty = False,
+                                     filterby = "instance_type", # Not using instance_types as not a Super-Entity
+                                     filter_opts = instance_types,
+                                     represent = entity_represent,
+                                     readable = True,
+                                     writable = True,
+                                     # @ToDo: Widget
+                                     #widget = S3PentityWidget(),
+                                     ),
+                     Field("title", # 'position' is a Reserved word in SQL
+                           label = T("Position"),
+                           ),
+                     person_id(),
+                     Field("matcher", "boolean",
+                           default = False,
+                           label = T("Matcher"),
+                           represent = s3_yes_no_represent,
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Matcher"),
+                                                             T("Is this person the one to match request items to specific warehouses &/or purchase them."),
+                                                             ))
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields(),
+                     )
 
         # CRUD strings
         current.response.s3.crud_strings[tablename] = Storage(
@@ -1929,6 +1974,20 @@ class RequestApproverModel(S3Model):
             msg_record_modified = T("Approver updated"),
             msg_record_deleted = T("Approver deleted"),
             msg_list_empty = T("No Approvers currently registered"))
+
+        # -----------------------------------------------------------------
+        # Link Approvers <> Requests
+        #
+        tablename = "req_approver_req"
+        define_table(tablename,
+                     self.req_req_id(),
+                     Field("title", # 'position' is a Reserved word in SQL
+                           label = T("Position"),
+                           ),
+                     person_id(),
+                     #s3_comments(),
+                     *s3_meta_fields(),
+                     )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -1966,7 +2025,7 @@ class RequestItemModel(S3Model):
         #
         tablename = "req_req_item"
         define_table(tablename,
-                     req_id(empty=False),
+                     req_id(empty = False),
                      self.supply_item_entity_id(),
                      self.supply_item_id(),
                      self.supply_item_pack_id(),
@@ -2072,8 +2131,7 @@ $.filterOptionsS3({
         else:
             create_next = None
 
-        list_fields = ["id",
-                       "item_id",
+        list_fields = ["item_id",
                        "item_pack_id",
                        ]
         lappend = list_fields.append
@@ -5174,20 +5232,22 @@ def req_rheader(r, check_page=False):
             tabs.append((T("Schedule"), "job"))
         else:
             # Hide these if no Items/Skills on one of these requests yet
+            auth = current.auth
+            req_id = record.id
             if items:
-                user = current.auth.user
+                user = auth.user
                 user_site_id = user.site_id if user else None
                 ritable = s3db.req_req_item
-                possibly_complete = db(ritable.req_id == record.id).select(ritable.id,
-                                                                           limitby = (0, 1)
-                                                                           )
+                possibly_complete = db(ritable.req_id == req_id).select(ritable.id,
+                                                                        limitby = (0, 1)
+                                                                        )
             elif people:
-                user = current.auth.user
+                user = auth.user
                 organisation_id = user.organisation_id if user else None
                 rstable = s3db.req_req_skill
-                possibly_complete = db(rstable.req_id == record.id).select(rstable.id,
-                                                                           limitby = (0, 1)
-                                                                           )
+                possibly_complete = db(rstable.req_id == req_id).select(rstable.id,
+                                                                        limitby = (0, 1)
+                                                                        )
             else:
                 possibly_complete = True
             if possibly_complete:
@@ -5201,27 +5261,35 @@ def req_rheader(r, check_page=False):
                         submit_btn = A(T("Submit for Approval"),
                                        _href = URL(c = "req",
                                                    f = "req",
-                                                   args = [r.id, "submit"]
+                                                   args = [req_id, "submit"]
                                                    ),
                                        _id = "req-submit",
                                        _class = "action-btn",
                                        )
-                        s3.jquery_ready.append('''S3.confirmClick('.req-submit','%s')''' \
+                        s3.jquery_ready.append('''S3.confirmClick('#req-submit','%s')''' \
                                 % T("Are you sure you want to submit this request?"))
                         s3.rfooter = TAG[""](submit_btn)
                     elif workflow_status == 2: # Submitted
                         if req_is_approver(site_id):
-                            approve_btn = A(T("Approve"),
-                                           _href = URL(c = "req",
-                                                       f = "req",
-                                                       args = [r.id, "approve_req"]
-                                                       ),
-                                           _id = "req-approve",
-                                           _class = "action-btn",
-                                           )
-                            s3.jquery_ready.append('''S3.confirmClick('.req-approve','%s')''' \
-                                    % T("Are you sure you want to approve this request?"))
-                            s3.rfooter = TAG[""](approve_btn)
+                            # Have they already approved?
+                            atable = s3db.req_approver_req
+                            query = (atable.req_id == req_id) & \
+                                    (atable.person_id == auth.s3_logged_in_person())
+                            approved = db(query).select(atable.id,
+                                                        limitby = (0, 1)
+                                                        )
+                            if not approved:
+                                approve_btn = A(T("Approve"),
+                                               _href = URL(c = "req",
+                                                           f = "req",
+                                                           args = [req_id, "approve_req"]
+                                                           ),
+                                               _id = "req-approve",
+                                               _class = "action-btn",
+                                               )
+                                s3.jquery_ready.append('''S3.confirmClick('#req-approve','%s')''' \
+                                        % T("Are you sure you want to approve this request?"))
+                                s3.rfooter = TAG[""](approve_btn)
 
         if not check_page:
             rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -6260,8 +6328,9 @@ def req_is_approver(site_id):
 
     auth = current.auth
 
-    if auth.s3_has_role("ADMIN"):
-        return True
+    # Will cause issues
+    #if auth.s3_has_role("ADMIN"):
+    #    return True
 
     db = current.db
     s3db = current.s3db
@@ -6297,5 +6366,39 @@ def req_is_approver(site_id):
         return True
 
     return False
+
+# =============================================================================
+def req_approvers(site_id):
+    """
+        Return people permitted to Approve a Request
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    stable = s3db.org_site
+    site_entity = db(stable.site_id == site_id).select(stable.instance_type,
+                                                       limitby = (0, 1)
+                                                       ).first()
+    itable = s3db.table(site_entity.instance_type)
+    site = db(itable.site_id == site_id).select(itable.pe_id,
+                                                limitby = (0, 1)
+                                                ).first()
+
+    pe_id = site.pe_id
+    entities = s3db.pr_get_ancestors(pe_id)
+    entities.append(pe_id)
+
+    atable = s3db.req_approver
+    query = (atable.pe_id.belongs(entities)) & \
+            (atable.deleted == False)
+    approvers = db(query).select(atable.person_id,
+                                 atable.title,
+                                 atable.matcher,
+                                 )
+
+    return {row.person_id: {"title": row.title,
+                            "matcher": row.matcher,
+                            } for row in approvers}
 
 # END =========================================================================
