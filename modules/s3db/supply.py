@@ -2160,7 +2160,7 @@ class supply_ItemCategoryRepresent(S3Represent):
             else:
                 sep = " - "
             if translate:
-                parent = t_(parent)
+                parent = T(parent)
             name = "%s%s%s" % (name, sep, parent)
             grandparent = row["supply_grandparent_item_category.name"]
             if grandparent:
