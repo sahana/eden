@@ -5021,24 +5021,34 @@ Thank you"""
     # -------------------------------------------------------------------------
     def customise_supply_item_category_resource(r, tablename):
 
+        s3db = current.s3db
+
+        table = s3db.supply_item_category
         #root_org = current.auth.root_org_name()
         #if root_org == HNRC:
         # Not using Assets Module
-        field = current.s3db.supply_item_category.can_be_asset
-        field.readable = field.writable = False
+        table.can_be_asset.readable = table.can_be_asset.writable = False
+        table.parent_item_category_id.represent = s3db.supply_ItemCategoryRepresent(show_catalog = False,
+                                                                                    use_code = False,
+                                                                                    )
 
     settings.customise_supply_item_category_resource = customise_supply_item_category_resource
 
     # -------------------------------------------------------------------------
     def customise_supply_item_resource(r, tablename):
 
-        table = current.s3db.supply_item
+        s3db = current.s3db
+
+        table = s3db.supply_item
         table.brand_id.readable = table.brand_id.writable = False
         table.model.readable = table.model.writable = False
         table.year.readable = table.year.writable = False
         table.length.readable = table.length.writable = False
         table.width.readable = table.width.writable = False
         table.height.readable = table.height.writable = False
+        table.item_category_id.represent = s3db.supply_ItemCategoryRepresent(show_catalog = False,
+                                                                             use_code = False,
+                                                                             )
 
     settings.customise_supply_item_resource = customise_supply_item_resource
 

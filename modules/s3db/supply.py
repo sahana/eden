@@ -2066,23 +2066,28 @@ class supply_ItemCategoryRepresent(S3Represent):
     def __init__(self,
                  translate = False,
                  show_link = False,
+                 show_catalog = None,
                  use_code = True,
                  multiple = False,
                  ):
 
-        self.catalog_multi = catalog_multi = current.deployment_settings.get_supply_catalog_multi()
+        if show_catalog is None:
+            show_catalog = current.deployment_settings.get_supply_catalog_multi()
+        self.show_catalog = show_catalog
+
         self.use_code = use_code
 
         # Need a custom lookup to join with Parent/Catalog
         fields = ["supply_item_category.id",
                   "supply_item_category.name",
-                  # Always-included since used as fallback if no name
-                  "supply_item_category.code",
+                  "supply_item_category.code", # Always-included since used as fallback if no name
                   "supply_parent_item_category.name",
+                  "supply_parent_item_category.code", # Always-included since used as fallback if no name
                   "supply_grandparent_item_category.name",
+                  "supply_grandparent_item_category.code", # Always-included since used as fallback if no name
                   "supply_grandparent_item_category.parent_item_category_id",
                   ]
-        if catalog_multi:
+        if show_catalog:
             fields.append("supply_catalog.name")
 
         super(supply_ItemCategoryRepresent,
@@ -2111,7 +2116,7 @@ class supply_ItemCategoryRepresent(S3Represent):
         left = [ptable.on(ptable.id == table.parent_item_category_id),
                 gtable.on(gtable.id == ptable.parent_item_category_id),
                 ]
-        if self.catalog_multi:
+        if self.show_catalog:
             ctable = db.supply_catalog
             left.append(ctable.on(ctable.id == table.catalog_id))
 
@@ -2137,35 +2142,49 @@ class supply_ItemCategoryRepresent(S3Represent):
             @param row: the supply_item_category Row
         """
 
-        translate = self.translate
-        use_code = self.use_code
-
         name = row["supply_item_category.name"]
         code = row["supply_item_category.code"]
-        catalog = row.get("supply_catalog.name")
-        parent = row["supply_parent_item_category.name"]
 
+        translate = self.translate
+        if translate:
+            T = current.T
+
+        use_code = self.use_code
         if use_code:
             name = code
         elif not name:
             name = code
         elif translate:
-            T = current.T
             name = T(name)
 
-        if parent:
+        parent_name = row["supply_parent_item_category.name"]
+        parent_code = row["supply_parent_item_category.code"] 
+        if parent_name or parent_code:
             if use_code:
                 # Compact format
                 sep = "-"
+                parent = parent_code
             else:
                 sep = " - "
-            if translate:
-                parent = T(parent)
+                if not parent_name:
+                    parent = parent_code
+                else:
+                    parent = parent_name
+                    if translate:
+                        parent = T(parent)
             name = "%s%s%s" % (name, sep, parent)
-            grandparent = row["supply_grandparent_item_category.name"]
-            if grandparent:
-                if translate:
-                    grandparent = T(grandparent)
+            grandparent_name = row["supply_grandparent_item_category.name"]
+            grandparent_code = row["supply_grandparent_item_category.code"]
+            if grandparent_name or grandparent_code:
+                if use_code:
+                    grandparent = grandparent_code
+                else:
+                    if not grandparent_name:
+                        grandparent = grandparent_code
+                    else:
+                        grandparent = grandparent_name
+                        if translate:
+                            grandparent = T(grandparent)
                 name = "%s%s%s" % (name, sep, grandparent)
                 # Check for Great-grandparent
                 # Trade-off "all in 1 row" vs "too many joins"
@@ -2196,22 +2215,34 @@ class supply_ItemCategoryRepresent(S3Represent):
                             greatgrandparent = row["supply_item_category.code"]
                             greatgreatgrandparent = row["supply_parent_item_category.code"]
                         else:
-                            greatgrandparent = row["supply_item_category.name"] or row["supply_item_category.code"]
-                            greatgreatgrandparent = row["supply_parent_item_category.name"] or row["supply_parent_item_category.code"]
-                        if translate:
-                            greatgrandparent = T(greatgrandparent)
+                            greatgrandparent = row["supply_item_category.name"]
+                            if greatgrandparent:
+                                if translate:
+                                    greatgrandparent = T(greatgrandparent)
+                            else:
+                                greatgrandparent = row["supply_item_category.code"]
+                            greatgreatgrandparent = row["supply_parent_item_category.name"]
+                            if greatgreatgrandparent:
+                                if translate:
+                                    greatgreatgrandparent = T(greatgreatgrandparent)
+                            else:
+                                greatgreatgrandparent = row["supply_parent_item_category.code"]
                         name = "%s%s%s" % (name, sep, greatgrandparent)
                         if greatgreatgrandparent:
-                            if translate:
-                                greatgreatgrandparent = T(greatgreatgrandparent)
                             name = "%s%s%s" % (name, sep, greatgreatgrandparent)
                             if use_code:
                                 greatgreatgreatgrandparent = row["supply_grandparent_item_category.code"]
                             else:
-                                greatgreatgreatgrandparent = row["supply_grandparent_item_category.name"] or row["supply_grandparent_item_category.code"]
+                                greatgreatgreatgrandparent = row["supply_grandparent_item_category.name"]
+                                if greatgreatgreatgrandparent:
+                                    if translate:
+                                        greatgreatgreatgrandparent = T(greatgreatgreatgrandparent)
+                                else:
+                                    greatgreatgreatgrandparent = row["supply_grandparent_item_category.code"]
                             if greatgreatgreatgrandparent:
                                 name = "%s%s%s" % (name, sep, greatgreatgreatgrandparent)
 
+        catalog = row.get("supply_catalog.name")
         if catalog:
             if translate:
                 catalog = T(catalog)

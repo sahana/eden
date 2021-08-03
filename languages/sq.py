@@ -2251,7 +2251,7 @@
 'For POP-3 this is usually 110 (995 for SSL), for IMAP this is usually 143 (993 for IMAP).': 'Për POP-3 kjo është zakonisht 110 (995 për SSL), për IMAP kjo është zakonisht 143 (993 për IMAP). ',
 'Force content-type to application/xml': 'Lloji i përmbajtjes së forcës në aplikim / XML',
 'forehead': 'ballë',
-'Forest Fire': 'Zjarri i Pyjeve',
+'Forest Fire': 'Zjarr ne Pyje',
 'form data': 'formojnë të dhëna',
 'Form Settings': 'Parametrat e formës',
 'Format': 'Format',
