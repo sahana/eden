@@ -67,8 +67,19 @@ def index():
         code = "NA"
         description = "unknown error"
 
-    # Send a JSON message if non-interactive request
-    if s3base.s3_get_extension() not in ("html", "iframe", "popup"):
+    ext = None
+    try:
+        requested_uri = request.vars.get("requested_uri")
+    except KeyError:
+        pass
+    else:
+        if requested_uri:
+            # Try to get the format extension of the original request
+            ext = s3base.s3_get_extension_from_url(requested_uri)
+
+    # If non-interactive format:
+    # - re-raise the same HTTP status, with a JSON message as body
+    if ext and ext not in ("html", "iframe", "popup"):
         message = current.xml.json_message(False, code, description)
         headers = {"Content-Type":"application/json"}
         raise HTTP(code, body=message, **headers)

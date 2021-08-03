@@ -1677,6 +1677,42 @@ def s3_get_extension(request=None):
     return extension
 
 # =============================================================================
+def s3_get_extension_from_url(url):
+    """
+        Helper to read the format extension from a URL string
+
+        @param url: the URL string
+
+        @returns: the format extension as string, if any
+    """
+
+    ext = None
+    if not url:
+        return ext
+
+    from s3compat import urlparse
+    try:
+        parsed = urlparse.urlparse(url)
+    except (ValueError, AttributeError):
+        pass
+    else:
+        if parsed.query:
+            params = parsed.query.split(",")
+            for param in params[::-1]:
+                k, v = param.split("=") if "=" in param else None, None
+                if k == "format":
+                    ext = v.lower()
+                    break
+        if not ext:
+            args = parsed.path.split("/")
+            for arg in args[::-1]:
+                if "." in arg:
+                    ext = arg.rsplit(".", 1)[-1]
+                    break
+
+    return ext
+
+# =============================================================================
 def s3_set_extension(url, extension=None):
     """
         Add a file extension to the path of a url, replacing all

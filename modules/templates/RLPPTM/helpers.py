@@ -6,11 +6,13 @@
     @license: MIT
 """
 
+import json
+
 from gluon import current, Field, URL, \
                   CRYPT, IS_EMAIL, IS_IN_SET, IS_LOWER, IS_NOT_IN_DB, \
                   SQLFORM, A, DIV, H4, H5, I, INPUT, LI, P, SPAN, TABLE, TD, TH, TR, UL
 
-from s3 import ICON, IS_FLOAT_AMOUNT, S3DateTime, \
+from s3 import ICON, IS_FLOAT_AMOUNT, JSONERRORS, S3DateTime, \
                S3Method, S3Represent, s3_fullname, s3_mark_required, s3_str
 
 from s3db.pr import pr_PersonRepresentContact
@@ -2243,5 +2245,212 @@ class ClaimPDF(S3Method):
             data = {}
 
         return data
+
+# =============================================================================
+class TestFacilityInfo(S3Method):
+    """
+        REST Method to report details/activities of a test facility
+    """
+
+    def apply_method(self, r, **attr):
+        """
+            Report test facility information
+
+            @param r: the S3Request instance
+            @param attr: controller attributes
+        """
+
+        if r.http == "POST":
+            if r.representation == "json":
+                output = self.facility_info(r, **attr)
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def facility_info(r, **attr):
+        """
+            Respond to a POST .json request, request body format:
+
+                {"client": "CLIENT",        - the client identity (ocert)
+                 "appkey": "APPKEY",        - the client app key (ocert)
+                 "code": "FACILITY-CODE",   - the facility code
+                 "report": ["start","end"], - the date interval to report
+                                              activities for (optional)
+                                              (ISO-format dates YYYY-MM-DD)
+                }
+
+            Output format:
+                {"code": "FACILITY-CODE",   - echoed from input
+                 "name": "FACILITY-NAME",   - the facility name
+                 "phone": "phone #",        - the facility phone number
+                 "email": "email",          - the facility email address
+                 "organisation":
+                    {"name": "ORG-NAME",    - the organisation name
+                     "type": "ORG-TYPE",    - the organisation type
+                     "website": "URL"       - the organisation website URL
+                     },
+                 "location":
+                    {"L1": "L1-NAME",       - the L1 name (state)
+                     "L2": "L2-NAME",       - the L2 name (district)
+                     "L3": "L3-NAME",       - the L3 name (commune/city)
+                     "L4": "L4-NAME",       - the L4 name (village/town)
+                     "address": "STREET",   - the street address
+                     "postcode": "XXXXX"    - the postcode
+                     },
+                 "report": ["start","end"], - echoed from input, ISO-format dates YYYY-MM-DD
+                 "activity":
+                    {"tests":59             - the total number of tests reported for the period
+                    }
+                 }
+        """
+
+        settings = current.deployment_settings
+
+        # Get the configured, permitted clients
+        ocert = settings.get_custom("ocert")
+        if not ocert:
+            r.error(501, current.ERROR.METHOD_DISABLED)
+
+        # Read the body JSON of the request
+        body = r.body
+        body.seek(0)
+        try:
+            s = body.read().decode("utf-8")
+        except (ValueError, AttributeError, UnicodeDecodeError):
+            r.error(400, current.ERROR.BAD_REQUEST)
+        try:
+            ref = json.loads(s)
+        except JSONERRORS:
+            r.error(400, current.ERROR.BAD_REQUEST)
+
+        # Verify the client
+        client = ref.get("client")
+        if not client or client not in ocert:
+            r.error(403, current.ERROR.NOT_PERMITTED)
+        key, _ = ocert.get(client)
+        if key:
+            appkey = ref.get("appkey")
+            if not appkey or appkey.upper() != key.upper():
+                r.error(403, current.ERROR.NOT_PERMITTED)
+
+        # Identify the facility
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.org_facility
+        record = r.record
+        if record:
+            query = (table.id == record.id)
+        else:
+            code = ref.get("code")
+            if not code:
+                r.error(400, current.ERROR.BAD_REQUEST)
+            query = (table.code.upper() == code.upper())
+
+        query &= (table.deleted == False)
+        facility = db(query).select(table.code,
+                                    table.name,
+                                    table.phone1,
+                                    table.email,
+                                    table.website,
+                                    table.organisation_id,
+                                    table.location_id,
+                                    table.site_id,
+                                    limitby = (0, 1),
+                                    ).first()
+
+        if not facility:
+            r.error(404, current.ERROR.BAD_RECORD)
+
+        # Prepare facility info
+        output = {"code": facility.code,
+                  "name": facility.name,
+                  "phone": facility.phone1,
+                  "email": facility.email,
+                  }
+
+        # Look up organisation data
+        otable = s3db.org_organisation
+        ttable = s3db.org_organisation_type
+        ltable = s3db.org_organisation_organisation_type
+        left = [ttable.on((ltable.organisation_id == otable.id) & \
+                          (ltable.deleted == False) & \
+                          (ttable.id == ltable.organisation_type_id)),
+                ]
+        query = (otable.id == facility.organisation_id) & \
+                (otable.deleted == False)
+        row = db(query).select(otable.name,
+                               otable.website,
+                               ttable.name,
+                               left = left,
+                               limitby = (0, 1),
+                               ).first()
+        if row:
+            organisation = row.org_organisation
+            orgtype = row.org_organisation_type
+            orgdata = {"name": organisation.name,
+                       "type": orgtype.name,
+                       "website": organisation.website,
+                       }
+            output["organisation"] = orgdata
+
+        # Look up location data
+        ltable = s3db.gis_location
+        query = (ltable.id == facility.location_id) & \
+                (ltable.deleted == False)
+        row = db(query).select(ltable.L1,
+                               ltable.L2,
+                               ltable.L3,
+                               ltable.L4,
+                               ltable.addr_street,
+                               ltable.addr_postcode,
+                               limitby = (0, 1),
+                               ).first()
+        if row:
+            locdata = {"L1": row.L1,
+                       "L2": row.L2,
+                       "L3": row.L3,
+                       "L4": row.L4,
+                       "address": row.addr_street,
+                       "postcode": row.addr_postcode,
+                       }
+            output["location"] = locdata
+
+        # Look up activity data
+        report = ref.get("report")
+        if isinstance(report, list) and len(report) == 2:
+            parse_date = current.calendar.parse_date
+            start, end = parse_date(s3_str(report[0])), \
+                         parse_date(s3_str(report[1]))
+            if start and end:
+                if start > end:
+                    start, end = end, start
+                table = s3db.disease_testing_report
+                query = (table.site_id == facility.site_id) & \
+                        (table.date >= start) & \
+                        (table.date <= end) & \
+                        (table.deleted == False)
+                total = table.tests_total.sum()
+                row = db(query).select(total).first()
+                tests_total = row[total]
+                if not tests_total:
+                    tests_total = 0
+                output["report"] = [start.isoformat(), end.isoformat()]
+                output["activity"] = {"tests": tests_total}
+            else:
+                r.error(400, "Invalid date format in report parameter")
+        else:
+            r.error(400, "Invalid report parameter format")
+
+        # Return as JSON
+        response = current.response
+        if response:
+            response.headers["Content-Type"] = "application/json; charset=utf-8"
+        return json.dumps(output, separators=(",", ":"), ensure_ascii=False)
 
 # END =========================================================================
