@@ -282,10 +282,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             M("Receive a new shipment", f="recv", m="create"),
                             M("Send a new shipment", f="send", m="create"),
                         ),
-                        M("Purchases", c="proc", f="order_item",
+                        M("Purchases", c="req", f="order_item",
                           restrict=["ORG_ADMIN",
-                                    "national_wh_manager"])(
-                        ),
+                                    "national_wh_manager"]),
                         M("Requests", c="req", f="req")(
                             M("My Requests",
                               vars = {"mine": 1},
@@ -333,11 +332,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
             
 
     # -------------------------------------------------------------------------
-    def proc(self):
-        """ Procurements """
+    #def proc(self):
+    #    """ Procurements """
 
         # Same as Inventory
-        return self.inv()
+    #    return self.inv()
 
     # -------------------------------------------------------------------------
     def req(self):

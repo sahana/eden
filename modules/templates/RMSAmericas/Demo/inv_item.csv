@@ -1,0 +1,34 @@
+Organisation,Warehouse,Item Name,Item Code,Unit of Measure,Quantity,Unit Value,Currency,Supplier/Donor,Comments
+PIRAC,Guadeloupe,,HSHETARPW406,piece,1000,12.25,EUR,International Federation of Red Cross and Red Crescent Societies,
+PIRAC,Guadeloupe,,KRELSHEK01,piece,526,29.5,EUR,International Federation of Red Cross and Red Crescent Societies,
+PIRAC,Guadeloupe,,KRELCLEA01,piece,500,27.23,EUR,CDCS,
+PIRAC,Guadeloupe,,KRELCOOSETA,piece,500,23,EUR,CDCS,
+PIRAC,Guadeloupe,,HCONJCANPF10,piece,2500,1.59,EUR,CDCS,
+PIRAC,Guadeloupe,,HCONBUCKP14L,piece,1000,4.08,EUR,CDCS,
+PIRAC,Guadeloupe,,HSHEBLANCLT2,piece,1500,4.08,EUR,CDCS,
+PIRAC,Guadeloupe,,HSHEMNETRL,piece,1500,2.26,EUR,CDCS,
+PIRAC,Martinique,,HSHETARPW406,piece,0,12.25,EUR,International Federation of Red Cross and Red Crescent Societies,
+PIRAC,Martinique,,KRELSHEK01,piece,500,29.5,EUR,International Federation of Red Cross and Red Crescent Societies,
+PIRAC,Martinique,,KRELCLEA01,piece,0,27.23,EUR,International Federation of Red Cross and Red Crescent Societies,
+PIRAC,Martinique,,KRELCOOSETA,piece,0,23,EUR,CDCS,
+PIRAC,Martinique,,HCONJCANPF10,piece,220,1.59,EUR,CDCS,
+PIRAC,Martinique,,HCONBUCKP14L,piece,0,4.08,EUR,CDCS,
+PIRAC,Martinique,,HSHEBLANCLT2,piece,0,4.08,EUR,CDCS,
+PIRAC,Martinique,,HSHEMNETRL,piece,0,2.26,EUR,CDCS,
+PIRAC,Guadeloupe,Water filter ORISA,,piece,10,80,EUR,Ready,
+PIRAC,Guadeloupe,Water treatment Unit AquaForce 2000,,piece,2,16000,EUR,VEOLIA,Propriétaire Véolia
+PIRAC,Martinique,Water treatment Unit AquaForce 2000,,piece,1,16000,EUR,VEOLIA,Propriétaire Véolia
+PIRAC,Guadeloupe,Water treatment Unit - Dessal SDU1000,,piece,1,40400,EUR,AQUASSISTANCE,Propriétaire Aquassistance
+PIRAC,Martinique,,WPUBERK4,piece,1,"13810.96",EUR,International Federation of Red Cross and Red Crescent Societies,2 palettes EUR
+PIRAC,Martinique,,KWATTANKP10,piece,6,"2367.24",EUR,International Federation of Red Cross and Red Crescent Societies,2 palettes EUR
+PIRAC,Martinique,,KWATTANKP05,piece,4,"2045.98",EUR,International Federation of Red Cross and Red Crescent Societies,2 palettes EUR
+PIRAC,Martinique,,KWATRAMP06S,piece,6,"347.76",EUR,International Federation of Red Cross and Red Crescent Societies,1 palettes EUR MIX
+PIRAC,Martinique,,KWATFITT05,piece,2,"2421.89",EUR,International Federation of Red Cross and Red Crescent Societies,2 palettes EUR HORS GABARI
+PIRAC,Martinique,BLADDER FITTINGS KIT CONNECTIONS FOR 10 BLADDERS,,piece,1,0,EUR,International Federation of Red Cross and Red Crescent Societies,1 palettes EUR MIX
+PIRAC,Martinique,,KWATWLAB02,piece,2,"2065.85",EUR,International Federation of Red Cross and Red Crescent Societies,MIX
+PIRAC,Martinique,,KWATPUMEDR02,piece,2,"7042.10",EUR,International Federation of Red Cross and Red Crescent Societies,2 palettes EUR
+PIRAC,Martinique,,KWATPUMCERU2,piece,4,"2276.99",EUR,International Federation of Red Cross and Red Crescent Societies,1 palette US
+PIRAC,Martinique,,KWATTOOLPU01,piece,2,"558.90",EUR,International Federation of Red Cross and Red Crescent Societies,MIX
+PIRAC,Martinique,,KWATNEACK02F,piece,1,"23432.26",EUR,International Federation of Red Cross and Red Crescent Societies,7 Palettes US + 1 EUR + MIX
+PIRAC,Martinique,,KWATNEACK02T,piece,1,"12792.52",EUR,International Federation of Red Cross and Red Crescent Societies,3 Palettes US + 2EUR + MIX
+

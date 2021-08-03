@@ -1972,6 +1972,14 @@ def need_response_line():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def order_item():
+    """
+        RESTful CRUD Controller for Order Items
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def facility():
 
     # Open record in this controller after creation

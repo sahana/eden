@@ -703,6 +703,8 @@ def config(settings):
     settings.req.prompt_match = False
     # Uncomment to disable Recurring Request
     settings.req.recurring = False # HNRC
+    # Use Order Items
+    settings.req.order_items = True
     # Use Workflow
     settings.req.workflow = True
 
@@ -825,11 +827,11 @@ def config(settings):
                 restricted = True,
                 #module_type = 4
             )),
-        ("proc", Storage(
-                name_nice = T("Procurement"),
-                restricted = True,
-                #module_type = None, # Not displayed
-            )),
+        #("proc", Storage(
+        #        name_nice = T("Procurement"),
+        #        restricted = True,
+        #        #module_type = None, # Not displayed
+        #    )),
         #("asset", Storage(
         #        name_nice = T("Assets"),
         #        #description = "Recording and Assigning Assets",
@@ -2752,8 +2754,8 @@ Thank you"""
                 s3.rfooter = DIV(A(ICON("print"),
                                  " ",
                                  T("PDF Report"),
-                                   _href=URL(args=[r.id, "report_pdf_export"]),#, extension="pdf"),
-                                   _class="action-btn",
+                                   _href = URL(args=[r.id, "report_pdf_export"]),#, extension="pdf"),
+                                   _class = "action-btn",
                                    ),
                                  )
 
@@ -2953,25 +2955,20 @@ Thank you"""
 
         s3db = current.s3db
 
+        # Add field methods for total weight and volume
+        from gluon import Field
+        table = s3db.inv_inv_item
+        table.total_weight = Field.Method("total_weight",
+                                          s3db.inv_item_total_weight,
+                                          )
+        table.total_volume = Field.Method("total_volume",
+                                          s3db.inv_item_total_volume,
+                                          )
+
         resource = r.resource
         if resource.tablename == "inv_inv_item" and r.method == "grouped":
             report = r.get_vars.get("report")
-            if report == "weight_and_volume":
-                # Add field methods for total weight and volume
-                from gluon import Field
-                table = s3db.inv_inv_item
-                table.total_weight = Field.Method("total_weight",
-                                                  s3db.inv_item_total_weight,
-                                                  )
-                table.total_volume = Field.Method("total_volume",
-                                                  s3db.inv_item_total_volume,
-                                                  )
-                s3db.configure("inv_inv_item",
-                               extra_fields = ["item_id$weight",
-                                               "item_id$volume",
-                                               ],
-                               )
-            elif report == "movements":
+            if report == "movements":
                 # Inject a date filter for transactions
                 filter_widgets = resource.get_config("filter_widgets")
                 from s3 import S3DateFilter
@@ -3057,12 +3054,31 @@ Thank you"""
 
         direct_stock_edits = settings.get_inv_direct_stock_edits()
 
+        list_fields = [(T("Description"), "item_id"),
+                       (T("Reference"), "item_id$code"),
+                       (T("Donor"), "supply_org_id"),
+                       (T("Stock Location"), "site_id"),
+                       (T("Physical Balance"), "quantity"),
+                       (T("Unit Weight"), "item_id$weight"),
+                       (T("Total Weight"), "total_weight"),
+                       (T("Unit Volume"), "item_id$volume"),
+                       (T("Total Volume"), "total_volume"),
+                       (T("Unit Price"), "pack_value"),
+                       (T("Total Price"), "total_value"),
+                       (T("Comments"), "comments"),
+                       ]
+
         current.s3db.configure("inv_inv_item",
                                create = direct_stock_edits,
                                deletable = direct_stock_edits,
                                editable = direct_stock_edits,
                                listadd = direct_stock_edits,
                                grouped = stock_reports,
+                               # Needed for Field.Methods
+                               extra_fields = ["item_id$weight",
+                                               "item_id$volume",
+                                               ],
+                               list_fields = list_fields,
                                )
 
     settings.customise_inv_inv_item_resource = customise_inv_inv_item_resource
@@ -3411,7 +3427,7 @@ Thank you"""
                                                "website",
                                                ]
 
-                        resource.configure(list_fields=list_fields)
+                        resource.configure(list_fields = list_fields)
 
                         if r.interactive:
                             table.country.label = T("Country")
@@ -3433,7 +3449,7 @@ Thank you"""
                                             "logo",
                                             "comments",
                                             )
-                            resource.configure(crud_form=crud_form)
+                            resource.configure(crud_form = crud_form)
 
             return result
         s3.prep = custom_prep
@@ -4670,14 +4686,14 @@ Thank you"""
     settings.customise_project_location_controller = customise_project_location_controller
 
     # -------------------------------------------------------------------------
-    def customise_proc_order_item_resource(r, tablename):
+    #def customise_proc_order_item_resource(r, tablename):
 
-        s3db = current.s3db
-        table = s3db.proc_order_item
-        f = table.order_id
-        f.readable = f.writable = False
+    #    s3db = current.s3db
+    #    table = s3db.proc_order_item
+    #    f = table.order_id
+    #    f.readable = f.writable = False
 
-    settings.customise_proc_order_item_resource = customise_proc_order_item_resource
+    #settings.customise_proc_order_item_resource = customise_proc_order_item_resource
 
     # -------------------------------------------------------------------------
     def customise_req_approver_resource(r, tablename):

@@ -647,8 +647,7 @@ $.filterOptionsS3({
 
         # List fields
         if track_pack_values:
-            list_fields = ["id",
-                           "site_id",
+            list_fields = ["site_id",
                            "item_id",
                            "item_id$code",
                            "item_id$item_category_id",
@@ -663,8 +662,7 @@ $.filterOptionsS3({
                            "status",
                            ]
         else:
-            list_fields = ["id",
-                           "site_id",
+            list_fields = ["site_id",
                            "item_id",
                            "item_id$code",
                            "item_id$item_category_id",
@@ -734,13 +732,14 @@ $.filterOptionsS3({
 
         if hasattr(row, "inv_inv_item"):
             row = row.inv_inv_item
-        try:
-            v = row.quantity * row.pack_value
-            return v
 
-        except (AttributeError,TypeError):
+        try:
+            value = row.quantity * row.pack_value
+        except (AttributeError, TypeError):
             # not available
             return current.messages["NONE"]
+        else:
+            return round(value, 2)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -876,15 +875,16 @@ $.filterOptionsS3({
 
         table = item.table
         data = item.data
+        data_get = data.get
 
-        site_id = data.get("site_id")
-        item_id = data.get("item_id")
-        pack_id = data.get("item_pack_id")
-        owner_org_id = data.get("owner_org_id")
-        supply_org_id = data.get("supply_org_id")
-        pack_value = data.get("pack_value")
-        currency = data.get("currency")
-        item_bin = data.get("bin")
+        site_id = data_get("site_id")
+        item_id = data_get("item_id")
+        pack_id = data_get("item_pack_id")
+        owner_org_id = data_get("owner_org_id")
+        supply_org_id = data_get("supply_org_id")
+        pack_value = data_get("pack_value")
+        currency = data_get("currency")
+        item_bin = data_get("bin")
 
         # Must match all of these exactly
         query = (table.site_id == site_id) & \
@@ -965,6 +965,7 @@ class S3InventoryTrackingModel(S3Model):
              "inv_send_onaccept",
              "inv_send_process",
              "inv_recv",
+             "inv_recv_id",
              "inv_recv_represent",
              "inv_recv_ref_represent",
              "inv_kitting",
@@ -1013,7 +1014,7 @@ class S3InventoryTrackingModel(S3Model):
         user = auth.user
 
         org_site_represent = self.org_site_represent
-        s3_string_represent = lambda str: str if str else NONE
+        s3_string_represent = lambda v: v if v else NONE
 
         send_ref = S3ReusableField("send_ref",
                                    label = T(settings.get_inv_send_ref_field_name()),
@@ -1025,10 +1026,6 @@ class S3InventoryTrackingModel(S3Model):
                                    represent = self.inv_recv_ref_represent,
                                    writable = False,
                                    )
-        purchase_ref = S3ReusableField("purchase_ref",
-                                       label = T("%(PO)s Number") % {"PO": settings.get_proc_shortname()},
-                                       represent = s3_string_represent,
-                                       )
 
         ship_doc_status = {SHIP_DOC_PENDING  : T("Pending"),
                            SHIP_DOC_COMPLETE : T("Complete"),
@@ -1384,7 +1381,10 @@ class S3InventoryTrackingModel(S3Model):
                                  ),
                      send_ref(),
                      recv_ref(),
-                     purchase_ref(),
+                     Field("purchase_ref",
+                           label = T("%(PO)s Number") % {"PO": settings.get_proc_shortname()},
+                           represent = s3_string_represent,
+                           ),
                      req_ref(readable = show_req_ref,
                              writable = show_req_ref
                              ),
@@ -1462,13 +1462,14 @@ class S3InventoryTrackingModel(S3Model):
             recv_id_label = T("Receive Shipment")
 
         # Reusable Field
+        inv_recv_represent = self.inv_recv_represent
         recv_id = S3ReusableField("recv_id", "reference %s" % tablename,
                                   label = recv_id_label,
                                   ondelete = "RESTRICT",
-                                  represent = self.inv_recv_represent,
+                                  represent = inv_recv_represent,
                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "inv_recv.id",
-                                                          self.inv_recv_represent,
+                                                          inv_recv_represent,
                                                           orderby = "inv_recv.date",
                                                           sort = True,
                                                           )),
@@ -1601,7 +1602,7 @@ class S3InventoryTrackingModel(S3Model):
                                                                    show_link=False),
                                                 instance_types = auth.org_site_types,
                                                 updateable = True,
-                                                sort=True,
+                                                sort = True,
                                                 ),
                            readable = True,
                            writable = True,
@@ -1964,11 +1965,25 @@ $.filterOptionsS3({
         #----------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {"inv_send_controller": self.inv_send_controller,
+        return {"inv_recv_id": recv_id,
+                "inv_send_controller": self.inv_send_controller,
                 "inv_send_onaccept": self.inv_send_onaccept,
                 "inv_send_process": self.inv_send_process,
                 "inv_track_item_deleting": self.inv_track_item_deleting,
                 "inv_track_item_onaccept": self.inv_track_item_onaccept,
+                }
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """
+            Safe defaults for model-global names in case module is disabled
+        """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return {"inv_recv_id": lambda **attr: dummy("recv_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -2105,6 +2120,8 @@ $.filterOptionsS3({
     def inv_send_represent(record_id, row=None, show_link=True):
         """
             Represent a Sent Shipment
+
+            @ToDo: S3Represent
         """
 
         if row:
@@ -2713,6 +2730,8 @@ $.filterOptionsS3({
     def inv_recv_represent(record_id, row=None, show_link=True):
         """
             Represent a Received Shipment
+
+            @ToDo: S3Represent
         """
 
         if row:
@@ -2918,7 +2937,8 @@ $.filterOptionsS3({
                 db = current.db
                 table = db.inv_send
                 row = db(table.send_ref == value).select(table.id,
-                                                         limitby=(0, 1)).first()
+                                                         limitby = (0, 1)
+                                                         ).first()
                 if row:
                     return A(value,
                              _href = URL(c = "inv",
@@ -2947,7 +2967,8 @@ $.filterOptionsS3({
                 db = current.db
                 table = db.inv_recv
                 recv_row = db(table.recv_ref == value).select(table.id,
-                                                              limitby=(0, 1)).first()
+                                                              limitby = (0, 1)
+                                                              ).first()
                 return A(value,
                          _href = URL(c = "inv",
                                      f = "recv",
@@ -3515,13 +3536,12 @@ $.filterOptionsS3({
             track_total = record.quantity
             # Remove the total from this record and place it back in the warehouse
             db(inv_item_table.id == record.send_inv_item_id).update(quantity = inv_item_table.quantity + track_total)
-            db(tracktable.id == record_id).update(
-                        quantity = 0,
-                        comments = "%sQuantity was: %s" % (
-                                        inv_item_table.comments,
-                                        track_total,
-                                        ),
-                        )
+            db(tracktable.id == record_id).update(quantity = 0,
+                                                  comments = "%sQuantity was: %s" % \
+                                                    (inv_item_table.comments,
+                                                     track_total,
+                                                     ),
+                                                  )
         return True
 
     # -------------------------------------------------------------------------

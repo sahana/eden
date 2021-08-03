@@ -48,6 +48,7 @@ __all__ = ("RequestPriorityStatusModel",
            "RequestNeedsResponseModel",
            "RequestNeedsResponseLineModel",
            "RequestNeedsResponseOrganisationModel",
+           "RequestOrderItemModel",
            "RequestProjectModel",
            "RequestTagModel",
            "RequestTaskModel",
@@ -3982,6 +3983,66 @@ class RequestTagModel(S3Model):
         return {}
 
 # =============================================================================
+class RequestOrderItemModel(S3Model):
+    """
+        Simple Item Ordering for Requests
+        - for when Procurement model isn't being used
+    """
+
+    names = ("req_order_item",
+             )
+
+    def model(self):
+
+        T = current.T
+        NONE = current.messages["NONE"]
+
+        # -----------------------------------------------------------------
+        # Request Item Ordering
+        #
+        tablename = "req_order_item"
+        self.define_table(tablename,
+                          self.req_item_id(empty = False,
+                                           readable = False, # Hidden
+                                           writable = False,
+                                           ),
+                          self.req_req_id(empty = False,
+                                          writable = False, # Auto-populated
+                                          ),
+                          self.supply_item_id(empty = False,
+                                              writable = False, # Auto-populated
+                                              ),
+                          Field("purchase_ref",
+                                label = T("%(PO)s Number") % \
+                                    {"PO": current.deployment_settings.get_proc_shortname()},
+                                represent = lambda v: v if v else NONE,
+                                ),
+                          self.inv_recv_id(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       insertable = False,
+                       )
+
+        # CRUD strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            #label_create = T("Create Purchase Item"),
+            title_display = T("Purchase Item Details"),
+            title_list = T("Purchase Items"),
+            title_update = T("Edit Purchase Item"),
+            label_list_button = T("List Purchase Items"),
+            label_delete_button = T("Delete Purchase Item"),
+            #msg_record_created = T("Purchase Item Added"),
+            msg_record_modified = T("Purchase Item Updated"),
+            msg_record_deleted = T("Purchase Item Deleted"),
+            msg_list_empty = T("No Purchase Items"))
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
 class RequestProjectModel(S3Model):
     """
         Link Requests to Projects
@@ -5438,7 +5499,7 @@ def req_rheader(r, check_page=False):
     return rheader
 
 # =============================================================================
-def req_match(rheader=None):
+def req_match(rheader = None):
     """
         Generic controller to display all requests a site could potentially
         fulfill as a tab of that site instance
@@ -5542,7 +5603,7 @@ def req_match(rheader=None):
 
         if settings.get_req_workflow():
             # Only show Approved Requests
-            r.resource.add_filter(FS("workflow_status")== 3)
+            r.resource.add_filter(FS("workflow_status") == 3)
 
         return True
     s3.prep = prep

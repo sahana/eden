@@ -35,10 +35,10 @@ def order():
                               )
 
 # -----------------------------------------------------------------------------
-def order_item():
-    """ RESTful CRUD controller """
+#def order_item():
+#    """ RESTful CRUD controller """
 
-    return s3_rest_controller()
+#    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def plan():

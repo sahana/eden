@@ -484,7 +484,8 @@ class S3PurchaseOrdersModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return {"proc_order_id": order_id,
+                }
 
     # -------------------------------------------------------------------------
     def defaults(self):

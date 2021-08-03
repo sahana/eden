@@ -5983,6 +5983,9 @@ class S3Config(Storage):
         """
         return self.req.get("req_restrict_on_complete", False)
 
+    def get_req_order_item(self):
+        return self.req.get("order_item", False)
+
     def get_req_workflow(self):
         """
             Whether to use Workflow for Requests

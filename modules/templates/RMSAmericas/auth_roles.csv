@@ -563,7 +563,6 @@ national_wh_manager,National Warehouse Manager,National Logistics Manager - mana
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,,,org_organisation_organisation_type,,READ|CREATE|UPDATE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,pr,person_search,,,READ,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,,,pr_person,,READ,,,,,
-national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,proc,order_item,,,READ|CREATE|UPDATE|DELETE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,req,,,,READ|CREATE|UPDATE|DELETE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,,,req_approver,,READ|CREATE|UPDATE|DELETE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,,,req_req,,READ|CREATE|UPDATE|DELETE,,,,,

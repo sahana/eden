@@ -305,11 +305,13 @@
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$warehouse"/></data>
             <!-- Link to Warehouse Organisation org -->
-            <reference field="organisation_id" resource="org_organisation">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$organisation"/>
-                </xsl:attribute>
-            </reference>
+            <xsl:if test="$organisation!=''">
+                <reference field="organisation_id" resource="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$organisation"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
        </resource>
 
     </xsl:template>
@@ -348,9 +350,9 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="SupplyItem">
-        <xsl:variable name="item" select="concat(col[@field='Item Name'],
-                                                 col[@field='Item Code'])"/>
-        <xsl:variable name="model" select="col[@field='Model']/text()"/>
+        <xsl:variable name="ItemCode" select="col[@field='Item Code']/text()"/>
+        <xsl:variable name="ItemName" select="col[@field='Item Name']/text()"/>
+        <xsl:variable name="item" select="concat($ItemName, $ItemCode)"/>
         <xsl:variable name="category" select="col[@field='Category']/text()"/>
         <xsl:variable name="catalog" select="col[@field='Catalog']/text()"/>
         <xsl:variable name="um">
@@ -358,44 +360,71 @@
                 <xsl:with-param name="colhdrs" select="$Units"/>
             </xsl:call-template>
         </xsl:variable>
+        <xsl:variable name="model" select="col[@field='Model']/text()"/>
         <xsl:variable name="pack" select="col[@field='Pack']"/>
         <xsl:variable name="pack_quantity" select="col[@field='Pack Quantity']"/>
         <xsl:variable name="item_tuid" select="concat('supply_item/', $item, '/', $um, '/', $model)"/>
         <xsl:variable name="pack_tuid" select="concat('supply_item_pack/', $item, '/', $um, '/', $model)"/>
+        <xsl:variable name="brand" select="col[@field='Brand']/text()"/>
+        <xsl:variable name="year" select="col[@field='Year']/text()"/>
+        <xsl:variable name="weight" select="col[@field='Weight']/text()"/>
+        <xsl:variable name="length" select="col[@field='Length']/text()"/>
+        <xsl:variable name="width" select="col[@field='Width']/text()"/>
+        <xsl:variable name="height" select="col[@field='Height']/text()"/>
+        <xsl:variable name="volume" select="col[@field='Volume']/text()"/>
+        <xsl:variable name="comments" select="col[@field='Comments']/text()"/>
 
         <resource name="supply_item">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$item_tuid"/>
             </xsl:attribute>
-            <data field="name"><xsl:value-of select="col[@field='Item Name']"/></data>
-            <data field="code"><xsl:value-of select="col[@field='Item Code']"/></data>
+            <xsl:if test="$ItemCode!=''">
+                <data field="code"><xsl:value-of select="$ItemCode"/></data>
+            </xsl:if>
+            <xsl:if test="$ItemName!=''">
+                <data field="name"><xsl:value-of select="$ItemName"/></data>
+            </xsl:if>
             <data field="um"><xsl:value-of select="$um"/></data>
-            <data field="model"><xsl:value-of select="col[@field='Model']"/></data>
-            <data field="year"><xsl:value-of select="col[@field='Year']"/></data>
-            <data field="weight"><xsl:value-of select="col[@field='Weight']"/></data>
-            <data field="length"><xsl:value-of select="col[@field='Length']"/></data>
-            <data field="width"><xsl:value-of select="col[@field='Width']"/></data>
-            <data field="height"><xsl:value-of select="col[@field='Height']"/></data>
-            <data field="volume"><xsl:value-of select="col[@field='Volume']"/></data>
-            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            <xsl:if test="$model!=''">
+                <data field="model"><xsl:value-of select="$model"/></data>
+            </xsl:if>
+            <xsl:if test="$year!=''">
+                <data field="year"><xsl:value-of select="$year"/></data>
+            </xsl:if>
+            <xsl:if test="$weight!=''">
+                <data field="weight"><xsl:value-of select="$weight"/></data>
+            </xsl:if>
+            <xsl:if test="$length!=''">
+                <data field="length"><xsl:value-of select="$length"/></data>
+            </xsl:if>
+            <xsl:if test="$width!=''">
+                <data field="width"><xsl:value-of select="$width"/></data>
+            </xsl:if>
+            <xsl:if test="$height!=''">
+                <data field="height"><xsl:value-of select="$height"/></data>
+            </xsl:if>
+            <xsl:if test="$volume!=''">
+                <data field="volume"><xsl:value-of select="$volume"/></data>
+            </xsl:if>
+            <xsl:if test="$comments!=''">
+                <data field="comments"><xsl:value-of select="$comments"/></data>
+            </xsl:if>
             <!-- Link to Brand -->
-            <reference field="brand_id" resource="supply_brand">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="col[@field='Brand']"/>
-                </xsl:attribute>
-            </reference>
-            <!-- Link to Supply Catalog -->
-            <reference field="catalog_id" resource="supply_catalog">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$catalog"/>
-                </xsl:attribute>
-            </reference>
+            <xsl:if test="$brand!=''">
+                <reference field="brand_id" resource="supply_brand">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$brand"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
             <!-- Link to Supply Item Category -->
-            <reference field="item_category_id" resource="supply_item_category">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$category"/>
-                </xsl:attribute>
-            </reference>
+            <xsl:if test="$category!=''">
+                <reference field="item_category_id" resource="supply_item_category">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$category"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
             <!-- Nest to Supply Item Pack (UM)-->
             <resource name="supply_item_pack">
                 <xsl:attribute name="tuid">
@@ -409,24 +438,34 @@
                     <data field="quantity"><xsl:value-of select="$pack_quantity"/></data>
                 </resource>
             </xsl:if>
-            <!-- Nest to Supply Catalog -->
-	        <resource name="supply_catalog_item">
-	            <xsl:attribute name="tuid">
-	                <xsl:value-of select="$item"/>
-	            </xsl:attribute>
-	            <!-- Link to Supply Catalog -->
-	            <reference field="catalog_id" resource="supply_catalog">
-	                <xsl:attribute name="tuid">
-	                    <xsl:value-of select="$catalog"/>
-	                </xsl:attribute>
-	            </reference>
-	            <!-- Link to Supply Item Category -->
-	            <reference field="item_category_id" resource="supply_item_category">
-	                <xsl:attribute name="tuid">
-	                    <xsl:value-of select="$category"/>
-	                </xsl:attribute>
-	            </reference>
-	        </resource>
+            <!-- Link to Supply Catalog -->
+            <xsl:if test="$catalog!=''">
+                <reference field="catalog_id" resource="supply_catalog">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$catalog"/>
+                    </xsl:attribute>
+                </reference>
+                <!-- Nest to Supply Catalog -->
+                <resource name="supply_catalog_item">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$item"/>
+                    </xsl:attribute>
+                    <!-- Link to Supply Catalog -->
+                    <reference field="catalog_id" resource="supply_catalog">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$catalog"/>
+                        </xsl:attribute>
+                    </reference>
+                    <!-- Link to Supply Item Category -->
+                    <xsl:if test="$category!=''">
+                        <reference field="item_category_id" resource="supply_item_category">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="$category"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:if>
+                </resource>
+            </xsl:if>
         </resource>
 
     </xsl:template>
