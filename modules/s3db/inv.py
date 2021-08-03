@@ -1979,11 +1979,7 @@ $.filterOptionsS3({
             Safe defaults for model-global names in case module is disabled
         """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
-
-        return {"inv_recv_id": lambda **attr: dummy("recv_id"),
+        return {"inv_recv_id": S3ReusableField.dummy("recv_id"),
                 }
 
     # -------------------------------------------------------------------------
