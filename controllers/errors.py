@@ -73,8 +73,9 @@ def index():
     except KeyError:
         pass
     else:
-        # Try to get the format extension of the original request
-        ext = s3base.s3_get_extension_from_url(requested_uri)
+        if requested_uri:
+            # Try to get the format extension of the original request
+            ext = s3base.s3_get_extension_from_url(requested_uri)
 
     # If non-interactive format:
     # - re-raise the same HTTP status, with a JSON message as body

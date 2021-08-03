@@ -1687,17 +1687,19 @@ def s3_get_extension_from_url(url):
     """
 
     ext = None
+    if not url:
+        return ext
 
     from s3compat import urlparse
     try:
         parsed = urlparse.urlparse(url)
-    except ValueError:
+    except (ValueError, AttributeError):
         pass
     else:
         if parsed.query:
             params = parsed.query.split(",")
             for param in params[::-1]:
-                k, v = param.split("=")
+                k, v = param.split("=") if "=" in param else None, None
                 if k == "format":
                     ext = v.lower()
                     break
