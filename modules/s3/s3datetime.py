@@ -232,10 +232,6 @@ class S3DateTime(object):
                 dt = dt.replace(tzinfo=tzinfo)
             else:
                 offset = cls.get_offset_value(cls.get_utc_offset())
-                if offset:
-                    delta = datetime.timedelta(seconds=offset)
-                else:
-                    delta = datetime.timedelta(0)
                 if date_only:
                     # Compute UTC date for 08:00 local time
                     dt = datetime.datetime.combine(dt, datetime.time(8, 0, 0))
@@ -1728,7 +1724,10 @@ def s3_get_tzinfo():
         session = current.session
 
         # 1st choice: use the _timezone parameter from the current form
-        tzname = current.request.post_vars.get("_timezone")
+        try:
+            tzname = current.request.post_vars.get("_timezone")
+        except ValueError:
+            tzname = None
         if tzname:
             session.s3.tzname = tzname
         else:
