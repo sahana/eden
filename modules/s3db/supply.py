@@ -112,7 +112,7 @@ class S3SupplyModel(S3Model):
         float_represent = IS_FLOAT_AMOUNT.represent
         translate = settings.get_L10n_translate_supply_item()
         if translate:
-            translate_represent = lambda v: T(v)
+            translate_represent = T
         else:
             translate_represent = None
 
