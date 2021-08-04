@@ -704,7 +704,7 @@ def config(settings):
     # Uncomment to disable Recurring Request
     settings.req.recurring = False # HNRC
     # Use Order Items
-    settings.req.order_items = True
+    settings.req.order_item = True
     # Use Workflow
     settings.req.workflow = True
 
@@ -5009,11 +5009,11 @@ Thank you"""
                     return False
 
             if r.component_name == "req_item":
+                s3db = current.s3db
                 workflow_status = r.record.workflow_status
                 if workflow_status == 2: # Submitted for Approval
-                    show_site_id = True
+                    show_site_and_po = True
                     # Are we a Logistics Approver?
-                    s3db = current.s3db
                     approvers = s3db.req_approvers(r.record.site_id)
                     person_id = current.auth.s3_logged_in_person()
                     if person_id in approvers and approvers[person_id]["matcher"]:
@@ -5028,17 +5028,36 @@ Thank you"""
                             # Allow User to Match
                             settings.req.prompt_match = True
                 elif workflow_status == 3: # Approved
-                    show_site_id = True
+                    show_site_and_po = True
                 else:
-                    show_site_id = False
+                    show_site_and_po = False
 
-                if show_site_id:
+                if show_site_and_po:
                     # Show in read-only form
                     r.component.table.site_id.readable = True
+
                     # Show in list_fields
+                    oitable = s3db.req_order_item
+                    def req_order_item_represent(record_id):
+                        """
+                            Probably few enough Request Items not to need an S3Represent sub-class
+                        """
+                        if record_id == None:
+                            return T("Not being Purchased")
+                        else:
+                            order_item = current.db(oitable.id == record_id).select(oitable.purchase_ref,
+                                                                                    limitby = (0, 1)
+                                                                                    ).first()
+                            return order_item.purchase_ref or T("Not yet entered")
+
+                    oitable.id.represent = req_order_item_represent
+                    order_label = T("%(PO)s Number") % \
+                                    {"PO": settings.get_proc_shortname()}
+
                     list_fields = ["item_id",
                                    "item_pack_id",
                                    "site_id",
+                                   (order_label, "order_item.id"),
                                    "quantity",
                                    "quantity_transit",
                                    "quantity_fulfil",

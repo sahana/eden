@@ -39,7 +39,7 @@ def is_affiliated():
     else:
         table = auth.settings.table_user
         auth_user = db(table.id == auth.user.id).select(table.organisation_id,
-                                                        limitby=(0, 1),
+                                                        limitby = (0, 1),
                                                         ).first()
         if auth_user and auth_user.organisation_id:
             return True
@@ -940,6 +940,32 @@ def req_item():
     if request.function != "fema":
         s3.filter = (FS("req_id$is_template") == False)
 
+    def order_item(r, **attr):
+        """
+            Create a req_order_item from a req_req_item
+        """
+
+        record = r.record
+        req_id = record.req_id
+
+        s3db.req_order_item.insert(req_item_id = record.id,
+                                   req_id = req_id,
+                                   item_id = record.item_id,
+                                   item_pack_id = record.item_pack_id,
+                                   quantity = record.quantity,
+                                   )
+
+        session.confirmation = T("Item added to your list of Purchases")
+        # Redirect back to the Request's Items tab
+        redirect(URL(c="req", f="req",
+                     args = [req_id, "req_item"]
+                     ))
+
+    s3db.set_method("req", "req_item",
+                    method = "order",
+                    action = order_item
+                    )
+
     def prep(r):
 
         if r.interactive or r.representation == "aadata":
@@ -1016,11 +1042,10 @@ def req_item_packs():
 def req_item_inv_item():
     """
         Shows the inventory items which match a requested item
-        @ToDo: Make this page a component of req_item
     """
 
     req_item_id  = request.args[0]
-    request.args = [] #
+    request.args = []
     ritable = s3db.req_req_item
     req_item = ritable[req_item_id]
     rtable = s3db.req_req
@@ -1031,7 +1056,8 @@ def req_item_inv_item():
     output["title"] = T("Request Stock from Available Warehouse")
     output["req_btn"] = A(T("Return to Request"),
                           _href = URL(c="req", f="req",
-                                      args=[req_item.req_id, "req_item"]),
+                                      args = [req_item.req_id, "req_item"]
+                                      ),
                           _class = "action-btn"
                           )
 
@@ -1087,8 +1113,19 @@ def req_item_inv_item():
             output["items_alt"] = inv_items_alt["items"]
         else:
             output["items_alt"] = T("No Inventories currently have suitable alternative items in stock")
+    else:
+        output["items_alt"] = None
 
-    response.view = "req/req_item_inv_item.html"
+    if settings.get_req_order_item():
+        output["order_btn"] = A(T("Order Item"),
+                                _href = URL(c="req", f="req_item",
+                                            args = [req_item_id, "order"]
+                                            ),
+                                _class = "action-btn"
+                                )
+    else:
+        output["order_btn"] = None
+
     s3.actions = [{"label": s3_str(T("Request From")),
                    "url": URL(c = request.controller,
                               f = "req",
@@ -1101,6 +1138,7 @@ def req_item_inv_item():
                    }
                   ]
 
+    response.view = "req/req_item_inv_item.html"
     return output
 
 # =============================================================================

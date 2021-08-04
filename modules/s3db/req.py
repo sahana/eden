@@ -1628,17 +1628,23 @@ $.filterOptionsS3({
         ritable = s3db.req_req_item
         query = (ritable.req_id == req_id) & \
                 (ritable.deleted == False)
-        request_items = db(query).select(ritable.site_id)
-        request_items = [row.site_id for row in request_items]
+        request_items = db(query).select(ritable.id,
+                                         ritable.site_id,
+                                         )
+        site_ids = [row.site_id for row in request_items]
 
         approver = approvers[person_id]
 
         if approver["matcher"]:
             # This person is responsible for Matching Items to Warehouses
-            if None in request_items:
-                # @ToDo: Check for Purchases
-                current.session.warning = current.T("You need to Match Items in this Request")
-                redirect(URL(args = [req_id, "req_item"]))
+            if None in site_ids:
+                # Check for Purchases
+                unmatched_items = [row.id for row in request_items if row.site_id == None]
+                oitable = s3db.req_order_item
+                orders = db(oitable.req_item_id.belongs(unmatched_items)).select(oitable.id)
+                if len(unmatched_items) != len(orders):
+                    current.session.warning = current.T("You need to Match Items in this Request")
+                    redirect(URL(args = [req_id, "req_item"]))
 
         # Add record to show that we have approved request
         artable.insert(req_id = req_id,
@@ -1668,7 +1674,7 @@ $.filterOptionsS3({
             subject_T = T("Request Approved for Items from your Warehouse")
             message_T = T("A new Request, %(reference)s, has been Approved for shipment from %(site)s by %(date_required)s. Please review at: %(url)s")
 
-            site_ids = set(request_items)
+            site_ids = set(site_ids)
             stable = s3db.org_site
             site_entities = db(stable.site_id.belongs(site_ids)).select(stable.site_id,
                                                                         stable.instance_type,
@@ -2348,6 +2354,10 @@ $.filterOptionsS3({
                        ondelete = self.req_item_ondelete,
                        super_entity = "supply_item_entity",
                        )
+
+        self.add_components(tablename,
+                            req_order_item = "req_item_id",
+                            )
 
         # ---------------------------------------------------------------------
         #
@@ -4173,12 +4183,23 @@ class RequestOrderItemModel(S3Model):
                           self.supply_item_id(empty = False,
                                               writable = False, # Auto-populated
                                               ),
+                          self.supply_item_pack_id(writable = False, # Auto-populated
+                                                   ),
+                          Field("quantity", "double", notnull=True,
+                                default = 0.0,
+                                label = T("Quantity"),
+                                represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                #requires = IS_FLOAT_AMOUNT(minimum=0.0),
+                                writable = False, # Auto-populated
+                                ),
                           Field("purchase_ref",
                                 label = T("%(PO)s Number") % \
                                     {"PO": current.deployment_settings.get_proc_shortname()},
                                 represent = lambda v: v if v else NONE,
                                 ),
-                          self.inv_recv_id(),
+                          self.inv_recv_id(label = T("Received Shipment"),
+                                           ),
                           *s3_meta_fields())
 
         self.configure(tablename,
