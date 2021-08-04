@@ -524,7 +524,7 @@ def req_controller(template = False):
                             # Can't commit if we have no acceptable sites
                             # TODO do not redirect if site is not required,
                             #      e.g. org-only commits of skills
-                            error_msg=T("You do not have permission for any facility to make a commitment.")
+                            error_msg = T("You do not have permission for any facility to make a commitment.")
                             current.session.error = error_msg
                             redirect(r.url(component="", method=""))
                         else:

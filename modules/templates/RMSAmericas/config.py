@@ -4823,6 +4823,7 @@ Thank you"""
 
         from gluon import IS_NOT_EMPTY
 
+        auth = current.auth
         s3db = current.s3db
 
         table = s3db.req_req
@@ -4836,10 +4837,10 @@ Thank you"""
         table.date_required.label = T("Requested Delivery Date")
         table.site_id.label = T("Deliver To")
 
-        LOGS_ADMIN = current.auth.s3_has_roles(("ORG_ADMIN",
-                                                "wh_manager",
-                                                "national_wh_manager",
-                                                ))
+        LOGS_ADMIN = auth.s3_has_roles(("ORG_ADMIN",
+                                        "wh_manager",
+                                        "national_wh_manager",
+                                        ))
         if not LOGS_ADMIN:
             table.requester_id.writable = False
 
@@ -4849,9 +4850,8 @@ Thank you"""
             if MINE:
                 # Filter
                 from s3 import FS
-                r.resource.add_filter(FS("requester_id") == current.auth.s3_logged_in_person())
+                r.resource.add_filter(FS("requester_id") == auth.s3_logged_in_person())
 
-            import json
             from gluon import IS_EMPTY_OR, IS_IN_SET
             from s3 import IS_ONE_OF, S3GroupedOptionsWidget, S3Represent, S3SQLCustomForm, S3SQLInlineComponent
             from s3layouts import S3PopupLink
@@ -4880,44 +4880,8 @@ Thank you"""
                                             },
                                     )
 
-            # Compact JSON encoding
-            SEPARATORS = (",", ":")
-
-            # Filtered components
-            s3db.add_components("req_req",
-                                req_req_tag = ({"name": "transport",
-                                                "joinby": "req_id",
-                                                "filterby": {"tag": "transport"},
-                                                "multiple": False,
-                                                },
-                                                ),
-                                )
-
-            # Individual settings for specific tag components
-            components_get = s3db.resource(tablename).components.get
-
-            transport_opts = {"Air": T("Air"),
-                              "Sea": T("Sea"),
-                              "Road": T("Road"),
-                              "RC Freight": T("RC Freight"),
-                              }
-            transport = components_get("transport")
-            f = transport.table.value
-            f.requires = IS_EMPTY_OR(IS_IN_SET(transport_opts))
-            f.represent = S3Represent(options = transport_opts)
-            f.widget = S3GroupedOptionsWidget(options = transport_opts,
-                                              multiple = False,
-                                              cols = 4,
-                                              sort = False,
-                                              )
-
             crud_fields = [f for f in table.fields if table[f].readable]
             crud_fields.insert(0, "project_req.project_id")
-            insert_index = crud_fields.index("transport_req") + 1
-            crud_fields.insert(insert_index, ("", "transport.value"))
-            s3 = current.response.s3
-            s3.jquery_ready.append('''S3.showHidden('%s',%s,'%s')''' % \
-                ("transport_req", json.dumps(["sub_transport_value"], separators=SEPARATORS), "req_req"))
 
             req_id = r.id
             if req_id:
@@ -4935,6 +4899,60 @@ Thank you"""
                                                                           ],
                                                                 readonly = True,
                                                                 ))
+                if r.method == "read" or \
+                   r.record.workflow_status in (3, 4, 5) or \
+                   not auth.s3_has_permission("update",
+                                              r.table,
+                                              record_id = req_id,
+                                              ):
+                    # Read-only form
+                    if r.record.transport_req:
+                        transport_opts = True
+                    else:
+                        transport_opts = False
+                else:
+                    # Update form
+                    transport_opts = True
+            else:
+                # Create form
+                transport_opts = True
+
+            if transport_opts:
+                # Filtered components
+                s3db.add_components("req_req",
+                                    req_req_tag = ({"name": "transport",
+                                                    "joinby": "req_id",
+                                                    "filterby": {"tag": "transport"},
+                                                    "multiple": False,
+                                                    },
+                                                    ),
+                                    )
+
+                # Individual settings for specific tag components
+                components_get = s3db.resource(tablename).components.get
+
+                transport_opts = {"Air": T("Air"),
+                                  "Sea": T("Sea"),
+                                  "Road": T("Road"),
+                                  "RC Freight": T("RC Freight"),
+                                  }
+                transport = components_get("transport")
+                f = transport.table.value
+                f.requires = IS_EMPTY_OR(IS_IN_SET(transport_opts))
+                f.represent = S3Represent(options = transport_opts)
+                f.widget = S3GroupedOptionsWidget(options = transport_opts,
+                                                  multiple = False,
+                                                  cols = 4,
+                                                  sort = False,
+                                                  )
+                insert_index = crud_fields.index("transport_req") + 1
+                crud_fields.insert(insert_index, ("", "transport.value"))
+
+                import json
+                SEPARATORS = (",", ":")
+                s3 = current.response.s3
+                s3.jquery_ready.append('''S3.showHidden('%s',%s,'%s')''' % \
+                    ("transport_req", json.dumps(["sub_transport_value"], separators=SEPARATORS), "req_req"))
 
             crud_form = S3SQLCustomForm(*crud_fields)
             s3db.configure(tablename,
@@ -4991,9 +5009,9 @@ Thank you"""
                     return False
 
             if r.component_name == "req_item":
-                show_site_id = False
                 workflow_status = r.record.workflow_status
                 if workflow_status == 2: # Submitted for Approval
+                    show_site_id = True
                     # Are we a Logistics Approver?
                     s3db = current.s3db
                     approvers = s3db.req_approvers(r.record.site_id)
@@ -5006,15 +5024,13 @@ Thank you"""
                         approved = current.db(query).select(atable.id,
                                                             limitby = (0, 1)
                                                             )
-                        if approved:
-                            show_site_id = True
-                        else:
+                        if not approved:
                             # Allow User to Match
                             settings.req.prompt_match = True
-                    else:
-                        show_site_id = True
                 elif workflow_status == 3: # Approved
-                   show_site_id = True
+                    show_site_id = True
+                else:
+                    show_site_id = False
 
                 if show_site_id:
                     # Show in read-only form
