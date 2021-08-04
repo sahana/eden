@@ -5244,12 +5244,17 @@ class PrintableShipmentForm(S3Method):
                     TH(T("Date")),
                     )
 
-        approver_rows = []
-        append = approver_rows.append
+        record = r.record
+        requester = record.requester_id
+        approvers = s3db.req_approvers(record.site_id)
+        person_ids = [requester] + list(approvers)
 
-        approvers = s3db.req_approvers(r.record.site_id)
+        names = s3db.pr_PersonRepresent().bulk(person_ids)
 
-        names = s3db.pr_PersonRepresent().bulk(list(approvers))
+        signature_rows = [TR(TH(T("Requester")),
+                             TD(names[requester]),
+                             )]
+        append = signature_rows.append
 
         for approver in approvers:
             append(TR(TH(approvers[approver]["title"]),
@@ -5257,7 +5262,7 @@ class PrintableShipmentForm(S3Method):
                       ))
 
         return TABLE(header,
-                     *approver_rows
+                     *signature_rows
                      )
 
     # -------------------------------------------------------------------------
