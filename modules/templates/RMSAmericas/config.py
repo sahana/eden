@@ -3056,6 +3056,7 @@ Thank you"""
 
         list_fields = [(T("Description"), "item_id"),
                        (T("Reference"), "item_id$code"),
+                       (T("Owner"), "owner_org_id"),
                        (T("Donor"), "supply_org_id"),
                        (T("Stock Location"), "site_id"),
                        (T("Physical Balance"), "quantity"),
@@ -3068,18 +3069,25 @@ Thank you"""
                        (T("Comments"), "comments"),
                        ]
 
-        current.s3db.configure("inv_inv_item",
-                               create = direct_stock_edits,
-                               deletable = direct_stock_edits,
-                               editable = direct_stock_edits,
-                               listadd = direct_stock_edits,
-                               grouped = stock_reports,
-                               # Needed for Field.Methods
-                               extra_fields = ["item_id$weight",
-                                               "item_id$volume",
-                                               ],
-                               list_fields = list_fields,
-                               )
+        from s3 import S3OptionsFilter
+        filter_widgets = resource.get_config("filter_widgets")
+        filter_widgets.insert(2, S3OptionsFilter("item_id",
+                                                 #label=T("Status"),
+                                                 hidden = True,
+                                                 ))
+
+        s3db.configure("inv_inv_item",
+                       create = direct_stock_edits,
+                       deletable = direct_stock_edits,
+                       editable = direct_stock_edits,
+                       listadd = direct_stock_edits,
+                       grouped = stock_reports,
+                       # Needed for Field.Methods
+                       extra_fields = ["item_id$weight",
+                                       "item_id$volume",
+                                       ],
+                       list_fields = list_fields,
+                       )
 
     settings.customise_inv_inv_item_resource = customise_inv_inv_item_resource
 
