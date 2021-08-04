@@ -4991,6 +4991,7 @@ Thank you"""
                     return False
 
             if r.component_name == "req_item":
+                show_site_id = False
                 workflow_status = r.record.workflow_status
                 if workflow_status == 2: # Submitted for Approval
                     # Are we a Logistics Approver?
@@ -5232,17 +5233,31 @@ class PrintableShipmentForm(S3Method):
             @param r: the S3Request
         """
 
-        T = current.T
-        from gluon import TABLE, TH, TR
+        from gluon import TABLE, TD, TH, TR
 
-        return TABLE(TR(TH("&nbsp;"),
-                        TH(T("Name")),
-                        TH(T("Signature")),
-                        TH(T("Date")),
-                        ),
-                     TR(TH(T("Requester"))),
-                     TR(TH(T("Budget Administrator"))),
-                     TR(TH(T("Finance"))),
+        T = current.T
+        s3db = current.s3db
+
+        header = TR(TH("&nbsp;"),
+                    TH(T("Name")),
+                    TH(T("Signature")),
+                    TH(T("Date")),
+                    )
+
+        approver_rows = []
+        append = approver_rows.append
+
+        approvers = s3db.req_approvers(r.record.site_id)
+
+        names = s3db.pr_PersonRepresent().bulk(list(approvers))
+
+        for approver in approvers:
+            append(TR(TH(approvers[approver]["title"]),
+                      TD(names[approver]),
+                      ))
+
+        return TABLE(header,
+                     *approver_rows
                      )
 
     # -------------------------------------------------------------------------

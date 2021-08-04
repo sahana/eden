@@ -1544,8 +1544,8 @@ $.filterOptionsS3({
         ui_language = session_s3.language
         url = "%s%s" % (current.deployment_settings.get_base_public_url(),
                         URL(c="req", f="req",
-                                  args = req_id,
-                                  ))
+                            args = req_id,
+                            ))
         req_ref = record.req_ref
         requester = record.requester_id
         date_required = record.date_required
@@ -1640,6 +1640,7 @@ $.filterOptionsS3({
                        )
 
         T = current.T
+        session = current.session
 
         # Have all Approvers approved the Request?
         if len(approvers) == len(approved) + 1:
@@ -1647,10 +1648,119 @@ $.filterOptionsS3({
             db(rtable.id == req_id).update(workflow_status = 3, # Approved
                                            )
             # Notify the Warehouse Officer(s)
-            #for site_id in request_items:
-            #    # @ToDo
+            session_s3 = session.s3
+            ui_language = session_s3.language
+            url = "%s%s" % (current.deployment_settings.get_base_public_url(),
+                            URL(c="req", f="req",
+                                args = [req_id, "req_item"],
+                                ))
+            req_ref = record.req_ref
+            date_required = record.date_required
+            date_represent = S3DateTime.date_represent # We want Dates not datetime which table.date_required uses
+            send_email = current.msg.send_by_pe_id
+            subject_T = T("Request Approved for Items from your Warehouse")
+            message_T = T("A new Request, %(reference)s, has been Approved for shipment from %(site)s by %(date_required)s. Please review at: %(url)s")
 
-        current.session.confirmation = T("Request Approved")
+            site_ids = set(request_items)
+            stable = s3db.org_site
+            site_entities = db(stable.site_id.belongs(site_ids)).select(stable.site_id,
+                                                                        stable.instance_type,
+                                                                        )
+            # Sort by Instance Type
+            sites_by_type = {}
+            for row in site_entities:
+                instance_type = row.instance_type
+                if instance_type not in sites_by_type:
+                    sites_by_type[instance_type] = []
+                sites_by_type[instance_type].append(row.site_id)
+
+            # Lookup Names & PE IDs
+            sites = {}
+            for instance_type in sites_by_type:
+                itable = s3db.table(instance_type)
+                instances = db(itable.site_id.belongs(sites_by_type[instance_type])).select(itable.name,
+                                                                                            itable.pe_id,
+                                                                                            itable.site_id,
+                                                                                            )
+                for row in instances:
+                    sites[row.site_id] = {"name": row.name,
+                                          "pe_id": row.pe_id,
+                                          }
+            for site_id in sites:
+
+                site = sites[site_id]
+                site_name = site["name"]
+                pe_id = site["pe_id"]
+
+                # Find the relevant wh_manager
+                # NB This is specific to RMSAmericas template currently, which is the only one to use this workflow
+                # @ToDo: Handle case where Role is assigned to default realm and so pe_id field is blank!
+                entities = s3db.pr_get_ancestors(pe_id)
+                entities.append(pe_id)
+
+                gtable = db.auth_group
+                mtable = db.auth_membership
+                utable = db.auth_user
+                ltable = s3db.pr_person_user
+                query = (gtable.uuid == "wh_manager") & \
+                        (gtable.id == mtable.group_id) & \
+                        (mtable.pe_id.belongs(entities)) & \
+                        (mtable.deleted == False) & \
+                        (mtable.user_id == utable.id) & \
+                        (utable.id == ltable.user_id)
+                operators = db(query).select(ltable.pe_id,
+                                             utable.language,
+                                             )
+                if not operators:
+                    # Send to national_wh_manager instead
+                    query = (gtable.uuid == "national_wh_manager") & \
+                            (gtable.id == mtable.group_id) & \
+                            (mtable.pe_id.belongs(entities)) & \
+                            (mtable.deleted == False) & \
+                            (mtable.user_id == utable.id) & \
+                            (utable.id == ltable.user_id)
+                    operators = db(query).select(ltable.pe_id,
+                                                 utable.language,
+                                                 )
+                    if not operators:
+                        # Send to ADMIN instead
+                        query = (gtable.uuid == "ADMIN") & \
+                                (gtable.id == mtable.group_id) & \
+                                (mtable.deleted == False) & \
+                                (mtable.user_id == utable.id) & \
+                                (utable.id == ltable.user_id)
+                        operators = db(query).select(ltable.pe_id,
+                                                     utable.language,
+                                                     )
+
+                # Send Localised Mail(s)
+                languages = {}
+                for row in operators:
+                    language = row["auth_user.language"]
+                    if language not in languages:
+                        languages[language] = []
+                    languages[language].append(row["pr_person_user.pe_id"])
+                for language in languages:
+                    T.force(language)
+                    session_s3.language = language # for date_represent
+                    subject = "%s: %s" % (s3_str(subject_T), req_ref)
+                    message = s3_str(message_T) % {"date_required": date_represent(date_required),
+                                                   "reference": req_ref,
+                                                   "site": site_name,
+                                                   "url": url,
+                                                   }
+                    users = languages[language]
+                    for pe_id in users:
+                        send_email(pe_id,
+                                   subject = subject,
+                                   message = message,
+                                   )
+
+            # Restore language for UI
+            session_s3.language = ui_language
+            T.force(ui_language)
+
+        session.confirmation = T("Request Approved")
         redirect(URL(args = req_id))
 
     # -------------------------------------------------------------------------
@@ -1729,13 +1839,16 @@ $.filterOptionsS3({
         db = current.db
         s3db = current.s3db
         settings = current.deployment_settings
+
         tablename = "req_req"
         table = s3db.req_req
-        form_vars = form.vars
-        form_vars_get = form_vars.get
 
-        record_id = form_vars.id
-        if form_vars_get("is_template"):
+        req_id = form.vars.id
+        record = db(table.id == req_id).select(limitby = (0, 1)
+                                               ).first()
+
+
+        if record.is_template:
             is_template = True
             f = "req_template"
         else:
@@ -1744,55 +1857,45 @@ $.filterOptionsS3({
 
             # If the req_ref is None then set it up
             if settings.get_req_use_req_number():
-                record = db(table.id == record_id).select(table.req_ref,
-                                                          table.site_id,
-                                                          limitby = (0, 1)
-                                                          ).first()
                 if not record.req_ref:
                     code = s3db.supply_get_shipping_code(settings.get_req_shortname(),
                                                          record.site_id,
                                                          table.req_ref,
                                                          )
-                    db(table.id == record_id).update(req_ref = code)
+                    record.update_record(req_ref = code)
 
-        req_status = form_vars_get("req_status")
-        if req_status is not None:
-            # Translate Simple Status
-            req_status = int(req_status)
-            if req_status == REQ_STATUS_PARTIAL:
-                # read current status
-                record = db(table.id == record_id).select(table.commit_status,
-                                                          table.fulfil_status,
-                                                          limitby = (0, 1)
-                                                          ).first()
-                data = {"cancel": False}
-                if record.commit_status != REQ_STATUS_COMPLETE:
-                    data["commit_status"] = REQ_STATUS_PARTIAL
-                if record.fulfil_status == REQ_STATUS_COMPLETE:
-                    data["fulfil_status"] = REQ_STATUS_PARTIAL
-                db(table.id == record_id).update(**data)
-            elif req_status == REQ_STATUS_COMPLETE:
-                db(table.id == record_id).update(fulfil_status = REQ_STATUS_COMPLETE,
-                                                 cancel = False,
-                                                 )
-            elif req_status == REQ_STATUS_CANCEL:
-                db(table.id == record_id).update(cancel = True,
-                                                 workflow_status = 5,
-                                                 )
-            elif req_status == REQ_STATUS_NONE:
-                db(table.id == record_id).update(commit_status = REQ_STATUS_NONE,
-                                                 fulfil_status = REQ_STATUS_NONE,
-                                                 cancel = False,
-                                                 )
+            req_status = record.req_status
+            if req_status is not None:
+                # Translate Simple Status
+                if req_status == REQ_STATUS_PARTIAL:
+                    # read current status
+                    data = {"cancel": False}
+                    if record.commit_status != REQ_STATUS_COMPLETE:
+                        data["commit_status"] = REQ_STATUS_PARTIAL
+                    if record.fulfil_status == REQ_STATUS_COMPLETE:
+                        data["fulfil_status"] = REQ_STATUS_PARTIAL
+                    record.update_record(**data)
+                elif req_status == REQ_STATUS_COMPLETE:
+                    record.update_record(fulfil_status = REQ_STATUS_COMPLETE,
+                                         cancel = False,
+                                         )
+                elif req_status == REQ_STATUS_CANCEL:
+                    record.update_record(cancel = True,
+                                         workflow_status = 5,
+                                         )
+                elif req_status == REQ_STATUS_NONE:
+                    record.update_record(commit_status = REQ_STATUS_NONE,
+                                         fulfil_status = REQ_STATUS_NONE,
+                                         cancel = False,
+                                         )
 
-        cancel = form_vars_get("cancel")
-        if cancel:
-            db(table.id == record_id).update(workflow_status = 5)
+            if record.cancel:
+                record.update_record(workflow_status = 5)
 
         if settings.get_req_requester_to_site():
-            requester_id = form_vars_get("requester_id")
+            requester_id = record.requester_id
             if requester_id:
-                site_id = form_vars_get("site_id")
+                site_id = record.site_id
                 # If the requester has no HR record, then create one
                 hrtable = s3db.hrm_human_resource
                 query = (hrtable.person_id == requester_id)
@@ -1838,6 +1941,21 @@ $.filterOptionsS3({
                                            )
                     s3db.hrm_human_resource_onaccept(Storage(id = hr_id))
 
+        # Update the Realm if the Requesting site changes
+        if form.record:
+            if record.site_id != form.record.site_id:
+                realm_entity = current.auth.get_realm_entity(table, record)
+                record.update_record(realm_entity = realm_entity)
+                req_type = record.type
+                if req_type == 1:
+                    db(s3db.req_req_item.req_id == req_id).update(realm_entity = realm_entity)
+                #elif req_type == 2:
+                #    db(s3db.req_req_asset.req_id == req_id).update(realm_entity = realm_entity)
+                elif req_type == 3:
+                    db(s3db.req_req_skill.req_id == req_id).update(realm_entity = realm_entity)
+                #elif req_type == 4:
+                #    db(s3db.req_req_shelter.req_id == req_id).update(realm_entity = realm_entity)
+
         # Configure the next page to go to based on the request type
         inline_forms = settings.get_req_inline_forms()
         if inline_forms and is_template:
@@ -1850,12 +1968,7 @@ $.filterOptionsS3({
                                              ))
 
         elif not inline_forms:
-            if table.type.default:
-                req_type = table.type.default
-            elif "type" in form_vars:
-                req_type = int(form_vars.type)
-            else:
-                req_type = 1
+            req_type = record.type
             if req_type == 1 and settings.has_module("inv"):
                 s3db.configure(tablename,
                                create_next = URL(c="req", f=f,
@@ -1864,14 +1977,14 @@ $.filterOptionsS3({
                                update_next = URL(c="req", f=f,
                                                  args=["[id]", "req_item"],
                                                  ))
-            elif req_type == 2 and settings.has_module("asset"):
-                s3db.configure(tablename,
-                               create_next = URL(c="req", f=f,
-                                                 args = ["[id]", "req_asset"],
-                                                 ),
-                               update_next = URL(c="req", f=f,
-                                                 args = ["[id]", "req_asset"],
-                                                 ))
+            #elif req_type == 2 and settings.has_module("asset"):
+            #    s3db.configure(tablename,
+            #                   create_next = URL(c="req", f=f,
+            #                                     args = ["[id]", "req_asset"],
+            #                                     ),
+            #                   update_next = URL(c="req", f=f,
+            #                                     args = ["[id]", "req_asset"],
+            #                                     ))
             elif req_type == 3 and settings.has_module("hrm"):
                 s3db.configure(tablename,
                                create_next = URL(c="req", f=f,
@@ -1880,14 +1993,14 @@ $.filterOptionsS3({
                                update_next = URL(c="req", f=f,
                                                  args = ["[id]", "req_skill"],
                                                  ))
-            elif req_type == 4 and settings.has_module("cr"):
-                s3db.configure(tablename,
-                               create_next = URL(c="req", f=f,
-                                                 args = ["[id]", "req_shelter"],
-                                                 ),
-                               update_next = URL(c="req", f=f,
-                                                 args = ["[id]", "req_shelter"],
-                                                 ))
+            #elif req_type == 4 and settings.has_module("cr"):
+            #    s3db.configure(tablename,
+            #                   create_next = URL(c="req", f=f,
+            #                                     args = ["[id]", "req_shelter"],
+            #                                     ),
+            #                   update_next = URL(c="req", f=f,
+            #                                     args = ["[id]", "req_shelter"],
+            #                                     ))
 
     # -------------------------------------------------------------------------
     @staticmethod
