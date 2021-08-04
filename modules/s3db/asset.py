@@ -484,7 +484,7 @@ class S3AssetModel(S3Model):
         # =====================================================================
         # Asset Log
         #
-        asset_log_status_opts = {ASSET_LOG_SET_BASE : T("Base %(facility)s Set") % dict(facility = org_site_label),
+        asset_log_status_opts = {ASSET_LOG_SET_BASE : T("Base %(facility)s Set") % {"facility": org_site_label},
                                  ASSET_LOG_ASSIGN   : T("Assigned"),
                                  ASSET_LOG_RETURN   : T("Returned"),
                                  ASSET_LOG_CHECK    : T("Checked"),
@@ -511,7 +511,7 @@ $.filterOptionsS3({
  'fncRepresent': function(record,PrepResult){
   var InstanceTypeNice=%(instance_type_nice)s
   return record.name+" ("+InstanceTypeNice[record.instance_type]+")"
-}})''' % dict(instance_type_nice = site_types)
+}})''' % {"instance_type_nice": site_types}
         else:
             script = None
 
@@ -629,21 +629,17 @@ $.filterOptionsS3({
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(asset_asset_id = asset_id,
-                    asset_represent = asset_represent,
-                    )
+        return {"asset_asset_id": asset_id,
+                "asset_represent": asset_represent,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
     def defaults():
         """ Return safe defaults for names in case the model is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
-
-        return dict(asset_asset_id = lambda **attr: dummy("asset_id"),
-                    )
+        return {"asset_asset_id": S3ReusableField.dummy("asset_id"),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1135,7 +1131,7 @@ def asset_rheader(r):
                 tabs = [(T("Asset Details"), None, {"native": True}),
                         (T("Vehicle Details"), "vehicle"),
                         (STAFF, "human_resource"),
-                        (T("Assign %(staff)s") % dict(staff=STAFF), "assign"),
+                        (T("Assign %(staff)s") % {"staff": STAFF}, "assign"),
                         (T("Check-In"), "check-in"),
                         (T("Check-Out"), "check-out"),
                         (T("GPS Data"), "presence"),
@@ -1174,7 +1170,7 @@ def asset_rheader(r):
             #    asset_action_btns += [ A( T("Return"),
             #                              _href = URL(f=func,
             #                                          args = [record.id, "log", "create"],
-            #                                          vars = dict(status = ASSET_LOG_RETURN)
+            #                                          vars = {"status": ASSET_LOG_RETURN}
             #                                        ),
             #                              _class = "action-btn"
             #                            )
@@ -1289,7 +1285,7 @@ def asset_controller():
                 uuid = ""
             element.text = uuid
             # Store in case we get called again with same value
-            persons[email] = dict(uuid=uuid)
+            persons[email] = {"uuid": uuid}
 
     s3.import_prep = import_prep
 

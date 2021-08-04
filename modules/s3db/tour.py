@@ -234,8 +234,8 @@ class S3GuidedTourModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(tour_config_id = tour_config_id,
-                    )
+        return {"tour_config_id": tour_config_id,
+                }
 
 # =============================================================================
 def tour_rheader(r):

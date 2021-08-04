@@ -241,11 +241,7 @@ class S3VehicleModel(S3Model):
     def defaults():
         """ Return safe defaults for names in case the model is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
-
-        return {"vehicle_vehicle_id": lambda **attr: dummy("vehicle_id"),
+        return {"vehicle_vehicle_id": S3ReusableField.dummy("vehicle_id"),
                 }
 
 # END =========================================================================

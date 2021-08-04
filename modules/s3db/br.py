@@ -310,11 +310,6 @@ class BRCaseModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        #dummy = S3ReusableField("dummy_id", "integer",
-        #                        readable = False,
-        #                        writable = False,
-        #                        )
-
         return {}
 
     # -------------------------------------------------------------------------
@@ -920,12 +915,7 @@ class BRCaseActivityModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False,
-                                )
-
-        return {"br_case_activity_id": lambda **attr: dummy("case_activity_id"),
+        return {"br_case_activity_id": S3ReusableField.dummy("case_activity_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -1159,11 +1149,6 @@ class BRAppointmentModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        #dummy = S3ReusableField("dummy_id", "integer",
-        #                        readable = False,
-        #                        writable = False,
-        #                        )
-
         return {}
 
 # =============================================================================
@@ -1287,12 +1272,7 @@ class BRNeedsModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False,
-                                )
-
-        return {"br_need_id": lambda **attr: dummy("need_id", **attr),
+        return {"br_need_id": S3ReusableField.dummy("need_id"),
                 }
 
 # =============================================================================
@@ -1755,9 +1735,7 @@ class BRAssistanceModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField.dummy
-
-        return {"br_assistance_type_id": dummy("assistance_type_id"),
+        return {"br_assistance_type_id": S3ReusableField.dummy("assistance_type_id"),
                 }
 
     # -------------------------------------------------------------------------

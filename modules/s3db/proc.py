@@ -493,11 +493,7 @@ class S3PurchaseOrdersModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
-
-        return {"proc_order_id": lambda **attr: dummy("order_id"),
+        return {"proc_order_id": S3ReusableField.dummy("order_id"),
                 }
 
     # -------------------------------------------------------------------------

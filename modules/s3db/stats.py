@@ -555,10 +555,7 @@ class S3StatsDemographicModel(S3Model):
     def defaults(self):
         """ Safe defaults if module is disabled """
 
-        return {"stats_demographic_id": S3ReusableField("parameter_id", "integer",
-                                                        readable = False,
-                                                        writable = False,
-                                                        ),
+        return {"stats_demographic_id": S3ReusableField.dummy("parameter_id"),
                 }
 
     # -------------------------------------------------------------------------

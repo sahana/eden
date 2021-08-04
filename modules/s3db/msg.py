@@ -533,11 +533,7 @@ class S3MessageModel(S3Model):
             Return safe defaults in case the model has been deactivated.
         """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
-
-        return {"msg_message_id": lambda **attr: dummy("message_id"),
+        return {"msg_message_id": S3ReusableField.dummy("message_id"),
                 }
 
 # =============================================================================

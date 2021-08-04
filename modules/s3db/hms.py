@@ -389,7 +389,9 @@ class HospitalDataModel(S3Model):
                                       )
 
         # Components
-        single = dict(joinby="hospital_id", multiple=False)
+        single = {"joinby": "hospital_id",
+                  "multiple": False,
+                  }
         multiple = "hospital_id"
         add_components(tablename,
                        hms_status = single,
@@ -909,18 +911,14 @@ class HospitalDataModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3db
         #
-        return dict(hms_hospital_id = hospital_id,
-                    )
+        return {"hms_hospital_id": hospital_id,
+                }
 
     # -------------------------------------------------------------------------
     def defaults(self):
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
-
-        return dict(hms_hospital_id = lambda **attr: dummy("hospital_id"),
-                    )
+        return {"hms_hospital_id": S3ReusableField.dummy("hospital_id"),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1274,7 +1272,7 @@ def hms_hospital_rheader(r, tabs=None):
                     permit = current.auth.s3_has_permission
                     if permit("update", tablename, r.id) and \
                        permit("create", "hrm_human_resource_site"):
-                        tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
+                        tabs.append((T("Assign %(staff)s") % {"staff": STAFF}, "assign"))
 
                 tabs.extend(s3db.req_tabs(r, match=False))
                 tabs.extend(s3db.inv_tabs(r))

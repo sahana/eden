@@ -579,11 +579,7 @@ class S3DeploymentModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
-
-        return {"deploy_mission_id": lambda **attr: dummy("mission_id"),
+        return {"deploy_mission_id": S3ReusableField.dummy("mission_id"),
                 }
 
     # -------------------------------------------------------------------------

@@ -890,11 +890,7 @@ class CRShelterModel(S3Model):
             Return safe defaults in case the model has been deactivated.
         """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
-
-        return {"cr_shelter_id": lambda **attr: dummy("shelter_id"),
+        return {"cr_shelter_id": S3ReusableField.dummy("shelter_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -1131,12 +1127,7 @@ class CRShelterServiceModel(S3Model):
     #def defaults():
     #    """ Safe defaults for names in case the module is disabled """
 
-    #    dummy = S3ReusableField("dummy_id", "integer",
-    #                            readable = False,
-    #                            writable = False,
-    #                            )
-
-    #    return {"cr_shelter_service_id":  lambda **attr: dummy("service_id"),
+    #    return {"cr_shelter_service_id":  S3ReusableField.dummy("service_id"),
     #            }
 
 # =============================================================================
@@ -1422,12 +1413,7 @@ class CRShelterInspectionModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False,
-                                )
-
-        return {"cr_shelter_flag_id":  lambda **attr: dummy("flag_id"),
+        return {"cr_shelter_flag_id":  S3ReusableField.dummy("flag_id"),
                 }
 
     # -------------------------------------------------------------------------

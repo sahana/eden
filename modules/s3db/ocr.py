@@ -192,16 +192,18 @@ def ocr_buttons(r):
     output = DIV(
 
         A(IMG(_src="/%s/static/img/upload-ocr.png" % a, _alt=UPLOAD),
-          _id="upload-pdf-btn",
-          _href=URL(c=c, f=f, args=urlargs + ["import.pdf"]),
-          _title=UPLOAD,
-          _style=_style),
+          _id = "upload-pdf-btn",
+          _href = URL(c=c, f=f, args=urlargs + ["import.pdf"]),
+          _title = UPLOAD,
+          _style = _style,
+          ),
 
         A(IMG(_src="/%s/static/img/download-ocr.png" % a, _alt=DOWNLOAD),
-          _id="download-pdf-btn",
-          _href=URL(c=c, f=f, args=urlargs + ["create.pdf"]),
-          _title=DOWNLOAD,
-          _style=_style),
+          _id = "download-pdf-btn",
+          _href = URL(c=c, f=f, args=urlargs + ["create.pdf"]),
+          _title = DOWNLOAD,
+          _style = _style,
+          ),
 
         )
     return output

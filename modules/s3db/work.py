@@ -327,12 +327,7 @@ class WorkJobModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False,
-                                )
-
-        return {"work_job_id": lambda **attr: dummy("job_id"),
+        return {"work_job_id": S3ReusableField.dummy("job_id"),
                 }
 
     # -------------------------------------------------------------------------

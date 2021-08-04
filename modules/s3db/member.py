@@ -423,7 +423,8 @@ class S3MembersModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(member_membership_id = membership_id)
+        return {"member_membership_id": membership_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -959,15 +959,12 @@ $.filterOptionsS3({
     def defaults():
         """ Return safe defaults for names in case the model is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False,
-                                )
+        dummy = S3ReusableField.dummy
 
-        return {"supply_item_id": lambda **attr: dummy("item_id"),
-                "supply_item_category_id": lambda **attr: dummy("item_category_id"),
-                "supply_item_entity_id": lambda **attr: dummy("item_entity_id"),
-                "supply_item_pack_id": lambda **attr: dummy("item_pack_id"),
+        return {"supply_item_id": dummy("item_id"),
+                "supply_item_category_id": dummy("item_category_id"),
+                "supply_item_entity_id": dummy("item_entity_id"),
+                "supply_item_pack_id": dummy("item_pack_id"),
                 "supply_item_pack_quantity": lambda tablename: lambda row: 0,
                 }
 
@@ -1642,13 +1639,7 @@ class S3SupplyDistributionModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False,
-                                )
-
-        return {"supply_distribution_id": lambda name="distribution_id", **attr: \
-                                                 dummy(name, **attr),
+        return {"supply_distribution_id": S3ReusableField.dummy("distribution_id"),
                 }
 
     # -------------------------------------------------------------------------

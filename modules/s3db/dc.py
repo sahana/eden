@@ -448,12 +448,7 @@ class DataCollectionTemplateModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False,
-                                )
-
-        return {"dc_template_id": lambda **attr: dummy("template_id"),
+        return {"dc_template_id": S3ReusableField.dummy("template_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -1256,13 +1251,10 @@ class DataCollectionModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False,
-                                )
+        dummy = S3ReusableField.dummy
 
-        return {"dc_response_id": lambda **attr: dummy("response_id"),
-                "dc_target_id": lambda **attr: dummy("target_id"),
+        return {"dc_response_id": dummy("response_id"),
+                "dc_target_id": dummy("target_id"),
                 }
 
     # -------------------------------------------------------------------------

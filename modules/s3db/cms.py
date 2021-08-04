@@ -665,9 +665,9 @@ class CMSContentModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(cms_post_id = post_id,
-                    cms_tag_id = tag_id,
-                    )
+        return {"cms_post_id": post_id,
+                "cms_tag_id": tag_id,
+                }
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -675,13 +675,11 @@ class CMSContentModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
+        dummy = S3ReusableField.dummy
 
-        return dict(cms_post_id = lambda **attr: dummy("post_id"),
-                    cms_tag_id = lambda **attr: dummy("tag_id"),
-                    )
+        return {"cms_post_id": dummy("post_id"),
+                "cms_tag_id": dummy("tag_id"),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -832,7 +830,7 @@ class CMSContentModel(S3Model):
                     data = json.loads(exists.deleted_fk)
                     data["deleted"] = False
                 else:
-                    data = dict(deleted=False)
+                    data = {"deleted": False}
                 db(ltable.id == link_id).update(**data)
         else:
             link_id = ltable.insert(post_id = post_id,
@@ -904,7 +902,7 @@ class CMSContentModel(S3Model):
                     data = json.loads(exists.deleted_fk)
                     data["deleted"] = False
                 else:
-                    data = dict(deleted=False)
+                    data = {"deleted": False}
                 db(ttable.id == tag_id).update(**data)
         else:
             tag_id = ttable.insert(name=tag)
@@ -921,7 +919,7 @@ class CMSContentModel(S3Model):
                     data = json.loads(exists.deleted_fk)
                     data["deleted"] = False
                 else:
-                    data = dict(deleted=False)
+                    data = {"deleted": False}
                 db(ltable.id == exists.id).update(**data)
         else:
             ltable.insert(post_id = post_id,
@@ -1954,7 +1952,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                      "record": record_id}
                                ),
                      _class="s3_modal",
-                     _title=T("Edit %(type)s") % dict(type=series_title),
+                     _title=T("Edit %(type)s") % {"type": series_title},
                      )
     else:
         edit_btn = ""
@@ -2266,7 +2264,7 @@ class cms_Calendar(S3Method):
                     rappend(TD())
             item.append(data_row)
 
-        output = dict(item=item)
+        output = {"item": item}
         output["title"] = T("Weekly Schedule")
 
         # Maintain RHeader for consistency

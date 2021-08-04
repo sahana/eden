@@ -190,8 +190,10 @@ class DiseaseDataModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        return {"disease_disease_id": S3ReusableField.dummy("disease_id"),
-                "disease_symptom_id": S3ReusableField.dummy("symptom_id"),
+        dummy = S3ReusableField.dummy
+
+        return {"disease_disease_id": dummy("disease_id"),
+                "disease_symptom_id": dummy("symptom_id"),
                 }
 
     # -------------------------------------------------------------------------

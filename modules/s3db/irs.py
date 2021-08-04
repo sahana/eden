@@ -517,9 +517,9 @@ class S3IRSModel(S3Model):
             - used by events module
                     & legacy assess & impact modules
         """
-        ireport_id = S3ReusableField("ireport_id", "integer",
-                                     readable=False, writable=False)
-        return {"irs_ireport_id": ireport_id}
+
+        return {"irs_ireport_id": S3ReusableField.dummy("ireport_id"),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod

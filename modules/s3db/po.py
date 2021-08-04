@@ -179,12 +179,7 @@ class OutreachAreaModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False,
-                                )
-
-        return {"po_area_id": lambda **attr: dummy("area_id"),
+        return {"po_area_id": S3ReusableField.dummy("area_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -780,11 +775,7 @@ class OutreachHouseholdModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
-
-        return {"po_household_id": lambda **attr: dummy("household_id"),
+        return {"po_household_id": S3ReusableField.dummy("household_id"),
                 }
 
     # -------------------------------------------------------------------------

@@ -667,15 +667,10 @@ class DVRCaseModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False,
-                                )
+        dummy = S3ReusableField.dummy
 
-        return {"dvr_case_id": lambda name="case_id", **attr: \
-                               dummy(name, **attr),
-                "dvr_case_status_id": lambda name="status_id", **attr: \
-                                      dummy(name, **attr),
+        return {"dvr_case_id": dummy("case_id"),
+                "dvr_case_status_id": dummy("status_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -1078,13 +1073,7 @@ class DVRCaseFlagModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False,
-                                )
-
-        return {"dvr_case_flag_id": lambda name="flag_id", **attr: \
-                                    dummy(name, **attr),
+        return {"dvr_case_flag_id": S3ReusableField.dummy("flag_id"),
                 }
 
 # =============================================================================
@@ -1224,13 +1213,7 @@ class DVRNeedsModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False,
-                                )
-
-        return {"dvr_need_id": lambda name="need_id", **attr: \
-                               dummy(name, **attr),
+        return {"dvr_need_id": S3ReusableField.dummy("need_id"),
                 }
 
 # =============================================================================
@@ -1413,13 +1396,7 @@ class DVRReferralModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False,
-                                )
-
-        return {"dvr_referral_type_id": lambda name="referral_type_id", **attr: \
-                                               dummy(name, **attr),
+        return {"dvr_referral_type_id": S3ReusableField.dummy("referral_type_id"),
                 }
 
 # =============================================================================
@@ -1940,11 +1917,6 @@ class DVRResponseModel(S3Model):
     @staticmethod
     def defaults():
         """ Safe defaults for names in case the module is disabled """
-
-        #dummy = S3ReusableField("dummy_id", "integer",
-                                #readable = False,
-                                #writable = False,
-                                #)
 
         return {}
 
@@ -3358,15 +3330,10 @@ class DVRCaseActivityModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False,
-                                )
+        dummy = S3ReusableField.dummy
 
-        return {"dvr_activity_id": lambda name="activity_id", **attr: \
-                                          dummy(name, **attr),
-                "dvr_case_activity_id": lambda name="case_activity_id", **attr: \
-                                               dummy(name, **attr),
+        return {"dvr_activity_id": dummy("activity_id"),
+                "dvr_case_activity_id": dummy("case_activity_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -3613,11 +3580,6 @@ class DVRCaseEffortModel(S3Model):
     @staticmethod
     def defaults():
         """ Safe defaults for names in case the module is disabled """
-
-        #dummy = S3ReusableField("dummy_id", "integer",
-        #                        readable = False,
-        #                        writable = False,
-        #                        )
 
         return {}
 
@@ -3883,14 +3845,8 @@ class DVRCaseAppointmentModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False,
-                                )
-
         return {"dvr_appointment_status_opts": {},
-                "dvr_appointment_type_id": lambda name="type_id", **attr: \
-                                           dummy(name, **attr),
+                "dvr_appointment_type_id": S3ReusableField.dummy("type_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -4268,13 +4224,7 @@ class DVRHouseholdModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False,
-                                )
-
-        return {"dvr_beneficiary_type_id": lambda name="beneficiary_type_id", **attr: \
-                                           dummy(name, **attr),
+        return {"dvr_beneficiary_type_id": S3ReusableField.dummy("beneficiary_type_id"),
                 }
 
 
@@ -4718,11 +4668,6 @@ class DVRLegalStatusModel(S3Model):
     @staticmethod
     def defaults():
         """ Safe defaults for names in case the module is disabled """
-
-        #dummy = S3ReusableField("dummy_id", "integer",
-        #                        readable = False,
-        #                        writable = False,
-        #                        )
 
         return {}
 
@@ -5918,11 +5863,6 @@ class DVRServiceContactModel(S3Model):
     @staticmethod
     def defaults():
         """ Safe defaults for names in case the module is disabled """
-
-        #dummy = S3ReusableField("dummy_id", "integer",
-        #                        readable = False,
-        #                        writable = False,
-        #                        )
 
         return {}
 

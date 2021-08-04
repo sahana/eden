@@ -814,13 +814,10 @@ class RequestModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
 
-        dummy = S3ReusableField("dummy", "string",
-                                readable = False,
-                                writable = False,
-                                )
+        dummy = S3ReusableField.dummy
 
-        return {"req_req_id": lambda **attr: dummy("req_id"),
-                "req_req_ref": lambda **attr: dummy("req_ref"),
+        return {"req_req_id": dummy("req_id"),
+                "req_req_ref": dummy("req_ref"),
                 }
 
     # -------------------------------------------------------------------------
@@ -2200,11 +2197,7 @@ $.filterOptionsS3({
             Safe defaults for model-global names in case module is disabled
         """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
-
-        return {"req_item_id": lambda **attr: dummy("req_item_id"),
+        return {"req_item_id": S3ReusableField.dummy("req_item_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -2881,12 +2874,7 @@ class RequestNeedsModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
 
-        dummy = S3ReusableField("dummy", "string",
-                                readable = False,
-                                writable = False,
-                                )
-
-        return {"req_need_id": lambda **attr: dummy("need_id"),
+        return {"req_need_id": S3ReusableField.dummy("need_id"),
                 }
 
 # =============================================================================
@@ -3761,12 +3749,7 @@ class RequestNeedsResponseModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
 
-        dummy = S3ReusableField("dummy", "string",
-                                readable = False,
-                                writable = False,
-                                )
-
-        return {"req_need_response_id": lambda **attr: dummy("need_response_id"),
+        return {"req_need_response_id": S3ReusableField.dummy("need_response_id"),
                 }
 
 # =============================================================================

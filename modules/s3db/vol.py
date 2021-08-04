@@ -929,11 +929,7 @@ $.filterOptionsS3({
             deployment_settings.
         """
 
-        return {"vol_cluster_id": S3ReusableField("vol_cluster_id",
-                                                  "integer",
-                                                  readable = False,
-                                                  writable = False,
-                                                  ),
+        return {"vol_cluster_id": S3ReusableField.dummy("vol_cluster_id"),
                 }
 
 # =============================================================================

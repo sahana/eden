@@ -364,10 +364,7 @@ class S3DocumentLibrary(S3Model):
     def defaults(self):
         """ Safe defaults if the module is disabled """
 
-        document_id = S3ReusableField("document_id", "integer",
-                                      readable=False, writable=False)
-
-        return {"doc_document_id": document_id,
+        return {"doc_document_id": S3ReusableField.dummy("document_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -940,11 +937,6 @@ class S3DataCardModel(S3Model):
     @classmethod
     def defaults(cls):
         """ Safe defaults for names in case the module is disabled """
-
-        #dummy = S3ReusableField("dummy_id", "integer",
-        #                        readable = False,
-        #                        writable = False,
-        #                        )
 
         return {"doc_card_types": {},
                 "doc_update_card_type_requires": cls.update_card_type_requires,

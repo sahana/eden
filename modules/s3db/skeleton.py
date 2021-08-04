@@ -121,9 +121,8 @@ class S3SkeletonDataModel(S3Model):
                                                                       "skeleton_example.id")))
 
         # Pass names back to global scope (s3.*)
-        return dict(
-            skeleton_example_id=skeleton_example_id,
-        )
+        return {"skeleton_example_id": skeleton_example_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -136,12 +135,8 @@ class S3SkeletonDataModel(S3Model):
             You don't need this function in case your model is mandatory anyway.
         """
 
-        return dict(
-            skeleton_example_id = S3ReusableField("skeleton_example_id",
-                                                  "integer",
-                                                  readable=False,
-                                                  writable=False),
-        )
+        return {"skeleton_example_id": S3ReusableField.dummy("skeleton_example_id"),
+                }
 
 
     # ---------------------------------------------------------------------

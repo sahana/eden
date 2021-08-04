@@ -785,10 +785,7 @@ $.filterOptionsS3({
             Return safe defaults in case the model has been deactivated.
         """
 
-        return {"cap_alert_id": S3ReusableField("alert_id", "integer",
-                                                readable = False,
-                                                writable = False,
-                                                ),
+        return {"cap_alert_id": S3ReusableField.dummy("alert_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -2728,10 +2725,7 @@ class CAPWarningPriorityModel(S3Model):
         """
 
 
-        return {"cap_warning_priority_id": S3ReusableField("priority", "integer",
-                                                           readable = False,
-                                                           writable = False,
-                                                           ),
+        return {"cap_warning_priority_id": S3ReusableField.dummy("priority"),
                 }
 
     # -------------------------------------------------------------------------

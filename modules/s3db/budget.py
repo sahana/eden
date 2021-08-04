@@ -449,13 +449,11 @@ class S3BudgetModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
+        dummy = S3ReusableField.dummy
 
-        return {"budget_budget_id": lambda **attr: dummy("budget_id"),
-                "budget_location_id": lambda **attr: dummy("location_id"),
-                "budget_staff_id": lambda **attr: dummy("staff_id"),
+        return {"budget_budget_id": dummy("budget_id"),
+                "budget_location_id": dummy("location_id"),
+                "budget_staff_id": dummy("staff_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -818,12 +816,10 @@ class S3BudgetKitModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
+        dummy = S3ReusableField.dummy
 
-        return {"budget_kit_id": lambda **attr: dummy("kit_id"),
-                "budget_item_id": lambda **attr: dummy("item_id"),
+        return {"budget_kit_id": dummy("kit_id"),
+                "budget_item_id": dummy("item_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -1175,11 +1171,7 @@ class S3BudgetBundleModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
-
-        return {"budget_bundle_id": lambda **attr: dummy("bundle_id"),
+        return {"budget_bundle_id": S3ReusableField.dummy("bundle_id"),
                 }
 
     # -------------------------------------------------------------------------
