@@ -1360,9 +1360,7 @@ class S3InventoryTrackingModel(S3Model):
                            #widget = S3SiteAutocompleteWidget(),
                            requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_site.site_id",
-                                                  lambda id, row: \
-                                                  org_site_represent(id, row,
-                                                                     show_link = False),
+                                                  org_site_represent,
                                                   instance_types = site_types,
                                                   not_filterby = "obsolete",
                                                   not_filter_opts = (True,),
