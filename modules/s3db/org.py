@@ -1716,7 +1716,7 @@ class OrgOrganisationGroupModel(S3Model):
                                     requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "org_group_membership_status.id",
                                                           represent,
-                                                          sort=True,
+                                                          sort = True,
                                                           )),
                                     sortby = "name",
                                     )
@@ -1764,7 +1764,13 @@ class OrgOrganisationGroupModel(S3Model):
         mtable = db.org_group_membership
 
         if _id:
-            record = db(mtable.id == _id).select(limitby=(0, 1)).first()
+            record = db(mtable.id == _id).select(mtable.id,
+                                                 mtable.group_id,
+                                                 mtable.organisation_id,
+                                                 mtable.deleted,
+                                                 mtable.deleted_fk,
+                                                 limitby = (0, 1)
+                                                 ).first()
         else:
             return
         if record:
@@ -5750,11 +5756,12 @@ class org_OrganisationRepresent(S3Represent):
             left = []
 
         if self.translate:
+            language = self.language
             ltable = s3db.org_organisation_name
 
             left.append(ltable.on((ltable.organisation_id == otable.id) & \
                                   (ltable.deleted != True) & \
-                                  (ltable.language == self.language)))
+                                  (ltable.language == language)))
 
             fields.extend([ltable.name_l10n, ltable.acronym_l10n])
 
@@ -5762,7 +5769,8 @@ class org_OrganisationRepresent(S3Represent):
                 lptable = ltable.with_alias("org_parent_organisation_name")
                 fields.append(lptable.name_l10n)
 
-                left.append(lptable.on(lptable.organisation_id == btable.organisation_id))
+                left.append(lptable.on((lptable.organisation_id == btable.organisation_id) & \
+                                       (lptable.language == language)))
 
         count = len(values)
         if count == 1:
@@ -5770,7 +5778,10 @@ class org_OrganisationRepresent(S3Represent):
         else:
             query = (otable.id.belongs(values))
 
-        rows = current.db(query).select(left=left, limitby=(0, count), *fields)
+        rows = current.db(query).select(left = left,
+                                        limitby = (0, count),
+                                        *fields
+                                        )
         self.queries += 1
 
         return rows
@@ -7814,7 +7825,7 @@ def org_update_affiliations(table, record):
         ltable = current.s3db.org_organisation_branch
         if not isinstance(record, Row):
             record = current.db(ltable.id == record).select(ltable.ALL,
-                                                            limitby=(0, 1),
+                                                            limitby = (0, 1),
                                                             ).first()
         if not record:
             return
@@ -7825,7 +7836,7 @@ def org_update_affiliations(table, record):
         mtable = current.s3db.org_group_membership
         if not isinstance(record, Row):
             record = current.db(mtable.id == record).select(mtable.ALL,
-                                                            limitby=(0, 1),
+                                                            limitby = (0, 1),
                                                             ).first()
         if not record:
             return
@@ -7842,7 +7853,8 @@ def org_update_affiliations(table, record):
             except (KeyError, AttributeError):
                 return
             record = current.db(query).select(rtable.ALL,
-                                              limitby=(0, 1)).first()
+                                              limitby = (0, 1)
+                                              ).first()
 
         org_site_update_affiliations(record)
 
@@ -7855,7 +7867,7 @@ def org_update_affiliations(table, record):
                                                             ltable.group_id,
                                                             ltable.deleted,
                                                             ltable.deleted_fk,
-                                                            limitby=(0, 1),
+                                                            limitby = (0, 1),
                                                             ).first()
         if not record:
             return

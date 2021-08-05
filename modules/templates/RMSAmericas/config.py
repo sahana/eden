@@ -436,21 +436,6 @@ def config(settings):
     # Set the label for Sites
     settings.org.site_label = "Office/Warehouse/Facility"
 
-    # Enable certain fields just for specific Organisations
-    #settings.org.dependent_fields = \
-    #    {"pr_person.middle_name"                     : (CVTL, VNRC),
-    #     "pr_person_details.mother_name"             : (BRCS, ),
-    #     "pr_person_details.father_name"             : (ARCS, BRCS),
-    #     "pr_person_details.grandfather_name"        : (ARCS, ),
-    #     "pr_person_details.affiliations"            : (PRC, ),
-    #     "pr_person_details.company"                 : (PRC, ),
-    #     "vol_details.availability"                  : (VNRC, ),
-    #     "vol_details.card"                          : (ARCS, ),
-    #     "vol_volunteer_cluster.vol_cluster_type_id"     : (PRC, ),
-    #     "vol_volunteer_cluster.vol_cluster_id"          : (PRC, ),
-    #     "vol_volunteer_cluster.vol_cluster_position_id" : (PRC, ),
-    #     }
-
     # -------------------------------------------------------------------------
     # Human Resource Management
     #
@@ -3338,9 +3323,68 @@ Thank you"""
     settings.customise_org_office_controller = customise_org_office_controller
 
     # -------------------------------------------------------------------------
+    def org_organisation_organisation_type_onaccept(form):
+        """
+            Ensure that all RC Orgs get added to RC org_group
+        """
+
+        # Get the link
+        try:
+            link_id = form.vars.id
+        except AttributeError:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        ttable = s3db.org_organisation_type
+        ltable = s3db.org_organisation_organisation_type
+
+        query = (ltable.id == link_id) & \
+                (ltable.organisation_type_id == ttable.id) & \
+                (ttable.name == RED_CROSS)
+
+        row = db(query).select(ltable.organisation_id,
+                               limitby = (0, 1),
+                               ).first()
+
+        if row:
+            # RC Org: ensure a member of RC org_group
+            gtable = s3db.org_group
+            group = db(gtable.name == "RC").select(gtable.id,
+                                                   limitby = (0, 1)
+                                                   ).first()
+            try:
+                group_id = group.id
+            except:
+                # IFRC prepop not done: Bail
+                return
+            organisation_id = row.organisation_id
+            mtable = s3db.org_group_membership
+            query = (mtable.organisation_id == organisation_id) & \
+                    (mtable.group_id == group_id)
+            member = db(query).select(mtable.id,
+                                      limitby = (0, 1)
+                                      ).first()
+            if not member:
+                membership_id = mtable.insert(group_id = group_id,
+                                              organisation_id = organisation_id,
+                                              )
+                onaccept = s3db.get_config("org_group_membership", "onaccept")
+                if onaccept:
+                    mform = Storage(vars = Storage(id = membership_id))
+                    onaccept(mform)
+
+    # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
 
         s3db = current.s3db
+
+        # Ensure that all RC Orgs get added to RC org_group
+        s3db.add_custom_callback("org_organisation_organisation_type",
+                                 "onaccept",
+                                 org_organisation_organisation_type_onaccept,
+                                 )
 
         if current.auth.override:
             # Prepop
