@@ -1914,10 +1914,18 @@ $.filterOptionsS3({
         table = s3db.req_req
 
         req_id = form.vars.id
-        record = db(table.id == req_id).select(limitby = (0, 1)
+        record = db(table.id == req_id).select(table.id,
+                                               table.type,
+                                               table.site_id,
+                                               table.requester_id,
+                                               table.is_template,
+                                               table.req_ref,
+                                               table.req_status,
+                                               table.commit_status,
+                                               table.fulfil_status,
+                                               table.cancel,
+                                               limitby = (0, 1),
                                                ).first()
-
-
         if record.is_template:
             is_template = True
             f = "req_template"
@@ -1925,42 +1933,45 @@ $.filterOptionsS3({
             is_template = False
             f = "req"
 
-            # If the req_ref is None then set it up
-            if settings.get_req_use_req_number():
-                if not record.req_ref:
-                    code = s3db.supply_get_shipping_code(settings.get_req_shortname(),
-                                                         record.site_id,
-                                                         table.req_ref,
-                                                         )
-                    record.update_record(req_ref = code)
+            update = {}
+
+            if settings.get_req_use_req_number() and not record.req_ref:
+                # Auto-generate req_ref
+                code = s3db.supply_get_shipping_code(settings.get_req_shortname(),
+                                                     record.site_id,
+                                                     table.req_ref,
+                                                     )
+                update["req_ref"] = code
 
             req_status = record.req_status
             if req_status is not None:
+                # Cancel-flag is implied by simple status
+                update["cancel"] = False
+
                 # Translate Simple Status
                 if req_status == REQ_STATUS_PARTIAL:
-                    # read current status
-                    data = {"cancel": False}
                     if record.commit_status != REQ_STATUS_COMPLETE:
-                        data["commit_status"] = REQ_STATUS_PARTIAL
+                        update["commit_status"] = REQ_STATUS_PARTIAL
                     if record.fulfil_status == REQ_STATUS_COMPLETE:
-                        data["fulfil_status"] = REQ_STATUS_PARTIAL
-                    record.update_record(**data)
-                elif req_status == REQ_STATUS_COMPLETE:
-                    record.update_record(fulfil_status = REQ_STATUS_COMPLETE,
-                                         cancel = False,
-                                         )
-                elif req_status == REQ_STATUS_CANCEL:
-                    record.update_record(cancel = True,
-                                         workflow_status = 5,
-                                         )
-                elif req_status == REQ_STATUS_NONE:
-                    record.update_record(commit_status = REQ_STATUS_NONE,
-                                         fulfil_status = REQ_STATUS_NONE,
-                                         cancel = False,
-                                         )
+                        update["fulfil_status"] = REQ_STATUS_PARTIAL
 
-            if record.cancel:
-                record.update_record(workflow_status = 5)
+                elif req_status == REQ_STATUS_COMPLETE:
+                    update["fulfil_status"] = REQ_STATUS_COMPLETE
+
+                elif req_status == REQ_STATUS_CANCEL:
+                    update["cancel"] = True
+                    update["workflow_status"] = 5
+
+                elif req_status == REQ_STATUS_NONE:
+                    update["commit_status"] = REQ_STATUS_NONE
+                    update["fulfil_status"] = REQ_STATUS_NONE
+
+            elif record.cancel:
+                # Using 3-tiered status (commit/transit/fulfill), explicit cancel-flag
+                update["workflow_status"] = 5
+
+            if update:
+                record.update_record(**update)
 
         if settings.get_req_requester_to_site():
             requester_id = record.requester_id
@@ -3956,7 +3967,7 @@ class RequestNeedsResponseLineModel(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
+        #db = current.db
 
         modality_opts = {1: T("Cash"),
                          2: T("In-kind"),
