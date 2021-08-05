@@ -42,6 +42,7 @@ AUTHENTICATED,Authenticated,,,,hrm_training,,,READ,,,,Managed by Reference Cente
 AUTHENTICATED,Authenticated,,,,hrm_training_event,,,READ,,,,Managed by Reference Centers
 AUTHENTICATED,Authenticated,,org,organisation,,,READ,,,,,
 AUTHENTICATED,Authenticated,,,,org_facility_type,,READ,,,,,
+AUTHENTICATED,Authenticated,,,,org_organisation_organisation_type,,READ|CREATE|DELETE,,,,,Needed to create Donors/Suppliers
 AUTHENTICATED,Authenticated,,pr,contact,,,CREATE,READ|UPDATE|DELETE,,,,
 AUTHENTICATED,Authenticated,,pr,contact_emergency,,,CREATE,READ|UPDATE|DELETE,,,,
 AUTHENTICATED,Authenticated,,,,pr_address,,CREATE,READ|UPDATE|DELETE,,,,
@@ -530,7 +531,6 @@ wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",,,req_req,,READ|C
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",org,,,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",,,org_facility,,READ|CREATE|UPDATE,,,,,
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",,,org_organisation,,READ|CREATE|UPDATE,,,,,Suppliers
-wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",,,org_organisation_organisation_type,,READ|CREATE|UPDATE,,,,,
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",vol,,,,NONE,,,,,
 wh_manager_national,Warehouse Manager National Rights,secondary role applied at NS level,inv,facility,,,READ,,,,,
 wh_manager_national,Warehouse Manager National Rights,secondary role applied at NS level,inv,recv,,,READ|CREATE|UPDATE,,,,,Need to see Orgs
@@ -560,7 +560,6 @@ national_wh_manager,National Warehouse Manager,National Logistics Manager - mana
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,,,org_facility,,READ|CREATE|UPDATE|DELETE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,,,org_office,,READ|CREATE|UPDATE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,,,org_organisation,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
-national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,,,org_organisation_organisation_type,,READ|CREATE|UPDATE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,pr,person_search,,,READ,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,,,pr_person,,READ,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,req,,,,READ|CREATE|UPDATE|DELETE,,,,,

@@ -1,37 +1,37 @@
-Organisation,Type,Comments,Country,Address,Phone,Phone2
-Publigráficas,Supplier,Imprenta,HN,"Col. La Pradera, calle principal, 300mts. Delante de Comercial Laeisz.",234-8225,9970-5015
-DICOSA,Supplier,Equipo Médico,HN,"Final de Blvd. Los Proceres, Edif. DICOSA Nº 4002, P.O. BOX 3307.",221-1970 / 74,9487-8179
-"Indufesa, Do it center",Supplier,Ferreteria,HN,Contiguo a Presidencial,2448010 / 2239-7512,
-Dimaco,Supplier,Ferreteria,HN,,221-6004 / 06,
-Ferrecasa,Supplier,Ferreteria,HN,,2324232,
-Larach y Cía,Supplier,Material de oficina,HN,Col. El Prado,2290-1100 / 2237-8171,
-Aerolinea Copa,Supplier,Aerolinea,HN,,"220-5143, 291-0099",
-Ester Tours/ Sandra,Supplier,Touroperadora,HN,,239-3700,
-Aerolinea Taca,Supplier,Aerolinea,HN,,"220-7602, 234-2602",
-DHL Honduras,Supplier,Empresa de envío,HN,,22641300/2245-0164,9519-3226
-Llanticentro Ferco,Supplier,Llantas,HN,Col. Ruben Dario,22357915,
-Utiles de Honduras,Supplier,Material de oficina,HN,,2228-4500/2228-4502,
-Intex,Supplier,Chalecos,HN,Res. Suyapita,2213-0005 / 2239-1768,8993-0580
-DTM Uniformes,Supplier,Serigrafia,HN,Anillo periferico Sur,2246-6441 / 2246-6411,9583-1326
-Banco Ficohsa,Supplier,Banco,HN,Tegucigalpa,2239-6410,9986-2142/9970-7020
-Sistelcom S de R.L.,Supplier,Equipo de radiocomunicacion,HN,Tegucigalpa,2235-4488 / 2235-3494 / 2550-6392 / 2550-2509 / 2550-1644,
-ENERCONS S de RL,Supplier,Combustible,HN,Tegucigalpa,2222-4353,9451-4211
-Café Cibreo,Supplier,Hotel,HN,Tegucigalpa,2220-5323 / 2237-2656,9941-9656
-Corporación Flores,Supplier,"Repuestos, accesorios y taller",HN,Tegucigalpa,2216-4000,
-Toyoservicios,Supplier,Taller,HN,San Pedro Sula,,9890-4393
-COPECO,Supplier,Socio DIPECHO,HN,Tegucigalpa,2290-4800 / 01 / 12,9954-5899 / 9480-7024
-Hotel Villas del Sol,Supplier,,HN,,2665-4938,
-PANACAM,Supplier,,HN,,2608-5506,
-COSEM,Supplier,,HN,,2235-2150 / 2239-3866,
-Ingeniería Gerencial,Supplier,Equipo ingeniería ,HN,"Aldea el Guayabal
+Organisation,Type,Parent,Comments,Country,Address,Phone,Phone2
+Publigráficas,Supplier,Honduran Red Cross,Imprenta,HN,"Col. La Pradera, calle principal, 300mts. Delante de Comercial Laeisz.",234-8225,9970-5015
+DICOSA,Supplier,Honduran Red Cross,Equipo Médico,HN,"Final de Blvd. Los Proceres, Edif. DICOSA Nº 4002, P.O. BOX 3307.",221-1970 / 74,9487-8179
+"Indufesa, Do it center",Supplier,Honduran Red Cross,Ferreteria,HN,Contiguo a Presidencial,2448010 / 2239-7512,
+Dimaco,Supplier,Honduran Red Cross,Ferreteria,HN,,221-6004 / 06,
+Ferrecasa,Supplier,Honduran Red Cross,Ferreteria,HN,,2324232,
+Larach y Cía,Supplier,Honduran Red Cross,Material de oficina,HN,Col. El Prado,2290-1100 / 2237-8171,
+Aerolinea Copa,Supplier,Honduran Red Cross,Aerolinea,HN,,"220-5143, 291-0099",
+Ester Tours/ Sandra,Supplier,Honduran Red Cross,Touroperadora,HN,,239-3700,
+Aerolinea Taca,Supplier,Honduran Red Cross,Aerolinea,HN,,"220-7602, 234-2602",
+DHL Honduras,Supplier,Honduran Red Cross,Empresa de envío,HN,,22641300/2245-0164,9519-3226
+Llanticentro Ferco,Supplier,Honduran Red Cross,Llantas,HN,Col. Ruben Dario,22357915,
+Utiles de Honduras,Supplier,Honduran Red Cross,Material de oficina,HN,,2228-4500/2228-4502,
+Intex,Supplier,Honduran Red Cross,Chalecos,HN,Res. Suyapita,2213-0005 / 2239-1768,8993-0580
+DTM Uniformes,Supplier,Honduran Red Cross,Serigrafia,HN,Anillo periferico Sur,2246-6441 / 2246-6411,9583-1326
+Banco Ficohsa,Supplier,Honduran Red Cross,Banco,HN,Tegucigalpa,2239-6410,9986-2142/9970-7020
+Sistelcom S de R.L.,Supplier,Honduran Red Cross,Equipo de radiocomunicacion,HN,Tegucigalpa,2235-4488 / 2235-3494 / 2550-6392 / 2550-2509 / 2550-1644,
+ENERCONS S de RL,Supplier,Honduran Red Cross,Combustible,HN,Tegucigalpa,2222-4353,9451-4211
+Café Cibreo,Supplier,Honduran Red Cross,Hotel,HN,Tegucigalpa,2220-5323 / 2237-2656,9941-9656
+Corporación Flores,Supplier,Honduran Red Cross,"Repuestos, accesorios y taller",HN,Tegucigalpa,2216-4000,
+Toyoservicios,Supplier,Honduran Red Cross,Taller,HN,San Pedro Sula,,9890-4393
+COPECO,Supplier,Honduran Red Cross,Socio DIPECHO,HN,Tegucigalpa,2290-4800 / 01 / 12,9954-5899 / 9480-7024
+Hotel Villas del Sol,Supplier,Honduran Red Cross,,HN,,2665-4938,
+PANACAM,Supplier,Honduran Red Cross,,HN,,2608-5506,
+COSEM,Supplier,Honduran Red Cross,,HN,,2235-2150 / 2239-3866,
+Ingeniería Gerencial,Supplier,Honduran Red Cross,Equipo ingeniería ,HN,"Aldea el Guayabal
 Carretera al batallon
 Atras escuela La EstanciaAldea el Guayabal
 Carretera al batallon
 Atras escuela La Estancia",2291-0250,
-Industrias panavisión,Supplier,Mobiliario y Equipo Oficina,HN,Tegucigalpa,2239-3066,9995-9955
-Sondel S.A.,Supplier,Equipo de protección y Rescate,HN,San Pedro SUla,2544-0446,
-DIMESA,Supplier,Equipo Médico,HN,Tegucigalpa,2236-8640,
-Isela Hernandez,Supplier,,HN,,9993-0372,
-Droguería Sandoval,Supplier,"Drogueria, farmaceutico",HN,Tegucigalpa,2213-5751,
-Droguería Corinfar,Supplier,"Drogueria, farmaceutico",HN,Tegucigalpa,2229-9012,
-Drogueria Farsiman,Supplier,"Drogueria, farmaceutico",HN,Tegucigalpa,2234-6981,
+Industrias panavisión,Supplier,Honduran Red Cross,Mobiliario y Equipo Oficina,HN,Tegucigalpa,2239-3066,9995-9955
+Sondel S.A.,Supplier,Honduran Red Cross,Equipo de protección y Rescate,HN,San Pedro SUla,2544-0446,
+DIMESA,Supplier,Honduran Red Cross,Equipo Médico,HN,Tegucigalpa,2236-8640,
+Isela Hernandez,Supplier,Honduran Red Cross,,HN,,9993-0372,
+Droguería Sandoval,Supplier,Honduran Red Cross,"Drogueria, farmaceutico",HN,Tegucigalpa,2213-5751,
+Droguería Corinfar,Supplier,Honduran Red Cross,"Drogueria, farmaceutico",HN,Tegucigalpa,2229-9012,
+Drogueria Farsiman,Supplier,Honduran Red Cross,"Drogueria, farmaceutico",HN,Tegucigalpa,2234-6981,

@@ -2907,10 +2907,10 @@ class PRGroupModel(S3Model):
                                  "person_id",
                                  "group_head",
                                  ],
-                  onvalidation = self.group_membership_onvalidation,
-                  onaccept = self.group_membership_onaccept,
-                  ondelete = self.group_membership_onaccept,
-                  realm_entity = self.group_membership_realm_entity,
+                  onvalidation = self.pr_group_membership_onvalidation,
+                  onaccept = self.pr_group_membership_onaccept,
+                  ondelete = self.pr_group_membership_onaccept,
+                  realm_entity = self.pr_group_membership_realm_entity,
                   )
 
         # ---------------------------------------------------------------------
@@ -2923,7 +2923,7 @@ class PRGroupModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def group_membership_onvalidation(form):
+    def pr_group_membership_onvalidation(form):
         """
             Verify that a person isn't added to a group more than once
 
@@ -3017,7 +3017,7 @@ class PRGroupModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def group_membership_onaccept(form):
+    def pr_group_membership_onaccept(form):
         """
             Remove any duplicate memberships and update affiliations
 
@@ -3197,20 +3197,17 @@ class PRGroupModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def group_membership_realm_entity(table, row):
+    def pr_group_membership_realm_entity(table, row):
         """
             Set the realm entity of Group Membership records to the same as
             that of the person
         """
 
-        db = current.db
-        s3db = current.s3db
-
         # Find the Group
-        gtable = s3db.pr_group
-        group = db(gtable.id == row.group_id).select(gtable.realm_entity,
-                                                     limitby = (0, 1),
-                                                     ).first()
+        gtable = current.s3db.pr_group
+        group = current.db(gtable.id == row.group_id).select(gtable.realm_entity,
+                                                             limitby = (0, 1),
+                                                             ).first()
         try:
             return group.realm_entity
         except AttributeError:

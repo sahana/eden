@@ -431,9 +431,10 @@ class OrgOrganisationModel(S3Model):
                            label = T("Logo"),
                            length = current.MAX_FILENAME_LENGTH,
                            represent = self.doc_image_represent,
-                           requires = [IS_EMPTY_OR(IS_IMAGE(maxsize=(400, 400),
-                                                            error_message=T("Upload an image file (png or jpeg), max. 400x400 pixels!"))),
-                                       IS_EMPTY_OR(IS_UPLOAD_FILENAME())],
+                           requires = [IS_EMPTY_OR(IS_IMAGE(maxsize = (400, 400),
+                                                            error_message = T("Upload an image file (png or jpeg), max. 400x400 pixels!"))),
+                                       IS_EMPTY_OR(IS_UPLOAD_FILENAME()),
+                                       ],
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Logo"),
                                                            T("Logo of the organization. This should be a png or jpeg file and it should be no larger than 400x400"))),
@@ -652,6 +653,7 @@ class OrgOrganisationModel(S3Model):
                                     "organisation_id")],
                   report_options = report_options,
                   super_entity = "pr_pentity",
+                  realm_components = ("organisation_organisation_type",),
                   )
 
         # Custom Method for S3OrganisationAutocompleteWidget
@@ -962,7 +964,7 @@ class OrgOrganisationModel(S3Model):
         db = current.db
         table = db.org_organisation
         deleted_row = db(table.id == row.id).select(table.logo,
-                                                    limitby=(0, 1)
+                                                    limitby = (0, 1)
                                                     ).first()
         if deleted_row and deleted_row.logo:
             current.s3db.pr_image_delete_all(deleted_row.logo)
@@ -1046,17 +1048,19 @@ class OrgOrganisationModel(S3Model):
             # These default mappings can be overridden per-deployment
             if org_type_default == "Donor":
                 row = db(table.name == "Bilateral").select(table.id,
-                                                           cache=current.s3db.cache,
-                                                           limitby=(0, 1)).first()
+                                                           cache = current.s3db.cache,
+                                                           limitby = (0, 1)
+                                                           ).first()
             elif org_type_default == "Partner":
                 row = db(table.name == "NGO").select(table.id,
-                                                     cache=current.s3db.cache,
-                                                     limitby=(0, 1)).first()
+                                                     cache = current.s3db.cache,
+                                                     limitby = (0, 1)
+                                                     ).first()
             elif org_type_default in ("Host National Society",
                                       "Partner National Society"):
                 row = db(table.name == "Red Cross / Red Crescent").select(table.id,
-                                                                          cache=current.s3db.cache,
-                                                                          limitby=(0, 1)
+                                                                          cache = current.s3db.cache,
+                                                                          limitby = (0, 1)
                                                                           ).first()
             if row:
                 # Note this sets only the default, so won't override existing or explicit values
@@ -2021,10 +2025,99 @@ class OrgOrganisationOrganisationModel(S3Model):
                                                             "parent_id",
                                                             ),
                                                  ),
+                       onaccept = self.org_organisation_organisation_onaccept,
+                       delete = self.org_organisation_organisation_ondelete,
+                       realm_entity = self.org_organisation_organisation_realm_entity,
                        )
 
         # Pass names back to global scope (s3.*)
         return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_organisation_organisation_realm_entity(table, row):
+        """
+            Set the realm entity of Organisation<>Organisation records to the same as
+            that of the parent
+        """
+
+        # Find the Parent
+        s3db = current.s3db
+        otable = s3db.org_organisation
+        ltable = s3db.org_organisation_organisation
+        query = (ltable.id == row.id) & \
+                (ltable.parent_id == otable.id)
+        parent = current.db(query).select(otable.realm_entity,
+                                          limitby = (0, 1),
+                                          ).first()
+        try:
+            return parent.realm_entity
+        except AttributeError:
+            # => Set to default of None
+            return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_organisation_organisation_onaccept(form):
+        """
+            Update the realm entity of the organisation after changing the
+            organisation link (otherwise link-dependent realm rules won't
+            ever take effect since the org_organisation record is written
+            before the org_organisation_organisation)
+
+            @param form: the Form
+        """
+
+        # Get the link
+        try:
+            record_id = form.vars.id
+        except AttributeError:
+            return
+        table = current.s3db.org_organisation_organisation
+        row = current.db(table.id == record_id).select(table.organisation_id,
+                                                       limitby = (0, 1),
+                                                       ).first()
+
+        if row:
+            # Update the realm entity
+            current.auth.set_realm_entity("org_organisation",
+                                          row.organisation_id,
+                                          force_update = True,
+                                          )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_organisation_organisation_ondelete(row):
+        """
+            Update the realm entity of the organisation after removing an
+            organisation link (otherwise link-dependent realm rules won't
+            take effect)
+
+            @param form: the Row
+        """
+
+        # Get the link
+        try:
+            record_id = row.id
+        except AttributeError:
+            return
+        table = current.s3db.org_organisation_organisation
+        row = current.db(table.id == record_id).select(table.deleted_fk,
+                                                       limitby = (0, 1),
+                                                       ).first()
+        if row and row.deleted_fk:
+            # Find the organisation ID
+            try:
+                deleted_fk = json.loads(row.deleted_fk)
+            except ValueError:
+                return
+            organisation_id = deleted_fk.get("organisation_id")
+
+            # Update the realm entity
+            current.auth.set_realm_entity("org_organisation",
+                                          organisation_id,
+                                          force_update = True,
+                                          )
 
 # =============================================================================
 class OrgOrganisationResourceModel(S3Model):
