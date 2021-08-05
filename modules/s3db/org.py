@@ -1997,7 +1997,10 @@ class OrgOrganisationOrganisationModel(S3Model):
         To report on the full hierarchy of branches, can use the root_organisation field
     """
 
-    names = ("org_organisation_organisation",)
+    names = ("org_organisation_organisation",
+             "org_organisation_organisation_onaccept",
+             "org_organisation_organisation_ondelete",
+             )
 
     def model(self):
 
@@ -2025,13 +2028,17 @@ class OrgOrganisationOrganisationModel(S3Model):
                                                             "parent_id",
                                                             ),
                                                  ),
-                       onaccept = self.org_organisation_organisation_onaccept,
-                       delete = self.org_organisation_organisation_ondelete,
+                       # Leave this templates which need this
+                       # - RMSAmericas
+                       #onaccept = self.org_organisation_organisation_onaccept,
+                       #ondelete = self.org_organisation_organisation_ondelete,
                        realm_entity = self.org_organisation_organisation_realm_entity,
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return {"org_organisation_organisation_onaccept": self.org_organisation_organisation_onaccept,
+                "org_organisation_organisation_ondelete": self.org_organisation_organisation_ondelete,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -3338,6 +3338,21 @@ Thank you"""
     settings.customise_org_office_controller = customise_org_office_controller
 
     # -------------------------------------------------------------------------
+    def customise_org_organisation_resource(r, tablename):
+
+        s3db = current.s3db
+
+        if current.auth.override:
+            # Prepop
+            # - ensure that realms get set properly
+            s3db.configure("org_organisation_organisation",
+                           onaccept = s3db.org_organisation_organisation_onaccept,
+                           ondelete = s3db.org_organisation_organisation_ondelete,
+                           )
+
+    settings.customise_org_organisation_resource = customise_org_organisation_resource
+
+    # -------------------------------------------------------------------------
     def customise_org_organisation_controller(**attr):
 
         s3 = current.response.s3
