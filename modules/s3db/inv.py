@@ -1073,7 +1073,7 @@ class S3InventoryTrackingModel(S3Model):
                            readable = not type_default,
                            writable = not type_default,
                            ),
-                     # This is a reference, not a super-link, so we can override
+                     # This is a reference, not a super_link, so we can override
                      Field("to_site_id", self.org_site,
                            label = T("To %(site)s") % {"site": SITE_LABEL},
                            ondelete = "SET NULL",
@@ -1332,13 +1332,13 @@ class S3InventoryTrackingModel(S3Model):
                      # This is a component, so needs to be a super_link
                      # - can't override field name, ondelete or requires
                      super_link("site_id", "org_site",
+                                default = user.site_id if is_logged_in() else None,
                                 empty = False,
                                 label = T("%(site)s (Recipient)") % {"site": SITE_LABEL},
                                 ondelete = "SET NULL",
-                                instance_types = auth.org_site_types,
+                                instance_types = site_types,
                                 not_filterby = "obsolete",
                                 not_filter_opts = (True,),
-                                default = user.site_id if is_logged_in() else None,
                                 readable = True,
                                 writable = True,
                                 represent = org_site_represent,
@@ -1353,7 +1353,7 @@ class S3InventoryTrackingModel(S3Model):
                            ),
                      organisation_id(label = T("Organization/Supplier"), # From Organization/Supplier
                                      ),
-                     # This is a reference, not a super-link, so we can override
+                     # This is a reference, not a super_link, so we can override
                      Field("from_site_id", "reference org_site",
                            label = T("From %(site)s") % {"site": SITE_LABEL},
                            ondelete = "SET NULL",
@@ -1363,6 +1363,7 @@ class S3InventoryTrackingModel(S3Model):
                                                   lambda id, row: \
                                                   org_site_represent(id, row,
                                                                      show_link = False),
+                                                  instance_types = site_types,
                                                   not_filterby = "obsolete",
                                                   not_filter_opts = (True,),
                                                   sort = True,
@@ -1592,35 +1593,28 @@ class S3InventoryTrackingModel(S3Model):
         #
         tablename = "inv_kitting"
         define_table(tablename,
-                     Field("site_id", "reference org_site",
-                           default = user.site_id if is_logged_in() else None,
-                           label = T("By %(site)s") % {"site": SITE_LABEL},
-                           represent = org_site_represent,
-                           requires = IS_ONE_OF(db, "org_site.site_id",
-                                                lambda id, row: \
-                                                org_site_represent(id, row,
-                                                                   show_link=False),
-                                                instance_types = auth.org_site_types,
-                                                updateable = True,
-                                                sort = True,
-                                                ),
-                           readable = True,
-                           writable = True,
-                           widget = S3SiteAutocompleteWidget(),
-                           comment = S3PopupLink(c = "inv",
-                                                 f = "warehouse",
-                                                 label = T("Create Warehouse"),
-                                                 title = T("Warehouse"),
-                                                 tooltip = T("Type the name of an existing site OR Click 'Create Warehouse' to add a new warehouse."),
-                                                 vars = {"child": "site_id"},
-                                                 ),
-                           ),
+                     # This is a component, so needs to be a super_link
+                     # - can't override field name, ondelete or requires
+                     super_link("site_id", "org_site",
+                                default = user.site_id if is_logged_in() else None,
+                                empty = False,
+                                label = T("By %(site)s") % {"site": SITE_LABEL},
+                                instance_types = site_types,
+                                not_filterby = "obsolete",
+                                not_filter_opts = (True,),
+                                readable = True,
+                                writable = True,
+                                represent = org_site_represent,
+                                updateable = True,
+                                #widget = S3SiteAutocompleteWidget(),
+                                ),
                      item_id(label = T("Kit"),
                              requires = IS_ONE_OF(db, "supply_item.id",
                                                   self.supply_item_represent,
                                                   filterby="kit",
-                                                  filter_opts=(True,),
-                                                  sort=True),
+                                                  filter_opts = (True,),
+                                                  sort = True
+                                                  ),
                              widget = S3AutocompleteWidget("supply", "item",
                                                            filter = "item.kit=1"),
                              # Needs better workflow as no way to add the Kit Items
@@ -1808,7 +1802,7 @@ $.filterOptionsS3({
                            represent = s3_string_represent,
                            requires = IS_LENGTH(16),
                            ),
-                     inv_item_id(name="recv_inv_item_id",
+                     inv_item_id("recv_inv_item_id",
                                  label = T("Receiving Inventory"),
                                  ondelete = "RESTRICT",
                                  required = False,
@@ -4522,6 +4516,7 @@ class S3InventoryAdjustModel(S3Model):
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Adjustments
@@ -4535,28 +4530,28 @@ class S3InventoryAdjustModel(S3Model):
 
         tablename = "inv_adj"
         define_table(tablename,
-                     self.super_link("doc_id", "doc_entity"),
+                     super_link("doc_id", "doc_entity"),
                      self.pr_person_id(name = "adjuster_id",
                                        label = T("Actioning officer"),
                                        ondelete = "RESTRICT",
                                        default = auth.s3_logged_in_person(),
                                        comment = self.pr_person_comment(child="adjuster_id")
                                        ),
-                     # This is a reference, not a super-link, so we can override
-                     Field("site_id", self.org_site,
-                           label = T(current.deployment_settings.get_inv_facility_label()),
-                           ondelete = "SET NULL",
-                           default = auth.user.site_id if auth.is_logged_in() else None,
-                           requires = IS_ONE_OF(db, "org_site.site_id",
-                                                lambda id, row: \
-                                                org_site_represent(id, row,
-                                                                   show_link=False),
-                                                instance_types = auth.org_site_types,
-                                                updateable = True,
-                                                sort = True,
-                                                ),
-                           represent = org_site_represent,
-                           ),
+                     # This is a component, so needs to be a super_link
+                     # - can't override field name, ondelete or requires
+                     super_link("site_id", "org_site",
+                                default = auth.user.site_id if auth.is_logged_in() else None,
+                                empty = False,
+                                instance_types = auth.org_site_types,
+                                label = T(current.deployment_settings.get_inv_facility_label()),
+                                not_filterby = "obsolete",
+                                not_filter_opts = (True,),
+                                readable = True,
+                                writable = True,
+                                represent = org_site_represent,
+                                updateable = True,
+                                #widget = S3SiteAutocompleteWidget(),
+                                ),
                      s3_date("adjustment_date",
                              default = "now",
                              writable = False
@@ -4582,7 +4577,7 @@ class S3InventoryAdjustModel(S3Model):
                        super_entity = "doc_entity",
                        onaccept = self.inv_adj_onaccept,
                        create_next = URL(args = ["[id]", "adj_item"]),
-                      )
+                       )
 
         # Components
         self.add_components(tablename,

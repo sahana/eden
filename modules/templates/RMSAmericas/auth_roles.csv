@@ -520,6 +520,7 @@ project_reader,Project Reader,Can Read the Projects for an NS,,,vol_details,,REA
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",inv,,,,READ|CREATE|UPDATE|DELETE,,,,,
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",inv,facility,,,READ|CREATE|UPDATE,,,,,
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",inv,inv_item,,,READ|CREATE|UPDATE|DELETE,,,,,
+wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",inv,kitting,,,READ|CREATE|UPDATE|DELETE,,,,,
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",inv,supplier,,,READ|CREATE|UPDATE,,,,,
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",inv,warehouse,,,READ|CREATE|UPDATE,,,,,
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",,,inv_adj,,READ|CREATE|UPDATE,,,,,
@@ -547,6 +548,7 @@ wh_manager_national,Warehouse Manager National Rights,secondary role applied at 
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,inv,,,,READ|CREATE|UPDATE|DELETE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,inv,facility,,,READ|CREATE|UPDATE|DELETE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,inv,inv_item,,,READ|CREATE|UPDATE|DELETE,,,,,
+national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,inv,kitting,,,READ|CREATE|UPDATE|DELETE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,inv,project,,,READ|CREATE|UPDATE|DELETE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,inv,req_match,,,READ|CREATE|UPDATE|DELETE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,inv,supplier,,,READ|CREATE|UPDATE|DELETE,,,,,
@@ -591,6 +593,7 @@ hn_user,Honduras User,All HN users applied at NS level,req,,,,READ|CREATE,READ|U
 hn_user,Honduras User,All HN users applied at NS level,,,req_req,,READ|CREATE,READ|UPDATE|DELETE,,,,
 rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,inv,,,,READ,,,,,Allow access to other RC orgs as Item Donors/Owners
 rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,inv,facility,,,NONE,,,,,
+rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,inv,kitting,,,NONE,,,,,
 rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,inv,supplier,,,NONE,,,,,
 rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,inv,warehouse,,,NONE,,,,,
 rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,,,org_organisation,,READ,,,,,
