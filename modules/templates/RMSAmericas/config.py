@@ -3325,7 +3325,8 @@ Thank you"""
     # -------------------------------------------------------------------------
     def org_organisation_organisation_type_onaccept(form):
         """
-            Ensure that all RC Orgs get added to RC org_group
+            * Update the realm entity
+            * Ensure that all RC Orgs get added to RC org_group
         """
 
         # Get the link
@@ -3341,39 +3342,47 @@ Thank you"""
         ltable = s3db.org_organisation_organisation_type
 
         query = (ltable.id == link_id) & \
-                (ltable.organisation_type_id == ttable.id) & \
-                (ttable.name == RED_CROSS)
+                (ltable.organisation_type_id == ttable.id)
 
         row = db(query).select(ltable.organisation_id,
+                               ttable.name,
                                limitby = (0, 1),
                                ).first()
 
         if row:
-            # RC Org: ensure a member of RC org_group
-            gtable = s3db.org_group
-            group = db(gtable.name == "RC").select(gtable.id,
-                                                   limitby = (0, 1)
-                                                   ).first()
-            try:
-                group_id = group.id
-            except:
-                # IFRC prepop not done: Bail
-                return
-            organisation_id = row.organisation_id
-            mtable = s3db.org_group_membership
-            query = (mtable.organisation_id == organisation_id) & \
-                    (mtable.group_id == group_id)
-            member = db(query).select(mtable.id,
-                                      limitby = (0, 1)
-                                      ).first()
-            if not member:
-                membership_id = mtable.insert(group_id = group_id,
-                                              organisation_id = organisation_id,
-                                              )
-                onaccept = s3db.get_config("org_group_membership", "onaccept")
-                if onaccept:
-                    mform = Storage(vars = Storage(id = membership_id))
-                    onaccept(mform)
+            organisation_id = row["org_organisation_organisation_type.organisation_id"]
+
+            # Update the realm entity
+            current.auth.set_realm_entity("org_organisation",
+                                          organisation_id,
+                                          force_update = True,
+                                          )
+
+            if row["org_organisation_type.name"] == RED_CROSS:
+                # RC Org: ensure a member of RC org_group
+                gtable = s3db.org_group
+                group = db(gtable.name == "RC").select(gtable.id,
+                                                       limitby = (0, 1)
+                                                       ).first()
+                try:
+                    group_id = group.id
+                except:
+                    # IFRC prepop not done: Bail
+                    return
+                mtable = s3db.org_group_membership
+                query = (mtable.organisation_id == organisation_id) & \
+                        (mtable.group_id == group_id)
+                member = db(query).select(mtable.id,
+                                          limitby = (0, 1)
+                                          ).first()
+                if not member:
+                    membership_id = mtable.insert(group_id = group_id,
+                                                  organisation_id = organisation_id,
+                                                  )
+                    onaccept = s3db.get_config("org_group_membership", "onaccept")
+                    if onaccept:
+                        mform = Storage(vars = Storage(id = membership_id))
+                        onaccept(mform)
 
     # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
@@ -3385,6 +3394,13 @@ Thank you"""
                                  "onaccept",
                                  org_organisation_organisation_type_onaccept,
                                  )
+
+        # Ensure that realms get set properly
+        s3db.configure("org_organisation_organisation_type",
+                       # Included in the custom callback
+                       #onaccept = s3db.org_organisation_organisation_type_onaccept,
+                       ondelete = s3db.org_organisation_organisation_type_ondelete,
+                       )
 
         if current.auth.override:
             # Prepop
@@ -5177,6 +5193,10 @@ Thank you"""
         table.item_category_id.represent = s3db.supply_ItemCategoryRepresent(show_catalog = False,
                                                                              use_code = False,
                                                                              )
+
+        if r.tablename == tablename:
+            # Brand & Year not used
+            r.resource.configure(filter_widgets = None)
 
     settings.customise_supply_item_resource = customise_supply_item_resource
 

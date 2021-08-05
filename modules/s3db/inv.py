@@ -1332,17 +1332,17 @@ class S3InventoryTrackingModel(S3Model):
                      # This is a component, so needs to be a super_link
                      # - can't override field name, ondelete or requires
                      super_link("site_id", "org_site",
+                                empty = False,
                                 label = T("%(site)s (Recipient)") % {"site": SITE_LABEL},
                                 ondelete = "SET NULL",
                                 instance_types = auth.org_site_types,
-                                updateable = True,
                                 not_filterby = "obsolete",
                                 not_filter_opts = (True,),
                                 default = user.site_id if is_logged_in() else None,
                                 readable = True,
                                 writable = True,
-                                empty = False,
                                 represent = org_site_represent,
+                                updateable = True,
                                 #widget = S3SiteAutocompleteWidget(),
                                 ),
                      Field("type", "integer",
@@ -1363,9 +1363,9 @@ class S3InventoryTrackingModel(S3Model):
                                                   lambda id, row: \
                                                   org_site_represent(id, row,
                                                                      show_link = False),
-                                                  sort=True,
                                                   not_filterby = "obsolete",
                                                   not_filter_opts = (True,),
+                                                  sort = True,
                                                   )),
                            represent = org_site_represent
                            ),

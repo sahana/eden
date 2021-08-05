@@ -122,7 +122,6 @@ ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all recor
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,project_window,,READ|UPDATE,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,req_approver,,ALL,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,req_req,,ALL,,,,,
-ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,supply_brand,,ALL,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,supply_catalog,,ALL,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,supply_item_category,,ALL,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,vol_details,,ALL,,,,,
@@ -519,11 +518,10 @@ project_reader,Project Reader,Can Read the Projects for an NS,,,pr_person_detail
 project_reader,Project Reader,Can Read the Projects for an NS,,,pr_physical_description,,READ,,,,,
 project_reader,Project Reader,Can Read the Projects for an NS,,,vol_details,,READ,,,,,
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",inv,,,,READ|CREATE|UPDATE|DELETE,,,,,
-wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",inv,adj,,,READ|CREATE|UPDATE,,,,,
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",inv,facility,,,READ|CREATE|UPDATE,,,,,
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",inv,inv_item,,,READ|CREATE|UPDATE|DELETE,,,,,
-wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",inv,req_match,,,READ|CREATE|UPDATE|DELETE,,,,,
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",inv,supplier,,,READ|CREATE|UPDATE,,,,,
+wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",inv,warehouse,,,READ|CREATE|UPDATE,,,,,
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",,,inv_adj,,READ|CREATE|UPDATE,,,,,
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",,,inv_inv_item,,READ|CREATE|UPDATE,,,,,
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",,,inv_recv,,READ|CREATE|UPDATE,,,,,
@@ -534,10 +532,8 @@ wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",,,req_req,,READ|C
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",org,,,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",,,org_facility,,READ|CREATE|UPDATE,,,,,
 wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",,,org_organisation,,READ|CREATE|UPDATE,,,,,Suppliers
-wh_manager,Warehouse Manager,"Warehouse Operator, StockKeeper",vol,,,,NONE,,,,,
+wh_manager_national,Warehouse Manager National Rights,secondary role applied at NS level,inv,,,,READ,,,,,
 wh_manager_national,Warehouse Manager National Rights,secondary role applied at NS level,inv,facility,,,READ,,,,,
-wh_manager_national,Warehouse Manager National Rights,secondary role applied at NS level,inv,recv,,,READ|CREATE|UPDATE,,,,,Need to see Orgs
-wh_manager_national,Warehouse Manager National Rights,secondary role applied at NS level,inv,send,,,READ|CREATE|UPDATE,,,,,Need to see Orgs
 wh_manager_national,Warehouse Manager National Rights,secondary role applied at NS level,inv,project,,,READ,,,,,
 wh_manager_national,Warehouse Manager National Rights,secondary role applied at NS level,inv,supplier,,,READ,,,,,
 wh_manager_national,Warehouse Manager National Rights,secondary role applied at NS level,,,inv_warehouse,,READ,,,,,Allow WH Manager to send/recv from other WH in country
@@ -547,15 +543,14 @@ wh_manager_national,Warehouse Manager National Rights,secondary role applied at 
 wh_manager_national,Warehouse Manager National Rights,secondary role applied at NS level,,,pr_person,,READ|CREATE,READ|UPDATE|DELETE,,,,
 wh_manager_national,Warehouse Manager National Rights,secondary role applied at NS level,,,project_project,,READ,,,,,
 wh_manager_national,Warehouse Manager National Rights,secondary role applied at NS level,req,,,,READ,,,,,"Need to have access to NS-filtered Projects"
+wh_manager_national,Warehouse Manager National Rights,secondary role applied at NS level,vol,,,,NONE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,inv,,,,READ|CREATE|UPDATE|DELETE,,,,,
-national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,inv,adj,,,READ|CREATE|UPDATE|DELETE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,inv,facility,,,READ|CREATE|UPDATE|DELETE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,inv,inv_item,,,READ|CREATE|UPDATE|DELETE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,inv,project,,,READ|CREATE|UPDATE|DELETE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,inv,req_match,,,READ|CREATE|UPDATE|DELETE,,,,,
-national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,inv,recv,,,READ|CREATE|UPDATE,,,,,
-national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,inv,send,,,READ|CREATE|UPDATE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,inv,supplier,,,READ|CREATE|UPDATE|DELETE,,,,,
+national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,inv,warehouse,,,READ|CREATE|UPDATE|DELETE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,,,inv_adj,,CREATE|READ|UPDATE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,,,inv_inv_item,,CREATE|READ|UPDATE,,,,,
 national_wh_manager,National Warehouse Manager,National Logistics Manager - manages all Warehouses in NS,,,inv_recv,,CREATE|READ|UPDATE,,,,,
@@ -594,6 +589,9 @@ hn_user,Honduras User,All HN users applied at NS level,pr,,,,READ|CREATE,READ|UP
 hn_user,Honduras User,All HN users applied at NS level,,,pr_person,,READ|CREATE,READ|UPDATE|DELETE,,,,
 hn_user,Honduras User,All HN users applied at NS level,req,,,,READ|CREATE,READ|UPDATE|DELETE,,,,
 hn_user,Honduras User,All HN users applied at NS level,,,req_req,,READ|CREATE,READ|UPDATE|DELETE,,,,
-rc_user,RC Movement User,All RC staff applied at RC Movement level,inv,,,,READ,,,,,Allow access to RC orgs as Item Donors/Owners
-rc_user,RC Movement User,All RC staff applied at RC Movement level,inv,supplier,,,NONE,,,,,
-rc_user,RC Movement User,All RC staff applied at RC Movement level,,,org_organisation,,READ,,,,,
+rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,inv,,,,READ,,,,,Allow access to other RC orgs as Item Donors/Owners
+rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,inv,facility,,,NONE,,,,,
+rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,inv,supplier,,,NONE,,,,,
+rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,inv,warehouse,,,NONE,,,,,
+rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,,,org_organisation,,READ,,,,,
+rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,,,inv_warehouse,,READ,,,,,Allow shipments to/from other RC warehouses

@@ -100,6 +100,8 @@ class OrgOrganisationModel(S3Model):
 
     names = ("org_organisation_type",
              "org_organisation_type_id",
+             "org_organisation_organisation_type_onaccept",
+             "org_organisation_organisation_type_ondelete",
              "org_region",
              "org_region_country",
              "org_region_id",
@@ -890,8 +892,10 @@ class OrgOrganisationModel(S3Model):
                                                        "organisation_type_id",
                                                        ),
                                             ),
-                  onaccept = self.org_organisation_organisation_type_onaccept,
-                  ondelete = self.org_organisation_organisation_type_ondelete,
+                  # Leave this to templates which need this
+                  # - RMSAmericas
+                  #onaccept = self.org_organisation_organisation_type_onaccept,
+                  #ondelete = self.org_organisation_organisation_type_ondelete,
                   xml_post_parse = self.org_organisation_organisation_type_xml_post_parse,
                   )
 
@@ -914,6 +918,8 @@ class OrgOrganisationModel(S3Model):
                 "org_organisation_crud_fields": crud_fields,
                 "org_organisation_id": organisation_id,
                 "org_organisation_represent": org_organisation_represent,
+                "org_organisation_organisation_type_onaccept": self.org_organisation_organisation_type_onaccept,
+                "org_organisation_organisation_type_ondelete": self.org_organisation_organisation_type_ondelete,
                 "org_region_id": region_id,
                 "org_region_represent": region_represent,
                 }
@@ -978,18 +984,22 @@ class OrgOrganisationModel(S3Model):
             ever take effect since the org_organisation record is written
             before the org_organisation_organisation_type)
 
+            NB Not Active by Default
+            - activate for templates that need this:
+                * RMSAmericas
+
             @param form: the Form
         """
 
-        # Get the type-link
+        # Get the link
         try:
-            record_id = form.vars.id
+            link_id = form.vars.id
         except AttributeError:
             return
         table = current.s3db.org_organisation_organisation_type
-        row = current.db(table.id == record_id).select(table.organisation_id,
-                                                       limitby = (0, 1),
-                                                       ).first()
+        row = current.db(table.id == link_id).select(table.organisation_id,
+                                                     limitby = (0, 1),
+                                                     ).first()
 
         if row:
             # Update the realm entity
@@ -1006,18 +1016,22 @@ class OrgOrganisationModel(S3Model):
             organisation type (otherwise type-dependent realm rules won't
             take effect)
 
+            NB Not Active by Default
+            - activate for templates that need this:
+                * RMSAmericas
+
             @param form: the Row
         """
 
-        # Get the type-link
+        # Get the link
         try:
-            record_id = row.id
+            link_id = row.id
         except AttributeError:
             return
         table = current.s3db.org_organisation_organisation_type
-        row = current.db(table.id == record_id).select(table.deleted_fk,
-                                                       limitby = (0, 1),
-                                                       ).first()
+        row = current.db(table.id == link_id).select(table.deleted_fk,
+                                                     limitby = (0, 1),
+                                                     ).first()
         if row and row.deleted_fk:
             # Find the organisation ID
             try:
@@ -2037,7 +2051,7 @@ class OrgOrganisationOrganisationModel(S3Model):
                                                             "parent_id",
                                                             ),
                                                  ),
-                       # Leave this templates which need this
+                       # Leave this to templates which need this
                        # - RMSAmericas
                        #onaccept = self.org_organisation_organisation_onaccept,
                        #ondelete = self.org_organisation_organisation_ondelete,
@@ -2081,6 +2095,10 @@ class OrgOrganisationOrganisationModel(S3Model):
             ever take effect since the org_organisation record is written
             before the org_organisation_organisation)
 
+            NB Not Active by Default
+            - activate for templates that need this:
+                * RMSAmericas
+
             @param form: the Form
         """
 
@@ -2108,6 +2126,10 @@ class OrgOrganisationOrganisationModel(S3Model):
             Update the realm entity of the organisation after removing an
             organisation link (otherwise link-dependent realm rules won't
             take effect)
+
+            NB Not Active by Default
+            - activate for templates that need this:
+                * RMSAmericas
 
             @param form: the Row
         """
