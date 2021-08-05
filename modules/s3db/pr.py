@@ -9289,7 +9289,8 @@ def pr_human_resource_update_affiliations(person_id):
                 if itable and "pe_id" in itable.fields:
                     q = itable.site_id == site_id
                     site = db(q).select(itable.pe_id,
-                                        limitby=(0, 1)).first()
+                                        limitby = (0, 1)
+                                        ).first()
                     if site:
                         site_pe_id = sites[site_id] = site.pe_id
             else:
@@ -9316,7 +9317,8 @@ def pr_human_resource_update_affiliations(person_id):
     affiliations = db(query).select(rtable.id,
                                     rtable.pe_id,
                                     rtable.role,
-                                    etable.instance_type)
+                                    etable.instance_type
+                                    )
 
     # Remove all affiliations which are not in masters
     for a in affiliations:
@@ -9367,7 +9369,8 @@ def pr_add_affiliation(master, affiliate, role=None, role_type=OU):
                 (rtable.role == role) & \
                 (rtable.deleted != True)
         row = current.db(query).select(rtable.id,
-                                       limitby=(0, 1)).first()
+                                       limitby = (0, 1)
+                                       ).first()
         if not row:
             data = {"pe_id": master_pe,
                     "role": role,
@@ -9455,14 +9458,16 @@ def pr_get_pe_id(entity, record_id=None):
         db = current.db
         if "pe_id" in table.fields and _id:
             record = db(table._id==_id).select(table.pe_id,
-                                               limitby=(0, 1)).first()
+                                               limitby = (0, 1)
+                                               ).first()
         elif _id:
             key = table._id.name
             if key == "pe_id":
                 return _id
             if key != "id" and "instance_type" in table.fields:
                 s = db(table._id==_id).select(table.instance_type,
-                                              limitby=(0, 1)).first()
+                                              limitby = (0, 1)
+                                              ).first()
             else:
                 return None
             if not s:
@@ -9470,7 +9475,8 @@ def pr_get_pe_id(entity, record_id=None):
             table = s3db.table(s.instance_type, None)
             if table and "pe_id" in table.fields:
                 record = db(table[key] == _id).select(table.pe_id,
-                                                      limitby=(0, 1)).first()
+                                                      limitby = (0, 1)
+                                                      ).first()
             else:
                 return None
     if record:

@@ -1336,8 +1336,9 @@ class OrgOrganisationBranchModel(S3Model):
                                              ltable.deleted,
                                              ltable.deleted_fk,
                                              *ifields,
-                                             left=left,
-                                             limitby=(0, 1)).first()
+                                             left = left,
+                                             limitby = (0, 1)
+                                             ).first()
 
         if record:
             organisation = record.org_organisation
@@ -1435,7 +1436,8 @@ class OrgOrganisationBranchModel(S3Model):
         record = db(table.id == row.id).select(table.branch_id,
                                                table.deleted,
                                                table.deleted_fk,
-                                               limitby=(0, 1)).first()
+                                               limitby = (0, 1)
+                                               ).first()
         if record:
             org_update_affiliations("org_organisation_branch", record)
 
@@ -1510,9 +1512,10 @@ class OrgOrganisationCapacityModel(S3Model):
                            writable = False,
                            ),
                      Field("indicator_id", "reference org_capacity_indicator",
-                           represent = S3Represent(lookup="org_capacity_indicator",
-                                                   fields=["number", "name"],
-                                                   field_sep=". "),
+                           represent = S3Represent(lookup = "org_capacity_indicator",
+                                                   fields = ["number", "name"],
+                                                   field_sep = ". "
+                                                   ),
                            writable = False,
                            ),
                      Field("rating",
@@ -1652,8 +1655,8 @@ class OrgOrganisationGroupModel(S3Model):
                                    requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "org_group.id",
                                                           group_represent,
-                                                          sort=True,
-                                                          updateable=True,
+                                                          sort = True,
+                                                          updateable = True,
                                                           )),
                                    sortby = "name",
                                    )
@@ -7824,7 +7827,9 @@ def org_update_affiliations(table, record):
 
         ltable = current.s3db.org_organisation_branch
         if not isinstance(record, Row):
-            record = current.db(ltable.id == record).select(ltable.ALL,
+            record = current.db(ltable.id == record).select(ltable.branch_id,
+                                                            ltable.deleted,
+                                                            ltable.deleted_fk,
                                                             limitby = (0, 1),
                                                             ).first()
         if not record:
@@ -7835,7 +7840,9 @@ def org_update_affiliations(table, record):
 
         mtable = current.s3db.org_group_membership
         if not isinstance(record, Row):
-            record = current.db(mtable.id == record).select(mtable.ALL,
+            record = current.db(mtable.id == record).select(mtable.organisation_id,
+                                                            mtable.deleted,
+                                                            mtable.deleted_fk,
                                                             limitby = (0, 1),
                                                             ).first()
         if not record:
@@ -7852,7 +7859,8 @@ def org_update_affiliations(table, record):
                 query = (rtable._id == record[rtable._id.name])
             except (KeyError, AttributeError):
                 return
-            record = current.db(query).select(rtable.ALL,
+            record = current.db(query).select(rtable.organisation_id,
+                                              rtable.pe_id,
                                               limitby = (0, 1)
                                               ).first()
 
