@@ -58,6 +58,7 @@ __all__ = ("RequestPriorityStatusModel",
            "CommitPersonModel",
            "CommitSkillModel",
            #"req_CheckMethod",
+           "req_ref_represent",
            "req_update_status",
            "req_rheader",
            "req_match",
@@ -222,7 +223,6 @@ class RequestModel(S3Model):
              "req_hide_quantities",
              "req_inline_form",
              "req_create_form_mods",
-             "req_ref_represent",
              "req_tabs",
              )
 
@@ -329,7 +329,7 @@ class RequestModel(S3Model):
         req_ref = S3ReusableField("req_ref", "string",
                                   label = T("%(REQ)s Number") %
                                           {"REQ": settings.get_req_shortname()},
-                                  represent = self.req_ref_represent,
+                                  represent = req_ref_represent,
                                   writable = False,
                                   )
 
@@ -353,7 +353,7 @@ class RequestModel(S3Model):
                                 writable = not default_type,
                                 ),
                           req_ref(represent = lambda v, row=None: \
-                                              self.req_ref_represent(v, show_link=False),
+                                              req_ref_represent(v, show_link=False),
                                   readable = use_req_number,
                                   writable = use_req_number,
                                   widget = lambda f, v: \
@@ -810,7 +810,6 @@ class RequestModel(S3Model):
                 "req_inline_form": self.req_inline_form,
                 "req_req_id": req_id,
                 "req_req_ref": req_ref,
-                "req_ref_represent": self.req_ref_represent,
                 "req_tabs": self.req_tabs,
                 }
 
@@ -1194,40 +1193,6 @@ $.filterOptionsS3({
         else:
             return current.s3db.req_status_opts.get(commit_status,
                                                     current.messages.UNKNOWN_OPT)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def req_ref_represent(value, show_link=True, pdf=False):
-        """
-            Represent for the Request Reference
-            if show_link is True then it will generate a link to the record
-            if pdf is True then it will generate a link to the PDF
-
-            @todo: document parameters
-            @todo: S3Represent
-        """
-
-        if value:
-            if show_link:
-                db = current.db
-                table = db.req_req
-                req_row = db(table.req_ref == value).select(table.id,
-                                                            limitby = (0, 1)
-                                                            ).first()
-                if req_row:
-                    if pdf:
-                        args = [req_row.id, "form"]
-                    else:
-                        args = [req_row.id]
-                    return A(value,
-                             _href = URL(c="req", f="req",
-                                         args = args,
-                                         extension = "",
-                                         ),
-                             )
-            return B(value)
-
-        return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5099,6 +5064,39 @@ class CommitSkillModel(S3Model):
                 req_update_commit_quantities_and_status(req)
 
 # =============================================================================
+def req_ref_represent(value, show_link=True, pdf=False):
+    """
+        Represent for the Request Reference
+        if show_link is True then it will generate a link to the record
+        if pdf is True then it will generate a link to the PDF
+
+        @todo: document parameters
+        @todo: S3Represent
+    """
+
+    if value:
+        if show_link:
+            db = current.db
+            table = db.req_req
+            req_row = db(table.req_ref == value).select(table.id,
+                                                        limitby = (0, 1)
+                                                        ).first()
+            if req_row:
+                if pdf:
+                    args = [req_row.id, "form"]
+                else:
+                    args = [req_row.id]
+                return A(value,
+                         _href = URL(c="req", f="req",
+                                     args = args,
+                                     extension = "",
+                                     ),
+                         )
+        return B(value)
+
+    return current.messages["NONE"]
+        
+# -----------------------------------------------------------------------------
 def req_update_status(req_id):
     """
         Update the request committed/in-transit/fulfilled statuses from the

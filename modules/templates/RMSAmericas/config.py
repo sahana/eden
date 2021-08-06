@@ -263,8 +263,9 @@ def config(settings):
             user = current.auth.user
             if user:
                 # @ToDo - this might cause issues if the user's org is different from the realm that gave them permissions to create the Org
-                realm_entity = s3db.pr_get_pe_id("org_organisation",
-                                                 user.organisation_id)
+                from s3db.pr import pr_get_pe_id
+                realm_entity = pr_get_pe_id("org_organisation",
+                                            user.organisation_id)
             else:
                 # Prepop data - need to handle this separately
                 if tablename == "org_organisation":
@@ -991,7 +992,8 @@ def config(settings):
                       (btable.branch_id.belongs(filter_opts))).select(btable.branch_id)
             filter_opts = list(set(filter_opts) - set(row.branch_id for row in rows))
 
-        organisation_represent = s3db.org_OrganisationRepresent
+        from s3db.org import org_OrganisationRepresent
+        organisation_represent = org_OrganisationRepresent
         represent = organisation_represent(parent=parent)
         f.represent = represent
 
@@ -1083,9 +1085,10 @@ def config(settings):
     #                                                  limitby = (0, 1)
     #                                                  ).first()
     #        if org:
+    #            from s3db.pr import pr_get_descendants
     #            pe_id = org.pe_id
-    #            pe_ids = s3db.pr_get_descendants((pe_id,),
-    #                                             entity_types=("org_organisation",))
+    #            pe_ids = pr_get_descendants((pe_id,),
+    #                                        entity_types=("org_organisation",))
     #            rows = db(otable.pe_id.belongs(pe_ids)).select(otable.id)
     #            ids = [row.id for row in rows]
     #            ids.append(user_org_id)
@@ -1335,7 +1338,8 @@ def config(settings):
             f = table.organisation_id
             f.label = T("Training Center")
             f.comment = False # Don't create here
-            org_represent = s3db.org_OrganisationRepresent(parent=False)
+            from s3db.org import org_OrganisationRepresent
+            org_represent = org_OrganisationRepresent(parent=False)
             f.represent = org_represent
 
         list_fields = ["code",
@@ -1462,7 +1466,8 @@ def config(settings):
         form_vars = form.vars
 
         # Call normal onaccept
-        s3db.hrm_human_resource_onaccept(form)
+        from s3db.hrm import hrm_human_resource_onaccept
+        hrm_human_resource_onaccept(form)
 
         # Is the person RC?
         organisation_id = form_vars.get("organisation_id")
@@ -1601,7 +1606,7 @@ def config(settings):
             hr.update_record(owned_by_user=user_id)
         else:
             hr_id = form_vars.get("id")
-            db(s3db.hrm_human_resource.id == hr_id).update(owned_by_user=user_id)
+            db(s3db.hrm_human_resource.id == hr_id).update(owned_by_user = user_id)
 
         # Set the Person record to be owned by this user
         person.update_record(owned_by_user=user_id)
@@ -2429,6 +2434,7 @@ Thank you"""
                                         "certification_from_training.number",
                                         )
 
+        from s3db.org import org_SiteRepresent
         filter_widgets = [
             S3TextFilter(["person_id$first_name",
                           "person_id$last_name",
@@ -2441,7 +2447,7 @@ Thank you"""
                          ),
             S3OptionsFilter("training_event_id$site_id",
                             label = T("Country"),
-                            represent = s3db.org_SiteRepresent(show_type=False),
+                            represent = org_SiteRepresent(show_type=False),
                             ),
             S3OptionsFilter("person_id$human_resource.organisation_id",
                             label = T("Organization"),
@@ -2455,18 +2461,14 @@ Thank you"""
                          ),
             ]
 
-        default_onaccept = s3db.get_config(tablename, "onaccept")
-        if default_onaccept and not isinstance(default_onaccept, list): # Catch running twice
-            onaccept = [default_onaccept,
-                        hrm_training_onaccept,
-                        ]
-        else:
-            onaccept = hrm_training_onaccept
+        s3db.add_custom_callback(tablename,
+                                 "onaccept",
+                                 hrm_training_onaccept,
+                                 )
 
         s3db.configure(tablename,
                       crud_form = crud_form,
                       filter_widgets = filter_widgets,
-                      onaccept = onaccept,
                       )
 
     settings.customise_hrm_training_resource = customise_hrm_training_resource
@@ -2475,13 +2477,14 @@ Thank you"""
     def customise_hrm_training_event_resource(r, tablename):
 
         from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineComponent
+        from s3db.org import org_OrganisationRepresent
 
         db = current.db
         auth = current.auth
         s3db = current.s3db
         table = s3db.hrm_training_event
 
-        org_represent = s3db.org_OrganisationRepresent(parent=False)
+        org_represent = org_OrganisationRepresent(parent = False)
 
         f = table.organisation_id
         f.label = T("Training Center")
@@ -2610,12 +2613,14 @@ Thank you"""
         def callback(r):
 
             from gluon.html import DIV, TABLE, TD, TH, TR
+            from s3db.org import org_OrganisationRepresent, \
+                                 org_organisation_logo
 
             rtable = s3db.hrm_training_event_report
 
             date_represent = rtable.date.represent
-            org_represent = s3db.org_OrganisationRepresent(parent = False,
-                                                           acronym = False)
+            org_represent = org_OrganisationRepresent(parent = False,
+                                                      acronym = False)
 
             # Logo
             otable = db.org_organisation
@@ -2632,15 +2637,16 @@ Thank you"""
 
             logo = org.logo
             if logo:
-                logo = s3db.org_organisation_logo(org)
+                logo = org_organisation_logo(org)
             elif current.deployment_settings.get_org_branches():
+                from s3db.org import org_root_organisation
                 root_org = current.cache.ram(
                     # Common key with auth.root_org
                     "root_org_%s" % org_id,
-                    lambda: s3db.org_root_organisation(org_id),
-                    time_expire=120
+                    lambda: org_root_organisation(org_id),
+                    time_expire = 120
                     )
-                logo = s3db.org_organisation_logo(root_org)
+                logo = org_organisation_logo(root_org)
 
             # Read the report
             report = db(rtable.training_event_id == r.id).select(limitby = (0, 1),
@@ -2756,11 +2762,12 @@ Thank you"""
             return result
         s3.prep = custom_prep
 
+        from s3db.hrm import hrm_rheader
         attr["rheader"] = lambda r: \
-            s3db.hrm_rheader(r, tabs=[(T("Training Event Details"), None),
-                                      (T("Participants"), "participant"),
-                                      (T("Report"), "training_event_report"),
-                                      ])
+            hrm_rheader(r, tabs=[(T("Training Event Details"), None),
+                                 (T("Participants"), "participant"),
+                                 (T("Report"), "training_event_report"),
+                                 ])
         return attr
 
     settings.customise_hrm_training_event_controller = customise_hrm_training_event_controller
@@ -2947,16 +2954,20 @@ Thank you"""
     # -------------------------------------------------------------------------
     def customise_inv_inv_item_resource(r, tablename):
 
+        from s3db.inv import inv_item_total_weight, \
+                             inv_item_total_volume, \
+                             inv_stock_movements
+
         s3db = current.s3db
 
         # Add field methods for total weight and volume
         from gluon import Field
         table = s3db.inv_inv_item
         table.total_weight = Field.Method("total_weight",
-                                          s3db.inv_item_total_weight,
+                                          inv_item_total_weight,
                                           )
         table.total_volume = Field.Method("total_volume",
-                                          s3db.inv_item_total_volume,
+                                          inv_item_total_volume,
                                           )
 
         resource = r.resource
@@ -3041,7 +3052,7 @@ Thank you"""
                                           ("sum", "quantity_out"),
                                           ("sum", "quantity"),
                                           ],
-                            "extract": s3db.inv_stock_movements,
+                            "extract": inv_stock_movements,
                             "pdf_header": inv_pdf_header,
                             },
                          }
@@ -3113,8 +3124,9 @@ Thank you"""
             record = r.record
             if record:
                 if not r.component:
-                    s3db = current.s3db
-                    if record.status == s3db.inv_ship_status["RECEIVED"]:
+                    from s3db.inv import inv_ship_status
+                    if record.status == inv_ship_status["RECEIVED"]:
+                        s3db = current.s3db
                         dtable = s3db.doc_document
                         query = (dtable.doc_id == record.doc_id) & \
                                 (dtable.deleted == False)
@@ -3197,8 +3209,9 @@ Thank you"""
             record = r.record
             if record:
                 if not r.component:
-                    s3db = current.s3db
-                    if record.status == s3db.inv_ship_status["SENT"]:
+                    from s3db.inv import inv_ship_status
+                    if record.status == inv_ship_status["SENT"]:
+                        s3db = current.s3db
                         dtable = s3db.doc_document
                         query = (dtable.doc_id == record.doc_id) & \
                                 (dtable.deleted == False)
@@ -3389,25 +3402,23 @@ Thank you"""
 
         s3db = current.s3db
 
-        # Ensure that all RC Orgs get added to RC org_group
-        s3db.add_custom_callback("org_organisation_organisation_type",
-                                 "onaccept",
-                                 org_organisation_organisation_type_onaccept,
-                                 )
-
         # Ensure that realms get set properly
+        # Ensure that all RC Orgs get added to RC org_group
+        #from s3db.org import org_organisation_organisation_type_onaccept
+        from s3db.org import org_organisation_organisation_type_ondelete
         s3db.configure("org_organisation_organisation_type",
-                       # Included in the custom callback
-                       #onaccept = s3db.org_organisation_organisation_type_onaccept,
-                       ondelete = s3db.org_organisation_organisation_type_ondelete,
+                       onaccept = org_organisation_organisation_type_onaccept,
+                       ondelete = org_organisation_organisation_type_ondelete,
                        )
 
         if current.auth.override:
             # Prepop
             # - ensure that realms get set properly
+            from s3db.org import org_organisation_organisation_onaccept, \
+                                 org_organisation_organisation_ondelete
             s3db.configure("org_organisation_organisation",
-                           onaccept = s3db.org_organisation_organisation_onaccept,
-                           ondelete = s3db.org_organisation_organisation_ondelete,
+                           onaccept = org_organisation_organisation_onaccept,
+                           ondelete = org_organisation_organisation_ondelete,
                            )
 
     settings.customise_org_organisation_resource = customise_org_organisation_resource
@@ -3554,7 +3565,8 @@ Thank you"""
                     ]
             if settings.get_L10n_translate_org_organisation():
                 tabs.append((T("Local Names"), "name"))
-            attr["rheader"] = lambda r: current.s3db.org_rheader(r, tabs=tabs)
+            from s3db.org import org_rheader
+            attr["rheader"] = lambda r: org_rheader(r, tabs=tabs)
 
         elif type_filter == "Academic,Bilateral,Government,Intergovernmental,NGO,UN agency":
             # Partners have simpler Tabs (hide Offices, Warehouses and Contacts)
@@ -3563,7 +3575,8 @@ Thank you"""
                     ]
             if settings.get_L10n_translate_org_organisation():
                 tabs.insert(1, (T("Local Names"), "name"))
-            attr["rheader"] = lambda r: current.s3db.org_rheader(r, tabs=tabs)
+            from s3db.org import org_rheader
+            attr["rheader"] = lambda r: org_rheader(r, tabs=tabs)
 
         else:
             # Enable tab for PDF card configurations
@@ -3941,7 +3954,8 @@ Thank you"""
         if current.request.controller in ("default", "hrm", "vol"):
             attr["csv_template"] = ("../../themes/RMSAmericas/formats", "hrm_person")
             # Common rheader for all views
-            attr["rheader"] = lambda r: s3db.hrm_rheader(r, profile=PROFILE)
+            from s3db.hrm import hrm_rheader
+            attr["rheader"] = lambda r: hrm_rheader(r, profile=PROFILE)
 
         return attr
 
@@ -4308,6 +4322,8 @@ Thank you"""
         else:
             programme = None
 
+        from s3db.project import project_hazard_help_fields, \
+                                 project_theme_help_fields
         crud_form = S3SQLCustomForm(
             "organisation_id",
             programme,
@@ -4329,7 +4345,7 @@ Thank you"""
                 "hazard",
                 label = T("Hazards"),
                 field = "hazard_id",
-                help_field = s3db.project_hazard_help_fields,
+                help_field = project_hazard_help_fields,
                 cols = 4,
                 translate = True,
             ),
@@ -4344,7 +4360,7 @@ Thank you"""
                 "theme",
                 label = T("Themes"),
                 field = "theme_id",
-                help_field = s3db.project_theme_help_fields,
+                help_field = project_theme_help_fields,
                 cols = 4,
                 translate = True,
                 # Filter Theme by Sector
@@ -4494,12 +4510,13 @@ Thank you"""
                                     branches = False,
                                     updateable = True,
                                     )
+                            #from s3db.org import org_organisation_requires
                             #ctable.organisation_id.requires = \
-                            #    s3db.org_organisation_requires(required = True,
-                            #                                   # Only allowed to add Projects for Orgs
-                            #                                   # that the user has write access to
-                            #                                   updateable = True,
-                            #                                   )
+                            #    org_organisation_requires(required = True,
+                            #                              # Only allowed to add Projects for Orgs
+                            #                              # that the user has write access to
+                            #                              updateable = True,
+                            #                              )
 
             else:
                 # Lead Organisation needs to be an NS (not a branch)
@@ -4824,7 +4841,8 @@ Thank you"""
 
             # Find all child Orgs/Sites of these
             entity_types = ["org_organisation"] + list(auth.org_site_types.keys())
-            child_pe_ids = s3db.pr_get_descendants(pe_ids, entity_types=entity_types)
+            from s3db.pr import pr_get_descendants
+            child_pe_ids = pr_get_descendants(pe_ids, entity_types=entity_types)
 
             entities = pe_ids + child_pe_ids
             
@@ -4843,13 +4861,15 @@ Thank you"""
             if None in pe_ids:
                 # Default Realm(s)
                 pe_ids.remove(None)
-                realms = s3db.pr_realm(auth.user["pe_id"])
+                from s3db.pr import pr_realm
+                realms = pr_realm(auth.user["pe_id"])
                 if realms:
                     pe_ids += realms
 
             # Find all child Orgs/Sites of these
             entity_types = ["org_organisation"] + list(auth.org_site_types.keys())
-            child_pe_ids = s3db.pr_get_descendants(pe_ids, entity_types=entity_types)
+            from s3db.pr import pr_get_descendants
+            child_pe_ids = pr_get_descendants(pe_ids, entity_types=entity_types)
 
             entities = pe_ids + child_pe_ids
             if len(entities) == 1:
@@ -4867,8 +4887,9 @@ Thank you"""
                 f.default = org_pe_id
 
         from s3 import IS_ONE_OF
+        from s3db import pr_PersonEntityRepresent
         f.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
-                               s3db.pr_PersonEntityRepresent(show_type = False),
+                               pr_PersonEntityRepresent(show_type = False),
                                filterby = "pe_id",
                                filter_opts = entities,
                                sort = True
@@ -4914,6 +4935,7 @@ Thank you"""
     def customise_req_req_resource(r, tablename):
 
         from gluon import IS_NOT_EMPTY
+        from s3db.req import req_ref_represent
 
         auth = current.auth
         s3db = current.s3db
@@ -4921,7 +4943,7 @@ Thank you"""
         table = s3db.req_req
         f = table.req_ref
         f.represent = lambda v, show_link=True, pdf=True: \
-            s3db.req_ref_represent(v, show_link, pdf)
+            req_ref_represent(v, show_link, pdf)
         f.requires = IS_NOT_EMPTY()
         f.widget = None
         table.priority.readable = table.priority.writable = False
@@ -5106,7 +5128,8 @@ Thank you"""
                 if workflow_status == 2: # Submitted for Approval
                     show_site_and_po = True
                     # Are we a Logistics Approver?
-                    approvers = s3db.req_approvers(r.record.site_id)
+                    from s3db.req import req_approvers
+                    approvers = req_approvers(r.record.site_id)
                     person_id = current.auth.s3_logged_in_person()
                     if person_id in approvers and approvers[person_id]["matcher"]:
                         # Have we already approved?
@@ -5165,6 +5188,8 @@ Thank you"""
     # -------------------------------------------------------------------------
     def customise_supply_item_category_resource(r, tablename):
 
+        from s3db.supply import supply_ItemCategoryRepresent
+
         s3db = current.s3db
 
         table = s3db.supply_item_category
@@ -5172,14 +5197,16 @@ Thank you"""
         #if root_org == HNRC:
         # Not using Assets Module
         table.can_be_asset.readable = table.can_be_asset.writable = False
-        table.parent_item_category_id.represent = s3db.supply_ItemCategoryRepresent(show_catalog = False,
-                                                                                    use_code = False,
-                                                                                    )
+        table.parent_item_category_id.represent = supply_ItemCategoryRepresent(show_catalog = False,
+                                                                               use_code = False,
+                                                                               )
 
     settings.customise_supply_item_category_resource = customise_supply_item_category_resource
 
     # -------------------------------------------------------------------------
     def customise_supply_item_resource(r, tablename):
+
+        from s3db.supply import supply_ItemCategoryRepresent
 
         s3db = current.s3db
 
@@ -5190,9 +5217,9 @@ Thank you"""
         table.length.readable = table.length.writable = False
         table.width.readable = table.width.writable = False
         table.height.readable = table.height.writable = False
-        table.item_category_id.represent = s3db.supply_ItemCategoryRepresent(show_catalog = False,
-                                                                             use_code = False,
-                                                                             )
+        table.item_category_id.represent = supply_ItemCategoryRepresent(show_catalog = False,
+                                                                        use_code = False,
+                                                                        )
 
         if r.tablename == tablename:
             # Brand & Year not used
@@ -5365,9 +5392,10 @@ class PrintableShipmentForm(S3Method):
         """
 
         from gluon import TABLE, TD, TH, TR
+        from s3db.pr import pr_PersonRepresent
+        from s3db.req import req_approvers
 
         T = current.T
-        s3db = current.s3db
 
         header = TR(TH("&nbsp;"),
                     TH(T("Name")),
@@ -5377,10 +5405,10 @@ class PrintableShipmentForm(S3Method):
 
         record = r.record
         requester = record.requester_id
-        approvers = s3db.req_approvers(record.site_id)
+        approvers = req_approvers(record.site_id)
         person_ids = [requester] + list(approvers)
 
-        names = s3db.pr_PersonRepresent().bulk(person_ids)
+        names = pr_PersonRepresent().bulk(person_ids)
 
         signature_rows = [TR(TH(T("Requester")),
                              TD(names[requester]),

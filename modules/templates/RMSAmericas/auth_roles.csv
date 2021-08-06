@@ -240,7 +240,6 @@ ns_training_manager,National Training Center Manager,Manages a National Training
 ns_training_manager,National Training Center Manager,Manages a National Training Center,,,org_facility,,READ,,,,,
 ns_training_manager,National Training Center Manager,Manages a National Training Center,,,org_organisation,,CREATE|READ,ALL,,,,
 ns_training_manager,National Training Center Manager,Manages a National Training Center,pr,compose,,,READ|UPDATE,,,,,
-ns_training_manager,National Training Center Manager,Manages a National Training Center,pr,forum,,,READ,,,,,
 ns_training_manager,National Training Center Manager,Manages a National Training Center,pr,forum,,,CREATE|READ|UPDATE|DELETE,,,,,
 ns_training_manager,National Training Center Manager,Manages a National Training Center,pr,person,,,READ,,,,,
 ns_training_manager,National Training Center Manager,Manages a National Training Center,pr,person_search,,,READ,,,,,
@@ -591,10 +590,10 @@ hn_user,Honduras User,All HN users applied at NS level,pr,,,,READ|CREATE,READ|UP
 hn_user,Honduras User,All HN users applied at NS level,,,pr_person,,READ|CREATE,READ|UPDATE|DELETE,,,,
 hn_user,Honduras User,All HN users applied at NS level,req,,,,READ|CREATE,READ|UPDATE|DELETE,,,,
 hn_user,Honduras User,All HN users applied at NS level,,,req_req,,READ|CREATE,READ|UPDATE|DELETE,,,,
-rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,inv,,,,READ,,,,,Allow access to other RC orgs as Item Donors/Owners
-rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,inv,facility,,,NONE,,,,,
-rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,inv,kitting,,,NONE,,,,,
-rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,inv,supplier,,,NONE,,,,,
-rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,inv,warehouse,,,NONE,,,,,
-rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,,,org_organisation,,READ,,,,,
-rc_logs_user,RC Movement User,All RC Logistics staff applied at RC Movement level,,,inv_warehouse,,READ,,,,,Allow shipments to/from other RC warehouses
+rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,inv,,,,READ,,,,,"Allow access to other RC orgs as Item Donors/Owners and other RC warehouses for shipments"
+rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,inv,facility,,,NONE,,,,,
+rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,inv,kitting,,,NONE,,,,,
+rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,inv,supplier,,,NONE,,,,,
+rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,inv,warehouse,,,NONE,,,,,
+rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,,,org_organisation,,READ,,,,,
+rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,,,inv_warehouse,,READ,,,,,"Allow shipments to/from other RC warehouses"

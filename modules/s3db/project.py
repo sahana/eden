@@ -397,7 +397,7 @@ class S3ProjectModel(S3Model):
             cappend(S3SQLInlineLink("hazard",
                                     label = T("Hazards"),
                                     field = "hazard_id",
-                                    help_field = self.project_hazard_help_fields,
+                                    help_field = project_hazard_help_fields,
                                     cols = 4,
                                     translate = True,
                                     ))
@@ -409,7 +409,7 @@ class S3ProjectModel(S3Model):
             cappend(S3SQLInlineLink("theme",
                                     label = T("Themes"),
                                     field = "theme_id",
-                                    help_field = self.project_theme_help_fields,
+                                    help_field = project_theme_help_fields,
                                     cols = 4,
                                     translate = True,
                                     # Filter Theme by Sector

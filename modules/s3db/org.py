@@ -65,6 +65,10 @@ __all__ = ("OrgOrganisationModel",
            "org_rheader",
            "org_site_staff_config",
            "org_organisation_controller",
+           "org_organisation_organisation_onaccept",
+           "org_organisation_organisation_ondelete",
+           "org_organisation_organisation_type_onaccept",
+           "org_organisation_organisation_type_ondelete",
            "org_office_controller",
            "org_facility_controller",
            "org_update_affiliations",
@@ -100,8 +104,6 @@ class OrgOrganisationModel(S3Model):
 
     names = ("org_organisation_type",
              "org_organisation_type_id",
-             "org_organisation_organisation_type_onaccept",
-             "org_organisation_organisation_type_ondelete",
              "org_region",
              "org_region_country",
              "org_region_id",
@@ -894,8 +896,8 @@ class OrgOrganisationModel(S3Model):
                                             ),
                   # Leave this to templates which need this
                   # - RMSAmericas
-                  #onaccept = self.org_organisation_organisation_type_onaccept,
-                  #ondelete = self.org_organisation_organisation_type_ondelete,
+                  #onaccept = org_organisation_organisation_type_onaccept,
+                  #ondelete = org_organisation_organisation_type_ondelete,
                   xml_post_parse = self.org_organisation_organisation_type_xml_post_parse,
                   )
 
@@ -918,8 +920,6 @@ class OrgOrganisationModel(S3Model):
                 "org_organisation_crud_fields": crud_fields,
                 "org_organisation_id": organisation_id,
                 "org_organisation_represent": org_organisation_represent,
-                "org_organisation_organisation_type_onaccept": self.org_organisation_organisation_type_onaccept,
-                "org_organisation_organisation_type_ondelete": self.org_organisation_organisation_type_ondelete,
                 "org_region_id": region_id,
                 "org_region_represent": region_represent,
                 }
@@ -974,77 +974,6 @@ class OrgOrganisationModel(S3Model):
                                                     ).first()
         if deleted_row and deleted_row.logo:
             current.s3db.pr_image_delete_all(deleted_row.logo)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_organisation_organisation_type_onaccept(form):
-        """
-            Update the realm entity of the organisation after changing the
-            organisation type (otherwise type-dependent realm rules won't
-            ever take effect since the org_organisation record is written
-            before the org_organisation_organisation_type)
-
-            NB Not Active by Default
-            - activate for templates that need this:
-                * RMSAmericas
-
-            @param form: the Form
-        """
-
-        # Get the link
-        try:
-            link_id = form.vars.id
-        except AttributeError:
-            return
-        table = current.s3db.org_organisation_organisation_type
-        row = current.db(table.id == link_id).select(table.organisation_id,
-                                                     limitby = (0, 1),
-                                                     ).first()
-
-        if row:
-            # Update the realm entity
-            current.auth.set_realm_entity("org_organisation",
-                                          row.organisation_id,
-                                          force_update = True,
-                                          )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_organisation_organisation_type_ondelete(row):
-        """
-            Update the realm entity of the organisation after removing an
-            organisation type (otherwise type-dependent realm rules won't
-            take effect)
-
-            NB Not Active by Default
-            - activate for templates that need this:
-                * RMSAmericas
-
-            @param form: the Row
-        """
-
-        # Get the link
-        try:
-            link_id = row.id
-        except AttributeError:
-            return
-        table = current.s3db.org_organisation_organisation_type
-        row = current.db(table.id == link_id).select(table.deleted_fk,
-                                                     limitby = (0, 1),
-                                                     ).first()
-        if row and row.deleted_fk:
-            # Find the organisation ID
-            try:
-                deleted_fk = json.loads(row.deleted_fk)
-            except ValueError:
-                return
-            organisation_id = deleted_fk.get("organisation_id")
-
-            # Update the realm entity
-            current.auth.set_realm_entity("org_organisation",
-                                          organisation_id,
-                                          force_update = True,
-                                          )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1406,7 +1335,7 @@ class OrgOrganisationBranchModel(S3Model):
                                             organisation_type_id = t,
                                             )
                     form = Storage(vars = Storage(id = link_id))
-                    OrgOrganisationModel.org_organisation_organisation_type_onaccept(link_id)
+                    org_organisation_organisation_type_onaccept(link_id)
 
                 # Inherit Org Sectors
                 ltable = s3db.org_sector_organisation
@@ -2021,8 +1950,6 @@ class OrgOrganisationOrganisationModel(S3Model):
     """
 
     names = ("org_organisation_organisation",
-             "org_organisation_organisation_onaccept",
-             "org_organisation_organisation_ondelete",
              )
 
     def model(self):
@@ -2053,15 +1980,13 @@ class OrgOrganisationOrganisationModel(S3Model):
                                                  ),
                        # Leave this to templates which need this
                        # - RMSAmericas
-                       #onaccept = self.org_organisation_organisation_onaccept,
-                       #ondelete = self.org_organisation_organisation_ondelete,
+                       #onaccept = org_organisation_organisation_onaccept,
+                       #ondelete = org_organisation_organisation_ondelete,
                        realm_entity = self.org_organisation_organisation_realm_entity,
                        )
 
         # Pass names back to global scope (s3.*)
-        return {"org_organisation_organisation_onaccept": self.org_organisation_organisation_onaccept,
-                "org_organisation_organisation_ondelete": self.org_organisation_organisation_ondelete,
-                }
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2085,77 +2010,6 @@ class OrgOrganisationOrganisationModel(S3Model):
         except AttributeError:
             # => Set to default of None
             return None
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_organisation_organisation_onaccept(form):
-        """
-            Update the realm entity of the organisation after changing the
-            organisation link (otherwise link-dependent realm rules won't
-            ever take effect since the org_organisation record is written
-            before the org_organisation_organisation)
-
-            NB Not Active by Default
-            - activate for templates that need this:
-                * RMSAmericas
-
-            @param form: the Form
-        """
-
-        # Get the link
-        try:
-            record_id = form.vars.id
-        except AttributeError:
-            return
-        table = current.s3db.org_organisation_organisation
-        row = current.db(table.id == record_id).select(table.organisation_id,
-                                                       limitby = (0, 1),
-                                                       ).first()
-
-        if row:
-            # Update the realm entity
-            current.auth.set_realm_entity("org_organisation",
-                                          row.organisation_id,
-                                          force_update = True,
-                                          )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_organisation_organisation_ondelete(row):
-        """
-            Update the realm entity of the organisation after removing an
-            organisation link (otherwise link-dependent realm rules won't
-            take effect)
-
-            NB Not Active by Default
-            - activate for templates that need this:
-                * RMSAmericas
-
-            @param form: the Row
-        """
-
-        # Get the link
-        try:
-            record_id = row.id
-        except AttributeError:
-            return
-        table = current.s3db.org_organisation_organisation
-        row = current.db(table.id == record_id).select(table.deleted_fk,
-                                                       limitby = (0, 1),
-                                                       ).first()
-        if row and row.deleted_fk:
-            # Find the organisation ID
-            try:
-                deleted_fk = json.loads(row.deleted_fk)
-            except ValueError:
-                return
-            organisation_id = deleted_fk.get("organisation_id")
-
-            # Update the realm entity
-            current.auth.set_realm_entity("org_organisation",
-                                          organisation_id,
-                                          force_update = True,
-                                          )
 
 # =============================================================================
 class OrgOrganisationResourceModel(S3Model):
@@ -7399,6 +7253,148 @@ def org_organisation_controller():
                                      rheader = org_rheader,
                                      )
     return output
+
+
+
+
+
+# -----------------------------------------------------------------------------
+def org_organisation_organisation_onaccept(form):
+    """
+        Update the realm entity of the organisation after changing the
+        organisation link (otherwise link-dependent realm rules won't
+        ever take effect since the org_organisation record is written
+        before the org_organisation_organisation)
+
+        NB Not Active by Default
+        - activate for templates that need this:
+            * RMSAmericas
+
+        @param form: the Form
+    """
+
+    # Get the link
+    try:
+        record_id = form.vars.id
+    except AttributeError:
+        return
+    table = current.s3db.org_organisation_organisation
+    row = current.db(table.id == record_id).select(table.organisation_id,
+                                                   limitby = (0, 1),
+                                                   ).first()
+
+    if row:
+        # Update the realm entity
+        current.auth.set_realm_entity("org_organisation",
+                                      row.organisation_id,
+                                      force_update = True,
+                                      )
+
+# -----------------------------------------------------------------------------
+def org_organisation_organisation_ondelete(row):
+    """
+        Update the realm entity of the organisation after removing an
+        organisation link (otherwise link-dependent realm rules won't
+        take effect)
+
+        NB Not Active by Default
+        - activate for templates that need this:
+            * RMSAmericas
+
+        @param form: the Row
+    """
+
+    # Get the link
+    try:
+        record_id = row.id
+    except AttributeError:
+        return
+    table = current.s3db.org_organisation_organisation
+    row = current.db(table.id == record_id).select(table.deleted_fk,
+                                                   limitby = (0, 1),
+                                                   ).first()
+    if row and row.deleted_fk:
+        # Find the organisation ID
+        try:
+            deleted_fk = json.loads(row.deleted_fk)
+        except ValueError:
+            return
+        organisation_id = deleted_fk.get("organisation_id")
+
+        # Update the realm entity
+        current.auth.set_realm_entity("org_organisation",
+                                      organisation_id,
+                                      force_update = True,
+                                      )
+
+# -----------------------------------------------------------------------------
+def org_organisation_organisation_type_onaccept(form):
+    """
+        Update the realm entity of the organisation after changing the
+        organisation type (otherwise type-dependent realm rules won't
+        ever take effect since the org_organisation record is written
+        before the org_organisation_organisation_type)
+
+        NB Not Active by Default
+        - activate for templates that need this:
+            * RMSAmericas
+
+        @param form: the Form
+    """
+
+    # Get the link
+    try:
+        link_id = form.vars.id
+    except AttributeError:
+        return
+    table = current.s3db.org_organisation_organisation_type
+    row = current.db(table.id == link_id).select(table.organisation_id,
+                                                 limitby = (0, 1),
+                                                 ).first()
+
+    if row:
+        # Update the realm entity
+        current.auth.set_realm_entity("org_organisation",
+                                      row.organisation_id,
+                                      force_update = True,
+                                      )
+
+# -----------------------------------------------------------------------------
+def org_organisation_organisation_type_ondelete(row):
+    """
+        Update the realm entity of the organisation after removing an
+        organisation type (otherwise type-dependent realm rules won't
+        take effect)
+
+        NB Not Active by Default
+        - activate for templates that need this:
+            * RMSAmericas
+
+        @param form: the Row
+    """
+
+    # Get the link
+    try:
+        link_id = row.id
+    except AttributeError:
+        return
+    table = current.s3db.org_organisation_organisation_type
+    row = current.db(table.id == link_id).select(table.deleted_fk,
+                                                 limitby = (0, 1),
+                                                 ).first()
+    if row and row.deleted_fk:
+        # Find the organisation ID
+        try:
+            deleted_fk = json.loads(row.deleted_fk)
+        except ValueError:
+            return
+        organisation_id = deleted_fk.get("organisation_id")
+
+        # Update the realm entity
+        current.auth.set_realm_entity("org_organisation",
+                                      organisation_id,
+                                      force_update = True,
+                                      )
 
 # =============================================================================
 def org_site_staff_config(r):
