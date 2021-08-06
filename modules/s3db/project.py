@@ -97,6 +97,8 @@ from ..s3 import *
 from s3compat import BytesIO, xrange
 from s3layouts import S3PopupLink
 
+from .req import req_timeframe
+
 # Compact JSON encoding
 SEPARATORS = (",", ":")
 
@@ -2072,7 +2074,7 @@ class S3ProjectActivityDemographicsModel(S3Model):
                                           empty = False,
                                           comment = parameter_id_comment,
                                           ),
-                          self.req_timeframe(),
+                          req_timeframe()(),
                           Field("target_value", "integer",
                                 label = T("Target Value"),
                                 represent = IS_INT_AMOUNT.represent,
@@ -2135,7 +2137,7 @@ $.filterOptionsS3({
                                               widget = None,
                                               ),
                           self.supply_item_pack_id(),
-                          self.req_timeframe(),
+                          req_timeframe()(),
                           Field("target_value", "integer",
                                 label = T("Target Value"),
                                 represent = IS_INT_AMOUNT.represent,

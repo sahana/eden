@@ -4518,12 +4518,13 @@ class OrgFacilityModel(S3Model):
                                 ))
 
         if settings.has_module("req"):
+            from .req import req_priority_opts
             # @ToDo: Report should show Total Open/Closed Requests
             report_fields.append((T("Highest Priority Open Requests"), "reqs"))
             filter_widgets.append(
                 S3OptionsFilter("reqs",
                                 label = T("Highest Priority Open Requests"),
-                                options = lambda: self.req_priority_opts,
+                                options = req_priority_opts,
                                 cols = 3,
                                 ))
 

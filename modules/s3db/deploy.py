@@ -138,8 +138,7 @@ class S3DeploymentModel(S3Model):
                      Field("status", "integer",
                            default = 2,
                            label = T("Status"),
-                           represent = lambda opt: \
-                                       mission_status_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = mission_status_opts),
                            requires = IS_IN_SET(mission_status_opts),
                            ),
                      # @todo: change into real fields written onaccept?
@@ -570,7 +569,8 @@ class S3DeploymentModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {"deploy_mission_id": mission_id,
-                "deploy_mission_status_opts": mission_status_opts,
+                # Currently only used by inactive IFRC template
+                #"deploy_mission_status_opts": mission_status_opts,
                 }
 
     # -------------------------------------------------------------------------

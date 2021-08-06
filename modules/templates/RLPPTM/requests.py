@@ -40,9 +40,9 @@ def req_filter_widgets():
                    S3TextFilter, \
                    s3_get_filter_opts
 
-    s3db = current.s3db
+    from s3db.req import req_status_opts
 
-    req_status_opts = OrderedDict(sorted(s3db.req_status_opts.items(),
+    req_status_opts = OrderedDict(sorted(req_status_opts().items(),
                                          key = lambda i: i[0],
                                          ))
 

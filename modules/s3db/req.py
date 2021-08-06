@@ -27,8 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("RequestPriorityStatusModel",
-           "RequestModel",
+__all__ = ("RequestModel",
            "RequestApproverModel",
            "RequestItemModel",
            "RequestSkillModel",
@@ -75,7 +74,9 @@ from gluon.storage import Storage
 from ..s3 import *
 from s3layouts import S3PopupLink
 
-OU = 1 # role type which indicates hierarchy, see role_types
+from .pr import OU
+
+DEFAULT = "DEFAULT"
 
 REQ_STATUS_NONE     = 0
 REQ_STATUS_PARTIAL  = 1
@@ -83,47 +84,42 @@ REQ_STATUS_COMPLETE = 2
 REQ_STATUS_CANCEL   = 3
 
 # =============================================================================
-class RequestPriorityStatusModel(S3Model):
-    """
-        Model for Request Priority & Status
-    """
+def req_priority_opts():
+    T = current.T
+    return {3: T("High"),
+            2: T("Medium"),
+            1: T("Low")
+            }
 
-    names = ("req_priority",
-             "req_priority_opts",
-             #"req_priority_represent",
-             "req_status",
-             "req_status_opts",
-             "req_timeframe",
-             "req_timeframe_opts",
-             )
+#def req_priority_represent(priority):
+#    """
+#        Represent request priority by a (color-coded) GIF image
+#        @ToDo: make CSS-only
+#    """
 
-    def model(self):
+#    src = URL(c = "static",
+#              f = "img",
+#              args = ["priority", "priority_%d.gif" % (priority or 4)],
+#              )
+#    return DIV(IMG(_src= src))
 
-        T = current.T
+def req_priority():
+    priority_opts = req_priority_opts()
+    return S3ReusableField("priority", "integer",
+                           default = 2,
+                           label = current.T("Priority"),
+                           #@ToDo: Colour code the priority text - red, orange, green
+                           #represent = req_priority_represent,
+                           represent = S3Represent(options = priority_opts),
+                           requires = IS_EMPTY_OR(
+                                           IS_IN_SET(priority_opts)
+                                           ),
+                           )
 
-        # ---------------------------------------------------------------------
-        # Request Priority
-        #
-        req_priority_opts = {3: T("High"),
-                             2: T("Medium"),
-                             1: T("Low")
-                             }
-
-        req_priority = S3ReusableField("priority", "integer",
-                                       default = 2,
-                                       label = T("Priority"),
-                                       #@ToDo: Colour code the priority text - red, orange, green
-                                       represent = S3Represent(options = req_priority_opts),
-                                       #represent = self.req_priority_represent,
-                                       requires = IS_EMPTY_OR(
-                                                       IS_IN_SET(req_priority_opts))
-                                       )
-
-        # ---------------------------------------------------------------------
-        # Request Status
-        #
-        req_status_opts = {
-            REQ_STATUS_NONE:     SPAN(T("None"),
+# =============================================================================
+def req_status_opts():
+    T = current.T
+    return {REQ_STATUS_NONE:     SPAN(T("None"),
                                       _class = "req_status_none",
                                       ),
             REQ_STATUS_PARTIAL:  SPAN(T("Partial"),
@@ -134,82 +130,38 @@ class RequestPriorityStatusModel(S3Model):
                                       ),
             }
 
-        req_status = S3ReusableField("req_status", "integer",
-                                     default = REQ_STATUS_NONE,
-                                     label = T("Request Status"),
-                                     represent = S3Represent(options = req_status_opts),
-                                     requires = IS_EMPTY_OR(
-                                                    IS_IN_SET(req_status_opts,
-                                                              zero = None)),
-                                     )
+def req_status():
+    status_opts = req_status_opts()
+    return S3ReusableField("req_status", "integer",
+                           label = current.T("Request Status"),
+                           represent = S3Represent(options = status_opts),
+                           requires = IS_EMPTY_OR(
+                                        IS_IN_SET(status_opts,
+                                                  zero = None,
+                                                  )
+                                        ),
+                           )
 
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {"req_priority": req_priority,
-                "req_priority_opts": req_priority_opts,
-                #"req_priority_represent": self.req_priority_represent,
-                "req_status": req_status,
-                "req_status_opts": req_status_opts,
-                }
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def defaults():
-        """
-            Safe defaults for model-global names if module is disabled
-        """
-
-        return {#"req_priority": req_priority,
-                #"req_priority_opts": req_priority_opts,
-                #"req_priority_represent": cls.req_priority_represent,
-                #"req_status": req_status,
-                #"req_status_opts": req_status_opts,
-                }
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def mandatory():
-        """
-            Mandatory s3-global objects
-        """
-
-        T = current.T
-        timeframe_opts = {1: T("0-12 hours"),
-                          2: T("12-24 hours"),
-                          3: T("1-2 days"),
-                          4: T("2-4 days"),
-                          5: T("5-7 days"),
-                          6: T(">1 week"),
-                          }
-
-        timeframe = S3ReusableField("timeframe", "integer",
-                                    default = 3,
-                                    label = T("Timeframe"),
-                                    represent = S3Represent(options = timeframe_opts),
-                                    requires = IS_EMPTY_OR(
-                                                IS_IN_SET(timeframe_opts,
-                                                          zero = None)),
-                                    )
-
-        return {"req_timeframe": timeframe,
-                "req_timeframe_opts": timeframe_opts,
-                }
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def req_priority_represent(priority):
-        """
-            Represent request priority by a (color-coded) GIF image
-
-            @todo: make CSS-only
-        """
-
-        src = URL(c = "static",
-                  f = "img",
-                  args = ["priority", "priority_%d.gif" % (priority or 4)],
-                  )
-        return DIV(IMG(_src= src))
+# =============================================================================
+def req_timeframe():
+    T = current.T
+    timeframe_opts = {1: T("0-12 hours"),
+                      2: T("12-24 hours"),
+                      3: T("1-2 days"),
+                      4: T("2-4 days"),
+                      5: T("5-7 days"),
+                      6: T(">1 week"),
+                      }
+    return S3ReusableField("timeframe", "integer",
+                           default = 3,
+                           label = T("Timeframe"),
+                           represent = S3Represent(options = timeframe_opts),
+                           requires = IS_EMPTY_OR(
+                                        IS_IN_SET(timeframe_opts,
+                                                  zero = None,
+                                                  ),
+                                        ),
+                           )
 
 # =============================================================================
 class RequestModel(S3Model):
@@ -245,6 +197,7 @@ class RequestModel(S3Model):
         super_link = self.super_link
 
         person_id = self.pr_person_id
+        req_status_field = req_status()
 
         # ---------------------------------------------------------------------
         # Model Options
@@ -333,9 +286,6 @@ class RequestModel(S3Model):
                                   writable = False,
                                   )
 
-        req_status = self.req_status
-        req_status_opts = self.req_status_opts
-
         # ---------------------------------------------------------------------
         # Requests
         #
@@ -368,7 +318,7 @@ class RequestModel(S3Model):
                                       #represent = "date",
                                       #widget = "date",
                                       ),
-                          self.req_priority(),
+                          req_priority()(),
                           # This is a component, so needs to be a super_link
                           # - can't override field name, ondelete or requires
                           super_link("site_id", "org_site",
@@ -486,33 +436,33 @@ class RequestModel(S3Model):
                                 ),
                           # Simple Status
                           # - currently just enabled in customise_req_fields() workflow
-                          req_status(readable = False,
+                          req_status_field(readable = False,
                                      writable = False,
                                      ),
                           # Detailed Status
-                          req_status("commit_status",
-                                     label = T("Commit Status"),
-                                     represent = self.req_commit_status_represent,
-                                     readable = use_commit,
-                                     writable = req_status_writable and use_commit,
-                                     ),
-                          req_status("transit_status",
-                                     label = T("Transit Status"),
-                                     readable = transit_status,
-                                     writable = req_status_writable and transit_status,
-                                     ),
-                          req_status("fulfil_status",
-                                     label = T("Fulfil. Status"),
-                                     writable = req_status_writable,
-                                     ),
-                          #req_status("filing_status",
-                          #           label = T("Filing Status"),
-                          #           comment = DIV(_class="tooltip",
-                          #                         _title="%s|%s" % (T("Filing Status"),
-                          #                                           T("Have all the signed documents for this shipment been filed?"))),
-                          #           readable = settings.get_req_document_filing(),
-                          #           writable = False,
-                          #           ),
+                          req_status_field("commit_status",
+                                           label = T("Commit Status"),
+                                           represent = self.req_commit_status_represent,
+                                           readable = use_commit,
+                                           writable = req_status_writable and use_commit,
+                                           ),
+                          req_status_field("transit_status",
+                                           label = T("Transit Status"),
+                                           readable = transit_status,
+                                           writable = req_status_writable and transit_status,
+                                           ),
+                          req_status_field("fulfil_status",
+                                           label = T("Fulfil. Status"),
+                                           writable = req_status_writable,
+                                           ),
+                          #req_status_field("filing_status",
+                          #                 label = T("Filing Status"),
+                          #                 comment = DIV(_class="tooltip",
+                          #                               _title="%s|%s" % (T("Filing Status"),
+                          #                                                 T("Have all the signed documents for this shipment been filed?"))),
+                          #                 readable = settings.get_req_document_filing(),
+                          #                 writable = False,
+                          #                 ),
                           Field("closed", "boolean",
                                 default = False,
                                 label = T("Closed"),
@@ -1191,8 +1141,8 @@ $.filterOptionsS3({
                         _class = "req_status_complete",
                         )
         else:
-            return current.s3db.req_status_opts.get(commit_status,
-                                                    current.messages.UNKNOWN_OPT)
+            return req_status_opts().get(commit_status,
+                                         current.messages.UNKNOWN_OPT)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2306,13 +2256,13 @@ $.filterOptionsS3({
         filter_widgets = [
             S3OptionsFilter("req_id$fulfil_status",
                             label = T("Status"),
-                            options = self.req_status_opts,
+                            options = req_status_opts,
                             cols = 3,
                             ),
             S3OptionsFilter("req_id$priority",
                             # Better to default (easier to customise/consistency)
                             #label = T("Priority"),
-                            options = self.req_priority_opts,
+                            options = req_priority_opts,
                             cols = 3,
                             ),
             S3LocationFilter("req_id$site_id$location_id",
@@ -2657,12 +2607,12 @@ class RequestSkillModel(S3Model):
         filter_widgets = [
             S3OptionsFilter("req_id$fulfil_status",
                             label = T("Status"),
-                            options = self.req_status_opts,
+                            options = req_status_opts,
                             cols = 3,
                             ),
             S3OptionsFilter("req_id$priority",
                             label = T("Priority"),
-                            options = self.req_priority_opts,
+                            options = req_priority_opts,
                             cols = 3,
                             ),
             S3LocationFilter("req_id$site_id$location_id",
@@ -2924,7 +2874,7 @@ class RequestNeedsModel(S3Model):
                                       readable = False,
                                       writable = False,
                                       ),
-                          self.req_priority(),
+                          req_priority()(),
                           Field("name", notnull = True,
                                 length = 64,
                                 label = T("Summary of Needs"),
@@ -2936,9 +2886,9 @@ class RequestNeedsModel(S3Model):
                                       label = T("Description"),
                                       comment = None,
                                       ),
-                          self.req_status("status",
-                                          label = T("Fulfilment Status"),
-                                          ),
+                          req_status()("status",
+                                       label = T("Fulfilment Status"),
+                                       ),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -3156,7 +3106,7 @@ class RequestNeedsDemographicsModel(S3Model):
                                           empty = False,
                                           comment = parameter_id_comment,
                                           ),
-                          self.req_timeframe(),
+                          req_timeframe()(),
                           Field("value", "double",
                                 label = T("Number"),
                                 #label = T("Number in Need"),
@@ -3249,7 +3199,7 @@ $.filterOptionsS3({
                                               widget = None,
                                               ),
                           self.supply_item_pack_id(),
-                          self.req_timeframe(),
+                          req_timeframe()(),
                           Field("quantity", "double",
                                 label = T("Quantity"),
                                 #label = T("Quantity Requested"),
@@ -3291,11 +3241,11 @@ $.filterOptionsS3({
                                 # Normally set automatically
                                 writable = False,
                                 ),
-                          self.req_priority(),
+                          req_priority()(),
                           s3_comments(),
-                          self.req_status("status",
-                                          label = T("Fulfilment Status"),
-                                          ),
+                          req_status()("status",
+                                       label = T("Fulfilment Status"),
+                                       ),
                           *s3_meta_fields())
 
         self.configure(tablename,
@@ -3349,11 +3299,11 @@ class RequestNeedsSkillsModel(S3Model):
                                 requires = IS_EMPTY_OR(
                                             IS_FLOAT_AMOUNT(minimum=1.0)),
                                 ),
-                          self.req_priority(),
+                          req_priority()(),
                           s3_comments(),
-                          self.req_status("status",
-                                          label = T("Fulfilment Status"),
-                                          ),
+                          req_status()("status",
+                                       label = T("Fulfilment Status"),
+                                       ),
                           *s3_meta_fields())
 
         self.configure(tablename,
@@ -3499,7 +3449,7 @@ $.filterOptionsS3({
                                 requires = IS_EMPTY_OR(
                                             IS_FLOAT_AMOUNT(minimum=1.0)),
                                 ),
-                          self.req_timeframe(),
+                          req_timeframe()(),
                           Field("quantity_committed", "double",
                                 label = T("Quantity Committed"),
                                 represent = lambda v: \
@@ -3534,9 +3484,9 @@ $.filterOptionsS3({
                                 writable = False,
                                 ),
                           #s3_comments(),
-                          self.req_status("status",
-                                          label = T("Fulfilment Status"),
-                                          ),
+                          req_status()("status",
+                                       label = T("Fulfilment Status"),
+                                       ),
                           *s3_meta_fields())
 
         # Components
@@ -5565,8 +5515,8 @@ def req_rheader(r, check_page=False):
         if use_workflow and workflow_status in (1, 2, 5): # Draft/Submitted/Cancelled
             transit_status = ("",)
         elif settings.get_req_show_quantity_transit() and not is_template:
-            transit_status = s3db.req_status_opts.get(record.transit_status,
-                                                      "")
+            transit_status = req_status_opts().get(record.transit_status,
+                                                   "")
             # @ToDo: Create the 'incoming' function if we need this!
             #if site_id and \
             #   record.transit_status in [REQ_STATUS_PARTIAL, REQ_STATUS_COMPLETE] and \

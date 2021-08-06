@@ -3224,6 +3224,7 @@ input.addPerson('lookupContact',siteID)}}})'''
     field = table.requester_id
     field.widget = S3AddPersonWidget(controller="pr")
 
+    #from s3db.req import req_status_opts
     filter_widgets = [
         S3TextFilter(["requester_id$first_name",
                       "requester_id$middle_name",
@@ -3237,12 +3238,12 @@ input.addPerson('lookupContact',siteID)}}})'''
                      ),
         #S3OptionsFilter("transit_status",
         #                label = T("Transit Status"),
-        #                options = s3db.req_status_opts,
+        #                options = req_status_opts,
         #                cols = 3,
         #                ),
         #S3OptionsFilter("fulfil_status",
         #                label = T("Fulfill Status"),
-        #                options = s3db.req_status_opts,
+        #                options = req_status_opts,
         #                cols = 3,
         #                ),
         S3LocationFilter("site_id$location_id",
