@@ -239,13 +239,15 @@ class DiseaseMonitoringModel(S3Model):
     """ Data Model for Disease Monitoring """
 
     names = ("disease_testing_report",
+             "disease_testing_device",
+             "disease_testing_device_id",
              )
 
     def model(self):
 
         T = current.T
 
-        #db = current.db
+        db = current.db
         s3 = current.response.s3
 
         define_table = self.define_table
@@ -350,18 +352,86 @@ class DiseaseMonitoringModel(S3Model):
             )
 
         # ---------------------------------------------------------------------
+        # Testing device registry
+        # - registry of approved testing devices for reference in e.g.
+        #   diagnostics, certificates etc.
+        #
+        device_classes = {"RAT": T("Rapid Antigen Test"),
+                          # to be extended
+                          }
+
+        tablename = "disease_testing_device"
+        define_table(tablename,
+                     self.disease_disease_id(
+                         ondelete = "CASCADE",
+                         ),
+                     Field("name"),
+                     Field("code"),
+                     Field("device_class",
+                           label = T("Device Class"),
+                           requires = IS_IN_SET(device_classes,
+                                                zero = None,
+                                                ),
+                           represent = S3Represent(options=device_classes),
+                           ),
+                     Field("approved", "boolean",
+                           default = True,
+                           label = T("Approved"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     # The list of approved devices can be long, but not all
+                     # of them are commonly available/in use - so can use this
+                     # flag to reduce the list in selectors to what is practical:
+                     Field("available", "boolean",
+                           default = True,
+                           label = T("Available"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Testing Device"),
+            title_display = T("Testing Device Details"),
+            title_list = T("Testing Devices"),
+            title_update = T("Edit Testing Device"),
+            label_list_button = T("List Testing Devices"),
+            label_delete_button = T("Delete Testing Device"),
+            msg_record_created = T("Testing Device created"),
+            msg_record_modified = T("Testing Device updated"),
+            msg_record_deleted = T("Testing Device deleted"),
+            msg_list_empty = T("No Testing Devices currently registered"),
+            )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename)
+        device_id = S3ReusableField("device_id", "reference %s" % tablename,
+                                    label = T("Testing Device"),
+                                    represent = represent,
+                                    requires = IS_ONE_OF(db, "%s.id" % tablename,
+                                                         represent,
+                                                         filterby = "available",
+                                                         filter_opts = [True],
+                                                         ),
+                                    sortby = "name",
+                                    )
+
+        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return {"disease_testing_device_id": device_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        #dummy = S3ReusableField.dummy
+        dummy = S3ReusableField.dummy
 
-        return {}
+        return {"disease_testing_device_id": dummy("device_id"),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod

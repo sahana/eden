@@ -206,6 +206,12 @@ def testing_report():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def testing_device():
+    """ Testing Device Registry: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def case_diagnostics():
     """ Diagnostic Tests: RESTful CRUD Controller """
 
