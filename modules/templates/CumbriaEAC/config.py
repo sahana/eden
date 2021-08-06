@@ -327,13 +327,16 @@ def config(settings):
 
         #anonymous_email = uuid4().hex
 
+        from s3db.pr import pr_address_anonymise, \
+                            pr_person_obscure_dob
+
         rules = [{"name": "default",
                   "title": "Name, Contacts, Address, Additional Information",
                   "fields": {"first_name": ("set", ANONYMOUS),
                              "middle_name": ("set", ANONYMOUS),
                              "last_name": ("set", ANONYMOUS),
                              "pe_label": "remove",
-                             "date_of_birth": s3db.pr_person_obscure_dob,
+                             "date_of_birth": pr_person_obscure_dob,
                              "comments": "remove",
                              },
                   "cascade": [("pr_contact", {"key": "pe_id",
@@ -346,7 +349,7 @@ def config(settings):
                                               }),
                               ("pr_address", {"key": "pe_id",
                                               "match": "pe_id",
-                                              "fields": {"location_id": s3db.pr_address_anonymise,
+                                              "fields": {"location_id": pr_address_anonymise,
                                                          "comments": "remove",
                                                          },
                                               #"delete": True,
@@ -397,7 +400,7 @@ def config(settings):
                                                                                                              }),
                                                                                              ("pr_address", {"key": "pe_id",
                                                                                                              "match": "pe_id",
-                                                                                                             "fields": {"location_id": s3db.pr_address_anonymise,
+                                                                                                             "fields": {"location_id": pr_address_anonymise,
                                                                                                                         "comments": "remove",
                                                                                                                         },
                                                                                                              "delete": True,
@@ -1368,7 +1371,8 @@ def config(settings):
         # Now done centrally
         #if r.representation == "plain":
         #    # Don't have a clickable map in Popups
-        #    table.location_id.represent = s3db.gis_LocationRepresent(show_link = False)
+        #    from s3db.gis import gis_LocationRepresent
+        #    table.location_id.represent = gis_LocationRepresent(show_link = False)
 
         # Redefine as multiple=False
         s3db.add_components("cr_shelter",
@@ -1628,7 +1632,8 @@ def config(settings):
                                                                                        check_out_date = r.utcnow,
                                                                                        )
                 # Update Shelter Population
-                s3db.cr_update_shelter_population(r.id)
+                from s3db.cr import cr_update_shelter_population
+                cr_update_shelter_population(r.id)
                 # response.confirmation triggers the popup close (although not actually seen by user)
                 response.confirmation = T("Client checked-out successfully!")
 
@@ -1921,7 +1926,8 @@ def config(settings):
                     current.db(query).delete()
 
                     # Update Shelter Population
-                    s3db.cr_update_shelter_population(r.id)
+                    from s3db.cr import cr_update_shelter_population
+                    cr_update_shelter_population(r.id)
 
                     # Add Site Event Log
                     s3db.org_site_event.insert(site_id = site_id,
@@ -2139,7 +2145,8 @@ def config(settings):
                 current.db(query).delete()
 
                 # Update Shelter Population
-                s3db.cr_update_shelter_population(shelter_id)
+                from s3db.cr import cr_update_shelter_population
+                cr_update_shelter_population(shelter_id)
 
                 # Add Site Event Log
                 check_in_date = form_vars_get("check_in_date", r.utcnow)
@@ -3136,7 +3143,8 @@ def config(settings):
                 f = s3db.org_site_event.site_id
                 f.label = T("Shelter")
                 f.readable = True
-                f.represent = s3db.org_SiteRepresent(show_type = False)
+                from s3db.org import org_SiteRepresent
+                f.represent = org_SiteRepresent(show_type = False)
 
                 return result
 
@@ -3291,7 +3299,8 @@ def config(settings):
                                       )
 
                         # Update Shelter Population
-                        s3db.cr_update_shelter_population(shelter_id)
+                        from s3db.cr import cr_update_shelter_population
+                        cr_update_shelter_population(shelter_id)
 
                         # Add Site Event Log
                         s3db.org_site_event.insert(site_id = site_id,

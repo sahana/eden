@@ -297,13 +297,16 @@ def config(settings):
         else:
             title = "Name, Contacts, Address, Additional Information, User Account"
 
+        from s3db.pr import pr_address_anonymise
+                            #pr_person_obscure_dob
+
         rules = [{"name": "default",
                   "title": title,
                   "fields": {"first_name": ("set", ANONYMOUS),
                              "middle_name": ("set", ANONYMOUS),
                              "last_name": ("set", ANONYMOUS),
                              #"pe_label": anonymous_id,
-                             #"date_of_birth": current.s3db.pr_person_obscure_dob,
+                             #"date_of_birth": pr_person_obscure_dob,
                              "date_of_birth": "remove",
                              "comments": "remove",
                              },
@@ -326,7 +329,7 @@ def config(settings):
                                                         }),
                               ("pr_address", {"key": "pe_id",
                                               "match": "pe_id",
-                                              "fields": {"location_id": current.s3db.pr_address_anonymise,
+                                              "fields": {"location_id": pr_address_anonymise,
                                                          "comments": "remove",
                                                          },
                                               }),
@@ -419,6 +422,9 @@ def config(settings):
 
         title = "Name, Contacts, Address, Additional Information, User Account"
 
+        from s3db.pr import pr_address_anonymise
+                            #pr_person_obscure_dob
+
         rules = [{"name": "default",
                   "title": title,
                   "fields": {"id": auth.s3_anonymise_roles,
@@ -437,7 +443,7 @@ def config(settings):
                                                                                         "middle_name": ("set", ANONYMOUS),
                                                                                         "last_name": ("set", ANONYMOUS),
                                                                                         #"pe_label": anonymous_id,
-                                                                                        #"date_of_birth": current.s3db.pr_person_obscure_dob,
+                                                                                        #"date_of_birth": pr_person_obscure_dob,
                                                                                         "date_of_birth": "remove",
                                                                                         "comments": "remove",
                                                                                         },
@@ -505,7 +511,7 @@ def config(settings):
                                                                                         }),
                                                               ("pr_address", {"key": "pe_id",
                                                                               "match": "pe_id",
-                                                                              "fields": {"location_id": current.s3db.pr_address_anonymise,
+                                                                              "fields": {"location_id": pr_address_anonymise,
                                                                                          "comments": "remove",
                                                                                          },
                                                                               }),
@@ -2133,6 +2139,7 @@ $('.copy-link').click(function(e){
     def customise_hrm_training_resource(r, tablename):
 
         from s3 import S3SQLCustomForm
+        from s3db.pr import pr_PersonRepresent
 
         s3db = current.s3db
 
@@ -2142,7 +2149,7 @@ $('.copy-link').click(function(e){
         f = table.person_id
         f.comment = None
         f.writable = False
-        f.represent = s3db.pr_PersonRepresent(show_link = True)
+        f.represent = pr_PersonRepresent(show_link = True)
 
         current.response.s3.crud_strings.hrm_training = Storage(
             label_create = T("Add Participant"),
@@ -2600,7 +2607,8 @@ $('.copy-link').click(function(e){
         table.name.readable = table.name.writable = True
         table.comments.comment = None
         table.start_date.requires = IS_UTC_DATETIME()
-        table.site_id.represent = s3db.org_SiteRepresent(show_type = False)
+        from s3db.org import org_SiteRepresent
+        table.site_id.represent = org_SiteRepresent(show_type = False)
         f = table.location_id
         f.readable = f.writable = True
         f.widget = S3LocationSelector(levels = ("L3", "L4"),
@@ -2686,9 +2694,10 @@ $('.copy-link').click(function(e){
         set_method = s3db.set_method
 
         # Ensure Tab is shown
+        from s3db.pr import pr_AssignMethod
         set_method("hrm", "training_event",
                    method = "assign",
-                   action = s3db.pr_AssignMethod(component = "training"))
+                   action = pr_AssignMethod(component = "training"))
 
         set_method("hrm", "training_event",
                    method = "remind",
@@ -2797,15 +2806,16 @@ $('.copy-link').click(function(e){
                                (T("Volunteer Offers"), "competency.skill_id"),
                                ]
 
+                from s3db.pr import pr_AssignMethod
                 set_method("hrm", "training_event",
                            method = "assign",
-                           action = s3db.pr_AssignMethod(component = "training",
-                                                         actions = actions,
-                                                         filter_widgets = filter_widgets,
-                                                         list_fields = list_fields,
-                                                         postprocess = "hrm_training_event_notification",
-                                                         title = T("Invite People"),
-                                                         ))
+                           action = pr_AssignMethod(component = "training",
+                                                    actions = actions,
+                                                    filter_widgets = filter_widgets,
+                                                    list_fields = list_fields,
+                                                    postprocess = "hrm_training_event_notification",
+                                                    title = T("Invite People"),
+                                                    ))
 
                 # Replace Callback rather than extend
                 #s3db.add_custom_callback("hrm_training",
@@ -3371,7 +3381,8 @@ $('.copy-link').click(function(e){
             current.log.error("Unable to link Group to Groups Forum: Group not Found")
             return
 
-        s3db.pr_add_affiliation(master, affiliate, role="Realm Hierarchy")
+        from s3db.pr import pr_add_affiliation
+        pr_add_affiliation(master, affiliate, role="Realm Hierarchy")
 
     # -------------------------------------------------------------------------
     def customise_pr_group_resource(r, tablename):
@@ -4111,7 +4122,8 @@ $('.copy-link').click(function(e){
                                                                          limitby = (0, 1)
                                                                          ).first()
                             reserves = forum.pe_id
-                            realms = s3db.pr_get_descendants({reserves}, entity_types={"pr_forum"})
+                            from s3db.pr import pr_get_descendants
+                            realms = pr_get_descendants({reserves}, entity_types={"pr_forum"})
                             realms.append(reserves)
                             rfilter &= FS("~.realm_entity").belongs(realms)
 
@@ -5415,10 +5427,11 @@ $('.copy-link').click(function(e){
                has_role("DONOR"):
                 table.created_by.readable = True
                 table.created_by.label = T("From")
-                table.created_by.represent = s3db.auth_UserRepresent(show_phone = True,
-                                                                     show_org = True,
-                                                                     show_link = False,
-                                                                     )
+                from s3db.auth import auth_UserRepresent
+                table.created_by.represent = auth_UserRepresent(show_phone = True,
+                                                                show_org = True,
+                                                                show_link = False,
+                                                                )
                 table.created_on.readable = True
                 table.created_on.label = T("Date Sent")
                 table.name.writable = False
@@ -5427,10 +5440,11 @@ $('.copy-link').click(function(e){
 
                 #table.realm_entity.readable = True
                 #table.realm_entity.label = T("To")
-                #table.realm_entity.represent = s3db.pr_PersonEntityRepresent(show_label = False,
-                #                                                             show_type = False,
-                #                                                             none = "Reserve(s)",
-                #                                                             )
+                #from s3db.pr import pr_PersonEntityRepresent
+                #table.realm_entity.represent = pr_PersonEntityRepresent(show_label = False,
+                #                                                        show_type = False,
+                #                                                        none = "Reserve(s)",
+                #                                                        )
 
                 # Filtered components
                 s3db.add_components("project_task",
@@ -5784,8 +5798,9 @@ $('.copy-link').click(function(e){
         contact = db(nctable.need_id == record_id).select(nctable.person_id,
                                                           limitby = (0, 1)
                                                           ).first()
-        contact = s3db.pr_PersonRepresentContact(show_email = True,
-                                                 show_link = False)(contact.person_id)
+        from s3db.pr import pr_PersonRepresentContact
+        contact = pr_PersonRepresentContact(show_email = True,
+                                            show_link = False)(contact.person_id)
         stable = s3db.hrm_skill
         nstable = s3db.req_need_skill
         query = (nstable.need_id == record_id) & \
@@ -6021,7 +6036,8 @@ $('.copy-link').click(function(e){
                 f.default = organisation_id
                 # Needs to be in the form
                 #f.readable = f.writable = False
-                #f.requires = s3db.org_organisation_requires(updateable = True)
+                #from s3db.org import org_organisation_requires
+                #f.requires = org_organisation_requires(updateable = True)
                 from gluon import IS_IN_SET
                 f.requires = IS_IN_SET({organisation_id: s3db.org_organisation[organisation_id].name}, zero=None)
             f.comment = None # No Create
@@ -6101,9 +6117,10 @@ $('.copy-link').click(function(e){
             #    # @ToDo: Create custom version of this which bypasses ACLs since
             #    #        - Will fail for normal Vols as they can't see other Vols anyway
             #    #        - Also failing for OrgAdmin as the user-added Phone is in the Personal PE not the Org's
-            #    s3db.req_need_contact.person_id.represent = s3db.pr_PersonRepresentContact(show_email = True,
-            #                                                                               show_link = False,
-            #                                                                               )
+            #    from s3db.pr import pr_PersonRepresentContact
+            #    s3db.req_need_contact.person_id.represent = pr_PersonRepresentContact(show_email = True,
+            #                                                                          show_link = False,
+            #                                                                          )
 
             if auth.s3_has_role("RESERVE", include_admin=False):
                 # Filter to just those they are invited to
@@ -6197,15 +6214,16 @@ $('.copy-link').click(function(e){
                                (T("Volunteer Offers"), "competency.skill_id"),
                                ]
 
+                from s3db.pr import pr_AssignMethod
                 set_method("req", "need",
                            method = "assign",
-                           action = s3db.pr_AssignMethod(component = "need_person",
-                                                         actions = actions,
-                                                         filter_widgets = filter_widgets,
-                                                         list_fields = list_fields,
-                                                         postprocess = "req_need_notification",
-                                                         title = T("Invite People"),
-                                                         ))
+                           action = pr_AssignMethod(component = "need_person",
+                                                    actions = actions,
+                                                    filter_widgets = filter_widgets,
+                                                    list_fields = list_fields,
+                                                    postprocess = "req_need_notification",
+                                                    title = T("Invite People"),
+                                                    ))
 
                 s3db.add_custom_callback("req_need_person",
                                          "onaccept",
@@ -6346,13 +6364,15 @@ $('.copy-link').click(function(e){
     # -------------------------------------------------------------------------
     def customise_req_need_person_resource(r, tablename):
 
+        from s3db.pr import pr_PersonRepresent
+
         s3db = current.s3db
 
         table = s3db.req_need_person
         f = table.person_id
         f.comment = None
         f.writable = False
-        f.represent = s3db.pr_PersonRepresent(show_link = True)
+        f.represent = pr_PersonRepresent(show_link = True)
 
         current.response.s3.crud_strings.req_need_person = Storage(
             label_create = T("Add Participant"),
@@ -6452,7 +6472,8 @@ $('.copy-link').click(function(e){
         table = s3db.supply_person_item
 
         # No Hyperlink for Items (don't have permissions anyway)
-        table.item_id.represent = s3db.supply_ItemRepresent()
+        from s3db.supply import supply_ItemRepresent
+        table.item_id.represent = supply_ItemRepresent()
 
         # Mandatory Status
         table.status_id.requires = table.status_id.requires.other
@@ -6528,11 +6549,12 @@ $('.copy-link').click(function(e){
 
         if current.auth.s3_has_role("ORG_ADMIN"):
             # Add Hyperlink for Donors
+            from s3db.pr import pr_PersonRepresentContact
             s3db.supply_person_item.person_id.represent = \
-                s3db.pr_PersonRepresentContact(linkto = URL(c="pr", f="person",
-                                                            args = ["[id]"],
-                                                            vars = {"donors": 1},
-                                                            extension = ""))
+                pr_PersonRepresentContact(linkto = URL(c="pr", f="person",
+                                                       args = ["[id]"],
+                                                       vars = {"donors": 1},
+                                                       extension = ""))
 
         # Post-process
         # (no need to call default one as not defined)
