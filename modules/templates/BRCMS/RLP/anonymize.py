@@ -12,14 +12,16 @@ def rlpcm_person_anonymize():
 
     ANONYMOUS = "-"
 
+    # Standard anonymizers
+    from s3db.pr import pr_address_anonymise as anonymous_address, \
+                        pr_person_obscure_dob as obscure_dob
+
     # Helper to produce an anonymous ID (pe_label)
     anonymous_id = lambda record_id, f, v: "NN%s" % uuid4().hex[-8:].upper()
     anonymous_code = lambda record_id, f, v: uuid4().hex
 
     # Case Activity Default Closure
     activity_closed = s3db.br_case_activity_default_status(closing=True)
-
-    anonymous_address = s3db.br_anonymous_address
 
     # General rule for attachments
     documents = ("doc_document", {
@@ -63,7 +65,7 @@ def rlpcm_person_anonymize():
          "fields": {"first_name": ("set", ANONYMOUS),
                     "last_name": ("set", ANONYMOUS),
                     "pe_label": anonymous_id,
-                    "date_of_birth": s3db.br_obscure_dob,
+                    "date_of_birth": obscure_dob,
                     "comments": "remove",
                     },
 

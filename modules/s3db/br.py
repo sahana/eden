@@ -44,14 +44,12 @@ __all__ = ("BRCaseModel",
            "br_AssistanceMeasureThemeRepresent",
            "br_CaseActivityRepresent",
            "br_DocEntityRepresent",
-           "br_anonymous_address",
            "br_case_read_orgs",
            "br_case_default_org",
            "br_case_root_org",
            "br_case_default_status",
            "br_case_status_filter_opts",
            "br_case_activity_default_status",
-           "br_obscure_dob",
            "br_org_assistance_themes",
            "br_group_membership_onaccept",
            "br_assistance_default_status",
@@ -4299,70 +4297,14 @@ def br_crud_strings(tablename):
     return crud_strings
 
 # =============================================================================
-def br_anonymous_address(record_id, field, value):
-    """
-        Helper to anonymize a pr_address location; removes street and
-        postcode details, but retains Lx ancestry for statistics
-
-        @param record_id: the pr_address record ID
-        @param field: the location_id Field
-        @param value: the location_id
-
-        @return: the location_id
-    """
-
-    db = current.db
-    s3db = current.s3db
-
-    # Get the location
-    if value:
-        ltable = s3db.gis_location
-        row = db(ltable.id == value).select(ltable.id,
-                                            ltable.level,
-                                            limitby = (0, 1),
-                                            ).first()
-        if not row.level:
-            # Specific location => remove address details
-            data = {"addr_street": None,
-                    "addr_postcode": None,
-                    "gis_feature_type": 0,
-                    "lat": None,
-                    "lon": None,
-                    "wkt": None,
-                    }
-            # Doesn't work - PyDAL doesn't detect the None value:
-            #if "the_geom" in ltable.fields:
-            #    data["the_geom"] = None
-            row.update_record(**data)
-            if "the_geom" in ltable.fields:
-                db.executesql("UPDATE gis_location SET the_geom=NULL WHERE id=%s" % row.id)
-
-    return value
-
-# -----------------------------------------------------------------------------
-def br_obscure_dob(record_id, field, value):
-    """
-        Helper to obscure a date of birth; maps to the first day of
-        the quarter, thus retaining the approximate age for statistics
-
-        @param record_id: the pr_address record ID
-        @param field: the location_id Field
-        @param value: the location_id
-
-        @return: the new date
-    """
-
-    if value:
-        month = int((value.month - 1) / 3) * 3 + 1
-        value = value.replace(month=month, day=1)
-
-    return value
-
-# -----------------------------------------------------------------------------
 def br_person_anonymize():
     """ Rules to anonymize a case file """
 
     ANONYMOUS = "-"
+
+    # Standard anonymizers
+    from s3db.pr import pr_address_anonymise as anonymous_address, \
+                        pr_person_obscure_dob as obscure_dob
 
     # Helper to produce an anonymous ID (pe_label)
     anonymous_id = lambda record_id, f, v: "NN%06d" % long(record_id)
@@ -4402,7 +4344,7 @@ def br_person_anonymize():
               "fields": {"first_name": ("set", ANONYMOUS),
                          "last_name": ("set", ANONYMOUS),
                          "pe_label": anonymous_id,
-                         "date_of_birth": br_obscure_dob,
+                         "date_of_birth": obscure_dob,
                          "comments": "remove",
                          },
               "cascade": [("br_case", {
@@ -4439,7 +4381,7 @@ def br_person_anonymize():
                           ("pr_address", {
                                 "key": "pe_id",
                                 "match": "pe_id",
-                                "fields": {"location_id": br_anonymous_address,
+                                "fields": {"location_id": anonymous_address,
                                            "comments": "remove",
                                            },
                                 }),
