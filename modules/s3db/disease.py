@@ -382,7 +382,7 @@ class DiseaseMonitoringModel(S3Model):
                            ),
                      Field("approved", "boolean",
                            default = True,
-                           label = T("Approved"),
+                           label = T("Approved##actionable"),
                            represent = s3_yes_no_represent,
                            ),
                      # The list of approved devices can be long, but not all
@@ -392,6 +392,12 @@ class DiseaseMonitoringModel(S3Model):
                            default = True,
                            label = T("Available"),
                            represent = s3_yes_no_represent,
+                           ),
+                     # Source would normally be a URI, but can also be a name
+                     # or similar, activate in template if/as needed:
+                     Field("source",
+                           readable = False,
+                           writable = False,
                            ),
                      s3_comments(),
                      *s3_meta_fields())
