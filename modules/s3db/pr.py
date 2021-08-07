@@ -96,7 +96,7 @@ __all__ = (# PR Base Entities
            "pr_add_to_role",
            "pr_remove_from_role",
            "pr_instance_type",
-           "pr_realm",
+           "pr_default_realms",
            "pr_realm_users",
            "pr_get_role_paths",
            "pr_get_role_branches",
@@ -9742,9 +9742,9 @@ def pr_instance_type(pe_id):
     return None
 
 # =============================================================================
-def pr_realm(entity):
+def pr_default_realms(entity):
     """
-        Get the default realm (=the immediate OU ancestors) of an entity
+        Get the default realm(s) (=the immediate OU ancestors) of an entity
 
         @param entity: the entity (pe_id)
     """

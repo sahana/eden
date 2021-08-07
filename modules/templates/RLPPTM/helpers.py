@@ -168,7 +168,8 @@ def get_role_users(role_uid, pe_id=None, organisation_id=None):
         pe_id = organisation.pe_id if organisation else None
 
     # Get all users with this realm as direct OU ancestor
-    users = s3db.pr_realm_users(pe_id) if pe_id else None
+    from s3db.pr import pr_realm_users
+    users = pr_realm_users(pe_id) if pe_id else None
     if users:
         # Look up those among the realm users who have
         # the role for either pe_id or for their default realm
@@ -433,7 +434,6 @@ def can_cancel_debit(debit):
     """
 
     auth = current.auth
-    s3db = current.s3db
 
     user = auth.user
     if user:
@@ -441,7 +441,7 @@ def can_cancel_debit(debit):
         gtable = auth.settings.table_group
         query = (gtable.uuid == "VOUCHER_PROVIDER")
         role = current.db(query).select(gtable.id,
-                                        cache = s3db.cache,
+                                        cache = current.s3db.cache,
                                         limitby = (0, 1),
                                         ).first()
         if not role:
@@ -459,7 +459,8 @@ def can_cancel_debit(debit):
             # User has a site-wide VOUCHER_PROVIDER role, however
             # for cancellation of debits they must be affiliated
             # with the debit owner organisation
-            role_realms = s3db.pr_realm(user["pe_id"])
+            from s3db.pr import pr_default_realms
+            role_realms = pr_default_realms(user["pe_id"])
 
         return debit.pe_id in role_realms
 

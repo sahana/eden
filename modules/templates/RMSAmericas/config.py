@@ -4861,8 +4861,8 @@ Thank you"""
             if None in pe_ids:
                 # Default Realm(s)
                 pe_ids.remove(None)
-                from s3db.pr import pr_realm
-                realms = pr_realm(auth.user["pe_id"])
+                from s3db.pr import pr_default_realms
+                realms = pr_default_realms(auth.user["pe_id"])
                 if realms:
                     pe_ids += realms
 

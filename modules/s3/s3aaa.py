@@ -4030,7 +4030,7 @@ Please go to %(url)s to approve this user."""
                                   system_roles.AUTHENTICATED,
                                   )
 
-                default_realm = s3db.pr_realm(self.user["pe_id"])
+                default_realm = s3db.pr_default_realms(self.user["pe_id"])
 
                 # Store the realms:
                 for row in rows:
@@ -7523,7 +7523,7 @@ class S3Permission(object):
             # b) looking up OU ancestors of a person (=a few) is much more
             #    efficient than looking up pr_person OU descendants of the
             #    role realm (=could be tens or hundreds of thousands)
-            ancestors = set(s3db.pr_realm(entity))
+            ancestors = set(s3db.pr_default_realms(entity))
 
         result = {}
         for e in acls:
