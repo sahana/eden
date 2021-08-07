@@ -15,7 +15,8 @@ from gluon import current, Field, URL, \
 from s3 import ICON, IS_FLOAT_AMOUNT, JSONERRORS, S3DateTime, \
                S3Method, S3Represent, s3_fullname, s3_mark_required, s3_str
 
-from s3db.pr import pr_PersonRepresentContact
+from s3db.pr import pr_PersonRepresentContact, pr_default_realms
+
 # =============================================================================
 def get_role_realms(role):
     """
@@ -459,7 +460,6 @@ def can_cancel_debit(debit):
             # User has a site-wide VOUCHER_PROVIDER role, however
             # for cancellation of debits they must be affiliated
             # with the debit owner organisation
-            from s3db.pr import pr_default_realms
             role_realms = pr_default_realms(user["pe_id"])
 
         return debit.pe_id in role_realms
