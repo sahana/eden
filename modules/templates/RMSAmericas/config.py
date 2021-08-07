@@ -206,6 +206,30 @@ def config(settings):
             for e in entities:
                 pr_add_affiliation(pe_id, realm_entity, role="Parent", role_type=OU)
 
+            return realm_entity
+
+        elif tablename == "inv_track_item":
+            # Inherit from inv_send (if-present) or inv_recv
+            record = db(table.id == row["id"]).select(table.send_id,
+                                                      table.recv_id,
+                                                      limitby = (0, 1)
+                                                      ).first()
+            send_id = record.send_id
+            if send_id:
+                stable = s3db.inv_send
+                send = db(stable.id == send_id).select(stable.realm_entity,
+                                                       limitby = (0, 1)
+                                                       ).first()
+                return send.realm_entity
+
+            recv_id = record.recv_id
+            if recv_id:
+                rtable = s3db.inv_recv
+                recv = db(stable.id == recv_id).select(rtable.realm_entity,
+                                                       limitby = (0, 1)
+                                                       ).first()
+                return recv.realm_entity
+
         elif tablename == "org_organisation":
             # Suppliers & Partners should be in the realm of the user's organisation
             ottable = s3db.org_organisation_type
@@ -244,7 +268,7 @@ def config(settings):
                                        limitby = (0, 1)
                                        ).first()
                 if org:
-                    realm_entity = org.pe_id
+                    return org.pe_id
                 # otherwise: inherit from the person record
         else:
             # Entity reference fields
@@ -347,8 +371,7 @@ def config(settings):
                                           limitby = (0, 1)
                                           ).first()
                 if record:
-                    realm_entity = record.realm_entity
-                    break
+                    return record.realm_entity
                 #else:
                 # Continue to loop through the rest of the default_fks
                 # Fall back to default get_realm_entity function
