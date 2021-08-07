@@ -93,6 +93,7 @@ def config(settings):
     # Use HRM for the /default/person Profile
     settings.auth.profile_controller = "hrm"
 
+    # -------------------------------------------------------------------------
     def ifrc_realm_entity(table, row):
         """
             Assign a Realm Entity to records
@@ -115,106 +116,98 @@ def config(settings):
         db = current.db
         s3db = current.s3db
 
-        # Entity reference fields
-        EID = "pe_id"
-        OID = "organisation_id"
-        SID = "site_id"
-        #GID = "group_id"
-        PID = "person_id"
-
-        # Owner Entity Foreign Key
-        realm_entity_fks = {"pr_contact": [("org_organisation", EID),
-                                          #("po_household", EID),
-                                          ("pr_person", EID),
-                                          ],
-                            "pr_contact_emergency": EID,
-                            "pr_physical_description": EID,
-                            "pr_address": [("org_organisation", EID),
-                                          ("pr_person", EID),
-                                          ],
-                            "pr_image": EID,
-                            "pr_identity": PID,
-                            "pr_education": PID,
-                            "pr_note": PID,
-                            "hrm_human_resource": SID,
-                            "hrm_training": PID,
-                            "hrm_training_event": OID,
-                            "inv_adj": SID,
-                            "inv_recv": SID,
-                            "inv_send": SID,
-                            "inv_inv_item": SID,
-                            "inv_track_item": "track_org_id",
-                            "inv_adj_item": "adj_id",
-                            "req_req": "site_id",
-                            "req_req_item": "req_id",
-                            #"po_household": "area_id",
-                            #"po_organisation_area": "area_id",
-                            }
-
-        # Default Foreign Keys (ordered by priority)
-        default_fks = (#"household_id",
-                       "catalog_id",
-                       "project_id",
-                       "project_location_id",
-                       )
-
-        # Link Tables
-        #realm_entity_link_table = {
-        #    "project_task": Storage(tablename = "project_task_project",
-        #                            link_key = "task_id"
-        #                            )
-        #    }
-        #if tablename in realm_entity_link_table:
-        #    # Replace row with the record from the link table
-        #    link_table = realm_entity_link_table[tablename]
-        #    table = s3db[link_table.tablename]
-        #    rows = db(table[link_table.link_key] == row.id).select(table.id,
-        #                                                           limitby = (0, 1)
-        #                                                           )
-        #    if rows:
-        #        # Update not Create
-        #        row = rows.first()
-
-        # Check if there is a FK to inherit the realm_entity
         realm_entity = 0
-        fk = realm_entity_fks.get(tablename, None)
-        fks = [fk] if not isinstance(fk, list) else list(fk)
-        fks.extend(default_fks)
-        for default_fk in fks:
-            if isinstance(default_fk, tuple):
-                instance_type, fk = default_fk
-            else:
-                instance_type, fk = None, default_fk
-            if fk not in table.fields:
-                continue
-
-            # Inherit realm_entity from parent record
-            if fk == EID:
-                if instance_type:
-                    ftable = s3db.table(instance_type)
-                    if not ftable:
-                        continue
-                else:
-                    ftable = s3db.pr_person
-                query = (ftable[EID] == row[EID])
-            else:
-                ftablename = table[fk].type[10:] # reference tablename
-                ftable = s3db[ftablename]
-                query = (table.id == row["id"]) & \
-                        (table[fk] == ftable.id)
-            record = db(query).select(ftable.realm_entity,
-                                      limitby = (0, 1)
-                                      ).first()
-            if record:
-                realm_entity = record.realm_entity
-                break
-            #else:
-            # Continue to loop through the rest of the default_fks
-            # Fall back to default get_realm_entity function
-
         use_user_organisation = False
-        # Suppliers & Partners are owned by the user's organisation
-        if realm_entity == 0 and tablename == "org_organisation":
+
+        if tablename in ("req_req", "inv_send", "inv_recv"):
+            # Ensure that we set the realm_entity to a pr_realm for this record,
+            # with the correct affiliations
+            record_id = row["id"]
+
+            if tablename == "inv_send":
+                realm_name = "WB_%s" % record_id
+                to_site_id = db(table.id == record_id).select(table.to_site_id,
+                                                              limitby = (0, 1)
+                                                              ).first().to_site_id
+                site_ids = (row["site_id"],
+                            to_site_id,
+                            )
+            elif tablename == "inv_recv":
+                realm_name = "GRN_%s" % record_id
+                from_site_id = db(table.id == record_id).select(table.from_site_id,
+                                                                limitby = (0, 1)
+                                                                ).first().from_site_id
+                site_ids = (row["site_id"],
+                            from_site_id
+                            )
+            elif tablename == "req_req":
+                realm_name = "REQ_%s" % record_id
+                ritable = s3db.req_req_item
+                query = (ritable.req_id == record_id) & \
+                        (ritable.deleted == False)
+                request_items = db(query).select(ritable.site_id)
+                site_ids = set([ri.site_id for ri in request_items] + [row["site_id"]])
+
+            # Find/create the Realm
+            rtable = s3db.pr_realm
+            realm = db(rtable.name == realm_name).select(rtable.pe_id,
+                                                         limitby = (0, 1)
+                                                         ).first()
+            if not realm:
+                realm_id = rtable.insert(name = realm_name)
+                realm = Storage(id = realm_id)
+                s3db.update_super(rtable, realm)
+
+            realm_entity = realm.pe_id
+
+            # Lookup the PE ID for Sites involved
+            stable = s3db.org_site
+            sites = db(stable.site_id.belongs(site_ids)).select(stable.site_id,
+                                                                stable.instance_type,
+                                                                )
+            instance_types = {}
+            for site in sites:
+                instance_type = site.instance_type
+                if instance_type in instance_types:
+                    instance_types[instance_type].append(site.site_id)
+                else:
+                    instance_types[instance_type] = [site.site_id]
+
+            entities = []
+            for instance_type in instance_types:
+                itable = s3db.table(instance_type)
+                instances = db(itable.site_id.belongs(instance_types[instance_type])).select(itable.pe_id)
+                entities += [i.pe_id for i in instances]
+
+            # Get all current affiliations
+            rtable = s3db.pr_role
+            atable = s3db.pr_affiliation
+            query = (atable.deleted == False) & \
+                    (atable.pe_id.belongs(entities)) & \
+                    (rtable.deleted == False) & \
+                    (rtable.id == atable.role_id)
+            affiliations = db(query).select(rtable.pe_id,
+                                            rtable.role,
+                                            )
+
+            # Remove affiliations which are no longer needed
+            from s3db.pr import OU, \
+                                pr_add_affiliation, \
+                                pr_remove_affiliation
+            for a in affiliations:
+                pe_id = a.pe_id
+                role = a.role
+                if pe_id not in entities:
+                    pr_remove_affiliation(pe_id, realm_entity, role=role)
+                else:
+                    entities.remove(pe_id)
+
+            # Add new affiliations
+            for e in entities:
+                pr_add_affiliation(pe_id, realm_entity, role="Parent", role_type=OU)
+
+        elif tablename == "org_organisation":
+            # Suppliers & Partners should be in the realm of the user's organisation
             ottable = s3db.org_organisation_type
             ltable = db.org_organisation_organisation_type
             query = (ltable.organisation_id == row["id"]) & \
@@ -225,10 +218,10 @@ def config(settings):
             if not otype or otype.name != RED_CROSS:
                 use_user_organisation = True
 
-        # Facilities & Forums are owned by the user's organisation
-        elif tablename in ("org_facility", "pr_forum"):
+        elif tablename in ("org_facility", "pr_forum", "pr_group"):
+            # Facilities, Forums and Groups should be in the realm of the user's organisation
             use_user_organisation = True
-
+        
         elif tablename == "hrm_training":
             # Inherit realm entity from the related HR record
             htable = s3db.hrm_human_resource
@@ -253,16 +246,118 @@ def config(settings):
                 if org:
                     realm_entity = org.pe_id
                 # otherwise: inherit from the person record
+        else:
+            # Entity reference fields
+            EID = "pe_id"
+            OID = "organisation_id"
+            SID = "site_id"
+            #GID = "group_id"
+            PID = "person_id"
 
-        # Groups are owned by the user's organisation
-        #elif tablename in ("pr_group",):
-        elif tablename == "pr_group":
-            use_user_organisation = True
+            # Owner Entity Foreign Key
+            realm_entity_fks = {"pr_contact": [("org_organisation", EID),
+                                               #("po_household", EID),
+                                               ("pr_person", EID),
+                                               ],
+                                "pr_contact_emergency": EID,
+                                "pr_physical_description": EID,
+                                "pr_address": [("org_organisation", EID),
+                                               ("pr_person", EID),
+                                               ],
+                                "pr_image": EID,
+                                "pr_identity": PID,
+                                "pr_education": PID,
+                                #"pr_note": PID,
+                                "hrm_human_resource": SID,
+                                "hrm_training": PID,
+                                "hrm_training_event": OID,
+                                "inv_adj": SID,
+                                "inv_adj_item": "adj_id",
+                                "inv_inv_item": SID,
+                                #"inv_recv": SID,
+                                #"inv_send": SID,
+                                #"inv_track_item": "track_org_id",
+                                #"req_req": "site_id",
+                                "req_req_item": "req_id",
+                                #"po_household": "area_id",
+                                #"po_organisation_area": "area_id",
+                                }
+
+            # Default Foreign Keys (ordered by priority)
+            default_fks = (#"household_id",
+                           "catalog_id",
+                           "project_id",
+                           "project_location_id",
+                           )
+
+            # Link Tables
+            #realm_entity_link_table = {
+            #    "project_task": Storage(tablename = "project_task_project",
+            #                            link_key = "task_id"
+            #                            )
+            #    }
+            #if tablename in realm_entity_link_table:
+            #    # Replace row with the record from the link table
+            #    link_table = realm_entity_link_table[tablename]
+            #    table = s3db[link_table.tablename]
+            #    rows = db(table[link_table.link_key] == row.id).select(table.id,
+            #                                                           limitby = (0, 1)
+            #                                                           )
+            #    if rows:
+            #        # Update not Create
+            #        row = rows.first()
+
+            # Check if there is a FK to inherit the realm_entity
+            fk = realm_entity_fks.get(tablename, None)
+            fks = [fk] if not isinstance(fk, list) else list(fk)
+            fks.extend(default_fks)
+            for default_fk in fks:
+                if isinstance(default_fk, tuple):
+                    instance_type, fk = default_fk
+                else:
+                    instance_type, fk = None, default_fk
+                if fk not in table.fields:
+                    continue
+
+                # Inherit realm_entity from parent record
+                if fk == EID:
+                    if instance_type:
+                        ftable = s3db.table(instance_type)
+                        if not ftable:
+                            continue
+                    else:
+                        ftable = s3db.pr_person
+                    query = (ftable[EID] == row[EID])
+                elif fk == SID:
+                    # Need to get the entity from the instance, not the super
+                    from s3db.pr import pr_get_pe_id
+                    realm_entity = pr_get_pe_id("org_site",
+                                                row[SID])
+                    break
+                elif fk == OID:
+                    ftable = s3db.org_organisation
+                    query = (ftable.id == row[OID])
+                else:
+                    # PID & other FKs not in row, so need to load
+                    ftablename = table[fk].type[10:] # reference tablename
+                    ftable = s3db[ftablename]
+                    query = (table.id == row["id"]) & \
+                            (table[fk] == ftable.id)
+                record = db(query).select(ftable.realm_entity,
+                                          limitby = (0, 1)
+                                          ).first()
+                if record:
+                    realm_entity = record.realm_entity
+                    break
+                #else:
+                # Continue to loop through the rest of the default_fks
+                # Fall back to default get_realm_entity function
 
         if use_user_organisation:
             user = current.auth.user
             if user:
-                # @ToDo - this might cause issues if the user's org is different from the realm that gave them permissions to create the Org
+                # @ToDo - this might cause issues if the user's org is different
+                #         from the realm that gave them permissions to create the record
                 from s3db.pr import pr_get_pe_id
                 realm_entity = pr_get_pe_id("org_organisation",
                                             user.organisation_id)
@@ -4795,16 +4890,6 @@ Thank you"""
     settings.customise_project_location_controller = customise_project_location_controller
 
     # -------------------------------------------------------------------------
-    #def customise_proc_order_item_resource(r, tablename):
-
-    #    s3db = current.s3db
-    #    table = s3db.proc_order_item
-    #    f = table.order_id
-    #    f.readable = f.writable = False
-
-    #settings.customise_proc_order_item_resource = customise_proc_order_item_resource
-
-    # -------------------------------------------------------------------------
     def customise_req_approver_resource(r, tablename):
 
         db = current.db
@@ -4887,7 +4972,7 @@ Thank you"""
                 f.default = org_pe_id
 
         from s3 import IS_ONE_OF
-        from s3db import pr_PersonEntityRepresent
+        from s3db.pr import pr_PersonEntityRepresent
         f.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
                                pr_PersonEntityRepresent(show_type = False),
                                filterby = "pe_id",
@@ -4930,6 +5015,30 @@ Thank you"""
                                                              )
 
     settings.customise_req_project_req_resource = customise_req_project_req_resource
+
+    # -------------------------------------------------------------------------
+    def req_req_onaccept(form):
+        """
+            Update realm if site_id changes
+            - Lighter then using update_realm on every update (this is much rarer edge case))
+            - Can hardcode the component handling
+        """
+
+        if form.record:
+            # Update form
+            req_id = form.vars.id
+            db = current.db
+            table  = db.req_req
+            if site_id not in record:
+                record = db(table.id == req_id).select(table.id,
+                                                       table.site_id,
+                                                       limitby = (0, 1)
+                                                       ).first()
+            if record.site_id != form.record.site_id:
+                realm_entity = current.auth.get_realm_entity(table, record)
+                db(table.id == req_id).update(realm_entity = realm_entity)
+                # Update Request Items
+                db(current.s3db.req_req_item.req_id == req_id).update(realm_entity = realm_entity)
 
     # -------------------------------------------------------------------------
     def customise_req_req_resource(r, tablename):
@@ -4976,7 +5085,9 @@ Thank you"""
             ptable = s3db.project_project
             f = s3db.req_project_req.project_id
             f.label = T("Project Code")
-            project_represent = S3Represent(lookup="project_project", fields=["code"])
+            project_represent = S3Represent(lookup = "project_project",
+                                            fields = ["code"],
+                                            )
             query = ((ptable.end_date == None) | \
                      (ptable.end_date > r.utcnow)) & \
                     (ptable.deleted == False)
@@ -5002,7 +5113,7 @@ Thank you"""
                 # Never opens in Component Tab, always breaks out
                 atable = s3db.req_approver_req
                 approved = db(atable.req_id == req_id).select(atable.id,
-                                                              limitby = (0, 1),
+                                                              limitby = (0, 1)
                                                               )
                 if approved:
                     crud_fields.insert(-1, S3SQLInlineComponent("approver",
@@ -5101,6 +5212,11 @@ Thank you"""
             #filter_widgets += [
             #                   ]
 
+        s3db.add_custom_callback(tablename,
+                                 "onaccept",
+                                 req_req_onaccept,
+                                 )
+
         s3db.configure(tablename,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
@@ -5184,6 +5300,35 @@ Thank you"""
         return attr
 
     settings.customise_req_req_controller = customise_req_req_controller
+
+    # -------------------------------------------------------------------------
+    def req_req_item_onaccept(form):
+        """
+            Update realm's affiliations if site_id changes
+        """
+
+        if form.record:
+            # Update form
+            form_vars_get = form.vars.get
+            if form_vars_get("site_id") != form.record.site_id:
+                # Item has been Requested from a specific site so this needs to be affiliated to the realm
+                db = current.db
+                table = db.req_req
+                record = db(table.id == form_vars_get("req_id")).select(table.id,
+                                                                        table.site_id,
+                                                                        )
+                # Update affiliations
+                current.auth.get_realm_entity(table, record)
+
+    # -------------------------------------------------------------------------
+    def customise_req_req_item_resource(r, tablename):
+
+        current.s3db.add_custom_callback(tablename,
+                                         "onaccept",
+                                         req_req_item_onaccept,
+                                         )
+
+    settings.customise_req_req_item_resource = customise_req_req_item_resource
 
     # -------------------------------------------------------------------------
     def customise_supply_item_category_resource(r, tablename):

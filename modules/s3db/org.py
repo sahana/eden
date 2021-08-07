@@ -1863,8 +1863,6 @@ class OrgOrganisationGroupTeamModel(S3Model):
             Update affiliations
         """
 
-        from .pr import OU
-
         if hasattr(form, "vars"):
             _id = form.vars.id
         elif isinstance(form, Row) and "id" in form:
@@ -1880,13 +1878,15 @@ class OrgOrganisationGroupTeamModel(S3Model):
 
         record = db(table.id == _id).select(table.group_id,
                                             table.org_group_id,
-                                            limitby=(0, 1)).first()
+                                            limitby = (0, 1)
+                                            ).first()
         if record:
+            from .pr import OU
             org_group = ("org_group", record.org_group_id)
             pr_group = ("pr_group", record.group_id)
             current.s3db.pr_add_affiliation(org_group, pr_group,
-                                            role="Groups",
-                                            role_type=OU,
+                                            role = "Groups",
+                                            role_type = OU,
                                             )
 
 # =============================================================================
@@ -8056,7 +8056,8 @@ def org_site_update_affiliations(record):
     organisation_id = record.get("organisation_id")
     if organisation_id:
         org = db(otable.id == organisation_id).select(otable.pe_id,
-                                                      limitby=(0, 1)).first()
+                                                      limitby = (0, 1)
+                                                      ).first()
         if org:
             o_pe_id = org.pe_id
     if s_pe_id:
@@ -8185,7 +8186,8 @@ def org_update_root_organisation(organisation_id, root_org=None):
                 (ltable.organisation_id == otable.id)
         parent_org = db(query).select(otable.id,
                                       otable.root_organisation,
-                                      limitby=(0, 1)).first()
+                                      limitby = (0, 1)
+                                      ).first()
         if not parent_org:
             # No parent organisation? => this is the root organisation
             root_org = organisation_id
@@ -8205,7 +8207,7 @@ def org_update_root_organisation(organisation_id, root_org=None):
         else:
             oquery = (otable.id == organisation_id)
             bquery = (ltable.organisation_id == organisation_id)
-        db(oquery).update(root_organisation=root_org)
+        db(oquery).update(root_organisation = root_org)
 
         # Propagate to all branches (explicit batch update)
         branches = db(bquery).select(ltable.branch_id)

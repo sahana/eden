@@ -437,8 +437,8 @@ class RequestModel(S3Model):
                           # Simple Status
                           # - currently just enabled in customise_req_fields() workflow
                           req_status_field(readable = False,
-                                     writable = False,
-                                     ),
+                                           writable = False,
+                                           ),
                           # Detailed Status
                           req_status_field("commit_status",
                                            label = T("Commit Status"),
@@ -674,7 +674,9 @@ class RequestModel(S3Model):
                                 )
                             ),
                        super_entity = "doc_entity",
-                       update_realm = True,
+                       # Leave this to templates
+                       # - reduce load on templates which don't need this
+                       #update_realm = True,
                        realm_components = ("req_item",
                                            "req_skill",
                                            ),
@@ -965,10 +967,10 @@ $.filterOptionsS3({
                     table.site_id.comment = A(T("Set as default Site"),
                                               _id = "req_req_site_id_link",
                                               _target = "_blank",
-                                              _href=URL(c = "default",
-                                                        f = "user",
-                                                        args = ["profile"],
-                                                        ),
+                                              _href = URL(c = "default",
+                                                          f = "user",
+                                                          args = ["profile"],
+                                                          ),
                                               )
 
             if method in ("update", "read"):
@@ -1056,11 +1058,13 @@ $.filterOptionsS3({
  'optional':true,
 })''' % T("No contacts yet defined for this site"))
                     table.site_id.comment = A(T("Set as default Site"),
-                                      _id="req_req_site_id_link",
-                                      _target="_blank",
-                                      _href=URL(c="default",
-                                                f="user",
-                                                args=["profile"]))
+                                              _id = "req_req_site_id_link",
+                                              _target = "_blank",
+                                              _href = URL(c="default",
+                                                          f="user",
+                                                          args = ["profile"],
+                                                          ),
+                                              )
 
             else:
                 fields.insert(1, "is_template")
@@ -1839,7 +1843,7 @@ $.filterOptionsS3({
                                                table.commit_status,
                                                table.fulfil_status,
                                                table.cancel,
-                                               limitby = (0, 1),
+                                               limitby = (0, 1)
                                                ).first()
         if record.is_template:
             is_template = True
@@ -1852,16 +1856,25 @@ $.filterOptionsS3({
 
             if settings.get_req_use_req_number() and not record.req_ref:
                 # Auto-generate req_ref
-                code = s3db.supply_get_shipping_code(settings.get_req_shortname(),
-                                                     record.site_id,
-                                                     table.req_ref,
-                                                     )
+                from s3db.supply import supply_get_shipping_code
+                code = supply_get_shipping_code(settings.get_req_shortname(),
+                                                record.site_id,
+                                                table.req_ref,
+                                                )
                 update["req_ref"] = code
 
             req_status = record.req_status
             if req_status is not None:
-                # Cancel-flag is implied by simple status
-                update["cancel"] = False
+                status_requires = table.req_status.requires
+                if status_requires.has_attr("other"):
+                    status_requires = status_requires.other
+                opts = [opt[0] for opt in status_requires.options()]
+                if str(REQ_STATUS_CANCEL) in opts:
+                    # Cancel flag implied by simple status
+                    update["cancel"] = False
+                elif record.cancel:
+                    # Using explicit cancel flag
+                    update["workflow_status"] = 5
 
                 # Translate Simple Status
                 if req_status == REQ_STATUS_PARTIAL:
@@ -1882,7 +1895,7 @@ $.filterOptionsS3({
                     update["fulfil_status"] = REQ_STATUS_NONE
 
             elif record.cancel:
-                # Using 3-tiered status (commit/transit/fulfill), explicit cancel-flag
+                # Using 3-tiered status (commit/transit/fulfill), and explicit cancel flag
                 update["workflow_status"] = 5
 
             if update:
@@ -1938,7 +1951,7 @@ $.filterOptionsS3({
                     s3db.hrm_human_resource_onaccept(Storage(id = hr_id))
 
         # Update the Realm if the Requesting site changes
-        # Now done via update_realm & realm_components: Heavier but no assumptions
+        # - now left to templates
         #if form.record:
         #    if record.site_id != form.record.site_id:
         #        realm_entity = current.auth.get_realm_entity(table, record)
@@ -2151,6 +2164,7 @@ class RequestItemModel(S3Model):
                      # @ToDo: Move this into a Currency Widget for the pack_value field
                      s3_currency(readable = track_pack_values,
                                  writable = track_pack_values),
+                     # Requested from:
                      self.org_site_id(),
                      Field("quantity_commit", "double",
                            default = 0,
@@ -2181,7 +2195,8 @@ class RequestItemModel(S3Model):
                            writable = quantities_writable,
                            ),
                      Field.Method("pack_quantity",
-                                  self.supply_item_pack_quantity(tablename=tablename)),
+                                  self.supply_item_pack_quantity(tablename=tablename)
+                                  ),
                      s3_comments(),
                      *s3_meta_fields(),
                      on_define = lambda table: \
@@ -2278,6 +2293,8 @@ $.filterOptionsS3({
                        list_fields = list_fields,
                        onaccept = self.req_item_onaccept,
                        ondelete = self.req_item_ondelete,
+                       # @ToDo: default realm to that of the req_id
+                       #realm_entity = self.req_item_realm_entity,
                        super_entity = "supply_item_entity",
                        )
 
@@ -2348,7 +2365,7 @@ $.filterOptionsS3({
         req_update_status(req_id)
 
         # Update req_item_category link table
-        item_id = form_vars.get("item_id", None)
+        item_id = form_vars.get("item_id")
         citable = db.supply_catalog_item
         cats = db(citable.item_id == item_id).select(citable.item_category_id)
         rictable = db.req_req_item_category
@@ -2628,6 +2645,8 @@ class RequestSkillModel(S3Model):
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        onaccept = self.req_skill_onaccept,
+                       # @ToDo: default realm to that of the req_id
+                       #realm_entity = self.req_skill_realm_entity,
                        )
 
         # ---------------------------------------------------------------------

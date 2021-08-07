@@ -9227,8 +9227,8 @@ def pr_human_resource_update_affiliations(person_id):
     r = rtable._tablename
     #e = etable._tablename
 
-    # Get the PE-ID for this person
-    pe_id = s3db.pr_get_pe_id("pr_person", person_id)
+    # Get the PE ID for this person
+    pe_id = pr_get_pe_id("pr_person", person_id)
 
     # Get all current HR records
     query = (htable.person_id == person_id) & \
@@ -9256,10 +9256,9 @@ def pr_human_resource_update_affiliations(person_id):
             if site_id and site_id not in sites:
                 itable = s3db.table(row[s].instance_type, None)
                 if itable and "pe_id" in itable.fields:
-                    q = itable.site_id == site_id
-                    site = db(q).select(itable.pe_id,
-                                        limitby = (0, 1)
-                                        ).first()
+                    site = db(itable.site_id == site_id).select(itable.pe_id,
+                                                                limitby = (0, 1)
+                                                                ).first()
                     if site:
                         site_pe_id = sites[site_id] = site.pe_id
             else:
@@ -9283,16 +9282,18 @@ def pr_human_resource_update_affiliations(person_id):
             (rtable.role.belongs((STAFF, VOLUNTEER))) & \
             (etable.pe_id == rtable.pe_id) & \
             (etable.instance_type.belongs((o, s)))
-    affiliations = db(query).select(rtable.id,
+    affiliations = db(query).select(#rtable.id,
                                     rtable.pe_id,
                                     rtable.role,
-                                    etable.instance_type
+                                    #etable.instance_type
                                     )
 
     # Remove all affiliations which are not in masters
     for a in affiliations:
-        pe = a[r].pe_id
-        role = a[r].role
+        #pe = a[r].pe_id
+        #role = a[r].role
+        pe = a.pe_id
+        role = a.role
         if role in masters:
             if pe not in masters[role]:
                 pr_remove_affiliation(pe, pe_id, role=role)
@@ -9316,9 +9317,9 @@ def pr_add_affiliation(master, affiliate, role=None, role_type=OU):
     """
         Add a new affiliation record
 
-        @param master: the master entity, either as PE-ID or as tuple
+        @param master: the master entity, either as PE ID or as tuple
                        (instance_type, instance_id)
-        @param affiliate: the affiliated entity, either as PE-ID or as tuple
+        @param affiliate: the affiliated entity, either as PE ID or as tuple
                           (instance_type, instance_id)
         @param role: the role to add the affiliate to (will be created if it
                      doesn't yet exist)
@@ -9393,13 +9394,13 @@ def pr_remove_affiliation(master, affiliate, role=None):
 #
 def pr_get_pe_id(entity, record_id=None):
     """
-        Get the PE-ID of an instance record
+        Get the PE ID of an instance record
 
         @param entity: the entity, either a tablename, a tuple (tablename,
-                       record_id), a Row of the instance type, or a PE-ID
+                       record_id), a Row of the instance type, or a PE ID
         @param record_id: the record ID, if entity is a tablename
 
-        @return: the PE-ID
+        @return: the PE ID
     """
 
     s3db = current.s3db
@@ -9426,17 +9427,18 @@ def pr_get_pe_id(entity, record_id=None):
     if table:
         db = current.db
         if "pe_id" in table.fields and _id:
-            record = db(table._id==_id).select(table.pe_id,
-                                               limitby = (0, 1)
-                                               ).first()
+            record = db(table._id == _id).select(table.pe_id,
+                                                 limitby = (0, 1)
+                                                 ).first()
         elif _id:
             key = table._id.name
             if key == "pe_id":
                 return _id
             if key != "id" and "instance_type" in table.fields:
-                s = db(table._id==_id).select(table.instance_type,
-                                              limitby = (0, 1)
-                                              ).first()
+                # PE ID is in the instance, not the super entity
+                s = db(table._id == _id).select(table.instance_type,
+                                                limitby = (0, 1)
+                                                ).first()
             else:
                 return None
             if not s:
