@@ -402,6 +402,11 @@ class DiseaseMonitoringModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        # Table configuration
+        self.configure(tablename,
+                       onaccept = self.testing_device_onaccept,
+                       )
+
         # CRUD Strings
         crud_strings[tablename] = Storage(
             label_create = T("Add Testing Device"),
@@ -510,6 +515,37 @@ class DiseaseMonitoringModel(S3Model):
         if total is not None and positive is not None:
             if positive > total:
                 form.errors["tests_positive"] = T("Number of positive results cannot be greater than number of tests")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def testing_device_onaccept(form):
+        """
+            Onaccept routine for testing devices
+                - make sure only approved devices are available
+        """
+
+        form_vars = form.vars
+        try:
+            record_id = form_vars.id
+        except AttributeError:
+            record_id = None
+        if not record_id:
+            return
+
+        # Get the record
+        table = current.s3db.disease_testing_device
+        query = (table.id == record_id)
+        record = current.db(query).select(table.id,
+                                          table.approved,
+                                          table.available,
+                                          limitby = (0, 1),
+                                          ).first()
+        if not record:
+            return
+
+        # If record is not approved, it must not be available either
+        if record.available and not record.approved:
+            record.update_record(available=False)
 
 # =============================================================================
 class CaseTrackingModel(S3Model):

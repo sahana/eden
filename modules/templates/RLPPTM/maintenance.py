@@ -53,6 +53,10 @@ class Daily():
         # Cleanup unverified accounts
         self.cleanup_unverified_accounts()
 
+        # Update the RAT device list
+        from .rat import RATList
+        RATList.sync()
+
     # -------------------------------------------------------------------------
     @staticmethod
     def cleanup_unverified_accounts():
