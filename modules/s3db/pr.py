@@ -33,6 +33,7 @@ __all__ = (# PR Base Entities
            "PRPersonRelationModel",
            "PRGroupModel",
            "PRForumModel",
+           "PRRealmModel",
 
            # Person Entity Components
            "PRAddressModel",
@@ -209,6 +210,7 @@ class PRPersonEntityModel(S3Model):
                            pr_person = T("Person"),
                            pr_forum = T("Forum"),
                            pr_group = T("Group"),
+                           pr_realm = T("Realm"),
                            )
 
         pr_pentity_represent = pr_PersonEntityRepresent()
@@ -3697,6 +3699,45 @@ class PRForumModel(S3Model):
         #return output
         current.session.confirmation = message
         redirect(URL(args=None))
+
+# =============================================================================
+class PRRealmModel(S3Model):
+    """
+        Realms
+        - used to be able to share data across multiple realms
+            - records have this as the realm_entity
+            - entities which need access are affiliated as OU parents
+        - used by RMSAmericas
+
+        @ToDo: UI to be able to manage permissions for individual records
+    """
+
+    names = ("pr_realm",
+             )
+
+    def model(self):
+
+        tablename = "pr_realm"
+        self.define_table(tablename,
+                          # Instances
+                          self.super_link("pe_id", "pr_pentity"),
+                          Field("name",
+                                #label = current.T("Name"),
+                                requires = IS_NOT_EMPTY(),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # Resource configuration
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(),
+                       super_entity = ("pr_pentity"),
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class PRAddressModel(S3Model):
