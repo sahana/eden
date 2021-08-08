@@ -2788,12 +2788,12 @@ body.rtl .event-type-header {
 }
 /* line 313, ../scss/theme/_misc.scss */
 .auth_register .subheading,
+.auth_register .form-row,
 .auth_register .consent-widget,
-.auth_register .controls,
 .result-register .subheading,
-.result-register .consent-widget,
-.result-register .controls {
-  max-width: 48rem;
+.result-register .form-row,
+.result-register .consent-widget {
+  max-width: 48rem !important;
 }
 
 /* line 320, ../scss/theme/_misc.scss */

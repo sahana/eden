@@ -753,6 +753,7 @@ def config(settings):
                        disease_id,
                        "probe_date",
                        "result",
+                       "device_id",
                        ]
 
         # Custom form (for read)

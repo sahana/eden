@@ -62,8 +62,28 @@
             }
         };
         toggleConsentOption();
+
+        var toggleDCCOption = function() {
+
+            var cwaOption = reportToCWA.val(),
+                dccRow = $('#test_result_dcc_option').closest('.form-row');
+            switch(cwaOption) {
+                case "ANONYMOUS":
+                    dccRow.hide();
+                    break;
+                case "PERSONAL":
+                    dccRow.show();
+                    break;
+                default:
+                    dccRow.hide();
+                    break;
+            }
+        };
+        toggleDCCOption();
+
         reportToCWA.off(ns).on('change' + ns, function() {
             toggleConsentOption();
+            toggleDCCOption();
         });
 
         // Toggle personal certificate option depending on result

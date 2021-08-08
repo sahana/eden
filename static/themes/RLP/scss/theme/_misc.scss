@@ -311,9 +311,9 @@ body.rtl {
 .auth_register,
 .result-register {
     .subheading,
-    .consent-widget,
-    .controls {
-        max-width: 48rem;
+    .form-row,
+    .consent-widget {
+        max-width: 48rem!important;
     }
     padding: 1rem!important;
 }
