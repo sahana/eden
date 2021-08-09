@@ -338,14 +338,15 @@ def inv_index():
     report.resource = s3db.resource("inv_inv_item")
     capacity = report.widget(r,
                              widget_id = "capacity",
-                             ajaxurl = None,
-                             #**attr
+                             ajaxurl = URL(c="inv", f="inv_item",
+                                           args = "report.json"
+                                           ),
                              )
 
     # KPI
     kpi = UL(LI(T("Total of weight and m3 stockpiled")),
              LI(T("Total of weight and m3 stockpiled sent")),
-             LI(T("Number of Shipment sent")),
+             LI(T("Number of Shipments sent")),
              LI(T("Remaining stockpile capacities available")),
              LI(T("Number of warehouses")),
              )

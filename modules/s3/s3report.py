@@ -539,14 +539,15 @@ class S3Report(S3Method):
             # Generate the report form
             ajax_vars = Storage(r.get_vars)
             ajax_vars.update(get_vars)
-            filter_form = attr.get("filter_form", None)
-            filter_tab = attr.get("filter_tab", None)
+            attr_get = attr.get
+            filter_form = attr_get("filter_form", None)
+            filter_tab = attr_get("filter_tab", None)
             filter_url = r.url(method = "",
                                representation = "",
                                vars = ajax_vars.fromkeys((k for k in ajax_vars
                                                           if k not in report_vars)),
                                )
-            ajaxurl = attr.get("ajaxurl", r.url(method = "report",
+            ajaxurl = attr_get("ajaxurl", r.url(method = "report",
                                                 representation = "json",
                                                 vars = ajax_vars
                                                 ))
@@ -557,7 +558,8 @@ class S3Report(S3Method):
                                                  filter_url = filter_url,
                                                  filter_form = filter_form,
                                                  filter_tab = filter_tab,
-                                                 widget_id = widget_id)
+                                                 widget_id = widget_id
+                                                 )
 
             # Detect and store theme-specific inner layout
             view = self._view(r, "pivottable.html")
