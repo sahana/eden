@@ -587,6 +587,8 @@ class DiseaseCertificateModel(S3Model):
                                 ),
                           Field("instance_id",
                                 ),
+                          Field("issuer_id",
+                                ),
                           Field("payload", "json",
                                 ),
                           Field("vhash", "text",

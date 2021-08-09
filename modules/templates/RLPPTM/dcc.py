@@ -8,9 +8,11 @@
 
 import datetime
 import hashlib
+import uuid
 
 from gluon import current
 
+ISSUER_PREFIX = "lsjvrlp"
 EXPIRY_PERIOD = 48 # DCC expires 48h after probe
 
 # =============================================================================
@@ -25,6 +27,7 @@ class DCC(object):
         """
 
         self.instance_id = instance_id
+        self.issuer_id = None
         self.data = None
 
     # -------------------------------------------------------------------------
@@ -76,8 +79,7 @@ class DCC(object):
                                        rtable.disease_id,
                                        rtable.result,
                                        rtable.probe_date,
-                                       ftable.id,
-                                       ftable.name,
+                                       ftable.site_id,
                                        dtable.id,
                                        dtable.code,
                                        left = left,
@@ -91,10 +93,11 @@ class DCC(object):
         if result.result not in ("POS", "NEG"):
             raise ValueError(error("inconclusive result"))
 
-        # Make sure the test facility is known
+        # Make sure the test facility is valid
         facility = row.org_facility
-        if not facility.id or not facility.name:
-            raise ValueError(error("test facility unknown"))
+        issuer_id = cls.get_issuer_id(facility.site_id)
+        if not issuer_id:
+            raise ValueError(error("invalid test facility"))
 
         # Make sure the test device is known
         device = row.disease_testing_device
@@ -109,11 +112,12 @@ class DCC(object):
 
         # Create the instance and fill with data
         instance = cls(instance_id)
+        instance.issuer_id = issuer_id
         instance.data = {"fn": first_name,
                          "ln": last_name,
                          "dob": dob.isoformat() if isinstance(dob, datetime.date) else dob,
                          "disease": result.disease_id,
-                         "site": facility.name,
+                         "site": facility.site_id,
                          "device": device.code,
                          "timestamp": int(probe_date.replace(microsecond=0).timestamp()),
                          "expires": int(expires.replace(microsecond=0).timestamp()),
@@ -144,6 +148,7 @@ class DCC(object):
                 (table.type == "TEST") & \
                 (table.deleted == False)
         row = db(query).select(table.disease_id,
+                               table.issuer_id,
                                table.payload,
                                table.vhash,
                                table.status,
@@ -153,10 +158,15 @@ class DCC(object):
                                ).first()
         if not row:
             raise ValueError("Certificate data not found")
+        issuer_id = row.issuer_id
+        if not issuer_id:
+            raise ValueError("Certificate data lacking issuer ID")
+
         data = row.payload
 
         # Create the instance and fill it with data
         instance = cls(instance_id)
+        instance.issuer_id = issuer_id
         instance.data = {"fn": data.get("fn"),
                          "ln": data.get("ln"),
                          "dob": data.get("dob"),
@@ -184,10 +194,15 @@ class DCC(object):
         """
 
         data = self.data
+
         instance_id = self.instance_id
+        issuer_id = self.issuer_id
 
         fields = ("fn", "ln", "dob", "disease", "site", "device", "timestamp", "result", "expires")
-        hashable = "%s#%s" % (instance_id, "#".join(str(data[k]) for k in fields))
+        hashable = "%s#%s#%s" % (instance_id,
+                                 issuer_id,
+                                 "#".join(str(data[k]) for k in fields),
+                                 )
 
         return hashlib.sha512(hashable.encode("utf-8")).hexdigest().lower()
 
@@ -216,6 +231,7 @@ class DCC(object):
         data = {"disease_id": self.data.get("disease"),
                 "type": "TEST",
                 "instance_id": instance_id,
+                "issuer_id": self.issuer_id,
                 "payload": self.data,
                 "status": "PENDING",
                 "vhash": self.vhash(),
@@ -253,6 +269,8 @@ class DCC(object):
         """
         # TODO implement
 
+        # Poll for all POCIDs with pending DCC requests
+
         pass
 
     # -------------------------------------------------------------------------
@@ -264,5 +282,33 @@ class DCC(object):
         # TODO implement
 
         pass
+
+    # -------------------------------------------------------------------------
+    # Tools
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_issuer_id(site_id):
+        """
+            Get the Point-of-Care ID for a site
+            - a string consisting of a common prefix and the site UUID
+
+            @returns: the ID as string, or None if site not found
+        """
+
+        s3db = current.s3db
+
+        stable = s3db.org_site
+        query = (stable.site_id == site_id)
+        row = current.db(query).select(stable.uuid,
+                                       cache = s3db.cache,
+                                       limitby = (0, 1),
+                                       ).first()
+        if row:
+            uid = uuid.UUID(row.uuid).hex
+            issuer_id = ("%s%s" % (ISSUER_PREFIX, uid)).lower()
+        else:
+            issuer_id = None
+
+        return issuer_id
 
 # END =========================================================================

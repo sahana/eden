@@ -27,7 +27,6 @@ from .vouchers import RLPCardLayout
 CWA = {"system": "RKI / Corona-Warn-App",
        "app": "Corona-Warn-App",
        }
-POCID_PREFIX = "lsjvrlp"
 
 # =============================================================================
 class TestResultRegistration(S3Method):
@@ -304,9 +303,11 @@ class TestResultRegistration(S3Method):
                         except ValueError as e:
                             hcert = None
                             response.warning = str(e)
-                        # TODO disable dcc in CWA report if failed?
                         if hcert:
                             hcert.save()
+                        else:
+                            # Remove DCC flag if hcert could not be generated
+                            cwa_report.dcc = False
 
                     S3CustomController._view("RLPPTM", "certificate.html")
 
@@ -608,7 +609,7 @@ class CWAReport(object):
                     }
             if dcc:
                 # Indicate whether we can issue a DCC (Digital COVID Certificate)
-                self.dcc = data["dgc"] = bool(dcc) and self.result in ("POS", "NEG")
+                self.dcc = bool(dcc) and self.result in ("POS", "NEG")
         else:
             data = {"timestamp": timestamp,
                     }
@@ -624,33 +625,6 @@ class CWAReport(object):
             data["hash"] = self.get_hash(data, anonymous=anonymous)
 
         self.data = data
-
-        self._poc_id = None
-
-    # -------------------------------------------------------------------------
-    @property
-    def poc_id(self):
-        """
-            The Point-of-Care ID for the test station we're reporting on
-            - a string consisting of a common prefix and the site UUID
-
-            @returns: the ID as string
-        """
-
-        poc_id = self._poc_id
-        if poc_id is None:
-            s3db = current.s3db
-            stable = s3db.org_site
-            query = (stable.site_id == self.site_id)
-            row = current.db(query).select(stable.uuid,
-                                           cache = s3db.cache,
-                                           limitby = (0, 1),
-                                           ).first()
-            if row:
-                uid = uuid.UUID(row.uuid).hex
-                poc_id = self._poc_id = ("%s%s" % (POCID_PREFIX, uid)).lower()
-
-        return poc_id
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -693,9 +667,14 @@ class CWAReport(object):
         # Template for CWA-link
         template = current.deployment_settings.get_custom(key="cwa_link_template")
 
+        # Add "dgc" parameter if DCC option enabled
+        data = dict(self.data)
+        if self.dcc:
+            data["dgc"] = True
+
         # Convert data to JSON
         from s3.s3xml import SEPARATORS
-        data_json = json.dumps(self.data, separators=SEPARATORS)
+        data_json = json.dumps(data, separators=SEPARATORS)
 
         # Base64-encode the data JSON
         data_str = base64.urlsafe_b64encode(data_json.encode("utf-8")).decode("utf-8")
@@ -907,13 +886,14 @@ class CWAReport(object):
 
         # Build the result_list
         result_list = {"testResults": [testresult]}
-        # Look up the LabID
         if self.dcc:
-            poc_id = self.poc_id
-            if not poc_id:
+            # Look up the LabID
+            from .dcc import DCC
+            lab_id = DCC.get_issuer_id(self.site_id)
+            if not lab_id:
                 raise RuntimeError("Point-of-Care ID for test station not found")
             else:
-                result_list["labId"] = poc_id
+                result_list["labId"] = lab_id
 
         # POST to server
         try:
