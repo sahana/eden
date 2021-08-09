@@ -6,14 +6,75 @@
     @license: MIT
 """
 
+import base64
+import cbor2
 import datetime
 import hashlib
+import re
+import secrets
 import uuid
+
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
+from cryptography.hazmat.primitives.asymmetric import padding as asym_padding
+from cryptography.hazmat.primitives import hashes
 
 from gluon import current
 
 ISSUER_PREFIX = "lsjvrlp"
 EXPIRY_PERIOD = 48 # DCC expires 48h after probe
+
+NONLATIN = re.compile(r"[^\u0020-\u0233\u1E02-\u1EF9]")
+SEPARATORS = re.compile(r"[\u002C\u0020\u002D]")
+DIACRITICS = {"A" : r"[\u00C0-\u00C3\u0100-\u0104\u01CD\u01DE\u01FA\u1EA0-\u1EB6]",
+              "AE": r"[\u00C4\u00C6\u01FC]",
+              "AA": r"[\u00C5]",
+              "B" : r"[\u1E02]",
+              "C" : r"[\u00C7\u0106-\u010C]",
+              "D" : r"[\u00D0\u010E\u0110\u1E0A\u1E10]",
+              "E" : r"[\u00C8-\u00CB\u0112-\u011A\u018F\u1EB8-\u1EC6]",
+              "F" : r"[\u1E1E]",
+              "G" : r"[\u011C-\u0122\u01E4\u01E6\u01F4\u1E20]",
+              "H" : r"[\u0124\u0126\u021E\u1E24\u1E26]",
+              "I" : r"[\u00CC-\u00CF\u0128-\u0131\u01CF\u1EC8\u1ECA]",
+              "J" : r"[\u0134]",
+              "IJ": r"[\u0132]",
+              "K" : r"[\u0136\u01E8\u1E30]",
+              "L" : r"[\u0139-\u0141]",
+              "M" : r"[\u1E40]",
+              "N" : r"[\u00D1\u0143-\u014A\u1E44]",
+              "O" : r"[\u00D2-\u00D5\u014C-\u0150\u01A0\u01D1\u01EA\u01EC\u022A-\u0230\u1ECC-\u1EDC]",
+              "OE": r"[\u00D6\u00D8\u0152\u01FE]",
+              "P" : r"[\u1E56]",
+              "R" : r"[\u0154-\u0158]",
+              "S" : r"[\u015A-\u0160\u0218\u1E60\u1E62]",
+              "SS": r"[\u00DF\u1E9E]",
+              "T" : r"[\u0162-\u0166\u021A\u1E6A]",
+              "TH": r"[\u00DE]",
+              "U" : r"[\u00D9-\u00DB\u0168-\u0172\u01AF\u01D3\u1EE4-\u1EF0]",
+              "UE": r"[\u00DC]",
+              "W" : r"[\u0174\u1E80-\u1E84]",
+              "X" : r"[\u1E8C]",
+              "Y" : r"[\u00DD\u0176\u0178\u0232\u1E8E\u1EF2-\u1EF8]",
+              "Z" : r"[\u0179-\u017D\u01B7\u01EE\u1E90\u1E92]",
+              }
+
+NUMERALS = {"1": "I",
+            "2": "II",
+            "3": "III",
+            "4": "IV",
+            "5": "V",
+            "6": "VI",
+            "7": "VII",
+            "8": "VIII",
+            "9": "IX",
+            }
+
+CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ<"
+
+PEM_TEMPLATE = "-----BEGIN PUBLIC KEY-----\n%s\n-----END PUBLIC KEY-----"
 
 # =============================================================================
 class DCC(object):
@@ -244,6 +305,136 @@ class DCC(object):
         s3db.onaccept(table, data, method="create")
 
     # -------------------------------------------------------------------------
+    def encode(self, dcci, public_key):
+        """
+            Encode and encrypt this instance for transmission to the DCC server
+
+            @param dcci: the certificate ID from the DCC request,
+                         e.g. "URN:UVCI:V1:DE:DMN3L94E7PBDYYLAPNNSS5T218"
+            @param public_key: the base64-encoded public RSA key from the
+                               DCC request
+
+            @returns: dict {
+                        "dataEncryptionKey": the encrypted AES-key (base64-encoded),
+                        "encryptedDcc":      the encrypted DCC (base64-encoded),
+                        "dccHash":           hash of the DCC (hex),
+                        }
+        """
+
+        data = self.data
+
+        # Convert timestamp into datetime
+        timestamp = data.get("timestamp")
+        expires = data.get("expires")
+        sc = "%sZ" % datetime.datetime.fromtimestamp(timestamp).isoformat()
+
+        # Convert test result to code
+        result_codes = {"NEG": "260415000",
+                        "POS": "260373001",
+                        }
+        result = data.get("result")
+        tr = result_codes.get(result)
+
+        # Look up site name from site
+        ftable = current.s3db.org_facility
+        query = (ftable.site_id == data.get("site"))
+        facility = current.db(query).select(ftable.name, limitby=(0, 1)).first()
+        tc = facility.name if facility else None
+
+        # Device code
+        ma = data.get("device")
+
+        # Names
+        fn = data.get("ln")
+        gn = data.get("fn")
+        # TODO catch ValueError
+        gnt = self.format_name(gn)
+        fnt = self.format_name(fn)
+
+        # Date of birth
+        dob = data.get("dob")
+
+        # Encoded DCC payload
+        data = {"t": [{"ci": dcci,
+                       "co": "DE",
+                       "is": "Robert Koch-Institut",
+                       "tg": "840539006",
+                       "tt": "LP217198-3",
+                       "sc": sc,
+                       "tr": tr,
+                       "tc": tc,
+                       "ma": ma,
+                       },
+                      ],
+                "dob": dob,
+                "nam": {"fn": fn,
+                        "gn": gn,
+                        "fnt": fnt,
+                        "gnt": gnt,
+                        },
+                "ver": "1.3.0",
+                }
+
+        # HCERT container
+        hcert = {1: "DE",
+                 4: expires,
+                 6: timestamp,
+                 -260: { 1: data },
+                 }
+
+        return self.encrypt(cbor2.dumps(hcert), public_key)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def encrypt(hcert, public_key):
+        """
+            Encrypt the HCERT
+
+            @param hcert: the HCERT as CBOR-bytestring
+            @param public_key: base64-encoded public key to encrypt the AES key with
+
+            @returns: dict {
+                        "dataEncryptionKey": the encrypted AES-key (base64-encoded),
+                        "encryptedDcc":      the encrypted DCC (base64-encoded),
+                        "dccHash":           hash of the DCC (hex),
+                        }
+        """
+
+        # Generate AES symmetric key (32 bytes)
+        key = secrets.token_bytes(32)
+
+        # Pad the hcert data to 128bit blocksize for AES encryption
+        padder = padding.PKCS7(128).padder()
+        padded = padder.update(hcert) + padder.finalize()
+
+        # Encrypt the padded hcert
+        iv = b"\x00" * 16
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), default_backend())
+        encryptor = cipher.encryptor()
+        encrypted = encryptor.update(padded) + encryptor.finalize()
+
+        # Convert base64-encoded public key to PEM and load it
+        pem = (PEM_TEMPLATE % public_key).encode("utf-8")
+        pkey = load_pem_public_key(pem, default_backend())
+
+        # Encrypt the AES key with the public key
+        sha256 = hashes.SHA256()
+        mgf = asym_padding.MGF1(algorithm=sha256)
+        padder = asym_padding.OAEP(mgf=mgf, algorithm=sha256, label=None)
+        key_enc = pkey.encrypt(key, padder)
+
+        # Build COSE for signature, and generate hash
+        es256 = cbor2.dumps({1:-7}) # COSE algorithm ECDSA w/ SHA256
+        cose = cbor2.dumps(["Signature1", es256, b"", hcert])
+        dcchash = hashlib.sha256(cose).hexdigest().lower()
+
+        b64encode = base64.b64encode
+        return {"encryptedDcc": b64encode(encrypted).decode('utf-8'),
+                "dataEncryptionKey": b64encode(key_enc).decode('utf-8'),
+                "dccHash": dcchash,
+                }
+
+    # -------------------------------------------------------------------------
     def send(self):
         """
             Send the encrypted DCC to the server
@@ -310,5 +501,41 @@ class DCC(object):
             issuer_id = None
 
         return issuer_id
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def format_name(name):
+        """
+            Transliterate+format a name according to ICAO conventions
+
+            @param name: the name
+
+            @returns: the transliterated/formatted name as string
+        """
+
+        # Remove any non-latin characters
+        string = NONLATIN.sub("", name).strip()
+        if not string:
+            raise ValueError
+
+        # Replace separators by <
+        string = SEPARATORS.sub("<", string.upper()).strip("<")
+        while("<<" in string):
+            string = string.replace("<<", "<")
+
+        # Map diacritics
+        for s, o in DIACRITICS.items():
+            string = re.sub(o, s, string)
+
+        # Map numerals
+        for o, s in NUMERALS.items():
+            string = string.replace(o, s)
+
+        # Remove all remaining invalid characters
+        string = "".join(c for c in string if c in CHARSET)
+        if not string:
+            raise ValueError
+
+        return string
 
 # END =========================================================================

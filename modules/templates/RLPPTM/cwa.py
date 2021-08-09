@@ -373,7 +373,19 @@ class TestResultRegistration(S3Method):
             if not c or not c[1]:
                 form.errors.consent = T("Consent required")
 
-        # TODO chosen test device must match the chosen disease, if disease_id is in FORM
+        if "disease_id" in formvars:
+            disease_id = formvars["disease_id"]
+            device_id = formvars.get("device_id")
+            if device_id:
+                table = current.s3db.disease_testing_device
+                query = (table.id == device_id) & \
+                        (table.disease_id == disease_id) & \
+                        (table.deleted == False)
+                row = current.db(query).select(table.id,
+                                               limitby = (0, 1),
+                                               ).first()
+                if not row:
+                    form.errors.device_id = T("Device not applicable for selected disease")
 
     # -------------------------------------------------------------------------
     @staticmethod
