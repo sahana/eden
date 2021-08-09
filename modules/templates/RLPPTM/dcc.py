@@ -10,8 +10,11 @@ import base64
 import cbor2
 import datetime
 import hashlib
+import json
 import re
+import requests
 import secrets
+import sys
 import uuid
 
 from cryptography.hazmat.primitives import padding
@@ -88,8 +91,11 @@ class DCC(object):
         """
 
         self.instance_id = instance_id
-        self.issuer_id = None
+
+        self.status = None
         self.data = None
+
+        self.issuer_id = None
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -173,6 +179,7 @@ class DCC(object):
 
         # Create the instance and fill with data
         instance = cls(instance_id)
+        instance.status = "PENDING"
         instance.issuer_id = issuer_id
         instance.data = {"fn": first_name,
                          "ln": last_name,
@@ -228,6 +235,7 @@ class DCC(object):
         # Create the instance and fill it with data
         instance = cls(instance_id)
         instance.issuer_id = issuer_id
+        instance.status = row.status
         instance.data = {"fn": data.get("fn"),
                          "ln": data.get("ln"),
                          "dob": data.get("dob"),
@@ -246,6 +254,139 @@ class DCC(object):
 
         return instance
 
+    # -------------------------------------------------------------------------
+    def save(self, errors=None):
+        """
+            Store/update this instance as HCERT data record
+
+            @param errors: error messages to store in the record
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.disease_hcert_data
+
+        now = datetime.datetime.utcnow()
+        instance_id = self.instance_id
+
+        # Check if record already exists
+        query = (table.instance_id == instance_id)
+        record = db(query).select(table.id,
+                                  table.errors,
+                                  table.certified_on,
+                                  limitby = (0, 1),
+                                  ).first()
+        if record:
+            # Status update
+            status = self.status
+            data = {"status": status,
+                    }
+            if status == "ISSUED" and not record.certified_on:
+                data["certified_on"] = now
+            if errors:
+                data["errors"] = errors
+            record.update_record(**data)
+            s3db.onaccept(table, record, method="update")
+        else:
+            # New record
+            data = {"disease_id": self.data.get("disease"),
+                    "type": "TEST",
+                    "instance_id": instance_id,
+                    "issuer_id": self.issuer_id,
+                    "payload": self.data,
+                    "status": "PENDING",
+                    "vhash": self.vhash(),
+                    "valid_until": now + datetime.timedelta(hours=48),
+                    }
+            if errors:
+                data["errors"] = errors
+
+            # Insert and post-process the record
+            data["id"] = table.insert(**data)
+            current.auth.s3_set_record_owner(table, data)
+            s3db.onaccept(table, data, method="create")
+
+    # -------------------------------------------------------------------------
+    def upload(self, dcci, public_key):
+        """
+            Send the encrypted DCC to the server
+
+            @param dcci: the DCC ID
+            @param public_key: public key to encrypt the AES key
+
+            @returns: error message on error, else None
+        """
+
+        # Check status
+        if self.status != "PENDING":
+            return "DCC upload failed, invalid status"
+
+        settings = current.deployment_settings
+
+        dcc_json = self.encode(dcci, public_key)
+        if not dcc_json:
+            return "DCC upload failed, no data"
+        key, cert, verify = self.get_dcc_credentials()
+
+        # The server endpoint to send to
+        dcc_base_url = settings.get_custom("dcc_base_url")
+        endpoint = "%s/version/v1/test/%s/dcc" % (dcc_base_url.rstrip("/"), self.instance_id)
+
+        errors = None
+        try:
+            sr = requests.post(endpoint,
+                               json = dcc_json,
+                               cert = (cert, key),
+                               verify = verify,
+                               )
+        except Exception:
+            # Local errors
+            errors = "DCC upload failed (local error: %s)" % sys.exc_info()[1]
+        else:
+            # Check return code (should be 204, but 202/200 would also be good news)
+            status_code = sr.status_code
+            if status_code not in (204, 202, 200, 409):
+                errors = "DCC upload failed, status code %s" % status_code
+                if status_code in (403, 404):
+                    # Either test result was not found, or we're not
+                    # authorized to certify this test result => don't try again
+                    self.status = "INVALID"
+            else:
+                self.status = "ISSUED"
+
+        # Update record status
+        self.save(errors=errors)
+
+        return errors
+
+    # -------------------------------------------------------------------------
+    def anonymize(self):
+        """
+            Anonymize the HCERT data record of this instance (=drop the payload)
+        """
+
+        table = current.s3db.disease_hcert_data
+        query = (table.instance_id == self.instance_id)
+
+        row = current.db(query).select(table.id,
+                                       table.status,
+                                       limitby = (0, 1),
+                                       ).first()
+        if not row:
+            return
+        data = {"payload": None,
+                }
+        if row.status == "PENDING":
+            # Once anonymized, DCC can no longer be produced
+            self.status = data["status"] = "INVALID"
+
+        row.update_record(**data)
+
+        self.data = None
+
+    # -------------------------------------------------------------------------
+    # Instance helpers
     # -------------------------------------------------------------------------
     def vhash(self):
         """
@@ -268,43 +409,6 @@ class DCC(object):
         return hashlib.sha512(hashable.encode("utf-8")).hexdigest().lower()
 
     # -------------------------------------------------------------------------
-    def save(self):
-        """
-            Store this instance as HCERT data record
-
-            @returns: HCERT data record ID
-        """
-
-        db = current.db
-        s3db = current.s3db
-
-        table = s3db.disease_hcert_data
-
-        instance_id = self.instance_id
-
-        # Check if record already exists (must not override)
-        query = (table.instance_id == instance_id)
-        if db(query).select(table.id, limitby=(0, 1)).first():
-            return
-
-        # Generate record
-        now = datetime.datetime.utcnow()
-        data = {"disease_id": self.data.get("disease"),
-                "type": "TEST",
-                "instance_id": instance_id,
-                "issuer_id": self.issuer_id,
-                "payload": self.data,
-                "status": "PENDING",
-                "vhash": self.vhash(),
-                "valid_until": now + datetime.timedelta(hours=48),
-                }
-
-        # Insert and post-process the record
-        data["id"] = table.insert(**data)
-        current.auth.s3_set_record_owner(table, data)
-        s3db.onaccept(table, data, method="create")
-
-    # -------------------------------------------------------------------------
     def encode(self, dcci, public_key):
         """
             Encode and encrypt this instance for transmission to the DCC server
@@ -322,6 +426,8 @@ class DCC(object):
         """
 
         data = self.data
+        if not data:
+            return None
 
         # Convert timestamp into datetime
         timestamp = data.get("timestamp")
@@ -435,44 +541,106 @@ class DCC(object):
                 }
 
     # -------------------------------------------------------------------------
-    def send(self):
-        """
-            Send the encrypted DCC to the server
-        """
-        # TODO implement
-
-        pass
-
-    # -------------------------------------------------------------------------
-    def anonymize(self):
-        """
-            Anonymize the HCERT data record
-        """
-        # TODO implement
-
-        pass
-
+    # Background tasks
     # -------------------------------------------------------------------------
     @classmethod
     def poll(cls):
         """
-            Poll the server for DCC requests
+            Poll the server for DCC requests, and issue any requested DCCs
         """
-        # TODO implement
 
-        # Poll for all POCIDs with pending DCC requests
+        db = current.db
+        s3db = current.s3db
 
-        pass
+        settings = current.deployment_settings
+
+        # Get the issuer IDs for all pending DCCs
+        now = datetime.datetime.utcnow()
+        table = s3db.disease_hcert_data
+        query = (table.status == "PENDING") & \
+                ((table.valid_until == None) | (table.valid_until > now)) & \
+                (table.issuer_id != None) & \
+                (table.deleted == False)
+        rows = db(query).select(table.issuer_id,
+                                groupby = table.issuer_id,
+                                )
+
+        # The client credentials to access the server
+        cert, key, verify = cls.get_dcc_credentials()
+
+        # The server endpoint to poll
+        dcc_base_url = settings.get_custom("dcc_base_url")
+        endpoint = "%s/version/v1/publicKey/search" % (dcc_base_url.rstrip("/"))
+
+        for row in rows:
+            # Search URL is per-issuer
+            search_url = "%s/%s" % (endpoint, row.issuer_id)
+            try:
+                sr = requests.get(search_url,
+                                  cert = (cert, key),
+                                  verify = verify,
+                                  )
+            except Exception:
+                # Local error
+                error = sys.exc_info()[1]
+                current.log.error("DCC requests: polling failed (local error: %s)" % error)
+                continue
+
+            # Check return code
+            if sr.status_code != 200:
+                # Remote error
+                current.log.error("DCC requests: polling failed, status code %s" % sr.status_code)
+                continue
+
+            # Decode the results
+            try:
+                requested_dccs = sr.json()
+            except json.JSONDecodeError:
+                error = sys.exc_info()[1]
+                current.log.error("DCC results: server response parse error: %s" % error)
+                continue
+
+            # If there are any requests, issue the DCCs
+            cls.issue(requested_dccs)
 
     # -------------------------------------------------------------------------
     @classmethod
     def issue(cls, dcc_request_list):
         """
-            Issue the requested DCCs and send them to the server
-        """
-        # TODO implement
+            Encode, encrypt and upload the requested DCCs, and anonymize the
+            respective HCERT data records when done
 
-        pass
+            @param dcc_request_list: a list of dicts:
+                        {"testId":    DCC instance ID,
+                         "dcci":      certificate ID,
+                         "publicKey": public RSA key to encrypt the AES key
+                         }
+        """
+
+        if not isinstance(dcc_request_list, list):
+            return
+
+        for item in dcc_request_list:
+            if not isinstance(item, dict):
+                continue
+
+            instance_id = item.get("testId")
+            if not instance_id:
+                continue
+            try:
+                inst = cls.load(instance_id)
+            except ValueError:
+                continue
+
+            dcci = item.get("dcci")
+            public_key = item.get("publicKey")
+            if not dcci or not public_key:
+                continue
+
+            inst.upload(dcci, public_key)
+
+            if inst.status != "PENDING":
+                inst.anonymize()
 
     # -------------------------------------------------------------------------
     # Tools
@@ -501,6 +669,85 @@ class DCC(object):
             issuer_id = None
 
         return issuer_id
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def register_issuer(cls, issuer_id):
+        """
+            Register an issuer ID (labID) with the DCC server
+
+            @param issuer_id: the issuer ID as string
+
+            @returns: success True|False
+        """
+
+        settings = current.deployment_settings
+
+        # The client credentials to access the server
+        cert, key, verify = cls.get_dcc_credentials()
+
+        # The server endpoint to register
+        dcc_base_url = settings.get_custom("dcc_base_url")
+        endpoint = "%s/version/v1/labId" % dcc_base_url
+
+        # POST to server
+        try:
+            sr = requests.post(endpoint,
+                               json = {"labId": issuer_id},
+                               cert = (cert, key),
+                               verify = verify,
+                               )
+        except Exception:
+            # Local error
+            error = sys.exc_info()[1]
+            current.log.error("DCC issuer registration: transmission failed (local error: %s)" % error)
+            return False
+
+        # Check return code (should be 204, but 202/200 would also be good news)
+        if sr.status_code not in (204, 202, 200):
+            # Remote error
+            current.log.error("DCC issuer registration: registration failed, status code %s" % sr.status_code)
+            return False
+
+        # Success
+        return True
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_dcc_credentials():
+        """
+            Get the credentials for access to the DCC server
+
+            @returns: tuple (cert, key, verify)
+                      - cert   = absolute pathname of the SSL client certificate
+                      - key    = absolute pathname of the key for the client
+                                 certificate
+                      - verify = absolute pathname to the CA certificate chain
+                                 for the server certificate, or True to use
+                                 python-certifi
+        """
+
+        settings = current.deployment_settings
+        folder = current.request.folder
+
+        # The client credentials to access the server
+        cert = settings.get_custom("cwa_client_certificate")
+        key = settings.get_custom("cwa_certificate_key")
+        if not cert or not key:
+            raise RuntimeError("No CWA client credentials configured")
+        cert = "%s/%s" % (folder, cert)
+        key = "%s/%s" % (folder, key)
+
+        # The certificate chain to verify the server identity
+        verify = settings.get_custom("dcc_server_ca")
+        if verify:
+            # Use the specified CA Certificate to verify server identity
+            verify = "%s/%s" % (current.request.folder, verify)
+        else:
+            # Use python-certifi (=> make sure the latest version is installed)
+            verify = True
+
+        return cert, key, verify
 
     # -------------------------------------------------------------------------
     @staticmethod

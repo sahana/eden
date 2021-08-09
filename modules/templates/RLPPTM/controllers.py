@@ -706,7 +706,8 @@ class approve(S3CustomController):
                             s3db_onaccept(sltable, link, method="create")
 
                     # Add default tags for facility
-                    from .helpers import add_facility_default_tags
+                    from .helpers import set_facility_code, add_facility_default_tags
+                    set_facility_code(facility_id)
                     add_facility_default_tags(facility_id)
 
                     # Approve user
