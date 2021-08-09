@@ -5,7 +5,7 @@ from os import path
 from gluon import *
 from gluon.storage import Storage
 
-from s3 import S3CustomController
+from s3 import S3CustomController, S3Report, S3Request
 
 THEME = "RMSAmericas"
 
@@ -322,8 +322,43 @@ def inv_index():
         - Dashboard
     """
 
-    output = {"title": current.T("Dashboard"),
-              "contents": I("coming soon..."),
+    T = current.T
+    s3db = current.s3db
+
+    # Shipments
+    shipments = DIV(I(T("Shipments...")))
+
+    # Notifications
+    notifications = DIV(I(T("Notifications...")))
+
+    # Capacity
+    # Define the Pivot Table
+    r = S3Request("inv", "inv_item")
+    report = S3Report()
+    report.resource = s3db.resource("inv_inv_item")
+    capacity = report.widget(r,
+                             widget_id = "capacity",
+                             ajaxurl = None,
+                             #**attr
+                             )
+
+    # KPI
+    kpi = UL(LI(T("Total of weight and m3 stockpiled")),
+             LI(T("Total of weight and m3 stockpiled sent")),
+             LI(T("Number of Shipment sent")),
+             LI(T("Remaining stockpile capacities available")),
+             LI(T("Number of warehouses")),
+             )
+
+    # Prepared Checklist
+    checklist = UL()
+
+    output = {"title": T("Dashboard"),
+              "shipments": shipments,
+              "notifications": notifications,
+              "capacity": capacity,
+              "kpi": kpi,
+              "checklist": checklist,
               }
 
     # Custom view

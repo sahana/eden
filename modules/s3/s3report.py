@@ -546,9 +546,10 @@ class S3Report(S3Method):
                                vars = ajax_vars.fromkeys((k for k in ajax_vars
                                                           if k not in report_vars)),
                                )
-            ajaxurl = attr.get("ajaxurl", r.url(method="report",
-                                                representation="json",
-                                                vars=ajax_vars))
+            ajaxurl = attr.get("ajaxurl", r.url(method = "report",
+                                                representation = "json",
+                                                vars = ajax_vars
+                                                ))
             output = S3ReportForm(resource).html(pivotdata,
                                                  get_vars = get_vars,
                                                  filter_widgets = None,
