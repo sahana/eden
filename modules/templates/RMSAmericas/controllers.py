@@ -50,11 +50,13 @@ class index(S3CustomController):
         auth = current.auth
 
         if auth.is_logged_in():
-            if current.response.confirmation:
+            response = current.response
+            if response.confirmation:
                 has_role = auth.s3_has_role
                 if has_role("wh_manager", include_admin=False) or \
                    has_role("national_wh_manager", include_admin=False):
                     # Redirect to WMS Dashboard
+                    current.session.confirmation = response.confirmation
                     redirect(URL(c="inv", f="index"))
 
             login_form = ""

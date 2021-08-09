@@ -6,7 +6,7 @@ from collections import OrderedDict
 from gluon import current
 from gluon.storage import Storage
 
-from s3 import S3Method
+from s3 import s3_str, S3Method, S3Represent
 
 from .controllers import deploy_index, inv_index
 
@@ -2565,7 +2565,7 @@ Thank you"""
                          ),
             S3OptionsFilter("training_event_id$site_id",
                             label = T("Country"),
-                            represent = org_SiteRepresent(show_type=False),
+                            represent = org_SiteRepresent(show_type = False),
                             ),
             S3OptionsFilter("person_id$human_resource.organisation_id",
                             label = T("Organization"),
@@ -2709,7 +2709,7 @@ Thank you"""
             Generate a PDF Export of a training Event Report
         """
 
-        from s3 import s3_fullname, s3_str
+        from s3 import s3_fullname#, s3_str
 
         record = r.record
 
@@ -3217,11 +3217,16 @@ Thank you"""
     # -------------------------------------------------------------------------
     def customise_inv_recv_resource(r, tablename):
 
+        s3db = current.s3db
+
+        # Use Custom Represent for Sites to send to
+        s3db.inv_recv.from_site_id.requires.other.label = org_SiteRepresent()
+
         # Custom GRN
-        current.s3db.set_method("inv", "recv",
-                                method = "form",
-                                action = PrintableShipmentForm,
-                                )
+        s3db.set_method("inv", "recv",
+                        method = "form",
+                        action = PrintableShipmentForm,
+                        )
 
     settings.customise_inv_recv_resource = customise_inv_recv_resource
 
@@ -3267,7 +3272,7 @@ Thank you"""
                                           "WB": T("Waybill"),
                                           }
                     from gluon import IS_IN_SET
-                    from s3 import S3Represent
+                    #from s3 import S3Represent
                     field.requires = IS_IN_SET(document_type_opts)
                     field.represent = S3Represent(options = document_type_opts)
 
@@ -3283,7 +3288,10 @@ Thank you"""
 
         s3db = current.s3db
 
-        s3db.configure("inv_send",
+        # Use Custom Represent for Sites to send to
+        s3db.inv_send.to_site_id.requires.other.label = org_SiteRepresent()
+
+        s3db.configure(tablename,
                        list_fields = ["id",
                                       "send_ref",
                                       "req_ref",
@@ -3351,7 +3359,7 @@ Thank you"""
                                           "WB": T("Waybill"),
                                           }
                     from gluon import IS_IN_SET
-                    from s3 import S3Represent
+                    #from s3 import S3Represent
                     field.requires = IS_IN_SET(document_type_opts)
                     field.represent = S3Represent(options = document_type_opts)
 
@@ -5022,7 +5030,7 @@ Thank you"""
             Customise reponse from options.s3json
         """
 
-        from s3 import IS_ONE_OF, S3Represent
+        from s3 import IS_ONE_OF#, S3Represent
 
         s3db = current.s3db
         ptable = s3db.project_project
@@ -5099,7 +5107,7 @@ Thank you"""
                 r.resource.add_filter(FS("requester_id") == auth.s3_logged_in_person())
 
             from gluon import IS_EMPTY_OR, IS_IN_SET
-            from s3 import IS_ONE_OF, S3GroupedOptionsWidget, S3Represent, S3SQLCustomForm, S3SQLInlineComponent
+            from s3 import IS_ONE_OF, S3GroupedOptionsWidget, S3SQLCustomForm, S3SQLInlineComponent#, S3Represent
             from s3layouts import S3PopupLink
 
             db = current.db
@@ -6018,5 +6026,276 @@ class PrintableShipmentForm(S3Method):
                             )
 
         return json_data
+
+# =============================================================================
+class org_SiteRepresent(S3Represent):
+    """
+        Representation of Sites
+        - include Organisation for sites outside own NS
+        - ensure these are sorted below those within NS
+    """
+
+    def __init__(self,
+                 show_link = False,
+                 show_type = True,
+                 ):
+
+        # Need a custom lookup
+        self.lookup_rows = self.custom_lookup_rows
+
+        user = current.auth.user
+        if user:
+            self.organisation_id = org_id = user.organisation_id
+            if org_id:
+                from s3db.org import org_root_organisation
+                self.root_org = current.cache.ram("root_org_%s" % org_id, # Same key as auth.root_org()
+                                                  lambda: org_root_organisation(org_id),
+                                                  time_expire=120
+                                                  )
+            else:
+                self.root_org = None
+        else:
+            self.organisation_id = None
+            self.root_org = None
+
+        self.org_labels = {}
+        self.show_type = show_type
+
+        super(org_SiteRepresent, self).__init__(lookup = "org_site",
+                                                fields = ["name"],
+                                                show_link = show_link,
+                                                )
+
+    # -------------------------------------------------------------------------
+    def bulk(self, values, rows=None, list_type=False, show_link=True, include_blank=True):
+        """
+            Represent multiple values as dict {value: representation}
+
+            @param values: list of values
+            @param rows: the referenced rows (if values are foreign keys)
+            @param show_link: render each representation as link
+            @param include_blank: Also include a blank value
+
+            @return: a dict {value: representation}
+        """
+
+        show_link = show_link and self.show_link
+        if show_link and not rows:
+            # Retrieve the rows
+            rows = self.lookup_rows(None, values)
+
+        self._setup()
+
+        # Get the values
+        if rows and self.table:
+            values = [row["org_site.site_id"] for row in rows]
+        else:
+            values = [values] if type(values) is not list else values
+
+        # Lookup the representations
+        if values:
+            labels = self._lookup(values, rows=rows)
+            if show_link:
+                link = self.link
+                rows = self.rows
+                labels = {k: link(k, v, rows.get(k)) for k, v in labels.items()}
+            for v in values:
+                if v not in labels:
+                    labels[v] = self.default
+        else:
+            labels = {}
+        if include_blank:
+            labels[None] = self.none
+        return labels
+
+    # -------------------------------------------------------------------------
+    def custom_lookup_rows(self, key, values, fields=None):
+        """
+            Custom lookup method for site rows, does a left join with any
+            instance_types found.
+            Parameters key and fields are not used, but are kept for API
+            compatibility reasons.
+
+            @param values: the site IDs
+        """
+
+        db = current.db
+        s3db = current.s3db
+        stable = s3db.org_site
+        otable = s3db.org_organisation
+
+        show_type = self.show_type
+        show_link = self.show_link
+
+        count = len(values)
+        if count == 1:
+            value = values[0]
+            query = (stable.site_id == value) & \
+                    (stable.organisation_id == otable.id)
+        else:
+            query = (stable.site_id.belongs(values)) & \
+                    (stable.organisation_id == otable.id)
+        limitby = (0, count)
+
+        fields = [stable.name,
+                  stable.site_id,
+                  otable.id,
+                  otable.root_organisation,
+                  ]
+        if show_type or show_link:
+            fields.append(stable.instance_type)
+
+        rows = db(query).select(limitby=limitby, *fields)
+        self.queries += 1
+
+        # Lookup represent for all Orgs
+        orgs = set(row["org_organisation.id"] for row in rows)
+        root_orgs = set(row["org_organisation.root_organisation"] for row in rows if row["org_organisation.root_organisation"] not in orgs)
+        from s3db.org import org_OrganisationRepresent
+        self.org_labels = org_OrganisationRepresent(parent = False,
+                                                    acronym = False,
+                                                    ).bulk(list(orgs) + list(root_orgs))
+
+        if show_type or show_link:
+
+            # Collect the site_ids
+            site_ids = set(row["org_site.site_id"] for row in rows)
+
+            # Retrieve the facility type links
+            ltable = s3db.org_site_facility_type
+            query = ltable.site_id.belongs(site_ids)
+            links = db(query).select(ltable.site_id,
+                                     ltable.facility_type_id,
+                                     )
+
+            # Collect all type IDs and type IDs per site_id
+            all_types = set()
+            facility_types = {}
+
+            for link in links:
+
+                facility_type_id = link.facility_type_id
+                all_types.add(facility_type_id)
+
+                site_id = link.site_id
+                if site_id in facility_types:
+                    facility_types[site_id].append(facility_type_id)
+                else:
+                    facility_types[site_id] = [facility_type_id]
+
+            # Bulk-represent all type IDs
+            # (stores the representations in the S3Represent)
+            if show_type:
+                ltable.facility_type_id.represent.bulk(list(all_types))
+
+            # Add the list of corresponding type IDs to each row
+            for row in rows:
+                row.facility_types = facility_types.get(row["org_site.site_id"]) or []
+
+        if show_link:
+
+            # Collect site_ids per instance type
+            site_ids = {}
+            for row in rows:
+                instance_type = row["org_site.instance_type"]
+                if instance_type in site_ids:
+                    site_ids[instance_type].add(row["org_site.site_id"])
+                else:
+                    site_ids[instance_type] = {row["org_site.site_id"]}
+
+            # Retrieve site ID / instance ID pairs per instance_type
+            instance_ids = {}
+            for instance_type in site_ids:
+                table = s3db.table(instance_type)
+                if not table:
+                    continue
+                query = table.site_id.belongs(site_ids[instance_type])
+                instances = db(query).select(table._id,
+                                             table.site_id,
+                                             )
+                self.queries += 1
+                key = table._id.name
+                for instance in instances:
+                    instance_ids[instance.site_id] = instance[key]
+
+            # Add the instance ID to each row
+            for row in rows:
+                row.instance_id = instance_ids.get(row["org_site.site_id"])
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def link(self, k, v, row=None):
+        """
+            Represent a (key, value) as hypertext link.
+
+            @param k: the key (site_id)
+            @param v: the representation of the key
+            @param row: the row with this key
+        """
+
+        if row:
+            try:
+                instance_type = row["org_site.instance_type"]
+                instance_id = row.instance_id
+            except (AttributeError, KeyError):
+                return v
+            else:
+                c, f = instance_type.split("_", 1)
+                return A(v, _href=URL(c=c, f=f, args=[instance_id],
+                                      # remove the .aaData extension in paginated views
+                                      extension=""
+                                      ))
+        else:
+            # We have no way to determine the linkto
+            return v
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a single Row
+
+            @param row: the org_site Row
+        """
+
+        name = row["org_site.name"]
+
+        if not name:
+            return self.default
+
+        if self.show_type:
+            instance_type = row["org_site.instance_type"]
+            facility_types = row.get("facility_types")
+
+            if facility_types:
+                represent = current.s3db.org_site_facility_type.facility_type_id.represent
+                type_names = represent.multiple(facility_types)
+                name = "%s (%s)" % (name, type_names)
+            else:
+                instance_type = current.auth.org_site_types.get(instance_type, None)
+                if instance_type:
+                    name = "%s (%s)" % (name, instance_type)
+
+        organisation_id = row.get("org_organisation.id")
+        root_org = row.get("org_organisation.root_organisation")
+        ns = None
+        parent = None
+        if root_org == self.root_org:
+            if organisation_id != self.organisation_id:
+                parent = self.org_labels.get(organisation_id)
+        else:
+            ns = self.org_labels.get(root_org)
+            if root_org != organisation_id:
+                parent = self.org_labels.get(organisation_id)
+            
+        if ns:
+            if parent:
+                name = "ᛜᛜ%s > %s > %s" % (ns, parent, name)
+            else:
+                name = "ᛜᛜ%s > %s" % (ns, name)
+        elif parent:
+            name = "ᛜ%s > %s" % (parent, name)
+
+        return s3_str(name)
 
 # END =========================================================================

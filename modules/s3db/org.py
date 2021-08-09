@@ -5743,6 +5743,8 @@ class org_SiteRepresent(S3Represent):
     def __init__(self,
                  show_link = False,
                  multiple = False,
+                 # @ToDo when-useful:
+                 #show_type = None,
                  show_type = True,
                  ):
 
@@ -5753,6 +5755,9 @@ class org_SiteRepresent(S3Represent):
         language = current.session.s3.language
         if language == settings.get_L10n_default_language():
             translate = False
+
+        #if show_type == None:
+        #    show_type = settings.get_org_site_show_type()
 
         if show_type or show_link or translate:
             # Need a custom lookup
@@ -5978,8 +5983,7 @@ class org_SiteRepresent(S3Represent):
             facility_types = row.get("facility_types")
 
             if facility_types:
-                ltable = current.s3db.org_site_facility_type
-                represent = ltable.facility_type_id.represent
+                represent = current.s3db.org_site_facility_type.facility_type_id.represent
                 type_names = represent.multiple(facility_types)
                 name = "%s (%s)" % (name, type_names)
             else:

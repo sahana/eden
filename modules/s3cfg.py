@@ -5203,6 +5203,12 @@ class S3Config(Storage):
         """
         return self.org.get("site_last_contacted", False)
 
+    #def get_org_site_show_type(self):
+    #    """
+    #        Whether to show the Type of Sites in Represents
+    #    """
+    #    return self.org.get("site_show_type", True)
+
     def get_org_site_volunteers(self):
         """
             Whether volunteers can be assigned to Sites
