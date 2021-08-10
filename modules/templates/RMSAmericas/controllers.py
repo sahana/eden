@@ -364,14 +364,30 @@ class inv_dashboard(S3CustomController):
         for row in rows:
             stockpile_weight += row["inv_inv_item.total_weight"]()
             stockpile_volume += row["inv_inv_item.total_volume"]()
-        num_shipments = "tbc"
-        shipments_weight = "tbc"
-        shipments_volume = "tbc"
+        
+        fields = ["id",
+                  "track_item.total_weight",
+                  "track_item.total_volume",
+                  "track_item.quantity",       # extra_fields
+                  "track_item.item_pack_id$quantity", # extra_fields
+                  "track_item.item_id$weight", # extra_fields
+                  "track_item.item_id$volume", # extra_fields
+                  ]
+        sresource = s3db.resource("inv_send")
+        # @ToDo: Filter by last month?
+        rows = sresource.select(fields, as_rows=True)
+        num_shipments = len(set([row["inv_send.id"] for row in rows]))
+        shipments_weight = 0
+        shipments_volume = 0
+        for row in rows:
+            shipments_weight += row["inv_track_item.total_weight"]()
+            shipments_volume += row["inv_track_item.total_volume"]()
+
         float_represent = IS_FLOAT_AMOUNT.represent
         kpi = UL(LI("%s: %s" % (T("Number of warehouses"), num_warehouses)),
                  LI("%s: %s" % (T("Number of Shipments sent"), num_shipments)),
-                 LI("%s: %s kg" % (T("Total weight sent"), shipments_weight)),
-                 LI("%s: %s m3" % (T("Total volume sent"), shipments_volume)),
+                 LI("%s: %s kg" % (T("Total weight sent"), float_represent(shipments_weight, precision=1))),
+                 LI("%s: %s m3" % (T("Total volume sent"), float_represent(shipments_volume, precision=3))),
                  LI("%s: %s kg" % (T("Total weight stockpiled"), float_represent(stockpile_weight, precision=1))),
                  LI("%s: %s m3" % (T("Total volume stockpiled"), float_represent(stockpile_volume, precision=1))),
                  LI(T("Remaining stockpile capacities available")),

@@ -1927,14 +1927,18 @@ $.filterOptionsS3({
 
         # Resource configuration
         configure(tablename,
-                  extra_fields = ["quantity", "pack_value", "item_pack_id"],
+                  extra_fields = ["quantity",
+                                  "recv_quantity",
+                                  "pack_value",
+                                  "item_id$volume",
+                                  "item_id$weight",
+                                  "item_pack_id$quantity",
+                                  ],
                   filter_widgets = filter_widgets,
                   list_fields = ["id",
                                  "status",
                                  "item_source_no",
                                  "item_id",
-                                 #(T("Weight (kg)"), "item_id$weight"),
-                                 #(T("Volume (m3)"), "item_id$volume"),
                                  "item_pack_id",
                                  "send_id",
                                  "recv_id",
@@ -1979,84 +1983,155 @@ $.filterOptionsS3({
     def inv_track_item_total_value(row):
         """ Total value of a track item """
 
-        # Default
-        total = current.messages["NONE"]
-
-        if hasattr(row, "inv_track_item"):
-            row = row.inv_track_item
         try:
-            if row.quantity and row.pack_value:
-                total = row.quantity * row.pack_value
-            else:
-                # Item lacks quantity, or value per pack, or both
-                # => default
-                pass
+            inv_track_item = getattr(row, "inv_track_item")
         except AttributeError:
-            # Columns needed to compute total not available
-            # => default
-            pass
+            inv_track_item = row
 
-        return total
+        try:
+            quantity = inv_track_item.quantity
+            pack_value = inv_track_item.pack_value
+        except AttributeError:
+            # Need to reload the track item
+            # Avoid this by adding to extra_fields
+            ttable = current.s3db.inv_track_item
+            query = (ttable.id == inv_track_item.id)
+            inv_track_item = current.db(query).select(ttable.quantity,
+                                                      ttable.pack_value,
+                                                      limitby = (0, 1),
+                                                      ).first()
+            quantity = inv_track_item.quantity
+            pack_value = inv_track_item.pack_value
+
+        if quantity and pack_value:
+            return round(quantity * pack_value, 2)
+        else:
+            # Item lacks quantity, or value per pack, or both
+            return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     @staticmethod
     def inv_track_item_total_volume(row, received=False):
         """ Total volume of a track item """
 
-        if hasattr(row, "inv_track_item"):
-            row = row.inv_track_item
         try:
-            quantity = row.quantity if not received else row.recv_quantity
+            inv_track_item = getattr(row, "inv_track_item")
         except AttributeError:
-            # Not available
+            inv_track_item = row
+
+        try:
+            supply_item = getattr(row, "supply_item")
+            volume = supply_item.volume
+        except AttributeError:
+            # Need to load the supply item
+            # Avoid this by adding to extra_fields
+            ttable = current.s3db.inv_track_item
+            stable = current.s3db.supply_item
+            query = (ttable.id == inv_track_item.id) & \
+                    (ttable.item_id == stable.id)
+            supply_item = current.db(query).select(stable.volume,
+                                                   limitby = (0, 1),
+                                                   ).first()
+            volume = supply_item.volume if supply_item else None
+
+        if volume is None:
             return current.messages["NONE"]
 
-        # Lookup Volume per item
-        table = current.s3db.supply_item
-        try:
-            volume = current.db(table.id == row.item_id).select(table.volume,
-                                                                limitby = (0, 1)
-                                                                ).first().volume
-        except AttributeError:
-            # No (such) item
-            return current.messages["NONE"]
-
-        # Return the total volume
-        if quantity is not None and volume is not None:
-            return round(quantity * volume, 2)
+        if received:
+            qfield = "recv_quantity"
         else:
-            # Unknown
-            return current.messages["NONE"]
+            qfield = "quantity"
+
+        try:
+            quantity = inv_track_item[qfield]
+        except KeyError:
+            # Need to reload the track item
+            # Avoid this by adding to extra_fields
+            ttable = current.s3db.inv_inv_item
+            query = (ttable.id == inv_track_item.id)
+            inv_track_item = current.db(query).select(ttable[qfield],
+                                                      limitby = (0, 1),
+                                                      ).first()
+            quantity = inv_track_item[qfield]
+
+        try:
+            supply_item_pack = getattr(row, "supply_item_pack")
+            pack_quantity = supply_item_pack.quantity
+        except AttributeError:
+            # Need to load the supply item pack
+            # Avoid this by adding to extra_fields
+            ttable = current.s3db.inv_track_item
+            ptable = current.s3db.supply_item_pack
+            query = (ttable.id == inv_track_item.id) & \
+                    (ttable.item_pack_id == ptable.id)
+            supply_item_pack = current.db(query).select(ptable.quantity,
+                                                        limitby = (0, 1),
+                                                        ).first()
+            pack_quantity = supply_item_pack.quantity
+
+        return round(quantity * pack_quantity * volume, 3)
 
     # -------------------------------------------------------------------------
     @staticmethod
     def inv_track_item_total_weight(row, received=False):
         """ Total weight of a track item """
 
-        if hasattr(row, "inv_track_item"):
-            row = row.inv_track_item
         try:
-            quantity = row.quantity if not received else row.recv_quantity
+            inv_track_item = getattr(row, "inv_track_item")
         except AttributeError:
-            # Not available
+            inv_track_item = row
+
+        try:
+            supply_item = getattr(row, "supply_item")
+            weight = supply_item.weight
+        except AttributeError:
+            # Need to load the supply item
+            # Avoid this by adding to extra_fields
+            ttable = current.s3db.inv_track_item
+            stable = current.s3db.supply_item
+            query = (ttable.id == inv_track_item.id) & \
+                    (ttable.item_id == stable.id)
+            supply_item = current.db(query).select(stable.weight,
+                                                   limitby = (0, 1),
+                                                   ).first()
+            weight = supply_item.weight if supply_item else None
+
+        if weight is None:
             return current.messages["NONE"]
 
-        # Lookup Weight per item
-        table = current.s3db.supply_item
-        try:
-            weight = current.db(table.id == row.item_id).select(table.weight,
-                                                                limitby = (0, 1)
-                                                                ).first().weight
-        except AttributeError:
-            # No (such) item
-            return current.messages["NONE"]
-
-        # Return the total weight
-        if quantity is not None and weight is not None:
-            return round(quantity * weight, 3)
+        if received:
+            qfield = "recv_quantity"
         else:
-            # Unknown
-            return current.messages["NONE"]
+            qfield = "quantity"
+
+        try:
+            quantity = inv_track_item[qfield]
+        except KeyError:
+            # Need to reload the track item
+            # Avoid this by adding to extra_fields
+            ttable = current.s3db.inv_inv_item
+            query = (ttable.id == inv_track_item.id)
+            inv_track_item = current.db(query).select(ttable[qfield],
+                                                      limitby = (0, 1),
+                                                      ).first()
+            quantity = inv_track_item[qfield]
+
+        try:
+            supply_item_pack = getattr(row, "supply_item_pack")
+            pack_quantity = supply_item_pack.quantity
+        except AttributeError:
+            # Need to load the supply item pack
+            # Avoid this by adding to extra_fields
+            ttable = current.s3db.inv_track_item
+            ptable = current.s3db.supply_item_pack
+            query = (ttable.id == inv_track_item.id) & \
+                    (ttable.item_pack_id == ptable.id)
+            supply_item_pack = current.db(query).select(ptable.quantity,
+                                                        limitby = (0, 1),
+                                                        ).first()
+            pack_quantity = supply_item_pack.quantity
+
+        return round(quantity * pack_quantity * weight, 2)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2088,7 +2163,8 @@ $.filterOptionsS3({
         row = current.db(query).select(ritable.quantity,
                                        ritable.quantity_transit,
                                        ritable.quantity_fulfil,
-                                       siptable.quantity).first()
+                                       siptable.quantity
+                                       ).first()
 
         if row:
             rim = row.req_req_item
