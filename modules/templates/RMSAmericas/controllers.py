@@ -5,7 +5,7 @@ from os import path
 from gluon import *
 from gluon.storage import Storage
 
-from s3 import S3CustomController, S3Report, S3Request
+from s3 import IS_FLOAT_AMOUNT, S3CustomController, S3Report, S3Request
 
 THEME = "RMSAmericas"
 
@@ -367,12 +367,13 @@ class inv_dashboard(S3CustomController):
         num_shipments = "tbc"
         shipments_weight = "tbc"
         shipments_volume = "tbc"
+        float_represent = IS_FLOAT_AMOUNT.represent
         kpi = UL(LI("%s: %s" % (T("Number of warehouses"), num_warehouses)),
                  LI("%s: %s" % (T("Number of Shipments sent"), num_shipments)),
                  LI("%s: %s kg" % (T("Total weight sent"), shipments_weight)),
                  LI("%s: %s m3" % (T("Total volume sent"), shipments_volume)),
-                 LI("%s: %s kg" % (T("Total weight stockpiled"), round(stockpile_weight, 1))),
-                 LI("%s: %s m3" % (T("Total volume stockpiled"), round(stockpile_volume, 1))),
+                 LI("%s: %s kg" % (T("Total weight stockpiled"), float_represent(stockpile_weight, precision=1))),
+                 LI("%s: %s m3" % (T("Total volume stockpiled"), float_represent(stockpile_volume, precision=1))),
                  LI(T("Remaining stockpile capacities available")),
                  )
 
