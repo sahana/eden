@@ -327,7 +327,7 @@ class DCC(object):
         dcc_json = self.encode(dcci, public_key)
         if not dcc_json:
             return "DCC upload failed, no data"
-        key, cert, verify = self.get_dcc_credentials()
+        cert, key, verify = self.get_dcc_credentials()
 
         # The server endpoint to send to
         dcc_base_url = settings.get_custom("dcc_base_url")
