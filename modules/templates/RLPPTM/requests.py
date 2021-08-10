@@ -104,15 +104,14 @@ def send_filter_widgets():
                    S3OptionsFilter, \
                    S3TextFilter, \
                    s3_get_filter_opts
-    from s3db.inv import inv_shipment_status_labels
-
-    s3db = current.s3db
+    from s3db.inv import SHIP_STATUS_CANCEL, \
+                         SHIP_STATUS_RETURNING, \
+                         inv_shipment_status_labels
 
     send_status_opts = OrderedDict(sorted(inv_shipment_status_labels().items(),
                                           key = lambda i: i[0],
                                           ))
     # We don't currently use these statuses
-    from s3db.inv import SHIP_STATUS_CANCEL, SHIP_STATUS_RETURNING
     del send_status_opts[SHIP_STATUS_CANCEL]
     del send_status_opts[SHIP_STATUS_RETURNING]
 
@@ -169,15 +168,14 @@ def recv_filter_widgets():
                    S3OptionsFilter, \
                    S3TextFilter, \
                    s3_get_filter_opts
-    from s3db.inv import inv_shipment_status_labels
-
-    s3db = current.s3db
+    from s3db.inv import SHIP_STATUS_CANCEL, \
+                         SHIP_STATUS_RETURNING, \
+                         inv_shipment_status_labels
 
     recv_status_opts = OrderedDict(sorted(inv_shipment_status_labels().items(),
                                           key = lambda i: i[0],
                                           ))
     # We don't currently use these statuses
-    from s3db.inv import SHIP_STATUS_CANCEL, SHIP_STATUS_RETURNING
     del recv_status_opts[SHIP_STATUS_CANCEL]
     del recv_status_opts[SHIP_STATUS_RETURNING]
 

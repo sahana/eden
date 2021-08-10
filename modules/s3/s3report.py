@@ -2434,10 +2434,10 @@ class S3PivotTable(object):
             # Get the representation method
             has_fk = f is not None and s3_has_foreign_key(f)
             if has_fk:
-                represent = lambda v, f=f: s3_str(f.represent(v))
+                represent = lambda v, field=f: s3_str(field.represent(v))
             else:
-                m = self._represent_method(selector)
-                represent = lambda v, m=m: s3_str(m(v))
+                reprmethod = self._represent_method(selector)
+                represent = lambda v, m=reprmethod: s3_str(m(v))
 
             represents[selector] = represent
 
@@ -2527,7 +2527,7 @@ class S3PivotTable(object):
                 return (keys, totals[0], totals)
         except (TypeError, ValueError):
             pass
-        return (None, None)
+        return (None, None, None)
 
     # -------------------------------------------------------------------------
     @staticmethod

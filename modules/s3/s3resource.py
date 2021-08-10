@@ -59,7 +59,7 @@ from .s3data import S3DataTable, S3DataList
 from .s3datetime import s3_format_datetime
 from .s3fields import s3_all_meta_field_names
 from .s3query import FS, S3ResourceField, S3ResourceQuery, S3Joins, S3URLQuery
-from .s3utils import s3_get_foreign_key, s3_get_last_record_id, s3_has_foreign_key, s3_remove_last_record_id, s3_str, s3_unicode
+from .s3utils import s3_get_last_record_id, s3_has_foreign_key, s3_remove_last_record_id, s3_str, s3_unicode
 from .s3validators import IS_ONE_OF
 from .s3xml import S3XMLFormat
 
