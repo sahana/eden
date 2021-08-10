@@ -316,54 +316,79 @@ def deploy_index():
     return output
 
 # =============================================================================
-def inv_index():
+class inv_dashboard(S3CustomController):
     """
-        Custom module homepage for Warehouse Management module
-        - Dashboard
+        Dashboard for Warehouse Management module
+        - used as homepage
     """
 
-    T = current.T
-    s3db = current.s3db
+    def __call__(self):
 
-    # Shipments
-    shipments = DIV(I(T("Shipments...")))
+        T = current.T
+        db = current.db
+        s3db = current.s3db
 
-    # Notifications
-    notifications = DIV(I(T("Notifications...")))
+        # Shipments
+        shipments = DIV(I(T("Shipments...")))
 
-    # Capacity
-    # Define the Pivot Table
-    r = S3Request("inv", "inv_item")
-    report = S3Report()
-    report.resource = s3db.resource("inv_inv_item")
-    capacity = report.widget(r,
-                             widget_id = "capacity",
-                             ajaxurl = URL(c="inv", f="inv_item",
-                                           args = "report.json"
-                                           ),
-                             )
+        # Notifications
+        notifications = DIV(I(T("Notifications...")))
 
-    # KPI
-    kpi = UL(LI(T("Total of weight and m3 stockpiled")),
-             LI(T("Total of weight and m3 stockpiled sent")),
-             LI(T("Number of Shipments sent")),
-             LI(T("Remaining stockpile capacities available")),
-             LI(T("Number of warehouses")),
-             )
+        # Capacity
+        # Define the Pivot Table
+        r = S3Request("inv", "inv_item")
+        r.customise_resource()
+        resource = s3db.resource("inv_inv_item")
+        report = S3Report()
+        report.resource = resource
+        capacity = report.widget(r,
+                                 widget_id = "capacity",
+                                 ajaxurl = URL(c="inv", f="inv_item",
+                                               args = "report.json"
+                                               ),
+                                 )
 
-    # Prepared Checklist
-    checklist = UL()
+        # KPI
+        fields = ["site_id",
+                  "total_weight",
+                  "total_volume",
+                  "quantity",       # extra_fields
+                  "item_pack_id$quantity", # extra_fields
+                  "item_id.weight", # extra_fields
+                  "item_id.volume", # extra_fields
+                  ]
+        rows = resource.select(fields, as_rows=True)
+        num_warehouses = len(set([row["inv_inv_item.site_id"] for row in rows]))
+        stockpile_weight = 0
+        stockpile_volume = 0
+        for row in rows:
+            stockpile_weight += row["inv_inv_item.total_weight"]()
+            stockpile_volume += row["inv_inv_item.total_volume"]()
+        num_shipments = "tbc"
+        shipments_weight = "tbc"
+        shipments_volume = "tbc"
+        kpi = UL(LI("%s: %s" % (T("Number of warehouses"), num_warehouses)),
+                 LI("%s: %s" % (T("Number of Shipments sent"), num_shipments)),
+                 LI("%s: %s kg" % (T("Total weight sent"), shipments_weight)),
+                 LI("%s: %s m3" % (T("Total volume sent"), shipments_volume)),
+                 LI("%s: %s kg" % (T("Total weight stockpiled"), round(stockpile_weight, 1))),
+                 LI("%s: %s m3" % (T("Total volume stockpiled"), round(stockpile_volume, 1))),
+                 LI(T("Remaining stockpile capacities available")),
+                 )
 
-    output = {"title": T("Dashboard"),
-              "shipments": shipments,
-              "notifications": notifications,
-              "capacity": capacity,
-              "kpi": kpi,
-              "checklist": checklist,
-              }
+        # Preparedness Checklist
+        checklist = UL()
 
-    # Custom view
-    S3CustomController._view(THEME, "inv_index.html")
-    return output
+        output = {"title": T("Dashboard"),
+                  "shipments": shipments,
+                  "notifications": notifications,
+                  "capacity": capacity,
+                  "kpi": kpi,
+                  "checklist": checklist,
+                  }
+
+        # Custom view
+        self._view(THEME, "inv_dashboard.html")
+        return output
 
 # END =========================================================================

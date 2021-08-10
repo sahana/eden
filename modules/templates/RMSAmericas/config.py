@@ -8,7 +8,7 @@ from gluon.storage import Storage
 
 from s3 import s3_str, S3Method, S3Represent
 
-from .controllers import deploy_index, inv_index
+from .controllers import deploy_index, inv_dashboard
 
 RED_CROSS = "Red Cross / Red Crescent"
 
@@ -768,7 +768,7 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Inventory Management
-    settings.customise_inv_home = inv_index # Imported from controllers.py
+    settings.customise_inv_home = inv_dashboard() # Imported from controllers.py
 
     # Hide Staff Management Tabs for Facilities in Inventory Module
     settings.inv.facility_manage_staff = False
@@ -3199,6 +3199,15 @@ Thank you"""
                                                  hidden = True,
                                                  ))
 
+        report_options = s3db.get_config(tablename, "report_options")
+        report_options.fact += [(T("Total Weight"), "total_weight"),
+                                (T("Total Volume"), "total_volume"),
+                                ]
+        report_options.precision = {"total_value": 3,
+                                    "total_weight": 3,
+                                    "total_volume": 3,
+                                    }
+
         s3db.configure("inv_inv_item",
                        create = direct_stock_edits,
                        deletable = direct_stock_edits,
@@ -3206,8 +3215,11 @@ Thank you"""
                        listadd = direct_stock_edits,
                        grouped = stock_reports,
                        # Needed for Field.Methods
-                       extra_fields = ["item_id$weight",
+                       extra_fields = ["quantity",
+                                       "pack_value",
+                                       "item_id$weight",
                                        "item_id$volume",
+                                       "item_pack_id$quantity",
                                        ],
                        list_fields = list_fields,
                        )

@@ -1739,7 +1739,7 @@ class S3PivotTable(object):
             @param strict: filter out dimension values which don't match
                            the resource filter
             @param precision: maximum precision of aggregate computations,
-                              a dict {selector:number_of_decimals}
+                              a dict {selector: number_of_decimals}
         """
 
         # Initialize ----------------------------------------------------------
