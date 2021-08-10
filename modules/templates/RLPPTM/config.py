@@ -3300,7 +3300,8 @@ def config(settings):
         from s3 import S3PriorityRepresent
         field = table.status
         status_opts = s3db.inv_ship_status
-        status_labels = s3db.inv_shipment_status_labels
+        from s3db.inv import inv_shipment_status_labels
+        status_labels = inv_shipment_status_labels()
         field.represent = S3PriorityRepresent(status_labels,
                                               {status_opts["IN_PROCESS"]: "lightblue",
                                                status_opts["RECEIVED"]: "green",
@@ -3472,7 +3473,8 @@ def config(settings):
         from s3 import S3PriorityRepresent
         field = table.status
         status_opts = s3db.inv_ship_status
-        status_labels = s3db.inv_shipment_status_labels
+        from s3db.inv import inv_shipment_status_labels
+        status_labels = inv_shipment_status_labels()
         field.represent = S3PriorityRepresent(status_labels,
                                               {status_opts["IN_PROCESS"]: "lightblue",
                                                status_opts["RECEIVED"]: "green",

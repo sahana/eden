@@ -108,7 +108,8 @@ class S3Resource(object):
                  approved = True,
                  unapproved = False,
                  context = False,
-                 extra_filters = None):
+                 extra_filters = None
+                 ):
         """
             Constructor
 
@@ -494,7 +495,8 @@ class S3Resource(object):
                as_rows = False,
                represent = False,
                show_links = True,
-               raw_data = False):
+               raw_data = False,
+               ):
         """
             Extract data from this resource
 
@@ -527,7 +529,8 @@ class S3Resource(object):
                               as_rows = as_rows,
                               represent = represent,
                               show_links = show_links,
-                              raw_data = raw_data)
+                              raw_data = raw_data,
+                              )
         if as_rows:
             return data.rows
         else:
@@ -4565,19 +4568,20 @@ class S3ResourceData(object):
     def __init__(self,
                  resource,
                  fields,
-                 start=0,
-                 limit=None,
-                 left=None,
-                 orderby=None,
-                 groupby=None,
-                 distinct=False,
-                 virtual=True,
-                 count=False,
-                 getids=False,
-                 as_rows=False,
-                 represent=False,
-                 show_links=True,
-                 raw_data=False):
+                 start = 0,
+                 limit = None,
+                 left = None,
+                 orderby = None,
+                 groupby = None,
+                 distinct = False,
+                 virtual = True,
+                 count = False,
+                 getids = False,
+                 as_rows = False,
+                 represent = False,
+                 show_links = True,
+                 raw_data = False
+                 ):
         """
             Constructor, extracts (and represents) data from a resource
 
@@ -5233,11 +5237,11 @@ class S3ResourceData(object):
     # -------------------------------------------------------------------------
     def filter_query(self,
                      query,
-                     join=None,
-                     left=None,
-                     getids=False,
-                     limitby=None,
-                     orderby=None,
+                     join = None,
+                     left = None,
+                     getids = False,
+                     limitby = None,
+                     orderby = None,
                      ):
         """
             Execute a query to determine the number/record IDs of all
@@ -5341,8 +5345,9 @@ class S3ResourceData(object):
                       dfields,
                       vfields,
                       joined_tables,
-                      as_rows=False,
-                      groupby=None):
+                      as_rows = False,
+                      groupby = None
+                      ):
         """
             Find all tables and fields to retrieve in the master query
 
@@ -5556,9 +5561,10 @@ class S3ResourceData(object):
                 rows,
                 pkey,
                 columns,
-                join=True,
-                records=None,
-                represent=False):
+                join = True,
+                records = None,
+                represent = False
+                ):
         """
             Extract the data from rows and store them in self.field_data
 
@@ -5642,9 +5648,10 @@ class S3ResourceData(object):
     def render(self,
                rfield,
                results,
-               none="-",
-               raw_data=False,
-               show_links=True):
+               none = "-",
+               raw_data = False,
+               show_links = True
+               ):
         """
             Render the representations of the values for rfield in
             all records in the result

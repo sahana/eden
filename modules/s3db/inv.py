@@ -27,11 +27,10 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3WarehouseModel",
-           "S3InventoryModel",
-           "S3InventoryTrackingLabels",
-           "S3InventoryTrackingModel",
-           "S3InventoryAdjustModel",
+__all__ = ("InvWarehouseModel",
+           "InventoryModel",
+           "InventoryTrackingModel",
+           "InventoryAdjustModel",
            "inv_tabs",
            "inv_rheader",
            "inv_rfooter",
@@ -41,11 +40,11 @@ __all__ = ("S3WarehouseModel",
            "inv_ship_status",
            "inv_tracking_status",
            "inv_adj_rheader",
-           "depends",
            "inv_InvItemRepresent",
            "inv_item_total_weight",
            "inv_item_total_volume",
            "inv_stock_movements",
+           "depends",
            )
 
 import datetime
@@ -97,8 +96,22 @@ inv_tracking_status = {"UNKNOWN"    : TRACK_STATUS_UNKNOWN,
 # Compact JSON encoding
 SEPARATORS = (",", ":")
 
+def inv_shipment_status_labels():
+    T = current.T
+    return {SHIP_STATUS_IN_PROCESS: T("In Process"),
+            SHIP_STATUS_RECEIVED: T("Received"),
+            SHIP_STATUS_SENT: T("Sent"),
+            SHIP_STATUS_CANCEL: T("Canceled"),
+            SHIP_STATUS_RETURNING: T("Returning"),
+            }
+
+def inv_itn_label():
+    # Overwrite the label until we have a better way to do this
+    #return current.T("Item Source Tracking Number")
+    return current.T("CTN")
+
 # =============================================================================
-class S3WarehouseModel(S3Model):
+class InvWarehouseModel(S3Model):
 
     names = ("inv_warehouse",
              "inv_warehouse_type",
@@ -387,7 +400,7 @@ class S3WarehouseModel(S3Model):
         current.s3db.org_update_affiliations("inv_warehouse", form.vars)
 
 # =============================================================================
-class S3InventoryModel(S3Model):
+class InventoryModel(S3Model):
     """
         Inventory Management
 
@@ -429,7 +442,7 @@ class S3InventoryModel(S3Model):
         #
         # ondelete references have been set to RESTRICT because the inv. items
         # should never be automatically deleted
-        inv_item_status_opts = self.inv_item_status_opts
+        inv_item_status_opts = settings.get_inv_item_status()
 
         tablename = "inv_inv_item"
         self.define_table(tablename,
@@ -497,7 +510,7 @@ class S3InventoryModel(S3Model):
                                       writable = track_pack_values,
                                       ),
                           Field("item_source_no", length=16,
-                                label = self.inv_itn_label,
+                                label = inv_itn_label(),
                                 represent = lambda v: v or NONE,
                                 requires = IS_LENGTH(16),
                                 ),
@@ -910,47 +923,7 @@ $.filterOptionsS3({
                 item.data.quantity = duplicate.quantity
 
 # =============================================================================
-class S3InventoryTrackingLabels(S3Model):
-    """ Tracking Status Labels """
-
-    names = ("inv_tracking_status_labels",
-             "inv_shipment_status_labels",
-             "inv_itn_label",
-             "inv_item_status_opts",
-             )
-
-    def model(self):
-
-        T = current.T
-
-        return {"inv_tracking_status_labels": {TRACK_STATUS_UNKNOWN: T("Unknown"),
-                                               TRACK_STATUS_PREPARING: T("In Process"),
-                                               TRACK_STATUS_TRANSIT: T("In transit"),
-                                               TRACK_STATUS_UNLOADING: T("Unloading"),
-                                               TRACK_STATUS_ARRIVED: T("Arrived"),
-                                               TRACK_STATUS_CANCELED: T("Canceled"),
-                                               TRACK_STATUS_RETURNING: T("Returning"),
-                                               },
-                "inv_shipment_status_labels": {SHIP_STATUS_IN_PROCESS: T("In Process"),
-                                               SHIP_STATUS_RECEIVED: T("Received"),
-                                               SHIP_STATUS_SENT: T("Sent"),
-                                               SHIP_STATUS_CANCEL: T("Canceled"),
-                                               SHIP_STATUS_RETURNING: T("Returning"),
-                                               },
-                # Overwrite the label until we have a better way to do this
-                #"inv_itn_label": T("Item Source Tracking Number"),
-                "inv_itn_label": T("CTN"),
-                "inv_item_status_opts": current.deployment_settings.get_inv_item_status(),
-                }
-
-    # -------------------------------------------------------------------------
-    def defaults(self):
-
-        # inv disabled => label dicts can remain the same, however
-        return self.model()
-
-# =============================================================================
-class S3InventoryTrackingModel(S3Model):
+class InventoryTrackingModel(S3Model):
     """
         A module to manage the shipment of inventory items
         - Sent Items
@@ -996,8 +969,15 @@ class S3InventoryTrackingModel(S3Model):
         item_pack_id = self.supply_item_pack_id
         req_item_id = self.req_item_id
         req_ref = self.req_req_ref
-        tracking_status = self.inv_tracking_status_labels
-        shipment_status = self.inv_shipment_status_labels
+        shipment_status = inv_shipment_status_labels()
+        tracking_status = {TRACK_STATUS_UNKNOWN: T("Unknown"),
+                           TRACK_STATUS_PREPARING: T("In Process"),
+                           TRACK_STATUS_TRANSIT: T("In transit"),
+                           TRACK_STATUS_UNLOADING: T("Unloading"),
+                           TRACK_STATUS_ARRIVED: T("Arrived"),
+                           TRACK_STATUS_CANCELED: T("Canceled"),
+                           TRACK_STATUS_RETURNING: T("Returning"),
+                           }
 
         NONE = current.messages["NONE"]
 
@@ -1008,6 +988,7 @@ class S3InventoryTrackingModel(S3Model):
         type_default = settings.get_inv_send_type_default()
         time_in = settings.get_inv_send_show_time_in()
         recv_shortname = settings.get_inv_recv_shortname()
+        itn_label = inv_itn_label()
         document_filing = settings.get_inv_document_filing()
 
         is_logged_in = auth.is_logged_in
@@ -1397,6 +1378,13 @@ class S3InventoryTrackingModel(S3Model):
                                ondelete = "SET NULL",
                                default = auth.s3_logged_in_person(),
                                comment = self.pr_person_comment(child="recipient_id")),
+                     Field("transport_type",
+                           label = T("Type of Transport"),
+                           # Enable in template as-required
+                           readable = False,
+                           writable = False,
+                           represent = s3_string_represent,
+                           ),
                      Field("status", "integer",
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(shipment_status)
@@ -1712,7 +1700,7 @@ class S3InventoryTrackingModel(S3Model):
                                 writable = False,
                            ),
                      Field("item_source_no", length=16,
-                           label = self.inv_itn_label,
+                           label = itn_label,
                            represent = s3_string_represent,
                            requires = IS_LENGTH(16),
                            ),
@@ -1733,7 +1721,7 @@ class S3InventoryTrackingModel(S3Model):
         # ---------------------------------------------------------------------
         # Tracking Items
         #
-        inv_item_status_opts = self.inv_item_status_opts
+        inv_item_status_opts = settings.get_inv_item_status()
 
         tablename = "inv_track_item"
         define_table(tablename,
@@ -1822,7 +1810,7 @@ $.filterOptionsS3({
                                                  T("The Bin in which the Item is being stored (optional)."))),
                            ),
                      Field("item_source_no", length=16,
-                           label = self.inv_itn_label,
+                           label = itn_label,
                            represent = s3_string_represent,
                            requires = IS_LENGTH(16),
                            ),
@@ -4563,7 +4551,7 @@ def inv_recv_pdf_footer(r):
     return None
 
 # =============================================================================
-class S3InventoryAdjustModel(S3Model):
+class InventoryAdjustModel(S3Model):
     """
         A module to manage the shipment of inventory items
         - Sent Items
@@ -4712,7 +4700,7 @@ class S3InventoryAdjustModel(S3Model):
         # ---------------------------------------------------------------------
         # Adjustment Items
         #
-        inv_item_status_opts = self.inv_item_status_opts
+        inv_item_status_opts = settings.get_inv_item_status()
 
         tablename = "inv_adj_item"
         define_table(tablename,

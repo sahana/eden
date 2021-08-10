@@ -104,10 +104,11 @@ def send_filter_widgets():
                    S3OptionsFilter, \
                    S3TextFilter, \
                    s3_get_filter_opts
+    from s3db.inv import inv_shipment_status_labels
 
     s3db = current.s3db
 
-    send_status_opts = OrderedDict(sorted(s3db.inv_shipment_status_labels.items(),
+    send_status_opts = OrderedDict(sorted(inv_shipment_status_labels().items(),
                                           key = lambda i: i[0],
                                           ))
     # We don't currently use these statuses
@@ -168,10 +169,11 @@ def recv_filter_widgets():
                    S3OptionsFilter, \
                    S3TextFilter, \
                    s3_get_filter_opts
+    from s3db.inv import inv_shipment_status_labels
 
     s3db = current.s3db
 
-    recv_status_opts = OrderedDict(sorted(s3db.inv_shipment_status_labels.items(),
+    recv_status_opts = OrderedDict(sorted(inv_shipment_status_labels().items(),
                                           key = lambda i: i[0],
                                           ))
     # We don't currently use these statuses
