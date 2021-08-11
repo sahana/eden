@@ -66,7 +66,7 @@ __all__ = ("RequestModel",
            "req_match",
            "req_ref_represent",
            "req_rheader",
-           "req_send_commit"
+           "req_send_commit",
            "req_tabs",
            "req_update_status",
            "req_RequesterRepresent",
@@ -4598,7 +4598,7 @@ def req_ref_represent(value, show_link=True, pdf=False):
         return B(value)
 
     return current.messages["NONE"]
-        
+
 # -------------------------------------------------------------------------
 def req_tabs(r, match=True):
     """
