@@ -348,6 +348,7 @@ class TestResultRegistration(S3Method):
             Validate the test result registration form
             - personal details are required for reporting to CWA by name
             - make sure the required consent option is checked
+            - make sure the selected device matches the selected disease
         """
 
         T = current.T
@@ -357,6 +358,7 @@ class TestResultRegistration(S3Method):
         consent = current.s3db.auth_Consent
         response = consent.parse(formvars.get("consent"))
 
+        # Verify that we have the data and consent required
         cwa = formvars.get("report_to_cwa")
         if cwa == "PERSONAL":
             # Personal data required
@@ -373,6 +375,9 @@ class TestResultRegistration(S3Method):
             if not c or not c[1]:
                 form.errors.consent = T("Consent required")
 
+        # Verify that the selected testing device matches the selected
+        # disease (only if disease is selectable - otherwise, the device
+        # list is pre-filtered anyway):
         if "disease_id" in formvars:
             disease_id = formvars["disease_id"]
             device_id = formvars.get("device_id")

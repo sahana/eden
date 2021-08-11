@@ -126,6 +126,11 @@ class DCC(object):
         # Check person data are complete
         if not all((first_name, last_name, dob)):
             raise ValueError(error("incomplete person data"))
+        try:
+            cls.format_name(first_name)
+            cls.format_name(last_name)
+        except ValueError:
+            raise ValueError(error("invalid name"))
 
         # Lookup probe date, result, name of test station, and device code
         s3db = current.s3db
@@ -165,6 +170,12 @@ class DCC(object):
         issuer_id = cls.get_issuer_id(facility.site_id)
         if not issuer_id:
             raise ValueError(error("invalid test facility"))
+
+        # If we have no previous DCC with this issuer_id:
+        # - try to register the the issuer_id
+        if cls.is_new_issuer(issuer_id):
+            if not cls.register_issuer(issuer_id):
+                raise ValueError(error("issuer ID could not be registered"))
 
         # Make sure the test device is known
         device = row.disease_testing_device
@@ -286,8 +297,13 @@ class DCC(object):
                 data["certified_on"] = now
             if errors:
                 data["errors"] = errors
+            if status != "PENDING":
+                data["payload"] = None
             record.update_record(**data)
             s3db.onaccept(table, record, method="update")
+            # Prevent subsequent failures/timeouts from rolling back
+            # this status update
+            db.commit()
         else:
             # New record
             data = {"disease_id": self.data.get("disease"),
@@ -324,9 +340,19 @@ class DCC(object):
 
         settings = current.deployment_settings
 
-        dcc_json = self.encode(dcci, public_key)
+        # Encode + encrypt the DCC components
+        try:
+            dcc_json = self.encode(dcci, public_key)
+        except ValueError:
+            errors = "DCC encoding failed, %s" % sys.exc_info()[1]
+            # This is a permanent error, so store error message and
+            # set status to invalid:
+            self.status = "INVALID"
+            self.save(errors=errors)
+            return errors
         if not dcc_json:
             return "DCC upload failed, no data"
+
         cert, key, verify = self.get_dcc_credentials()
 
         # The server endpoint to send to
@@ -350,7 +376,8 @@ class DCC(object):
                 errors = "DCC upload failed, status code %s" % status_code
                 if status_code in (403, 404):
                     # Either test result was not found, or we're not
-                    # authorized to certify this test result => don't try again
+                    # authorized to certify it - this is a permanent
+                    # error, so set status to invalid
                     self.status = "INVALID"
             else:
                 self.status = "ISSUED"
@@ -359,31 +386,6 @@ class DCC(object):
         self.save(errors=errors)
 
         return errors
-
-    # -------------------------------------------------------------------------
-    def anonymize(self):
-        """
-            Anonymize the HCERT data record of this instance (=drop the payload)
-        """
-
-        table = current.s3db.disease_hcert_data
-        query = (table.instance_id == self.instance_id)
-
-        row = current.db(query).select(table.id,
-                                       table.status,
-                                       limitby = (0, 1),
-                                       ).first()
-        if not row:
-            return
-        data = {"payload": None,
-                }
-        if row.status == "PENDING":
-            # Once anonymized, DCC can no longer be produced
-            self.status = data["status"] = "INVALID"
-
-        row.update_record(**data)
-
-        self.data = None
 
     # -------------------------------------------------------------------------
     # Instance helpers
@@ -453,7 +455,6 @@ class DCC(object):
         # Names
         fn = data.get("ln")
         gn = data.get("fn")
-        # TODO catch ValueError
         gnt = self.format_name(gn)
         fnt = self.format_name(fn)
 
@@ -607,8 +608,7 @@ class DCC(object):
     @classmethod
     def issue(cls, dcc_request_list):
         """
-            Encode, encrypt and upload the requested DCCs, and anonymize the
-            respective HCERT data records when done
+            Upload the requested DCCs
 
             @param dcc_request_list: a list of dicts:
                         {"testId":    DCC instance ID,
@@ -639,9 +639,6 @@ class DCC(object):
 
             inst.upload(dcci, public_key)
 
-            if inst.status != "PENDING":
-                inst.anonymize()
-
     # -------------------------------------------------------------------------
     # Tools
     # -------------------------------------------------------------------------
@@ -669,6 +666,26 @@ class DCC(object):
             issuer_id = None
 
         return issuer_id
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def is_new_issuer(cls, issuer_id):
+        """
+            Check whether an issuer_id is new (=has not been used in
+            a HCERT data record yet)
+
+            @param issuer_id: the issuer ID
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.disease_hcert_data
+        query = (table.issuer_id == issuer_id) & \
+                (table.deleted == False)
+        row = db(query).select(table.id, limitby=(0, 1)).first()
+
+        return False if row else True
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -784,5 +801,42 @@ class DCC(object):
             raise ValueError
 
         return string
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cleanup():
+        """
+            Cleanup HCERT data, to be run on a daily schedule
+                - set pending records beyond their valid-until
+                  date to expired
+                - anonymize all records which are no longer pending
+
+            @returns: tuple (num_expired, num_anonymized)
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.disease_hcert_data
+        now = datetime.datetime.utcnow()
+
+        # Make sure all records have a valid_until
+        query = (table.valid_until == None)
+        rows = db(query).select(table.id, table.created_on)
+        for row in rows:
+            row.update_record(valid_until = row.created_on + datetime.timedelta(hours=EXPIRY_PERIOD))
+
+        # Set any pending records beyond their valid_until to expired
+        query = (table.valid_until <= now) & \
+                (table.status == "PENDING")
+        expired = anonymized = db(query).update(payload=None, status="EXPIRED")
+
+        # Anonymize any invalid, expired or issued records
+        # (as far as this hasn't been done yet)
+        query = (table.payload != None) & \
+                (table.status != "PENDING")
+        anonymized += db(query).update(payload=None)
+
+        return expired, anonymized
 
 # END =========================================================================
