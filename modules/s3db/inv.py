@@ -3332,19 +3332,19 @@ def inv_tabs(r):
             if show_inv:
                 recv_label = settings.get_inv_recv_tab_label()
                 send_label = settings.get_inv_send_tab_label()
-                inv_tabs = [(T("Stock"), "inv_item"),
-                            #(T("Incoming"), "incoming/"),
-                            (T(recv_label), "recv"),
-                            (T(send_label), "send"),
-                            ]
+                tabs = [(T("Stock"), "inv_item"),
+                        #(T("Incoming"), "incoming/"),
+                        (T(recv_label), "recv"),
+                        (T(send_label), "send"),
+                        ]
                 if settings.has_module("proc"):
-                    inv_tabs.append((T("Planned Procurements"), "plan"))
+                    tabs.append((T("Planned Procurements"), "plan"))
                 if show_collapse:
-                    inv_tabs.append(("- %s" % T("Warehouse"), None, {"show_inv": "False"}))
+                    tabs.append(("- %s" % T("Warehouse"), None, {"show_inv": "False"}))
             else:
-                inv_tabs = [("+ %s" % T("Warehouse"), "inv_item", {"show_inv": "True"}),
-                            ]
-            return inv_tabs
+                tabs = [("+ %s" % T("Warehouse"), "inv_item", {"show_inv": "True"}),
+                        ]
+            return tabs
 
     return []
 
@@ -3384,7 +3384,7 @@ def inv_rheader(r):
                 tabs.append((T("Assign %(staff)s") % {"staff": STAFF}, "assign"))
         if settings.has_module("asset") and permit("read", "asset_asset"):
             tabs.insert(6, (T("Assets"), "asset"))
-        tabs = tabs + s3db.inv_tabs(r)
+        tabs = tabs + inv_tabs(r)
         if settings.has_module("req"):
             tabs = tabs + s3db.req_tabs(r)
         tabs.append((T("Attachments"), "document"))

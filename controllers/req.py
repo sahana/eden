@@ -322,7 +322,8 @@ def req_controller(template = False):
                 elif r.component_name == "req_item":
                     ctable = r.component.table
                     ctable.site_id.writable = ctable.site_id.readable = False
-                    s3.req_hide_quantities(ctable)
+                    from s3db.req import req_hide_quantities
+                    req_hide_quantities(ctable)
                     if use_workflow and workflow_status in (3, 4, 5): # Approved, Completed, Cancelled
                         # Lock all fields
                         s3db.configure("req_req_item",
@@ -332,7 +333,8 @@ def req_controller(template = False):
                                        )
 
                 elif r.component_name == "req_skill":
-                    s3.req_hide_quantities(r.component.table)
+                    from s3db.req import req_hide_quantities
+                    req_hide_quantities(r.component.table)
                     if use_workflow and workflow_status in (3, 4, 5): # Approved, Completed, Cancelled
                         # Lock all fields
                         s3db.configure("req_req_skill",

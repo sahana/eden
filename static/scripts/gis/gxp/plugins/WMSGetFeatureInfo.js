@@ -155,6 +155,7 @@ gxp.plugins.WMSGetFeatureInfo = Ext.extend(gxp.plugins.Tool, {
                     layers: [layer],
                     infoFormat: infoFormat,
                     vendorParams: vendorParams,
+                    maxFeatures: 1000, // This is needed when requesting clustered features.
                     eventListeners: {
                         getfeatureinfo: function(evt) {
                             var title = x.get("title") || x.get("name");
