@@ -301,6 +301,9 @@ class DCC(object):
                 data["payload"] = None
             record.update_record(**data)
             s3db.onaccept(table, record, method="update")
+            # Prevent subsequent failures/timeouts from rolling back
+            # this status update
+            db.commit()
         else:
             # New record
             data = {"disease_id": self.data.get("disease"),
