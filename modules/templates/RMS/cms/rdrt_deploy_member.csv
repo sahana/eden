@@ -1,0 +1,37 @@
+Name,Title,Body
+RDRTDeployMember,"Deploying a Member","<div class=""online-documentation"">
+<p>
+To deploy a member, <a href=""{{name:RDRTMissionsSummary}}"">open the Mission Profile</a>,
+and click ""Deploy this Member"" on the respective Response Card
+</p>
+<p><em>OR</em></p>
+<p>
+choose ""Deploy New Member"" in the ""Members Deployed"" section:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/mission_profile_deploy.png""></img>
+<p>
+This will open the Deployment Dialog.
+</p>
+<p>
+If you clicked ""Deploy this Member"" on a Response Card, the member name
+will already be populated:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/deploy_from_response.png""></img>
+<p>
+If you chose ""Deploy New Member"" instead, you can now enter a few
+letters of the member's name, then choose the member from the
+drop-down list:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/deploy_new_member.png""></img>
+
+<p>
+Choose a Sector and (optionally) enter a Position. Fill in the
+Start Date, then click ""Save"".
+</p>
+<p>
+You can see the newly created Deployment Card in the ""Members Deployed""
+section of the Mission Profile:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/mission_profile_deployment_card.png""></img>
+<p><a href=""{{name:RDRT}}"">Back to table of contents</a></p>
+</div>"

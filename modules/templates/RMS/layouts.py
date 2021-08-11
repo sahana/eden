@@ -5,7 +5,7 @@ from gluon import *
 from s3 import *
 #from s3theme import NAV, SECTION
 
-THEME = "RMSAmericas"
+THEME = "RMS"
 
 training_functions = ("certificate", "course", "course_certificate",
                       "facility", "training", "training_center",
@@ -47,7 +47,7 @@ class S3MainMenuLayout(S3NavigationItem):
 
         # Inject JavaScript
         s3 = current.response.s3
-        s3.scripts.append("/%s/static/themes/RMSAmericas/js/nav.js" % request.application)
+        s3.scripts.append("/%s/static/themes/RMS/js/nav.js" % request.application)
         # Use tooltip-f class to avoid clash with widgets.css
         # Remove nub
         s3.js_foundation = '''{tooltip:{tooltip_class:'.tooltip-f',tip_template:function(selector,content){var tooltipClass='';if(!$('div[data-selector="'+selector+'"]').hasClass('hd')){tooltipClass=' tooltip-m'};return '<span data-selector="'+selector+'" class="'+Foundation.libs.tooltip.settings.tooltip_class.substring(1)+tooltipClass+'">'+content+'</span>'}}}'''
@@ -105,8 +105,8 @@ class S3MainMenuLayout(S3NavigationItem):
                 image = "warehouses.png"
                 module_name = T("Warehouses")
                 if auth.s3_has_roles(("ORG_ADMIN",
-                                      "wh_manager",
-                                      "national_wh_manager",
+                                      "wh_operator",
+                                      "logs_manager",
                                       )):
                     module_href = URL(c="inv", f="index")
                 else:
@@ -205,7 +205,7 @@ class S3MainMenuLayout(S3NavigationItem):
                     settings_active = " active"
                 else:
                     settings_active = ""
-            elif has_role("national_wh_manager"):
+            elif has_role("logs_manager"):
                 # WMS Module configuration
                 # ▪ Labelling
                 # ▪ Auto localisation
@@ -319,7 +319,7 @@ class S3MainMenuLayout(S3NavigationItem):
 
         if not logo:
             # Default to generic IFRC
-            logo = IMG(_src = "/%s/static/themes/RMSAmericas/img/logo_small.png" %
+            logo = IMG(_src = "/%s/static/themes/RMS/img/logo_small.png" %
                               request.application,
                        _alt = T("Red Cross/Red Crescent"),
                        _class = "hi",
@@ -474,7 +474,7 @@ class S3OrgMenuLayout(S3NavigationItem):
 
         if not logo:
             # Default to generic IFRC
-            logo = IMG(_src = "/%s/static/themes/RMSAmericas/img/logo_small.png" %
+            logo = IMG(_src = "/%s/static/themes/RMS/img/logo_small.png" %
                               current.request.application,
                        _alt = current.T("Red Cross/Red Crescent"),
                        _width = 60,

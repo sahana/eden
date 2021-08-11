@@ -1386,7 +1386,7 @@ class PRPersonModel(S3Model):
             last_name = form_vars_get("last_name")
             middle_as_last = current.deployment_settings.get_L10n_mandatory_middlename()
             if middle_as_last:
-                # RMSAmericas: Map the Person's middle_name to the User's last_name
+                # RMS: Map the Person's middle_name to the User's last_name
                 if first_name and \
                    (user.first_name != first_name or \
                    user.last_name != middle_name):
@@ -3707,7 +3707,7 @@ class PRRealmModel(S3Model):
         - used to be able to share data across multiple realms
             - records have this as the realm_entity
             - entities which need access are affiliated as OU parents
-        - used by RMSAmericas
+        - used by RMS
 
         @ToDo: UI to be able to manage permissions for individual records
     """

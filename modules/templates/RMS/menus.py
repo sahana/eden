@@ -272,8 +272,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ INV / Inventory """
 
         if current.auth.s3_has_roles(("ORG_ADMIN",
-                                      "wh_manager",
-                                      "national_wh_manager",
+                                      "wh_operator",
+                                      "logs_manager",
                                       )):
             return M()(
                         M("Stock Management", c="inv", link=False)(
@@ -284,7 +284,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                         M("Purchases", c="req", f="order_item",
                           restrict=["ORG_ADMIN",
-                                    "national_wh_manager"]),
+                                    "logs_manager"]),
                         M("Requests", c="req", f="req")(
                             M("My Requests",
                               vars = {"mine": 1},
@@ -292,10 +292,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                         M("Import Inventory", c="inv", f="inv_item", m="import",
                           restrict=["ORG_ADMIN",
-                                    "national_wh_manager"]),
+                                    "logs_manager"]),
                         M("Parameters", c="inv", link=False,
                           restrict=["ORG_ADMIN",
-                                    "national_wh_manager"])(
+                                    "logs_manager"])(
                             M("Warehouses", f="warehouse"),
                             M("Projects", f="project"),
                             M("Catalogs", c="supply", f="catalog"),

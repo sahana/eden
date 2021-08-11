@@ -1,0 +1,109 @@
+Name,Title,Body
+RDRTResponses,"RDRT: Reviewing Responses","<div class=""online-documentation"">
+<h3>How Responses to RDRT Alerts are linked to Missions and Members</h3>
+<p>
+Incoming responses to RDRT alerts are <em>automatically</em> linked
+to the respective mission and roster member profile.
+</p>
+<p>
+For this to work correctly, the member must:
+<ul>
+<li>reply from an email address registered with his profile in RMS</li>
+<li>include the <em>mission tag</em> from the alert in the reply</li>
+</ul>
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/mission_tag.png""></img>
+<p>
+Most email programs would automatically include the mission tag
+along with the alert message when you just click ""Reply"". That
+does not always work, however.
+</p>
+<p>
+Messages which could not automatically be linked to a mission will
+appear in the <a href=""{{name:RDRTInbox}}"">Inbox</a>, where
+they can be linked manually to a mission.
+</p>
+<p>
+See at the bottom of this page what to do if the message could not
+automatically be linked to the correct roster member.
+</p>
+
+<h3>How to see the Responses for a particular Mission</h3>
+<p>
+Open the <a href=""{{name:RDRTMissionsSummary}}"">Mission Profile</a> and
+find the ""Responses"" section:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/mission_profile_responses.png""></img>
+<p>
+Each response card contains:
+<ul>
+<li>the member name and organization</li>
+<li>date and time when the response message was received by RMS</li>
+<li>the response message</li>
+<li>a list of attachments of the response message</li>
+<li>information about previous deployments and performance rating</li>
+</ul>
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/response_card_basics.png""></img>
+<p>
+Click ""more"" to expand the message text on the response card.
+</p>
+<p>
+Attachments can be opened by clicking the file name(s). Use right-click to
+download them instead.
+</p>
+
+<h3>How to open the Member Profile</h3>
+<p>
+The member name (not the organization name!) in the response card
+is linked to the member's profile containing all necessary
+background information.
+</p>
+<p>
+Click the member name to open the profile in a new browser tab:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/rdrt_member_profile.png""></img>
+
+<h3>If a Response Message could not be linked to a Member Profile</h4>
+<p>
+If you see a simple email address in place of the member name, then
+the response message could not automatically be linked to a member:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/response_card_unlinked.png""></img>
+<p>
+You can link the response message to member manually. Click the Edit-icon
+on the response card to open a window to edit the response data:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/response_card_link_to_member.png""></img>
+<p>
+Click into the member field and enter a few letters of the name, select the
+member from the drop-down list and click save to link the response message to
+this member.
+</p>
+
+<h3>How to add Comments</h3>
+<p>
+You can add comments to response cards, e.g. to make notes or capture
+additional information:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/response_card_comments.png""></img>
+<p>
+Click the Edit-icon on the response card to open the Edit-window, and
+then enter your notes into the ""Comments"" box. Click ""Save"" to update
+the card:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/response_card_edit_comments.png""></img>
+
+<h3>If a Response Message was linked to the wrong Mission</h3>
+<p>
+It could happen that a response message was linked to the wrong mission. In this
+case you can manually re-assign it to the correct mission.
+</p>
+<p>
+Click the edit-icon on the response card to open the edit window, choose the
+correct mission from the drop-down, then click ""Save"":
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/response_card_link_to_mission.png""></img>
+
+<p><a href=""{{name:RDRT}}"">Back to table of contents</a></p>
+</div>"

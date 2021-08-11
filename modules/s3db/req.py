@@ -1512,7 +1512,7 @@ $.filterOptionsS3({
             Approve a Request (custom REST method)
 
             NB This is currently hardcoded to Items Requests not Person Requests
-            NB This is currently hardcoded to RMSAmericas roles
+            NB This is currently hardcoded to RMS roles
         """
 
         record = r.record
@@ -1626,10 +1626,10 @@ $.filterOptionsS3({
             atable = s3db.pr_affiliation
             rtable = s3db.pr_role
 
-            # Lookup realm for all wh_manager with default realm outside of loop
-            # NB The role name is specific to RMSAmericas template currently, which is the only one to use this workflow
+            # Lookup realm for all wh_operator with default realm outside of loop
+            # NB The role name is specific to RMS template currently, which is the only one to use this workflow
             # Incorporates a Bulk version of s3db.pr_realm()
-            query = (gtable.uuid == "wh_manager") & \
+            query = (gtable.uuid == "wh_operator") & \
                     (gtable.id == mtable.group_id) & \
                     (mtable.pe_id == None) & \
                     (mtable.deleted == False) & \
@@ -1640,10 +1640,10 @@ $.filterOptionsS3({
                     (atable.role_id == rtable.id) & \
                     (rtable.deleted == False) & \
                     (rtable.role_type == OU)
-            wh_managers_default_realm = db(query).select(ltable.pe_id,
-                                                         utable.language,
-                                                         rtable.pe_id,
-                                                         )
+            wh_operators_default_realm = db(query).select(ltable.pe_id,
+                                                          utable.language,
+                                                          rtable.pe_id,
+                                                          )
 
             for site_id in sites:
 
@@ -1651,12 +1651,12 @@ $.filterOptionsS3({
                 site_name = site["name"]
                 pe_id = site["pe_id"]
 
-                # Find the relevant wh_manager
-                # NB The role name is specific to RMSAmericas template currently, which is the only one to use this workflow
+                # Find the relevant wh_operator
+                # NB The role name is specific to RMS template currently, which is the only one to use this workflow
                 entities = s3db.pr_get_ancestors(pe_id)
                 entities.append(pe_id)
 
-                query = (gtable.uuid == "wh_manager") & \
+                query = (gtable.uuid == "wh_operator") & \
                         (gtable.id == mtable.group_id) & \
                         (mtable.pe_id.belongs(entities)) & \
                         (mtable.deleted == False) & \
@@ -1666,14 +1666,14 @@ $.filterOptionsS3({
                                              utable.language,
                                              )
                 operators = list(operators)
-                for row in wh_managers_default_realm:
+                for row in wh_operators_default_realm:
                     if row["pr_role.pe_id"] in entities:
                         operators.append(row)
 
                 if not operators:
-                    # Send to national_wh_manager instead
+                    # Send to logs_manager instead
                     # NB We lookup the ones with default realm inside the loop as we don't expect to his this often
-                    query = (gtable.uuid == "national_wh_manager") & \
+                    query = (gtable.uuid == "logs_manager") & \
                             (gtable.id == mtable.group_id) & \
                             ((mtable.pe_id.belongs(entities)) | \
                              (mtable.pe_id == None)) & \
@@ -1703,11 +1703,11 @@ $.filterOptionsS3({
                             (rtable.role_type == OU) & \
                             (atable.pe_id == ltable.pe_id) & \
                             (ltable.user_id == utable.id)
-                    national_wh_managers_default_realm = db(query).select(ltable.pe_id,
-                                                                          utable.language,
-                                                                          rtable.pe_id,
-                                                                          )
-                    for row in national_wh_managers_default_realm:
+                    logs_managers_default_realm = db(query).select(ltable.pe_id,
+                                                                   utable.language,
+                                                                   rtable.pe_id,
+                                                                   )
+                    for row in logs_managers_default_realm:
                         if row["pr_role.pe_id"] in entities:
                             operators.append(row)
 

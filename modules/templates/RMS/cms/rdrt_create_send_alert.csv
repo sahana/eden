@@ -1,0 +1,78 @@
+Name,Title,Body
+RDRTSendAlert,"Creating and Sending Alerts","<div class=""online-documentation"">
+<p>
+The workflow to create and send alerts consists of 3 steps:
+</p>
+<ol>
+    <li>Create Alert</li>
+    <li>Select Recipients</li>
+    <li>Send Alert</li>
+</ol>
+<h3>Creating an Alert from the Mission Profile</h3>
+<p>
+In the Mission Profile, click the ""Create Alert"" button:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/mission_profile_create_alert.png""></img>
+<p>
+...to open a form to create a new alert for this mission:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/create_alert_mission.png""></img>
+<p>
+Click ""Save"" to save the alert - this will not send the alert just yet,
+but store it in the database, and open another view where you can select
+recipients.
+</p>
+
+<h3>Creating an Alert from the Side Menu</h3>
+<p>
+Alternatively, from the left menu choose ""Create"" under ""Alerts"":
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/side_menu_create_alert.png""></img>
+<p>
+...to open a form to create a new alert:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/create_alert.png""></img>
+<p>
+Click ""Save"" to save the alert - this will not send the alert just yet,
+but store it in the database, and open another view where you can select
+recipients.
+</p>
+
+<h3>Selecting Recipients</h3>
+<p>
+After creating a new alert, you will be directed to a tabbed view of the alert.
+</p>
+<p>
+On the ""Select Recipients"" tab, you see a list of all roster members. You
+can use filters to find particular roster members:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/alert_select_recipients.png""></img>
+<p>
+Check the boxes on the left for those members you want to add as alert
+recipients. You can use the ""All"" checkbox at the top to select/deselect
+all members currently listed.
+</p>
+<p>
+Then, click ""Add as Recipients"" (Do not forget this step!).
+</p>
+<p>
+You can repeat this step as many times as you need. Use the ""Recipients""
+tab to verify which recipients have been added:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/alert_verify_recipients.png""></img>
+
+<h3>Sending an Alert</h3>
+<p>
+You can send the alert directly from the ""Select Recipients"" tab by
+clicking the ""Send"" button:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/alert_view_send_alert.png""></img>
+<p>
+Alternatively, you can return to the Mission Profile, where the alert is
+marked as ""not sent"". Click the ""Send Alert"" link on the alert card to
+send the alert, or click the edit icon to modify the alert message or add
+more recipients:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/mission_profile_send_alert.png""></img>
+<p><a href=""{{name:RDRT}}"">Back to table of contents</a></p>
+<div>"

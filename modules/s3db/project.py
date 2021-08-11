@@ -435,7 +435,7 @@ class S3ProjectModel(S3Model):
             rappend("sum(total_organisation_amount)")
             rappend("avg(total_organisation_amount)")
         if budget_monitoring:
-            # @ToDo: Add the defaulting from RMSAmericas/config.py
+            # @ToDo: Add the defaulting from RMS/config.py
             #cappend(S3SQLInlineComponent("budget",
             #                             label = T("Budget"),
             #                             #link = False,
@@ -5225,7 +5225,7 @@ class S3ProjectPlanningModel(S3Model):
                      indicator_id(readable = False,
                                   writable = False,
                                   ),
-                     # Used as linktable for RMSAmericas HNRC for their UI
+                     # Used as linktable for RMS HNRC for their UI
                      indicator_activity_id(),
                      # Populated Automatically
                      # Used for Timeplot &, in future, to ease changing the monitoring frequency

@@ -10,7 +10,7 @@ from s3 import ICON, IS_FLOAT_AMOUNT, s3_str, \
 
 from s3db.inv import SHIP_DOC_PENDING, SHIP_DOC_COMPLETE
 
-THEME = "RMSAmericas"
+THEME = "RMS"
 
 # =============================================================================
 def auth_formstyle(form, fields, *args, **kwargs):
@@ -56,8 +56,8 @@ class index(S3CustomController):
             response = current.response
             if response.confirmation:
                 has_role = auth.s3_has_role
-                if has_role("wh_manager", include_admin=False) or \
-                   has_role("national_wh_manager", include_admin=False):
+                if has_role("wh_operator", include_admin=False) or \
+                   has_role("logs_manager", include_admin=False):
                     # Redirect to WMS Dashboard
                     current.session.confirmation = response.confirmation
                     redirect(URL(c="inv", f="index"))
@@ -132,8 +132,8 @@ class apps(S3CustomController):
                              ))
 
         if has_roles((ORG_ADMIN,
-                      "wh_manager",
-                      "national_wh_manager",
+                      "wh_operator",
+                      "logs_manager",
                       )):
             wh_url = URL(c = "inv",
                          f = "index",

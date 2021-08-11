@@ -16,6 +16,13 @@ def config(settings):
         Template settings for IFRC's Resource Management System
 
         http://eden.sahanafoundation.org/wiki/Deployments/IFRC
+
+        This version was developed for the Asia-Pacific Zone
+        Also used in:
+            * Iraq
+            * Madagascar
+            * Nairobi (RDRT)
+            * Yemen
     """
 
     T = current.T

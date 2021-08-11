@@ -15,9 +15,11 @@ RED_CROSS = "Red Cross / Red Crescent"
 def config(settings):
     """
         Template settings for IFRC's Resource Management System
-        - Americas Zone
 
         http://eden.sahanafoundation.org/wiki/Deployments/IFRC
+
+        This version was developed for the Americas Zone
+        NB Apellido Paterno pr_person.middle_name matches to auth_user.last_name
     """
 
     T = current.T
@@ -31,13 +33,13 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Pre-Populate
     #
-    settings.base.prepopulate.append("RMSAmericas")
-    settings.base.prepopulate_demo.append("RMSAmericas/Demo")
+    settings.base.prepopulate.append("RMS")
+    settings.base.prepopulate_demo.append("RMS/Demo")
 
     # -------------------------------------------------------------------------
     # Theme (folder to use for views/layout.html)
     #
-    settings.base.theme = "RMSAmericas"
+    settings.base.theme = "RMS"
 
     # Uncomment to disable responsive behavior of datatables
     #settings.ui.datatables_responsive = False
@@ -1981,7 +1983,7 @@ Thank you"""
                     r.resource.configure(list_fields = list_fields)
 
                     # Bind method for signature list export + add export icon
-                    from templates.RMSAmericas.siglist import HRSignatureList
+                    from .siglist import HRSignatureList
                     s3db.set_method("hrm", "human_resource",
                                     method = "siglist",
                                     action = HRSignatureList,
@@ -1992,7 +1994,7 @@ Thank you"""
                 if auth.s3_has_roles(ID_CARD_EXPORT_ROLES):
                     if r.representation == "card":
                         # Configure ID card layout
-                        from templates.RMSAmericas.idcards import IDCardLayout
+                        from .idcards import IDCardLayout
                         resource.configure(pdf_card_layout = IDCardLayout)
 
                     if not r.id and not r.component:
@@ -2167,7 +2169,7 @@ Thank you"""
                               user_org_default_filter,
                               tablename = "hrm_programme_hours")
 
-        attr["csv_template"] = ("../../themes/RMSAmericas/formats", "hrm_programme_hours")
+        attr["csv_template"] = ("../../themes/RMS/formats", "hrm_programme_hours")
         return attr
 
     settings.customise_hrm_programme_hours_controller = customise_hrm_programme_hours_controller
@@ -2425,7 +2427,7 @@ Thank you"""
                 ]
         persons = db(ptable.pe_id.belongs(person_pe_ids)).select(ptable.id,
                                                                  ptable.first_name,
-                                                                 # RMSAmericas uses Apellido Paterno for Last Name
+                                                                 # Americas use Apellido Paterno for Last Name
                                                                  ptable.middle_name,
                                                                  #ptable.last_name,
                                                                  ctable.value,
@@ -4113,7 +4115,7 @@ Thank you"""
         s3.prep = custom_prep
 
         if current.request.controller in ("default", "hrm", "vol"):
-            attr["csv_template"] = ("../../themes/RMSAmericas/formats", "hrm_person")
+            attr["csv_template"] = ("../../themes/RMS/formats", "hrm_person")
             # Common rheader for all views
             from s3db.hrm import hrm_rheader
             attr["rheader"] = lambda r: hrm_rheader(r, profile=PROFILE)
@@ -4998,14 +5000,14 @@ Thank you"""
             entities = pe_ids + child_pe_ids
             
         else:
-            # Filter to entities the user has the ORG_ADMIN or national_wh_manager role for
+            # Filter to entities the user has the ORG_ADMIN or logs_manager role for
 
             # Lookup which realms the user has the roles for
             gtable = db.auth_group
             mtable = db.auth_membership
             query = (mtable.user_id == auth.user.id) & \
                     (mtable.group_id == gtable.id) & \
-                    (gtable.uuid.belongs(("ORG_ADMIN", "national_wh_manager")))
+                    (gtable.uuid.belongs(("ORG_ADMIN", "logs_manager")))
 
             memberships = db(query).select(mtable.pe_id)
             pe_ids = [m.pe_id for m in memberships]
@@ -5127,8 +5129,8 @@ Thank you"""
         table.site_id.label = T("Deliver To")
 
         LOGS_ADMIN = auth.s3_has_roles(("ORG_ADMIN",
-                                        "wh_manager",
-                                        "national_wh_manager",
+                                        "wh_operator",
+                                        "logs_manager",
                                         ))
         if not LOGS_ADMIN:
             table.requester_id.writable = False

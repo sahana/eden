@@ -1764,7 +1764,7 @@ class HRInsuranceModel(S3Model):
         self.define_table(tablename,
                           # The original use (IFRC) used human_resource_id instead of the usual person_id in order to put it into the HR form
                           self.hrm_human_resource_id(),
-                          # RMSAmericas uses person_id in order to have on a common Medical Information tab with Physical Description fields
+                          # RMS uses person_id in order to have on a common Medical Information tab with Physical Description fields
                           #self.pr_person_id(),
                           Field("type",
                                 label = T("Type"),
@@ -2949,7 +2949,7 @@ class HRSkillModel(S3Model):
 
         # =====================================================================
         # Training Event Report
-        # - this is currently configured for RMS Americas
+        # - this is currently configured for RMS 
         #   (move custom labels there if need to make this more generic)
         #
 
@@ -3805,7 +3805,7 @@ class HRSkillModel(S3Model):
 
         if not person_id:
             # This record is being created as a direct component of the Training,
-            # in order to set the Number (RMS Americas usecase).
+            # in order to set the Number (RMS  usecase).
             # Find the other record (created onaccept of training)
             query = (table.training_id == training_id) & \
                     (table.id != record_id)
@@ -9078,7 +9078,7 @@ def hrm_training_controller():
             table.month = Field.Method("month", hrm_training_month)
 
         # Can't reliably link to persons as these are imported in random order
-        # - do this postimport if desired (see RMSAmericas)
+        # - do this postimport if desired (see RMS)
         #elif method == "import":
         #    # If users accounts are created for imported participants
         #    s3db.configure("auth_user",
@@ -9507,7 +9507,7 @@ class hrm_CV(S3Method):
                           "create_function": "person",
                           "create_component": "experience",
                           "pagesize": None, # all records
-                          # Settings suitable for RMSAmericas
+                          # Settings suitable for RMS
                           "list_fields": ["start_date",
                                           "end_date",
                                           "employment_type",
@@ -9527,7 +9527,7 @@ class hrm_CV(S3Method):
                           "filter": FS("assignment__link.assignment_id") != None,
                           "insert": False,
                           "pagesize": None, # all records
-                          # Settings suitable for RMSAmericas
+                          # Settings suitable for RMS
                           "list_fields": ["start_date",
                                           "end_date",
                                           "location_id",
@@ -9880,7 +9880,7 @@ class hrm_Record(S3Method):
                     # Exclude Training Hours
                     filter_ &= (FS("programme_id") != None)
                 if phtable.place.readable:
-                    # RMSAmericas
+                    # RMS
                     list_fields += ["place",
                                     "event",
                                     ]

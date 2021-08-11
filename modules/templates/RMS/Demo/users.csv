@@ -1,0 +1,30 @@
+First Name,Middle Name,Email,Password,Role,Organisation,Facility Type,Office,Link,Language
+RIT,Admin,ritadmin@example.com,eden,surge_capacity_manager/0,International Federation of Red Cross and Red Crescent Societies,,,Staff,es
+Disaster,Manager,dm@example.com,eden,disaster_manager/0,International Federation of Red Cross and Red Crescent Societies,,,Staff,es
+CREEC,Coordinator,creec@example.com,eden,training_coordinator/org_organisation.acronym=CREEC,Centro de Referencia para la Resiliencia Comunitaria,,,Staff,es
+CREEC,Assistant,creeca@example.com,eden,training_assistant/org_organisation.acronym=CREEC,Centro de Referencia para la Resiliencia Comunitaria,,,Staff,es
+CREPD,Coordinator,crepd@example.com,eden,training_coordinator/org_organisation.acronym=CREPD,Centro de Referencia en Preparación Institucional para Desastre,,,Staff,es
+Honduras,Org Admin,hn_orgadmin@example.com,eden,"ORG_ADMIN,hn_user",Honduran Red Cross,,,Staff,es
+Honduras,M&E,hn_me@example.com,eden,"monitoring_evaluation,hn_user",Honduran Red Cross,,,Staff,es
+Honduras,Project Manager,hn_project_manager@example.com,eden,"project_manager,hn_user",Honduran Red Cross,,,Staff,es
+Honduras,Project Reader,hn_project_reader@example.com,eden,"project_reader,hn_user",Honduran Red Cross,,,Staff,es
+Honduras,Logistics Manager,hn_wh_operator@example.com,eden,"rc_logs_user/org_group.name=RC,logs_manager,hn_user",Honduran Red Cross,,,Staff,es
+Comayagua,Warehouse Operator,hn_com_bodega@example.com,eden,"rc_logs_user/org_group.name=RC,wh_operator/inv_warehouse.name=Comayagua,wh_operator_national/org_organisation.name=Honduran Red Cross,hn_user/org_organisation.name=Honduran Red Cross",Comayagua,Warehouse,Comayagua,Staff,es
+Tegucigalpa,Warehouse Operator,hn_teg_bodega@example.com,eden,"rc_logs_user/org_group.name=RC,wh_operator/inv_warehouse.name=Tegucigalpa,wh_operator_national/org_organisation.name=Honduran Red Cross,hn_user/org_organisation.name=Honduran Red Cross",Tegucigalpa,Warehouse,Tegucigalpa,Staff,es
+Nicaragua,HR Manager,ni_hr_manager@example.com,eden,"hr_manager,rms_user",Nicaraguan Red Cross,,,Staff,es
+Tipitapa,HR Assistant,ni_hr_assistant@example.com,eden,"hr_assistant,rms_user/org_organisation.name=Nicaraguan Red Cross",Tipitapa,,,Staff,es
+Nicaragua,Logistics Manager,ni_wh_operator@example.com,eden,"rc_logs_user/org_group.name=RC,logs_manager,rms_user",Nicaraguan Red Cross,,,Staff,es
+Paraguay,Org Admin,py_admin@example.com,eden,ORG_ADMIN,Paraguayan Red Cross,,,Staff,es
+Paraguay,HR Manager,py_hr_manager@example.com,eden,"hr_manager,rms_user",Paraguayan Red Cross,,,Staff,es
+Paraguay,HR Assistant,py_hr_assistant@example.com,eden,"hr_assistant,rms_user",Paraguayan Red Cross,,,Staff,es
+Paraguay,Partner Manager,py_partner_manager@example.com,eden,"member_manager,rms_user",Paraguayan Red Cross,,,Staff,es
+Paraguay,Training Center Manager,py_training_manager@example.com,eden,"ns_training_manager,rms_user",Paraguayan Red Cross,,,Staff,es
+Paraguay,Training Center Assistant,py_training_assistant@example.com,eden,"ns_training_assistant,rms_user",Paraguayan Red Cross,,,Staff,es
+CRF,Logistics Manager,crf_wh_operator@example.com,eden,"rc_logs_user/org_group.name=RC,logs_manager/org_organisation.name=French Red Cross,rms_user/org_organisation.name=French Red Cross",French Red Cross,,,Staff,fr
+Guadeloupe,Warehouse Operator,gp_wh_operator@example.com,eden,"rc_logs_user/org_group.name=RC,wh_operator/org_organisation.name=Guadeloupe,wh_operator_national/org_organisation.name=French Red Cross,rms_user/org_organisation.name=French Red Cross",Guadeloupe,,,Staff,fr
+PIRAC,Logistics Manager,pirac@example.com,eden,"rc_logs_user/org_group.name=RC,logs_manager/org_organisation.name=PIRAC,wh_operator_national/org_organisation.name=French Red Cross,rms_user/org_organisation.name=French Red Cross,inv_reader/org_organisation.name=Dominica Red Cross Society,inv_reader/org_organisation.name=Saint Kitts and Nevis Red Cross Society,inv_reader/org_organisation.name=Guadeloupe,inv_reader/org_organisation.name=Martinique",PIRAC,,,Staff,fr
+Dominica,Logistics Manager,dm_wh_operator@example.com,eden,"rc_logs_user/org_group.name=RC,logs_manager/org_organisation.name=Dominica Red Cross Society,rms_user/org_organisation.name=Dominica Red Cross Society",Dominica Red Cross Society,,,Staff,en
+Marigot,Warehouse Operator,marigot_wh_operator@example.com,eden,"rc_logs_user/org_group.name=RC,wh_operator/org_organisation.name=Marigot,wh_operator_national/org_organisation.name=Dominica Red Cross Society,rms_user/org_organisation.name=Dominica Red Cross Society",Marigot,,,Staff,en
+La Pleine,Warehouse Operator,lapleine_wh_operator@example.com,eden,"rc_logs_user/org_group.name=RC,wh_operator/org_organisation.name=La Pleine,wh_operator_national/org_organisation.name=Dominica Red Cross Society,rms_user/org_organisation.name=Dominica Red Cross Society",La Pleine,,,Staff,en
+Staff,User,staff@example.com,eden,,Cuban Red Cross,,,Staff,es
+Volunteer,User,volunteer@example.com,eden,,Cuban Red Cross,,,Volunteer,es

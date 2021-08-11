@@ -200,7 +200,7 @@ def person():
 def trainee():
     """
         HR Controller
-        - used by RMSAmericas to be able to filter to 'External Trainees'
+        - used by RMS to be able to filter to 'External Trainees'
     """
 
     return s3db.hrm_human_resource_controller()
@@ -209,7 +209,7 @@ def trainee():
 def trainee_person():
     """
         Person Controller
-        - used by RMSAmericas to be able to configure for 'External Trainees'
+        - used by RMS to be able to configure for 'External Trainees'
     """
 
     return s3db.hrm_person_controller()

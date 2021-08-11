@@ -1,7 +1,7 @@
 Name,Organisation,Branch,Country,Building,Address,L1,L2,L3,Lat,Lon,Phone1,Phone2,Email,Fax,Comments
-Basse-Terre,French Red Cross (Croix Rouge Francaise),Guadeloupe,GP
-Guadeloupe,French Red Cross (Croix Rouge Francaise),PIRAC,GP
-Martinique,French Red Cross (Croix Rouge Francaise),PIRAC,MQ
+Basse-Terre,French Red Cross,Guadeloupe,GP
+Guadeloupe,French Red Cross,PIRAC,GP
+Martinique,French Red Cross,PIRAC,MQ
 Roseau,Dominica Red Cross Society,,DM
 Marigot,Dominica Red Cross Society,Marigot,DM
 La Pleine,Dominica Red Cross Society,La Pleine,DM

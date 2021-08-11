@@ -895,7 +895,7 @@ class OrgOrganisationModel(S3Model):
                                                        ),
                                             ),
                   # Leave this to templates which need this
-                  # - RMSAmericas
+                  # - RMS
                   #onaccept = org_organisation_organisation_type_onaccept,
                   #ondelete = org_organisation_organisation_type_ondelete,
                   xml_post_parse = self.org_organisation_organisation_type_xml_post_parse,
@@ -1979,7 +1979,7 @@ class OrgOrganisationOrganisationModel(S3Model):
                                                             ),
                                                  ),
                        # Leave this to templates which need this
-                       # - RMSAmericas
+                       # - RMS
                        #onaccept = org_organisation_organisation_onaccept,
                        #ondelete = org_organisation_organisation_ondelete,
                        realm_entity = self.org_organisation_organisation_realm_entity,
@@ -6701,7 +6701,7 @@ def org_rheader(r, tabs=None):
                             ]
                 else:
                     if type_filter == "Training Center":
-                        # e.g.RMSAmericas
+                        # e.g.RMS
                         skip_branches = True
                     tabs = [(T("Basic Details"), None, {"native": 1}),
                             ]
@@ -7273,7 +7273,7 @@ def org_organisation_organisation_onaccept(form):
 
         NB Not Active by Default
         - activate for templates that need this:
-            * RMSAmericas
+            * RMS
 
         @param form: the Form
     """
@@ -7304,7 +7304,7 @@ def org_organisation_organisation_ondelete(row):
 
         NB Not Active by Default
         - activate for templates that need this:
-            * RMSAmericas
+            * RMS
 
         @param form: the Row
     """
@@ -7342,7 +7342,7 @@ def org_organisation_organisation_type_onaccept(form):
 
         NB Not Active by Default
         - activate for templates that need this:
-            * RMSAmericas
+            * RMS
 
         @param form: the Form
     """
@@ -7373,7 +7373,7 @@ def org_organisation_organisation_type_ondelete(row):
 
         NB Not Active by Default
         - activate for templates that need this:
-            * RMSAmericas
+            * RMS
 
         @param form: the Row
     """
