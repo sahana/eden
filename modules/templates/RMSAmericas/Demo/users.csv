@@ -10,21 +10,21 @@ Honduras,Org Admin,hn_orgadmin@example.com,eden,"ORG_ADMIN,hn_user",Honduran Red
 Honduras,M&E,hn_me@example.com,eden,"monitoring_evaluation,hn_user",Honduran Red Cross,,,Staff,es
 Honduras,Project Manager,hn_project_manager@example.com,eden,"project_manager,hn_user",Honduran Red Cross,,,Staff,es
 Honduras,Project Reader,hn_project_reader@example.com,eden,"project_reader,hn_user",Honduran Red Cross,,,Staff,es
-Honduras,Warehouse Manager,hn_wh_manager@example.com,eden,"rc_logs_user/org_group.name=RC,national_wh_manager,hn_user",Honduran Red Cross,,,Staff,es
-Comayagua,Warehouse Manager,hn_com_bodega@example.com,eden,"rc_logs_user/org_group.name=RC,wh_manager/inv_warehouse.name=Comayagua,wh_manager_national/org_organisation.name=Honduran Red Cross,hn_user/org_organisation.name=Honduran Red Cross",Comayagua,Warehouse,Comayagua,Staff,es
-Tegucigalpa,Warehouse Manager,hn_teg_bodega@example.com,eden,"rc_logs_user/org_group.name=RC,wh_manager/inv_warehouse.name=Tegucigalpa,wh_manager_national/org_organisation.name=Honduran Red Cross,hn_user/org_organisation.name=Honduran Red Cross",Tegucigalpa,Warehouse,Tegucigalpa,Staff,es
+Honduras,Logistics Manager,hn_wh_manager@example.com,eden,"rc_logs_user/org_group.name=RC,national_wh_manager,hn_user",Honduran Red Cross,,,Staff,es
+Comayagua,Warehouse Operator,hn_com_bodega@example.com,eden,"rc_logs_user/org_group.name=RC,wh_manager/inv_warehouse.name=Comayagua,wh_manager_national/org_organisation.name=Honduran Red Cross,hn_user/org_organisation.name=Honduran Red Cross",Comayagua,Warehouse,Comayagua,Staff,es
+Tegucigalpa,Warehouse Operator,hn_teg_bodega@example.com,eden,"rc_logs_user/org_group.name=RC,wh_manager/inv_warehouse.name=Tegucigalpa,wh_manager_national/org_organisation.name=Honduran Red Cross,hn_user/org_organisation.name=Honduran Red Cross",Tegucigalpa,Warehouse,Tegucigalpa,Staff,es
 Nicaragua,HR Manager,ni_hr_manager@example.com,eden,hr_manager,Nicaraguan Red Cross,,,Staff,es
 Tipitapa,HR Assistant,ni_hr_assistant@example.com,eden,hr_assistant,Tipitapa,,,Staff,es
-Nicaragua,Warehouse Manager,ni_wh_manager@example.com,eden,"rc_logs_user/org_group.name=RC,national_wh_manager",Nicaraguan Red Cross,,,Staff,es
+Nicaragua,Logistics Manager,ni_wh_manager@example.com,eden,"rc_logs_user/org_group.name=RC,national_wh_manager",Nicaraguan Red Cross,,,Staff,es
 Paraguay,Org Admin,py_admin@example.com,eden,ORG_ADMIN,Paraguayan Red Cross,,,Staff,es
 Paraguay,HR Manager,py_hr_manager@example.com,eden,hr_manager,Paraguayan Red Cross,,,Staff,es
 Paraguay,HR Assistant,py_hr_assistant@example.com,eden,hr_assistant,Paraguayan Red Cross,,,Staff,es
 Paraguay,Partner Manager,py_partner_manager@example.com,eden,member_manager,Paraguayan Red Cross,,,Staff,es
 Paraguay,Training Center Manager,py_training_manager@example.com,eden,ns_training_manager,Paraguayan Red Cross,,,Staff,es
 Paraguay,Training Center Assistant,py_training_assistant@example.com,eden,ns_training_assistant,Paraguayan Red Cross,,,Staff,es
-CRF,Warehouse Manager,crf_wh_manager@example.com,eden,"rc_logs_user/org_group.name=RC,national_wh_manager/org_organisation.name=French Red Cross (Croix Rouge Francaise)",French Red Cross (Croix Rouge Francaise),,,Staff,fr
-Guadeloupe,Warehouse Manager,gp_wh_manager@example.com,eden,"rc_logs_user/org_group.name=RC,wh_manager/org_organisation.name=Guadeloupe,wh_manager_national/org_organisation.name=French Red Cross (Croix Rouge Francaise)",Guadeloupe,,,Staff,fr
-PIRAC,Warehouse Manager,pirac@example.com,eden,"rc_logs_user/org_group.name=RC,national_wh_manager/org_organisation.name=PIRAC,wh_manager_national/org_organisation.name=French Red Cross (Croix Rouge Francaise),national_wh_manager/org_organisation.name=Guadeloupe,national_wh_manager/org_organisation.name=Dominica Red Cross Society,national_wh_manager/org_organisation.name=Saint Kitts and Nevis Red Cross Society",PIRAC,,,Staff,fr
-Dominica,Warehouse Manager,dm_wh_manager@example.com,eden,"rc_logs_user/org_group.name=RC,national_wh_manager/org_organisation.name=Dominica Red Cross Society",Dominica Red Cross Society,,,Staff,en
-Marigot,Warehouse Manager,marigot_wh_manager@example.com,eden,"rc_logs_user/org_group.name=RC,wh_manager/org_organisation.name=Marigot,wh_manager_national/org_organisation.name=Dominica Red Cross Society",Marigot,Staff,,,en
-La Pleine,Warehouse Manager,lapleine_wh_manager@example.com,eden,"rc_logs_user/org_group.name=RC,wh_manager/org_organisation.name=La Pleine,wh_manager_national/org_organisation.name=Dominica Red Cross Society",La Pleine,Staff,,,en
+CRF,Logistics Manager,crf_wh_manager@example.com,eden,"rc_logs_user/org_group.name=RC,national_wh_manager/org_organisation.name=French Red Cross (Croix Rouge Francaise)",French Red Cross (Croix Rouge Francaise),,,Staff,fr
+Guadeloupe,Warehouse Operator,gp_wh_manager@example.com,eden,"rc_logs_user/org_group.name=RC,wh_manager/org_organisation.name=Guadeloupe,wh_manager_national/org_organisation.name=French Red Cross (Croix Rouge Francaise)",Guadeloupe,,,Staff,fr
+PIRAC,Logistics Manager,pirac@example.com,eden,"rc_logs_user/org_group.name=RC,national_wh_manager/org_organisation.name=PIRAC,wh_manager_national/org_organisation.name=French Red Cross (Croix Rouge Francaise)",PIRAC,,,Staff,fr
+Dominica,Logistics Manager,dm_wh_manager@example.com,eden,"rc_logs_user/org_group.name=RC,national_wh_manager/org_organisation.name=Dominica Red Cross Society",Dominica Red Cross Society,,,Staff,en
+Marigot,Warehouse Operator,marigot_wh_manager@example.com,eden,"rc_logs_user/org_group.name=RC,wh_manager/org_organisation.name=Marigot,wh_manager_national/org_organisation.name=Dominica Red Cross Society",Marigot,Staff,,,en
+La Pleine,Warehouse Operator,lapleine_wh_manager@example.com,eden,"rc_logs_user/org_group.name=RC,wh_manager/org_organisation.name=La Pleine,wh_manager_national/org_organisation.name=Dominica Red Cross Society",La Pleine,Staff,,,en
