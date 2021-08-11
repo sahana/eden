@@ -57,11 +57,12 @@ __all__ = ("RequestModel",
            "CommitPersonModel",
            "CommitSkillModel",
            #"req_CheckMethod",
-           "req_ref_represent",
-           "req_update_status",
-           "req_rheader",
-           "req_match",
            "req_add_from_template",
+           "req_match",
+           "req_ref_represent",
+           "req_rheader",
+           "req_send_commit"
+           "req_update_status",
            "req_RequesterRepresent",
            "req_ReqItemRepresent",
            #"req_is_approver",
@@ -1579,7 +1580,7 @@ $.filterOptionsS3({
             # Update the Status
             db(rtable.id == req_id).update(workflow_status = 3, # Approved
                                            )
-            # Notify the Warehouse Officer(s)
+            # Notify the Warehouse Operator(s)
             session_s3 = session.s3
             ui_language = session_s3.language
             url = "%s%s" % (current.deployment_settings.get_base_public_url(),
@@ -4598,7 +4599,6 @@ class CommitItemModel(S3Model):
     """
 
     names = ("req_commit_item",
-             "req_send_commit"
              )
 
     def model(self):
@@ -4648,7 +4648,6 @@ class CommitItemModel(S3Model):
         #
         return {# Used by commit_req() controller (TODO make module-global then?)
                 "req_commit_item_onaccept": self.commit_item_onaccept,
-                "req_send_commit": self.req_send_commit,
                 }
 
     # -------------------------------------------------------------------------
@@ -4719,103 +4718,6 @@ class CommitItemModel(S3Model):
                                    ).first()
             if req:
                 req_update_commit_quantities_and_status(req)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def req_send_commit():
-        """
-            Controller function to create a Shipment containing all
-            items in a commitment (interactive)
-        """
-
-        # Get the commit record
-        try:
-            commit_id = current.request.args[0]
-        except KeyError:
-            redirect(URL(c="req", f="commit"))
-
-        db = current.db
-        s3db = current.s3db
-
-        req_table = db.req_req
-        rim_table = db.req_req_item
-        com_table = db.req_commit
-        cim_table = db.req_commit_item
-
-        send_table = s3db.inv_send
-        tracktable = s3db.inv_track_item
-
-        query = (com_table.id == commit_id) & \
-                (com_table.req_id == req_table.id) & \
-                (com_table.deleted == False)
-        record = db(query).select(com_table.committer_id,
-                                  com_table.site_id,
-                                  com_table.organisation_id,
-                                  req_table.requester_id,
-                                  req_table.site_id,
-                                  req_table.req_ref,
-                                  limitby = (0, 1)
-                                  ).first()
-
-        # @ToDo: Identify if we have stock items which match the commit items
-        # If we have a single match per item then proceed automatically (as-now) & then decrement the stock quantity
-        # If we have no match then warn the user & ask if they should proceed anyway
-        # If we have mulitple matches then provide a UI to allow the user to select which stock items to use
-
-        # Create an inv_send and link to the commit
-        form_vars = Storage(sender_id = record.req_commit.committer_id,
-                            site_id = record.req_commit.site_id,
-                            recipient_id = record.req_req.requester_id,
-                            to_site_id = record.req_req.site_id,
-                            req_ref = record.req_req.req_ref,
-                            status = 0,
-                            )
-        send_id = send_table.insert(**form_vars)
-        form_vars.id = send_id
-
-        # Get all of the committed items
-        query = (cim_table.commit_id == commit_id) & \
-                (cim_table.req_item_id == rim_table.id) & \
-                (cim_table.deleted == False)
-        records = db(query).select(rim_table.id,
-                                   rim_table.item_id,
-                                   rim_table.item_pack_id,
-                                   rim_table.currency,
-                                   rim_table.quantity,
-                                   rim_table.quantity_transit,
-                                   rim_table.quantity_fulfil,
-                                   cim_table.quantity,
-                                   )
-        # Create inv_track_items for each commit item
-        insert = tracktable.insert
-        for row in records:
-            rim = row.req_req_item
-            # Now done as a VirtualField instead (looks better & updates closer to real-time, so less of a race condition)
-            #quantity_shipped = max(rim.quantity_transit, rim.quantity_fulfil)
-            #quantity_needed = rim.quantity - quantity_shipped
-            insert(req_item_id = rim.id,
-                   track_org_id = record.req_commit.organisation_id,
-                   send_id = send_id,
-                   status = 1,
-                   item_id = rim.item_id,
-                   item_pack_id = rim.item_pack_id,
-                   currency = rim.currency,
-                   #req_quantity = quantity_needed,
-                   quantity = row.req_commit_item.quantity,
-                   recv_quantity = row.req_commit_item.quantity,
-                   )
-
-        # Create the Waybill
-        form = Storage()
-        form.vars = form_vars
-        s3db.inv_send_onaccept(form)
-
-        # Redirect to inv_send for the send id just created
-        redirect(URL(#c = "inv", or "req"
-                     f = "send",
-                     #args = [send_id, "track_item"]
-                     args = [send_id]
-                     ))
 
 # =============================================================================
 class CommitPersonModel(S3Model):
@@ -5779,6 +5681,102 @@ def req_match(rheader = None):
                                      rheader = rheader,
                                      )
     return output
+
+# =============================================================================
+def req_send_commit():
+    """
+        Controller function to create a Shipment containing all
+        items in a commitment (interactive)
+    """
+
+    # Get the commit record
+    try:
+        commit_id = current.request.args[0]
+    except KeyError:
+        redirect(URL(c="req", f="commit"))
+
+    db = current.db
+    s3db = current.s3db
+
+    req_table = db.req_req
+    rim_table = db.req_req_item
+    com_table = db.req_commit
+    cim_table = db.req_commit_item
+
+    send_table = s3db.inv_send
+    tracktable = s3db.inv_track_item
+
+    query = (com_table.id == commit_id) & \
+            (com_table.req_id == req_table.id) & \
+            (com_table.deleted == False)
+    record = db(query).select(com_table.committer_id,
+                              com_table.site_id,
+                              com_table.organisation_id,
+                              req_table.requester_id,
+                              req_table.site_id,
+                              req_table.req_ref,
+                              limitby = (0, 1)
+                              ).first()
+
+    # @ToDo: Identify if we have stock items which match the commit items
+    # If we have a single match per item then proceed automatically (as-now) & then decrement the stock quantity
+    # If we have no match then warn the user & ask if they should proceed anyway
+    # If we have mulitple matches then provide a UI to allow the user to select which stock items to use
+
+    # Create an inv_send and link to the commit
+    form_vars = Storage(sender_id = record.req_commit.committer_id,
+                        site_id = record.req_commit.site_id,
+                        recipient_id = record.req_req.requester_id,
+                        to_site_id = record.req_req.site_id,
+                        req_ref = record.req_req.req_ref,
+                        status = 0,
+                        )
+    send_id = send_table.insert(**form_vars)
+    form_vars.id = send_id
+
+    # Get all of the committed items
+    query = (cim_table.commit_id == commit_id) & \
+            (cim_table.req_item_id == rim_table.id) & \
+            (cim_table.deleted == False)
+    records = db(query).select(rim_table.id,
+                               rim_table.item_id,
+                               rim_table.item_pack_id,
+                               rim_table.currency,
+                               rim_table.quantity,
+                               rim_table.quantity_transit,
+                               rim_table.quantity_fulfil,
+                               cim_table.quantity,
+                               )
+    # Create inv_track_items for each commit item
+    insert = tracktable.insert
+    for row in records:
+        rim = row.req_req_item
+        # Now done as a VirtualField instead (looks better & updates closer to real-time, so less of a race condition)
+        #quantity_shipped = max(rim.quantity_transit, rim.quantity_fulfil)
+        #quantity_needed = rim.quantity - quantity_shipped
+        insert(req_item_id = rim.id,
+               track_org_id = record.req_commit.organisation_id,
+               send_id = send_id,
+               status = 1,
+               item_id = rim.item_id,
+               item_pack_id = rim.item_pack_id,
+               currency = rim.currency,
+               #req_quantity = quantity_needed,
+               quantity = row.req_commit_item.quantity,
+               recv_quantity = row.req_commit_item.quantity,
+               )
+
+    # Create the Waybill
+    form = Storage()
+    form.vars = form_vars
+    s3db.inv_send_onaccept(form)
+
+    # Redirect to inv_send for the send id just created
+    redirect(URL(#c = "inv", or "req"
+                 f = "send",
+                 #args = [send_id, "track_item"]
+                 args = [send_id]
+                 ))
 
 # =============================================================================
 class req_CheckMethod(S3Method):

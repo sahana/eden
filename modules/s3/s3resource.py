@@ -324,7 +324,8 @@ class S3Resource(object):
                     filter = None,
                     vars = None,
                     extra_filters = None,
-                    filter_component = None):
+                    filter_component = None,
+                    ):
         """
             Query builder
 

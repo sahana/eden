@@ -9804,8 +9804,8 @@ def pr_default_realms(entity):
             (rtable.deleted != True) & \
             (rtable.role_type == OU)
     rows = current.db(query).select(rtable.pe_id)
-    realm = [row.pe_id for row in rows]
-    return realm
+    realms = [row.pe_id for row in rows]
+    return realms
 
 # =============================================================================
 def pr_realm_users(realm, roles=None, role_types=OU):

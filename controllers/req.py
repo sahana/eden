@@ -1245,8 +1245,8 @@ def skills_filter(req_id):
                                                         s3db.hrm_multi_skill_represent,
                                                         filterby = "id",
                                                         filter_opts = filter_opts,
-                                                        sort=True,
-                                                        multiple=True
+                                                        sort = True,
+                                                        multiple = True
                                                         )
 
 # =============================================================================
@@ -1318,11 +1318,12 @@ def commit():
                                               error_msg=T("You do not have permission for any facility to make a commitment.") )
 
                     table.site_id.comment = A(T("Set as default Site"),
-                                              _id="req_commit_site_id_link",
-                                              _target="_blank",
-                                              _href=URL(c="default",
-                                                        f="user",
-                                                        args=["profile"]))
+                                              _id = "req_commit_site_id_link",
+                                              _target = "_blank",
+                                              _href = URL(c = "default",
+                                                          f = "user",
+                                                          args = ["profile"]
+                                                          ))
 
                     jappend = s3.jquery_ready.append
                     jappend('''
@@ -1381,11 +1382,12 @@ $.filterOptionsS3({
                     auth.permitted_facilities(table=r.table,
                           error_msg=T("You do not have permission for any facility to make a commitment."))
                     table.site_id.comment = A(T("Set as default Site"),
-                                              _id="req_commit_site_id_link",
-                                              _target="_blank",
-                                              _href=URL(c="default",
-                                                        f="user",
-                                                        args=["profile"]))
+                                              _id = "req_commit_site_id_link",
+                                              _target = "_blank",
+                                              _href = URL(c = "default",
+                                                          f = "user",
+                                                          args = ["profile"]
+                                                          ))
                     # Limit organisation_id to organisations the user has permissions for
                     #auth.permitted_organisations(table=r.table, redirect_on_error=False)
                     #table.organisation_id.readable = True
