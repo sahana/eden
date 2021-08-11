@@ -413,6 +413,7 @@ def warehouse():
     else:
         native = False
 
+    from s3db.inv import inv_rheader
     output = s3_rest_controller(module, resourcename,
                                 #hide_filter = {"inv_item": False,
                                 #               "_default": True,
@@ -425,7 +426,7 @@ def warehouse():
                                 csv_stylesheet = csv_stylesheet,
                                 csv_template = resourcename,
                                 native = native,
-                                rheader = s3db.inv_rheader,
+                                rheader = inv_rheader,
                                 )
     return output
 
@@ -701,7 +702,8 @@ def inv_item_packs():
 def send():
     """ RESTful CRUD controller """
 
-    return s3db.inv_send_controller()
+    from s3db.inv import inv_send_controller
+    return inv_send_controller()
 
 # ==============================================================================
 def send_commit():
@@ -709,13 +711,15 @@ def send_commit():
         Send a Shipment containing all items in a Commitment
     """
 
-    return s3db.req_send_commit()
+    from s3db.req import req_send_commit
+    return req_send_commit()
 
 # -----------------------------------------------------------------------------
 def send_process():
     """ Process a Shipment """
 
-    return s3db.inv_send_process()
+    from s3db.inv import inv_send_process
+    return inv_send_process()
 
 # -----------------------------------------------------------------------------
 def send_returns():
@@ -911,12 +915,12 @@ def set_recv_attr(status):
     """
 
     recvtable = s3db.inv_recv
-    ship_status = s3db.inv_ship_status
     recvtable.sender_id.readable = recvtable.sender_id.writable = False
     recvtable.grn_status.readable = recvtable.grn_status.writable = False
     recvtable.cert_status.readable = recvtable.cert_status.writable = False
     recvtable.eta.readable = False
     recvtable.req_ref.writable = True
+    from s3db.inv import inv_ship_status
     if status == ship_status["IN_PROCESS"]:
         recvtable.send_ref.writable = True
         recvtable.recv_ref.readable = False
@@ -960,19 +964,19 @@ def recv():
         except:
             pass
 
-    status = s3db.inv_ship_status
-    SHIP_STATUS_IN_PROCESS = status["IN_PROCESS"]
-    SHIP_STATUS_SENT = status["SENT"]
-    SHIP_STATUS_RECEIVED = status["RECEIVED"]
-    SHIP_STATUS_CANCEL = status["CANCEL"]
+    from s3db.inv import inv_ship_status
+    SHIP_STATUS_IN_PROCESS = inv_ship_status["IN_PROCESS"]
+    SHIP_STATUS_SENT = inv_ship_status["SENT"]
+    SHIP_STATUS_RECEIVED = inv_ship_status["RECEIVED"]
+    SHIP_STATUS_CANCEL = inv_ship_status["CANCEL"]
 
-    status = s3db.inv_tracking_status
-    TRACK_STATUS_UNKNOWN    = status["UNKNOWN"]
-    TRACK_STATUS_PREPARING  = status["IN_PROCESS"]
-    TRACK_STATUS_TRANSIT    = status["SENT"]
-    TRACK_STATUS_UNLOADING  = status["UNLOADING"]
-    TRACK_STATUS_ARRIVED    = status["RECEIVED"]
-    TRACK_STATUS_CANCELED   = status["CANCEL"]
+    from s3db.inv import inv_tracking_status
+    TRACK_STATUS_UNKNOWN    = inv_tracking_status["UNKNOWN"]
+    TRACK_STATUS_PREPARING  = inv_tracking_status["IN_PROCESS"]
+    TRACK_STATUS_TRANSIT    = inv_tracking_status["SENT"]
+    TRACK_STATUS_UNLOADING  = inv_tracking_status["UNLOADING"]
+    TRACK_STATUS_ARRIVED    = inv_tracking_status["RECEIVED"]
+    TRACK_STATUS_CANCELED   = inv_tracking_status["CANCEL"]
 
     def set_track_attr(status):
         # By default Make all fields writable False
@@ -1131,7 +1135,8 @@ def recv():
                            listadd = False,
                            )
 
-    output = s3_rest_controller(rheader = s3db.inv_recv_rheader,
+    from s3db.inv import inv_recv_rheader
+    output = s3_rest_controller(rheader = inv_recv_rheader,
                                 )
     return output
 
@@ -1252,7 +1257,7 @@ def recv_process():
 
     # Check status
     status = recv_record.status
-    inv_ship_status = s3db.inv_ship_status
+    from s3db.inv import inv_ship_status
     if status == inv_ship_status["RECEIVED"]:
         session.error = T("This shipment has already been received.")
         redirect(URL(c="inv", f="recv", args=[recv_id]))
@@ -1340,7 +1345,7 @@ def recv_cancel():
                                                   limitby = (0, 1)
                                                   ).first()
 
-    inv_ship_status = s3db.inv_ship_status
+    from s3db.inv import inv_ship_status
     if recv_record.status != inv_ship_status["RECEIVED"]:
         session.error = T("This shipment has not been received - it has NOT been canceled because it can still be edited.")
         redirect(URL(c="inv", f="recv", args=[recv_id]))
@@ -1529,7 +1534,8 @@ def track_item():
                        )
         s3.filter = (FS("expiry_date") != None)
 
-    output = s3_rest_controller(rheader = s3db.inv_rheader,
+    from s3db.inv import inv_rheader
+    output = s3_rest_controller(rheader = inv_rheader,
                                 )
     return output
 
@@ -1631,7 +1637,8 @@ def adj():
                        listadd = False,
                        )
 
-    output = s3_rest_controller(rheader = s3db.inv_adj_rheader,
+    from s3db.inv import inv_adj_rheader
+    output = s3_rest_controller(rheader = inv_adj_rheader,
                                 )
     return output
 
@@ -1728,6 +1735,7 @@ def recv_item_json():
     except:
         raise HTTP(400, current.xml.json_message(False, 400, "No value provided!"))
 
+    from s3db.inv import inv_ship_status
     stable = s3db.org_site
     rtable = s3db.inv_recv
     ittable = s3db.inv_track_item
@@ -1737,16 +1745,17 @@ def recv_item_json():
     query = (ittable.req_item_id == item_id) & \
             (rtable.id == ittable.recv_id) & \
             (rtable.site_id == stable.id) & \
-            (rtable.status == s3db.inv_ship_status["RECEIVED"]) & \
+            (rtable.status == inv_ship_status["RECEIVED"]) & \
             (ittable.deleted == False)
     records = db(query).select(rtable.id,
                                rtable.date,
                                stable.name,
-                               ittable.quantity)
+                               ittable.quantity,
+                               )
 
-    output = "[%s,%s" % (json.dumps(dict(id = str(T("Received")),
-                                         quantity = "#"
-                                         )),
+    output = "[%s,%s" % (json.dumps({"id": s3_str(T("Received")),
+                                     "quantity": "#",
+                                     }),
                          records.json()[1:])
 
     response.headers["Content-Type"] = "application/json"
@@ -1765,10 +1774,10 @@ def send_item_json():
     except:
         raise HTTP(400, current.xml.json_message(False, 400, "No value provided!"))
 
+    from s3db.inv import inv_ship_status
     stable = s3db.org_site
     istable = s3db.inv_send
     ittable = s3db.inv_track_item
-    inv_ship_status = s3db.inv_ship_status
 
     istable.date.represent = lambda dt: dt[:10]
 
@@ -1781,12 +1790,14 @@ def send_item_json():
     records = db(query).select(istable.id,
                                istable.date,
                                stable.name,
-                               ittable.quantity)
+                               ittable.quantity,
+                               )
 
-    output = "[%s,%s" % (json.dumps(dict(id = str(T("Sent")),
-                                         quantity = "#"
-                                         )),
-                         records.json()[1:])
+    output = "[%s,%s" % (json.dumps({"id": s3_str(T("Sent")),
+                                     "quantity": "#",
+                                     }),
+                         records.json()[1:],
+                         )
 
     response.headers["Content-Type"] = "application/json"
     return output
@@ -1794,7 +1805,8 @@ def send_item_json():
 # -----------------------------------------------------------------------------
 def kitting():
 
-    return s3_rest_controller(rheader = s3db.inv_rheader,
+    from s3db.inv import inv_rheader
+    return s3_rest_controller(rheader = inv_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -1849,12 +1861,14 @@ def incoming():
     """
 
     # @ToDo: Create this function!
-    return s3db.inv_incoming()
+    from s3db.inv import inv_incoming
+    return inv_incoming()
 
 # -----------------------------------------------------------------------------
 def req_match():
     """ Match Requests """
 
-    return s3db.req_match()
+    from s3db.req import req_match
+    return req_match()
 
 # END =========================================================================

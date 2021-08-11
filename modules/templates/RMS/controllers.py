@@ -8,7 +8,8 @@ from gluon.storage import Storage
 from s3 import ICON, IS_FLOAT_AMOUNT, s3_str, \
                S3CustomController, S3Report, S3Request, S3Represent
 
-from s3db.inv import SHIP_DOC_PENDING, SHIP_DOC_COMPLETE
+from s3db.inv import SHIP_DOC_PENDING, SHIP_DOC_COMPLETE, \
+                     SHIP_STATUS_SENT, SHIP_STATUS_RECEIVED, SHIP_STATUS_RETURNING
 
 THEME = "RMS"
 
@@ -348,7 +349,7 @@ class inv_dashboard(S3CustomController):
         srows = sresource.select(fields,
                                  as_rows = True,
                                  limit = 5,
-                                 orderby = "inv_send.date",
+                                 orderby = ~stable.date,
                                  )
 
         rtable = s3db.inv_recv
@@ -367,7 +368,7 @@ class inv_dashboard(S3CustomController):
         rrows = rresource.select(fields,
                                  as_rows = True,
                                  limit = 5,
-                                 orderby = "inv_recv.date",
+                                 orderby = ~rtable.date,
                                  )
         rtotal = len(rrows)
 
@@ -396,7 +397,7 @@ class inv_dashboard(S3CustomController):
                 stotal += 1
                 continue
             rrow.type = "recv"
-            sappend(srow)
+            sappend(rrow)
             if stotal == 4:
                 break
             stotal += 1
@@ -419,7 +420,7 @@ class inv_dashboard(S3CustomController):
                 stotal += 1
                 continue
             rrow.type = "recv"
-            sappend(srow)
+            sappend(rrow)
             if stotal == 4:
                 break
             stotal += 1
@@ -625,6 +626,31 @@ class inv_dashboard(S3CustomController):
                                  )
 
         # KPI
+        # Which Warehouses are we responsible for?
+        user = current.auth.user
+        wtable = s3db.inv_warehouse
+        gtable = db.auth_group
+        mtable = db.auth_membership
+        query = (mtable.user_id == user.id) & \
+                (mtable.group_id == gtable.id) & \
+                (gtable.uuid.belongs("ORG_ADMIN",
+                                     "logs_manager",
+                                     "wh_operator",
+                                     ))
+        realms = db(query).select(mtable.pe_id)
+        realms = list(set([row.pe_id for row in realms]))
+        if None in realms:
+            realms.remove(None)
+            # Lookup Default Realm
+            from s3db.pr import pr_default_realms
+            default_realms = pr_default_realms(user.pe_id)
+            realms = realms + default_realms
+        from s3db.pr import pr_get_descendants
+        child_pe_ids = pr_get_descendants(realms, entity_types=["inv_warehouse"])
+        warehouses = db(wtable.pe_id.belongs(realms + child_pe_ids)).select(wtable.site_id)
+        warehouses = [row.site_id for row in warehouses]
+
+        itable = s3db.inv_inv_item
         fields = ["site_id",
                   "total_weight",
                   "total_volume",
@@ -633,8 +659,10 @@ class inv_dashboard(S3CustomController):
                   "item_id.weight", # extra_fields
                   "item_id.volume", # extra_fields
                   ]
-        rows = resource.select(fields, as_rows=True)
-        num_warehouses = len(set([row["inv_inv_item.site_id"] for row in rows])) # Assumes that every WH has Inventory
+        iresource = s3db.resource("inv_inv_item",
+                                  filter = (itable.site_id.belongs(warehouses)),
+                                  )
+        rows = iresource.select(fields, as_rows=True)
         stockpile_weight = 0
         stockpile_volume = 0
         for row in rows:
@@ -649,7 +677,12 @@ class inv_dashboard(S3CustomController):
                   "track_item.item_id$weight", # extra_fields
                   "track_item.item_id$volume", # extra_fields
                   ]
-        sresource = s3db.resource("inv_send")
+        sresource = s3db.resource("inv_send",
+                                  filter = (stable.status.belongs([SHIP_STATUS_SENT,
+                                                                   SHIP_STATUS_RECEIVED,
+                                                                   SHIP_STATUS_RETURNING,
+                                                                   ]))
+                                  )
         # @ToDo: Filter by last month?
         srows = sresource.select(fields,
                                  as_rows = True,
@@ -658,11 +691,21 @@ class inv_dashboard(S3CustomController):
         shipments_weight = 0
         shipments_volume = 0
         for row in srows:
-            shipments_weight += row["inv_track_item.total_weight"]()
-            shipments_volume += row["inv_track_item.total_volume"]()
+            weight = row["inv_track_item.total_weight"]()
+            try:
+                shipments_weight += weight
+            except TypeError:
+                # NONE returned: ignore
+                pass
+            volume = row["inv_track_item.total_volume"]()
+            try:
+                shipments_volume += volume
+            except TypeError:
+                # NONE returned: ignore
+                pass
 
         float_represent = IS_FLOAT_AMOUNT.represent
-        kpi = UL(LI("%s: %s" % (T("Number of warehouses"), num_warehouses)),
+        kpi = UL(LI("%s: %s" % (T("Number of warehouses"), len(warehouses))),
                  LI("%s: %s" % (T("Number of Shipments sent"), num_shipments)),
                  LI("%s: %s kg" % (T("Total weight sent"), float_represent(shipments_weight, precision=1))),
                  LI("%s: %s m3" % (T("Total volume sent"), float_represent(shipments_volume, precision=3))),
