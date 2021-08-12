@@ -214,7 +214,7 @@ class index(S3CustomController):
                                limitby = (0, 1),
                                ).first()
         if not row:
-            return None
+            return ""
 
         return XML(row.body) if cmsxml else row.body
 
