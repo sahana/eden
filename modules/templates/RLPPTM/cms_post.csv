@@ -80,3 +80,4 @@ Aktuell liegt kein (ausreichendes) Raumkonzept für Ihre Teststelle vor. Bitte b
 
 Bitte legen Sie ein entsprechendes Raumkonzept vor. ",
 TestResultRegistrationIntroDisabled,disease,case_diagnostics,Placeholder post for test result registration page intro,Rename into TestResultRegistrationIntro (remove Disabled-suffix) to activate
+HomepageIntroDisabled,default,index,,
