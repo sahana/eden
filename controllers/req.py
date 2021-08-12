@@ -1779,9 +1779,9 @@ def send_req():
 
     # Loop through each request item and find matches in the site inventory
     # - don't match items which are expired or in bad condition
-    IN_PROCESS = s3db.inv_tracking_status["IN_PROCESS"]
+    from s3db.inv import inv_tracking_status, inv_remove
+    IN_PROCESS = inv_tracking_status["IN_PROCESS"]
     insert = tracktable.insert
-    inv_remove = s3db.inv_remove
     ii_item_id_field = iitable.item_id
     ii_quantity_field = iitable.quantity
     ii_expiry_field = iitable.expiry_date

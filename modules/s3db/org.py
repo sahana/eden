@@ -1302,10 +1302,11 @@ class OrgOrganisationBranchModel(S3Model):
                 deleted_fk = {"branch_id": branch_id,
                               "organisation_id": organisation_id,
                               }
-                db(query).update(deleted=True,
-                                 branch_id=None,
-                                 organisation_id=None,
-                                 deleted_fk=json.dumps(deleted_fk))
+                db(query).update(deleted = True,
+                                 branch_id = None,
+                                 organisation_id = None,
+                                 deleted_fk = json.dumps(deleted_fk),
+                                 )
 
                 # Inherit fields from parent organisation
                 update = dict((field, organisation[field])
@@ -6781,7 +6782,7 @@ def org_rheader(r, tabs=None):
                     (btable.organisation_id == table.id)
             row = db(query).select(table.id,
                                    table.name,
-                                   limitby=(0, 1)
+                                   limitby = (0, 1)
                                    ).first()
             if row:
                 record_data.append(TR(TH("%s: " % T("Branch of")),

@@ -4873,6 +4873,12 @@ class S3Config(Storage):
         """
         return self.inv.get("warehouse_code_unique", False)
 
+    def get_inv_warehouse_locations(self):
+        """
+            Use strctured Warehouse Locations rather than just freetext field
+        """
+        return self.inv.get("warehouse_locations", False)
+
     # -------------------------------------------------------------------------
     # IRS
     #

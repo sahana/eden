@@ -2725,7 +2725,7 @@
 'Locations De-duplicator': 'Emplacements de duplication',
 'Locations of this level need to have a parent of level': 'Emplacements de ce niveau doivent avoir un parent de niveau',
 'Locations should be different!': 'Les emplacements doivent être différents!',
-'Locations': 'adresses',
+'Locations': 'Emplacements',
 'Lockdown': 'Verrouiller',
 'Log Entry Details': "Détails d'entrée du journal",
 'Log entry added': 'Entrée de journal ajouté',

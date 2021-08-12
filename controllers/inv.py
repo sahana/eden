@@ -1824,6 +1824,10 @@ def facility_type():
     return s3_rest_controller("org")
 
 # -----------------------------------------------------------------------------
+#def warehouse_location():
+#    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def project():
     """
         Simpler version of Projects for use within Inventory module

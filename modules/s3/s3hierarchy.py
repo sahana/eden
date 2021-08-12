@@ -89,25 +89,43 @@ class S3HierarchyCRUD(S3Method):
         resource = self.resource
         tablename = resource.tablename
 
+        crud_string = self.crud_string
+
+        component = r.component
+        if component:
+            if r.component_id:
+                r.error(405, "HierarchyCRUD not yet supported for individual Components")
+            else:
+                record = None
+                # @ToDo: This won't work for e.g. components defined with link tables
+                ctable = component.table
+                _filter = (ctable[component.fkey] == r.id)
+        else:
+            record = r.record
+            # @todo: apply all resource filters?
+            _filter = None
+
+        hierarchy = S3Hierarchy(tablename = tablename,
+                                filter = _filter)
+        if not hierarchy.config:
+            r.error(405, "No hierarchy configured for %s" % tablename)
+
         # Widget ID
         widget_id = "%s-hierarchy" % tablename
 
         # Render the tree
-        try:
-            tree = self.render_tree(widget_id, record=r.record)
-        except SyntaxError:
-            r.error(405, "No hierarchy configured for %s" % tablename)
+        tree = self.render_tree(hierarchy, widget_id, record=record)
 
         # Page title
-        if r.record:
-            title = self.crud_string(tablename, "title_display")
+        if record:
+            title = crud_string(tablename, "title_display")
         else:
-            title = self.crud_string(tablename, "title_list")
+            title = crud_string(tablename, "title_list")
         output["title"] = title
 
         # Build the form
         form = FORM(DIV(tree,
-                        _class="s3-hierarchy-tree",
+                        _class = "s3-hierarchy-tree",
                         ),
                     _id = widget_id,
                     )
@@ -115,41 +133,67 @@ class S3HierarchyCRUD(S3Method):
 
         # Widget options and scripts
         T = current.T
-        crud_string = lambda name: self.crud_string(tablename, name)
+        resource_config = resource.get_config
+
+        if component:
+            # @ToDo: way of adding a new top-level node
+            if resource_config("hierarchy_method_no_open"):
+                # No point in seeing an Open menu item
+                open_url = None
+            else:
+                open_url = r.url(method = "read",
+                                 component_id = "[id]",
+                                 #representation = "popup",
+                                 )
+        else:
+            open_url = r.url(method = "read",
+                             id = "[id]",
+                             )
 
         widget_opts = {
             "widgetID": widget_id,
 
-            "openLabel": str(T("Open")),
-            "openURL": r.url(method="read", id="[id]"),
+            "openLabel": s3_str(T("Open")),
+            "openURL": open_url,
             "ajaxURL": r.url(id=None, representation="json"),
 
-            "editLabel": str(T("Edit")),
-            "editTitle": str(crud_string("title_update")),
+            "editLabel": s3_str(T("Edit")),
+            "editTitle": s3_str(crud_string(tablename, "title_update")),
 
-            "addLabel": str(T("Add")),
-            "addTitle": str(crud_string("label_create")),
+            "addLabel": s3_str(T("Add")),
+            "addTitle": s3_str(crud_string(tablename, "label_create")),
 
-            "deleteLabel": str(T("Delete")),
-            "deleteRoot": False if r.record else True
+            "deleteLabel": s3_str(T("Delete")),
+            "deleteRoot": False if record else True
         }
 
         # Check permissions and add CRUD URLs
-        resource_config = resource.get_config
         has_permission = current.auth.s3_has_permission
         if resource_config("editable", True) and \
            has_permission("update", tablename):
-            widget_opts["editURL"] = r.url(method = "update",
-                                           id = "[id]",
-                                           representation = "popup",
-                                           )
+            if component:
+                widget_opts["editURL"] = r.url(method = "update",
+                                               component_id = "[id]",
+                                               representation = "popup",
+                                               )
+            else:
+                widget_opts["editURL"] = r.url(method = "update",
+                                               id = "[id]",
+                                               representation = "popup",
+                                               )
 
         if resource_config("deletable", True) and \
            has_permission("delete", tablename):
-            widget_opts["deleteURL"] = r.url(method = "delete",
-                                             id = "[id]",
-                                             representation = "json",
-                                             )
+            if component:
+                widget_opts["deleteURL"] = r.url(method = "delete",
+                                                 component_id = "[id]",
+                                                 representation = "json",
+                                                 )
+            else:
+                widget_opts["deleteURL"] = r.url(method = "delete",
+                                                 id = "[id]",
+                                                 representation = "json",
+                                                 )
 
         if resource_config("insertable", True) and \
            has_permission("create", tablename):
@@ -206,7 +250,7 @@ class S3HierarchyCRUD(S3Method):
                 children = h.children(node_id)
                 if children:
                     nodes = []
-                    h._represent(node_ids=children)
+                    h._represent(node_ids = children)
                     for child_id in children:
                         label = h.label(child_id)
                         # @todo: include CRUD permissions?
@@ -219,33 +263,26 @@ class S3HierarchyCRUD(S3Method):
         return json.dumps(data, separators = SEPARATORS)
 
     # -------------------------------------------------------------------------
-    def render_tree(self, widget_id, record=None):
+    def render_tree(self, hierarchy, widget_id, record=None):
         """
             Render the tree
 
+            @param hierarchy: the S3Hierarchy instance
             @param widget_id: the widget ID
             @param record: the root record (if requested)
         """
 
-        resource = self.resource
-        tablename = resource.tablename
-
-        h = S3Hierarchy(tablename = tablename)
-        if not h.config:
-            raise SyntaxError()
-
         root = None
         if record:
             try:
-                root = record[h.pkey]
+                root = record[hierarchy.pkey]
             except AttributeError as e:
                 # Hierarchy misconfigured? Or has r.record been tampered with?
-                msg = "S3Hierarchy: key %s not found in record" % h.pkey
+                msg = "S3Hierarchy: key %s not found in record" % hierarchy.pkey
                 e.args = tuple([msg] + list(e.args[1:]))
                 raise
 
-        # @todo: apply all resource filters?
-        return h.html("%s-tree" % widget_id, root=root)
+        return hierarchy.html("%s-tree" % widget_id, root=root)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -424,7 +461,7 @@ class S3HierarchyCRUD(S3Method):
         codec = S3Codec.get_codec("xls")
         result = codec.encode(output,
                               title = resource.name,
-                              list_fields = hcolumns+columns,
+                              list_fields = hcolumns + columns,
                               )
 
         # Reponse headers and file name are set in codec
@@ -976,7 +1013,9 @@ class S3Hierarchy(object):
         # Create the link if it does not already exist
         query = ((linktable[lkey] == data[lkey]) &
                  (linktable[rkey] == data[rkey]))
-        row = current.db(query).select(linktable._id, limitby=(0, 1)).first()
+        row = current.db(query).select(linktable._id,
+                                       limitby = (0, 1)
+                                       ).first()
         if not row:
             onaccept = s3db.get_config(tablename, "create_onaccept")
             if onaccept is None:
@@ -1307,9 +1346,10 @@ class S3Hierarchy(object):
     # -------------------------------------------------------------------------
     def siblings(self,
                  node_id,
-                 category=DEFAULT,
-                 classify=False,
-                 inclusive=False):
+                 category = DEFAULT,
+                 classify = False,
+                 inclusive = False,
+                 ):
         """
             Get the sibling nodes of a node. If the node is a root node,
             this method returns all root nodes.
@@ -1354,9 +1394,10 @@ class S3Hierarchy(object):
     # -------------------------------------------------------------------------
     def findall(self,
                 node_id,
-                category=DEFAULT,
-                classify=False,
-                inclusive=False):
+                category = DEFAULT,
+                classify = False,
+                inclusive = False,
+                ):
         """
             Find descendant nodes of a node
 
@@ -1376,9 +1417,9 @@ class S3Hierarchy(object):
                 if n is None:
                     continue
                 result |= findall(n,
-                                  category=category,
-                                  classify=classify,
-                                  inclusive=inclusive)
+                                  category = category,
+                                  classify = classify,
+                                  inclusive = inclusive)
             return result
         nodes = self.nodes
         node = nodes.get(node_id)
@@ -1386,9 +1427,9 @@ class S3Hierarchy(object):
             return result
         if node["s"]:
             result |= findall(node["s"],
-                              category=category,
-                              classify=classify,
-                              inclusive=True)
+                              category = category,
+                              classify = classify,
+                              inclusive = True)
         if inclusive:
             this = (node_id, node["c"]) if classify else node_id
             if category is DEFAULT or category == node["c"]:
@@ -1460,7 +1501,8 @@ class S3Hierarchy(object):
             if LABEL in node:
                 label = node[LABEL]
             else:
-                self._represent(node_ids=[node_id], renderer=represent)
+                self._represent(node_ids = [node_id],
+                                renderer = represent)
             if LABEL in node:
                 label = node[LABEL]
             if type(label) is unicodeT:
@@ -1558,7 +1600,7 @@ class S3Hierarchy(object):
                          {node_id: [label, category, subnodes], ...}
         """
 
-        self._represent(renderer=represent)
+        self._represent(renderer = represent)
 
         roots = [root] if root else self.roots
 
@@ -1576,11 +1618,12 @@ class S3Hierarchy(object):
     # -------------------------------------------------------------------------
     def html(self,
              widget_id,
-             root=None,
-             represent=None,
-             hidden=True,
-             none=None,
-             _class=None):
+             root = None,
+             represent = None,
+             hidden = True,
+             none = None,
+             _class = None,
+             ):
         """
             Render this hierarchy as nested unsorted list
 
@@ -1594,22 +1637,23 @@ class S3Hierarchy(object):
             @return: the list (UL)
         """
 
-        self._represent(renderer=represent)
+        self._represent(renderer = represent)
 
         roots = [root] if root else self.roots
 
         html = self._html
         output = UL([html(node_id, widget_id, represent=represent)
                     for node_id in roots],
-                    _id=widget_id,
-                    _style="display:none" if hidden else None)
+                    _id = widget_id,
+                    _style = "display:none" if hidden else None
+                    )
         if _class:
             output.add_class(_class)
         if none:
             if none is True:
                 none = current.messages["NONE"]
             output.insert(0, LI(none,
-                                _id="%s-None" % widget_id,
+                                _id = "%s-None" % widget_id,
                                 _rel = "none",
                                 _class = "s3-hierarchy-node s3-hierarchy-none",
                                 ))
@@ -1656,13 +1700,14 @@ class S3Hierarchy(object):
     def export_node(self,
                     node_id,
                     prefix = "_hierarchy",
-                    depth=None,
-                    level=0,
-                    path=None,
-                    hcol=None,
+                    depth = None,
+                    level = 0,
+                    path = None,
+                    hcol = None,
                     columns = None,
                     data = None,
-                    node_list=None):
+                    node_list = None,
+                    ):
         """
             Export the hierarchy beneath a node
 
@@ -1728,13 +1773,13 @@ class S3Hierarchy(object):
         for child in children:
             self.export_node(child,
                              prefix = prefix,
-                             depth=depth,
-                             level=level+1,
-                             path=dict(path),
-                             hcol=hcol,
-                             columns=columns,
-                             data=data,
-                             node_list=node_list,
+                             depth = depth,
+                             level = level+1,
+                             path = dict(path),
+                             hcol = hcol,
+                             columns = columns,
+                             data = data,
+                             node_list = node_list,
                              )
         return node_list
 

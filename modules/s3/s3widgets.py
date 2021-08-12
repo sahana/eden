@@ -7457,15 +7457,15 @@ class S3CascadeSelectWidget(FormWidget):
     """ Cascade Selector for Hierarchies """
 
     def __init__(self,
-                 lookup=None,
-                 formstyle=None,
-                 levels=None,
-                 multiple=False,
-                 filter=None,
-                 leafonly=True,
-                 cascade=None,
-                 represent=None,
-                 inline=False,
+                 lookup = None,
+                 formstyle = None,
+                 levels = None,
+                 multiple = False,
+                 filter = None,
+                 leafonly = True,
+                 cascade = None,
+                 represent = None,
+                 inline = False,
                  ):
         """
             Constructor
@@ -7907,11 +7907,11 @@ class S3HierarchyWidget(FormWidget):
         T = current.T
 
         widget_opts = {"selected": selected,
-                       "selectedText": str(T("# selected")),
-                       "noneSelectedText": str(T("Select")),
-                       "noOptionsText": str(T("No options available")),
-                       "selectAllText": str(T("Select All")),
-                       "deselectAllText": str(T("Deselect All")),
+                       "selectedText": s3_str(T("# selected")),
+                       "noneSelectedText": s3_str(T("Select")),
+                       "noOptionsText": s3_str(T("No options available")),
+                       "selectAllText": s3_str(T("Select All")),
+                       "deselectAllText": s3_str(T("Deselect All")),
                        }
 
         # Only include non-default options
@@ -8029,11 +8029,10 @@ class S3OptionsMatrixWidget(FormWidget):
                 else:
                     checked = False
 
-                row_cells.append(TD(
-                                    INPUT(_type="checkbox",
-                                          _name=field.name,
-                                          _value=option,
-                                          value=checked
+                row_cells.append(TD(INPUT(_type = "checkbox",
+                                          _name = field.name,
+                                          _value = option,
+                                          value = checked
                                           )
                                     ))
             grid_rows.append(TR(row_cells))

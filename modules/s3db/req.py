@@ -600,19 +600,18 @@ class RequestModel(S3Model):
         fact_fields = report_fields + [(T("Requests"), "id")]
 
         # Reusable Field
-        represent = self.req_represent
+        req_represent = self.req_represent
         req_id = S3ReusableField("req_id", "reference %s" % tablename,
                                  label = T("Request"),
                                  ondelete = "CASCADE",
-                                 represent = represent,
+                                 represent = req_represent,
                                  requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db,
                                                           "req_req.id",
-                                                          lambda req_id, row:
-                                                            represent(req_id, row,
-                                                                      show_link=False),
-                                                          orderby="req_req.date",
-                                                          sort=True)
+                                                          req_represent,
+                                                          orderby = "req_req.date",
+                                                          sort = True
+                                                          )
                                                 ),
                                  sortby = "date",
                                  )
@@ -734,6 +733,14 @@ class RequestModel(S3Model):
                        req_approver_req = {"name": "approver",
                                            "joinby": "req_id",
                                            },
+
+                       # Shipments
+                       #inv_send_req = "req_id",
+                       #inv_send = {"link": "inv_send_req",
+                       #            "joinby": "req_id",
+                       #            "key": "send_id",
+                       #            "actuate": "hide",
+                       #            },
 
                        # Projects
                        req_project_req = {"joinby": "req_id",

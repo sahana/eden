@@ -573,6 +573,11 @@ logs_manager,Logistics Manager,Manages all Warehouses in NS,supply,,,,READ|CREAT
 logs_manager,Logistics Manager,Manages all Warehouses in NS,,,supply_catalog,,READ|CREATE|UPDATE,,,,,
 logs_manager,Logistics Manager,Manages all Warehouses in NS,,,supply_item_category,,READ|CREATE|UPDATE|DELETE,,,,,
 logs_manager,Logistics Manager,Manages all Warehouses in NS,vol,,,,NONE,,,,,
+logs_manager_national,Logistics Manager National Rights,For e.g. PIRAC where there is a Logistics Manager at branch level who needs to be able to manage Project Codes,inv,project,,,READ|CREATE|UPDATE|DELETE,,,,,
+logs_manager_national,Logistics Manager National Rights,For e.g. PIRAC where there is a Logistics Manager at branch level who needs to be able to manage Project Codes,,,project_project,,READ|CREATE,READ|UPDATE,,,,
+logs_manager_national,Logistics Manager National Rights,For e.g. PIRAC where there is a Logistics Manager at branch level who needs to be able to manage Project Codes,,,org_organisation,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
+logs_manager_national,Logistics Manager National Rights,For e.g. PIRAC where there is a Logistics Manager at branch level who needs to be able to manage Project Codes,req,,,,READ,,,,,"Need to have access to NS-filtered Projects"
+logs_manager_national,Logistics Manager National Rights,For e.g. PIRAC where there is a Logistics Manager at branch level who needs to be able to manage Project Codes,vol,,,,NONE,,,,,
 rms_user,RMS User,All NS bar HN applied at NS level,inv,inv_item,,,READ,,,,,
 rms_user,RMS User,All NS bar HN applied at NS level,,,inv_inv_item,,READ,,,,,
 rms_user,RMS User,All NS bar HN applied at NS level,,,org_facility,,READ,,,,,

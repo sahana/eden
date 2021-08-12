@@ -119,7 +119,7 @@ class S3Resource(object):
             @param id: record ID (or list of record IDs)
             @param uid: record UID (or list of record UIDs)
 
-            @param filter: filter query
+            @param filter: filter query (DAL only)
             @param vars: dictionary of URL query variables
 
             @param components: list of component aliases

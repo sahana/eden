@@ -122,43 +122,44 @@
                            deletable = opts.deleteRoot;
                         }
 
-                        var items = {
-                            'open': {
-                                label: self.options.openLabel,
+                        var items = {};
+                        if (opts.openURL) {
+                            items.open = {
+                                label: opts.openLabel,
                                 action: function(obj) {
                                     self._openNode($node);
                                 },
                                 separator_after: true
                             }
-                        };
+                        }
 
                         // @todo: check permission for node and disable if forbidden
                         if (opts.editURL) {
                             items.edit = {
-                                label: self.options.editLabel,
+                                label: opts.editLabel,
                                 action: function(obj) {
                                     self._editNode($node);
-                                },
+                                }
                             }
                         }
 
                         // @todo: check permission for node and disable if forbidden
                         if (deletable && opts.deleteURL) {
                             items.delete = {
-                                label: self.options.deleteLabel,
+                                label: opts.deleteLabel,
                                 separator_after: true,
                                 action: function(obj) {
                                     self._deleteNode($node);
-                                },
+                                }
                             }
                         }
 
                         if (opts.addURL) {
                             items.add = {
-                                label: self.options.addLabel,
+                                label: opts.addLabel,
                                 action: function(obj) {
                                     self._addNode($node);
-                                },
+                                }
                             }
                         }
 

@@ -1374,14 +1374,15 @@ class S3Request(object):
 
     # -------------------------------------------------------------------------
     def url(self,
-            id=None,
-            component=None,
-            component_id=None,
-            target=None,
-            method=None,
-            representation=None,
-            vars=None,
-            host=None):
+            id = None,
+            component = None,
+            component_id = None,
+            target = None,
+            method = None,
+            representation = None,
+            vars = None,
+            host = None,
+            ):
         """
             Returns the URL of this request, use parameters to override
             current requests attributes:

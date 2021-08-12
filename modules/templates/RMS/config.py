@@ -552,6 +552,7 @@ def config(settings):
     #
     # Enable the use of Organisation Branches
     settings.org.branches = True
+    settings.org.branches_tree_view = True
     # Set the length of the auto-generated org/site code the default is 10
     #settings.org.site_code_len = 3
     # Set the label for Sites
@@ -798,6 +799,8 @@ def config(settings):
                                36: T("Consignment"), # Borrowed
                                37: T("In Transit"),  # Loaning warehouse space to another agency
                                }
+    # Use structured Warehouse Locations
+    settings.inv.warehouse_locations = True
 
     # Disable Alternate Items
     settings.supply.use_alt_name = False
@@ -3319,6 +3322,19 @@ Thank you"""
         s3db = current.s3db
         table = s3db.inv_send
 
+        s3db.add_components(tablename,
+                            # Requests
+                            inv_send_req = {"joinby": "send_id",
+                                            "multiple": False,
+                                            },
+                            req_req = {"link": "inv_send_req",
+                                       "joinby": "send_id",
+                                       "key": "req_id",
+                                       "actuate": "hide",
+                                       "multiple": False,
+                                       },
+                            )
+
         # Use Custom Represent for Sites to send to
         from .controllers import org_SiteRepresent
         table.to_site_id.requires.other.label = org_SiteRepresent()
@@ -3328,9 +3344,36 @@ Thank you"""
         f.requires = IS_IN_SET(transport_opts)
         f.represent = S3Represent(options = transport_opts)
 
+        s3db.inv_send_req.requires.other.label = org_SiteRepresent()
+
+        from s3 import S3SQLCustomForm
+        crud_form = S3SQLCustomForm("send_req.req_id",
+                                    #"send_ref",
+                                    "site_id",
+                                    "type",
+                                    "to_site_id",
+                                    "organisation_id",
+                                    "sender_id",
+                                    "recipient_id",
+                                    "transport_type",
+                                    "transported_by",
+                                    "transport_ref",
+                                    "driver_name",
+                                    "driver_phone",
+                                    "vehicle_plate_no",
+                                    #"time_in",
+                                    #"time_out",
+                                    # Will only appear in Update forms:
+                                    "date",
+                                    "delivery_date",
+                                    "status",
+                                    "filing_status",
+                                    "comments",
+                                    )
+
         s3db.configure(tablename,
-                       list_fields = ["id",
-                                      "send_ref",
+                       crud_form = crud_form,
+                       list_fields = ["send_ref",
                                       "req_ref",
                                       #"sender_id",
                                       "site_id",
