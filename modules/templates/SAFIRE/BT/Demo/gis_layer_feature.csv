@@ -1,0 +1,8 @@
+Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Site,Points,Trackable,Style,Opacity,Folder,Visible,Enabled,Cluster Threshold,Refresh
+Airports,All Active Airports,transport,airport,airport,Airport,{name} (T('Airport')),name,~.obsolete=False,,True,,,,,False,,,
+Population,For summary page,stats,demographic_data,,,{location_id}: {value},"location_id,value",,,,,"[{'prop':'value','fillOpacity':0.5}]",0.5,,,False,0,0
+Heliports,All Active Heliports,transport,heliport,helicopter,Heliport,{name} (T('Heliport')),name,~.obsolete=False,,True,,,,,False,,,
+Hospitals,All Active Medical Facilities,hms,hospital,hospital,Medical Facility,{name} (T('Hospital')),name,~.obsolete=False,,True,,,,,False,,,
+Projects,,project,location,project,,{name} (T('Project'))<br />{location_id}<br />{multi_activity_type_id},"name,location_id,multi_activity_type_id",,,,,,,,False,,,
+Shelters,All Active Shelters,cr,shelter,shelter,Campground,{name} (T('Shelter'))<br />T('Population') {population}<br />T('Capacity') {capacity_day},"name,population,capacity_day",~.status__ne=1,,True,,,,,False,,,
+Training Events,Used for Search Results,hrm,training_event,,,{course_id} (T('Training Event'))<br />{site_id}<br />{start_date},"course_id,site_id,start_date",,,True,,,,,,False,,

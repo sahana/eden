@@ -64,6 +64,12 @@ def river():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def reservoir():
+    """ Reservoirs, RESTful controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def zone():
     """ RESTful CRUD controller """
 

@@ -106,10 +106,7 @@ class S3AssetModel(S3Model):
         organisation_id = self.org_organisation_id
         person_id = self.pr_person_id
 
-        messages = current.messages
-        NONE = messages["NONE"]
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
-        YES = T("Yes")
+        NONE = current.messages["NONE"]
 
         settings = current.deployment_settings
         org_site_label = settings.get_org_site_label()
@@ -164,8 +161,7 @@ class S3AssetModel(S3Model):
                            # @ToDo: We could set this automatically based on Item Category
                            default = ASSET_TYPE_OTHER,
                            label = T("Type"),
-                           represent = lambda opt: \
-                                       asset_type_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = asset_type_opts),
                            requires = IS_IN_SET(asset_type_opts),
                            readable = types,
                            writable = types,
@@ -182,7 +178,7 @@ class S3AssetModel(S3Model):
                      Field("kit", "boolean",
                            default = False,
                            label = T("Kit?"),
-                           represent = lambda opt: YES if opt else NONE,
+                           represent = lambda opt: T("Yes") if opt else NONE,
                            # @ToDo: deployment_setting
                            readable = False,
                            writable = False,
@@ -249,8 +245,7 @@ class S3AssetModel(S3Model):
                      # Populated onaccept of the log for reporting/filtering
                      Field("cond", "integer",
                            label = T("Condition"),
-                           represent = lambda opt: \
-                                       asset_condition_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = asset_condition_opts),
                            #readable = False,
                            writable = False,
                            ),
@@ -520,8 +515,7 @@ $.filterOptionsS3({
                      asset_id(),
                      Field("status", "integer",
                            label = T("Status"),
-                           represent = lambda opt: \
-                                       asset_log_status_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = asset_log_status_opts),
                            requires = IS_IN_SET(asset_log_status_opts),
                            ),
                      s3_datetime("datetime",
@@ -580,8 +574,7 @@ $.filterOptionsS3({
                            ),
                      Field("cond", "integer",  # condition is a MySQL reserved word
                            label = T("Condition"),
-                           represent = lambda opt: \
-                                       asset_condition_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = asset_condition_opts),
                            requires = IS_IN_SET(asset_condition_opts,
                                                 zero = "%s..." % T("Please select")),
                            ),

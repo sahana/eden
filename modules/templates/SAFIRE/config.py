@@ -242,13 +242,11 @@ def config(settings):
     settings.cr.people_registration = False
 
     # -------------------------------------------------------------------------
-    def customise_cr_shelter_resource(r, tablename):
+    #def customise_cr_shelter_resource(r, tablename):
 
         #table = current.s3db.cr_shelter
-        f = current.s3db.cr_shelter.shelter_service_id
-        f.readable = f.writable = False
 
-    settings.customise_cr_shelter_resource = customise_cr_shelter_resource
+    #settings.customise_cr_shelter_resource = customise_cr_shelter_resource
 
     # -------------------------------------------------------------------------
     # Events

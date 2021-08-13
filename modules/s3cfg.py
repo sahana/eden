@@ -4875,7 +4875,7 @@ class S3Config(Storage):
 
     def get_inv_warehouse_locations(self):
         """
-            Use strctured Warehouse Locations rather than just freetext field
+            Use structured Warehouse Locations rather than just freetext Bin field
         """
         return self.inv.get("warehouse_locations", False)
 

@@ -45,7 +45,7 @@ class S3WaterModel(S3Model):
              "water_river",
              "water_gauge",
              #"water_debris_basin",
-             #"water_reservoir",
+             "water_reservoir",
              )
 
     def model(self):
@@ -258,27 +258,27 @@ class S3WaterModel(S3Model):
         # -----------------------------------------------------------------------------
         # Reservoirs
         # Water Storage areas
-        #
-        #tablename = "water_reservoir"
-        #define_table(tablename,
-        #             Field("name",
-        #                   label = T("Name"),
-        #                   ),
-        #             location_id(),
-        #             s3_comments(),
-        #             *s3_meta_fields())
 
-        #crud_strings[tablename] = Storage(
-        #    label_create = T("Create Reservoir"),
-        #    title_display = T("Reservoir Details"),
-        #    title_list = T("Reservoirs"),
-        #    title_update = T("Edit Reservoir"),
-        #    title_map = T("Map of Reservoirs"),
-        #    label_list_button = T("List Reservoirs"),
-        #    msg_record_created = T("Reservoir added"),
-        #    msg_record_modified = T("Reservoir updated"),
-        #    msg_record_deleted = T("Reservoir deleted"),
-        #    msg_list_empty = T("No Reservoirs currently registered"))
+        tablename = "water_reservoir"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Name"),
+                           ),
+                     location_id(),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Reservoir"),
+            title_display = T("Reservoir Details"),
+            title_list = T("Reservoirs"),
+            title_update = T("Edit Reservoir"),
+            title_map = T("Map of Reservoirs"),
+            label_list_button = T("List Reservoirs"),
+            msg_record_created = T("Reservoir added"),
+            msg_record_modified = T("Reservoir updated"),
+            msg_record_deleted = T("Reservoir deleted"),
+            msg_list_empty = T("No Reservoirs currently registered"))
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

@@ -89,8 +89,6 @@ class S3HierarchyCRUD(S3Method):
         resource = self.resource
         tablename = resource.tablename
 
-        crud_string = self.crud_string
-
         component = r.component
         if component:
             if r.component_id:
@@ -115,6 +113,8 @@ class S3HierarchyCRUD(S3Method):
 
         # Render the tree
         tree = self.render_tree(hierarchy, widget_id, record=record)
+
+        crud_string = self.crud_string
 
         # Page title
         if record:
