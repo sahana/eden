@@ -921,7 +921,7 @@ def set_recv_attr(status):
     recvtable.eta.readable = False
     recvtable.req_ref.writable = True
     from s3db.inv import inv_ship_status
-    if status == ship_status["IN_PROCESS"]:
+    if status == inv_ship_status["IN_PROCESS"]:
         recvtable.send_ref.writable = True
         recvtable.recv_ref.readable = False
         recvtable.sender_id.readable = False
@@ -929,7 +929,7 @@ def set_recv_attr(status):
         # Make all fields writable False
         for field in recvtable.fields:
             recvtable[field].writable = False
-    if status == ship_status["SENT"]:
+    if status == inv_ship_status["SENT"]:
         recvtable.date.writable = True
         recvtable.recipient_id.readable = recvtable.recipient_id.writable = True
         recvtable.comments.writable = True
