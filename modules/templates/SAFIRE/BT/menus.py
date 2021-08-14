@@ -38,6 +38,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Disaster Assessments", c="dc", f="index"),
                 MM("Human Resources", c="hrm", f="staff"),
                 MM("Infrastructure", c="transport", f="index"),
+                MM("Population", c="stats", f="demographic_data"),
                 MM("Stores Management", c="inv", f="index"),
                 ),
                MM("DRR", link=False)(
@@ -45,7 +46,8 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Trainings", c="hrm", f="training_event", m="summary"),
                 ),
                MM("Other", link=False)(
-                MM("Disease", c="disease", f="index"),
+                MM("Cases", c="br", f="person", vars={"closed": 0}),
+                MM("Disease", c="disease", f="disease"),
                 MM("Shelters", c="cr", f="shelter"),
                 ),
                ]
@@ -217,10 +219,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
                        ),
-                   M("Population", c="stats", f="demographic_data")(
-                       M("Create", m="create"),
-                       #M("Import", m="import", p="create"),
-                       ),
                    M("Cultural Sites", c="org", f="facility", m="summary")(
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
@@ -242,12 +240,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
     # -------------------------------------------------------------------------
     def org(self):
         """ Organisations menu """
-
-        return self.transport()
-
-    # -------------------------------------------------------------------------
-    def stats(self):
-        """ Stats menu """
 
         return self.transport()
 

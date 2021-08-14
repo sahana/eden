@@ -41,6 +41,7 @@
         L4......................gis_location.L4 (org_organisation_location)
         L5......................gis_location.L5 (org_organisation_location)
         Website.................org_organisation.website
+        Contact.................org_organisation.contact
         Phone...................org_organisation.phone
         Phone2..................pr_contact.value
         Facebook................pr_contact.value
@@ -406,6 +407,12 @@
                 <xsl:if test="col[@field='Acronym']!=''">
                     <data field="acronym">
                         <xsl:value-of select="col[@field='Acronym']"/>
+                    </data>
+                </xsl:if>
+
+                <xsl:if test="col[@field='Contact']!=''">
+                    <data field="contact">
+                        <xsl:value-of select="col[@field='Contact']"/>
                     </data>
                 </xsl:if>
 
