@@ -485,19 +485,21 @@
         <xsl:variable name="CategoryName" select="col[@field='Category']/text()"/>
         <xsl:variable name="CategoryTUID" select="concat($CatalogName, '|', $CategoryName)"/>
 
-        <resource name="supply_item_category">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$CategoryTUID"/>
-            </xsl:attribute>
-            <data field="code"><xsl:value-of select="substring($CategoryName,1,16)"/></data>
-            <data field="name"><xsl:value-of select="$CategoryName"/></data>
-            <reference field="catalog_id" resource="supply_catalog">
+        <xsl:if test="$CategoryName!=''">
+            <resource name="supply_item_category">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$CatalogName"/>
+                    <xsl:value-of select="$CategoryTUID"/>
                 </xsl:attribute>
-            </reference>
-            <data field="can_be_asset" value="true">True</data>
-        </resource>
+                <data field="code"><xsl:value-of select="substring($CategoryName,1,16)"/></data>
+                <data field="name"><xsl:value-of select="$CategoryName"/></data>
+                <reference field="catalog_id" resource="supply_catalog">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$CatalogName"/>
+                    </xsl:attribute>
+                </reference>
+                <data field="can_be_asset" value="true">True</data>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 
@@ -536,12 +538,6 @@
                     <xsl:value-of select="$CatalogName"/>
                 </xsl:attribute>
             </reference>
-            <!-- Link to Supply Item Category -->
-            <reference field="item_category_id" resource="supply_item_category">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$CategoryTUID"/>
-                </xsl:attribute>
-            </reference>
             <xsl:if test="$BrandName!=''">
                 <reference field="brand_id" resource="supply_brand">
                     <xsl:attribute name="tuid">
@@ -549,24 +545,32 @@
                     </xsl:attribute>
                 </reference>
             </xsl:if>
-            <!-- Nest to Supply Catalog -->
-            <resource name="supply_catalog_item">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$ItemTUID"/>
-                </xsl:attribute>
-                <!-- Link to Supply Catalog -->
-                <reference field="catalog_id" resource="supply_catalog">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$CatalogName"/>
-                    </xsl:attribute>
-                </reference>
+            <xsl:if test="$CategoryName!=''">
                 <!-- Link to Supply Item Category -->
                 <reference field="item_category_id" resource="supply_item_category">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$CategoryTUID"/>
                     </xsl:attribute>
                 </reference>
-            </resource>
+                <!-- Nest to Supply Catalog -->
+                <resource name="supply_catalog_item">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$ItemTUID"/>
+                    </xsl:attribute>
+                    <!-- Link to Supply Catalog -->
+                    <reference field="catalog_id" resource="supply_catalog">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$CatalogName"/>
+                        </xsl:attribute>
+                    </reference>
+                    <!-- Link to Supply Item Category -->
+                    <reference field="item_category_id" resource="supply_item_category">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$CategoryTUID"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
         </resource>
 
     </xsl:template>

@@ -3,7 +3,7 @@
 #from collections import OrderedDict
 
 from gluon import current#, URL
-#from gluon.storage import Storage
+from gluon.storage import Storage
 
 def config(settings):
     """
@@ -29,10 +29,219 @@ def config(settings):
     modules["disease"] = {"name_nice": T("Disease"), "module_type": 10}
     modules["edu"] = {"name_nice": T("Schools"), "module_type": 10}
     modules["stats"] = {"name_nice": T("Statistics"), "module_type": 10}
-    modules["transport"] = {"name_nice": T("Transport"), "module_type": 10}
+    modules["transport"] = {"name_nice": T("Infrastructure"), "module_type": 10}
     modules["water"] = {"name_nice": T("Water"), "module_type": 10}
 
     settings.supply.catalog_multi = False
+
+    # -------------------------------------------------------------------------
+    def customise_asset_asset_resource(r, tablename):
+
+        s3db = current.s3db
+
+        s3db.asset_asset.site_id.represent.show_type = False
+
+        list_fields = [(T("Store"), "site_id"),
+                       (T("Asset Number"), "number"),
+                       (T("Item Name"), "item_id$name"),
+                       (T("Condition"), "cond"),
+                       (T("Assigned To"), "assigned_to_id"),
+                       ]
+
+        s3db.configure(tablename,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_asset_asset_resource = customise_asset_asset_resource
+
+    # -------------------------------------------------------------------------
+    def customise_dc_target_resource(r, tablename):
+
+        s3db = current.s3db
+
+        #s3db.dc_target.
+
+        template = r.get_vars.get("~.template_id$name")
+        if template:
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Create %s") % template,
+                title_display = T("%s Details") % template,
+                title_list = T("%ss") % template,
+                title_update = T("Edit %s") % template,
+                #title_upload = T("Import %ss") % template,
+                label_list_button = T("List %ss") % template,
+                label_delete_button = T("Delete %s") % template,
+                msg_record_created = T("%s added") % template,
+                msg_record_modified = T("%s updated") % template,
+                msg_record_deleted = T("%s deleted") % template,
+                msg_list_empty = T("No %ss currently registered") % template)
+
+        list_fields = ["location_id$L1",
+                       "location_id$L2",
+                       (T("Hazard Type"), "name"),
+                       (T("Reporting Date"), "date"),
+                       (T("Reported by"), "created_by"),
+                       ]
+
+        s3db.configure(tablename,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_dc_target_resource = customise_dc_target_resource
+
+    # -------------------------------------------------------------------------
+    def customise_edu_school_resource(r, tablename):
+
+        s3db = current.s3db
+
+        #s3db.edu_school.
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Education Facility"),
+            title_display = T("Education Facility Details"),
+            title_list = T("Education Facilities"),
+            title_update = T("Edit Education Facility"),
+            #title_upload = T("Import Education Facilities"),
+            label_list_button = T("List Education Facilities"),
+            label_delete_button = T("Delete Education Facility"),
+            msg_record_created = T("Education Facility added"),
+            msg_record_modified = T("Education Facility updated"),
+            msg_record_deleted = T("Education Facility deleted"),
+            msg_list_empty = T("No Education Facilities currently registered"))
+
+        list_fields = ["name",
+                       "location_id$L1",
+                       "location_id$L2",
+                       "location_id$L3",
+                       "location_id$L4",
+                       ]
+
+        s3db.configure(tablename,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_edu_school_resource = customise_edu_school_resource
+
+    # -------------------------------------------------------------------------
+    def customise_hms_hospital_resource(r, tablename):
+
+        s3db = current.s3db
+
+        #s3db.hms_hospital.
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Health Facility"),
+            title_display = T("Health Facility Details"),
+            title_list = T("Health Facilities"),
+            title_update = T("Edit Health Facility"),
+            #title_upload = T("Import Health Facilities"),
+            label_list_button = T("List Health Facilities"),
+            label_delete_button = T("Delete Health Facility"),
+            msg_record_created = T("Health Facility added"),
+            msg_record_modified = T("Health Facility updated"),
+            msg_record_deleted = T("Health Facility deleted"),
+            msg_list_empty = T("No Health Facilities currently registered"))
+
+        list_fields = ["name",
+                       "location_id$L1",
+                       "location_id$L2",
+                       "location_id$L3",
+                       "location_id$L4",
+                       ]
+
+        s3db.configure(tablename,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_hms_hospital_resource = customise_hms_hospital_resource
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_training_event_resource(r, tablename):
+
+        from s3 import S3DateTime
+        date_represent = S3DateTime.date_represent
+
+        s3db = current.s3db
+
+        table = s3db.hrm_training_event
+        table.site_id.represent.show_type = False
+        table.start_date.represent = date_represent
+        table.end_date.represent = date_represent
+
+        list_fields = [(T("Training Title"), "course_id"),
+                       (T("From Date"), "start_date"),
+                       (T("To Date"), "end_date"),
+                       (T("Location"), "site_id"),
+                       (T("Status"), "comments"),
+                       ]
+
+        s3db.configure(tablename,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_hrm_training_event_resource = customise_hrm_training_event_resource
+
+    # -------------------------------------------------------------------------
+    def customise_inv_inv_item_resource(r, tablename):
+
+        from s3 import S3Represent
+
+        s3db = current.s3db
+
+        s3db.inv_inv_item.site_id.represent.show_type = False
+        represent = S3Represent(lookup = "supply_item_category")
+        s3db.supply_item.item_category_id.represent = represent
+        s3db.supply_item_category.parent_item_category_id.represent = represent
+
+        list_fields = [(T("Store"), "site_id"),
+                       (T("Item Name"), "item_id$name"),
+                       (T("Item Category"), "item_id$item_category_id$parent_item_category_id"),
+                       (T("Item Sub-category"), "item_id$item_category_id"),
+                       (T("Quantity"), "quantity"),
+                       (T("UoM"), "item_pack_id"),
+                       ]
+
+        s3db.configure(tablename,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_inv_inv_item_resource = customise_inv_inv_item_resource
+
+    # -------------------------------------------------------------------------
+    def customise_org_facility_resource(r, tablename):
+
+        s3db = current.s3db
+
+        #s3db.org_facility.
+
+        facility_type = r.get_vars.get("site_facility_type.facility_type_id$name")
+        if facility_type:
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Create %s") % facility_type,
+                title_display = T("%s Details") % facility_type,
+                title_list = T("%ss") % facility_type,
+                title_update = T("Edit %s") % facility_type,
+                #title_upload = T("Import %ss") % facility_type,
+                label_list_button = T("List %ss") % facility_type,
+                label_delete_button = T("Delete %s") % facility_type,
+                msg_record_created = T("%s added") % facility_type,
+                msg_record_modified = T("%s updated") % facility_type,
+                msg_record_deleted = T("%s deleted") % facility_type,
+                msg_list_empty = T("No %ss currently registered") % facility_type)
+
+        list_fields = ["name",
+                       "location_id$L1",
+                       "location_id$L2",
+                       "location_id$L3",
+                       "location_id$L4",
+                       ]
+
+        s3db.configure(tablename,
+                       filter_widgets = None,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_org_facility_resource = customise_org_facility_resource
 
     # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
@@ -92,5 +301,58 @@ def config(settings):
                        )
 
     settings.customise_supply_catalog_item_resource = customise_supply_catalog_item_resource
+
+    # -------------------------------------------------------------------------
+    def customise_transport_bridge_resource(r, tablename):
+
+        s3db = current.s3db
+
+        #s3db.transport_bridge.
+
+        list_fields = ["name",
+                       "location_id$L1",
+                       "location_id$L2",
+                       "location_id$L3",
+                       "location_id$L4",
+                       ]
+
+        s3db.configure(tablename,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_transport_bridge_resource = customise_transport_bridge_resource
+
+    # -------------------------------------------------------------------------
+    def customise_water_reservoir_resource(r, tablename):
+
+        s3db = current.s3db
+
+        #s3db.hms_hospital.
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Water Source"),
+            title_display = T("Water Source Details"),
+            title_list = T("Water Sources"),
+            title_update = T("Edit Water Source"),
+            #title_upload = T("Import Water Sources"),
+            label_list_button = T("List Water Sources"),
+            label_delete_button = T("Delete Water Source"),
+            msg_record_created = T("Water Source added"),
+            msg_record_modified = T("Water Source updated"),
+            msg_record_deleted = T("Water Source deleted"),
+            msg_list_empty = T("No Water Sources currently registered"))
+
+        list_fields = ["name",
+                       "location_id$L1",
+                       "location_id$L2",
+                       "location_id$L3",
+                       "location_id$L4",
+                       ]
+
+        s3db.configure(tablename,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_water_reservoir_resource = customise_water_reservoir_resource
 
 # END =========================================================================

@@ -121,17 +121,17 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ Assessments menu """
 
         return M()(M("Initial Disaster Assessment (IDA)", c="dc", f="target",
-                     vars = {"template_id$name": "Initial Disaster Assessment (IDA)"})(
+                     vars = {"~.template_id$name": "Initial Disaster Assessment (IDA)"})(
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
                        ),
                    M("Preliminary Damage and Needs Assessment (PDNA)", c="dc", f="target",
-                     vars = {"template_id$name": "Preliminary Damage and Needs Assessment (PDNA)"})(
+                     vars = {"~.template_id$name": "Preliminary Damage and Needs Assessment (PDNA)"})(
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
                        ),
                    M("Detailed Damage Assessment", c="dc", f="target",
-                     vars = {"template_id$name": "Detailed Damage Assessment"})(
+                     vars = {"~.template_id$name": "Detailed Damage Assessment"})(
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
                        ),
@@ -174,6 +174,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                    M("Transfer Item", c="inv", f="send", m="create"),
                    M("Assign Item", c="asset", f="asset"),
                    M("Return Item", c="asset", f="asset"),
+                   M("Item Adjustment", c="inv", f="adj"),
                    M("Stores", c="inv", f="warehouse", m="summary")(
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
@@ -207,7 +208,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
                        ),
-                   M("Sanitation Facilities", c="org", f="facility", m="summary")(
+                   M("Sanitation Facilities", c="org", f="facility", m="summary",
+                     vars = {"site_facility_type.facility_type_id$name": "Sanitation Facility"})(
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
                        ),
@@ -219,7 +221,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
                        ),
-                   M("Cultural Sites", c="org", f="facility", m="summary")(
+                   M("Cultural Sites", c="org", f="facility", m="summary",
+                     vars = {"site_facility_type.facility_type_id$name": "Cultural Site"})(
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
                        ),

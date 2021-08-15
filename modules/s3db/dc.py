@@ -33,6 +33,7 @@ __all__ = ("DataCollectionTemplateModel",
            "DataCollectionModel",
            #"dc_TargetReport",
            "dc_TargetXLS",
+           "dc_answer_form",
            "dc_rheader",
            )
 
@@ -987,7 +988,6 @@ class DataCollectionModel(S3Model):
              "dc_target_l10n",
              "dc_response",
              "dc_response_id",
-             "dc_answer_form",
              )
 
     def model(self):
@@ -1243,7 +1243,6 @@ class DataCollectionModel(S3Model):
         # Pass names back to global scope (s3.*)
         return {"dc_response_id": response_id,
                 "dc_target_id": target_id,
-                "dc_answer_form": self.dc_answer_form,
                 }
 
     # -------------------------------------------------------------------------
@@ -1257,272 +1256,271 @@ class DataCollectionModel(S3Model):
                 "dc_target_id": dummy("target_id"),
                 }
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def dc_answer_form(r, tablename):
-        """
-            Customise the form for Answers to a Template
-            Web UI:
-                Create the crud_form, autototals, grids, hides & subheadings
-            Mobile Client:
-                Create the crud_form
-                (autototals, grids, hides & subheadings are in the table.settings)
+# =============================================================================
+def dc_answer_form(r, tablename):
+    """
+        Customise the form for Answers to a Template
+        Web UI:
+            Create the crud_form, autototals, grids, hides & subheadings
+        Mobile Client:
+            Create the crud_form
+            (autototals, grids, hides & subheadings are in the table.settings)
 
-            SCPHIMS calls this in customise_default_table_controller()
-            UCCE doesn't need Web UI Answers, so writes to s3_table.settings["mobile_form"] when survey is activated instead
-        """
+        SCPHIMS calls this in customise_default_table_controller()
+        UCCE doesn't need Web UI Answers, so writes to s3_table.settings["mobile_form"] when survey is activated instead
+    """
 
-        T = current.T
-        db = current.db
-        ttable = db.dc_template
+    T = current.T
+    db = current.db
+    ttable = db.dc_template
 
-        # Mobile form configuration required for both schema and data export
-        #mform = r.method == "mform"
-        mform = r.tablename == tablename
-        if mform:
-            # Going direct to Dynamic Table
-            dtable = db.s3_table
-            query = (dtable.name == tablename) & \
-                    (ttable.table_id == dtable.id)
-            template = db(query).select(ttable.id,
-                                        ttable.layout,
-                                        limitby = (0, 1),
-                                        ).first()
-            template_id = template.id
-        else:
-            # Going via Component
-            template_id = r.record.template_id
-            template = db(ttable.id == template_id).select(ttable.layout,
-                                                           limitby = (0, 1),
-                                                           ).first()
-        layout = template.layout
+    # Mobile form configuration required for both schema and data export
+    #mform = r.method == "mform"
+    mform = r.tablename == tablename
+    if mform:
+        # Going direct to Dynamic Table
+        dtable = db.s3_table
+        query = (dtable.name == tablename) & \
+                (ttable.table_id == dtable.id)
+        template = db(query).select(ttable.id,
+                                    ttable.layout,
+                                    limitby = (0, 1),
+                                    ).first()
+        template_id = template.id
+    else:
+        # Going via Component
+        template_id = r.record.template_id
+        template = db(ttable.id == template_id).select(ttable.layout,
+                                                       limitby = (0, 1),
+                                                       ).first()
+    layout = template.layout
 
-        if layout is None:
-            current.session.error = T("Template has no Layout")
-            redirect(URL(c="dc", f="template",
-                         args = [template_id],
-                         ))
+    if layout is None:
+        current.session.error = T("Template has no Layout")
+        redirect(URL(c="dc", f="template",
+                     args = [template_id],
+                     ))
 
-        # Add the Questions
-        # Prep for Auto-Totals
-        # Prep for Grids
-        qtable = db.dc_question
-        ltable = db.dc_question_l10n
-        ftable = db.s3_field
+    # Add the Questions
+    # Prep for Auto-Totals
+    # Prep for Grids
+    qtable = db.dc_question
+    ltable = db.dc_question_l10n
+    ftable = db.s3_field
 
-        language = current.session.s3.language
-        if language == current.deployment_settings.get_L10n_default_language():
-            translate = False
-        else:
-            translate = True
+    language = current.session.s3.language
+    if language == current.deployment_settings.get_L10n_default_language():
+        translate = False
+    else:
+        translate = True
 
-        query = (qtable.template_id == template_id) & \
-                (qtable.deleted == False)
-        left = [ftable.on(ftable.id == qtable.field_id),
-                ]
-        fields = [ftable.name,
-                  ftable.label,
-                  qtable.id,
-                  qtable.code,
-                  # @ToDo: Get all these from settings
-                  #qtable.totals,
-                  #qtable.grid,
-                  #qtable.show_hidden,
-                  qtable.settings,
-                  ]
+    query = (qtable.template_id == template_id) & \
+            (qtable.deleted == False)
+    left = [ftable.on(ftable.id == qtable.field_id),
+            ]
+    fields = [ftable.name,
+              ftable.label,
+              qtable.id,
+              qtable.code,
+              # @ToDo: Get all these from settings
+              #qtable.totals,
+              #qtable.grid,
+              #qtable.show_hidden,
+              qtable.settings,
+              ]
+    if translate:
+        left.append(ltable.on((ltable.question_id == qtable.id) & \
+                              (ltable.language == language)))
+        fields.append(ltable.name_l10n)
+    rows = db(query).select(*fields,
+                            left = left
+                            )
+
+    auto_totals = {}
+    codes = {}
+    grids = {}
+    grid_children = {}
+    show_hidden = {}
+    questions = {}
+    for question in rows:
+        field_name = question.get("s3_field.name")
+        code = question["dc_question.code"]
+        if code:
+            codes[code] = field_name
+        # @ToDo: Get all these from settings
+        #totals = question["dc_question.totals"]
+        #if totals:
+        #    auto_totals[field_name] = {"codes": totals,
+        #                               "fields": [],
+        #                               }
+        #grid = question["dc_question.grid"]
+        #if grid:
+        #    len_grid = len(grid)
+        #    if len_grid == 2:
+        #        # Grid Pseudo-Question
+        #        if not code:
+        #            # @ToDo: Make mandatory in onvalidation
+        #            raise ValueError("Code required for Grid Questions")
+        #        rows = [s3_str(T(v)) for v in grid[0]]
+        #        cols = [s3_str(T(v)) for v in grid[1]]
+        #        fields = [[0 for x in xrange(len(rows))] for y in xrange(len(cols))]
+        #        grids[code] = {"r": rows,
+        #                       "c": cols,
+        #                       "f": fields,
+        #                       }
+        #    elif len_grid == 3:
+        #        # Child Question
+        #        grid_children[field_name] = grid
+        #    else:
+        #        current.log.warning("Invalid grid data for %s - ignoring" % (code or field_name))
+        #hides = question["dc_question.show_hidden"]
+        #if hides:
+        #    show_hidden[field_name] = {"codes": hides,
+        #                               "fields": [],
+        #                               }
+
+        label = None
         if translate:
-            left.append(ltable.on((ltable.question_id == qtable.id) & \
-                                  (ltable.language == language)))
-            fields.append(ltable.name_l10n)
-        rows = db(query).select(*fields,
-                                left = left
-                                )
+            label = question.get("dc_question_l10n.name_l10n")
+        if not label:
+            label = question.get("s3_field.label")
+        questions[question["dc_question.id"]] = {"name": field_name,
+                                                 "code": code,
+                                                 "label": label,
+                                                 }
 
-        auto_totals = {}
-        codes = {}
-        grids = {}
-        grid_children = {}
-        show_hidden = {}
-        questions = {}
-        for question in rows:
-            field_name = question.get("s3_field.name")
-            code = question["dc_question.code"]
-            if code:
-                codes[code] = field_name
-            # @ToDo: Get all these from settings
-            #totals = question["dc_question.totals"]
-            #if totals:
-            #    auto_totals[field_name] = {"codes": totals,
-            #                               "fields": [],
-            #                               }
-            #grid = question["dc_question.grid"]
-            #if grid:
-            #    len_grid = len(grid)
-            #    if len_grid == 2:
-            #        # Grid Pseudo-Question
-            #        if not code:
-            #            # @ToDo: Make mandatory in onvalidation
-            #            raise ValueError("Code required for Grid Questions")
-            #        rows = [s3_str(T(v)) for v in grid[0]]
-            #        cols = [s3_str(T(v)) for v in grid[1]]
-            #        fields = [[0 for x in xrange(len(rows))] for y in xrange(len(cols))]
-            #        grids[code] = {"r": rows,
-            #                       "c": cols,
-            #                       "f": fields,
-            #                       }
-            #    elif len_grid == 3:
-            #        # Child Question
-            #        grid_children[field_name] = grid
-            #    else:
-            #        current.log.warning("Invalid grid data for %s - ignoring" % (code or field_name))
-            #hides = question["dc_question.show_hidden"]
-            #if hides:
-            #    show_hidden[field_name] = {"codes": hides,
-            #                               "fields": [],
-            #                               }
+    # Append questions to the form, with subheadings
+    crud_fields = []
+    cappend = crud_fields.append
+    subheadings = {}
+    fname = None
 
-            label = None
+    for posn in layout:
+        item = layout[posn]
+        item_type = item["type"]
+        if item_type == "question":
+            question = questions[item["id"]]
+            fname = question["name"]
+            if fname:
+                cappend((question["label"], fname))
+                # @ToDo: If type is options and 'other' field then add this, with suitable displayLogic
+            else:
+                # Grid Pseudo-Question
+                fname = question["code"]
+                cappend(S3SQLDummyField(fname))
+        elif item_type == "subheading":
+            text = None
             if translate:
-                label = question.get("dc_question_l10n.name_l10n")
-            if not label:
-                label = question.get("s3_field.label")
-            questions[question["dc_question.id"]] = {"name": field_name,
-                                                     "code": code,
-                                                     "label": label,
-                                                     }
+                l10n = item.get("l10n")
+                if l10n:
+                    text = l10n.get(language)
+            if text is None:
+                text = item["text"]
+            subheadings[fname] = text
+        elif item_type == "instructions":
+            do = None
+            say = None
+            do_item = item.get("do")
+            say_item = item.get("say")
+            if translate:
+                do_l10n = do_item.get("l10n")
+                if do_l10n:
+                    do = do_l10n.get(language)
+                say_l10n = say_item.get("l10n")
+                if say_l10n:
+                    say = say_l10n.get(language)
+            if do is None:
+                do = do_item.get("text")
+            if say is None:
+                say = say_item.get("text")
+            cappend(S3SQLInlineInstruction(do=item["do"], say=item["say"]))
+        elif item_type == "break":
+            cappend(S3SQLSectionBreak())
 
-        # Append questions to the form, with subheadings
-        crud_fields = []
-        cappend = crud_fields.append
-        subheadings = {}
-        fname = None
+    # Auto-Totals
+    autototals = {}
+    for field in auto_totals:
+        f = auto_totals[field]
+        append = f["fields"].append
+        for code in f["codes"]:
+            append(codes.get(code))
+        autototals[field] = f["fields"]
 
-        for posn in layout:
-            item = layout[posn]
-            item_type = item["type"]
-            if item_type == "question":
-                question = questions[item["id"]]
-                fname = question["name"]
-                if fname:
-                    cappend((question["label"], fname))
-                    # @ToDo: If type is options and 'other' field then add this, with suitable displayLogic
-                else:
-                    # Grid Pseudo-Question
-                    fname = question["code"]
-                    cappend(S3SQLDummyField(fname))
-            elif item_type == "subheading":
-                text = None
-                if translate:
-                    l10n = item.get("l10n")
-                    if l10n:
-                        text = l10n.get(language)
-                if text is None:
-                    text = item["text"]
-                subheadings[fname] = text
-            elif item_type == "instructions":
-                do = None
-                say = None
-                do_item = item.get("do")
-                say_item = item.get("say")
-                if translate:
-                    do_l10n = do_item.get("l10n")
-                    if do_l10n:
-                        do = do_l10n.get(language)
-                    say_l10n = say_item.get("l10n")
-                    if say_l10n:
-                        say = say_l10n.get(language)
-                if do is None:
-                    do = do_item.get("text")
-                if say is None:
-                    say = say_item.get("text")
-                cappend(S3SQLInlineInstruction(do=item["do"], say=item["say"]))
-            elif item_type == "break":
-                cappend(S3SQLSectionBreak())
+    # Grids
+    # Place the child fields in the correct places in their grids
+    if len(grids):
+        for child in grid_children:
+            code, row, col = grid_children[child]
+            try:
+                grids[code]["f"][col - 1][row - 1] = child
+            except:
+                current.log.warning("Invalid grid data for %s - ignoring" % code)
+
+    # Hides
+    hides = {}
+    for field in show_hidden:
+        f = show_hidden[field]
+        append = f["fields"].append
+        for code in f["codes"]:
+            fname = codes.get(code) or code
+            append(fname)
+        hides[field] = f["fields"]
+
+    if mform:
+        # Add response_id to form (but keep invisible) so that it can be used for the dataList represent
+        f = r.table.response_id
+        f.readable = f.writable = False
+        crud_fields.insert(0, "response_id")
+
+        crud_form = S3SQLCustomForm(*crud_fields)
+
+        current.s3db.configure(tablename,
+                               crud_form = crud_form,
+                               autototals = autototals,
+                               grids = grids,
+                               show_hidden = hides,
+                               subheadings = subheadings,
+                               )
+
+    else:
+        crud_form = S3SQLCustomForm(*crud_fields)
+
+        current.s3db.configure(tablename,
+                               crud_form = crud_form,
+                               subheadings = subheadings,
+                               )
+
+        s3 = current.response.s3
+
+        # Compact JSON encoding
+        SEPARATORS = (",", ":")
+        jappend = s3.jquery_ready.append
 
         # Auto-Totals
-        autototals = {}
-        for field in auto_totals:
-            f = auto_totals[field]
-            append = f["fields"].append
-            for code in f["codes"]:
-                append(codes.get(code))
-            autototals[field] = f["fields"]
+        for field in autototals:
+            jappend('''S3.autoTotals('%s',%s,'%s')''' % \
+                (field,
+                 json.dumps(autototals[field], separators=SEPARATORS),
+                 tablename))
 
         # Grids
-        # Place the child fields in the correct places in their grids
         if len(grids):
-            for child in grid_children:
-                code, row, col = grid_children[child]
-                try:
-                    grids[code]["f"][col - 1][row - 1] = child
-                except:
-                    current.log.warning("Invalid grid data for %s - ignoring" % code)
+            jappend('''S3.dc_grids(%s,'%s')''' % \
+                (json.dumps(grids, separators=SEPARATORS),
+                 tablename))
 
-        # Hides
-        hides = {}
-        for field in show_hidden:
-            f = show_hidden[field]
-            append = f["fields"].append
-            for code in f["codes"]:
-                fname = codes.get(code) or code
-                append(fname)
-            hides[field] = f["fields"]
+        # Show Hidden
+        for field in hides:
+            jappend('''S3.showHidden('%s',%s,'%s')''' % \
+                (field,
+                 json.dumps(hides[field], separators=SEPARATORS),
+                 tablename))
 
-        if mform:
-            # Add response_id to form (but keep invisible) so that it can be used for the dataList represent
-            f = r.table.response_id
-            f.readable = f.writable = False
-            crud_fields.insert(0, "response_id")
-
-            crud_form = S3SQLCustomForm(*crud_fields)
-
-            current.s3db.configure(tablename,
-                                   crud_form = crud_form,
-                                   autototals = autototals,
-                                   grids = grids,
-                                   show_hidden = hides,
-                                   subheadings = subheadings,
-                                   )
-
+        # Add JS
+        if s3.debug:
+            s3.scripts.append("/%s/static/scripts/S3/s3.dc_answer.js" % r.application)
         else:
-            crud_form = S3SQLCustomForm(*crud_fields)
-
-            current.s3db.configure(tablename,
-                                   crud_form = crud_form,
-                                   subheadings = subheadings,
-                                   )
-
-            s3 = current.response.s3
-
-            # Compact JSON encoding
-            SEPARATORS = (",", ":")
-            jappend = s3.jquery_ready.append
-
-            # Auto-Totals
-            for field in autototals:
-                jappend('''S3.autoTotals('%s',%s,'%s')''' % \
-                    (field,
-                     json.dumps(autototals[field], separators=SEPARATORS),
-                     tablename))
-
-            # Grids
-            if len(grids):
-                jappend('''S3.dc_grids(%s,'%s')''' % \
-                    (json.dumps(grids, separators=SEPARATORS),
-                     tablename))
-
-            # Show Hidden
-            for field in hides:
-                jappend('''S3.showHidden('%s',%s,'%s')''' % \
-                    (field,
-                     json.dumps(hides[field], separators=SEPARATORS),
-                     tablename))
-
-            # Add JS
-            if s3.debug:
-                s3.scripts.append("/%s/static/scripts/S3/s3.dc_answer.js" % r.application)
-            else:
-                s3.scripts.append("/%s/static/scripts/S3/s3.dc_answer.min.js" % r.application)
+            s3.scripts.append("/%s/static/scripts/S3/s3.dc_answer.min.js" % r.application)
 
 # =============================================================================
 class dc_TargetReport(S3Method):
