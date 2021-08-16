@@ -2291,7 +2291,8 @@ class TestFacilityInfo(S3Method):
                  "phone": "phone #",        - the facility phone number
                  "email": "email",          - the facility email address
                  "organisation":
-                    {"name": "ORG-NAME",    - the organisation name
+                    {"id": "ORG-ID",        - the organisation ID tag
+                     "name": "ORG-NAME",    - the organisation name
                      "type": "ORG-TYPE",    - the organisation type
                      "website": "URL"       - the organisation website URL
                      },
@@ -2379,22 +2380,29 @@ class TestFacilityInfo(S3Method):
         otable = s3db.org_organisation
         ttable = s3db.org_organisation_type
         ltable = s3db.org_organisation_organisation_type
+        ottable = s3db.org_organisation_tag
         left = [ttable.on((ltable.organisation_id == otable.id) & \
                           (ltable.deleted == False) & \
                           (ttable.id == ltable.organisation_type_id)),
+                ottable.on((ottable.organisation_id == otable.id) & \
+                           (ottable.tag == "OrgID") & \
+                           (ottable.deleted == False)),
                 ]
         query = (otable.id == facility.organisation_id) & \
                 (otable.deleted == False)
         row = db(query).select(otable.name,
                                otable.website,
                                ttable.name,
+                               ottable.value,
                                left = left,
                                limitby = (0, 1),
                                ).first()
         if row:
             organisation = row.org_organisation
             orgtype = row.org_organisation_type
-            orgdata = {"name": organisation.name,
+            orgid = row.org_organisation_tag
+            orgdata = {"id": orgid.value,
+                       "name": organisation.name,
                        "type": orgtype.name,
                        "website": organisation.website,
                        }
