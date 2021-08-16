@@ -114,6 +114,7 @@
                 });
             }
             toggleConsentOption();
+            toggleDCCOption();
         };
         $('#test_result_result').off(ns).on('change' + ns, function() {
             togglePersonalOption();
