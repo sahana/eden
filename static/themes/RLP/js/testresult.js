@@ -66,15 +66,18 @@
         var toggleDCCOption = function() {
 
             var cwaOption = reportToCWA.val(),
-                dccRow = $('#test_result_dcc_option').closest('.form-row');
+                dccOption = $('#test_result_dcc_option'),
+                dccRow = dccOption.closest('.form-row');
             switch(cwaOption) {
                 case "ANONYMOUS":
+                    dccOption.prop('checked', false);
                     dccRow.hide();
                     break;
                 case "PERSONAL":
                     dccRow.show();
                     break;
                 default:
+                    dccOption.prop('checked', false);
                     dccRow.hide();
                     break;
             }
