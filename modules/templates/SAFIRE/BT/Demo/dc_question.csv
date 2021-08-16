@@ -1,0 +1,7 @@
+Template,Question,Code,Type,Options,Required,Settings,Tooltip
+Initial Disaster Assessment (IDA),Type of Hazard,I1,SELECT,"['Disease Outbreak','Forest Fire','Earthquake','Windstorm','Drought','Landslide','Hailstorm','Heavy Rainfall','Human wildlife conflict','Structural Fire','Pest','GLOF','Thunder & Lightning','Tropical Storm','Flood']",Y,,
+Initial Disaster Assessment (IDA),Date of Incident,I2,DATE,,Y,,
+Preliminary Damage and Needs Assessment (PDNA),Type of Hazard,P1,SELECT,"['Disease Outbreak','Forest Fire','Earthquake','Windstorm','Drought','Landslide','Hailstorm','Heavy Rainfall','Human wildlife conflict','Structural Fire','Pest','GLOF','Thunder & Lightning','Tropical Storm','Flood']",Y,,
+Preliminary Damage and Needs Assessment (PDNA),Date of Incident,P2,DATE,,Y,,
+Detailed Damage Assessment,Type of Infrastructure,D1,SELECT,"['Water','Sanitation','Education','Health','Culture','Air Transport','Communication Infrastructure','Food Storages (FCB)','Power','Road']",Y,,
+

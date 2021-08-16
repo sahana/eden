@@ -159,7 +159,7 @@ class DataCollectionTemplateModel(S3Model):
                   )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         template_id = S3ReusableField("template_id", "reference %s" % tablename,
                                       label = T("Template"),
                                       ondelete = "CASCADE",
@@ -272,10 +272,10 @@ class DataCollectionTemplateModel(S3Model):
                      #      default = True,
                      #      label = T("Sort Options?"),
                      #      represent = s3_yes_no_represent,
-                     #      comment = DIV(_class="tooltip",
-                     #                    _title="%s|%s" % (T("Sort Options?"),
-                     #                                      T("Whether options should be sorted alphabetically"),
-                     #                                      ),
+                     #      comment = DIV(_class = "tooltip",
+                     #                    _title = "%s|%s" % (T("Sort Options?"),
+                     #                                        T("Whether options should be sorted alphabetically"),
+                     #                                        ),
                      #                    ),
                      #      ),
                      # Field used by UCCE:
@@ -288,11 +288,11 @@ class DataCollectionTemplateModel(S3Model):
                      #Field("grid", "json",
                      #      label = T("Grid"),
                      #      requires = IS_EMPTY_OR(IS_JSONS3()),
-                     #      comment = DIV(_class="tooltip",
-                     #                    _title="%s|%s%s" % (T("Grid"),
-                     #                                        T("For Grid Pseudo-Question, this is the Row labels & Column labels"),
-                     #                                        T("For Questions within the Grid, this is their position in the Grid, encoded as Grid,Row,Col"), # @ToDo: Widget?
-                     #                                        ),
+                     #      comment = DIV(_class = "tooltip",
+                     #                    _title = "%s|%s%s" % (T("Grid"),
+                     #                                          T("For Grid Pseudo-Question, this is the Row labels & Column labels"),
+                     #                                          T("For Questions within the Grid, this is their position in the Grid, encoded as Grid,Row,Col"), # @ToDo: Widget?
+                     #                                          ),
                      #                    ),
                      #      ),
                      # Field used by SCPHIMS:
@@ -300,10 +300,10 @@ class DataCollectionTemplateModel(S3Model):
                      #Field("totals", "json",
                      #      label = T("Totals"),
                      #      requires = IS_EMPTY_OR(IS_JSONS3()),
-                     #      comment = DIV(_class="tooltip",
-                     #                    _title="%s|%s" % (T("Totals"),
-                     #                                      T("List of fields (codes) which this one is the Total of"),
-                     #                                      ),
+                     #      comment = DIV(_class = "tooltip",
+                     #                    _title = "%s|%s" % (T("Totals"),
+                     #                                        T("List of fields (codes) which this one is the Total of"),
+                     #                                        ),
                      #                    ),
                      #      ),
                      # Field used by SCPHIMS:
@@ -311,20 +311,20 @@ class DataCollectionTemplateModel(S3Model):
                      #Field("show_hidden", "json",
                      #      label = T("Show Hidden"),
                      #      requires = IS_EMPTY_OR(IS_JSONS3()),
-                     #      comment = DIV(_class="tooltip",
-                     #                    _title="%s|%s" % (T("Show Hidden"),
-                     #                                      T("List of fields (codes) which this one unhides when selected"),
-                     #                                      ),
+                     #      comment = DIV(_class = "tooltip",
+                     #                    _title = "%s|%s" % (T("Show Hidden"),
+                     #                                        T("List of fields (codes) which this one unhides when selected"),
+                     #                                        ),
                      #                    ),
                      #      ),
                      Field("require_not_empty", "boolean",
                            default = False,
                            label = T("Required?"),
                            represent = s3_yes_no_represent,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Required?"),
-                                                           T("Is the field mandatory? (Cannot be left empty)"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Required?"),
+                                                             T("Is the field mandatory? (Cannot be left empty)"),
+                                                             ),
                                          ),
                            ),
                      Field("file", "upload",
@@ -333,7 +333,7 @@ class DataCollectionTemplateModel(S3Model):
                            length = current.MAX_FILENAME_LENGTH,
                            represent = self.doc_image_represent,
                            requires = IS_EMPTY_OR(
-                                        IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS)),
+                                        IS_IMAGE(extensions = (s3.IMAGE_EXTENSIONS)),
                                         # Distinguish from prepop
                                         null = "",
                                       ),
@@ -345,10 +345,10 @@ class DataCollectionTemplateModel(S3Model):
                            ),
                      s3_comments(label = T("Tooltip"),
                                  represent = s3_text_represent,
-                                 comment = DIV(_class="tooltip",
-                                               _title="%s|%s" % (T("Tooltip"),
-                                                                 T("Explanation of the field to be displayed in forms"),
-                                                                 ),
+                                 comment = DIV(_class = "tooltip",
+                                               _title = "%s|%s" % (T("Tooltip"),
+                                                                   T("Explanation of the field to be displayed in forms"),
+                                                                   ),
                                                ),
                                  ),
                      *s3_meta_fields())
@@ -539,7 +539,7 @@ class DataCollectionTemplateModel(S3Model):
     def dc_template_onaccept(form):
         """
             On-accept routine for dc_template:
-             - Set the Dynamnic Table to the same Title as the Template
+             - Set the Dynamic Table to the same Title as the Template
              - Convert Question Codes to IDs in the layout
         """
 
@@ -555,7 +555,7 @@ class DataCollectionTemplateModel(S3Model):
         record = db(ttable.id == template_id).select(ttable.name,
                                                      ttable.layout,
                                                      ttable.table_id,
-                                                     limitby = (0, 1),
+                                                     limitby = (0, 1)
                                                      ).first()
 
         # Sync the name of the Template to that of the Dynamic Table
@@ -616,7 +616,7 @@ class DataCollectionTemplateModel(S3Model):
         # Load full record
         ttable = s3db.dc_template
         record = db(ttable.id == template_id).select(ttable.deleted_fk,
-                                                     limitby = (0, 1),
+                                                     limitby = (0, 1)
                                                      ).first()
 
         deleted_fk = json.loads(record.deleted_fk)
@@ -707,10 +707,13 @@ class DataCollectionTemplateModel(S3Model):
                 else:
                     # Nothing special needed client-side
                     piped_question = db(qtable.id == pipe_image["id"]).select(qtable.file,
-                                                                              limitby=(0, 1)
+                                                                              limitby = (0, 1)
                                                                               ).first()
                     if piped_question:
-                        mobile_settings["image"] = {"url": URL(c="default", f="download", args=piped_question.file),
+                        mobile_settings["image"] = {"url": URL(c = "default",
+                                                               f = "download",
+                                                               args = piped_question.file,
+                                                               ),
                                                     }
 
         requires = question_settings.get("requires")
@@ -783,7 +786,7 @@ class DataCollectionTemplateModel(S3Model):
                     # Lookup the table_id
                     ttable = db.dc_template
                     template = db(ttable.id == question.template_id).select(ttable.table_id,
-                                                                            limitby=(0, 1)
+                                                                            limitby = (0, 1)
                                                                             ).first()
                     from uuid import uuid1
                     name = "f%s" % str(uuid1()).replace("-", "_")
@@ -867,7 +870,7 @@ class DataCollectionTemplateModel(S3Model):
             # Lookup the table_id
             ttable = db.dc_template
             template = db(ttable.id == question.template_id).select(ttable.table_id,
-                                                                    limitby=(0, 1)
+                                                                    limitby = (0, 1)
                                                                     ).first()
             from uuid import uuid1
             name = "f%s" % str(uuid1()).replace("-", "_")
@@ -942,7 +945,7 @@ class DataCollectionTemplateModel(S3Model):
                                     qtable.options,
                                     ltable.options_l10n,
                                     ltable.language,
-                                    limitby=(0, 1)
+                                    limitby = (0, 1)
                                     ).first()
 
         if question["dc_question.field_type"] in (6, 12):
@@ -1160,7 +1163,9 @@ class DataCollectionModel(S3Model):
 
         # Configuration
         self.configure(tablename,
-                       create_next = URL(c="dc", f="respnse", args=["[id]", "answer"]),
+                       create_next = URL(c="dc", f="respnse",
+                                         args = ["[id]", "answer"],
+                                         ),
                        # Question Answers are in a Dynamic Component
                        # - however they all have the same component name so add correct one in controller instead!
                        #dynamic_components = True,
@@ -1607,7 +1612,7 @@ class dc_TargetReport(S3Method):
                 (ttable.table_id == dtable.id)
         template = db(query).select(ttable.layout,
                                     dtable.name,
-                                    limitby=(0, 1),
+                                    limitby = (0, 1)
                                     ).first()
 
         # Responses (for Stats)
@@ -2320,7 +2325,7 @@ def dc_rheader(r, tabs=None):
                             (dtable.deleted == False)
                     data = db(query).select(value_field,
                                             date_field,
-                                            limitby=(0, 1),
+                                            limitby = (0, 1),
                                             orderby = ~date_field, # @ToDo: Handle case where system stores future predictions
                                             ).first()
                     if data:
@@ -2339,7 +2344,7 @@ def dc_rheader(r, tabs=None):
                         (etable.id == event_id)
                 event = db(query).select(etable.id,
                                          date_field,
-                                         limitby=(0, 1)
+                                         limitby = (0, 1)
                                          ).first()
 
                 def event_name(record):

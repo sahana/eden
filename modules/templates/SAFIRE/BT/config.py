@@ -25,7 +25,7 @@ def config(settings):
 
     modules = settings.modules
     modules["br"] = {"name_nice": T("Case Management"), "module_type": 10}
-    modules["dc"] = {"name_nice": T("Assessments"), "module_type": 10}
+    modules["dc"] = {"name_nice": T("Disaster Assessments"), "module_type": 10}
     modules["disease"] = {"name_nice": T("Disease"), "module_type": 10}
     modules["edu"] = {"name_nice": T("Schools"), "module_type": 10}
     modules["stats"] = {"name_nice": T("Statistics"), "module_type": 10}
@@ -59,22 +59,29 @@ def config(settings):
 
         s3db = current.s3db
 
-        #s3db.dc_target.
+        template_name = r.get_vars.get("~.template_id$name")
+        if template_name:
+            ttable = s3db.dc_template
+            template = current.db(ttable.name == template_name).select(ttable.id,
+                                                                  limitby = (0, 1)
+                                                                  ).first()
+            if template:
+                f = s3db.dc_target.template_id
+                f.default = template.id
+                f.readable = f.writable = False
 
-        template = r.get_vars.get("~.template_id$name")
-        if template:
             current.response.s3.crud_strings[tablename] = Storage(
-                label_create = T("Create %s") % template,
-                title_display = T("%s Details") % template,
-                title_list = T("%ss") % template,
-                title_update = T("Edit %s") % template,
-                #title_upload = T("Import %ss") % template,
-                label_list_button = T("List %ss") % template,
-                label_delete_button = T("Delete %s") % template,
-                msg_record_created = T("%s added") % template,
-                msg_record_modified = T("%s updated") % template,
-                msg_record_deleted = T("%s deleted") % template,
-                msg_list_empty = T("No %ss currently registered") % template)
+                label_create = T("Create %s") % template_name,
+                title_display = T("%s Details") % template_name,
+                title_list = T("%ss") % template_name,
+                title_update = T("Edit %s") % template_name,
+                #title_upload = T("Import %ss") % template_name,
+                label_list_button = T("List %ss") % template_name,
+                label_delete_button = T("Delete %s") % template_name,
+                msg_record_created = T("%s added") % template_name,
+                msg_record_modified = T("%s updated") % template_name,
+                msg_record_deleted = T("%s deleted") % template_name,
+                msg_list_empty = T("No %ss currently registered") % template_name)
 
         list_fields = ["location_id$L1",
                        "location_id$L2",
