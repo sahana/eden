@@ -10,12 +10,9 @@
          Question....................dc_question.name
          Code........................dc_question.code
          Type........................dc_question.field_type
-         Options.....................dc_question.options
-         #Sort........................dc_question.sort_options
+         Options.....................dc_question.options (JSON. Use List to force order or Dict to alphasort)
          Required....................dc_question.require_not_empty
-         Totals......................dc_question.totals
-         Grid........................dc_question.grid
-         Show Hidden.................dc_question.show_hidden
+         Settings....................dc_question.settings (JSON)
          Tooltip.....................dc_question.comments
 
     *********************************************************************** -->
@@ -51,10 +48,14 @@
             <data field="name"><xsl:value-of select="col[@field='Question']"/></data>
             <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
             <data field="options"><xsl:value-of select="col[@field='Options']"/></data>
+            <data field="settings"><xsl:value-of select="col[@field='Settings']"/></data>
+            <data field="comments"><xsl:value-of select="col[@field='Tooltip']"/></data>
+
+            <!-- Deprecated
             <data field="totals"><xsl:value-of select="col[@field='Totals']"/></data>
             <data field="grid"><xsl:value-of select="col[@field='Grid']"/></data>
             <data field="show_hidden"><xsl:value-of select="col[@field='Show Hidden']"/></data>
-            <data field="comments"><xsl:value-of select="col[@field='Tooltip']"/></data>
+            -->
 
             <!-- Sort Options
             <xsl:variable name="SortOptions">
@@ -112,9 +113,10 @@
                 <xsl:when test="$Type='NUMBER' or $Type='INTEGER'">
                     <data field="field_type">2</data>
                 </xsl:when>
+                <!-- Not yet supported
                 <xsl:when test="$Type='FRACTION' or $Type='FLOAT'">
                     <data field="field_type">3</data>
-                </xsl:when>
+                </xsl:when> -->
                 <xsl:when test="$Type='YES/NO' or $Type='Y/N' or $Type='BOOLEAN'">
                     <data field="field_type">4</data>
                 </xsl:when>
@@ -127,9 +129,10 @@
                 <xsl:when test="$Type='DATE'">
                     <data field="field_type">7</data>
                 </xsl:when>
+                <!-- Not yet supported
                 <xsl:when test="$Type='DATETIME'">
                     <data field="field_type">8</data>
-                </xsl:when>
+                </xsl:when> -->
                 <xsl:when test="$Type='GRID' or $Type='TABLE'">
                     <data field="field_type">9</data>
                 </xsl:when>
@@ -143,23 +146,6 @@
                     <!-- Default to String -->
                     <data field="field_type">1</data>
                 </xsl:otherwise>
-            </xsl:choose>
-
-            <!-- Required -->
-            <xsl:variable name="Required">
-                <xsl:call-template name="uppercase">
-                    <xsl:with-param name="string">
-                        <xsl:value-of select="col[@field='Required']/text()"/>
-                    </xsl:with-param>
-                </xsl:call-template>
-            </xsl:variable>
-            <xsl:choose>
-                <xsl:when test="starts-with($Required, 'Y') or starts-with($Required, 'T')">
-                    <data field="require_not_empty" value="true">True</data>
-                </xsl:when>
-                <xsl:when test="starts-with($Required, 'N') or starts-with($Required, 'F')">
-                    <data field="require_not_empty" value="false">False</data>
-                </xsl:when>
             </xsl:choose>
 
         </resource>

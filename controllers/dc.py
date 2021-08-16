@@ -69,7 +69,8 @@ def template():
         return True
     s3.prep = prep
 
-    return s3_rest_controller(rheader = s3db.dc_rheader)
+    from s3db.dc import dc_rheader
+    return s3_rest_controller(rheader = dc_rheader)
 
 # -----------------------------------------------------------------------------
 def question():
@@ -78,7 +79,8 @@ def question():
         - used for imports & to manage translations
     """
 
-    return s3_rest_controller(rheader = s3db.dc_rheader,
+    from s3db.dc import dc_rheader
+    return s3_rest_controller(rheader = dc_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -88,6 +90,7 @@ def question_l10n():
         - used for imports
     """
 
+    #from s3db.dc import dc_rheader
     return s3_rest_controller(#rheader = s3db.dc_rheader,
                               )
 
@@ -130,7 +133,8 @@ def target():
         return True
     s3.prep = prep
 
-    return s3_rest_controller(rheader = s3db.dc_rheader,
+    from s3db.dc import dc_rheader
+    return s3_rest_controller(rheader = dc_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -186,13 +190,15 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                 )
 
                 # Custom Form with Questions & Subheadings sorted correctly
-                s3db.dc_answer_form(r, tablename)
+                from s3db.dc import dc_answer_form
+                dc_answer_form(r, tablename)
 
         return True
     s3.prep = prep
 
+    from s3db.dc import dc_rheader
     return s3_rest_controller("dc", "response",
-                              rheader = s3db.dc_rheader,
+                              rheader = dc_rheader,
                               )
 
 # END =========================================================================
