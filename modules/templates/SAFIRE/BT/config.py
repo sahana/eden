@@ -32,6 +32,8 @@ def config(settings):
     modules["transport"] = {"name_nice": T("Transport"), "module_type": 10}
     modules["water"] = {"name_nice": T("Water"), "module_type": 10}
 
+    settings.hrm.id_cards = True
+
     settings.supply.catalog_multi = False
 
     # -------------------------------------------------------------------------
@@ -163,6 +165,19 @@ def config(settings):
                        )
 
     settings.customise_hms_hospital_resource = customise_hms_hospital_resource
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_human_resource_controller(**attr):
+
+        #if r.representation == "card":
+        # Configure ID card layout
+        from templates.RMS.idcards import IDCardLayout
+        #resource.configure(pdf_card_layout = IDCardLayout)
+        current.s3db.configure("hrm_human_resource", pdf_card_layout = IDCardLayout)
+
+        return attr
+
+    settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
 
     # -------------------------------------------------------------------------
     def customise_hrm_training_event_resource(r, tablename):

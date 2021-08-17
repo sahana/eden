@@ -4290,12 +4290,12 @@ class PRImageModel(S3Model):
         # Image
         #
         pr_image_type_opts = {
-            1:T("Photograph"),
-            2:T("Sketch"),
-            3:T("Fingerprint"),
-            4:T("X-Ray"),
-            5:T("Document Scan"),
-            9:T("other")
+            1: T("Photograph"),
+            2: T("Sketch"),
+            3: T("Fingerprint"),
+            4: T("X-Ray"),
+            5: T("Document Scan"),
+            9: T("other")
         }
 
         def get_file(table):

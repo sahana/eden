@@ -269,6 +269,7 @@ if len(pop_list) > 0:
     s3.import_feed = bi.import_feed
     s3.import_font = bi.import_font
     s3.import_image = bi.import_image
+    s3.import_pr_image = bi.import_pr_image
     s3.import_remote_csv = bi.import_remote_csv
     s3.import_role = bi.import_role
     s3.import_script = bi.import_script

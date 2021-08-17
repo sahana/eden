@@ -4692,7 +4692,7 @@ class S3BulkImporter(object):
                      imagefield
                      ):
         """
-            Import images, such as a logo or person image
+            Import images, such as a logo
 
             filename     a CSV list of records and filenames
             tablename    the name of the table
@@ -4765,7 +4765,8 @@ class S3BulkImporter(object):
                 # Get the id of the resource
                 query = base_query & (idfield == row["id"])
                 record = db(query).select(limitby = (0, 1),
-                                          *fields).first()
+                                          *fields
+                                          ).first()
                 try:
                     record_id = record.id
                 except AttributeError:
@@ -4796,7 +4797,116 @@ class S3BulkImporter(object):
                     callback(onaccept, form, tablename=tablename)
                 else:
                     for (key, error) in form.errors.items():
-                        current.log.error("error importing logo %s: %s %s" % (image, key, error))
+                        current.log.error("error importing image %s: %s %s" % (image, key, error))
+
+    # -------------------------------------------------------------------------
+    def import_pr_image(self, filename):
+        """
+            Import person images from CSV
+
+            Example:
+            bi.import_pr_image("pr_image.csv")
+            and the file pr_image.csv may look as follows
+            First Name,Middle Name,Last Name,Image,Profile,Type
+            John,,Doe,jdoe.jpg,Y,
+            Type should be an integer If empty then uses default (usually 1 (Photograph))
+        """
+
+        # Check if the source file is accessible
+        from s3compat import PY2
+        try:
+            if PY2:
+                openFile = open(filename, "r")
+            else:
+                openFile = open(filename, "r", encoding="utf-8")
+        except IOError:
+            return "Unable to open file %s" % filename
+
+        tablename = "pr_image"
+
+        reader = self.csv.DictReader(openFile)
+
+        db = current.db
+        s3db = current.s3db
+        audit = current.audit
+        ptable = s3db.pr_person
+        table = s3db.pr_image
+        table.pe_id.writable = True
+        type_default = table.type.default
+
+        # Get callbacks
+        get_config = s3db.get_config
+        onvalidation = get_config(tablename, "create_onvalidation") or \
+                       get_config(tablename, "onvalidation")
+        onaccept = get_config(tablename, "create_onaccept") or \
+                   get_config(tablename, "onaccept")
+
+        for row in reader:
+            if row != None:
+                # Open the file
+                image = row["Image"]
+                try:
+                    # Extract the path to the CSV file, image should be in
+                    # this directory, or relative to it
+                    path = os.path.split(filename)[0]
+                    imagepath = os.path.join(path, image)
+                    openFile = open(imagepath, "rb")
+                except IOError:
+                    current.log.error("Unable to open image file %s" % image)
+                    continue
+                image_source = BytesIO(openFile.read())
+                # Get the pe_id of the person
+                first_name = row.get("First Name")
+                middle_name = row.get("Middle Name")
+                last_name = row.get("Last Name")
+                query = (ptable.first_name == first_name) & \
+                        (ptable.middle_name == middle_name) & \
+                        (ptable.last_name == last_name)
+                person = db(query).select(ptable.pe_id,
+                                          limitby = (0, 1)
+                                          ).first()
+                try:
+                    pe_id = person.pe_id
+                except AttributeError:
+                    from s3 import s3_fullname
+                    person = Storage(first_name = first_name,
+                                     middle_name = middle_name,
+                                     last_name = last_name,
+                                     )
+                    current.log.error("Unable to find person %s to attach the image file to" % s3_fullname(person))
+                    continue
+                # Create and accept the form
+                form = SQLFORM(table, fields=["pe_id", "image", "type", "profile"])
+                form_vars = Storage()
+                form_vars._formname = "%s/create" % tablename
+                source = Storage()
+                source.filename = imagepath
+                source.file = image_source
+                form_vars.pe_id = pe_id
+                form_vars.image = source
+                form_vars["type"] = row.get("Type", type_default)
+                profile = row.get("Profile")
+                if profile:
+                    if profile.upper() in ("Y","YES","T","TRUE"):
+                        form_vars.profile = True
+                    elif profile.upper() in ("N","NO","F","FALSE"):
+                        form_vars.profile = False
+                    else:
+                        # default (usually False)
+                        form_vars.profile = None
+                else:
+                    # default (usually False)
+                    form_vars.profile = None
+                if form.accepts(form_vars, onvalidation=onvalidation):
+                    # Audit
+                    audit("create", "pr", "image", form=form, representation="csv")
+
+                    # Execute onaccept
+                    callback(onaccept, form, tablename=tablename)
+                else:
+                    current.log.debug("Not Accepted")
+                    for (key, error) in form.errors.items():
+                        current.log.error("error importing image %s: %s %s" % (image, key, error))
 
     # -------------------------------------------------------------------------
     @staticmethod
