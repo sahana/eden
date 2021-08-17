@@ -3563,6 +3563,8 @@ def config(settings):
             # Call standard prep
             result = standard_prep(r) if callable(standard_prep) else True
 
+            add_org_tags()
+
             resource = r.resource
             table = resource.table
 
