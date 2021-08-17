@@ -64,26 +64,40 @@ from gluon.storage import Storage
 from ..s3 import *
 from s3layouts import S3PopupLink
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
+# Dependency list for translate-module
+depends = ["supply"]
+
+# =============================================================================
 SHIP_STATUS_IN_PROCESS = 0
 SHIP_STATUS_RECEIVED   = 1
 SHIP_STATUS_SENT       = 2
 SHIP_STATUS_CANCEL     = 3
 SHIP_STATUS_RETURNING  = 4
 
-# Dependency list
-depends = ["supply"]
-
-# To pass to global scope
+# Dict to lookup a status by name
 inv_ship_status = {"IN_PROCESS" : SHIP_STATUS_IN_PROCESS,
-                   "RECEIVED"   : SHIP_STATUS_RECEIVED,
                    "SENT"       : SHIP_STATUS_SENT,
+                   "RECEIVED"   : SHIP_STATUS_RECEIVED,
                    "CANCEL"     : SHIP_STATUS_CANCEL,
                    "RETURNING"  : SHIP_STATUS_RETURNING,
                    }
 
+def inv_shipment_status_labels():
+    T = current.T
+    return OrderedDict({SHIP_STATUS_IN_PROCESS: T("In Process"),
+                        SHIP_STATUS_SENT: T("Sent"),
+                        SHIP_STATUS_RECEIVED: T("Received"),
+                        SHIP_STATUS_CANCEL: T("Canceled"),
+                        SHIP_STATUS_RETURNING: T("Returning"),
+                        })
+
 SHIP_DOC_PENDING  = 0
 SHIP_DOC_COMPLETE = 1
 
+# =============================================================================
 TRACK_STATUS_UNKNOWN    = 0
 TRACK_STATUS_PREPARING  = 1
 TRACK_STATUS_TRANSIT    = 2
@@ -92,6 +106,7 @@ TRACK_STATUS_ARRIVED    = 4
 TRACK_STATUS_CANCELED   = 5
 TRACK_STATUS_RETURNING  = 6
 
+# Dict to lookup a status by name
 inv_tracking_status = {"UNKNOWN"    : TRACK_STATUS_UNKNOWN,
                        "IN_PROCESS" : TRACK_STATUS_PREPARING,
                        "SENT"       : TRACK_STATUS_TRANSIT,
@@ -101,18 +116,7 @@ inv_tracking_status = {"UNKNOWN"    : TRACK_STATUS_UNKNOWN,
                        "RETURNING"  : TRACK_STATUS_RETURNING,
                        }
 
-# Compact JSON encoding
-SEPARATORS = (",", ":")
-
-def inv_shipment_status_labels():
-    T = current.T
-    return {SHIP_STATUS_IN_PROCESS: T("In Process"),
-            SHIP_STATUS_RECEIVED: T("Received"),
-            SHIP_STATUS_SENT: T("Sent"),
-            SHIP_STATUS_CANCEL: T("Canceled"),
-            SHIP_STATUS_RETURNING: T("Returning"),
-            }
-
+# =============================================================================
 def inv_itn_label():
     # Overwrite the label until we have a better way to do this
     #return current.T("Item Source Tracking Number")
@@ -227,7 +231,6 @@ class InvWarehouseModel(S3Model):
         # ---------------------------------------------------------------------
         # Warehouses
         #
-
         if settings.get_inv_warehouse_code_unique():
             code_requires = IS_EMPTY_OR([IS_LENGTH(10),
                                          IS_NOT_IN_DB(db, "inv_warehouse.code"),
@@ -4869,10 +4872,7 @@ def inv_send_controller():
                             quantity_fulfil = fulfil_qty[item.item_pack_id]
                             db(ritable.id == item.id).update(quantity_fulfil=quantity_fulfil)
                             req_quantity = item.quantity * item.pack_quantity()
-                            if quantity_fulfil >= req_quantity:
-                                complete = True
-                            else:
-                                complete = False
+                            complete = quantity_fulfil >= req_quantity
 
                     # Update overall Request Status
                     if complete:
