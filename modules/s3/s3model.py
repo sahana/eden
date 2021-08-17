@@ -234,11 +234,10 @@ class S3Model(object):
         db = current.db
 
         # Table already defined?
-        if hasattr(db, tablename):
+        try:
             return getattr(db, tablename)
-        elif getattr(db, "_lazy_tables") and \
-             tablename in getattr(db, "_LAZY_TABLES"):
-            return getattr(db, tablename)
+        except AttributeError:
+            pass
 
         found = None
 
