@@ -233,6 +233,8 @@ Thank you"""
         # CLI can override with auth.override=True
         self.PROTECTED = ("admin",)
 
+        self._user_represent = None
+
     # -------------------------------------------------------------------------
     def define_tables(self, migrate=True, fake_migrate=False):
         """
@@ -1887,6 +1889,33 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
                           field_id + SQLFORM.ID_ROW_SUFFIX,
                           )
         return form
+
+    # -------------------------------------------------------------------------
+    @property
+    def user_represent(self):
+        """
+            Common auth_UserRepresent instance for meta-fields (lazy property)
+
+            @returns: S3Represent instance
+        """
+
+        represent = self._user_represent
+        if represent is None:
+
+            if current.deployment_settings.get_ui_auth_user_represent() == "name":
+                show_name = True
+                show_email = False
+            else:
+                show_name = False
+                show_email = True
+
+            represent = current.s3db.auth_UserRepresent(show_name = show_name,
+                                                        show_email = show_email,
+                                                        show_link = False,
+                                                        )
+            self._user_represent = represent
+
+        return represent
 
     # -------------------------------------------------------------------------
     def configure_user_fields(self, pe_ids=None):
