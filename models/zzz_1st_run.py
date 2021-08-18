@@ -133,6 +133,9 @@ if len(pop_list) > 0:
     #ORG_ADMIN = system_roles.ORG_ADMIN
     #ORG_GROUP_ADMIN = system_roles.ORG_GROUP_ADMIN
 
+    # Create indexes for permission table
+    auth.permission.create_indexes()
+
     # =========================================================================
     # Configure Scheduled Tasks
     #

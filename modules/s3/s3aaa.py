@@ -6192,6 +6192,23 @@ class S3Permission(object):
             self.table = db[self.tablename]
 
     # -------------------------------------------------------------------------
+    def create_indexes(self):
+        """
+            Create indexes for s3_permission table, for faster rule lookups
+        """
+
+        db = current.db
+
+        sql = "CREATE INDEX IF NOT EXISTS %(index)s ON %(table)s (%(field)s);"
+
+        names = {"table": self.tablename}
+
+        for fname in ("controller", "function", "tablename"):
+            names["field"] = fname
+            names["index"] = "%(table)s_%(field)s_idx" % names
+            db.executesql(sql % names)
+
+    # -------------------------------------------------------------------------
     # ACL Management
     # -------------------------------------------------------------------------
     def update_acl(self, group,
@@ -7343,15 +7360,15 @@ class S3Permission(object):
         page_restricted = self.page_restricted(c=c, f=f)
 
         # Base query
-        query = (table.deleted != True) & \
-                (table.group_id.belongs(roles))
+        query = (table.group_id.belongs(roles)) & \
+                (table.deleted == False)
 
         # Page ACLs
         if page_restricted:
             q = (table.function == None)
             if f and self.use_facls:
                 q |= (table.function == f)
-            q &= (table.controller == c)
+            q = (table.controller == c) & q
         else:
             q = None
 
@@ -7360,9 +7377,9 @@ class S3Permission(object):
             # Be sure to use the original table name
             if hasattr(t, "_tablename"):
                 t = original_tablename(t)
-            tq = (table.controller == None) & \
-                 (table.function == None) & \
-                 (table.tablename == t)
+            tq = (table.tablename == t) & \
+                 (table.controller == None) & \
+                 (table.function == None)
             q = tq if q is None else q | tq
             table_restricted = self.table_restricted(t)
         else:
@@ -7370,7 +7387,7 @@ class S3Permission(object):
 
         # Retrieve the ACLs
         if q is not None:
-            query &= q
+            query = q & query
             rows = db(query).select(table.group_id,
                                     table.controller,
                                     table.function,
