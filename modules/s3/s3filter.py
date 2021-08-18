@@ -3413,7 +3413,7 @@ class S3FilterForm(object):
             return None
 
         table = current.s3db.pr_filter
-        query = (table.deleted != True) & \
+        query = (table.deleted == False) & \
                 (table.pe_id == pe_id)
 
         if resource:
@@ -3908,7 +3908,7 @@ class S3Filter(S3Method):
             r.unauthorised()
 
         # Build query
-        query = (table.deleted != True) & \
+        query = (table.deleted == False) & \
                 (table.resource == self.resource.tablename) & \
                 (table.pe_id == pe_id)
 
@@ -4298,7 +4298,7 @@ def s3_get_filter_opts(tablename,
     if auth.s3_has_permission("read", table):
         query = auth.s3_accessible_query("read", table)
         if "deleted" in table.fields:
-            query &= (table.deleted != True)
+            query &= (table.deleted == False)
         if location_filter:
             location = current.session.s3.location_filter
             if location:

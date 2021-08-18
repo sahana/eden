@@ -4119,7 +4119,7 @@ class S3Duplicate(object):
 
         # Ignore deleted records?
         if self.ignore_deleted and "deleted" in table.fields:
-            query &= (table.deleted != True)
+            query &= (table.deleted == False)
 
         # Find a match
         duplicate = current.db(query).select(table._id,
@@ -4726,7 +4726,7 @@ class S3BulkImporter(object):
         audit = current.audit
         table = s3db[tablename]
         idfield = table[idfield]
-        base_query = (table.deleted != True)
+        base_query = (table.deleted == False)
         fieldnames = [table._id.name,
                       imagefield
                       ]

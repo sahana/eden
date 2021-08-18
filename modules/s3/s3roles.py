@@ -1519,7 +1519,7 @@ class S3PermissionWidget(object):
 
         # Load all dynamic tables (TODO: how does this make sense?)
         #ttable = s3db.s3_table
-        #rows = db(ttable.deleted != True).select(ttable.name)
+        #rows = db(ttable.deleted == False).select(ttable.name)
         #for row in rows:
         #    s3db.table(row.name)
 

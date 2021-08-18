@@ -861,7 +861,7 @@ class S3RecordMerger(object):
 
                 query = (t.realm_entity == duplicate_pe_id)
                 if "deleted" in t.fields:
-                    query &= (t.deleted != True)
+                    query &= (t.deleted == False)
                 try:
                     db(query).update(realm_entity = original_pe_id)
                 except:
@@ -955,7 +955,7 @@ class S3RecordMerger(object):
         duplicate = None
         query = table._id.belongs([original_id, duplicate_id])
         if "deleted" in table.fields:
-            query &= (table.deleted != True)
+            query &= (table.deleted == False)
         rows = db(query).select(table.ALL, limitby=(0, 2))
         for row in rows:
             record_id = row[table._id]

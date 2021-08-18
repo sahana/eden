@@ -350,7 +350,7 @@ class S3Sync(S3Method):
         if not mixed:
             query = (ttable.repository_id == connector.id) & \
                     (ttable.resource_name == r.tablename) & \
-                    (ttable.deleted != True)
+                    (ttable.deleted == False)
             task = db(query).select(limitby=(0, 1)).first()
         else:
             task = None
@@ -576,7 +576,7 @@ class S3Sync(S3Method):
             policies = S3ImportItem.POLICY
             query = (ttable.repository_id == repository.id) & \
                     (ttable.resource_name == tablename) & \
-                    (ttable.deleted != True)
+                    (ttable.deleted == False)
             task = current.db(query).select(limitby=(0, 1)).first()
             if task and item.original:
                 original = item.original
@@ -787,7 +787,7 @@ class S3Sync(S3Method):
 
         ftable = s3db.sync_resource_filter
         query = (ftable.task_id == task_id) & \
-                (ftable.deleted != True)
+                (ftable.deleted == False)
         rows = db(query).select(ftable.tablename,
                                 ftable.filter_string,
                                 )

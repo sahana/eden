@@ -1362,7 +1362,7 @@ class S3AddPersonWidget(FormWidget):
         # Unique email?
         s3db = current.s3db
         ctable = s3db.pr_contact
-        query = (ctable.deleted != True) & \
+        query = (ctable.deleted == False) & \
                 (ctable.contact_method == "EMAIL") & \
                 (ctable.value == value)
         if person_id:
@@ -3538,7 +3538,7 @@ class S3EmbeddedComponentWidget(FormWidget):
             fq = (linktable[rkey] == table[fkey]) & \
                  (linktable[lkey] == _id)
             if "deleted" in linktable:
-                fq &= (linktable.deleted != True)
+                fq &= (linktable.deleted == False)
             linked = current.db(fq).select(table._id)
             from .s3query import FS
             pkey = FS("id")
@@ -4733,7 +4733,7 @@ class S3LocationDropdownWidget(FormWidget):
         if self.blank:
             query = (table.id == value)
         elif level:
-            query = (table.deleted != True) & \
+            query = (table.deleted == False) & \
                     (table.level == level)
         else:
             # Workaround for merge form
@@ -6982,7 +6982,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                 if self.prevent_duplicate_addresses:
                     query = (table.addr_street == address) & \
                             (table.parent == parent) & \
-                            (table.deleted != True)
+                            (table.deleted == False)
                     duplicate = current.db(query).select(table.id,
                                                          limitby = (0, 1)
                                                          ).first()

@@ -287,7 +287,7 @@ class S3DashboardConfig(object):
         query = (table.controller == context.controller) & \
                 (table.function == context.function) & \
                 (table.active == True) & \
-                (table.deleted != True)
+                (table.deleted == False)
         row = current.db(query).select(table.id,
                                        table.layout,
                                        table.title,

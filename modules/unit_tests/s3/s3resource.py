@@ -41,7 +41,7 @@ class ComponentJoinConstructionTests(unittest.TestCase):
         rtable = resource.table
         ctable = component.table
         expected = (ctable.person_id == rtable.id) & \
-                   (ctable.deleted != True)
+                   (ctable.deleted == False)
 
         join = component.get_join()
         self.assertEqual(str(join), str(expected))
@@ -56,7 +56,7 @@ class ComponentJoinConstructionTests(unittest.TestCase):
         rtable = resource.table
         ctable = component.table
         expected = (rtable.pe_id == ctable.pe_id) & \
-                   (ctable.deleted != True)
+                   (ctable.deleted == False)
 
         join = component.get_join()
         self.assertEqual(str(join), str(expected))
@@ -73,7 +73,7 @@ class ComponentJoinConstructionTests(unittest.TestCase):
         project_task_project = component.link.table
         project_task = component.table
         expected = (((project_task_project.project_id == project_project.id) &
-                   (project_task_project.deleted != True)) &
+                   (project_task_project.deleted == False)) &
                    (project_task_project.task_id == project_task.id))
 
         join = component.get_join()
@@ -103,7 +103,7 @@ class ComponentLeftJoinConstructionTests(unittest.TestCase):
         rtable = resource.table
         ctable = component.table
         expected = ctable.on((ctable.person_id == rtable.id) &
-                             (ctable.deleted != True))
+                             (ctable.deleted == False))
 
         ljoin = component.get_left_join()
         assertTrue(isinstance(ljoin, list))
@@ -123,7 +123,7 @@ class ComponentLeftJoinConstructionTests(unittest.TestCase):
         rtable = resource.table
         ctable = component.table
         expected = ctable.on((rtable.pe_id == ctable.pe_id) &
-                             (ctable.deleted != True))
+                             (ctable.deleted == False))
 
         ljoin = component.get_left_join()
         assertTrue(isinstance(ljoin, list))
@@ -146,7 +146,7 @@ class ComponentLeftJoinConstructionTests(unittest.TestCase):
         ctable = component.table
 
         expected_l = ltable.on((ltable.project_id == rtable.id) &
-                               (ltable.deleted != True))
+                               (ltable.deleted == False))
         expected_r = ctable.on(ltable.task_id == ctable.id)
 
         ljoin = component.get_left_join()
@@ -2794,23 +2794,23 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         # Check that the aliased table is properly joined
         expected = org_test_office.on(
                         ((org_test_office.organisation_id == org_organisation.id) &
-                         (org_test_office.deleted != True)) &
+                         (org_test_office.deleted == False)) &
                         (org_test_office.office_type_id == 5))
         assertEqual(str(rfilter.get_joins(left=True)[0]), str(expected))
 
         # ...and the effective query of the master contains the filter
         # and is using the correct alias
-        expected = (((org_organisation.deleted != True) &
-                     (org_organisation.id > 0)) &
+        expected = (((org_organisation.id > 0) &
+                     (org_organisation.deleted == False)) &
                     (org_test_office.name.lower().like("xyz%")))
         assertEqual(str(resource.get_query()), str(expected))
 
         # Check the query of the component
         component = resource.components["test"]
-        expected = (((org_test_office.deleted != True) &
-                    (org_test_office.id > 0)) &
-                    (((org_organisation.deleted != True) &
-                    (org_organisation.id > 0)) &
+        expected = (((org_test_office.id > 0) &
+                     (org_test_office.deleted == False)) &
+                    (((org_organisation.id > 0) &
+                      (org_organisation.deleted == False)) &
                     (org_test_office.name.lower().like("xyz%"))))
         assertEqual(str(component.get_query()), str(expected))
 
@@ -2960,7 +2960,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         component = resource.components["email"]
         join = component.get_join()
         expected = (((hrm_human_resource.person_id == pr_person.id) &
-                   (pr_person.deleted != True)) &
+                   (pr_person.deleted == False)) &
                    ((pr_person.pe_id == pr_email_contact.pe_id) &
                    (pr_email_contact.contact_method == "EMAIL")))
         assertEqual(str(join), str(expected))
@@ -2968,7 +2968,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         component = resource.components["phone"]
         join = component.get_join()
         expected = (((hrm_human_resource.person_id == pr_person.id) &
-                   (pr_person.deleted != True)) &
+                   (pr_person.deleted == False)) &
                    ((pr_person.pe_id == pr_phone_contact.pe_id) &
                    (pr_phone_contact.contact_method == "SMS")))
         assertEqual(str(join), str(expected))
@@ -2996,7 +2996,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         assertEqual(len(ljoin), 2)
         assertEqual(str(ljoin[0]), str(pr_person.on(
                         (hrm_human_resource.person_id == pr_person.id) &
-                        (pr_person.deleted != True))))
+                        (pr_person.deleted == False))))
 
         assertEqual(str(ljoin[1]), str(pr_email_contact.on(
                         (pr_person.pe_id == pr_email_contact.pe_id) &
@@ -3010,7 +3010,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         assertEqual(len(ljoin), 2)
         assertEqual(str(ljoin[0]), str(pr_person.on(
                         (hrm_human_resource.person_id == pr_person.id) &
-                        (pr_person.deleted != True))))
+                        (pr_person.deleted == False))))
 
         assertEqual(str(ljoin[1]), str(pr_phone_contact.on(
                         (pr_person.pe_id == pr_phone_contact.pe_id) &
@@ -3853,25 +3853,25 @@ class LinkDeletionTests(unittest.TestCase):
         # Should have deleted the link for component1, but not for component2
         table = db.link_link
         row = db((table.component_id == self.component1) & \
-                 (table.deleted != True)).select(table.id,
+                 (table.deleted == False)).select(table.id,
                                                  limitby=(0, 1)).first()
         assertEqual(row, None, msg = "Link not deleted")
 
         row = db((table.component_id == self.component2) & \
-                 (table.deleted != True)).select(table.id,
+                 (table.deleted == False)).select(table.id,
                                                  limitby=(0, 1)).first()
         assertNotEqual(row, None, msg = "Unrelated link deleted")
 
         # The component records should still be available
         table = db.link_component
         row = db((table.id == self.component1) & \
-                 (table.deleted != True)).select(table.id,
+                 (table.deleted == False)).select(table.id,
                                                  limitby=(0, 1)).first()
         assertNotEqual(row, None,
                        msg = "Component record deleted instead of just unlinking it")
 
         row = db((table.id == self.component2) & \
-                 (table.deleted != True)).select(table.id,
+                 (table.deleted == False)).select(table.id,
                                                  limitby=(0, 1)).first()
         assertNotEqual(row, None,
                        msg = "Unrelated component record deleted")

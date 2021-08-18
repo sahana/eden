@@ -818,7 +818,7 @@ class S3Hierarchy(object):
             fields.append(table[ckey])
 
         if "deleted" in table:
-            query = (table.deleted != True)
+            query = (table.deleted == False)
         else:
             query = (table.id > 0)
         rows = current.db(query).select(left = self.left, *fields)

@@ -830,7 +830,7 @@ class S3Model(object):
         join = ttable.on(ttable.id == ftable.table_id)
         query = (ftable.master == tablename) & \
                 (ftable.component_key == True) & \
-                (ftable.deleted != True)
+                (ftable.deleted == False)
         rows = current.db(query).select(ftable.name,
                                         ftable.field_type,
                                         ftable.component_alias,
@@ -1795,7 +1795,7 @@ class S3DynamicModel(object):
         ttable = s3db.s3_table
         ftable = s3db.s3_field
         query = (ttable.name == tablename) & \
-                (ttable.deleted != True) & \
+                (ttable.deleted == False) & \
                 (ftable.table_id == ttable.id)
         rows = db(query).select(ftable.name,
                                 ftable.field_type,
@@ -1861,7 +1861,7 @@ class S3DynamicModel(object):
         # Load table configuration settings
         ttable = s3db.s3_table
         query = (ttable.name == tablename) & \
-                (ttable.deleted != True)
+                (ttable.deleted == False)
         row = current.db(query).select(ttable.title,
                                        ttable.settings,
                                        limitby = (0, 1),
