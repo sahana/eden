@@ -3851,28 +3851,28 @@ class S3ResourceFilter(object):
         else:
             mquery = (table._id > 0)
 
-        # Deletion status
-        DELETED = current.xml.DELETED
-        if DELETED in table.fields and not resource.include_deleted:
-            remaining = (table[DELETED] != True)
-            mquery = remaining & mquery
-
         # ID query
         if id is not None:
             if not isinstance(id, (list, tuple)):
                 self.multiple = False
-                mquery = mquery & (table._id == id)
+                mquery = (table._id == id) & mquery
             else:
-                mquery = mquery & (table._id.belongs(id))
+                mquery = (table._id.belongs(id)) & mquery
 
         # UID query
         UID = current.xml.UID
         if uid is not None and UID in table:
             if not isinstance(uid, (list, tuple)):
                 self.multiple = False
-                mquery = mquery & (table[UID] == uid)
+                mquery = (table[UID] == uid) & mquery
             else:
-                mquery = mquery & (table[UID].belongs(uid))
+                mquery = (table[UID].belongs(uid)) & mquery
+
+        # Deletion status
+        DELETED = current.xml.DELETED
+        if DELETED in table.fields and not resource.include_deleted:
+            remaining = (table[DELETED] != True)
+            mquery &= remaining
 
         parent = resource.parent
         if not parent:

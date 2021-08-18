@@ -7396,7 +7396,7 @@ class S3Permission(object):
                                     table.entity,
                                     table.uacl,
                                     table.oacl,
-                                    cacheable = True
+                                    cacheable = True,
                                     )
         else:
             rows = []
@@ -7652,11 +7652,11 @@ class S3Permission(object):
 
         if not "restricted_tables" in s3:
             table = self.table
-            query = (table.deleted != True) & \
-                    (table.controller == None) & \
-                    (table.function == None)
+            query = (table.controller == None) & \
+                    (table.function == None) & \
+                    (table.deleted != True)
             rows = current.db(query).select(table.tablename,
-                                            groupby = table.tablename
+                                            groupby = table.tablename,
                                             )
             s3.restricted_tables = [row.tablename for row in rows]
 
