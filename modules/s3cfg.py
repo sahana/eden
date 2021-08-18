@@ -134,7 +134,7 @@ class S3Config(Storage):
     # Unifont can be downloaded from http://unifoundry.com/unifont/index.html
     fonts = {"ar": ["unifont", "unifont"], # Note that this isn't an ideal font for Arabic as it doesn't support reshaping. We use arabic_reshaper to improve this.
              #"dv": ["unifont", "unifont"],
-             #"dz": ["unifont", "unifont"],
+             "dz": ["unifont", "unifont"],
              "km": ["unifont", "unifont"],
              "ko": ["unifont", "unifont"],
              "mn": ["unifont", "unifont"],

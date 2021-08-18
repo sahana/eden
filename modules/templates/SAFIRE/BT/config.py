@@ -87,6 +87,11 @@ def config(settings):
                 msg_record_deleted = T("%s deleted") % template_name,
                 msg_list_empty = T("No %ss currently registered") % template_name)
 
+        from s3 import S3DateFilter, S3LocationFilter
+        filter_widgets = [S3LocationFilter(),
+                          S3DateFilter("date"),
+                          ]
+
         list_fields = ["location_id$L1",
                        "location_id$L2",
                        (T("Hazard Type"), "name"),
@@ -95,6 +100,7 @@ def config(settings):
                        ]
 
         s3db.configure(tablename,
+                       filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        )
 

@@ -1,0 +1,3 @@
+Name,Description,URL,Projection,Marker,Style,Folder,Config,Enabled,Visible,Cluster Threshold,Refresh,Popup Format
+Dzongkhags,,https://bhutan.aidiq.com/static/Dzongkhags.geojson,4326,,"{'fillOpacity':0.2,'fill':'FF0000'}",Boundaries,,True,False,0,0,
+Gewogs,,https://bhutan.aidiq.com/static/Gewogs.geojson,4326,,"{'fillOpacity':0.2,'fill':'FF0000'}",Boundaries,,True,False,0,0,{name} ({Dzongkhag})
