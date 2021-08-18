@@ -1,1 +1,357 @@
-Name,Template,Project,Status,Date
+Template,Name,Date,Country,L1,L2,L3,L4
+Initial Disaster Assessment (IDA),Earthquake,05-Apr-2021,BT,Thimphu,Ge-nyen,,
+Detailed Damage Assessment,Earthquake,12-Jul-2019,BT,Pemagatshel,Dungmin,,
+Detailed Damage Assessment,Earthquake,12-Jul-2019,BT,Pemagatshel,Dungmin,Bangyuel,
+Detailed Damage Assessment,Structural Fire,23-Aug-2019,BT,Zhemgang,Phangkhar,Shalingtoed_Tashibi,Tashibi
+Detailed Damage Assessment,GLOF,09-Apr-2020,BT,Zhemgang,Goshing,Lamthang,Babsar
+Detailed Damage Assessment,Windstorm,08-Apr-2020,BT,Monggar,Drepoong,Drepoong,
+Detailed Damage Assessment,Structural Fire,,BT,Monggar,Shermuhung,Gangmung,Gangmung
+Detailed Damage Assessment,Windstorm,10-Apr-2020,BT,Zhemgang,Bjoka,Barpong_Namirgang,Barpong
+Detailed Damage Assessment,Windstorm,10-Apr-2020,BT,Zhemgang,Bjoka,Kamati,Kamati
+Detailed Damage Assessment,Windstorm,10-Apr-2020,BT,Zhemgang,Nangkor,Goling,Zhobling
+Detailed Damage Assessment,Windstorm,10-Apr-2020,BT,Zhemgang,Trong,Dangkhar_Trong,Tingbi Pam
+Detailed Damage Assessment,Windstorm,09-Apr-2020,BT,Zhemgang,Trong,Zhemgang Thromde,Trong
+Detailed Damage Assessment,Forest Fire,11-Apr-2020,BT,Dagana,Tsendagang,Samarchhu,Darey
+Detailed Damage Assessment,GLOF,02-Apr-2020,BT,Punakha,Chubu,Ngoedrupchu,Chimchina
+Detailed Damage Assessment,GLOF,,BT,Monggar,Mongar,Gyalpoizhing_Wangling,
+Detailed Damage Assessment,GLOF,12-Apr-2020,BT,Monggar,Tsakaling,Nyartsi_Tsakaling,
+Detailed Damage Assessment,GLOF,10-Apr-2020,BT,Monggar,Tsamang,Thuenmong_Tokari,Tokari
+Detailed Damage Assessment,Thunder & Lightning,09-Apr-2020,BT,Monggar,Chaskhar,Borphai_Chagsakhar,Warjam
+Detailed Damage Assessment,Windstorm,,BT,Chhukha,Loggchina,,
+Detailed Damage Assessment,Windstorm,,BT,Chhukha,Phuentshogling,Pekarling_Rigzinling,
+Detailed Damage Assessment,Windstorm,10-Apr-2020,BT,Chhukha,Bongo,Gedu_Miritsemo,Shingchikha
+Detailed Damage Assessment,Windstorm,15-Apr-2020,BT,Zhemgang,Goshing,Lamthang,
+Detailed Damage Assessment,Windstorm,15-Apr-2020,BT,Zhemgang,Goshing,Lamthang,Lumtang
+Detailed Damage Assessment,Windstorm,15-Apr-2020,BT,Zhemgang,Goshing,Lamthang,Silingbi
+Detailed Damage Assessment,Windstorm,16-Apr-2020,BT,Zhemgang,Goshing,Budhashi,Boksar
+Detailed Damage Assessment,Windstorm,16-Apr-2020,BT,Zhemgang,Goshing,Budhashi,Zhangzhaling
+Detailed Damage Assessment,Windstorm,15-Apr-2020,BT,Zhemgang,Goshing,Budhashi,Yungkhorpong
+Detailed Damage Assessment,Windstorm,16-Apr-2020,BT,Zhemgang,Goshing,Budhashi,Zurphag
+Detailed Damage Assessment,Windstorm,15-Apr-2020,BT,Zhemgang,Goshing,Budhashi,Budhashi
+Detailed Damage Assessment,Windstorm,15-Apr-2020,BT,Zhemgang,Goshing,Lamthang,Dzongphu
+Detailed Damage Assessment,Windstorm,15-Apr-2020,BT,Zhemgang,Goshing,Budhashi,
+Detailed Damage Assessment,Structural Fire,04-Jan-2020,BT,Chhukha,Bjachho,Tsimalakha_Tsimasham,Metsaga
+Detailed Damage Assessment,Structural Fire,17-Apr-2020,BT,Chhukha,Bongo,Gedu_Miritsemo,Pakshikha
+Detailed Damage Assessment,Windstorm,,BT,Tsirang,Kilkhorthang,Maenchhana,
+Detailed Damage Assessment,Windstorm,09-Apr-2020,BT,Tsirang,Mendrelgang,Pemashong_Samsh- ing Gaden,Pemashong(Sarkigaon)
+Detailed Damage Assessment,Windstorm,09-Apr-2020,BT,Tsirang,Patsaling,Patshaling Maed_ Tsakaling,Patshaling Maed
+Detailed Damage Assessment,Windstorm,09-Apr-2020,BT,Tsirang,Kilkhorthang,Dekiling,Dekiling(Lower Bockray)
+Detailed Damage Assessment,Windstorm,09-Apr-2020,BT,Tsirang,Kilkhorthang,Dekiling,Dekiling(Lower Bockray)
+Detailed Damage Assessment,Windstorm,09-Apr-2020,BT,Tsirang,Kilkhorthang,Tashiyangjong,
+Detailed Damage Assessment,Windstorm,09-Apr-2020,BT,Tsirang,Doonglagang,Khirithang,
+Detailed Damage Assessment,Windstorm,09-Apr-2020,BT,Tsirang,Tsirangtoed,Tagthang_Wangphu,Tagthang(Bhaktar)
+Detailed Damage Assessment,Windstorm,09-Apr-2020,BT,Tsirang,Tsirangtoed,Kabelzhing,Kabelzhing(Tsirang Toed)
+Detailed Damage Assessment,Windstorm,09-Apr-2020,BT,Tsirang,Rangthaling,Charingma_Rangth- angling,Charingma (Zulphay- gaon)
+Detailed Damage Assessment,Windstorm,09-Apr-2020,BT,Tsirang,Tsolingkhar,Droobchhugang,Alenchi(Alaichey)
+Detailed Damage Assessment,Windstorm,09-Apr-2020,BT,Tsirang,Rangthaling,Neymedsa,Neymedsa (Nevarey)
+Detailed Damage Assessment,Thunder & Lightning,11-Apr-2020,BT,Tsirang,Mendrelgang,Pemashong_Samsh- ing Gaden,Pemashong(Sarkigaon)
+Detailed Damage Assessment,Thunder & Lightning,,BT,Samtse,Samtse Dzongkhag Thromde,,
+Detailed Damage Assessment,Thunder & Lightning,,BT,Samtse,Samtse Dzongkhag Thromde,,
+Detailed Damage Assessment,Tropical Storm,28-Apr-2020,BT,Monggar,Na-Rang,Dongshom,Pankang
+Detailed Damage Assessment,Tropical Storm,04-May-2020,BT,Yangtse,Yangtse,Lichen,Desa-Sherub
+Detailed Damage Assessment,Structural Fire,11-May-2020,BT,Yangtse,Tongmajangsa,Baagpa_Kuenzangling,Shaagpa
+Detailed Damage Assessment,Tropical Storm,08-May-2020,BT,Monggar,Tsamang,Ganglapong Toed,Ganglapong Toed
+Detailed Damage Assessment,Forest Fire,15-Oct-2019,BT,Dagana,Khibesa,Pogtog,Gewathang
+Detailed Damage Assessment,Forest Fire,21-Oct-2016,BT,Dagana,Tshangkha,Gelechu,Upper Salamji
+Detailed Damage Assessment,Forest Fire,20-Oct-2016,BT,Dagana,Drujegang,Pangserpo,Krongtod
+Detailed Damage Assessment,Structural Fire,02-Nov-2011,BT,Dagana,Tashiding,Namchela,Middle Namchella
+Detailed Damage Assessment,Structural Fire,22-Mar-2013,BT,Dagana,Kana,Lhaling,Kanakha
+Detailed Damage Assessment,Structural Fire,25-Feb-2014,BT,Dagana,Drujegang,Pangserpo,Krongtod
+Detailed Damage Assessment,Structural Fire,16-Mar-2016,BT,Dagana,Tseza,Karlingdzingkha,Karlingzingkha
+Detailed Damage Assessment,Structural Fire,29-Dec-2016,BT,Dagana,Goshi,Gozhi Bar,Gozhi Baar
+Detailed Damage Assessment,Structural Fire,10-Jul-2018,BT,Dagana,Tsendagang,Tsendagang,Lower Tsendagang
+Detailed Damage Assessment,Structural Fire,08-Oct-2018,BT,Dagana,Tsendagang,Gangzurmaed,Mongargaon
+Detailed Damage Assessment,Structural Fire,29-Jan-2022,BT,Dagana,Kana,Bjurugang,Bjurugang
+Detailed Damage Assessment,Structural Fire,04-Apr-2017,BT,Dagana,Lhamoizingkha,Lhamoizingkha,Farmgaon
+Detailed Damage Assessment,Structural Fire,06-Jun-2012,BT,Dagana,Khibesa,Pogtog,Pogtog
+Detailed Damage Assessment,Disease Outbreak,18-Sep-2011,BT,Dagana,Tseza,Samey,Sameyzingkha
+Detailed Damage Assessment,Disease Outbreak,18-Sep-2011,BT,Dagana,Tseza,Tashigang,Tashigang
+Detailed Damage Assessment,Disease Outbreak,18-Sep-2011,BT,Dagana,Tseza,Tsangleykha,Tsangleykha
+Detailed Damage Assessment,Disease Outbreak,18-Sep-2011,BT,Dagana,Kana,Bartsha-Namgyelgang,Bartsa
+Detailed Damage Assessment,Disease Outbreak,18-Sep-2011,BT,Dagana,Tsendagang,Gangzurtoed,Gurung gaon
+Detailed Damage Assessment,Disease Outbreak,18-Sep-2011,BT,Dagana,Laja,Sidpa,Sidpa
+Detailed Damage Assessment,Disease Outbreak,18-Sep-2011,BT,Dagana,Laja,Thasa,Thasa A
+Detailed Damage Assessment,Disease Outbreak,18-Sep-2011,BT,Dagana,Gesarling,Tashithang,Tashithang
+Detailed Damage Assessment,Disease Outbreak,18-Sep-2011,BT,Dagana,Gesarling,Tanju,Tanju
+Detailed Damage Assessment,Disease Outbreak,18-Sep-2011,BT,Dagana,Khibesa,Pogtog,Tsuga
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Khibesa,Akhochen,Akochen
+Detailed Damage Assessment,Windstorm,05-Apr-2015,BT,Dagana,Dorona,Nimtola,Nimtola
+Detailed Damage Assessment,Forest Fire,,BT,Dagana,Khibesa,Pogtog,Kekana
+Detailed Damage Assessment,Tropical Storm,26-Nov-2013,BT,Dagana,Tsendagang,Samarchhu,Baragumtey
+Detailed Damage Assessment,Windstorm,26-Apr-2013,BT,Dagana,Khibesa,Pakser,Pakser
+Detailed Damage Assessment,Windstorm,19-Mar-2014,BT,Dagana,Tseza,Karlingdzingkha,Dzongsho
+Detailed Damage Assessment,Windstorm,19-Mar-2014,BT,Dagana,Tseza,Peling,Tongsho
+Detailed Damage Assessment,Windstorm,19-Mar-2014,BT,Dagana,Tseza,Tsangleykha,Tsangleykha
+Detailed Damage Assessment,Windstorm,19-Mar-2014,BT,Dagana,Drujegang,Thangna,Sertochen
+Detailed Damage Assessment,Windstorm,14-Apr-2014,BT,Dagana,Khibesa,Thomgang,Thomgang
+Detailed Damage Assessment,Windstorm,14-Apr-2013,BT,Dagana,Tshangkha,Tshangkha,Tshangkha
+Detailed Damage Assessment,Windstorm,14-Apr-2013,BT,Dagana,Tseza,Tsangleykha,Tsangleykha
+Detailed Damage Assessment,Windstorm,14-Apr-2013,BT,Dagana,Tseza,Samey,Sameyjongmena
+Detailed Damage Assessment,Windstorm,14-Apr-2013,BT,Dagana,Tseza,Peling,Tongsho
+Detailed Damage Assessment,Windstorm,14-Apr-2013,BT,Dagana,Tseza,Peling,Peling
+Detailed Damage Assessment,Windstorm,14-Apr-2013,BT,Dagana,Dorona,Nimtola,Nimtola
+Detailed Damage Assessment,GLOF,28-Oct-2011,BT,Dagana,Tseza,Peling,Peling
+Detailed Damage Assessment,GLOF,28-Oct-2011,BT,Dagana,Tseza,Peling,Dawa Zimpa
+Detailed Damage Assessment,GLOF,28-Oct-2011,BT,Dagana,Tseza,Peling,Kheju
+Detailed Damage Assessment,GLOF,28-Oct-2011,BT,Dagana,Tseza,Peling,Tongsho
+Detailed Damage Assessment,GLOF,28-Oct-2011,BT,Dagana,Tseza,Samey,Samey Bazingkha
+Detailed Damage Assessment,GLOF,28-Oct-2011,BT,Dagana,Tseza,Samey,Sameyjongmena
+Detailed Damage Assessment,GLOF,28-Oct-2011,BT,Dagana,Tseza,Tashigang,Tashigang
+Detailed Damage Assessment,GLOF,28-Oct-2011,BT,Dagana,Tseza,Tashigang,Jansagang?
+Detailed Damage Assessment,GLOF,28-Oct-2011,BT,Dagana,Tseza,Samey,Sameyjongmena
+Detailed Damage Assessment,Earthquake,11-Sep-2015,BT,Dagana,Lhamoizingkha,Lhamoizingkha,Farmgaon
+Detailed Damage Assessment,Disease Outbreak,28-Jun-2015,BT,Dagana,Kana,Lhaling,Nindukha
+Detailed Damage Assessment,Disease Outbreak,28-Jun-2015,BT,Dagana,Kana,Dalithang-Gangyab,Gangjab
+Detailed Damage Assessment,Disease Outbreak,28-Jun-2015,BT,Dagana,Tsendagang,Gangzurtoed,Gurung gaon
+Detailed Damage Assessment,Disease Outbreak,28-Jun-2015,BT,Dagana,Tashiding,Shamdoley,Lower Shamdoley
+Detailed Damage Assessment,Disease Outbreak,28-Jun-2015,BT,Dagana,Tshangkha,Zinchila,Zinchela
+Detailed Damage Assessment,Disease Outbreak,28-Jun-2015,BT,Dagana,Laja,Sidpa,Sidpa
+Detailed Damage Assessment,Disease Outbreak,28-Jun-2015,BT,Dagana,Laja,Barna,Barna
+Detailed Damage Assessment,Disease Outbreak,28-Jun-2015,BT,Dagana,Khibesa,Pogtog,Gumla
+Detailed Damage Assessment,Windstorm,05-Apr-2015,BT,Dagana,Dorona,Nimtola,Nimtola
+Detailed Damage Assessment,Windstorm,05-Apr-2015,BT,Dagana,Dorona,Dorona Chewa,Dorona Chewa
+Detailed Damage Assessment,Windstorm,05-Apr-2015,BT,Dagana,Dorona,Mamaedthang,Mamaedthang
+Detailed Damage Assessment,Windstorm,05-Apr-2015,BT,Dagana,Dorona,Mamaedthang,lalidhaper
+Detailed Damage Assessment,Windstorm,05-Apr-2015,BT,Dagana,Dorona,Mamaedthang,Chukam
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Goshi,Baleygang,Middle Balaygang
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Goshi,Gozhitoed,Gozhitoed
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Goshi,Gozhi Bar,Gozhi Baar
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Goshi,Gozhi maed,Gozhi Maed
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Goshi,Dogak,Dogak
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Tshangkha,Pateykha,Upper Pateykha
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Tshangkha,Tshangkha,Tshangkha
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Tshangkha,Zinchila,Zinchela
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Tshangkha,Gongpasumchu,Upper Gungpasumchu
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Khibesa,Gipsa,Gipsa
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Khibesa,Gipsa,Demna
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Khibesa,Thomgang,Gumagang
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Khibesa,Thomgang,Thomgang
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Khibesa,Pakser,Pakser
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Khibesa,Pakser,Shamgang
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Khibesa,Akhochen,Akochen
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Tsendagang,Tsendagang,Upper Tsendagang
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Tsendagang,Gangzurtoed,Gurung gaon
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Tsendagang,Gangzurmaed,Mongargaon
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Drujegang,Pangserpo,Krongtod
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Drujegang,Budipang-pangna,Pangna
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Drujegang,Thangna,Sertochen
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Tashiding,Gangyab,Gangyab
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Tashiding,Tashiding,Middle Tashiding
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Tashiding,Norbuling,Upper Norbuling
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Tashiding,Norbuling,Langchenthang
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Tashiding,Shamdoley,Upper Shamdolay
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Tashiding,Namchela,Middle Namchella
+Detailed Damage Assessment,Windstorm,04-Apr-2015,BT,Dagana,Tashiding,Namchela,Kawakha
+Detailed Damage Assessment,Structural Fire,18-Oct-2014,BT,Dagana,Tsendagang,Gangzurmaed,lower Raigaon
+Detailed Damage Assessment,Structural Fire,16-Jul-2015,BT,Dagana,Goshi,Baleygang,Middle Balaygang
+Detailed Damage Assessment,Landslide,10-Jul-2010,BT,Dagana,Karmaling,Omchhu,Rajabagan
+Detailed Damage Assessment,Earthquake,26-Aug-2010,BT,Dagana,Lhamoizingkha,Lhamoizingkha,Farmgaon
+Detailed Damage Assessment,Landslide,21-Aug-2010,BT,Dagana,Tsendagang,Gangzurmaed,Upper Raigaon
+Detailed Damage Assessment,Landslide,21-Aug-2010,BT,Dagana,Tsendagang,Gangzurtoed,Pasaybung
+Detailed Damage Assessment,Landslide,21-Sep-2010,BT,Dagana,Tsendagang,Tsendagang,Lower Tsendagang
+Detailed Damage Assessment,Landslide,21-Aug-2010,BT,Dagana,Dorona,Dorona Chewa,Susigang
+Detailed Damage Assessment,Landslide,21-Aug-2010,BT,Dagana,Goshi,Gozhi Bar,Gozhi Baar
+Detailed Damage Assessment,Tropical Storm,06-Aug-2009,BT,Dagana,Lhamoizingkha,Kuendrelthang,Kuendrelthang
+Detailed Damage Assessment,GLOF,10-Apr-2009,BT,Dagana,Nichula,Damchunang,Damchunang
+Detailed Damage Assessment,GLOF,10-Apr-2009,BT,Dagana,Nichula,Katarey,Katarey
+Detailed Damage Assessment,GLOF,10-Apr-2010,BT,Dagana,Nichula,Dangreybu,Dangreybu
+Detailed Damage Assessment,GLOF,10-Apr-2009,BT,Dagana,Karmaling,Semchumthang,Upper Dorjiphu
+Detailed Damage Assessment,GLOF,23-Mar-2009,BT,Dagana,Tseza,Karlingdzingkha,Karlingzingkha
+Detailed Damage Assessment,GLOF,23-Mar-2009,BT,Dagana,Tseza,Tsangleykha,Khamey
+Detailed Damage Assessment,GLOF,23-Mar-2009,BT,Dagana,Tseza,Tsangleykha,Tsangleykha
+Detailed Damage Assessment,GLOF,23-Mar-2009,BT,Dagana,Tseza,Tashigang,Tashigang
+Detailed Damage Assessment,Tropical Storm,,BT,Dagana,Lhamoizingkha,Kuendrelthang,Kuendrelthang
+Detailed Damage Assessment,Earthquake,10-Jul-2019,BT,Dagana,Karmaling,Omchhu,Simbolay
+Detailed Damage Assessment,Landslide,11-Jul-2019,BT,Dagana,Karmaling,Laptsakha,Laptsakha A
+Detailed Damage Assessment,Landslide,24-Jun-2019,BT,Dagana,Karmaling,Semchumthang,Upper Dorjiphu
+Detailed Damage Assessment,Earthquake,16-Jul-2019,BT,Dagana,Lhamoizingkha,Chongsamling,Sibsooni
+Detailed Damage Assessment,Windstorm,06-Jul-2019,BT,Dagana,Khibesa,Thomgang,Thomgang
+Detailed Damage Assessment,Windstorm,06-Jul-2019,BT,Dagana,Khibesa,Pakser,Pakser
+Detailed Damage Assessment,Windstorm,06-Jul-2019,BT,Dagana,Khibesa,Akhochen,Soma
+Detailed Damage Assessment,Windstorm,06-Jul-2019,BT,Dagana,Khibesa,Gipsa,Gipsa
+Detailed Damage Assessment,Windstorm,02-Jul-2019,BT,Dagana,Tashiding,Namchela,Upper Namchela
+Detailed Damage Assessment,Earthquake,25-Jun-2019,BT,Dagana,Lhamoizingkha,Lhamoizingkha,Farmgaon
+Detailed Damage Assessment,Earthquake,25-Jun-2019,BT,Dagana,Gesarling,Gesarling,Gesarling
+Detailed Damage Assessment,Structural Fire,30-Jan-2020,BT,Dagana,Goshi,Dogak,Dogak
+Detailed Damage Assessment,Drought,17-Mar-2020,BT,Yangtse,Khamdang,Nombaring_Shazam,Pangthang
+Detailed Damage Assessment,Drought,20-Mar-2020,BT,Yangtse,Toedtsho,Nangkhar_Seb,Pangthang
+Detailed Damage Assessment,Tropical Storm,20-May-2020,BT,Samtse,Norgaygang (Bara),Miphelgang_Samphelgang,Miphelgang (Dhakal Gaon)
+Detailed Damage Assessment,Windstorm,,BT,Tsirang,Rangthaling,Neymedsa,Neymedsa (Nevarey)
+Detailed Damage Assessment,Landslide,22-May-2020,BT,Tsirang,Rangthaling,Charingma_Rangth- angling,Charingma (Zulphay- gaon)
+Detailed Damage Assessment,Landslide,22-May-2020,BT,Tsirang,Doonglagang,Norjangsa,
+Detailed Damage Assessment,Landslide,22-May-2020,BT,Tsirang,Pungtenchu,Peljorling,Peljorling(Dhansiri)
+Detailed Damage Assessment,Landslide,22-May-2020,BT,Tsirang,Rangthaling,Dharchhargang,Dharchhargang(Dhajey)
+Detailed Damage Assessment,Landslide,22-May-2020,BT,Tsirang,Semjong,Tashiling Maed,
+Detailed Damage Assessment,Landslide,22-May-2020,BT,Tsirang,Pungtenchu,Serzhong,Serzhong(Phaleday)
+Detailed Damage Assessment,Landslide,22-May-2020,BT,Tsirang,Doonglagang,Dangreybu Toed,Dangraybu Toed (Bich- gaon ka)
+Detailed Damage Assessment,Tropical Storm,22-May-2020,BT,Tsirang,Mendrelgang,Riserbu,Riserbu Ka(Kamigaon)
+Detailed Damage Assessment,Tropical Storm,22-May-2020,BT,Tsirang,Barshong,Barshong Toed,Barshong Toed(Gairigaon Ka)
+Detailed Damage Assessment,Landslide,22-May-2020,BT,Tsirang,Tsolingkhar,Kapazhing,Kapazhing
+Detailed Damage Assessment,Landslide,22-May-2020,BT,Tsirang,Barshong,Gangtogkha,Gangtokha(Daragang)
+Detailed Damage Assessment,Landslide,22-May-2020,BT,Tsirang,Sergithang,Sergithang Maed,Sergithang Maed(Lower Sergithang)
+Detailed Damage Assessment,Tropical Storm,22-May-2020,BT,Tsirang,Sergithang,Sergithang Toed,Sergithang Toed(Upper Sergithang)
+Detailed Damage Assessment,Landslide,22-May-2020,BT,Tsirang,Semjong,Tashiling Maed,Tashiling Maed(Bararay A)
+Detailed Damage Assessment,Tropical Storm,22-May-2020,BT,Monggar,Drametse,Ba-Ging_Shadang,
+Detailed Damage Assessment,Tropical Storm,21-May-2020,BT,Yangtse,Boomdeyling,Ngalimang_Phanteng,Dungzam
+Detailed Damage Assessment,Landslide,21-May-2020,BT,Yangtse,Tongmajangsa,Baagpa_Kuenzangling,Kuenzangling
+Detailed Damage Assessment,Landslide,26-May-2020,BT,Yangtse,Ramjar,Khalapangthang_Tsang-Rong,Gonpa
+Detailed Damage Assessment,Landslide,26-May-2020,BT,Yangtse,Ramjar,Bawoong,Jalam tag
+Detailed Damage Assessment,Landslide,26-May-2020,BT,Yangtse,Yalang,Dhoogti_Gashing,Dhoogti
+Detailed Damage Assessment,Landslide,26-May-2020,BT,Yangtse,Yalang,Phuyang_Yalang,Phuyang
+Detailed Damage Assessment,Landslide,26-May-2020,BT,Yangtse,Jamkhar,Rijoong_Yoob,Rijung
+Detailed Damage Assessment,Landslide,21-May-2020,BT,Wangduephodrang,Gase Tshogongm,Dabchhaykha_Matshigkha,Dabchhaykha
+Detailed Damage Assessment,Landslide,22-May-2020,BT,Wangduephodrang,Ruebisa,Zamding,Zamding
+Detailed Damage Assessment,Landslide,22-May-2020,BT,Wangduephodrang,Athang,Jaroggang_Dzawo,Dzawo
+Detailed Damage Assessment,Tropical Storm,22-May-2020,BT,Wangduephodrang,Bjenag,Wachhey,Wachhey
+Detailed Damage Assessment,Structural Fire,,BT,Paro,Wangchang,Gebtoed_Olathang_Tajoog,Gangtoed
+Detailed Damage Assessment,Structural Fire,08-Jun-2020,BT,Samtse,Ugyentse (Nainital),Dangreyboog_Rigpailing,Dangrayboog Ka(BichGaon A) /Khar / Tashiding
+Detailed Damage Assessment,Windstorm,10-Apr-2020,BT,Samdrupjongkhar,Kiptse,,
+Detailed Damage Assessment,Windstorm,10-Apr-2020,BT,Samdrupjongkhar,Samdrup Gatshel,,
+Detailed Damage Assessment,Forest Fire,,BT,Pemagatshel,Shumar,Nangkhor,Nangkhor
+Detailed Damage Assessment,Windstorm,10-Apr-2020,BT,Pemagatshel,Chimung,,
+Detailed Damage Assessment,Windstorm,10-Apr-2020,BT,Pemagatshel,Khar,Bongmaan,Bongmaan
+Detailed Damage Assessment,Landslide,23-Apr-2020,BT,Pemagatshel,Shumar,,
+Detailed Damage Assessment,Windstorm,23-Apr-2020,BT,Pemagatshel,Yurung,Khangma,
+Detailed Damage Assessment,Tropical Storm,03-May-2020,BT,Pemagatshel,Zobel,Raysingnang,Raysinang
+Detailed Damage Assessment,Windstorm,27-May-2020,BT,Pemagatshel,Yurung,Khangma,
+Detailed Damage Assessment,Flood,01-Jul-2020,BT,Samtse,Tashichhoeling (Sipsu),Tashichhoeling,Sengeygang(Hangay)
+Detailed Damage Assessment,Tropical Storm,01-Jul-2020,BT,Samtse,Tashichhoeling (Sipsu),Daangling_Gangjoog,Daangling(PakhaGaon)
+Detailed Damage Assessment,Landslide,26-May-2020,BT,Yangtse,Jamkhar,Neydraag_Paechhu,Ninda
+Detailed Damage Assessment,Landslide,26-May-2020,BT,Yangtse,Jamkhar,Chhema_Taagchhema,Chayma
+Detailed Damage Assessment,Tropical Storm,26-May-2020,BT,Yangtse,Ramjar,Dhomtshang_Doongmaen,Wangringmo
+Detailed Damage Assessment,Landslide,26-May-2020,BT,Yangtse,Toedtsho,Nangkhar_Seb,Sep
+Detailed Damage Assessment,Landslide,26-May-2020,BT,Yangtse,Tongmajangsa,Bainangkhar_Gomkora,Gomphukora
+Detailed Damage Assessment,Tropical Storm,26-May-2020,BT,Yangtse,Jamkhar,Rijoong_Yoob,Tshergom
+Detailed Damage Assessment,Tropical Storm,26-May-2020,BT,Yangtse,Jamkhar,Rijoong_Yoob,Zor
+Detailed Damage Assessment,Tropical Storm,26-May-2020,BT,Yangtse,Jamkhar,Shingkhar_Tongla,Tongla
+Detailed Damage Assessment,Structural Fire,10-Jun-2020,BT,Yangtse,Toedtsho,Maeldoong_Omba,Tshongang
+Detailed Damage Assessment,Hailstorm,19-Jun-2020,BT,Yangtse,Jamkhar,Shingkhar_Tongla,Tongla
+Detailed Damage Assessment,Hailstorm,19-Jun-2020,BT,Yangtse,Jamkhar,Rijoong_Yoob,Rijung
+Detailed Damage Assessment,Windstorm,26-Jun-2020,BT,Yangtse,Khamdang,Dhomtshang_Karmadzom,Karmazom
+Detailed Damage Assessment,Windstorm,03-Jul-2020,BT,Yangtse,Toedtsho,Maeldoong_Omba,
+Detailed Damage Assessment,Windstorm,03-Jul-2020,BT,Yangtse,Toedtsho,Khi-Nyel_Togshing,Tokshing
+Detailed Damage Assessment,Windstorm,03-Jul-2020,BT,Pemagatshel,Yurung,Wanglakho Thongo,Thongo
+Detailed Damage Assessment,Tropical Storm,05-Jul-2020,BT,Dagana,Kana,Bartsha-Namgyelgang,Bartsa
+Detailed Damage Assessment,Landslide,12-Jul-2020,BT,Samdrupjongkhar,Gomdar,Gomdar_Richhanglu,Gomdar
+Detailed Damage Assessment,Earthquake,14-Jul-2020,BT,Samdrupjongkhar,Toed,,
+Detailed Damage Assessment,Landslide,,BT,Samtse,Phuentshogpelri (Pugli),Nyoenpaling_Tingtingma,Nyoenpaling B(Pugli B)
+Detailed Damage Assessment,Tropical Storm,02-Sep-2020,BT,Yangtse,Yangtse,Baaney_Bimkhar,Tshergom
+Detailed Damage Assessment,Windstorm,17-Apr-2020,BT,Zhemgang,Nangkor,Dakphel-Kikhar-Tali,Dakphel
+Detailed Damage Assessment,Structural Fire,15-Sep-2020,BT,Zhemgang,Goshing,Lingmapong_Samchholing,"Samchhoeling,"
+Detailed Damage Assessment,GLOF,09-Apr-2020,BT,Zhemgang,Goshing,Lamthang,Babsar
+Detailed Damage Assessment,Windstorm,03-May-2020,BT,Zhemgang,Shingkhar,Nyimshong_Thajong,Zamling
+Detailed Damage Assessment,Tropical Storm,21-Sep-2020,BT,Zhemgang,Nangkor,Dakphel-Kikhar-Tali,Dakphel
+Detailed Damage Assessment,Flood,05-Oct-2020,BT,Dagana,Tseza,Tsangleykha,Zamtog
+Detailed Damage Assessment,Structural Fire,04-Jan-2020,BT,Chhukha,Darla,,
+Detailed Damage Assessment,Landslide,,BT,Chhukha,Geling,Kamji_Na-Yekha,Kamji
+Detailed Damage Assessment,Structural Fire,11-Jul-2020,BT,Chhukha,Darla,Gamanang_Kalzang-ri,
+Detailed Damage Assessment,Landslide,07-Jul-2020,BT,Chhukha,Bjachho,Tsimalakha_Tsimasham,Tsimasham
+Detailed Damage Assessment,Structural Fire,31-Jul-2020,BT,Chhukha,Loggchina,Dzedokha,Dzedokha
+Detailed Damage Assessment,Structural Fire,26-Oct-2020,BT,Chhukha,Samphelling,Khenpaithang_Sonamthang,Sonamthang
+Detailed Damage Assessment,Tropical Storm,09-Dec-2020,BT,Yangtse,Ramjar,Khalapangthang_Tsang-Rong,Gonpa
+Detailed Damage Assessment,Windstorm,25-Dec-2020,BT,Paro,Tsento,Nyechhu_Shar-ri,Nyechhu
+Detailed Damage Assessment,Windstorm,25-Dec-2020,BT,Paro,Lamgong,Jagarthang,Sergang
+Detailed Damage Assessment,Windstorm,25-Dec-2020,BT,Paro,Nagya,Bueltikha_Jagoen,Bueltikha
+Detailed Damage Assessment,Windstorm,25-Dec-2020,BT,Paro,Doteng,Aa-tsho_Phunoob,Aa-tsho
+Detailed Damage Assessment,Windstorm,25-Dec-2020,BT,Paro,Doteng,Joogar_Pachhu,
+Detailed Damage Assessment,Forest Fire,17-Jan-2021,BT,Monggar,Ngatshang,Yadi_Yekhar,Nyamed
+Detailed Damage Assessment,Forest Fire,,BT,Bumthang,Chhoekhor,Dawathang-Dorjibi-Kashingtsawa,Kashingtsawa
+Detailed Damage Assessment,Forest Fire,,BT,Bumthang,Dzongkhag Thromde (Chamkhar),,
+Detailed Damage Assessment,Structural Fire,06-Jan-2021,BT,Samdrup Jongkhar Thromde,Samdrup Gatshel,,
+Detailed Damage Assessment,Windstorm,,BT,Trongsa,Drakteng,,
+Detailed Damage Assessment,Earthquake,01-Oct-2020,BT,Trongsa,Nubi,Bjee-Semjee,Bjeepam
+Detailed Damage Assessment,Structural Fire,18-Feb-2021,BT,Thimphu Thromde,,,
+Detailed Damage Assessment,Disease Outbreak,06-Mar-2021,BT,Tsirang,Kilkhorthang,,
+Detailed Damage Assessment,Structural Fire,01-Mar-2021,BT,Chhukha,Bongo,Bongo_Phasooma,Phasooma
+Detailed Damage Assessment,Structural Fire,06-Mar-2021,BT,Chhukha,Doongna,Chhulakha_Mangdokha,Mangdokha
+Detailed Damage Assessment,Structural Fire,21-Feb-2021,BT,Chhukha,Doongna,Babana_Papaling,Babana
+Detailed Damage Assessment,Windstorm,06-Mar-2021,BT,Chhukha,Getana,Janamo_Phootsha,Phoosa
+Detailed Damage Assessment,Structural Fire,02-Feb-2021,BT,Pemagatshel,Nanong,Raling,Barphu
+Detailed Damage Assessment,Forest Fire,22-Mar-2021,BT,Pemagatshel,Shumar,Chongmashing Dagor,Dagor
+Detailed Damage Assessment,Structural Fire,13-Feb-2021,BT,Bumthang,Dzongkhag Thromde (Chamkhar),Jalikhar,Jalikhar
+Detailed Damage Assessment,Forest Fire,13-Feb-2021,BT,Bumthang,Dzongkhag Thromde (Chamkhar),,
+Detailed Damage Assessment,Structural Fire,30-Mar-2021,BT,Bumthang,Dzongkhag Thromde (Chamkhar),Chamkhar,Chamkhar
+Detailed Damage Assessment,Windstorm,05-Apr-2021,BT,Dagana,Tseza,Tsangleykha,Tsangleykha
+Detailed Damage Assessment,Windstorm,,BT,Monggar,Balam,Balam,
+Detailed Damage Assessment,Windstorm,04-Apr-2021,BT,Monggar,Balam,Balam,Lower Balam
+Detailed Damage Assessment,Windstorm,04-Apr-2021,BT,Monggar,Drametse,Drametse_Shaphangma,Shaphangma
+Detailed Damage Assessment,Windstorm,04-Apr-2021,BT,Monggar,Shermuhung,Soenakhar,
+Detailed Damage Assessment,Windstorm,04-Apr-2021,BT,Monggar,Shermuhung,Serzhong,
+Detailed Damage Assessment,Windstorm,04-Apr-2021,BT,Monggar,Shermuhung,Jabgang,
+Detailed Damage Assessment,Windstorm,04-Apr-2021,BT,Monggar,Thangrong,Lingkhar,Lingkhar
+Detailed Damage Assessment,Windstorm,04-Apr-2021,BT,Monggar,Kengkhar,Phosothong_singchongri,Shingchongri
+Detailed Damage Assessment,Windstorm,04-Apr-2021,BT,Monggar,Ngatshang,Nyingala_Phanasi,Phanas
+Detailed Damage Assessment,Windstorm,04-Apr-2021,BT,Monggar,Ngatshang,Thoomdari,Thumbari
+Detailed Damage Assessment,Windstorm,04-Apr-2021,BT,Monggar,Ngatshang,Thoomdari,Tagor
+Detailed Damage Assessment,Windstorm,04-Apr-2021,BT,Monggar,Na-Rang,Thrinangphu,Gutshaphu
+Detailed Damage Assessment,Windstorm,04-Apr-2021,BT,Monggar,Kengkhar,Phosothong_singchongri,
+Detailed Damage Assessment,Windstorm,05-Apr-2021,BT,Monggar,Kengkhar,Dogtang_Mooroong,Korshangri
+Detailed Damage Assessment,Forest Fire,03-Apr-2021,BT,Monggar,Na-Rang,Dongshom,Phaphung
+Detailed Damage Assessment,Earthquake,08-Apr-2021,BT,Bumthang,Dzongkhag Thromde (Chamkhar),Jalikhar,Gongkhar
+Detailed Damage Assessment,Earthquake,08-Apr-2021,BT,Bumthang,Chhoekhor,Kharsa -Thangbi,Kharsa
+Detailed Damage Assessment,Earthquake,08-Apr-2021,BT,Bumthang,Chhoekhor,Dawathang-Dorjibi-Kashingtsawa,Dawathang
+Detailed Damage Assessment,Windstorm,05-Apr-2021,BT,Sarpang,Gelephu,Lekithang,Lekithang(Lakitar)
+Detailed Damage Assessment,Windstorm,05-Apr-2021,BT,Sarpang,Gelephu,Dzomlingthang,Dzomlingthang(Mainator)
+Detailed Damage Assessment,Windstorm,05-Apr-2021,BT,Sarpang,Gelephu,Dzomlingthang,Dzomlingthang(Mainator)
+Detailed Damage Assessment,Windstorm,28-Mar-2021,BT,Punakha,Lingbukha,Gumkarmo,Tsikuna
+Detailed Damage Assessment,Windstorm,10-Feb-2021,BT,Punakha,Goenshari,Goomgang,Ngyetshokha
+Detailed Damage Assessment,Windstorm,26-Mar-2021,BT,Punakha,Bapisa,Sopsokha-Yuwa-Zhikha,Yuwakha
+Detailed Damage Assessment,Windstorm,14-Apr-2021,BT,Monggar,Drametse,Zangkhar,
+Detailed Damage Assessment,Windstorm,14-Apr-2021,BT,Monggar,Saling,Saling,
+Detailed Damage Assessment,Windstorm,22-Apr-2021,BT,Monggar,Thangrong,Bauchhoeling_Panglen,Baucholing
+Detailed Damage Assessment,Windstorm,22-Apr-2021,BT,Monggar,Thangrong,Bauchhoeling_Panglen,Raynangkhoi
+Detailed Damage Assessment,Windstorm,22-Apr-2021,BT,Monggar,Thangrong,Changshing,Changshing Goenpa
+Detailed Damage Assessment,Windstorm,22-Apr-2021,BT,Monggar,Thangrong,Changshing,Changshing Goenpa
+Detailed Damage Assessment,Windstorm,22-Apr-2021,BT,Monggar,Thangrong,Bauchhoeling_Panglen,Baucholing
+Detailed Damage Assessment,Windstorm,22-Apr-2021,BT,Monggar,Thangrong,Bauchhoeling_Panglen,Baucholing
+Detailed Damage Assessment,Windstorm,22-Apr-2021,BT,Monggar,Thangrong,Changshing,Changshing Goenpa
+Detailed Damage Assessment,Windstorm,22-Apr-2021,BT,Monggar,Thangrong,Changshing,Changshing Goenpa
+Detailed Damage Assessment,Windstorm,22-Apr-2021,BT,Monggar,Shermuhung,Muhung,Muhung
+Detailed Damage Assessment,Windstorm,22-Apr-2021,BT,Monggar,Shermuhung,Muhung,Muhung
+Detailed Damage Assessment,Windstorm,23-Apr-2021,BT,Monggar,Chhaling,,
+Detailed Damage Assessment,Windstorm,22-Apr-2021,BT,Monggar,Saling,Kalapang_Risa,Resa
+Detailed Damage Assessment,Windstorm,22-Apr-2021,BT,Monggar,Drepoong,Zunglen,
+Detailed Damage Assessment,Windstorm,22-Apr-2021,BT,Monggar,Drepoong,Drepoong,
+Detailed Damage Assessment,Windstorm,23-Apr-2021,BT,Monggar,Thangrong,Atola,Tongkangla
+Detailed Damage Assessment,Windstorm,,BT,Bumthang,Chumey,Zungngae,Yamthrag
+Detailed Damage Assessment,Forest Fire,23-Apr-2021,BT,Monggar,Kengkhar,Dogtang_Mooroong,Romangla
+Detailed Damage Assessment,Structural Fire,24-Apr-2021,BT,Monggar,Chaskhar,Kharnang_Kheshingra,
+Detailed Damage Assessment,Earthquake,28-Apr-2021,BT,Dagana,Laja,Thasa,Thasa A
+Detailed Damage Assessment,Earthquake,28-Apr-2021,BT,Dagana,Goshi,Baleygang,Middle Balaygang
+Detailed Damage Assessment,Earthquake,,BT,Dagana,Khibesa,Thomgang,Thomgang
+Detailed Damage Assessment,Earthquake,29-Apr-2021,BT,Dagana,Laja,Balung,Balung
+Detailed Damage Assessment,Earthquake,29-Apr-2021,BT,Dagana,Laja,Thasa,Thasa A
+Detailed Damage Assessment,Earthquake,29-Apr-2021,BT,Dagana,Tseza,Tsangleykha,Tsangleykha
+Detailed Damage Assessment,Earthquake,28-Apr-2021,BT,Dagana,Tseza,Tashigang,Tashigang
+Detailed Damage Assessment,Earthquake,29-Apr-2021,BT,Dagana,Tseza,Peling,Tongsho
+Detailed Damage Assessment,Earthquake,29-Apr-2021,BT,Dagana,Tseza,Peling,Peling
+Detailed Damage Assessment,Windstorm,29-Apr-2021,BT,Dagana,Drujegang,Budipang-pangna,Budipang
+Detailed Damage Assessment,Earthquake,28-Apr-2021,BT,Dagana,Khibesa,Akhochen,Akochen
+Detailed Damage Assessment,Earthquake,28-Apr-2021,BT,Dagana,Khibesa,Pogtog,Gumla
+Detailed Damage Assessment,Earthquake,28-Apr-2021,BT,Dagana,Khibesa,Pakser,Pakser
+Detailed Damage Assessment,Earthquake,28-Apr-2021,BT,Dagana,Khibesa,Thomgang,Thomgang
+Detailed Damage Assessment,Earthquake,29-Apr-2021,BT,Dagana,Drujegang,Thangna,
+Detailed Damage Assessment,Earthquake,29-Apr-2021,BT,Dagana,Drujegang,Ambithang-Pangserpo,
+Detailed Damage Assessment,Earthquake,29-Apr-2021,BT,Dagana,Drujegang,Pangserpo,
+Detailed Damage Assessment,Windstorm,29-Apr-2021,BT,Dagana,Drujegang,Budipang-pangna,Budipang
+Detailed Damage Assessment,Earthquake,29-Apr-2021,BT,Dagana,Drujegang,Pangna-patala,Patala
+Detailed Damage Assessment,Earthquake,28-Apr-2021,BT,Pemagatshel,Shumar,Bartsheri,Bartsheri
+Detailed Damage Assessment,Earthquake,28-Apr-2021,BT,Pemagatshel,Shumar,Bartsheri,Kherigonpa / Khoraypam
+Detailed Damage Assessment,Earthquake,28-Apr-2021,BT,Pemagatshel,Shumar,Nangkhor,Maan
+Detailed Damage Assessment,Earthquake,28-Apr-2021,BT,Pemagatshel,Shumar,Khotakpa Yalang,Denchi
+Detailed Damage Assessment,Earthquake,28-Apr-2021,BT,Pemagatshel,Shumar,Khotakpa Yalang,Khotakpa
+Detailed Damage Assessment,Earthquake,28-Apr-2021,BT,Pemagatshel,Shumar,Nangkhor,Shumar
+Detailed Damage Assessment,Earthquake,28-Apr-2021,BT,Pemagatshel,Shumar,Goengpong Shali,Shali
+Detailed Damage Assessment,Earthquake,10-May-2021,BT,Haa,Uesu,Tshaphel_Tsiloongkha,Tsiloongkha
+Detailed Damage Assessment,Windstorm,29-Apr-2021,BT,Monggar,Mongar,Phosorong,
+Detailed Damage Assessment,Windstorm,29-Apr-2021,BT,Monggar,Tsamang,Banjar,Banjair
+Detailed Damage Assessment,Structural Fire,17-May-2021,BT,Monggar,Mongar,Phosorong,
+Detailed Damage Assessment,Windstorm,29-Apr-2021,BT,Monggar,Tsamang,Banjar,Banjair
+Detailed Damage Assessment,Windstorm,29-Apr-2021,BT,Monggar,Chhaling,Chaling,
+Detailed Damage Assessment,Windstorm,29-Apr-2021,BT,Monggar,Tsakaling,,
+Detailed Damage Assessment,Windstorm,29-Apr-2021,BT,Monggar,Jurmed,,
+Detailed Damage Assessment,Windstorm,29-Apr-2021,BT,Monggar,Drepoong,Drepoong,
+Detailed Damage Assessment,Structural Fire,03-Jun-2021,BT,Bumthang,Chumey,Gyaltsa,Choda
+Detailed Damage Assessment,Heavy Rainfall,08-Jun-2021,BT,Pemagatshel,Khar,Khar_ Yagyur,Khar
+Detailed Damage Assessment,Landslide,15-Jul-2021,BT,Punakha,Talo,Talo,Janwanang
+Detailed Damage Assessment,Heavy Rainfall,28-Jul-2021,BT,Monggar,Mongar,,

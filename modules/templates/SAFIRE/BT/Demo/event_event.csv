@@ -1,3 +1,5 @@
-Name,Type,Description,Start Date,Country
-Sarpang Flood,Earthquake,2016 monsoon flood impact in Sarpang Dzongkhag,19-Aug-2016,BT
-Cyclone Amphan,Windstorm,Cyclone Amphan affected Bhutan from 18-23/05/2020,18-May-2020,BT
+Name,Type,Description,Start Date,Country,L1,L2,Closed,Impact:Deaths,Impact:Injured,Impact:Missing,Impact:Houses Destroyed,Impact:Houses Damaged,Impact:Directly affected,Impact:Indirectly Affected,Impact:Relocated,Impact:Evacuated,Impact:Losses $USD,Impact:Losses $Local,Impact:Education centers,Impact:Hospitals,Impact:Damages in crops Ha.,Impact:Lost Cattle,Impact:Damages in roads Mts
+Sarpang Flood,Earthquake,2016 monsoon flood impact in Sarpang Dzongkhag,19-Aug-2016,BT,Sarpang,,Y
+Cyclone Amphan,Windstorm,Cyclone Amphan affected Bhutan from 18-23/05/2020,18-May-2020,BT,
+191,Earthquake,,2009-09-21,BT,Monggar,,Y,6,18,,260,1997,,,,,0,0,,33,20,0
+27,Flood,"They were buried alive by landslide during collection of cordyceps on 26th May, 2009 at Namdating, near Tshampa RBA camp.",2009-06-25,BT,Bumthang,Choekhor,Y,6,,,,2,,,,,0,0,,,,6
