@@ -24,7 +24,7 @@
     <xsl:template match="row">
         <xsl:variable name="description" select="col[@field='Description']"/>
 
-        <resource name="stats_demographic">
+        <resource name="disease_statistic">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <xsl:if test="$description!=''">
                 <data field="description"><xsl:value-of select="$description"/></data>

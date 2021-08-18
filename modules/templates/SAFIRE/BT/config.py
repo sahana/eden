@@ -3,7 +3,7 @@
 #from collections import OrderedDict
 
 from gluon import current#, URL
-#from gluon.storage import Storage
+from gluon.storage import Storage
 
 def config(settings):
     """
@@ -37,8 +37,6 @@ def config(settings):
     settings.supply.catalog_multi = False
 
     # -------------------------------------------------------------------------
-<<<<<<< HEAD
-=======
     def customise_asset_asset_resource(r, tablename):
 
         s3db = current.s3db
@@ -289,7 +287,6 @@ def config(settings):
     settings.customise_org_facility_resource = customise_org_facility_resource
 
     # -------------------------------------------------------------------------
->>>>>>> 5ab908603 (DC: Update XSL/CSV)
     def customise_org_organisation_resource(r, tablename):
 
         # Configuration for Suppliers

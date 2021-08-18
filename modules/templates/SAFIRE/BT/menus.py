@@ -121,20 +121,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ Assessments menu """
 
         return M()(M("Initial Disaster Assessment (IDA)", c="dc", f="target",
-<<<<<<< HEAD
-                     vars = {"template_id$name": "Initial Disaster Assessment (IDA)"})(
-                       M("Create", m="create"),
-                       #M("Import", m="import", p="create"),
-                       ),
-                   M("Preliminary Damage and Needs Assessment (PDNA)", c="dc", f="target",
-                     vars = {"template_id$name": "Preliminary Damage and Needs Assessment (PDNA)"})(
-                       M("Create", m="create"),
-                       #M("Import", m="import", p="create"),
-                       ),
-                   M("Detailed Damage Assessment", c="dc", f="target",
-                     vars = {"template_id$name": "Detailed Damage Assessment"})(
-                       M("Create", m="create"),
-=======
                      vars = {"~.template_id$name": "Initial Disaster Assessment (IDA)"})(
                        M("Create", m="create",
                          vars = {"~.template_id$name": "Initial Disaster Assessment (IDA)"}),
@@ -150,7 +136,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                      vars = {"~.template_id$name": "Detailed Damage Assessment"})(
                        M("Create", m="create",
                          vars = {"~.template_id$name": "Detailed Damage Assessment"}),
->>>>>>> 5ab908603 (DC: Update XSL/CSV)
                        #M("Import", m="import", p="create"),
                        ),
                    )
