@@ -9,5 +9,5 @@ Heliports,All Active Heliports,transport,heliport,helicopter,Heliport,{name} (T(
 Projects,,project,location,project,,{name} (T('Project'))<br />{location_id},"name,location_id",,,,,,,,False,,,
 Shelters,All Active Shelters,cr,shelter,shelter,Campground,{name} (T('Shelter'))<br />T('Population') {population}<br />T('Capacity') {capacity_day},"name,population,capacity_day",~.status__ne=1,,True,,,,,False,,,
 Training Events,Used for Search Results,hrm,training_event,,,{course_id} (T('Training Event'))<br />{site_id}<br />{start_date},"course_id,site_id,start_date",,,True,,,,,,False,,
-Warehouses,,inv,warehouse,warehouse,Warehouse,{name} (T('Warehouse')),name,&~.obsolete=False,,True,,,,,False,,,
+Warehouses,,inv,warehouse,warehouse,Building,{name} (T('Warehouse')),name,&~.obsolete=False,,True,,,,,False,,,
 Water Sources,,water,reservoir,water,Water Hydrant,{name} (T('Water Source')),name,,,True,,,,,False,,,
