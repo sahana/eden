@@ -1294,7 +1294,9 @@ class S3StatsImpactModel(S3Model):
                      super_link("data_id", "stats_data"),
                      # Instance (link to Photos/Reports)
                      super_link("doc_id", "doc_entity"),
-                     self.gis_location_id(widget = S3LocationSelector(show_map=False)),
+                     self.gis_location_id(widget = S3LocationSelector(show_map = False,
+                                                                      show_postcode = False,
+                                                                      )),
                      s3_date(),
                      # This is a component, so needs to be a super_link
                      # - can't override field name, ondelete or requires

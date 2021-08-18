@@ -410,9 +410,14 @@ def config(settings):
                     INCIDENTS = T("Incidents")
                 tabs = [(label, None),
                         (INCIDENTS, "incident"),
-                        (T("Documents"), "document"),
-                        (T("Photos"), "image"),
                         ]
+                if settings.get_event_impact_tab():
+                    tabs.append((T("Impact"), "impact"))
+                if settings.get_event_dc_target_tab():
+                    tabs.append((T("Assessment Targets"), "target"))
+                tabs += [(T("Documents"), "document"),
+                         (T("Photos"), "image"),
+                         ]
 
                 rheader_tabs = s3_rheader_tabs(r, tabs)
 
