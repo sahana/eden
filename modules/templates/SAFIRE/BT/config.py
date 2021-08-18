@@ -87,12 +87,26 @@ def config(settings):
                 msg_record_deleted = T("%s deleted") % template_name,
                 msg_list_empty = T("No %ss currently registered") % template_name)
 
-        from s3 import S3DateFilter, S3LocationFilter
-        filter_widgets = [S3LocationFilter(),
+        from s3 import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3SQLCustomForm, S3SQLInlineLink
+
+        crud_form = S3SQLCustomForm(S3SQLInlineLink("event",
+                                                    field = "event_id",
+                                                    #label = type_label,
+                                                    multiple = False,
+                                                    ),
+                                    "template_id",
+                                    "date",
+                                    "location_id",
+                                    "comments",
+                                    )
+
+        filter_widgets = [S3OptionsFilter("event__link.event_id"),
+                          S3LocationFilter(),
                           S3DateFilter("date"),
                           ]
 
-        list_fields = ["location_id$L1",
+        list_fields = ["event__link.event_id",
+                       "location_id$L1",
                        "location_id$L2",
                        (T("Hazard Type"), "name"),
                        (T("Reporting Date"), "date"),
@@ -100,6 +114,7 @@ def config(settings):
                        ]
 
         s3db.configure(tablename,
+                       crud_form = crud_form,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        )
