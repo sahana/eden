@@ -18,7 +18,7 @@ import s3db.auth
 import s3db.br
 import s3db.budget
 import s3db.cap
-import s3db.climate
+#import s3db.climate
 import s3db.cms
 import s3db.cr
 import s3db.dc
@@ -36,7 +36,7 @@ import s3db.gis
 import s3db.hms
 import s3db.hrm
 import s3db.inv
-import s3db.irs
+#import s3db.irs
 import s3db.member
 import s3db.msg
 import s3db.ocr
@@ -53,12 +53,12 @@ import s3db.security
 import s3db.setup
 import s3db.sit
 import s3db.stats
-import s3db.stdm
+#import s3db.stdm
 import s3db.supply
 import s3db.survey
 import s3db.sync
-import s3db.tour
-import s3db.tr
+#import s3db.tour
+#import s3db.tr
 import s3db.translate
 import s3db.transport
 import s3db.vehicle

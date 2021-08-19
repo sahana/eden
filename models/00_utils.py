@@ -338,8 +338,8 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     elif method not in s3.action_methods:
         s3.actions = None
 
-    if get_vars.tour:
-        output = s3db.tour_builder(output)
+    #if get_vars.tour:
+    #    output = s3db.tour_builder(output)
 
     return output
 

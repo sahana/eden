@@ -236,20 +236,20 @@ if len(pop_list) > 0:
         db.budget_parameter.insert() # Defaults are fine
 
     # Climate Module
-    if has_module("climate"):
-        s3db.climate_first_run()
+    #if has_module("climate"):
+    #    s3db.climate_first_run()
 
     # Incident Reporting System
-    if has_module("irs"):
-        # Categories visible to end-users by default
-        table = db.irs_icategory
-        table.insert(code = "flood")
-        table.insert(code = "geophysical.landslide")
-        table.insert(code = "roadway.bridgeClosure")
-        table.insert(code = "roadway.roadwayClosure")
-        table.insert(code = "other.buildingCollapsed")
-        table.insert(code = "other.peopleTrapped")
-        table.insert(code = "other.powerFailure")
+    #if has_module("irs"):
+    #    # Categories visible to end-users by default
+    #    table = db.irs_icategory
+    #    table.insert(code = "flood")
+    #    table.insert(code = "geophysical.landslide")
+    #    table.insert(code = "roadway.bridgeClosure")
+    #    table.insert(code = "roadway.roadwayClosure")
+    #    table.insert(code = "other.buildingCollapsed")
+    #    table.insert(code = "other.peopleTrapped")
+    #    table.insert(code = "other.powerFailure")
 
     # Supply Module
     if has_module("supply"):

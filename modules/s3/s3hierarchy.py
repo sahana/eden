@@ -354,7 +354,7 @@ class S3HierarchyCRUD(S3Method):
         tablename = resource.tablename
 
         # Get the hierarchy
-        h = S3Hierarchy(tablename=tablename)
+        h = S3Hierarchy(tablename = tablename)
         if not h.config:
             r.error(405, "No hierarchy configured for %s" % tablename)
 
