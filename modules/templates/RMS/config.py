@@ -776,6 +776,7 @@ def config(settings):
     # Hide Staff Management Tabs for Facilities in Inventory Module
     settings.inv.facility_manage_staff = False
     settings.inv.document_filing = True
+    settings.inv.minimums = True
     settings.inv.show_mode_of_transport = True
     settings.inv.send_show_time_in = True
     #settings.inv.collapse_tabs = True

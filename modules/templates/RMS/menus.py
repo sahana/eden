@@ -303,7 +303,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             M("Items", c="supply", f="item"),
                             M("Suppliers", f="supplier"),
                             M("Facilities", f="facility"),
-                            M("Stock limit", link=False),
+                            M("Stock limit", f="minimum"),
                         ),
                         M("Reports", c="inv", link=False)(
                             M("Short Inventory", f="inv_item", m="report"),

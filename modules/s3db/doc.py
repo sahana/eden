@@ -119,7 +119,7 @@ class S3DocumentLibrary(S3Model):
                                security_seized_item = T("Seized Item"),
                                # @ToDo: Deprecate
                                #stats_people = T("People"),
-                               stdm_tenure = T("Tenure"),
+                               #stdm_tenure = T("Tenure"),
                                vulnerability_document = T("Vulnerability Document"),
                                vulnerability_risk = T("Risk"),
                                vulnerability_evac_route = T("Evacuation Route"),

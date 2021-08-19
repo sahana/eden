@@ -3410,6 +3410,7 @@ class OrgSiteModel(S3Model):
 
                        # Inventory
                        inv_inv_item = "site_id",
+                       inv_minimum = "site_id",
                        inv_recv = "site_id",
                        inv_send = "site_id",
 

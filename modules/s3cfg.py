@@ -4743,6 +4743,12 @@ class S3Config(Storage):
         """
         return self.inv.get("facility_manage_staff", True)
 
+    def get_inv_minimums(self):
+        """
+            Manage Minimum Stock Levels
+        """
+        return self.inv.get("minimums", False)
+
     def get_inv_recv_tab_label(self):
         label = self.inv.get("recv_tab_label")
         if not label:
