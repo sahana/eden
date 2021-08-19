@@ -117,7 +117,8 @@ def item():
     """ RESTful CRUD controller """
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    return s3db.supply_item_controller()
+    from s3db.supply import supply_item_controller
+    return supply_item_controller()
 
 # -----------------------------------------------------------------------------
 def item_category():
@@ -135,11 +136,13 @@ def item_category():
         if r.id:
             # Should not be able to set the Parent to this record
             # @ToDo: Also prevent setting to any of the categories of which this is an ancestor
+            from s3db.supply import supply_ItemCategoryRepresent
             the_set = db(table.id != r.id)
             table.parent_item_category_id.requires = IS_EMPTY_OR(
                 IS_ONE_OF(the_set, "supply_item_category.id",
-                          s3db.supply_ItemCategoryRepresent(use_code=False),
-                          sort=True)
+                          supply_ItemCategoryRepresent(use_code = False),
+                          sort = True,
+                          )
                 )
 
         return True
@@ -152,7 +155,8 @@ def item_entity():
     """ RESTful CRUD controller """
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    return s3db.supply_item_entity_controller()
+    from s3db.supply import supply_item_entity_controller
+    return supply_item_entity_controller()
 
 # -----------------------------------------------------------------------------
 def item_pack():
