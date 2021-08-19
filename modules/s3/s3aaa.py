@@ -6197,11 +6197,16 @@ class S3Permission(object):
             Create indexes for s3_permission table, for faster rule lookups
         """
 
-        db = current.db
+        dbtype = current.deployment_settings.get_database_type()
 
-        sql = "CREATE INDEX IF NOT EXISTS %(index)s ON %(table)s (%(field)s);"
+        if dbtype in ("postgres", "sqlite"):
+            sql = "CREATE INDEX IF NOT EXISTS %(index)s ON %(table)s (%(field)s);"
+        else:
+            return
 
         names = {"table": self.tablename}
+
+        db = current.db
 
         for fname in ("controller", "function", "tablename"):
             names["field"] = fname
