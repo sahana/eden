@@ -2756,6 +2756,7 @@ def supply_item_controller():
 
     def postp(r, output):
         if r.interactive and \
+           r.component and \
            r.component.name == "inv_item":
             # Open Natively
             # Custom Action Buttons
