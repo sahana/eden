@@ -36,6 +36,9 @@ def config(settings):
 
     settings.supply.catalog_multi = False
 
+    settings.project.mode_3w = True
+    settings.project.multiple_organisations = True
+
     # -------------------------------------------------------------------------
     def customise_asset_asset_resource(r, tablename):
 
