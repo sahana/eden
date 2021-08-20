@@ -25,6 +25,7 @@ def config(settings):
 
     modules = settings.modules
     modules["br"] = {"name_nice": T("Case Management"), "module_type": 10}
+    modules["budget"] = {"name_nice": T("Budget Management"), "module_type": 10}
     modules["dc"] = {"name_nice": T("Disaster Assessments"), "module_type": 10}
     modules["disease"] = {"name_nice": T("Disease"), "module_type": 10}
     modules["edu"] = {"name_nice": T("Schools"), "module_type": 10}
@@ -38,6 +39,16 @@ def config(settings):
 
     settings.project.mode_3w = True
     settings.project.multiple_organisations = True
+    settings.project.activities = True
+    settings.project.activity_types = True
+    settings.project.budget_monitoring = True
+    settings.project.goals = True
+    settings.project.outcomes = True
+    settings.project.outputs = True
+    settings.project.indicators = True
+    #settings.project.indicator_criteria = True
+    settings.project.programmes = True
+    settings.project.themes = True
 
     # -------------------------------------------------------------------------
     def customise_asset_asset_resource(r, tablename):
