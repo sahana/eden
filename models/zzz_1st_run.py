@@ -133,6 +133,9 @@ if len(pop_list) > 0:
     #ORG_ADMIN = system_roles.ORG_ADMIN
     #ORG_GROUP_ADMIN = system_roles.ORG_GROUP_ADMIN
 
+    # Create indexes for permission table
+    auth.permission.create_indexes()
+
     # =========================================================================
     # Configure Scheduled Tasks
     #
@@ -233,20 +236,20 @@ if len(pop_list) > 0:
         db.budget_parameter.insert() # Defaults are fine
 
     # Climate Module
-    if has_module("climate"):
-        s3db.climate_first_run()
+    #if has_module("climate"):
+    #    s3db.climate_first_run()
 
     # Incident Reporting System
-    if has_module("irs"):
-        # Categories visible to end-users by default
-        table = db.irs_icategory
-        table.insert(code = "flood")
-        table.insert(code = "geophysical.landslide")
-        table.insert(code = "roadway.bridgeClosure")
-        table.insert(code = "roadway.roadwayClosure")
-        table.insert(code = "other.buildingCollapsed")
-        table.insert(code = "other.peopleTrapped")
-        table.insert(code = "other.powerFailure")
+    #if has_module("irs"):
+    #    # Categories visible to end-users by default
+    #    table = db.irs_icategory
+    #    table.insert(code = "flood")
+    #    table.insert(code = "geophysical.landslide")
+    #    table.insert(code = "roadway.bridgeClosure")
+    #    table.insert(code = "roadway.roadwayClosure")
+    #    table.insert(code = "other.buildingCollapsed")
+    #    table.insert(code = "other.peopleTrapped")
+    #    table.insert(code = "other.powerFailure")
 
     # Supply Module
     if has_module("supply"):
@@ -269,6 +272,7 @@ if len(pop_list) > 0:
     s3.import_feed = bi.import_feed
     s3.import_font = bi.import_font
     s3.import_image = bi.import_image
+    s3.import_pr_image = bi.import_pr_image
     s3.import_remote_csv = bi.import_remote_csv
     s3.import_role = bi.import_role
     s3.import_script = bi.import_script

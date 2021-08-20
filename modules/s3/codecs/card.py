@@ -586,12 +586,12 @@ class S3PDFCardLayout(Flowable):
                      value,
                      x,
                      y,
-                     bctype="code128",
-                     height=12,
-                     barwidth=0.85,
-                     halign=None,
-                     valign=None,
-                     maxwidth=None,
+                     bctype = "code128",
+                     height = 12,
+                     barwidth = 0.85,
+                     halign = None,
+                     valign = None,
+                     maxwidth = None,
                      ):
         """
             Helper function to render a barcode
@@ -705,12 +705,12 @@ class S3PDFCardLayout(Flowable):
                    img,
                    x,
                    y,
-                   width=None,
-                   height=None,
-                   proportional=True,
-                   scale=None,
-                   halign=None,
-                   valign=None,
+                   width = None,
+                   height = None,
+                   proportional = True,
+                   scale = None,
+                   halign = None,
+                   valign = None,
                    ):
         """
             Helper function to draw an image

@@ -1810,6 +1810,11 @@ def kitting():
                               )
 
 # -----------------------------------------------------------------------------
+def minimum():
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def facility():
     # Open record in this controller after creation
     s3db.configure("org_facility",

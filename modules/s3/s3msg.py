@@ -678,32 +678,32 @@ class S3Msg(object):
         # Left joins for multi-recipient lookups
         gleft = [mtable.on((mtable.group_id == gtable.id) & \
                            (mtable.person_id != None) & \
-                           (mtable.deleted != True)),
+                           (mtable.deleted == False)),
                  ptable.on((ptable.id == mtable.person_id) & \
-                           (ptable.deleted != True))
+                           (ptable.deleted == False))
                  ]
         fleft = [fmtable.on((fmtable.forum_id == ftable.id) & \
                            (fmtable.person_id != None) & \
-                           (fmtable.deleted != True)),
+                           (fmtable.deleted == False)),
                  ptable.on((ptable.id == fmtable.person_id) & \
-                           (ptable.deleted != True))
+                           (ptable.deleted == False))
                  ]
 
         if htable:
             oleft = [htable.on((htable.organisation_id == otable.id) & \
                                (htable.person_id != None) & \
-                               (htable.deleted != True)),
+                               (htable.deleted == False)),
                      ptable.on((ptable.id == htable.person_id) & \
-                               (ptable.deleted != True)),
+                               (ptable.deleted == False)),
                      ]
 
             etable = s3db.hrm_training_event
             ttable = s3db.hrm_training
             tleft = [ttable.on((ttable.training_event_id == etable.id) & \
                                (ttable.person_id != None) & \
-                               (ttable.deleted != True)),
+                               (ttable.deleted == False)),
                      ptable.on((ptable.id == ttable.person_id) & \
-                               (ptable.deleted != True)),
+                               (ptable.deleted == False)),
                      ]
 
             atable = s3db.table("deploy_alert")
@@ -712,9 +712,9 @@ class S3Msg(object):
                 aleft = [ltable.on(ltable.alert_id == atable.id),
                          htable.on((htable.id == ltable.human_resource_id) & \
                                    (htable.person_id != None) & \
-                                   (htable.deleted != True)),
+                                   (htable.deleted == False)),
                          ptable.on((ptable.id == htable.person_id) & \
-                                   (ptable.deleted != True))
+                                   (ptable.deleted == False))
                          ]
 
         # chainrun: used to fire process_outbox again,
@@ -742,9 +742,9 @@ class S3Msg(object):
                 message = row["msg_email.body"] or ""
                 from_address = row["msg_email.from_address"] or ""
                 query = (attachment_table.message_id == message_id) & \
-                        (attachment_table.deleted != True) & \
+                        (attachment_table.deleted == False) & \
                         (attachment_table.document_id == document_table.id) & \
-                        (document_table.deleted != True)
+                        (document_table.deleted == False)
                 arows = db(query).select(file_field)
                 for arow in arows:
                     file = arow.file
@@ -908,7 +908,7 @@ class S3Msg(object):
         if channel_id:
             query = (gcmtable.channel_id == channel_id)
         else:
-            query = (gcmtable.enabled == True) & (gcmtable.deleted != True)
+            query = (gcmtable.enabled == True) & (gcmtable.deleted == False)
 
         row = current.db(query).select(gcmtable.api_key,
                                        limitby = (0, 1)
@@ -2279,7 +2279,7 @@ class S3Msg(object):
                                                   # @ToDo: Enclosures
                                                   )
                 if links:
-                    query_ = (ltable.rss_id == exists.id) & (ltable.deleted != True)
+                    query_ = (ltable.rss_id == exists.id) & (ltable.deleted == False)
                     for link_ in links:
                         url_ = link_["url"]
                         type_ = link_["type"]
@@ -2900,7 +2900,7 @@ class S3Compose(S3CRUD):
                     all_contact_opts = current.msg.MSG_CONTACT_OPTS
                     contact_method_opts = {}
                     ctable = s3db.pr_contact
-                    query = (ctable.deleted != True) & \
+                    query = (ctable.deleted == False) & \
                             (ctable.pe_id == recipient)
                     rows = db(query).select(ctable.contact_method)
                     for row in rows:

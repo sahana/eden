@@ -608,7 +608,7 @@ class S3FieldPath(object):
                 query = (table[pkey] == ktable[fkey])
                 DELETED = current.xml.DELETED
                 if DELETED in ktable.fields:
-                    query &= ktable[DELETED] != True
+                    query &= ktable[DELETED] == False
                 join = [ktable.on(query)]
 
             else:
@@ -1673,7 +1673,7 @@ class S3ResourceQuery(object):
                 # Execute query and retrieve the lookup table IDs
                 DELETED = current.xml.DELETED
                 if DELETED in table.fields:
-                    subquery &= table[DELETED] != True
+                    subquery &= table[DELETED] == False
                 rows = current.db(subquery).select(table._id)
 
                 # Override field/keys

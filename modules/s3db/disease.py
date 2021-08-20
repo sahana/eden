@@ -1074,6 +1074,7 @@ class CaseTrackingModel(S3Model):
                      s3_datetime("probe_date",
                                  default = "now",
                                  label = T("Probe Date"),
+                                 future = 0,
                                  ),
                      Field("probe_status",
                            represent = S3Represent(options = probe_status),

@@ -233,6 +233,8 @@ Thank you"""
         # CLI can override with auth.override=True
         self.PROTECTED = ("admin",)
 
+        self._user_represent = None
+
     # -------------------------------------------------------------------------
     def define_tables(self, migrate=True, fake_migrate=False):
         """
@@ -1889,6 +1891,33 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
         return form
 
     # -------------------------------------------------------------------------
+    @property
+    def user_represent(self):
+        """
+            Common auth_UserRepresent instance for meta-fields (lazy property)
+
+            @returns: S3Represent instance
+        """
+
+        represent = self._user_represent
+        if represent is None:
+
+            if current.deployment_settings.get_ui_auth_user_represent() == "name":
+                show_name = True
+                show_email = False
+            else:
+                show_name = False
+                show_email = True
+
+            represent = current.s3db.auth_UserRepresent(show_name = show_name,
+                                                        show_email = show_email,
+                                                        show_link = False,
+                                                        )
+            self._user_represent = represent
+
+        return represent
+
+    # -------------------------------------------------------------------------
     def configure_user_fields(self, pe_ids=None):
         """
             Configure User Fields - for registration & user administration
@@ -2201,7 +2230,7 @@ $.filterOptionsS3({
                 org = org_full
 
             query = (otable.name.lower() == org.lower()) & \
-                    (otable.deleted != True)
+                    (otable.deleted == False)
             if parent:
                 btable = s3db.org_organisation_branch
                 ptable = db.org_organisation.with_alias("org_parent_organisation")
@@ -2225,7 +2254,7 @@ $.filterOptionsS3({
                 # Search by local name
                 query = (ltable.name_l10n.lower() == org.lower()) & \
                         (ltable.organisation_id == otable.id) & \
-                        (ltable.deleted != True)
+                        (ltable.deleted == False)
                 records = db(query).select(otable.id,
                                            otable.pe_id,
                                            limitby = (0, 2))
@@ -2267,7 +2296,7 @@ $.filterOptionsS3({
             ptable = s3db.pr_person
             query = (ptable.first_name.lower() == first_name.lower()) & \
                     (ptable.last_name.lower() == last_name.lower()) & \
-                    (ptable.deleted != True) & \
+                    (ptable.deleted == False) & \
                     (ctable.pe_id == ptable.pe_id) & \
                     (ctable.contact_method == "EMAIL") & \
                     (ctable.value == email)
@@ -3393,7 +3422,7 @@ Please go to %(url)s to approve this user."""
         # Default status to "Member"
         stable = s3db.org_group_person_status
         query = (stable.name.lower() == "member") & \
-                (stable.deleted != True)
+                (stable.deleted == False)
         row = db(query).select(stable.id, limitby=(0, 1)).first()
         if row:
             status_id = row.id
@@ -3404,7 +3433,7 @@ Please go to %(url)s to approve this user."""
         ltable = s3db.org_group_person
         query = (ltable.person_id == person_id) & \
                 (ltable.org_group_id == org_group_id) & \
-                (ltable.deleted != True)
+                (ltable.deleted == False)
         row = db(query).select(ltable.id, limitby=(0, 1)).first()
         if not row:
             # Make sure person record and org_group record exist
@@ -3908,7 +3937,7 @@ Please go to %(url)s to approve this user."""
         gtable = self.settings.table_group
         if gtable is not None:
             S3_SYSTEM_ROLES = self.S3_SYSTEM_ROLES
-            query = (gtable.deleted != True) & \
+            query = (gtable.deleted == False) & \
                      gtable.uuid.belongs(set(S3_SYSTEM_ROLES.values()))
             rows = current.db(query).select(gtable.id, gtable.uuid)
             system_roles = Storage([(role.uuid, role.id) for role in rows])
@@ -4001,7 +4030,7 @@ Please go to %(url)s to approve this user."""
 
             # Get all current auth_memberships of the user
             mtable = self.settings.table_membership
-            query = (mtable.deleted != True) & \
+            query = (mtable.deleted == False) & \
                     (mtable.user_id == user_id) & \
                     (mtable.group_id != None)
             rows = db(query).select(mtable.group_id, mtable.pe_id,
@@ -4081,7 +4110,7 @@ Please go to %(url)s to approve this user."""
                         rn = rtable._tablename
                         an = atable._tablename
 
-                        query = (dtable.deleted != True) & \
+                        query = (dtable.deleted == False) & \
                                 (atable.role_id == dtable.role_id) & \
                                 (atable.pe_id.belongs(ancestors)) & \
                                 (rtable.id == dtable.role_id)
@@ -4311,7 +4340,7 @@ Please go to %(url)s to approve this user."""
         else:
             group_ids = [group_id]
         if query is not None:
-            query = (gtable.deleted != True) & query
+            query = (gtable.deleted == False) & query
             groups = db(query).select(gtable.id, gtable.uuid)
             group_ids = [g.id for g in groups]
             missing = [uuid for uuid in uuids
@@ -4322,7 +4351,7 @@ Please go to %(url)s to approve this user."""
                     group_ids.append(group_id)
 
         # Find the assigned groups
-        query = (mtable.deleted != True) & \
+        query = (mtable.deleted == False) & \
                 (mtable.user_id == user_id) & \
                 (mtable.group_id.belongs(group_ids) & \
                 (mtable.pe_id == for_pe))
@@ -4386,12 +4415,12 @@ Please go to %(url)s to approve this user."""
         else:
             group_ids = [group_id]
         if query is not None:
-            query = (gtable.deleted != True) & query
+            query = (gtable.deleted == False) & query
             groups = db(query).select(gtable.id)
             group_ids = [g.id for g in groups]
 
         # Get the assigned groups
-        query = (mtable.deleted != True) & \
+        query = (mtable.deleted == False) & \
                 (mtable.user_id == user_id) & \
                 (mtable.group_id.belongs(group_ids))
 
@@ -4433,7 +4462,7 @@ Please go to %(url)s to approve this user."""
             return []
 
         mtable = self.settings.table_membership
-        query = (mtable.deleted != True) & \
+        query = (mtable.deleted == False) & \
                 (mtable.user_id == user_id)
         if isinstance(for_pe, (list, tuple)):
             if len(for_pe):
@@ -4497,7 +4526,7 @@ Please go to %(url)s to approve this user."""
             else:
                 gtable = self.settings.table_group
                 query = (gtable.uuid == role) & \
-                        (gtable.deleted != True)
+                        (gtable.deleted == False)
                 row = current.db(query).select(gtable.id,
                                                cache = (current.cache.ram, 600),
                                                limitby = (0, 1),
@@ -4565,7 +4594,7 @@ Please go to %(url)s to approve this user."""
         if resolve:
             gtable = self.settings.table_group
             query = (gtable.uuid.belongs(resolve)) & \
-                    (gtable.deleted != True)
+                    (gtable.deleted == False)
             rows = current.db(query).select(gtable.id,
                                             cache = (current.cache.ram, 600),
                                             )
@@ -4605,7 +4634,7 @@ Please go to %(url)s to approve this user."""
 
         mtable = self.settings.table_membership
 
-        query = (mtable.deleted != True) & \
+        query = (mtable.deleted == False) & \
                 (mtable.group_id == group_id)
         if for_pe is None:
             query &= (mtable.pe_id == None)
@@ -4670,7 +4699,7 @@ Please go to %(url)s to approve this user."""
         else:
             group_ids = [group_id]
         if query is not None:
-            query = (gtable.deleted != True) & query
+            query = (gtable.deleted == False) & query
             groups = db(query).select(gtable.id, gtable.uuid)
             group_ids = [g.id for g in groups]
             missing = [u for u in uuids if u not in [g.uuid for g in groups]]
@@ -4684,12 +4713,12 @@ Please go to %(url)s to approve this user."""
         if receiver is not None:
             if not isinstance(receiver, (list, tuple)):
                 receiver = [receiver]
-            query = (dtable.deleted != True) & \
+            query = (dtable.deleted == False) & \
                     (dtable.group_id.belongs(group_ids)) & \
                     (dtable.role_id == rtable.id) & \
-                    (rtable.deleted != True) & \
+                    (rtable.deleted == False) & \
                     (atable.role_id == rtable.id) & \
-                    (atable.deleted != True) & \
+                    (atable.deleted == False) & \
                     (atable.pe_id.belongs(receiver))
             rows = db(query).select(atable.pe_id)
             assigned = [row.pe_id for row in rows]
@@ -4720,7 +4749,7 @@ Please go to %(url)s to approve this user."""
                 if role_id:
                     roles.append(role_id)
         else:
-            query = (rtable.deleted != True) & \
+            query = (rtable.deleted == False) & \
                     (rtable.pe_id == entity) & \
                     (rtable.role == role)
             row = db(query).select(rtable.id, limitby=(0, 1)).first()
@@ -4800,14 +4829,14 @@ Please go to %(url)s to approve this user."""
         else:
             group_ids = [group_id]
         if query is not None:
-            query = (gtable.deleted != True) & query
+            query = (gtable.deleted == False) & query
             groups = db(query).select(gtable.id, gtable.uuid)
             group_ids = [g.id for g in groups]
         if not group_ids:
             return False
 
         # Get all delegations
-        query = (dtable.deleted != True) & \
+        query = (dtable.deleted == False) & \
                 (dtable.group_id.belongs(group_ids)) & \
                 (dtable.role_id == rtable.id) & \
                 (rtable.pe_id == entity) & \
@@ -4866,9 +4895,9 @@ Please go to %(url)s to approve this user."""
         if None in (dtable, rtable, atable):
             return None
 
-        query = (rtable.deleted != True) & \
-                (dtable.deleted != True) & \
-                (atable.deleted != True) & \
+        query = (rtable.deleted == False) & \
+                (dtable.deleted == False) & \
+                (atable.deleted == False) & \
                 (rtable.pe_id == entity) & \
                 (dtable.role_id == rtable.id) & \
                 (atable.role_id == rtable.id)
@@ -5824,7 +5853,7 @@ Please go to %(url)s to approve this user."""
                     continue
                 query = self.s3_accessible_query("update", ftable)
                 if "deleted" in ftable:
-                    query &= (ftable.deleted != True)
+                    query &= (ftable.deleted == False)
                 rows = current.db(query).select(ftable.site_id)
                 site_ids += [row.site_id for row in rows]
             except:
@@ -6161,6 +6190,28 @@ class S3Permission(object):
                             *S3MetaFields.sync_meta_fields()
                             )
             self.table = db[self.tablename]
+
+    # -------------------------------------------------------------------------
+    def create_indexes(self):
+        """
+            Create indexes for s3_permission table, for faster rule lookups
+        """
+
+        dbtype = current.deployment_settings.get_database_type()
+
+        if dbtype in ("postgres", "sqlite"):
+            sql = "CREATE INDEX IF NOT EXISTS %(index)s ON %(table)s (%(field)s);"
+        else:
+            return
+
+        names = {"table": self.tablename}
+
+        db = current.db
+
+        for fname in ("controller", "function", "tablename"):
+            names["field"] = fname
+            names["index"] = "%(table)s_%(field)s_idx" % names
+            db.executesql(sql % names)
 
     # -------------------------------------------------------------------------
     # ACL Management
@@ -7314,15 +7365,15 @@ class S3Permission(object):
         page_restricted = self.page_restricted(c=c, f=f)
 
         # Base query
-        query = (table.deleted != True) & \
-                (table.group_id.belongs(roles))
+        query = (table.group_id.belongs(roles)) & \
+                (table.deleted == False)
 
         # Page ACLs
         if page_restricted:
             q = (table.function == None)
             if f and self.use_facls:
                 q |= (table.function == f)
-            q &= (table.controller == c)
+            q = (table.controller == c) & q
         else:
             q = None
 
@@ -7331,9 +7382,9 @@ class S3Permission(object):
             # Be sure to use the original table name
             if hasattr(t, "_tablename"):
                 t = original_tablename(t)
-            tq = (table.controller == None) & \
-                 (table.function == None) & \
-                 (table.tablename == t)
+            tq = (table.tablename == t) & \
+                 (table.controller == None) & \
+                 (table.function == None)
             q = tq if q is None else q | tq
             table_restricted = self.table_restricted(t)
         else:
@@ -7341,7 +7392,7 @@ class S3Permission(object):
 
         # Retrieve the ACLs
         if q is not None:
-            query &= q
+            query = q & query
             rows = db(query).select(table.group_id,
                                     table.controller,
                                     table.function,
@@ -7350,7 +7401,7 @@ class S3Permission(object):
                                     table.entity,
                                     table.uacl,
                                     table.oacl,
-                                    cacheable = True
+                                    cacheable = True,
                                     )
         else:
             rows = []
@@ -7606,11 +7657,11 @@ class S3Permission(object):
 
         if not "restricted_tables" in s3:
             table = self.table
-            query = (table.deleted != True) & \
-                    (table.controller == None) & \
-                    (table.function == None)
+            query = (table.controller == None) & \
+                    (table.function == None) & \
+                    (table.deleted == False)
             rows = current.db(query).select(table.tablename,
-                                            groupby = table.tablename
+                                            groupby = table.tablename,
                                             )
             s3.restricted_tables = [row.tablename for row in rows]
 
@@ -7635,7 +7686,7 @@ class S3Permission(object):
                 hidden_modules = restricted_modules
             else:
                 t = self.table
-                query = (t.deleted != True) & \
+                query = (t.deleted == False) & \
                         (t.controller.belongs(restricted_modules)) & \
                         (t.tablename == None)
                 if roles:
@@ -8430,10 +8481,10 @@ class S3EntityRoleManager(S3Method):
         gtable = current.auth.settings.table_group
         utable = current.auth.settings.table_user
 
-        query = (mtable.deleted != True) & \
-                (gtable.deleted != True) & \
+        query = (mtable.deleted == False) & \
+                (gtable.deleted == False) & \
                 (gtable.id == mtable.group_id) & \
-                (utable.deleted != True) & \
+                (utable.deleted == False) & \
                 (utable.id == mtable.user_id)
 
         if user_id:

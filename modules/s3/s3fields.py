@@ -1257,17 +1257,7 @@ class S3MetaFields(object):
             @return: representation function
         """
 
-        if current.deployment_settings.get_ui_auth_user_represent() == "name":
-            show_name = True
-            show_email = False
-        else:
-            show_name = False
-            show_email = True
-
-        return current.s3db.auth_UserRepresent(show_name = show_name,
-                                               show_email = show_email,
-                                               show_link = False,
-                                               )
+        return current.auth.user_represent
 
 # -----------------------------------------------------------------------------
 def s3_meta_fields():

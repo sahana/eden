@@ -25,14 +25,30 @@ def config(settings):
 
     modules = settings.modules
     modules["br"] = {"name_nice": T("Case Management"), "module_type": 10}
+    modules["budget"] = {"name_nice": T("Budget Management"), "module_type": 10}
     modules["dc"] = {"name_nice": T("Disaster Assessments"), "module_type": 10}
     modules["disease"] = {"name_nice": T("Disease"), "module_type": 10}
     modules["edu"] = {"name_nice": T("Schools"), "module_type": 10}
     modules["stats"] = {"name_nice": T("Statistics"), "module_type": 10}
-    modules["transport"] = {"name_nice": T("Infrastructure"), "module_type": 10}
+    modules["transport"] = {"name_nice": T("Transport"), "module_type": 10}
     modules["water"] = {"name_nice": T("Water"), "module_type": 10}
 
+    settings.hrm.id_cards = True
+
     settings.supply.catalog_multi = False
+
+    settings.project.mode_3w = True
+    settings.project.multiple_organisations = True
+    settings.project.activities = True
+    settings.project.activity_types = True
+    settings.project.budget_monitoring = True
+    settings.project.goals = True
+    settings.project.outcomes = True
+    settings.project.outputs = True
+    settings.project.indicators = True
+    #settings.project.indicator_criteria = True
+    settings.project.programmes = True
+    settings.project.themes = True
 
     # -------------------------------------------------------------------------
     def customise_asset_asset_resource(r, tablename):
@@ -83,7 +99,26 @@ def config(settings):
                 msg_record_deleted = T("%s deleted") % template_name,
                 msg_list_empty = T("No %ss currently registered") % template_name)
 
-        list_fields = ["location_id$L1",
+        from s3 import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3SQLCustomForm, S3SQLInlineLink
+
+        crud_form = S3SQLCustomForm(S3SQLInlineLink("event",
+                                                    field = "event_id",
+                                                    #label = type_label,
+                                                    multiple = False,
+                                                    ),
+                                    "template_id",
+                                    "date",
+                                    "location_id",
+                                    "comments",
+                                    )
+
+        filter_widgets = [S3OptionsFilter("event__link.event_id"),
+                          S3LocationFilter(),
+                          S3DateFilter("date"),
+                          ]
+
+        list_fields = ["event__link.event_id",
+                       "location_id$L1",
                        "location_id$L2",
                        (T("Hazard Type"), "name"),
                        (T("Reporting Date"), "date"),
@@ -91,6 +126,8 @@ def config(settings):
                        ]
 
         s3db.configure(tablename,
+                       crud_form = crud_form,
+                       filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        )
 
@@ -161,6 +198,19 @@ def config(settings):
                        )
 
     settings.customise_hms_hospital_resource = customise_hms_hospital_resource
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_human_resource_controller(**attr):
+
+        #if r.representation == "card":
+        # Configure ID card layout
+        from templates.RMS.idcards import IDCardLayout
+        #resource.configure(pdf_card_layout = IDCardLayout)
+        current.s3db.configure("hrm_human_resource", pdf_card_layout = IDCardLayout)
+
+        return attr
+
+    settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
 
     # -------------------------------------------------------------------------
     def customise_hrm_training_event_resource(r, tablename):
@@ -308,58 +358,5 @@ def config(settings):
                        )
 
     settings.customise_supply_catalog_item_resource = customise_supply_catalog_item_resource
-
-    # -------------------------------------------------------------------------
-    def customise_transport_bridge_resource(r, tablename):
-
-        s3db = current.s3db
-
-        #s3db.transport_bridge.
-
-        list_fields = ["name",
-                       "location_id$L1",
-                       "location_id$L2",
-                       "location_id$L3",
-                       "location_id$L4",
-                       ]
-
-        s3db.configure(tablename,
-                       list_fields = list_fields,
-                       )
-
-    settings.customise_transport_bridge_resource = customise_transport_bridge_resource
-
-    # -------------------------------------------------------------------------
-    def customise_water_reservoir_resource(r, tablename):
-
-        s3db = current.s3db
-
-        #s3db.hms_hospital.
-
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Create Water Source"),
-            title_display = T("Water Source Details"),
-            title_list = T("Water Sources"),
-            title_update = T("Edit Water Source"),
-            #title_upload = T("Import Water Sources"),
-            label_list_button = T("List Water Sources"),
-            label_delete_button = T("Delete Water Source"),
-            msg_record_created = T("Water Source added"),
-            msg_record_modified = T("Water Source updated"),
-            msg_record_deleted = T("Water Source deleted"),
-            msg_list_empty = T("No Water Sources currently registered"))
-
-        list_fields = ["name",
-                       "location_id$L1",
-                       "location_id$L2",
-                       "location_id$L3",
-                       "location_id$L4",
-                       ]
-
-        s3db.configure(tablename,
-                       list_fields = list_fields,
-                       )
-
-    settings.customise_water_reservoir_resource = customise_water_reservoir_resource
 
 # END =========================================================================

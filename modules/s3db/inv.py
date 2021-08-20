@@ -31,6 +31,7 @@ __all__ = ("InvWarehouseModel",
            "InventoryModel",
            "InventoryTrackingModel",
            "InventoryAdjustModel",
+           "InventoryMinimumModel",
            "InventoryRequestModel",
            "inv_adj_rheader",
            "inv_item_total_weight",
@@ -64,26 +65,40 @@ from gluon.storage import Storage
 from ..s3 import *
 from s3layouts import S3PopupLink
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
+# Dependency list for translate-module
+depends = ["supply"]
+
+# =============================================================================
 SHIP_STATUS_IN_PROCESS = 0
 SHIP_STATUS_RECEIVED   = 1
 SHIP_STATUS_SENT       = 2
 SHIP_STATUS_CANCEL     = 3
 SHIP_STATUS_RETURNING  = 4
 
-# Dependency list
-depends = ["supply"]
-
-# To pass to global scope
+# Dict to lookup a status by name
 inv_ship_status = {"IN_PROCESS" : SHIP_STATUS_IN_PROCESS,
-                   "RECEIVED"   : SHIP_STATUS_RECEIVED,
                    "SENT"       : SHIP_STATUS_SENT,
+                   "RECEIVED"   : SHIP_STATUS_RECEIVED,
                    "CANCEL"     : SHIP_STATUS_CANCEL,
                    "RETURNING"  : SHIP_STATUS_RETURNING,
                    }
 
+def inv_shipment_status_labels():
+    T = current.T
+    return OrderedDict({SHIP_STATUS_IN_PROCESS: T("In Process"),
+                        SHIP_STATUS_SENT: T("Sent"),
+                        SHIP_STATUS_RECEIVED: T("Received"),
+                        SHIP_STATUS_CANCEL: T("Canceled"),
+                        SHIP_STATUS_RETURNING: T("Returning"),
+                        })
+
 SHIP_DOC_PENDING  = 0
 SHIP_DOC_COMPLETE = 1
 
+# =============================================================================
 TRACK_STATUS_UNKNOWN    = 0
 TRACK_STATUS_PREPARING  = 1
 TRACK_STATUS_TRANSIT    = 2
@@ -92,6 +107,7 @@ TRACK_STATUS_ARRIVED    = 4
 TRACK_STATUS_CANCELED   = 5
 TRACK_STATUS_RETURNING  = 6
 
+# Dict to lookup a status by name
 inv_tracking_status = {"UNKNOWN"    : TRACK_STATUS_UNKNOWN,
                        "IN_PROCESS" : TRACK_STATUS_PREPARING,
                        "SENT"       : TRACK_STATUS_TRANSIT,
@@ -101,18 +117,7 @@ inv_tracking_status = {"UNKNOWN"    : TRACK_STATUS_UNKNOWN,
                        "RETURNING"  : TRACK_STATUS_RETURNING,
                        }
 
-# Compact JSON encoding
-SEPARATORS = (",", ":")
-
-def inv_shipment_status_labels():
-    T = current.T
-    return {SHIP_STATUS_IN_PROCESS: T("In Process"),
-            SHIP_STATUS_RECEIVED: T("Received"),
-            SHIP_STATUS_SENT: T("Sent"),
-            SHIP_STATUS_CANCEL: T("Canceled"),
-            SHIP_STATUS_RETURNING: T("Returning"),
-            }
-
+# =============================================================================
 def inv_itn_label():
     # Overwrite the label until we have a better way to do this
     #return current.T("Item Source Tracking Number")
@@ -227,7 +232,6 @@ class InvWarehouseModel(S3Model):
         # ---------------------------------------------------------------------
         # Warehouses
         #
-
         if settings.get_inv_warehouse_code_unique():
             code_requires = IS_EMPTY_OR([IS_LENGTH(10),
                                          IS_NOT_IN_DB(db, "inv_warehouse.code"),
@@ -477,7 +481,7 @@ class InventoryModel(S3Model):
     """
         Inventory Management
 
-        Record inventories of items at sites :
+        Record inventories of items at sites:
             Warehouses, Offices, Shelters, Hospitals, etc
     """
 
@@ -2997,6 +3001,8 @@ def inv_tabs(r):
                         ]
                 if settings.has_module("proc"):
                     tabs.append((T("Planned Procurements"), "plan"))
+                if settings.get_inv_minimums():
+                    tabs.append((T("Stock Minimums"), "minimum"))
                 if show_collapse:
                     tabs.append(("- %s" % T("Warehouse"), None, {"show_inv": "False"}))
             else:
@@ -4109,6 +4115,79 @@ class InventoryAdjustModel(S3Model):
                 return reprstr
 
 # =============================================================================
+class InventoryMinimumModel(S3Model):
+    """
+        Manage Minimum Stock levels for Sites
+
+        Used by: RMS
+    """
+
+    names = ("inv_minimum",
+             )
+
+    def model(self):
+
+        T = current.T
+        auth = current.auth
+
+        WAREHOUSE = T(current.deployment_settings.get_inv_facility_label())
+
+        # ---------------------------------------------------------------------
+        # Minimum Stock Levels
+        #
+
+        tablename = "inv_minimum"
+        self.define_table(tablename,
+                          # This is a component, so needs to be a super_link
+                          # - can't override field name, ondelete or requires
+                          self.super_link("site_id", "org_site",
+                                          default = auth.user.site_id if auth.is_logged_in() else None,
+                                          empty = False,
+                                          label = WAREHOUSE,
+                                          instance_types = auth.org_site_types,
+                                          not_filterby = "obsolete",
+                                          not_filter_opts = (True,),
+                                          ondelete = "CASCADE",
+                                          represent = self.org_site_represent,
+                                          readable = True,
+                                          writable = True,
+                                          updateable = True,
+                                          # Comment these to use a Dropdown & not an Autocomplete
+                                          #widget = S3SiteAutocompleteWidget(),
+                                          #comment = DIV(_class="tooltip",
+                                          #              _title="%s|%s" % (WAREHOUSE,
+                                          #                                messages.AUTOCOMPLETE_HELP)),
+                                          ),
+                          self.supply_item_id(ondelete = "RESTRICT",
+                                              required = True,
+                                              ),
+                          Field("quantity", "double", notnull=True,
+                                default = 0.0,
+                                label = T("Quantity"),
+                                represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                requires = IS_FLOAT_AMOUNT(minimum=0.0),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields()
+                          )
+
+        # CRUD strings
+        current.response.s3.crud_strings[tablename] = Storage(
+           label_create = T("Add Minimum Stock Level"),
+           title_display = T("Minimum Stock Level Details"),
+           title_list = T("Minimum Stock Levels"),
+           title_update = T("Edit Minimum Stock Level"),
+           label_list_button = T("List Minimum Stock Levels"),
+           label_delete_button = T("Delete Minimum Stock Level"),
+           msg_record_created = T("Minimum Stock Level added"),
+           msg_record_modified = T("Minimum Stock Level updated"),
+           msg_record_deleted = T("Minimum Stock Level deleted"),
+           msg_list_empty = T("No Minimum Stock Levels currently registered"))
+
+        return {}
+
+# =============================================================================
 class InventoryRequestModel(S3Model):
     """
         Link Shipments <> Requests
@@ -4869,10 +4948,7 @@ def inv_send_controller():
                             quantity_fulfil = fulfil_qty[item.item_pack_id]
                             db(ritable.id == item.id).update(quantity_fulfil=quantity_fulfil)
                             req_quantity = item.quantity * item.pack_quantity()
-                            if quantity_fulfil >= req_quantity:
-                                complete = True
-                            else:
-                                complete = False
+                            complete = quantity_fulfil >= req_quantity
 
                     # Update overall Request Status
                     if complete:

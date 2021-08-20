@@ -354,7 +354,7 @@ class S3HierarchyCRUD(S3Method):
         tablename = resource.tablename
 
         # Get the hierarchy
-        h = S3Hierarchy(tablename=tablename)
+        h = S3Hierarchy(tablename = tablename)
         if not h.config:
             r.error(405, "No hierarchy configured for %s" % tablename)
 
@@ -818,7 +818,7 @@ class S3Hierarchy(object):
             fields.append(table[ckey])
 
         if "deleted" in table:
-            query = (table.deleted != True)
+            query = (table.deleted == False)
         else:
             query = (table.id > 0)
         rows = current.db(query).select(left = self.left, *fields)

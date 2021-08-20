@@ -776,6 +776,7 @@ def config(settings):
     # Hide Staff Management Tabs for Facilities in Inventory Module
     settings.inv.facility_manage_staff = False
     settings.inv.document_filing = True
+    settings.inv.minimums = True
     settings.inv.show_mode_of_transport = True
     settings.inv.send_show_time_in = True
     #settings.inv.collapse_tabs = True
@@ -3203,12 +3204,13 @@ Thank you"""
                        (T("Comments"), "comments"),
                        ]
 
-        from s3 import S3OptionsFilter
         filter_widgets = resource.get_config("filter_widgets")
-        filter_widgets.insert(2, S3OptionsFilter("item_id",
-                                                 #label=T("Status"),
-                                                 hidden = True,
-                                                 ))
+        if filter_widgets is not None:
+            from s3 import S3OptionsFilter
+            filter_widgets.insert(2, S3OptionsFilter("item_id",
+                                                     #label=T("Status"),
+                                                     hidden = True,
+                                                     ))
 
         report_options = s3db.get_config(tablename, "report_options")
         report_options.fact += [(T("Total Weight"), "total_weight"),

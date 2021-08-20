@@ -1069,7 +1069,7 @@ class IS_ONE_OF_EMPTY(Validator):
                 q = (itable._id != None) & \
                     auth.s3_accessible_query(method, itable)
                 if "deleted" in itable:
-                    q &= itable.deleted != True
+                    q &= itable.deleted == False
                 if query is None:
                     query = q
                 else:

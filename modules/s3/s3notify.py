@@ -483,7 +483,7 @@ class S3Notifications(object):
         # Find all resources with due subscriptions
         next_check = rtable.next_check_time
         locked_deleted = (rtable.locked != True) & \
-                         (rtable.deleted != True)
+                         (rtable.deleted == False)
         query = ((next_check == None) |
                  (next_check <= now)) & \
                 locked_deleted
@@ -537,7 +537,7 @@ class S3Notifications(object):
                 query |= q
 
         query = (stable.frequency != "never") & \
-                (stable.deleted != True) & \
+                (stable.deleted == False) & \
                 ((next_check == None) | \
                  (next_check <= now)) & \
                 query

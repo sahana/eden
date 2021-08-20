@@ -946,7 +946,7 @@ class S3Resource(object):
         if not rows:
             DELETED = current.xml.DELETED
             if DELETED in table:
-                query = (table[DELETED] != True)
+                query = (table[DELETED] == False)
             else:
                 query = (table_id > 0)
             row = current.db(query).select(table_id, limitby=(0, 1)).first()
@@ -2611,7 +2611,7 @@ class S3Resource(object):
             rkey = self.rkey
             lquery = (ltable[pkey] == linktable[lkey])
             if DELETED in linktable:
-                lquery &= (linktable[DELETED] != True)
+                lquery &= (linktable[DELETED] == False)
             if self.filter is not None and not reverse:
                 rquery = (linktable[rkey] == rtable[fkey]) & self.filter
             else:
@@ -2624,7 +2624,7 @@ class S3Resource(object):
         else:
             lquery = (ltable[pkey] == rtable[fkey])
             if DELETED in rtable and not reverse:
-                lquery &= (rtable[DELETED] != True)
+                lquery &= (rtable[DELETED] == False)
             if self.filter is not None:
                 lquery &= self.filter
             if reverse:
@@ -3851,28 +3851,28 @@ class S3ResourceFilter(object):
         else:
             mquery = (table._id > 0)
 
-        # Deletion status
-        DELETED = current.xml.DELETED
-        if DELETED in table.fields and not resource.include_deleted:
-            remaining = (table[DELETED] != True)
-            mquery = remaining & mquery
-
         # ID query
         if id is not None:
             if not isinstance(id, (list, tuple)):
                 self.multiple = False
-                mquery = mquery & (table._id == id)
+                mquery = (table._id == id) & mquery
             else:
-                mquery = mquery & (table._id.belongs(id))
+                mquery = (table._id.belongs(id)) & mquery
 
         # UID query
         UID = current.xml.UID
         if uid is not None and UID in table:
             if not isinstance(uid, (list, tuple)):
                 self.multiple = False
-                mquery = mquery & (table[UID] == uid)
+                mquery = (table[UID] == uid) & mquery
             else:
-                mquery = mquery & (table[UID].belongs(uid))
+                mquery = (table[UID].belongs(uid)) & mquery
+
+        # Deletion status
+        DELETED = current.xml.DELETED
+        if DELETED in table.fields and not resource.include_deleted:
+            remaining = (table[DELETED] == False)
+            mquery &= remaining
 
         parent = resource.parent
         if not parent:

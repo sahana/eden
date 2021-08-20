@@ -2310,16 +2310,16 @@ def supply_item_rheader(r):
 
             table = r.table
 
-            rheader = DIV(TABLE(TR( TH("%s: " % table.name.label),
-                                    item.name,
-                                  ),
-                                TR( TH("%s: " % table.brand_id.label),
-                                    table.brand_id.represent(item.brand_id),
-                                  ),
-                                TR( TH("%s: " % table.model.label),
-                                    item.model or current.messages["NONE"],
-                                  ),
-                               ),
+            rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
+                                   item.name,
+                                   ),
+                                TR(TH("%s: " % table.brand_id.label),
+                                   table.brand_id.represent(item.brand_id),
+                                   ),
+                                TR(TH("%s: " % table.model.label),
+                                   item.model or current.messages["NONE"],
+                                   ),
+                                ),
                           rheader_tabs
                          )
             return rheader
@@ -2384,7 +2384,8 @@ def supply_item_entity_category(row):
     query = (table.id == item_id)
 
     record = current.db(query).select(table.item_category_id,
-                                      limitby=(0, 1)).first()
+                                      limitby = (0, 1)
+                                      ).first()
     if record:
         return table.item_category_id.represent(record.item_category_id)
     else:
@@ -2423,7 +2424,8 @@ def supply_item_entity_country(row):
                 (stable.site_id == itable.site_id) & \
                 (ltable.id == stable.location_id)
         record = current.db(query).select(ltable.L0,
-                                          limitby=(0, 1)).first()
+                                          limitby = (0, 1)
+                                          ).first()
 
     elif instance_type == "inv_track_item":
 
@@ -2434,7 +2436,8 @@ def supply_item_entity_country(row):
                 (stable.site_id == rtable.site_id) & \
                 (ltable.id == stable.location_id)
         record = current.db(query).select(ltable.L0,
-                                          limitby=(0, 1)).first()
+                                          limitby = (0, 1)
+                                          ).first()
 
     elif instance_type == "proc_plan_item":
 
@@ -2445,7 +2448,8 @@ def supply_item_entity_country(row):
                 (stable.site_id == ptable.site_id) & \
                 (ltable.id == stable.location_id)
         record = current.db(query).select(ltable.L0,
-                                          limitby=(0, 1)).first()
+                                          limitby = (0, 1)
+                                          ).first()
 
     else:
         # @ToDo: Assets and req_items
@@ -2479,7 +2483,7 @@ def supply_item_entity_organisation(row):
     except AttributeError:
         return None
 
-    organisation_represent = s3db.org_OrganisationRepresent(acronym=False)
+    organisation_represent = s3db.org_OrganisationRepresent(acronym = False)
     itable = s3db[instance_type]
 
     if instance_type == "inv_inv_item":
@@ -2488,7 +2492,8 @@ def supply_item_entity_organisation(row):
         query = (itable[ekey] == entity_id) & \
                 (stable.site_id == itable.site_id)
         record = current.db(query).select(stable.organisation_id,
-                                          limitby=(0, 1)).first()
+                                          limitby = (0, 1)
+                                          ).first()
 
     elif instance_type == "proc_plan_item":
 
@@ -2498,7 +2503,8 @@ def supply_item_entity_organisation(row):
                 (rtable.id == itable.plan_id) & \
                 (stable.site_id == rtable.site_id)
         record = current.db(query).select(stable.organisation_id,
-                                          limitby=(0, 1)).first()
+                                          limitby = (0, 1)
+                                          ).first()
 
     elif instance_type == "inv_track_item":
 
@@ -2508,7 +2514,8 @@ def supply_item_entity_organisation(row):
                 (rtable.id == itable.recv_id) & \
                 (stable.site_id == rtable.site_id)
         record = current.db(query).select(stable.organisation_id,
-                                          limitby=(0, 1)).first()
+                                          limitby = (0, 1)
+                                          ).first()
 
     else:
         # @ToDo: Assets and req_items
@@ -2549,7 +2556,8 @@ def supply_item_entity_contacts(row):
 
         query = (itable[ekey] == entity_id)
         record = db(query).select(itable.site_id,
-                                  limitby=(0, 1)).first()
+                                  limitby = (0, 1)
+                                  ).first()
 
     elif instance_type == "inv_track_item":
 
@@ -2557,7 +2565,8 @@ def supply_item_entity_contacts(row):
         query = (itable[ekey] == entity_id) & \
                 (rtable.id == itable.recv_id)
         record = db(query).select(rtable.site_id,
-                                  limitby=(0, 1)).first()
+                                  limitby = (0, 1)
+                                  ).first()
 
     elif instance_type == "proc_plan_item":
 
@@ -2565,7 +2574,8 @@ def supply_item_entity_contacts(row):
         query = (itable[ekey] == entity_id) & \
                 (ptable.id == itable.plan_id)
         record = db(query).select(ptable.site_id,
-                                  limitby=(0, 1)).first()
+                                  limitby = (0, 1)
+                                  ).first()
     else:
         # @ToDo: Assets and req_items
         record = None
@@ -2579,7 +2589,8 @@ def supply_item_entity_contacts(row):
     query = (otable.site_id == record.site_id)
     office = db(query).select(otable.id,
                               otable.comments,
-                              limitby=(0, 1)).first()
+                              limitby = (0, 1)
+                              ).first()
 
     if office:
 
@@ -2591,12 +2602,13 @@ def supply_item_entity_contacts(row):
 
         elif office.comments:
             comments = s3_comments_represent(office.comments,
-                                             show_link=False)
+                                             show_link = False)
         else:
             comments = default
 
         return A(comments,
-                 _href = URL(f="office", args = [office.id]))
+                 _href = URL(f="office", args = [office.id])
+                 )
 
     else:
         return default
@@ -2633,12 +2645,13 @@ def supply_item_entity_status(row):
 
         query = (itable[ekey] == entity_id)
         record = current.db(query).select(itable.expiry_date,
-                                          limitby=(0, 1)).first()
+                                          limitby = (0, 1)
+                                          ).first()
         if record:
             T = current.T
             if record.expiry_date:
                 status = T("Stock Expires %(date)s") % \
-                          dict(date=record.expiry_date)
+                          {"date": record.expiry_date}
             else:
                 status = T("In Stock")
 
@@ -2649,11 +2662,12 @@ def supply_item_entity_status(row):
         query = (itable[ekey] == entity_id) & \
                 (rtable.id == itable.plan_id)
         record = current.db(query).select(rtable.eta,
-                                          limitby=(0, 1)).first()
+                                          limitby = (0, 1)
+                                          ).first()
         if record:
             T = current.T
             if record.eta:
-                status = T("Planned %(date)s") % dict(date=record.eta)
+                status = T("Planned %(date)s") % {"date": record.eta}
             else:
                 status = T("Planned Procurement")
 
@@ -2663,11 +2677,12 @@ def supply_item_entity_status(row):
         query = (itable[ekey] == entity_id) & \
                 (rtable.id == itable.send_inv_item_id)
         record = current.db(query).select(rtable.eta,
-                                          limitby=(0, 1)).first()
+                                          limitby = (0, 1)
+                                          ).first()
         if record:
             T = current.T
             if record.eta:
-                status = T("Order Due %(date)s") % dict(date=record.eta)
+                status = T("Order Due %(date)s") % {"date": record.eta}
             else:
                 status = T("On Order")
 
@@ -2693,13 +2708,14 @@ def supply_item_controller():
                                deletable = False,
                                )
                 # Filter to just item packs for this Item
-                s3db.inv_inv_item.item_pack_id.requires = IS_ONE_OF(current.db,
-                                                                    "supply_item_pack.id",
-                                                                    s3db.supply_item_pack_represent,
-                                                                    sort = True,
-                                                                    filterby = "item_id",
-                                                                    filter_opts = (r.record.id,),
-                                                                    )
+                # - opened Natively now
+                #s3db.inv_inv_item.item_pack_id.requires = IS_ONE_OF(current.db,
+                #                                                    "supply_item_pack.id",
+                #                                                    s3db.supply_item_pack_represent,
+                #                                                    sort = True,
+                #                                                    filterby = "item_id",
+                #                                                    filter_opts = (r.record.id,),
+                #                                                    )
 
             elif r.component_name == "req_item":
                 # This is a report not a workflow
@@ -2733,10 +2749,28 @@ def supply_item_controller():
         elif r.representation == "xls":
             # Use full Category names in XLS output
             s3db.supply_item.item_category_id.represent = \
-                supply_ItemCategoryRepresent(use_code=False)
+                supply_ItemCategoryRepresent(use_code = False)
 
         return True
     s3.prep = prep
+
+    def postp(r, output):
+        if r.interactive and \
+           r.component and \
+           r.component.name == "inv_item":
+            # Open Natively
+            # Custom Action Buttons
+            s3.actions = [{"label": s3_str(s3.crud_labels.READ),
+                           "url": URL(c = "inv",
+                                      f = "inv_item",
+                                      args = ["[id]"],
+                                      ),
+                           "_class": "action-btn",
+                           },
+                          ]
+
+        return output
+    s3.postp = postp
 
     return current.rest_controller("supply", "item",
                                    rheader = supply_item_rheader,
@@ -2826,7 +2860,8 @@ def supply_item_entity_controller():
             rheader.append(DIV(B("%s:" % T("Filter by Category")),
                                BR(),
                                select,
-                               _class="rfilter"))
+                               _class = "rfilter",
+                               ))
 
             # Filter by Status
             select = SELECT(_multiple="multiple", _id="status_dropdown")
@@ -2838,7 +2873,8 @@ def supply_item_entity_controller():
             rheader.append(DIV(B("%s:" % T("Filter by Status")),
                                BR(),
                                select,
-                               _class="rfilter"))
+                               _class = "rfilter",
+                               ))
 
             output["rheader"] = rheader
 
@@ -2895,7 +2931,8 @@ def supply_item_entity_controller():
             rheader.append(DIV(B("%s:" % T("Filter by Country")),
                                BR(),
                                select,
-                               _class="rfilter"))
+                               _class = "rfilter",
+                               ))
 
             # Filter by Organisation
             select = SELECT(_multiple="multiple", _id="organisation_dropdown")
@@ -2908,7 +2945,8 @@ def supply_item_entity_controller():
             rheader.append(DIV(B("%s:" % T("Filter by Organization")),
                                BR(),
                                select,
-                               _class="rfilter"))
+                               _class = "rfilter",
+                               ))
 
             # http://datatables.net/api#fnFilter
             # Columns:

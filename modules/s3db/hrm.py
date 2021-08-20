@@ -888,9 +888,9 @@ class HRModel(S3Model):
                 crud_fields.append("person_availability.options")
             crud_fields.extend(("details.card",
                                 # @ToDo: Move these to the IFRC Template (PH RC only people to use this)
-                                "volunteer_cluster.vol_cluster_type_id",
-                                "volunteer_cluster.vol_cluster_id",
-                                "volunteer_cluster.vol_cluster_position_id",
+                                #"volunteer_cluster.vol_cluster_type_id",
+                                #"volunteer_cluster.vol_cluster_id",
+                                #"volunteer_cluster.vol_cluster_position_id",
                                 ))
             vol_active = settings.get_hrm_vol_active()
             if vol_active and not callable(vol_active):

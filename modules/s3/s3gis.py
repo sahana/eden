@@ -738,7 +738,7 @@ class GIS(object):
             else:
                 table = current.s3db.gis_location
                 query = (table.level != None) & \
-                        (table.deleted != True)
+                        (table.deleted == False)
                 if current.deployment_settings.get_gis_spatialdb():
                     point = "POINT (%s %s)" % (lon, lat)
                     query &= (table.the_geom.st_intersects(point))
@@ -3405,7 +3405,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             # All countries
             cquery = (table.level == "L0") & \
                      (table.end_date == None) & \
-                     (table.deleted != True)
+                     (table.deleted == False)
 
         if current.deployment_settings.get_gis_spatialdb():
             spatial = True
@@ -3487,16 +3487,16 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 File.close()
 
         q1 = (table.level == "L1") & \
-             (table.deleted != True) & \
+             (table.deleted == False) & \
              (table.end_date == None)
         q2 = (table.level == "L2") & \
-             (table.deleted != True) & \
+             (table.deleted == False) & \
              (table.end_date == None)
         q3 = (table.level == "L3") & \
-             (table.deleted != True) & \
+             (table.deleted == False) & \
              (table.end_date == None)
         q4 = (table.level == "L4") & \
-             (table.deleted != True) & \
+             (table.deleted == False) & \
              (table.end_date == None)
 
         if "L1" in levels:

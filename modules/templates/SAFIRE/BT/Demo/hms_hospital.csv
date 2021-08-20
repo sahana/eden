@@ -1,262 +1,262 @@
 Name,Country,L1,L2,L3,L4,Lat,Lon
 "Wangdicholing Hospital",BT,"Bumthang","Dzongkhag Thromde (Chamkhar)","Dekiling","Chamkhar","27.5592","90.7447"
 "BHU",BT,"Bumthang","Chhoekhor","Nangsipe-Zangling-Zhabjethang","Zhabjethang","27.6696","90.7442"
-"BHU",BT,"Bumthang","Chumey","Phurjoen","Ungsang","27.6696","90.7099"
+"BHU",BT,"Bumthang","Chhume","Phurjoen","Ungsang","27.6696","90.7099"
 "BHU",BT,"Bumthang","Tang","Dazur","Yezrang","27.5721","90.7099"
 "BHU",BT,"Bumthang","Chhoekhor","Dhur-Lusibee","Dhur","27.6128","90.6657"
 "BHU",BT,"Bumthang","Ura","Beteng-Pangkhar-Somthrang","Pangkhar","27.4876","90.9158"
-"Wangdue Hospital (Jatshokha)",BT,"Wangduephodrang","Thedtsho","RinchhengangMaed","Chagzamphakha","27.5","90.1333"
-"Punakha Hospital",BT,"Punakha","Guma","Guma -Wolakha","Gumakha","28.0","89.9333"
-"phuntshogthang BHU",BT,"Samdrupjongkhar","Phuntshogthang","","","26.9167","91.6167"
-"Tashi Gatsel MI room",BT,"Chhukha","Bjabchhog","Tashi Gatshel","Tashi Gatsel","27.0","89.55"
-"Pema Gatshel Hospital",BT,"Pema Gatshel","Shumar","Bartsheri","Bartsheri","27.0","91.3667"
-"Samtse General Hospital",BT,"Samtse","Samtse Dzongkhag Thromde","","Yugo(Daragoan)","26.8977","89.0871"
-"Bartsham BHU",BT,"Trashigang","Bartsham","Trashang","Trashang","27.3333","91.7333"
-"Thinleygang BHU",BT,"Punakha","Toepisa","Lemjeykha-Thinleygang","Tangho","28.0","89.9333"
-"Tarphel BHU II",BT,"Yangtse","Boomdeyling","Pangkhar_Tarphel","Taphel","27.751","91.3887"
-"Dzongkhag Hospital",BT,"Tsirang","Kilkhorthang","Maenchhana","Maenchhana(Mithun)","26.9333","90.1"
-"BHU",BT,"Lhuentse","Jarey","Ladrong","Ladrong","27.75","91.1833"
-"Bali Hospital",BT,"Haa","Haa Town","","","27.3333","89.1833"
-"Kuzhuchen BHU",BT,"Thimphu","Kawang","Kuzhugchen","","27.6","89.6667"
+"Wangdue Hospital (Jatshokha)",BT,"Wangduephodrang","Thedtsho","RinchhengangMaed","Chagzamphakha",,
+"Punakha Hospital",BT,"Punakha","Guma","Guma -Wolakha","Gumakha",,
+"phuntshogthang BHU",BT,"Samdrupjongkhar","Phuntsthothang",,,"26.9167","91.6167"
+"Tashi Gatsel MI room",BT,"Chhukha","Bjachho","Tashi Gatshel","Tashi Gatsel",,
+"Pema Gatshel Hospital",BT,"Pemagatshel","Shumer","Bartsheri","Bartsheri",,
+"Samtse General Hospital",BT,"Samtse","Samtse Dzongkhag Thromde",,"Yugo(Daragoan)","26.8977","89.0871"
+"Bartsham BHU",BT,"Trashigang","Bartsham","Trashang","Trashang",,
+"Thinleygang BHU",BT,"Punakha","Toepisa","Lemjeykha-Thinleygang","Tangho",,
+"Tarphel BHU II",BT,"Yangtse","Bumdeling","Pangkhar_Tarphel","Taphel",,
+"Dzongkhag Hospital",BT,"Tsirang","Kikorthang","Maenchhana","Maenchhana(Mithun)","26.9333","90.1"
+"BHU",BT,"Lhuentse","Jaray","Ladrong","Ladrong",,
+"Bali Hospital",BT,"Haa","Haa Town",,,,
+"Kuzhuchen BHU",BT,"Thimphu","Kawang","Kuzhugchen",,,
 "Wangdicholing hospital",BT,"Bumthang","Dzongkhag Thromde (Chamkhar)","Dekiling","Wangduecholing","27.7","90.7833"
-"Daga BHU",BT,"Dagana","Tseza","Karlingdzingkha","Karlingzingkha","27.0753","89.8756"
-"Gelephu Referel hospital",BT,"Sarpang","Gelephu","Pemathang","","26.9031","90.2352"
-"Panbang Hospital",BT,"Zhemgang","Ngangla","Panbang_Sonamthang","Panbang","27.0843","90.8503"
-"Gem Dorji",BT,"Trongsa","Tangsibj","Tangsibji","Tashiling","27.35","90.5333"
-"Thangrong",BT,"Monggar","Thangrong","Ngaru_Pongtang","","27.1981","91.3489"
-"Yangtse Dzongkhag Hospital",BT,"Yangtse","Yangtse","Baaney_Bimkhar","Tongchen","27.751","91.3887"
-"Dagapela Hospital",BT,"Dagana","Goshi","Gozhi Bar","Gozhi Baar","27.0753","89.8756"
-"Lhamoizingkha BHU",BT,"Dagana","Lhamoizingkha","","","27.0753","89.8756"
-"Khagochen BHU",BT,"Dagana","Kana","Dalithang-Gangyab","Khagochen","27.0753","89.8756"
-"Bjurugang BHU",BT,"Dagana","Kana","Bjurugang","Bjurugang","27.0753","89.8756"
-"Nimtola BHU",BT,"Dagana","Dorona","Nimtola","Nimtola","27.0753","89.8756"
-"Akhochen BHU",BT,"Dagana","Khibesa","Akhochen","Akochen","27.0753","89.8756"
-"Drujegang BHU",BT,"Dagana","Drujegang","Budipang-pangna","Pangna","27.0753","89.8756"
-"Tsangkha BHU",BT,"Dagana","Tshangkha","Tshangkha","Tshangkha","27.0753","89.8756"
-"Laja BHU",BT,"Dagana","Laja","Barna","Aechephu","27.0753","89.8756"
-"Dawakha",BT,"Paro","Dokar","Dawakha_Tshongkha","Tshongkha","27.5167","89.4"
-"Tarphel Sub post",BT,"Yangtse","Boomdeyling","Pangkhar_Tarphel","Taphel","27.751","91.3887"
-"Dungzam BHU",BT,"Yangtse","Boomdeyling","Ngalimang_Phanteng","Dungzam","27.751","91.3887"
-"BHU1",BT,"Sarpang","Chuzom/Dovan","Jangchubling","Jangchubling(Pankhey)","26.9031","90.2352"
-"BHU",BT,"Lhuentse","Minjey","Boo-Dur_Kupi-Nyalsa","Boo-dur","27.75","91.1833"
-"BHU",BT,"Lhuentse","Jarey","Ladrong","Ladrong","27.75","91.1833"
-"BHU",BT,"Lhuentse","Khoma","Berpa_Khoma","Khoma","27.75","91.1833"
-"BHU",BT,"Lhuentse","Kurtoed","Dungkar","","27.75","91.1833"
-"BHU",BT,"Lhuentse","Maenbi","Tagmochhu_Gorgan","Tagmochhu","27.75","91.1833"
-"BHU",BT,"Lhuentse","Maedtsho","Gortshom_Tshangthrom-Maed","Gortshom","27.75","91.1833"
-"BHU",BT,"Lhuentse","Jarey","Yabi_Zangkhar","Zangkhar","27.75","91.1833"
-"BHU",BT,"Lhuentse","Jarey","Ladrong","Ladrong","27.75","91.1833"
-"BHU",BT,"Lhuentse","Tsaenkhar","Autsho_Chharbi","Autsho","27.75","91.1833"
-"BHU",BT,"Lhuentse","Tsaenkhar","Dekaling_Tshochhen","Tshochhen","27.75","91.1833"
-"Resirbo Hospital",BT,"Trashigang","Lumang","Riserboo - Tsangpo","Riserboo","27.3333","91.7333"
-"Trashigang Hospital",BT,"Trashigang","Samkhar","Maelphel - Samkhar","Malphel","27.3333","91.7333"
-"Tshangpo BHU 1",BT,"Trashigang","Thrimshing","Tsangpo- Lhakhang jab","Tsangpo","27.3333","91.7333"
-"Rangjung BHU 1",BT,"Trashigang","Shongphu","Changmi - Rangjoong","Rangjung","27.3333","91.7333"
-"Kanglung BHU 1",BT,"Trashigang","Kanglung","Mertsham-Thragom","Thragom","27.3333","91.7333"
-"Khaling BHU 1",BT,"Trashigang","Khaling","Khaling","Dawzor","27.3333","91.7333"
-"Bikhar BHU ii",BT,"Trashigang","Samkhar","Bikhar - Domkahr","","27.3333","91.7333"
-"Bidhung BHU ii",BT,"Trashigang","Bidung","Kakaniwog","","27.3333","91.7333"
-"Merak BHU ii",BT,"Trashigang","Merak","Merag Toed","Merak Toed","27.3333","91.7333"
-"Phongmey BHU ii",BT,"Trashigang","Phongmey","Phongmed","","27.3333","91.7333"
-"Yabrang BHU ii",BT,"Trashigang","Phongmey","Ya-brang","Yabrang","27.3333","91.7333"
-"Thongrong Subpost",BT,"Trashigang","Phongmey","Thong-rong","Thongwrong","27.3333","91.7333"
-"Radhi BHU ii",BT,"Trashigang","Radhi","Dekidling - Tsenkhar","Tsangkhar","27.3333","91.7333"
-"Sakteng BHU ii",BT,"Trashigang","Sakteng","Sagteng","Sakteng","27.3333","91.7333"
-"Chaling Subpost",BT,"Trashigang","Shongphu","Chaling","Chaling","27.3333","91.7333"
-"Changmi BHU ii",BT,"Trashigang","Shongphu","Changmi - Rangjoong","Changme","27.3333","91.7333"
-"Udzorong BHU ii",BT,"Trashigang","Udzorong","Barkazor - Mankhar","Barkazor","27.3333","91.7333"
-"Yangneer BHU ii",BT,"Trashigang","Yangnyer","Dargyeling - Kharthoong","Kheri (Yangnyer)","27.3333","91.7333"
-"Pasaphu Subpost",BT,"Trashigang","Kangpara","","","27.3333","91.7333"
-"Thungkhar BHU ii",BT,"Trashigang","Thrimshing","Berdoongma - Thoongkhar","Thungkhar","27.3333","91.7333"
-"Phegpari subpost",BT,"Trashigang","Thrimshing","Thrimishing","Thrimshing","27.3333","91.7333"
-"Lumang BHU ii",BT,"Trashigang","Lumang","Kharphoog - kurchhilo","Kurichilo","27.3333","91.7333"
-"Joenkhar BHU ii",BT,"Trashigang","Sakteng","joenkhar","Sakteng Jyenkhar","27.3333","91.7333"
-"Chhukha BHU",BT,"Chhukha","Bjabchhog","Bjabchhog","","27.0","89.55"
-"Tsimalhakha Hospital",BT,"Chhukha","Bjabchhog","Tsimalakha_Tsimasham","","27.0","89.55"
-"Gedu Hosptital",BT,"Chhukha","Bongo","Gedu_Miritsemo","","27.0","89.55"
-"Khaotoekha BHU",BT,"Chhukha","Loggchina","","","27.0","89.55"
-"Chapcha BHU",BT,"Chhukha","Chapchha","","","27.0","89.55"
-"Bongo BHU",BT,"Chhukha","Bongo","Bongo_Phasooma","","27.0","89.55"
-"Baeyul Kinzang",BT,"Chhukha","Bongo","Baeyuel Kunzang","","27.0","89.55"
-"Chongyekha",BT,"Chhukha","Phuentshogling","","","27.0","89.55"
-"Darla BHU",BT,"Chhukha","Darla","","","27.0","89.55"
-"Sinchula BHU",BT,"Chhukha","Darla","","","27.0","89.55"
-"Rinchentse BHU",BT,"Chhukha","Darla","","","27.0","89.55"
-"Doongna BHU",BT,"Chhukha","Doongna","","","27.0","89.55"
-"Getena BHU",BT,"Chhukha","Getana","","","27.0","89.55"
-"Metakha Sub post",BT,"Chhukha","Maedtabkha","","","27.0","89.55"
-"Logchina BHU",BT,"Chhukha","Loggchina","","","27.0","89.55"
-"Rangaytung",BT,"Chhukha","Samphelling","","","27.0","89.55"
-"Chimuna",BT,"Chhukha","Loggchina","","","27.0","89.55"
-"Arekha BHU",BT,"Chhukha","Bongo","","","27.0","89.55"
-"Betikha",BT,"Paro","Nagya","Bueltikha_Jagoen","Bueltikha","27.5167","89.4"
-"Drukgyel",BT,"Paro","Tsento","","","27.5167","89.4"
-"BHU-II",BT,"Gasa","Khamoed","Damji","Bjishong","27.9963","89.9957"
-"Gasa BHU-1",BT,"Gasa","Khatoed","Mani","Mani","27.9963","89.9957"
-"Laya BHU-II",BT,"Gasa","Laya","Pazhi","","27.9963","89.9957"
-"Lunana BHU-II",BT,"Gasa","Lunana","Lhedi","Lhedi","27.9963","89.9957"
-"Lopokha Sub post",BT,"Wangduephodrang","Athang","Lophokha_Phagtakha","Lophokha","27.5","90.1333"
-"Migtana Sub post",BT,"Wangduephodrang","Athang","Rookha","Rookha","27.5","90.1333"
-"Kamichu BHU",BT,"Wangduephodrang","Darkar","Kamina_Wogyal","Wogyal","27.5","90.1333"
-"Uma BHU",BT,"Wangduephodrang","Darkar","Uma Khatoed","Uma Khatoed","27.5","90.1333"
-"Dangchu BHU",BT,"Wangduephodrang","Dangchu","Tashidingkha_Zimi","Chhubarwogm","27.5","90.1333"
-"Nobding Sub post",BT,"Wangduephodrang","Dangchu","DoongdoongNyelsa_Norbooding","Norbooding","27.5","90.1333"
-"Gaselo BHU",BT,"Wangduephodrang","Gase Tshogongm","Khatoedkha","Gangchhumigang Lamta","27.5","90.1333"
-"BJimithangkha BHU",BT,"Wangduephodrang","Gase Tshowogm","Medpaisa_Taabchhaekha","Medpaisa","27.5","90.1333"
-"sephu BHU",BT,"Wangduephodrang","Saephu","Rukoobji","Chagzam","27.5","90.1333"
-"Jalla BHU",BT,"Wangduephodrang","Ruebisa","Oola","Oola","27.5","90.1333"
-"Esa BHU",BT,"Wangduephodrang","Gangteng","Tapaiteng_Uesa","Uesa","27.5","90.1333"
-"Samtengang BHU",BT,"Wangduephodrang","Nyishog","Samtengang","Samtengang","27.5","90.1333"
-"Teki Agona BHU",BT,"Wangduephodrang","Bjenag","Wachhey","Kokokhar","27.5","90.1333"
-"Khotokha sub post",BT,"Wangduephodrang","Bjenag","Tashi Tokha","Khotokha","27.5","90.1333"
-"Taksha subpost",BT,"Wangduephodrang","Darkar","Sili_Taagsha","Taagsha","27.5","90.1333"
-"Kazhi BHU",BT,"Wangduephodrang","Kazhi","Chegidp","Goendep","27.5","90.1333"
-"Army hospital",BT,"Wangduephodrang","Thedtsho","RinchhengangMaed","Chagzamphakha","27.5","90.1333"
-"Gangtay Subpost",BT,"Wangduephodrang","Gangteng","Gangteng","Gangteng","27.5","90.1333"
-"Nahi subpost",BT,"Wangduephodrang","Nahi","Uesagongm_Thabji","Hamchhu","27.5","90.1333"
-"Hebesa Subpost",BT,"Wangduephodrang","Gase Tshowogm","Haebisa","Haebisa","27.5","90.1333"
-"Gonpasingma BHU",BT,"Pema Gatshel","Zobel","Zobel","Zobel","27.0","91.3667"
-"Nanong BHU",BT,"Pema Gatshel","Nanong","Nanong","","27.0","91.3667"
-"Tshatshi BHU",BT,"Pema Gatshel","Nanong","Gashigkhar_ Tsatshi","Tshatshi","27.0","91.3667"
-"Pema Gatshel Hospital",BT,"Pema Gatshel","Shumar","","","27.0","91.3667"
-"Shali-subpost",BT,"Pema Gatshel","Shumar","Goengpong Shali","Shali","27.0","91.3667"
-"Pretengma BHU",BT,"Pema Gatshel","Khar","","","27.0","91.3667"
-"Thongsa",BT,"Pema Gatshel","Chongshing","Thongsa","","27.0","91.3667"
-"Chongshing",BT,"Pema Gatshel","Chongshing","Chongshing_ Jorphung","Chongshing","27.0","91.3667"
-"Yurung BHU",BT,"Pema Gatshel","Yurung","","","27.0","91.3667"
-"Khangma-subpost",BT,"Pema Gatshel","Yurung","Khangma","","27.0","91.3667"
-"Chhimoong BHU",BT,"Pema Gatshel","Chimung","Chhimoong","Chhimoong","27.0","91.3667"
-"Nyasikhar-subpost",BT,"Pema Gatshel","Chimung","Nyashkhar","Nyashikhar","27.0","91.3667"
-"Dungmin BHU",BT,"Pema Gatshel","Dungmin","Dungmaed_ Zimzor","","27.0","91.3667"
-"Thrumchung BHU",BT,"Pema Gatshel","Dungmin","La-Nyiri_Thrumchoong","Thrumchoong","27.0","91.3667"
-"Mikuri-subpost",BT,"Pema Gatshel","Dungmin","Bangyuel","Migkuri","27.0","91.3667"
-"Nganglam BHU",BT,"Pema Gatshel","Norbugang","","","27.0","91.3667"
-"Norbugang",BT,"Pema Gatshel","Norbugang","Norboogang_Rinchenzor","Norboogang","27.0","91.3667"
-"Borongmo-subpost",BT,"Pema Gatshel","Norbugang","Maenchhu_Nganglam","Borongmo","27.0","91.3667"
-"Dechenling BHU",BT,"Pema Gatshel","Decheling","Dechhenling_Goenpawoong","","27.0","91.3667"
-"Chokhorling BHU",BT,"Pema Gatshel","Choekhorling","Chhoekhorling _Gazawong","Chhoekhorling","27.0","91.3667"
-"Haa Hospital",BT,"Haa","Haa Town","Bali Maed","Bali Maed","27.3333","89.1833"
-"Bali TM unit",BT,"Haa","Kartshog","Bali_Mombitshokha","Bali","27.3333","89.1833"
-"Yangthang BHU",BT,"Haa","Bji","Yangthang","Jangtoed","27.3333","89.1833"
-"Sangbaykha BHU",BT,"Haa","","","","27.3333","89.1833"
-"Dorithasa BHU",BT,"Haa","","","","27.3333","89.1833"
-"Ngatsena BHU",BT,"Haa","","","","27.3333","89.1833"
-"Drungkhag subpost",BT,"Haa","","","","27.3333","89.1833"
-"Bebji",BT,"Haa","","","","27.3333","89.1833"
-"Dechencholing",BT,"Thimphu","Kawang","Kuzhugchen","","27.6","89.6667"
-"Senggey BHU",BT,"Sarpang","Sengye","Yarpheling","Yarpheling(Thoemba)","26.9031","90.2352"
-"Phibsoo",BT,"Sarpang","Sengye","Sangaythang","Wangchulingkhar(Phibsoo)","26.9031","90.2352"
-"Menchulam",BT,"Sarpang","Gakiling /Hilley","Menchhulam","Menchhulam(Kharpani)","26.9031","90.2352"
-"Sarpang District Hospital",BT,"Sarpang","Shompangkha","Shompangkha","Shompangkha(Sarpangtar)","26.9031","90.2352"
-"Jigmecholing BHU II",BT,"Sarpang","Jigmecholing","Khatoed","Khatoe","26.9031","90.2352"
-"Gakidling",BT,"Sarpang","Jigmecholing","Gongduegang","Gongduegang(Gong Gaon)","26.9031","90.2352"
-"Jangchubling",BT,"Sarpang","Chuzom/Dovan","Jangchubling","Jangchubling(Pankhey)","26.9031","90.2352"
-"Lhayul",BT,"Sarpang","Chuzom/Dovan","Lhayul","Lhayul(Mougaon)","26.9031","90.2352"
-"Chokhorling",BT,"Sarpang","Dekiling","Chhokhorling","Chhokhorling(Toribari)","26.9031","90.2352"
-"Norbuling",BT,"Sarpang","Shershong","Norbuling","Norbuling","26.9031","90.2352"
-"Umling",BT,"Sarpang","Umling","Dungmin","Dungmin","26.9031","90.2352"
-"Tarathang",BT,"Sarpang","Taraythang","Pemacholing","Pemachholing(Dragaon)","26.9031","90.2352"
-"Chuzangang",BT,"Sarpang","Chuzargang","Barthang","Barthang","26.9031","90.2352"
-"Hongtsho",BT,"Thimphu","Chang","Lhoongtsho_Tashigang","","27.6","89.6667"
-"Chamgang",BT,"Thimphu","Darkarla","Chamgang Maed","","27.6","89.6667"
-"Chamgang",BT,"Thimphu","Darkarla","Chamgang Maed","","27.6","89.6667"
-"Genekha",BT,"Thimphu","Ge-nyen","Ge-nyenkha","","27.6","89.6667"
-"Lingzhi",BT,"Thimphu","Lingzhi","Chakphu","","27.6","89.6667"
-"Soe",BT,"Thimphu","Soe","Jangothang","","27.6","89.6667"
-"Barshong",BT,"Thimphu","Naro","Barshong_Nango","","27.6","89.6667"
-"Buli Primary Health Center",BT,"Zhemgang","Nangkor","Buli","Buli","27.0843","90.8503"
-"Tsheldang Primary Health Center",BT,"Zhemgang","Nangkor","Nyakhar-Tsheldang","Tsheldang","27.0843","90.8503"
-"Nyimshong Primary Health Center",BT,"Zhemgang","Shingkhar","Nyimshong_Thajong","Nyimshong","27.0843","90.8503"
-"Shingkhar Primary Health Center",BT,"Zhemgang","Shingkhar","","","27.0843","90.8503"
-"Norboogang BHU",BT,"Samtse","Norboogang (Chengmari)","Dawaling_ Yangphelthang","Tshongduekha (Hatkhola)","27.0333","89.0833"
-"Ugyentse BHU",BT,"Samtse","Ugyentse (Nainital)","Dangkarling_Dechhengang","Dangkharling(BahunGaon)","27.0333","89.0833"
-"Yoeseltse BHU",BT,"Samtse","Yoeseltse (Ghumauney)","Dungkar","Dungkar(Ghumaune B)","27.0333","89.0833"
-"Sa-Ngag-Chhoeling BHU 2",BT,"Samtse","Sa-Ngag-Chhoeling (Chargharey)","","","27.0333","89.0833"
-"Tading BHU",BT,"Samtse","Tading","","","27.0333","89.0833"
-"Tading Sub Post",BT,"Samtse","Tading","","","27.0333","89.0833"
+"Daga BHU",BT,"Dagana","Tseza","Karlingdzingkha","Karlingzingkha",,
+"Gelephu Referel hospital",BT,"Sarpang","Gelephu","Pemathang",,,
+"Panbang Hospital",BT,"Zhemgang","Ngangla","Panbang_Sonamthang","Panbang",,
+"Gem Dorji",BT,"Trongsa","Tangsibji","Tangsibji","Tashiling","27.35","90.5333"
+"Thangrong",BT,"Monggar","Thangrong","Ngaru_Pongtang",,"27.1981","91.3489"
+"Yangtse Dzongkhag Hospital",BT,"Yangtse","Yangtse","Baaney_Bimkhar","Tongchen",,
+"Dagapela Hospital",BT,"Dagana","Gozhi","Gozhi Bar","Gozhi Baar",,
+"Lhamoizingkha BHU",BT,"Dagana","Lhamoizingkha",,,,
+"Khagochen BHU",BT,"Dagana","Kana","Dalithang-Gangyab","Khagochen",,
+"Bjurugang BHU",BT,"Dagana","Kana","Bjurugang","Bjurugang",,
+"Nimtola BHU",BT,"Dagana","Dorona","Nimtola","Nimtola",,
+"Akhochen BHU",BT,"Dagana","Khipisa","Akhochen","Akochen",,
+"Drujegang BHU",BT,"Dagana","Drugyelgang","Budipang-pangna","Pangna",,
+"Tsangkha BHU",BT,"Dagana","Tshangkha","Tshangkha","Tshangkha",,
+"Laja BHU",BT,"Dagana","Lajab","Barna","Aechephu",,
+"Dawakha",BT,"Paro","Doga","Dawakha_Tshongkha","Tshongkha",,
+"Tarphel Sub post",BT,"Yangtse","Bumdeling","Pangkhar_Tarphel","Taphel",,
+"Dungzam BHU",BT,"Yangtse","Bumdeling","Ngalimang_Phanteng","Dungzam",,
+"BHU1",BT,"Sarpang","Chuzom/Dovan","Jangchubling","Jangchubling(Pankhey)",,
+"BHU",BT,"Lhuentse","Minjey","Boo-Dur_Kupi-Nyalsa","Boo-dur",,
+"BHU",BT,"Lhuentse","Jaray","Ladrong","Ladrong",,
+"BHU",BT,"Lhuentse","Khoma","Berpa_Khoma","Khoma",,
+"BHU",BT,"Lhuentse","Kurtoe","Dungkar",,,
+"BHU",BT,"Lhuentse","Maenbi","Tagmochhu_Gorgan","Tagmochhu",,
+"BHU",BT,"Lhuentse","Maedtsho","Gortshom_Tshangthrom-Maed","Gortshom",,
+"BHU",BT,"Lhuentse","Jaray","Yabi_Zangkhar","Zangkhar",,
+"BHU",BT,"Lhuentse","Jaray","Ladrong","Ladrong",,
+"BHU",BT,"Lhuentse","Tsaenkhar","Autsho_Chharbi","Autsho",,
+"BHU",BT,"Lhuentse","Tsaenkhar","Dekaling_Tshochhen","Tshochhen",,
+"Resirbo Hospital",BT,"Trashigang","Lumang","Riserboo - Tsangpo","Riserboo",,
+"Trashigang Hospital",BT,"Trashigang","Samkhar","Maelphel - Samkhar","Malphel",,
+"Tshangpo BHU 1",BT,"Trashigang","Thrimshing","Tsangpo- Lhakhang jab","Tsangpo",,
+"Rangjung BHU 1",BT,"Trashigang","Shongphu","Changmi - Rangjoong","Rangjung",,
+"Kanglung BHU 1",BT,"Trashigang","Kanglung","Mertsham-Thragom","Thragom",,
+"Khaling BHU 1",BT,"Trashigang","Khaling","Khaling","Dawzor",,
+"Bikhar BHU ii",BT,"Trashigang","Samkhar","Bikhar - Domkahr",,,
+"Bidhung BHU ii",BT,"Trashigang","Bidung","Kakaniwog",,,
+"Merak BHU ii",BT,"Trashigang","Merak","Merag Toed","Merak Toed",,
+"Phongmey BHU ii",BT,"Trashigang","Phongme","Phongmed",,,
+"Yabrang BHU ii",BT,"Trashigang","Phongme","Ya-brang","Yabrang",,
+"Thongrong Subpost",BT,"Trashigang","Phongme","Thong-rong","Thongwrong",,
+"Radhi BHU ii",BT,"Trashigang","Radi","Dekidling - Tsenkhar","Tsangkhar",,
+"Sakteng BHU ii",BT,"Trashigang","Sakteng","Sagteng","Sakteng",,
+"Chaling Subpost",BT,"Trashigang","Shongphu","Chaling","Chaling",,
+"Changmi BHU ii",BT,"Trashigang","Shongphu","Changmi - Rangjoong","Changme",,
+"Udzorong BHU ii",BT,"Trashigang","Udzorong","Barkazor - Mankhar","Barkazor",,
+"Yangneer BHU ii",BT,"Trashigang","Yangnyer","Dargyeling - Kharthoong","Kheri (Yangnyer)",,
+"Pasaphu Subpost",BT,"Trashigang","Kangpara",,,,
+"Thungkhar BHU ii",BT,"Trashigang","Thrimshing","Berdoongma - Thoongkhar","Thungkhar",,
+"Phegpari subpost",BT,"Trashigang","Thrimshing","Thrimishing","Thrimshing",,
+"Lumang BHU ii",BT,"Trashigang","Lumang","Kharphoog - kurchhilo","Kurichilo",,
+"Joenkhar BHU ii",BT,"Trashigang","Sakteng","joenkhar","Sakteng Jyenkhar",,
+"Chhukha BHU",BT,"Chhukha","Bjachho","Bjabchhog",,,
+"Tsimalhakha Hospital",BT,"Chhukha","Bjachho","Tsimalakha_Tsimasham",,,
+"Gedu Hosptital",BT,"Chhukha","Bongo","Gedu_Miritsemo",,,
+"Khaotoekha BHU",BT,"Chhukha","Logchina",,,,
+"Chapcha BHU",BT,"Chhukha","Chapchha",,,,
+"Bongo BHU",BT,"Chhukha","Bongo","Bongo_Phasooma",,,
+"Baeyul Kinzang",BT,"Chhukha","Bongo","Baeyuel Kunzang",,,
+"Chongyekha",BT,"Chhukha","Phuentsholing",,,,
+"Darla BHU",BT,"Chhukha","Dala",,,,
+"Sinchula BHU",BT,"Chhukha","Dala",,,,
+"Rinchentse BHU",BT,"Chhukha","Dala",,,,
+"Doongna BHU",BT,"Chhukha","Doongna",,,,
+"Getena BHU",BT,"Chhukha","Getana",,,,
+"Metakha Sub post",BT,"Chhukha","Maedtabkha",,,,
+"Logchina BHU",BT,"Chhukha","Logchina",,,,
+"Rangaytung",BT,"Chhukha","Samphelling",,,,
+"Chimuna",BT,"Chhukha","Logchina",,,,
+"Arekha BHU",BT,"Chhukha","Bongo",,,,
+"Betikha",BT,"Paro","Naja","Bueltikha_Jagoen","Bueltikha",,
+"Drukgyel",BT,"Paro","Tsento",,,,
+"BHU-II",BT,"Gasa","Khamoed","Damji","Bjishong",,
+"Gasa BHU-1",BT,"Gasa","Khatoed","Mani","Mani",,
+"Laya BHU-II",BT,"Gasa","Laya","Pazhi",,,
+"Lunana BHU-II",BT,"Gasa","Lunana","Lhedi","Lhedi",,
+"Lopokha Sub post",BT,"Wangduephodrang","Athang","Lophokha_Phagtakha","Lophokha",,
+"Migtana Sub post",BT,"Wangduephodrang","Athang","Rookha","Rookha",,
+"Kamichu BHU",BT,"Wangduephodrang","Daga","Kamina_Wogyal","Wogyal",,
+"Uma BHU",BT,"Wangduephodrang","Daga","Uma Khatoed","Uma Khatoed",,
+"Dangchu BHU",BT,"Wangduephodrang","Dangchhu","Tashidingkha_Zimi","Chhubarwogm",,
+"Nobding Sub post",BT,"Wangduephodrang","Dangchhu","DoongdoongNyelsa_Norbooding","Norbooding",,
+"Gaselo BHU",BT,"Wangduephodrang","Gase Tshogongm","Khatoedkha","Gangchhumigang Lamta",,
+"BJimithangkha BHU",BT,"Wangduephodrang","Gase Tshowogm","Medpaisa_Taabchhaekha","Medpaisa",,
+"sephu BHU",BT,"Wangduephodrang","Sephu","Rukoobji","Chagzam",,
+"Jalla BHU",BT,"Wangduephodrang","Ruepisa","Oola","Oola",,
+"Esa BHU",BT,"Wangduephodrang","Gangte","Tapaiteng_Uesa","Uesa",,
+"Samtengang BHU",BT,"Wangduephodrang","Nyisho","Samtengang","Samtengang",,
+"Teki Agona BHU",BT,"Wangduephodrang","Bjena","Wachhey","Kokokhar",,
+"Khotokha sub post",BT,"Wangduephodrang","Bjena","Tashi Tokha","Khotokha",,
+"Taksha subpost",BT,"Wangduephodrang","Daga","Sili_Taagsha","Taagsha",,
+"Kazhi BHU",BT,"Wangduephodrang","Kazhi","Chegidp","Goendep",,
+"Army hospital",BT,"Wangduephodrang","Thedtsho","RinchhengangMaed","Chagzamphakha",,
+"Gangtay Subpost",BT,"Wangduephodrang","Gangte","Gangteng","Gangteng",,
+"Nahi subpost",BT,"Wangduephodrang","Nahi","Uesagongm_Thabji","Hamchhu",,
+"Hebesa Subpost",BT,"Wangduephodrang","Gase Tshowogm","Haebisa","Haebisa",,
+"Gonpasingma BHU",BT,"Pemagatshel","Zobel","Zobel","Zobel",,
+"Nanong BHU",BT,"Pemagatshel","Nanong","Nanong",,,
+"Tshatshi BHU",BT,"Pemagatshel","Nanong","Gashigkhar_ Tsatshi","Tshatshi",,
+"Pema Gatshel Hospital",BT,"Pemagatshel","Shumer",,,,
+"Shali-subpost",BT,"Pemagatshel","Shumer","Goengpong Shali","Shali",,
+"Pretengma BHU",BT,"Pemagatshel","Khar",,,,
+"Thongsa",BT,"Pemagatshel","Chongshing","Thongsa",,,
+"Chongshing",BT,"Pemagatshel","Chongshing","Chongshing_ Jorphung","Chongshing",,
+"Yurung BHU",BT,"Pemagatshel","Yurung",,,,
+"Khangma-subpost",BT,"Pemagatshel","Yurung","Khangma",,,
+"Chhimoong BHU",BT,"Pemagatshel","Chimung","Chhimoong","Chhimoong",,
+"Nyasikhar-subpost",BT,"Pemagatshel","Chimung","Nyashkhar","Nyashikhar",,
+"Dungmin BHU",BT,"Pemagatshel","Dungmin","Dungmaed_ Zimzor",,,
+"Thrumchung BHU",BT,"Pemagatshel","Dungmin","La-Nyiri_Thrumchoong","Thrumchoong",,
+"Mikuri-subpost",BT,"Pemagatshel","Dungmin","Bangyuel","Migkuri",,
+"Nganglam BHU",BT,"Pemagatshel","Norbugang",,,,
+"Norbugang",BT,"Pemagatshel","Norbugang","Norboogang_Rinchenzor","Norboogang",,
+"Borongmo-subpost",BT,"Pemagatshel","Norbugang","Maenchhu_Nganglam","Borongmo",,
+"Dechenling BHU",BT,"Pemagatshel","Dechhenling","Dechhenling_Goenpawoong",,,
+"Chokhorling BHU",BT,"Pemagatshel","Chokhorling","Chhoekhorling _Gazawong","Chhoekhorling",,
+"Haa Hospital",BT,"Haa","Haa Town","Bali Maed","Bali Maed",,
+"Bali TM unit",BT,"Haa","Kartshog","Bali_Mombitshokha","Bali",,
+"Yangthang BHU",BT,"Haa","Bji","Yangthang","Jangtoed",,
+"Sangbaykha BHU",BT,"Haa",,,,,
+"Dorithasa BHU",BT,"Haa",,,,,
+"Ngatsena BHU",BT,"Haa",,,,,
+"Drungkhag subpost",BT,"Haa",,,,,
+"Bebji",BT,"Haa",,,,,
+"Dechencholing",BT,"Thimphu","Kawang","Kuzhugchen",,,
+"Senggey BHU",BT,"Sarpang","Senge","Yarpheling","Yarpheling(Thoemba)",,
+"Phibsoo",BT,"Sarpang","Senge","Sangaythang","Wangchulingkhar(Phibsoo)",,
+"Menchulam",BT,"Sarpang","Gakiling /Hilley","Menchhulam","Menchhulam(Kharpani)",,
+"Sarpang District Hospital",BT,"Sarpang","Shompangkha","Shompangkha","Shompangkha(Sarpangtar)",,
+"Jigmecholing BHU II",BT,"Sarpang","Jigmichhoeling","Khatoed","Khatoe",,
+"Gakidling",BT,"Sarpang","Jigmichhoeling","Gongduegang","Gongduegang(Gong Gaon)",,
+"Jangchubling",BT,"Sarpang","Chuzom/Dovan","Jangchubling","Jangchubling(Pankhey)",,
+"Lhayul",BT,"Sarpang","Chuzom/Dovan","Lhayul","Lhayul(Mougaon)",,
+"Chokhorling",BT,"Sarpang","Dekiling","Chhokhorling","Chhokhorling(Toribari)",,
+"Norbuling",BT,"Sarpang","Sherzhong","Norbuling","Norbuling",,
+"Umling",BT,"Sarpang","Umling","Dungmin","Dungmin",,
+"Tarathang",BT,"Sarpang","Taraythang","Pemacholing","Pemachholing(Dragaon)",,
+"Chuzangang",BT,"Sarpang","Chhuzagang","Barthang","Barthang",,
+"Hongtsho",BT,"Thimphu","Chang","Lhoongtsho_Tashigang",,,
+"Chamgang",BT,"Thimphu","Dagala","Chamgang Maed",,,
+"Chamgang",BT,"Thimphu","Dagala","Chamgang Maed",,,
+"Genekha",BT,"Thimphu","Genye","Ge-nyenkha",,,
+"Lingzhi",BT,"Thimphu","Lingzhi","Chakphu",,,
+"Soe",BT,"Thimphu","Soe","Jangothang",,,
+"Barshong",BT,"Thimphu","Naro","Barshong_Nango",,,
+"Buli Primary Health Center",BT,"Zhemgang","Nangkor","Buli","Buli",,
+"Tsheldang Primary Health Center",BT,"Zhemgang","Nangkor","Nyakhar-Tsheldang","Tsheldang",,
+"Nyimshong Primary Health Center",BT,"Zhemgang","Shingkhar","Nyimshong_Thajong","Nyimshong",,
+"Shingkhar Primary Health Center",BT,"Zhemgang","Shingkhar",,,,
+"Norboogang BHU",BT,"Samtse","Norboogang (Chengmari)","Dawaling_ Yangphelthang","Tshongduekha (Hatkhola)",,
+"Ugyentse BHU",BT,"Samtse","Ugyentse (Nainital)","Dangkarling_Dechhengang","Dangkharling(BahunGaon)",,
+"Yoeseltse BHU",BT,"Samtse","Yoeseltse (Ghumauney)","Dungkar","Dungkar(Ghumaune B)",,
+"Sa-Ngag-Chhoeling BHU 2",BT,"Samtse","Sa-Ngag-Chhoeling (Chargharey)",,,,
+"Tading BHU",BT,"Samtse","Tading",,,,
+"Tading Sub Post",BT,"Samtse","Tading",,,,
 "Sipsu BHU",BT,"Samtse","Tashichhoeling (Sipsu)","Dewachen_Zhiwaling","Zhiwaling(Kothigaon)","26.9746","88.9539"
-"Tendruk BHU",BT,"Samtse","Tendruk","Nyizergang_Tendrukthang","Tendruk ( Tendrukthang/Tendu Tar)","27.0333","89.0833"
-"Pemaling BHU",BT,"Samtse","Pemaling (Biru)","Chhusilgang_Dramedsa","Pemaling (Kamigaon)","27.0333","89.0833"
-"Bara BHU",BT,"Samtse","Norgaygang (Bara)","Dangreyboog-Patshaling","Dangrayboog (Bich Gaon)","27.0333","89.0833"
-"Phendeygang Sup-post",BT,"Samtse","Norgaygang (Bara)","Chhu-Goo-Phendegang","Phendegang (Fenchi)","27.0333","89.0833"
-"Gangtok BHU",BT,"Samtse","Namgaychoeling (Lahireni)","Sernyagang_Tsholingkhar","Gangtog (Gyanthok)","27.0333","89.0833"
-"Gomtu Hospital",BT,"Samtse","Phuentshogpelri (Pugli)","Jangchhogling_Lachhuthang","Peldenling(Gomtu)","27.0333","89.0833"
+"Tendruk BHU",BT,"Samtse","Tendruk","Nyizergang_Tendrukthang","Tendruk ( Tendrukthang/Tendu Tar)",,
+"Pemaling BHU",BT,"Samtse","Pemaling (Biru)","Chhusilgang_Dramedsa","Pemaling (Kamigaon)",,
+"Bara BHU",BT,"Samtse","Norgaygang (Bara)","Dangreyboog-Patshaling","Dangrayboog (Bich Gaon)",,
+"Phendeygang Sup-post",BT,"Samtse","Norgaygang (Bara)","Chhu-Goo-Phendegang","Phendegang (Fenchi)",,
+"Gangtok BHU",BT,"Samtse","Namgaychoeling (Lahireni)","Sernyagang_Tsholingkhar","Gangtog (Gyanthok)",,
+"Gomtu Hospital",BT,"Samtse","Phuentshogpelri (Pugli)","Jangchhogling_Lachhuthang","Peldenling(Gomtu)",,
 "Dorokha BHU",BT,"Samtse","Dophoogchen","Dangreyboog_Ngagang","Dokarkha Ka (Dorokha A)","26.97","89.19"
-"Sengdhen BHU",BT,"Samtse","Dophoogchen","Sangloong_Sengteng","Sengteng","27.0333","89.0833"
+"Sengdhen BHU",BT,"Samtse","Dophoogchen","Sangloong_Sengteng","Sengteng",,
 "Denchukha BHU",BT,"Samtse","Duenchhukha","Duenchukha_Gabji","Duenchhukha (Duenchukha)","26.9131","89.0836"
-"Gawaling Sup-post",BT,"Samtse","Duenchhukha","Gawaling_Karzhing","Gawaling (Baseni)","27.0333","89.0833"
+"Gawaling Sup-post",BT,"Samtse","Duenchhukha","Gawaling_Karzhing","Gawaling (Baseni)",,
 "Dumtoe BHU",BT,"Samtse","Doongtoed (Dumtoe)","Doongtoed_Khaling","Doongtoed(Daragaon)","27.0713","89.1479"
-"Nobgang BHU",BT,"Punakha","Talo","Nobgang","","28.0","89.9333"
-"Kabesa BHU",BT,"Punakha","Kabesa","","","28.0","89.9333"
-"Samdingkha BHU",BT,"Punakha","Toedwang","","","28.0","89.9333"
-"Shengana BHU",BT,"Punakha","Shenga-Bjimi","","","28.0","89.9333"
-"Goenshari BHU",BT,"Punakha","Goenshari","","","28.0","89.9333"
-"Tshochagsa BHU",BT,"Punakha","Lingbukha","","","28.0","89.9333"
-"Khomshar Primary Health Center",BT,"Zhemgang","Bardo","Khomshar","","27.0843","90.8503"
-"Langdurbi Primary Health Center",BT,"Zhemgang","Bardo","Langdurbi","Langdurbi","27.0843","90.8503"
-"Gongphu Primary Health Center",BT,"Zhemgang","Trong","Gongphu","Gongphu","27.0843","90.8503"
-"Kradijong Primary Health Center",BT,"Zhemgang","Phangkhar","Mamo Trong_Pantang","Tradijong","27.0843","90.8503"
-"Pantang Primary Health Center",BT,"Zhemgang","Phangkhar","Mamo Trong_Pantang","Pantang","27.0843","90.8503"
-"Bjoka Primary Health Center",BT,"Zhemgang","Bjoka","Bjoka","Trong","27.0843","90.8503"
-"Namirgang Primary Health Center",BT,"Zhemgang","Bjoka","Barpong_Namirgang","Namirgang","27.0843","90.8503"
-"Kagtong Primary Health Center",BT,"Zhemgang","Ngangla","Kagtong","","27.0843","90.8503"
-"Manas Primary Health Care",BT,"Zhemgang","Ngangla","","","27.0843","90.8503"
-"Zhemgang Hospital",BT,"Zhemgang","Trong","Dangkhar_Trong","Dhangkhar","27.0843","90.8503"
-"Dungzam BHU II",BT,"Yangtse","Boomdeyling","Ngalimang_Phanteng","Dungzam","27.751","91.3887"
-"Trashi Yangtse Hospital",BT,"Yangtse","Yangtse","Baaney_Bimkhar","Tongchen","27.751","91.3887"
-"Tshenkharla BHU",BT,"Yangtse","Khamdang","Nombaring_Shazam","Tshenkharla","27.751","91.3887"
-"Khenyel BHU",BT,"Yangtse","Toedtsho","Khi-Nyel_Togshing","Bakpa","27.751","91.3887"
-"Jangphutse  Sub-post",BT,"Yangtse","Toedtsho","Jangphootse","Tsangwog","27.751","91.3887"
-"Melongkhar BHU",BT,"Yangtse","Yalang","Chhema_Melongkhar","Chema","27.751","91.3887"
-"Thragom BHU",BT,"Yangtse","Yalang","Rolam_Thragom","Thragom","27.751","91.3887"
-"Ramjar BHU",BT,"Yangtse","Ramjar","Bainang-Reb_Romang","Boenkangzor","27.751","91.3887"
-"Jamkhar BHU",BT,"Yangtse","Jamkhar","Rijoong_Yoob","Youb","27.751","91.3887"
-"Tongzahng BHU",BT,"Yangtse","Tongmajangsa","Baagpa_Kuenzangling","Shaagpa","27.751","91.3887"
-"Rabti Sub-post",BT,"Yangtse","Yangtse","Rabti","Rabti","27.751","91.3887"
-"BHU",BT,"Lhuentse","Gangzur","Ney","Ney","27.75","91.1833"
-"Gunitsawa",BT,"Paro","Tsento","","","27.5167","89.4"
-"Narang",BT,"Monggar","Na-Rang","Thrinangphu","Gutshaphu","27.2756","91.2406"
-"Balam BHU",BT,"Monggar","Balam","Balam","Lower Balam","27.2756","91.2406"
-"Chali BHU",BT,"Monggar","Chhaling","Chulabi","Garwaling","27.2756","91.2406"
-"Chaskhar BHU",BT,"Monggar","Chaskhar","Doongsingma_Pam","Dungsingma","27.2756","91.2406"
-"Chaskhar BHU",BT,"Monggar","Chaskhar","Doongsingma_Pam","Dungsingma","27.2756","91.2406"
-"Drameste BHU",BT,"Monggar","Drametse","Drametse_Shaphangma","Drametse","27.2756","91.2406"
-"Drepoong BHU",BT,"Monggar","Drepoong","Drepoong","Labtsa Zor","27.2756","91.2406"
-"Pangthang Sub-Post, Tshabor",BT,"Monggar","Gongdue","Damkhar_Weringla","Pangthang","27.2756","91.2406"
-"Daksa BHU",BT,"Monggar","Gongdue","Daagsa_Kumazong","Daksa","27.2756","91.2406"
-"Yangbari BHU",BT,"Monggar","Gongdue","Pikari_Yangbari","Yangbari","27.2756","91.2406"
-"Jurmey BHU",BT,"Monggar","Jurmed","Bilam_Dangkila","Bilam","27.2756","91.2406"
-"Muktangkhar ORC",BT,"Monggar","Jurmed","Moogtangkhar_Tsangkhazor","Muktangkhar","27.2756","91.2406"
-"Tselam ORC",BT,"Monggar","Jurmed","Moodoongkhar_Tselam","Tselam","27.2756","91.2406"
-"Yarakla ORC",BT,"Monggar","Jurmed","Koknala_Ya-Ragla","Ya-Rakla","27.2756","91.2406"
-"Sangkama ORC",BT,"Monggar","Jurmed","Ngamphu_Sangkama","Sangkama","27.2756","91.2406"
-"Narang  BHU",BT,"Monggar","Na-Rang","Thrinangphu","Gutshaptang","27.2756","91.2406"
-"Kengkhar BHU",BT,"Monggar","Kengkhar","Phosothong_singchongri","Shingchongri","27.2756","91.2406"
-"Tongla Sub-Post",BT,"Monggar","Kengkhar","Tongla_Zi-Tsibi","Tongla","27.2756","91.2406"
-"Chai BHU",BT,"Monggar","Chhaling","Chulabi","Garwaling","27.2756","91.2406"
-"Yadi BHU",BT,"Monggar","Ngatshang","Pelshoob","","27.2756","91.2406"
-"Ngatshang BHU",BT,"Monggar","Ngatshang","Thoomdari","Zangdari","27.2756","91.2406"
-"Sengor BHU",BT,"Monggar","Saling","Seng-Gor","Seng-Gor","27.2756","91.2406"
-"Lingmithang BHU",BT,"Monggar","Saling","Tsenzabi_Masangdaza","","27.2756","91.2406"
-"Resa Sub-Post",BT,"Monggar","Saling","Kalapang_Risa","Resa","27.2756","91.2406"
-"ORC",BT,"Monggar","Saling","Drogsar","Drogsar","27.2756","91.2406"
-"Tsenzabi ORC",BT,"Monggar","Saling","Tsenzabi_Masangdaza","Tsenzibi","27.2756","91.2406"
-"Masangdaza ORC",BT,"Monggar","Saling","Tsenzabi_Masangdaza","Masangdaza","27.2756","91.2406"
-"Saling ORC",BT,"Monggar","Saling","Saling","Saling","27.2756","91.2406"
-"Thridangbi ORC",BT,"Monggar","Saling","Thridangbi","","27.2756","91.2406"
-"Kalapang ORC",BT,"Monggar","Saling","Kalapang_Risa","Kalapang","27.2756","91.2406"
-"Mangling ORC",BT,"Monggar","Saling","Drogsar","Maangling","27.2756","91.2406"
-"Gyalpozhing BHU",BT,"Monggar","Mongar","Gyalpoizhing_Wangling","Gyelpozhing","27.2756","91.2406"
-"Muhung BHU",BT,"Monggar","Shermuhung","Muhung","Muhung","27.2756","91.2406"
-"SErzhong BHU",BT,"Monggar","Shermuhung","Serzhong","Serzhong","27.2756","91.2406"
-"Serzhong BHU",BT,"Monggar","Shermuhung","Serzhong","Serzhong","27.2756","91.2406"
-"Nagor BHU",BT,"Monggar","Silambi","Nagor","Nagor Trong","27.2756","91.2406"
-"Silambi Sub-Post",BT,"Monggar","Silambi","","","27.2756","91.2406"
-"Tsakaling BHU",BT,"Monggar","Tsakaling","Nyartsi_Tsakaling","","27.2756","91.2406"
-"Takhambi Sub-Post",BT,"Monggar","Tsakaling","Tagkhambi","Takham Toe","27.2756","91.2406"
-"Banjar BHU",BT,"Monggar","Tsamang","Banjar","Banjair","27.2756","91.2406"
-"Tsamang BHU",BT,"Monggar","Tsamang","Thuenmong_Tokari","Tokari","27.2756","91.2406"
-"Ganglapong BHU",BT,"Monggar","Tsamang","Ganglapong Toed","Ganglapong Toed","27.2756","91.2406"
-"Woop ORC",BT,"Monggar","Drepoong","Drepoong","Woop pek","27.2756","91.2406"
-"Zunglen woong ORC",BT,"Monggar","Drepoong","Zunglen","Zunglen","27.2756","91.2406"
-"Tshangkhar ORC",BT,"Monggar","Drepoong","Tsangkhar","Tsangkhar","27.2756","91.2406"
+"Nobgang BHU",BT,"Punakha","Talo","Nobgang",,,
+"Kabesa BHU",BT,"Punakha","Kabjisa",,,,
+"Samdingkha BHU",BT,"Punakha","Toedwang",,,,
+"Shengana BHU",BT,"Punakha","Shengabjimi",,,,
+"Goenshari BHU",BT,"Punakha","Goenshari",,,,
+"Tshochagsa BHU",BT,"Punakha","Lingmukha",,,,
+"Khomshar Primary Health Center",BT,"Zhemgang","Bardo","Khomshar",,,
+"Langdurbi Primary Health Center",BT,"Zhemgang","Bardo","Langdurbi","Langdurbi",,
+"Gongphu Primary Health Center",BT,"Zhemgang","Trong","Gongphu","Gongphu",,
+"Kradijong Primary Health Center",BT,"Zhemgang","Pangkhar","Mamo Trong_Pantang","Tradijong",,
+"Pantang Primary Health Center",BT,"Zhemgang","Pangkhar","Mamo Trong_Pantang","Pantang",,
+"Bjoka Primary Health Center",BT,"Zhemgang","Bjoka","Bjoka","Trong",,
+"Namirgang Primary Health Center",BT,"Zhemgang","Bjoka","Barpong_Namirgang","Namirgang",,
+"Kagtong Primary Health Center",BT,"Zhemgang","Ngangla","Kagtong",,,
+"Manas Primary Health Care",BT,"Zhemgang","Ngangla",,,,
+"Zhemgang Hospital",BT,"Zhemgang","Trong","Dangkhar_Trong","Dhangkhar",,
+"Dungzam BHU II",BT,"Yangtse","Bumdeling","Ngalimang_Phanteng","Dungzam",,
+"Trashi Yangtse Hospital",BT,"Yangtse","Yangtse","Baaney_Bimkhar","Tongchen",,
+"Tshenkharla BHU",BT,"Yangtse","Khamdang","Nombaring_Shazam","Tshenkharla",,
+"Khenyel BHU",BT,"Yangtse","Toedtsho","Khi-Nyel_Togshing","Bakpa",,
+"Jangphutse  Sub-post",BT,"Yangtse","Toedtsho","Jangphootse","Tsangwog",,
+"Melongkhar BHU",BT,"Yangtse","Yalang","Chhema_Melongkhar","Chema",,
+"Thragom BHU",BT,"Yangtse","Yalang","Rolam_Thragom","Thragom",,
+"Ramjar BHU",BT,"Yangtse","Ramjar","Bainang-Reb_Romang","Boenkangzor",,
+"Jamkhar BHU",BT,"Yangtse","Jamkhar","Rijoong_Yoob","Youb",,
+"Tongzahng BHU",BT,"Yangtse","Tongmajangsa","Baagpa_Kuenzangling","Shaagpa",,
+"Rabti Sub-post",BT,"Yangtse","Yangtse","Rabti","Rabti",,
+"BHU",BT,"Lhuentse","Gangzur","Ney","Ney",,
+"Gunitsawa",BT,"Paro","Tsento",,,,
+"Narang",BT,"Monggar","Narang","Thrinangphu","Gutshaphu",,
+"Balam BHU",BT,"Monggar","Balam","Balam","Lower Balam",,
+"Chali BHU",BT,"Monggar","Chhali","Chulabi","Garwaling",,
+"Chaskhar BHU",BT,"Monggar","Chaskhar","Doongsingma_Pam","Dungsingma",,
+"Chaskhar BHU",BT,"Monggar","Chaskhar","Doongsingma_Pam","Dungsingma",,
+"Drameste BHU",BT,"Monggar","Drametse","Drametse_Shaphangma","Drametse",,
+"Drepoong BHU",BT,"Monggar","Drepung","Drepoong","Labtsa Zor",,
+"Pangthang Sub-Post, Tshabor",BT,"Monggar","Gongdue","Damkhar_Weringla","Pangthang",,
+"Daksa BHU",BT,"Monggar","Gongdue","Daagsa_Kumazong","Daksa",,
+"Yangbari BHU",BT,"Monggar","Gongdue","Pikari_Yangbari","Yangbari",,
+"Jurmey BHU",BT,"Monggar","Jurmed","Bilam_Dangkila","Bilam",,
+"Muktangkhar ORC",BT,"Monggar","Jurmed","Moogtangkhar_Tsangkhazor","Muktangkhar",,
+"Tselam ORC",BT,"Monggar","Jurmed","Moodoongkhar_Tselam","Tselam",,
+"Yarakla ORC",BT,"Monggar","Jurmed","Koknala_Ya-Ragla","Ya-Rakla",,
+"Sangkama ORC",BT,"Monggar","Jurmed","Ngamphu_Sangkama","Sangkama",,
+"Narang  BHU",BT,"Monggar","Narang","Thrinangphu","Gutshaptang",,
+"Kengkhar BHU",BT,"Monggar","Kengkhar","Phosothong_singchongri","Shingchongri",,
+"Tongla Sub-Post",BT,"Monggar","Kengkhar","Tongla_Zi-Tsibi","Tongla",,
+"Chai BHU",BT,"Monggar","Chhali","Chulabi","Garwaling",,
+"Yadi BHU",BT,"Monggar","Ngatshang","Pelshoob",,,
+"Ngatshang BHU",BT,"Monggar","Ngatshang","Thoomdari","Zangdari",,
+"Sengor BHU",BT,"Monggar","Saleng","Seng-Gor","Seng-Gor",,
+"Lingmithang BHU",BT,"Monggar","Saleng","Tsenzabi_Masangdaza",,,
+"Resa Sub-Post",BT,"Monggar","Saleng","Kalapang_Risa","Resa",,
+"ORC",BT,"Monggar","Saleng","Drogsar","Drogsar",,
+"Tsenzabi ORC",BT,"Monggar","Saleng","Tsenzabi_Masangdaza","Tsenzibi",,
+"Masangdaza ORC",BT,"Monggar","Saleng","Tsenzabi_Masangdaza","Masangdaza",,
+"Saling ORC",BT,"Monggar","Saleng","Saling","Saling",,
+"Thridangbi ORC",BT,"Monggar","Saleng","Thridangbi",,,
+"Kalapang ORC",BT,"Monggar","Saleng","Kalapang_Risa","Kalapang",,
+"Mangling ORC",BT,"Monggar","Saleng","Drogsar","Maangling",,
+"Gyalpozhing BHU",BT,"Monggar","Mongar","Gyalpoizhing_Wangling","Gyelpozhing",,
+"Muhung BHU",BT,"Monggar","Shermung","Muhung","Muhung",,
+"SErzhong BHU",BT,"Monggar","Shermung","Serzhong","Serzhong",,
+"Serzhong BHU",BT,"Monggar","Shermung","Serzhong","Serzhong",,
+"Nagor BHU",BT,"Monggar","Silambi","Nagor","Nagor Trong",,
+"Silambi Sub-Post",BT,"Monggar","Silambi",,,,
+"Tsakaling BHU",BT,"Monggar","Tsakaling","Nyartsi_Tsakaling",,,
+"Takhambi Sub-Post",BT,"Monggar","Tsakaling","Tagkhambi","Takham Toe",,
+"Banjar BHU",BT,"Monggar","Tsamang","Banjar","Banjair",,
+"Tsamang BHU",BT,"Monggar","Tsamang","Thuenmong_Tokari","Tokari",,
+"Ganglapong BHU",BT,"Monggar","Tsamang","Ganglapong Toed","Ganglapong Toed",,
+"Woop ORC",BT,"Monggar","Drepung","Drepoong","Woop pek",,
+"Zunglen woong ORC",BT,"Monggar","Drepung","Zunglen","Zunglen",,
+"Tshangkhar ORC",BT,"Monggar","Drepung","Tsangkhar","Tsangkhar",,

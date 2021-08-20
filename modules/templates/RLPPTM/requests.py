@@ -108,9 +108,8 @@ def send_filter_widgets():
                          SHIP_STATUS_RETURNING, \
                          inv_shipment_status_labels
 
-    send_status_opts = OrderedDict(sorted(inv_shipment_status_labels().items(),
-                                          key = lambda i: i[0],
-                                          ))
+    send_status_opts = OrderedDict(inv_shipment_status_labels())
+
     # We don't currently use these statuses
     del send_status_opts[SHIP_STATUS_CANCEL]
     del send_status_opts[SHIP_STATUS_RETURNING]
@@ -136,10 +135,15 @@ def send_filter_widgets():
     if current.auth.s3_has_role("SUPPLY_COORDINATOR"):
 
         coordinator_filters = [
+            S3OptionsFilter("to_site_id$organisation_id$delivery.value",
+                            label = T("Delivery##supplying"),
+                            options = delivery_tag_opts(),
+                            ),
             S3OptionsFilter("site_id",
                             label = T("Distribution Center"),
                             ),
             S3OptionsFilter("to_site_id",
+                            hidden = True,
                             ),
             S3LocationFilter("to_site_id$location_id",
                              levels = ["L3", "L4"],

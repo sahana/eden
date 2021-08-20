@@ -959,7 +959,9 @@ class S3EventLocationModel(S3Model):
                                               ondelete = "CASCADE",
                                               ),
                           self.gis_location_id(
-                            widget = S3LocationSelector(show_map=False),
+                            widget = S3LocationSelector(show_map = False,
+                                                        show_postcode = False,
+                                                        ),
                             #widget = S3LocationAutocompleteWidget(),
                             requires = IS_LOCATION(),
                             represent = self.gis_LocationRepresent(sep=", "),
