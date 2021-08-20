@@ -1228,14 +1228,11 @@ class InventoryTrackingModel(S3Model):
 
                        # Requests
                        # - enable in Templates
-                       #inv_send_req = {"joinby": "send_id",
-                       #                "multiple": False,
-                       #                },
+                       #inv_send_req = "send_id",
                        #req_req = {"link": "inv_send_req",
                        #           "joinby": "send_id",
                        #           "key": "req_id",
                        #           "actuate": "hide",
-                       #           "multiple": False,
                        #           },
                        )
 
@@ -1551,7 +1548,17 @@ class InventoryTrackingModel(S3Model):
 
         # Components
         add_components(tablename,
+
                        inv_track_item = "recv_id",
+
+                       # Requests
+                       # - enable in Templates
+                       #inv_recv_req = "recv_id",
+                       #req_req = {"link": "inv_recv_req",
+                       #           "joinby": "recv_id",
+                       #           "key": "req_id",
+                       #           "actuate": "hide",
+                       #           },
                        )
 
         # Custom methods
@@ -4199,25 +4206,43 @@ class InventoryRequestModel(S3Model):
     """
 
     names = ("inv_send_req",
+             "inv_recv_req",
              )
 
     def model(self):
 
-        # ---------------------------------------------------------------------
-        # Shipments <> Requests
-        #
+        define_table = self.define_table
+        req_id = self.req_req_id
 
+        # ---------------------------------------------------------------------
+        # Outgoing Shipments <> Requests
+        #
         tablename = "inv_send_req"
-        self.define_table(tablename,
-                          self.inv_send_id(empty = False,
-                                           ondelete = "CASCADE",
-                                           ),
-                          self.req_req_id(empty = False,
-                                          # Default anyway
-                                          #ondelete = "CASCADE",
-                                          ),
-                          *s3_meta_fields()
-                          )
+        define_table(tablename,
+                     self.inv_send_id(empty = False,
+                                      ondelete = "CASCADE",
+                                      ),
+                     req_id(empty = False,
+                            # Default anyway
+                            #ondelete = "CASCADE",
+                            ),
+                     *s3_meta_fields()
+                     )
+
+        # ---------------------------------------------------------------------
+        # Incoming Shipments <> Requests
+        #
+        tablename = "inv_recv_req"
+        define_table(tablename,
+                     self.inv_recv_id(empty = False,
+                                      ondelete = "CASCADE",
+                                      ),
+                     req_id(empty = False,
+                            # Default anyway
+                            #ondelete = "CASCADE",
+                            ),
+                     *s3_meta_fields()
+                     )
 
         return {}
 
@@ -5104,7 +5129,8 @@ def inv_send_process():
             (tracktable.deleted == False)
     track_items = db(query).select(tracktable.req_item_id,
                                    tracktable.quantity,
-                                   tracktable.item_pack_id)
+                                   tracktable.item_pack_id,
+                                   )
     if not track_items:
         session.error = T("No items have been selected for shipping.")
 
@@ -5118,7 +5144,8 @@ def inv_send_process():
     db(stable.id == send_id).update(date = request.utcnow,
                                     status = SHIP_STATUS_SENT,
                                     owned_by_user = None,
-                                    owned_by_group = ADMIN)
+                                    owned_by_group = ADMIN,
+                                    )
 
     # If this is linked to a request then update the quantity in transit
     req_ref = send_record.req_ref
@@ -5143,7 +5170,8 @@ def inv_send_process():
                                                                  ).first().quantity
                 transit_quantity = t_qnty * inv_p_qnty / req_p_qnty
                 db(ritable.id == req_item_id).update(quantity_transit = ritable.quantity_transit + transit_quantity)
-        s3db.req_update_status(req_id)
+        from .req import req_update_status
+        req_update_status(req_id)
 
     # Create a Receive record
     rtable = s3db.inv_recv
@@ -5187,38 +5215,56 @@ def inv_track_item_deleting(record_id):
     db = current.db
     s3db = current.s3db
     tracktable = db.inv_track_item
-    inv_item_table = db.inv_inv_item
-    ritable = s3db.req_req_item
-    siptable = db.supply_item_pack
-    record = tracktable[record_id]
+    record = db(tracktable.id == record_id).select(tracktable.status,
+                                                   tracktable.req_item_id,
+                                                   tracktable.item_pack_id,
+                                                   tracktable.quantity,
+                                                   tracktable.send_inv_item_id,
+                                                   limitby = (0, 1)
+                                                   ).first()
     if record.status != 1:
+        # Not 'Preparing': Do not allow
         return False
-    # if this is linked to a request
-    # then remove these items from the quantity in transit
-    if record.req_item_id:
-        req_id = record.req_item_id
-        req_item = ritable[req_id]
-        req_quantity = req_item.quantity_transit
-        req_pack_quantity = siptable[req_item.item_pack_id].quantity
-        track_pack_quantity = siptable[record.item_pack_id].quantity
-        quantity_transit = s3db.supply_item_add(req_quantity,
-                                               req_pack_quantity,
-                                               - record.quantity,
-                                               track_pack_quantity
-                                              )
-        db(ritable.id == req_id).update(quantity_transit = quantity_transit)
-        s3db.req_update_status(req_id)
 
-    # Check that we have a link to a warehouse
+    if record.req_item_id:
+        # This is linked to a Request:
+        # - remove these items from the quantity in transit
+        req_id = record.req_item_id
+        ritable = s3db.req_req_item
+        req_item = db(ritable.id == req_id).select(ritable.id,
+                                                   ritable.quantity_transit,
+                                                   ritable.item_pack_id,
+                                                   limitby = (0, 1)
+                                                   ).first()
+        req_quantity = req_item.quantity_transit
+        siptable = db.supply_item_pack
+        req_pack_quantity = db(siptable.id == req_item.item_pack_id).select(siptable.quantity,
+                                                                            limitby = (0, 1)
+                                                                            ).first().quantity
+        track_pack_quantity = db(siptable.id == record.item_pack_id).select(siptable.quantity,
+                                                                            limitby = (0, 1)
+                                                                            ).first().quantity
+        from .supply import supply_item_add
+        quantity_transit = supply_item_add(req_quantity,
+                                           req_pack_quantity,
+                                           - record.quantity,
+                                           track_pack_quantity
+                                           )
+        req_item.update_record(quantity_transit = quantity_transit)
+        from .req import req_update_status
+        req_update_status(req_id)
+
     if record.send_inv_item_id:
+        # This is linked to a Warehouse Inventory item:
+        # - remove the total from this record and place it back in the warehouse
         track_total = record.quantity
-        # Remove the total from this record and place it back in the warehouse
+        inv_item_table = db.inv_inv_item
         db(inv_item_table.id == record.send_inv_item_id).update(quantity = inv_item_table.quantity + track_total)
         db(tracktable.id == record_id).update(quantity = 0,
                                               comments = "%sQuantity was: %s" % \
-                                                (inv_item_table.comments,
-                                                 track_total,
-                                                 ),
+                                                            (tracktable.comments,
+                                                             track_total,
+                                                             ),
                                               )
     return True
 
@@ -5229,14 +5275,17 @@ def inv_track_item_onaccept(form):
        then the inv_item quantity will be reduced.
     """
 
+    from .supply import supply_item_add
+
     db = current.db
     s3db = current.s3db
+
     tracktable = db.inv_track_item
     inv_item_table = db.inv_inv_item
     stable = db.inv_send
     rtable = db.inv_recv
     siptable = db.supply_item_pack
-    supply_item_add = s3db.supply_item_add
+
     form_vars = form.vars
     record_id = form_vars.id
     record = form.record
@@ -5394,7 +5443,8 @@ def inv_track_item_onaccept(form):
                                               track_pack_quantity
                                               )
             db(ritable.id == record.req_item_id).update(quantity_fulfil = quantity_fulfil)
-            s3db.req_update_status(req_id)
+            from .req import req_update_status
+            req_update_status(req_id)
 
         db(tracktable.id == record_id).update(recv_inv_item_id = inv_item_id,
                                               status = TRACK_STATUS_ARRIVED,

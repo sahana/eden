@@ -2665,6 +2665,11 @@ class S3Config(Storage):
         """
         return self.__lazy("ui", "organizer_snap_duration", None)
 
+    def get_ui_thumbnail(self):
+        """ Get the size of Thumbnail to use for Images """
+
+        return self.ui.get("thumbnail", (None, None))
+
     # =========================================================================
     # Messaging
     #

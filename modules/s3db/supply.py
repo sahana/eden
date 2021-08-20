@@ -31,6 +31,7 @@ __all__ = ("S3SupplyModel",
            "S3SupplyDistributionModel",
            "S3SupplyDistributionDVRActivityModel",
            "S3SupplyPersonModel",
+           "supply_item_add",
            "supply_item_rheader",
            "supply_item_controller",
            "supply_item_entity_controller",
@@ -90,7 +91,6 @@ class S3SupplyModel(S3Model):
              "supply_kit_item",
              "supply_item_represent",
              "supply_item_category_represent",
-             "supply_item_add",
              "supply_item_pack_quantity",
              )
 
@@ -377,6 +377,7 @@ $.filterOptionsS3({
         #  Instances of these become Inventory Items & Request items
         #
 
+        from .doc import doc_image_represent
         track_pack_values = settings.get_inv_track_pack_values()
 
         tablename = "supply_item"
@@ -464,6 +465,27 @@ $.filterOptionsS3({
                                        float_represent(v, precision=3),
                            requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
                            ),
+                     Field("url",
+                           label = T("URL"),
+                           represent = s3_url_represent,
+                           requires = IS_EMPTY_OR(IS_URL()),
+                           ),
+                     Field("file", "upload",
+                           autodelete = True,
+                           label = T("Image"),
+                           length = current.MAX_FILENAME_LENGTH,
+                           represent = doc_image_represent,
+                           requires = IS_EMPTY_OR(
+                                        IS_IMAGE(extensions = (s3.IMAGE_EXTENSIONS)),
+                                        # Distinguish from prepop
+                                        null = "",
+                                      ),
+                           # upload folder needs to be visible to the download() function as well as the upload
+                           uploadfolder = os.path.join(current.request.folder,
+                                                       "uploads",
+                                                       "images"),
+                           widget = S3ImageCropWidget((600, 600)),
+                           ),
                      Field("obsolete", "boolean",
                            default = False,
                            readable = False,
@@ -472,11 +494,6 @@ $.filterOptionsS3({
                      # These comments do *not* pull through to an Inventory's Items or a Request's Items
                      s3_comments(),
                      *s3_meta_fields())
-
-        # Categories in Progress
-        #table.item_category_id_0.label = T("Category")
-        #table.item_category_id_1.readable = table.item_category_id_1.writable = False
-        #table.item_category_id_2.readable = table.item_category_id_2.writable = False
 
         # CRUD strings
         ADD_ITEM = T("Create Item")
@@ -573,6 +590,7 @@ $.filterOptionsS3({
                   deduplicate = self.supply_item_duplicate,
                   filter_widgets = filter_widgets,
                   onaccept = self.supply_item_onaccept,
+                  onvalidation = self.supply_item_onvalidation,
                   orderby = "supply_item.name",
                   report_options = report_options,
                   summary = summary,
@@ -950,7 +968,6 @@ $.filterOptionsS3({
                 "supply_item_represent": supply_item_represent,
                 "supply_item_category_represent": item_category_represent,
                 "supply_item_pack_quantity": SupplyItemPackQuantity,
-                "supply_item_add": self.supply_item_add,
                 "supply_item_pack_represent": item_pack_represent,
                 }
 
@@ -979,27 +996,6 @@ $.filterOptionsS3({
         if not (form.vars.code or form.vars.name):
             errors = form.errors
             errors.code = errors.name = current.T("An Item Category must have a Code OR a Name.")
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def supply_item_add(quantity_1, pack_quantity_1,
-                        quantity_2, pack_quantity_2):
-        """
-            Adds item quantities together, accounting for different pack
-            quantities.
-            Returned quantity according to pack_quantity_1
-
-            Used by controllers/inv.py & modules/s3db/inv.py
-        """
-
-        if pack_quantity_1 == pack_quantity_2:
-            # Faster calculation
-            quantity = quantity_1 + quantity_2
-        else:
-            quantity = ((quantity_1 * pack_quantity_1) +
-                        (quantity_2 * pack_quantity_2)) / pack_quantity_1
-        return quantity
-
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1263,6 +1259,27 @@ $.filterOptionsS3({
                                    create_next = url,
                                    update_next = url,
                                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def supply_item_onvalidation(form):
+        """
+            Handle Images in interactive forms
+        """
+
+        form_vars = form.vars
+
+        encoded_file = form_vars.get("imagecrop-data", None)
+        if encoded_file:
+            # S3ImageCropWidget
+            import base64
+            metadata, encoded_file = encoded_file.split(",")
+            #filename, datatype, enctype = metadata.split(";")
+            filename = metadata.split(";", 1)[0]
+            f = Storage()
+            f.filename = uuid4().hex + filename
+            f.file = BytesIO(base64.b64decode(encoded_file))
+            form_vars.file = f
 
 # =============================================================================
 class S3SupplyDistributionModel(S3Model):
@@ -2240,6 +2257,25 @@ class supply_ItemCategoryRepresent(S3Represent):
             name = "%s > %s" % (catalog, name)
 
         return s3_str(name)
+
+# =============================================================================
+def supply_item_add(quantity_1, pack_quantity_1,
+                    quantity_2, pack_quantity_2):
+    """
+        Adds item quantities together, accounting for different pack
+        quantities.
+        Returned quantity according to pack_quantity_1
+
+        Used by controllers/inv.py & modules/s3db/inv.py
+    """
+
+    if pack_quantity_1 == pack_quantity_2:
+        # Faster calculation
+        quantity = quantity_1 + quantity_2
+    else:
+        quantity = ((quantity_1 * pack_quantity_1) +
+                    (quantity_2 * pack_quantity_2)) / pack_quantity_1
+    return quantity
 
 # =============================================================================
 def item_um_from_name(name):

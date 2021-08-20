@@ -208,9 +208,9 @@ class S3Importer(S3Method):
         self.function = r.function
 
         try:
-            self.uploadTitle = current.response.s3.crud_strings[tablename].title_upload or T("Import")
+            self.upload_title = current.response.s3.crud_strings[tablename].title_upload or T("Import")
         except (KeyError, AttributeError):
-            self.uploadTitle = T("Import")
+            self.upload_title = T("Import")
 
         # @todo: correct to switch this off for the whole session?
         current.session.s3.ocr_enabled = False
@@ -247,7 +247,8 @@ class S3Importer(S3Method):
         # If we have an upload ID, then get upload and import job
         self.upload_id = upload_id
         query = (self.upload_table.id == upload_id)
-        self.upload_job = current.db(query).select(limitby=(0, 1)).first()
+        self.upload_job = current.db(query).select(limitby = (0, 1)
+                                                   ).first()
         if self.upload_job:
             self.job_id = self.upload_job.job_id
         else:
@@ -302,14 +303,14 @@ class S3Importer(S3Method):
 
         #current.log.debug("S3Importer.upload()")
 
-        request = self.request
-
-        form = self._upload_form(r, **attr)
         output = self._create_upload_dataTable()
-        if request.representation == "aadata":
+        if r.representation == "aadata":
             return output
 
-        output.update(form=form, title=self.uploadTitle)
+        form = self._upload_form(r, **attr)
+        output.update(form = form,
+                      title = self.upload_title,
+                      )
         return output
 
     # -------------------------------------------------------------------------
@@ -335,7 +336,7 @@ class S3Importer(S3Method):
                                      user_id = current.session.auth.user.id
                                      )
         else:
-            title = self.uploadTitle
+            title = self.upload_title
             form = self._upload_form(r, **attr)
 
             r = self.request
@@ -2855,7 +2856,7 @@ class S3ImportItem(object):
         item_id = self.item_id
         db = current.db
         row = db(item_table.item_id == item_id).select(item_table.id,
-                                                       limitby=(0, 1)
+                                                       limitby = (0, 1)
                                                        ).first()
         if row:
             record_id = row.id
@@ -2913,12 +2914,12 @@ class S3ImportItem(object):
                 if store_entry is not None:
                     ritems.append(json.dumps(store_entry))
         if ritems:
-            record.update(ritems=ritems)
+            record.update(ritems = ritems)
         citems = [c.item_id for c in self.components]
         if citems:
-            record.update(citems=citems)
+            record.update(citems = citems)
         if self.parent:
-            record.update(parent=self.parent.item_id)
+            record.update(parent = self.parent.item_id)
         if record_id:
             db(item_table.id == record_id).update(**record)
         else:
@@ -3000,14 +3001,15 @@ class S3ImportJob():
 
     # -------------------------------------------------------------------------
     def __init__(self, table,
-                 tree=None,
-                 files=None,
-                 job_id=None,
-                 strategy=None,
-                 update_policy=None,
-                 conflict_policy=None,
-                 last_sync=None,
-                 onconflict=None):
+                 tree = None,
+                 files = None,
+                 job_id = None,
+                 strategy = None,
+                 update_policy = None,
+                 conflict_policy = None,
+                 last_sync = None,
+                 onconflict = None,
+                 ):
         """
             Constructor
 
@@ -3085,7 +3087,8 @@ class S3ImportJob():
                 query = (jobtable.job_id == job_id)
             row = current.db(query).select(jobtable.job_id,
                                            jobtable.tablename,
-                                           limitby=(0, 1)).first()
+                                           limitby = (0, 1)
+                                           ).first()
             if not row:
                 raise SyntaxError("Job record not found")
             self.job_id = row.job_id
@@ -3142,7 +3145,8 @@ class S3ImportJob():
                  original = None,
                  components = None,
                  parent = None,
-                 joinby = None):
+                 joinby = None,
+                 ):
         """
             Parse and validate an XML element and add it as new item
             to the job.
@@ -3401,7 +3405,8 @@ class S3ImportJob():
                   fields = None,
                   tree = None,
                   directory = None,
-                  lookup = None):
+                  lookup = None,
+                  ):
         """
             Find referenced elements in the tree
 

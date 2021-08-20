@@ -3247,6 +3247,16 @@ Thank you"""
         s3db = current.s3db
         table = s3db.inv_recv
 
+        s3db.add_components(tablename,
+                            # Requests
+                            inv_recv_req = "recv_id",
+                            req_req = {"link": "inv_recv_req",
+                                       "joinby": "recv_id",
+                                       "key": "req_id",
+                                       "actuate": "hide",
+                                       },
+                            )
+
         # Use Custom Represent for Sites to send to
         from .controllers import org_SiteRepresent
         table.from_site_id.requires.other.label = org_SiteRepresent()
@@ -3255,6 +3265,48 @@ Thank you"""
         f.redable = f.writable = True
         f.requires = IS_IN_SET(transport_opts)
         f.represent = S3Represent(options = transport_opts)
+
+        from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineLink
+        crud_form = S3SQLCustomForm(S3SQLInlineLink("req",
+                                                    field = "req_id",
+                                                    label = T("Request Number"),
+                                                    # @ToDo: Filter appropriately
+                                                    #requires = IS_ONE_OF()
+                                                    ),
+                                    "site_id",
+                                    "type",
+                                    "organisation_id",
+                                    "from_site_id",
+                                    "eta",
+                                    "date",
+                                    "send_ref",
+                                    #"recv_ref", # Always calculate automatically?
+                                    "purchase_ref",
+                                    "sender_id",
+                                    "recipient_id",
+                                    "transport_type",
+                                    "status",
+                                    "grn_status",
+                                    "cert_status",
+                                    "filing_status",
+                                    "comments",
+                                    )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = ["recv_ref",
+                                      (T("Request Number"), "recv_req.req_id"),
+                                      "send_ref",
+                                      "purchase_ref",
+                                      "recipient_id",
+                                      "organisation_id",
+                                      "from_site_id",
+                                      "site_id",
+                                      "date",
+                                      "type",
+                                      "status",
+                                      ],
+                       )
 
         # Custom GRN
         s3db.set_method("inv", "recv",
@@ -3326,14 +3378,11 @@ Thank you"""
 
         s3db.add_components(tablename,
                             # Requests
-                            inv_send_req = {"joinby": "send_id",
-                                            "multiple": False,
-                                            },
+                            inv_send_req = "send_id",
                             req_req = {"link": "inv_send_req",
                                        "joinby": "send_id",
                                        "key": "req_id",
                                        "actuate": "hide",
-                                       "multiple": False,
                                        },
                             )
 
@@ -3346,11 +3395,14 @@ Thank you"""
         f.requires = IS_IN_SET(transport_opts)
         f.represent = S3Represent(options = transport_opts)
 
-        s3db.inv_send_req.requires.other.label = org_SiteRepresent()
-
-        from s3 import S3SQLCustomForm
-        crud_form = S3SQLCustomForm("send_req.req_id",
-                                    #"send_ref",
+        from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineLink
+        crud_form = S3SQLCustomForm(S3SQLInlineLink("req",
+                                                    field = "req_id",
+                                                    label = T("Request Number"),
+                                                    # @ToDo: Filter appropriately
+                                                    #requires = IS_ONE_OF()
+                                                    ),
+                                    #"send_ref", # Always calculate automatically?
                                     "site_id",
                                     "type",
                                     "to_site_id",
@@ -3376,7 +3428,8 @@ Thank you"""
         s3db.configure(tablename,
                        crud_form = crud_form,
                        list_fields = ["send_ref",
-                                      "req_ref",
+                                      #"req_ref",
+                                      (T("Request Number"), "send_req.req_id"),
                                       #"sender_id",
                                       "site_id",
                                       "date",
@@ -3388,7 +3441,7 @@ Thank you"""
                                       #"driver_phone",
                                       #"vehicle_plate_no",
                                       #"time_out",
-                                      "comments",
+                                      #"comments",
                                       ],
                        )
 
@@ -3750,7 +3803,6 @@ Thank you"""
                                                             field = "organisation_type_id",
                                                             label = type_label,
                                                             multiple = False,
-                                                            #widget = "hierarchy",
                                                             ),
                                             "region_id",
                                             "country",
@@ -4522,8 +4574,8 @@ Thank you"""
                             "parent": "programme_project",
                             }
             programme = S3SQLInlineLink("programme",
-                                        label = T("Program"),
                                         field = "programme_id",
+                                        label = T("Program"),
                                         multiple = False,
                                         comment = comment,
                                         )

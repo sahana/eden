@@ -2067,13 +2067,6 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
             }
         });
 
-        // T2 Layer
-        //try { $('.zoom').fancyZoom( {
-        //    scaleImg: true,
-        //    closeOnClick: true,
-        //    directory: S3.Ap.concat('/static/media')
-        //}); } catch(e) {}
-
         // S3 Layer
 
         // If a form is submitted with errors, this will scroll
