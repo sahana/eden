@@ -1,0 +1,53 @@
+Scenario,Parent,Priority,Task,Comments
+Aircraft Crash 1,,Normal,Investigate,Task Comments
+Landslide Search and Rescue,,Normal,Identify and share search area,
+Landslide Search and Rescue,Identify and share search area,Normal,Report number of missing persons,
+Water evacuation transport only,,Low,Report the number of people to evacuate,
+Water evacuation transport only,,High,Locate and assign water evacuation first responders,
+Water Evacuation Large Group,Locate and assign water evacuation first responders,High,Identify and share location of secure loading area,
+Water Evacuation Large Group,Identify and share location of secure loading area,Normal,Report the number of people to evacuate,
+Water Evacuation Large Group,,Urgent,Locate and assign water evacuation first responders,
+Water Evacuation Large Group,Report the number of people to evacuate,Normal,Locate and assign ground transportation (buses),
+Building inferno,,Urgent,Evacuate people,
+Building inferno,Evacuate people,High,Knock on all doors,
+Building inferno,Evacuate people,Low,Count all people,
+Building inferno,,Urgent,Contain fire,
+Building inferno,Contain fire,Normal,Sweep and secure,
+Wildfire safety,,High,Dispatch local team to assess the situation,
+Wildfire safety,,Normal,Notify response teams to standby,
+Wildfire safety,Dispatch local team to assess the situation,High,Assess situational report to declare event,
+Wildfire safety,Assess situational report to declare event,High,Deploy relevant emergency response personnel,
+Wildfire safety,Assess situational report to declare event,Normal,Warn public in the immediate danger zones,
+Wildfire safety,Deploy relevant emergency response personnel,Normal,Setup onsite mobile command center,
+Wildfire safety,Setup onsite mobile command center,Normal,Assess hourly situational reports and updates,
+Wildfire safety,Assess hourly situational reports and updates,Nromal,Update management summary situational reports,
+Wildfire safety,Update management summary situational reports,Normal,Provide media updates and continue to inform the public,
+Wildfire safety,Assess hourly situational reports and updates,Nromal,Contain the wildfire,
+Wildfire safety,Contain the wildfire,Normal,Sweep and secure the burn area,
+Wildfire safety,Sweep and secure the burn area,Normal,Provide final management summary situational report,
+Flood Search and Rescue,,High,Notify local SAR team to ready set and deploy,
+Flood Search and Rescue,Notify local SAR team to ready set and deploy,High,Send all situational information to incident commander,
+Flood Search and Rescue,,Normal,Confirm SAR team onsite,
+Flood Search and Rescue,Confirm SAR team onsite,normal,Get initial situational report,
+Flood Search and Rescue,Get initial situational report,High,Request and deploy additional resources if needed,
+Flood Search and Rescue,Get initial situational report,Normal,Update hourly situational reports,
+Flood Search and Rescue,Update hourly situational reports,Normal,Submit final casualty and illness report,
+Flood Search and Rescue,Submit final casualty and illness report,Normal,Update equipment damage and loss report
+Infectious disease control,,high,assess the disease situation
+Infectious disease control,assess the disease situation,high,evaluate casualty and illness case report
+Infectious disease control,evaluate casualty and illness case report,high,dispatch quarantine and control medical team
+Infectious disease control,dispatch quarantine and control medical team,high,provide operational guidelines
+Infectious disease control,dispatch quarantine and control medical team,normal,file daily situational summary report
+Infectious disease control,file daily situational summary report,normal,assess the site SEIR situation
+Infectious disease control,assess the site SEIR situation,normal,cleanup decommission and evict site
+Dengue control,,Normal,Send case information
+Dengue control,Send case information,Normal,Receive investigation report
+Dengue control,Receive investigation report,Normal,Dispatch site cleanup team
+Dengue control,Dispatch site cleanup team,Normal,File case response report
+Snow storm missing person,,High,file missing persons report
+Snow storm missing person,file missing persons report with all relevant information,High,Inform Gewog police staion
+Snow storm missing person,,Inform Gewog police staion,High,ready set and dispatch search and recue team
+Snow storm missing person,ready set and dispatch search and recue team,normal,submit dispatch report
+Snow storm missing person,ready set and dispatch search and recue team,normal,assign counselor to the case
+Snow storm missing person,submit dispatch report,normal,log situational report updates
+Snow storm missing person,log situational report updates,normal,log final report

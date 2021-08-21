@@ -1,0 +1,57 @@
+Scenario,Item,Comments
+Aircraft Crash 1,Radio,Equipment Comments
+Building inferno,Tower ladder
+Building inferno,Command Unit
+Building inferno,Tanker Truck
+Water Evacuation Large Group,Motor boat
+Water Evacuation Large Group,Safety line,rope (multiple)
+Water Evacuation Large Group,Life jacket,> 12 pieces
+Water Evacuation Large Group,Bus,1
+Water Evacuation Large Group,Drinking water,500
+Water evacuation transport only,Motor boat
+Water evacuation transport only,Life jacket,> 6 pieces
+Water evacuation transport only,Drinking water,500
+Landslide Search and Rescue,Robot,1
+Landslide Search and Rescue,Digging equipment,20
+Landslide Search and Rescue,Scanning device,1
+Landslide Search and Rescue,Drinking water,500
+Flood Search and Rescue,Life jacket,50
+Flood Search and Rescue,Safety line,20
+Flood Search and Rescue,Motor boat,3
+Flood Search and Rescue,Pump,5
+Flood Search and Rescue,Radio,20
+Flood Search and Rescue,Drinking water,500
+Avalanche Search and Rescue,Safety line,5
+Avalanche Search and Rescue,Sledge,3
+Avalanche Search and Rescue,Helicopter,1
+Avalanche Search and Rescue,Radio,10
+Avalanche Search and Rescue,Drinking water,100
+Infectious disease control,Protective clothing,2
+Infectious disease control,Gloves,10
+Infectious disease control,Face shields,2
+Infectious disease control,Goggles,2
+Infectious disease control,Facemasks,3
+Infectious disease control,Sampling device,3
+Infectious disease control,Sample container,3
+Infectious disease control,Laboratory test kits,1
+Infectious disease control,Sanitizer,1
+Infectious disease control,Cooler box,1
+Wildfire safety,Digging equipment,50
+Wildfire safety,Pump,5
+Wildfire safety,Bus,1
+Wildfire safety,Goggles
+Wildfire safety,Radio,20
+Wildfire safety,Helmet,50
+Wildfire safety,Helicopter,1
+Wildfire safety,Axe,50
+Wildfire safety,Thermal Blanket,50
+Wildfire safety,Safety line,20
+Wildfire safety,Command Unit,1
+Wildfire safety,Drinking water,500
+Wildfire safety,Tanker Truck,5
+Chemical contamination of Water,Protective clothing,2
+Chemical contamination of Water,Gloves,10
+Chemical contamination of Water,Goggles,2
+Chemical contamination of Water,Facemasks,3
+Chemical contamination of Water,Sampling device,3
+Chemical contamination of Water,Sample container,3
