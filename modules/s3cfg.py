@@ -4878,6 +4878,12 @@ class S3Config(Storage):
     def get_inv_recv_shortname(self):
         return self.inv.get("recv_shortname", "GRN")
 
+    def get_inv_warehouse_free_capacity_calculated(self):
+        """
+            Whether to calculate Free Capacity for Warehouses
+        """
+        return self.inv.get("warehouse_free_capacity_calculated", False)
+
     def get_inv_warehouse_code_unique(self):
         """
             Validate for Unique Warehouse Codes

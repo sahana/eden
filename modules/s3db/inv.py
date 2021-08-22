@@ -52,6 +52,7 @@ __all__ = ("InvWarehouseModel",
            "inv_track_item_deleting",
            #"inv_track_item_onaccept",
            "inv_tracking_status",
+           "inv_warehouse_free_capacity",
            "inv_InvItemRepresent",
            "depends",
            )
@@ -239,6 +240,8 @@ class InvWarehouseModel(S3Model):
         else:
             code_requires = IS_LENGTH(10)
 
+        free_capacity_calculated = settings.get_inv_warehouse_free_capacity_calculated()
+
         tablename = "inv_warehouse"
         define_table(tablename,
                      super_link("pe_id", "pr_pentity"),
@@ -261,19 +264,20 @@ class InvWarehouseModel(S3Model):
                         ),
                      warehouse_type_id(),
                      self.gis_location_id(),
-                     Field("capacity", "integer",
+                     Field("capacity", "double",
                            label = T("Capacity (m3)"),
                            represent = lambda v: v or NONE,
                            requires = IS_EMPTY_OR(
-                                        IS_INT_IN_RANGE(0, None)
+                                        IS_FLOAT_IN_RANGE(0, None)
                                         ),
                            ),
-                     Field("free_capacity", "integer",
+                     Field("free_capacity", "double",
                            label = T("Free Capacity (m3)"),
                            represent = lambda v: v or NONE,
                            requires = IS_EMPTY_OR(
-                                        IS_INT_IN_RANGE(0, None)
+                                        IS_FLOAT_IN_RANGE(0, None)
                                         ),
+                           writable = not free_capacity_calculated,
                            ),
                      Field("contact",
                            label = T("Contact"),
@@ -762,6 +766,11 @@ $.filterOptionsS3({
                            ]
 
         # Configuration
+        if settings.get_inv_warehouse_free_capacity_calculated():
+            onaccept = self.inv_inv_item_onaccept
+        else:
+            onaccept = None
+
         self.configure(tablename,
                        # Lock the record so that it can't be meddled with
                        # - unless explicitly told to allow this
@@ -778,7 +787,8 @@ $.filterOptionsS3({
                                        ],
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
-                       onvalidation = self.inv_inv_item_onvalidate,
+                       onaccept = onaccept,
+                       onvalidation = self.inv_inv_item_onvalidation,
                        report_options = report_options,
                        super_entity = "supply_item_entity",
                        grouped = {
@@ -829,7 +839,24 @@ $.filterOptionsS3({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def inv_inv_item_onvalidate(form):
+    def inv_inv_item_onaccept(form):
+        """
+            Update the Free Capacity of the Warehouse
+        """
+
+        site_id = form.vars.get("site_id")
+        if not site_id:
+            table = s3db.inv_inv_item
+            record = current.db(table.id == form.vars.id).select(table.site_id,
+                                                                 limitby = (0, 1)
+                                                                 ).first()
+            site_id = record.site_id
+
+        inv_warehouse_free_capacity(site_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_inv_item_onvalidation(form):
         """
             When a inv_inv_item record is created with a source number,
             then the source number needs to be unique within the
@@ -5496,6 +5523,50 @@ def inv_track_item_onaccept(form):
                                               )
             # Copy the adj_item_id to the tracking record
             db(tracktable.id == record_id).update(adj_item_id = adj_item_id)
+
+# =============================================================================
+def inv_warehouse_free_capacity(site_id):
+    """
+        Update the Warehouse Free Capacity
+    """
+
+    db = current.db
+    s3db = current.s3db
+    table = s3db.inv_warehouse
+
+    warehouse = db(table.site_id == site_id).select(table.id,
+                                                    table.capacity,
+                                                    limitby = (0, 1)
+                                                    ).first()
+    if not warehouse or not warehouse.capacity:
+        # Not a Warehouse, or Capacity not defined
+        return
+
+    table = s3db.inv_inv_item
+    itable = s3db.supply_item
+    ptable = s3db.supply_item_pack
+    query = (table.site_id == site_id) & \
+            (table.deleted == False) & \
+            (table.quantity != 0) & \
+            (table.item_id == itable.id) & \
+            (itable.volume != None) & \
+            (table.item_pack_id == itable.id)
+
+    items = db(query).select(table.quantity,
+                             itable.volume,
+                             ptable.quantity,
+                             )
+    used_capacity = 0
+    for row in items:
+        volume = row["inv_inv_item.quantity"] * row["supply_item.volume"] * row["supply_item_pack.quantity"]
+        used_capacity += volume
+
+    free_capacity = round(warehouse.capacity - used_capacity, 1)
+
+    warehouse.update_record(free_capacity = free_capacity)
+
+    # In case it's useful to CLI scripts
+    return free_capacity
 
 # =============================================================================
 def inv_adj_rheader(r):

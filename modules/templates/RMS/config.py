@@ -800,6 +800,8 @@ def config(settings):
                                36: T("Consignment"), # Borrowed
                                37: T("In Transit"),  # Loaning warehouse space to another agency
                                }
+    # Calculate Warehouse Free Capacity
+    settings.inv.warehouse_free_capacity_calculated = True
     # Use structured Warehouse Locations
     settings.inv.warehouse_locations = True
 
