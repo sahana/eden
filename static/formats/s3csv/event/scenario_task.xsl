@@ -9,7 +9,7 @@
          CSV fields:
          Scenario................event_scenario_task.scenario_id$name
          Task....................event_scenario_task.task_id$name
-         Priority
+         Priority................event_scenario_task.task_id$priority
          Comments................event_scenario_task.task_id$comments
 
     *********************************************************************** -->
