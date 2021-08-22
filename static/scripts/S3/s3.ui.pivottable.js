@@ -966,8 +966,26 @@
                 items.push(series);
             }
 
+            var height,
+                margin,
+                rotateLabels,
+                staggerLabels;
+            if ((items.length == 1) && (data.length > 18)) {
+                // Vertical Labels
+                rotateLabels = 90;
+                staggerLabels = false; // No point, as over-written by the rotation
+                height = '420px';
+                margin = {top: 15, right: 10, bottom: 110, left: 60};
+            } else {
+                // Default: Horizontal Labels with stagger
+                rotateLabels = 0;
+                staggerLabels = true;
+                height = '360px';
+                margin = {top: 15, right: 10, bottom: 50, left: 60};
+            }
+
             // Set the height of the chart container
-            $(chart).css({height: '360px'});
+            $(chart).css({height: height});
 
             // Chart title
             if (title) {
@@ -1008,8 +1026,10 @@
                     reportChart = nv.models.discreteBarChart()
                                            .x(function(d) { return d.label; })
                                            .y(function(d) { return d.value; })
-                                           .staggerLabels(true)
-                                           .showValues(true);
+                                           .margin(margin)
+                                           .staggerLabels(staggerLabels)
+                                           .showValues(true)
+                                           .rotateLabels(rotateLabels);
                     reportChart.valueFormat(valueFormat);
                     dispatch = reportChart.discretebar;
                 }
