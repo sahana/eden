@@ -905,11 +905,8 @@
                     wrapper.find('.dt-export-options').show();
                 }
 
-                // Add modals if necessary
-                // - in future maybe use S3.redraw() to catch all elements
-                if ($(selector + ' .s3_modal').length) {
-                    S3.addModals();
-                }
+                // Add JS to new elements (tooltips, modals, fancyZoom, etc)
+                S3.redraw();
 
                 // Toggle empty section if present (e.g. S3Profile, homepages in certain templates)
                 var container = el.closest('.dt-contents');

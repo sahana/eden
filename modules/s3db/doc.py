@@ -608,6 +608,9 @@ def doc_image_represent(filename):
     height, width = current.deployment_settings.get_ui_thumbnail()
     if height:
         div["_style"] = "height:%spx;width:%spx;" % (height, width)
+        # Add fancyZoom to show in Lightbox rather than just provide download option
+        # - JS/CSS not loaded by default, so need enabling for this to work
+        div[0]["_class"] = "fancy"
 
     return div
 

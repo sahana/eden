@@ -296,12 +296,20 @@ S3.popup_remove = function() {
     $('iframe.ui-dialog-content').dialog('close');
 };
 
+S3.fancyZoom = function() {
+    // fancyZoom not currently loaded by default
+    if ($.isFunction($.fancyZoom)) {
+        $('a.fancy').fancyZoom();
+    }
+}
+
 // Functions to re-run after new page elements are brought in via AJAX
-// - an be added-to dynamically
+// - can be added-to dynamically
 S3.redraw_fns = [// jQueryUI Dialog Modal Popups
                  'addModals',
                  // Help Tooltips
-                 'addTooltips'
+                 'addTooltips',
+                 'fancyZoom'
                  ];
 S3.redraw = function() {
     var redraw_fns = S3.redraw_fns;

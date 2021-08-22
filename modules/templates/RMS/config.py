@@ -498,14 +498,14 @@ def config(settings):
     settings.gis.postcode_selector = False
 
     # -------------------------------------------------------------------------
+    # Filter Manager
+    #settings.search.filter_manager = False
+
     # Use the label 'Camp' instead of 'Shelter'
-    #
     settings.ui.camp = True
 
-    # -------------------------------------------------------------------------
-    # Filter Manager
-    #
-    #settings.search.filter_manager = False
+    # Requires enabling fancyZoom JS & CSS
+    #settings.ui.thumbnail = (60,60)
 
     # -------------------------------------------------------------------------
     # Default Summary
