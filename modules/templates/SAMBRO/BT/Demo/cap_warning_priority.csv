@@ -1,0 +1,16 @@
+Priority Rank,Event Code,Name,Event Type,Urgency,Severity,Certainty,Color Code
+4,,Flood retreat advisory,Flash Flood,Past,Minor,Unlikely,00E0E0
+3,,Flood Warning in Effect,Flash Flood,Past,Minor,Unlikely,E81100
+2,,Flood water rising,Flash Flood,Past,Minor,Unlikely,E8C900
+1,,Flood Advisory,Flash Flood,Future,Moderate,Possible,00E0E0
+1,,Tropical cyclone 0,Tropical Cyclone,Past ,Minor,Unlikely,00E0E0
+2,,Tropical cyclone 1,Tropical Cyclone,Expected,Severe,Unlikely,E8C900
+3,,Tropical cyclone 2,Tropical Cyclone,Immediate,Extreme,Unlikely,E81100
+1,,Public Health Cat 01,Epidemic,Future,Minor,Observed,00E0E0
+2,,Public Health Cat 02,Epidemic,Expected,Severe,Observed,E8C900
+3,,Public Health Cat 03,Epidemic,Immediate,Extreme,Observed,E81100
+1,,Advisory,Drought,Expected,Moderate,Observed,00E0E0
+2,,Warning,Drought,Immediate,Extreme,Observed,E81100
+1,,GLOF Advisory,Glacier Lake Outburst Flood,Expected,Severe,Likely,e8c900
+2,,GLOF Warning,Glacier Lake Outburst Flood,Immediate,Extreme,Observed,E81100
+3,,GLOF All Clear,Glacier Lake Outburst Flood,Past,Minor,Unlikely,00dee8
