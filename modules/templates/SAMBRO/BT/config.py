@@ -35,7 +35,7 @@ def config(settings):
     # UI Settings
     settings.ui.menu_logo = URL(c = "static",
                                 f = "themes",
-                                args = ["SAMBRO", "BT", "img", "ddm.png"],
+                                args = ["SAMBRO", "BT", "img", "DDM.png"],
                                 )
 
 # END =========================================================================
