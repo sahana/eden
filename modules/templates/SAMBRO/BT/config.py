@@ -24,7 +24,7 @@ def config(settings):
     # L10n (Localization) settings
     languages = OrderedDict([
         ("en-US", "English"),
-        ("bt", "Bhutan"),
+        ("bt", "Bhutanese"),
     ])
     settings.cap.languages = languages
     settings.L10n.languages = languages
