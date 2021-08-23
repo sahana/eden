@@ -1,0 +1,4 @@
+Name,URL,Type
+ISRO,https://www.mosdac.gov.in/3dimager.xml,cms
+PAGASA Public Alerts,http://publicalert.pagasa.dost.gov.ph/feeds/,cap
+USGS,https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.atom,cms
