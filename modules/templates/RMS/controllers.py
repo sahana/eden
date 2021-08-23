@@ -647,8 +647,11 @@ class inv_dashboard(S3CustomController):
             realms = realms + default_realms
         from s3db.pr import pr_get_descendants
         child_pe_ids = pr_get_descendants(realms, entity_types=["inv_warehouse"])
-        warehouses = db(wtable.pe_id.belongs(realms + child_pe_ids)).select(wtable.site_id)
-        warehouses = [row.site_id for row in warehouses]
+        warehouses = db(wtable.pe_id.belongs(realms + child_pe_ids)).select(wtable.site_id,
+                                                                            wtable.name,
+                                                                            wtable.free_capacity,
+                                                                            )
+        wh_site_ids = [row.site_id for row in warehouses]
 
         itable = s3db.inv_inv_item
         fields = ["site_id",
@@ -660,7 +663,7 @@ class inv_dashboard(S3CustomController):
                   "item_id.volume", # extra_fields
                   ]
         iresource = s3db.resource("inv_inv_item",
-                                  filter = (itable.site_id.belongs(warehouses)),
+                                  filter = (itable.site_id.belongs(wh_site_ids)),
                                   )
         rows = iresource.select(fields, as_rows=True)
         stockpile_weight = 0
@@ -705,13 +708,20 @@ class inv_dashboard(S3CustomController):
                 pass
 
         float_represent = IS_FLOAT_AMOUNT.represent
+
+        free_capacities = UL()
+        for row in warehouses:
+            free_capacities.append(LI("%s: %s m3" % (row.name, float_represent(row.free_capacity, precision=1))))
+
         kpi = UL(LI("%s: %s" % (T("Number of warehouses"), len(warehouses))),
                  LI("%s: %s" % (T("Number of Shipments sent"), num_shipments)),
                  LI("%s: %s kg" % (T("Total weight sent"), float_represent(shipments_weight, precision=1))),
                  LI("%s: %s m3" % (T("Total volume sent"), float_represent(shipments_volume, precision=3))),
                  LI("%s: %s kg" % (T("Total weight stockpiled"), float_represent(stockpile_weight, precision=1))),
                  LI("%s: %s m3" % (T("Total volume stockpiled"), float_represent(stockpile_volume, precision=1))),
-                 LI(T("Remaining stockpile capacities available")),
+                 LI("%s:" % T("Remaining stockpile capacities available"),
+                    free_capacities
+                    ),
                  )
 
         # Preparedness Checklist

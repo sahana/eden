@@ -166,8 +166,7 @@ class S3DocumentLibrary(S3Model):
                            ),
                      Field("url",
                            label = T("URL"),
-                           represent = lambda url: \
-                            url and A(url, _href=url) or NONE,
+                           represent = s3_url_represent,
                            requires = IS_EMPTY_OR(IS_URL()),
                            ),
                      # Mailmerge template?
@@ -311,6 +310,7 @@ class S3DocumentLibrary(S3Model):
                            ),
                      Field("url",
                            label = T("URL"),
+                           represent = s3_url_represent,
                            requires = IS_EMPTY_OR(IS_URL()),
                            ),
                      Field("type", "integer",
@@ -387,7 +387,10 @@ class S3DocumentLibrary(S3Model):
                 return current.T("File not found")
             else:
                 return A(origname,
-                         _href=URL(c="default", f="download", args=[filename]))
+                         _href = URL(c="default", f="download",
+                                     args = [filename],
+                                     )
+                         )
         else:
             return current.messages["NONE"]
 
@@ -410,7 +413,8 @@ class S3DocumentLibrary(S3Model):
 
         if query:
             duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
+                                                 limitby = (0, 1)
+                                                 ).first()
 
             if duplicate:
                 item.id = duplicate.id
@@ -500,7 +504,7 @@ class S3DocumentLibrary(S3Model):
     @staticmethod
     def document_onaccept(form):
         """
-            Build a full-text index
+            Build a full-text index (only run when SOLR is configured)
         """
 
         form_vars = form.vars
@@ -521,13 +525,14 @@ class S3DocumentLibrary(S3Model):
     @staticmethod
     def document_ondelete(row):
         """
-            Remove the full-text index
+            Remove the full-text index (only run when SOLR is configured)
         """
 
         db = current.db
         table = db.doc_document
         record = db(table.id == row.id).select(table.file,
-                                               limitby=(0, 1)).first()
+                                               limitby = (0, 1)
+                                               ).first()
 
         document = json.dumps({"filename": record.file,
                                "id": row.id,
@@ -591,25 +596,23 @@ def doc_image_represent(filename):
     if not filename:
         return current.messages["NONE"]
 
-    return DIV(A(IMG(_src=URL(c="default", f="download",
-                              args=filename),
-                     _height=40),
-                     _class="zoom",
-                     _href=URL(c="default", f="download",
-                               args=filename)))
+    div = DIV(A(IMG(_src = URL(c="default", f="download",
+                               args = filename,
+                               ),
+                    ),
+                _href = URL(c="default", f="download",
+                            args = filename,
+                            ),
+                ))
 
-    # @todo: implement/activate the JavaScript for this:
-    #anchor = "zoom-media-image-%s" % uuid4()
-    #return DIV(A(IMG(_src=URL(c="default", f="download",
-                              #args=filename),
-                     #_height=40),
-                     #_class="zoom",
-                     #_href="#%s" % anchor),
-               #DIV(IMG(_src=URL(c="default", f="download",
-                                #args=filename),
-                       #_width=600),
-                       #_id="%s" % anchor,
-                       #_class="hide"))
+    height, width = current.deployment_settings.get_ui_thumbnail()
+    if height:
+        div["_style"] = "height:%spx;width:%spx;" % (height, width)
+        # Add fancyZoom to show in Lightbox rather than just provide download option
+        # - JS/CSS not loaded by default, so need enabling for this to work
+        div[0]["_class"] = "fancy"
+
+    return div
 
 # =============================================================================
 def doc_checksum(docstr):

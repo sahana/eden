@@ -584,6 +584,8 @@ def config(settings):
     #settings.ui.organizer_time_format = "H:mm"
     # Configure the snap raster width in organizer (hh:mm:ss)
     #settings.ui.organizer_snap_duration = "00:15:00"
+    # Thumbnail size for Images. Requires enabling fancyZoom JS & CSS
+    #settings.ui.thumbnail = (60,60)
 
     # -------------------------------------------------------------------------
     # Sync

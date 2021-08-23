@@ -52,6 +52,7 @@ __all__ = ("InvWarehouseModel",
            "inv_track_item_deleting",
            #"inv_track_item_onaccept",
            "inv_tracking_status",
+           "inv_warehouse_free_capacity",
            "inv_InvItemRepresent",
            "depends",
            )
@@ -239,6 +240,8 @@ class InvWarehouseModel(S3Model):
         else:
             code_requires = IS_LENGTH(10)
 
+        free_capacity_calculated = settings.get_inv_warehouse_free_capacity_calculated()
+
         tablename = "inv_warehouse"
         define_table(tablename,
                      super_link("pe_id", "pr_pentity"),
@@ -261,19 +264,20 @@ class InvWarehouseModel(S3Model):
                         ),
                      warehouse_type_id(),
                      self.gis_location_id(),
-                     Field("capacity", "integer",
+                     Field("capacity", "double",
                            label = T("Capacity (m3)"),
                            represent = lambda v: v or NONE,
                            requires = IS_EMPTY_OR(
-                                        IS_INT_IN_RANGE(0, None)
+                                        IS_FLOAT_IN_RANGE(0, None)
                                         ),
                            ),
-                     Field("free_capacity", "integer",
+                     Field("free_capacity", "double",
                            label = T("Free Capacity (m3)"),
                            represent = lambda v: v or NONE,
                            requires = IS_EMPTY_OR(
-                                        IS_INT_IN_RANGE(0, None)
+                                        IS_FLOAT_IN_RANGE(0, None)
                                         ),
+                           writable = not free_capacity_calculated,
                            ),
                      Field("contact",
                            label = T("Contact"),
@@ -762,6 +766,11 @@ $.filterOptionsS3({
                            ]
 
         # Configuration
+        if settings.get_inv_warehouse_free_capacity_calculated():
+            onaccept = self.inv_inv_item_onaccept
+        else:
+            onaccept = None
+
         self.configure(tablename,
                        # Lock the record so that it can't be meddled with
                        # - unless explicitly told to allow this
@@ -778,7 +787,8 @@ $.filterOptionsS3({
                                        ],
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
-                       onvalidation = self.inv_inv_item_onvalidate,
+                       onaccept = onaccept,
+                       onvalidation = self.inv_inv_item_onvalidation,
                        report_options = report_options,
                        super_entity = "supply_item_entity",
                        grouped = {
@@ -829,7 +839,24 @@ $.filterOptionsS3({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def inv_inv_item_onvalidate(form):
+    def inv_inv_item_onaccept(form):
+        """
+            Update the Free Capacity of the Warehouse
+        """
+
+        site_id = form.vars.get("site_id")
+        if not site_id:
+            table = s3db.inv_inv_item
+            record = current.db(table.id == form.vars.id).select(table.site_id,
+                                                                 limitby = (0, 1)
+                                                                 ).first()
+            site_id = record.site_id
+
+        inv_warehouse_free_capacity(site_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_inv_item_onvalidation(form):
         """
             When a inv_inv_item record is created with a source number,
             then the source number needs to be unique within the
@@ -1228,14 +1255,11 @@ class InventoryTrackingModel(S3Model):
 
                        # Requests
                        # - enable in Templates
-                       #inv_send_req = {"joinby": "send_id",
-                       #                "multiple": False,
-                       #                },
+                       #inv_send_req = "send_id",
                        #req_req = {"link": "inv_send_req",
                        #           "joinby": "send_id",
                        #           "key": "req_id",
                        #           "actuate": "hide",
-                       #           "multiple": False,
                        #           },
                        )
 
@@ -1551,7 +1575,17 @@ class InventoryTrackingModel(S3Model):
 
         # Components
         add_components(tablename,
+
                        inv_track_item = "recv_id",
+
+                       # Requests
+                       # - enable in Templates
+                       #inv_recv_req = "recv_id",
+                       #req_req = {"link": "inv_recv_req",
+                       #           "joinby": "recv_id",
+                       #           "key": "req_id",
+                       #           "actuate": "hide",
+                       #           },
                        )
 
         # Custom methods
@@ -4199,25 +4233,43 @@ class InventoryRequestModel(S3Model):
     """
 
     names = ("inv_send_req",
+             "inv_recv_req",
              )
 
     def model(self):
 
-        # ---------------------------------------------------------------------
-        # Shipments <> Requests
-        #
+        define_table = self.define_table
+        req_id = self.req_req_id
 
+        # ---------------------------------------------------------------------
+        # Outgoing Shipments <> Requests
+        #
         tablename = "inv_send_req"
-        self.define_table(tablename,
-                          self.inv_send_id(empty = False,
-                                           ondelete = "CASCADE",
-                                           ),
-                          self.req_req_id(empty = False,
-                                          # Default anyway
-                                          #ondelete = "CASCADE",
-                                          ),
-                          *s3_meta_fields()
-                          )
+        define_table(tablename,
+                     self.inv_send_id(empty = False,
+                                      ondelete = "CASCADE",
+                                      ),
+                     req_id(empty = False,
+                            # Default anyway
+                            #ondelete = "CASCADE",
+                            ),
+                     *s3_meta_fields()
+                     )
+
+        # ---------------------------------------------------------------------
+        # Incoming Shipments <> Requests
+        #
+        tablename = "inv_recv_req"
+        define_table(tablename,
+                     self.inv_recv_id(empty = False,
+                                      ondelete = "CASCADE",
+                                      ),
+                     req_id(empty = False,
+                            # Default anyway
+                            #ondelete = "CASCADE",
+                            ),
+                     *s3_meta_fields()
+                     )
 
         return {}
 
@@ -5104,7 +5156,8 @@ def inv_send_process():
             (tracktable.deleted == False)
     track_items = db(query).select(tracktable.req_item_id,
                                    tracktable.quantity,
-                                   tracktable.item_pack_id)
+                                   tracktable.item_pack_id,
+                                   )
     if not track_items:
         session.error = T("No items have been selected for shipping.")
 
@@ -5118,7 +5171,8 @@ def inv_send_process():
     db(stable.id == send_id).update(date = request.utcnow,
                                     status = SHIP_STATUS_SENT,
                                     owned_by_user = None,
-                                    owned_by_group = ADMIN)
+                                    owned_by_group = ADMIN,
+                                    )
 
     # If this is linked to a request then update the quantity in transit
     req_ref = send_record.req_ref
@@ -5143,7 +5197,8 @@ def inv_send_process():
                                                                  ).first().quantity
                 transit_quantity = t_qnty * inv_p_qnty / req_p_qnty
                 db(ritable.id == req_item_id).update(quantity_transit = ritable.quantity_transit + transit_quantity)
-        s3db.req_update_status(req_id)
+        from .req import req_update_status
+        req_update_status(req_id)
 
     # Create a Receive record
     rtable = s3db.inv_recv
@@ -5187,38 +5242,56 @@ def inv_track_item_deleting(record_id):
     db = current.db
     s3db = current.s3db
     tracktable = db.inv_track_item
-    inv_item_table = db.inv_inv_item
-    ritable = s3db.req_req_item
-    siptable = db.supply_item_pack
-    record = tracktable[record_id]
+    record = db(tracktable.id == record_id).select(tracktable.status,
+                                                   tracktable.req_item_id,
+                                                   tracktable.item_pack_id,
+                                                   tracktable.quantity,
+                                                   tracktable.send_inv_item_id,
+                                                   limitby = (0, 1)
+                                                   ).first()
     if record.status != 1:
+        # Not 'Preparing': Do not allow
         return False
-    # if this is linked to a request
-    # then remove these items from the quantity in transit
-    if record.req_item_id:
-        req_id = record.req_item_id
-        req_item = ritable[req_id]
-        req_quantity = req_item.quantity_transit
-        req_pack_quantity = siptable[req_item.item_pack_id].quantity
-        track_pack_quantity = siptable[record.item_pack_id].quantity
-        quantity_transit = s3db.supply_item_add(req_quantity,
-                                               req_pack_quantity,
-                                               - record.quantity,
-                                               track_pack_quantity
-                                              )
-        db(ritable.id == req_id).update(quantity_transit = quantity_transit)
-        s3db.req_update_status(req_id)
 
-    # Check that we have a link to a warehouse
+    if record.req_item_id:
+        # This is linked to a Request:
+        # - remove these items from the quantity in transit
+        req_id = record.req_item_id
+        ritable = s3db.req_req_item
+        req_item = db(ritable.id == req_id).select(ritable.id,
+                                                   ritable.quantity_transit,
+                                                   ritable.item_pack_id,
+                                                   limitby = (0, 1)
+                                                   ).first()
+        req_quantity = req_item.quantity_transit
+        siptable = db.supply_item_pack
+        req_pack_quantity = db(siptable.id == req_item.item_pack_id).select(siptable.quantity,
+                                                                            limitby = (0, 1)
+                                                                            ).first().quantity
+        track_pack_quantity = db(siptable.id == record.item_pack_id).select(siptable.quantity,
+                                                                            limitby = (0, 1)
+                                                                            ).first().quantity
+        from .supply import supply_item_add
+        quantity_transit = supply_item_add(req_quantity,
+                                           req_pack_quantity,
+                                           - record.quantity,
+                                           track_pack_quantity
+                                           )
+        req_item.update_record(quantity_transit = quantity_transit)
+        from .req import req_update_status
+        req_update_status(req_id)
+
     if record.send_inv_item_id:
+        # This is linked to a Warehouse Inventory item:
+        # - remove the total from this record and place it back in the warehouse
         track_total = record.quantity
-        # Remove the total from this record and place it back in the warehouse
+        inv_item_table = db.inv_inv_item
         db(inv_item_table.id == record.send_inv_item_id).update(quantity = inv_item_table.quantity + track_total)
         db(tracktable.id == record_id).update(quantity = 0,
                                               comments = "%sQuantity was: %s" % \
-                                                (inv_item_table.comments,
-                                                 track_total,
-                                                 ),
+                                                            (tracktable.comments,
+                                                             track_total,
+                                                             ),
                                               )
     return True
 
@@ -5229,14 +5302,17 @@ def inv_track_item_onaccept(form):
        then the inv_item quantity will be reduced.
     """
 
+    from .supply import supply_item_add
+
     db = current.db
     s3db = current.s3db
+
     tracktable = db.inv_track_item
     inv_item_table = db.inv_inv_item
     stable = db.inv_send
     rtable = db.inv_recv
     siptable = db.supply_item_pack
-    supply_item_add = s3db.supply_item_add
+
     form_vars = form.vars
     record_id = form_vars.id
     record = form.record
@@ -5394,7 +5470,8 @@ def inv_track_item_onaccept(form):
                                               track_pack_quantity
                                               )
             db(ritable.id == record.req_item_id).update(quantity_fulfil = quantity_fulfil)
-            s3db.req_update_status(req_id)
+            from .req import req_update_status
+            req_update_status(req_id)
 
         db(tracktable.id == record_id).update(recv_inv_item_id = inv_item_id,
                                               status = TRACK_STATUS_ARRIVED,
@@ -5446,6 +5523,50 @@ def inv_track_item_onaccept(form):
                                               )
             # Copy the adj_item_id to the tracking record
             db(tracktable.id == record_id).update(adj_item_id = adj_item_id)
+
+# =============================================================================
+def inv_warehouse_free_capacity(site_id):
+    """
+        Update the Warehouse Free Capacity
+    """
+
+    db = current.db
+    s3db = current.s3db
+    table = s3db.inv_warehouse
+
+    warehouse = db(table.site_id == site_id).select(table.id,
+                                                    table.capacity,
+                                                    limitby = (0, 1)
+                                                    ).first()
+    if not warehouse or not warehouse.capacity:
+        # Not a Warehouse, or Capacity not defined
+        return
+
+    table = s3db.inv_inv_item
+    itable = s3db.supply_item
+    ptable = s3db.supply_item_pack
+    query = (table.site_id == site_id) & \
+            (table.deleted == False) & \
+            (table.quantity != 0) & \
+            (table.item_id == itable.id) & \
+            (itable.volume != None) & \
+            (table.item_pack_id == itable.id)
+
+    items = db(query).select(table.quantity,
+                             itable.volume,
+                             ptable.quantity,
+                             )
+    used_capacity = 0
+    for row in items:
+        volume = row["inv_inv_item.quantity"] * row["supply_item.volume"] * row["supply_item_pack.quantity"]
+        used_capacity += volume
+
+    free_capacity = round(warehouse.capacity - used_capacity, 1)
+
+    warehouse.update_record(free_capacity = free_capacity)
+
+    # In case it's useful to CLI scripts
+    return free_capacity
 
 # =============================================================================
 def inv_adj_rheader(r):

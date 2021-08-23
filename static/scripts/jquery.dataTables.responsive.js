@@ -442,6 +442,8 @@ Responsive.prototype = {
 			else {
 				var info = that.c.details.renderer( dt, row[0] );
 				row.child( info, 'child' ).show();
+                // Add JS to new elements (tooltips, modals, fancyZoom, etc)
+                S3.redraw();
 				$( row.node() ).addClass( 'parent' );
 			}
 		} );
@@ -491,7 +493,9 @@ Responsive.prototype = {
 						row.child.hide();
 					}
 					else {
-						row.child( info, 'child' ).show();
+						// Add JS to new elements (tooltips, modals, fancyZoom, etc)
+                        S3.redraw();
+                        row.child( info, 'child' ).show();
 					}
 				}
 			} );

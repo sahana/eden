@@ -29,6 +29,8 @@
          Height..........................supply_item.height
          Volume..........................supply_item.volume
          Kit.............................supply_item.kit
+         URL.............................supply_item.url
+         Image...........................supply_item.file (URL to remote server to download)
          Distributed.....................supply_distribution_item (boolean to create)
          Comments........................supply_item.comments
 
@@ -189,10 +191,21 @@
             <data field="width"><xsl:value-of select="col[@field='Width']"/></data>
             <data field="height"><xsl:value-of select="col[@field='Height']"/></data>
             <data field="volume"><xsl:value-of select="col[@field='Volume']"/></data>
+            <data field="url"><xsl:value-of select="col[@field='URL']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
 	        <xsl:if test="$kit='Y' or $kit='YES' or $kit='T' or $kit='TRUE'">
 	            <data field="kit" value="true">True</data>
 	        </xsl:if>
+
+            <!-- Image -->
+            <xsl:if test="col[@field='Image']!=''">
+                <data field="file">
+                    <xsl:attribute name="url">
+                        <xsl:value-of select="col[@field='Image']"/>
+                    </xsl:attribute>
+                </data>
+            </xsl:if>
+
             <!-- Link to Brand -->
             <reference field="brand_id" resource="supply_brand">
                 <xsl:attribute name="tuid">

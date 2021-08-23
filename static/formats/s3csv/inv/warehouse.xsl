@@ -26,6 +26,7 @@
          Phone2..................inv_warehouse
          Email...................inv_warehouse
          Fax.....................inv_warehouse
+         Capacity................inv_warehouse
          Comments................inv_warehouse
 
     *********************************************************************** -->
@@ -249,6 +250,7 @@
             <data field="phone2"><xsl:value-of select="col[@field='Phone2']/text()"/></data>
             <data field="email"><xsl:value-of select="col[@field='Email']/text()"/></data>
             <data field="fax"><xsl:value-of select="col[@field='Fax']/text()"/></data>
+            <data field="capacity"><xsl:value-of select="col[@field='Capacity']/text()"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']/text()"/></data>
 
         </resource>

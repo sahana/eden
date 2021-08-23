@@ -4661,7 +4661,9 @@ def req_update_status(req_id):
 
     db = current.db
     s3db = current.s3db
+
     table = s3db.req_req_item
+
     is_none = {"commit": True,
                "transit": True,
                "fulfil": True,
@@ -4698,8 +4700,7 @@ def req_update_status(req_id):
         else:
             status_update["%s_status" % status_type] = REQ_STATUS_PARTIAL
 
-    rtable = s3db.req_req
-    db(rtable.id == req_id).update(**status_update)
+    db(s3db.req_req.id == req_id).update(**status_update)
 
 # -------------------------------------------------------------------------
 def req_update_commit_quantities_and_status(req):
@@ -4748,7 +4749,7 @@ def req_update_commit_quantities_and_status(req):
         if not any(qty for qty in commit_qty.values()):
             # Nothing has been committed for this request so far
             commit_status = REQ_STATUS_NONE
-            db(query).update(quantity_commit=0)
+            db(query).update(quantity_commit = 0)
         else:
             # Get all requested items for this request
             ritems = db(query).select(ritable.id,
@@ -4809,7 +4810,7 @@ def req_update_commit_quantities_and_status(req):
         if not any(row.quantity for row in cskills):
             # Nothing has been committed for this request so far
             commit_status = REQ_STATUS_NONE
-            db(query).update(quantity_commit=0)
+            db(query).update(quantity_commit = 0)
         else:
             # Get all requested skill(set)s for this request
             rskills = db(query).select(rstable.id,
@@ -4932,9 +4933,9 @@ def req_req_details(row):
                                           ltable.quantity,
                                           )
         if skills:
-            represent = S3Represent(lookup="hrm_skill",
-                                    multiple=True,
-                                    none=current.T("Unskilled")
+            represent = S3Represent(lookup = "hrm_skill",
+                                    multiple = True,
+                                    none = current.T("Unskilled")
                                     )
             skills = ["%s %s" % (skill.quantity,
                                  represent(skill.skill_id)) \

@@ -2665,6 +2665,11 @@ class S3Config(Storage):
         """
         return self.__lazy("ui", "organizer_snap_duration", None)
 
+    def get_ui_thumbnail(self):
+        """ Get the size of Thumbnail to use for Images """
+
+        return self.ui.get("thumbnail", (None, None))
+
     # =========================================================================
     # Messaging
     #
@@ -4872,6 +4877,12 @@ class S3Config(Storage):
 
     def get_inv_recv_shortname(self):
         return self.inv.get("recv_shortname", "GRN")
+
+    def get_inv_warehouse_free_capacity_calculated(self):
+        """
+            Whether to calculate Free Capacity for Warehouses
+        """
+        return self.inv.get("warehouse_free_capacity_calculated", False)
 
     def get_inv_warehouse_code_unique(self):
         """
