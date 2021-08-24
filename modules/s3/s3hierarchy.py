@@ -42,6 +42,7 @@ from gluon.tools import callback
 from s3compat import long, unicodeT, xrange
 from .s3utils import s3_str
 from .s3rest import S3Method
+from .s3crud import S3CRUD
 from .s3widgets import SEPARATORS
 
 DEFAULT = lambda: None
@@ -62,7 +63,7 @@ class S3HierarchyCRUD(S3Method):
         """
 
         if r.http == "GET":
-            if r.representation == "html":
+            if r.representation in ("html", "tree"):
                 output = self.tree(r, **attr)
             elif r.representation == "json" and "node" in r.get_vars:
                 output = self.node_json(r, **attr)
@@ -95,7 +96,7 @@ class S3HierarchyCRUD(S3Method):
                 r.error(405, "HierarchyCRUD not yet supported for individual Components")
             else:
                 record = None
-                _filter = r.resource.rfilter.get_query() & r.component._join(implicit = True)
+                _filter = resource.parent.rfilter.get_query() & resource._join(implicit = True)
         else:
             record = r.record
             # @todo: apply all resource filters?
@@ -112,14 +113,8 @@ class S3HierarchyCRUD(S3Method):
         # Render the tree
         tree = self.render_tree(hierarchy, widget_id, record=record)
 
-        crud_string = self.crud_string
-
-        # Page title
-        if record:
-            title = crud_string(tablename, "title_display")
-        else:
-            title = crud_string(tablename, "title_list")
-        output["title"] = title
+        if r.representation == "tree":
+            return tree
 
         # Build the form
         form = FORM(DIV(tree,
@@ -129,31 +124,40 @@ class S3HierarchyCRUD(S3Method):
                     )
         output["form"] = form
 
+        crud_string = self.crud_string
+
+        # Page title
+        if record:
+            title = crud_string(tablename, "title_display")
+        else:
+            title = crud_string(tablename, "title_list")
+        output["title"] = title
+
         # Widget options and scripts
         T = current.T
         resource_config = resource.get_config
+        url = r.url
 
         if component:
-            # @ToDo: way of adding a new top-level node
             if resource_config("hierarchy_method_no_open"):
                 # No point in seeing an Open menu item
                 open_url = None
             else:
-                open_url = r.url(method = "read",
-                                 component_id = "[id]",
-                                 #representation = "popup",
-                                 )
+                open_url = url(method = "read",
+                               component_id = "[id]",
+                               #representation = "popup",
+                               )
         else:
-            open_url = r.url(method = "read",
-                             id = "[id]",
-                             )
+            open_url = url(method = "read",
+                           id = "[id]",
+                           )
 
         widget_opts = {
             "widgetID": widget_id,
 
             "openLabel": s3_str(T("Open")),
             "openURL": open_url,
-            "ajaxURL": r.url(id=None, representation="json"),
+            "ajaxURL": url(id=None, representation="json"),
 
             "editLabel": s3_str(T("Edit")),
             "editTitle": s3_str(crud_string(tablename, "title_update")),
@@ -170,34 +174,53 @@ class S3HierarchyCRUD(S3Method):
         if resource_config("editable", True) and \
            has_permission("update", tablename):
             if component:
-                widget_opts["editURL"] = r.url(method = "update",
-                                               component_id = "[id]",
-                                               representation = "popup",
-                                               )
+                widget_opts["editURL"] = url(method = "update",
+                                             component_id = "[id]",
+                                             representation = "popup",
+                                             )
             else:
-                widget_opts["editURL"] = r.url(method = "update",
-                                               id = "[id]",
-                                               representation = "popup",
-                                               )
+                widget_opts["editURL"] = url(method = "update",
+                                             id = "[id]",
+                                             representation = "popup",
+                                             )
 
         if resource_config("deletable", True) and \
            has_permission("delete", tablename):
             if component:
-                widget_opts["deleteURL"] = r.url(method = "delete",
-                                                 component_id = "[id]",
-                                                 representation = "json",
-                                                 )
+                widget_opts["deleteURL"] = url(method = "delete",
+                                               component_id = "[id]",
+                                               representation = "json",
+                                               )
             else:
-                widget_opts["deleteURL"] = r.url(method = "delete",
-                                                 id = "[id]",
-                                                 representation = "json",
-                                                 )
+                widget_opts["deleteURL"] = url(method = "delete",
+                                               id = "[id]",
+                                               representation = "json",
+                                               )
 
+        add_btn = None
         if resource_config("insertable", True) and \
            has_permission("create", tablename):
-            widget_opts["addURL"] = r.url(method = "create",
-                                          representation = "popup",
-                                          )
+            widget_opts["addURL"] = url(method = "create",
+                                        representation = "popup",
+                                        )
+            if not record:
+                # Provide a way to add new top-level items
+                _href = url(method = "create",
+                            representation = "popup",
+                            vars = {"refresh": widget_id},
+                            )
+                add_btn = S3CRUD.crud_button(tablename = tablename,
+                                             name = "label_create",
+                                             _class = "s3_modal",
+                                             _href = _href,
+                                             _id = "add-btn",
+                                             )
+                if current.deployment_settings.ui.formstyle == "bootstrap":
+                    add_btn.add_class("btn btn-primary")
+                else:
+                    add_btn.add_class("action-btn")
+
+        output["root_add_btn"] = add_btn # 'add_btn' removed from output by postp for inv_warehouse
 
         # Theme options
         theme = current.deployment_settings.get_ui_hierarchy_theme()
@@ -261,7 +284,8 @@ class S3HierarchyCRUD(S3Method):
         return json.dumps(data, separators = SEPARATORS)
 
     # -------------------------------------------------------------------------
-    def render_tree(self, hierarchy, widget_id, record=None):
+    @staticmethod
+    def render_tree(hierarchy, widget_id, record=None):
         """
             Render the tree
 

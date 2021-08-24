@@ -2362,16 +2362,17 @@ class S3CRUD(S3Method):
     # Utility functions
     # -------------------------------------------------------------------------
     @staticmethod
-    def crud_button(label=None,
-                    tablename=None,
-                    name=None,
-                    icon=None,
-                    _href=None,
-                    _id=None,
-                    _class=None,
-                    _title=None,
-                    _target=None,
-                    **attr):
+    def crud_button(label = None,
+                    tablename = None,
+                    name = None,
+                    icon = None,
+                    _href = None,
+                    _id = None,
+                    _class = None,
+                    _title = None,
+                    _target = None,
+                    **attr
+                    ):
         """
             Generate a CRUD action button
 
@@ -2508,19 +2509,19 @@ class S3CRUD(S3Method):
         # Add button
         if "add" in buttons and config("insertable", True):
             ADD_BTN = "add_btn"
-            authorised = self._permitted(method="create")
+            authorised = self._permitted(method = "create")
             if authorised:
                 if ADD_BTN in custom_crud_buttons:
                     btn = crud_button(custom = custom_crud_buttons[ADD_BTN])
                 else:
                     label = crud_string(tablename, "label_create")
                     _href = url(method = "create",
-                                representation = representation
+                                representation = representation,
                                 )
                     btn = crud_button(label = label,
                                       icon = "add",
                                       _href = _href,
-                                      _id = "add-btn"
+                                      _id = "add-btn",
                                       )
                 output[ADD_BTN] = btn
 
@@ -2535,12 +2536,12 @@ class S3CRUD(S3Method):
                     _href = url(method = "",
                                 id = r.id if r.component else 0,
                                 vars = remove_filters(r.get_vars),
-                                representation = representation
+                                representation = representation,
                                 )
                     btn = crud_button(label = label,
                                       icon = "list",
                                       _href = _href,
-                                      _id = "list-btn"
+                                      _id = "list-btn",
                                       )
                 output[LIST_BTN] = btn
 
@@ -2549,18 +2550,19 @@ class S3CRUD(S3Method):
             SUMMARY_BTN = "summary_btn"
             if not r.component or r.component.multiple:
                 if SUMMARY_BTN in custom_crud_buttons:
-                    btn = crud_button(custom=custom_crud_buttons[SUMMARY_BTN])
+                    btn = crud_button(custom = custom_crud_buttons[SUMMARY_BTN])
                 else:
                     label = crud_string(tablename, "label_list_button")
                     _href = url(method = "summary",
                                 id = 0,
                                 vars = remove_filters(r.get_vars),
-                                representation = representation
+                                representation = representation,
                                 )
                     btn = crud_button(label = label,
                                       icon = "list",
                                       _href = _href,
-                                      _id = "summary-btn")
+                                      _id = "summary-btn",
+                                      )
                 output[SUMMARY_BTN] = btn
 
         if not record_id:
@@ -2569,7 +2571,7 @@ class S3CRUD(S3Method):
         # Edit button
         if "edit" in buttons and config("editable", True):
             EDIT_BTN = "edit_btn"
-            authorised = self._permitted(method="update")
+            authorised = self._permitted(method = "update")
             if authorised:
                 if EDIT_BTN in custom_crud_buttons:
                     btn = crud_button(custom = custom_crud_buttons[EDIT_BTN])
@@ -2581,14 +2583,14 @@ class S3CRUD(S3Method):
                     btn = crud_button(label = label,
                                       icon = "edit",
                                       _href = _href,
-                                      _id = "edit-btn"
+                                      _id = "edit-btn",
                                       )
                 output[EDIT_BTN] = btn
 
         # Delete button
         if "delete" in buttons and config("deletable", True):
             DELETE_BTN = "delete_btn"
-            authorised = self._permitted(method="delete")
+            authorised = self._permitted(method = "delete")
             if authorised:
                 if DELETE_BTN in custom_crud_buttons:
                     btn = crud_button(custom = custom_crud_buttons[DELETE_BTN])
@@ -2601,7 +2603,7 @@ class S3CRUD(S3Method):
                                       icon = "delete",
                                       _href = _href,
                                       _id = "delete-btn",
-                                      _class = "delete-btn"
+                                      _class = "delete-btn",
                                       )
                 output[DELETE_BTN] = btn
 
@@ -2713,8 +2715,8 @@ class S3CRUD(S3Method):
                                              ))
             s3crud.action_button(labels.UPDATE, update_url,
                                  # To use modals
-                                 #_class="action-btn s3_modal"
-                                 _class="action-btn edit",
+                                 #_class = "action-btn s3_modal"
+                                 _class = "action-btn edit",
                                  icon = "edit",
                                  **target
                                  )
@@ -2728,8 +2730,8 @@ class S3CRUD(S3Method):
                                            ))
             s3crud.action_button(labels.READ, read_url,
                                  # To use modals
-                                 #_class="action-btn s3_modal"
-                                 _class="action-btn read",
+                                 #_class = "action-btn s3_modal"
+                                 _class = "action-btn read",
                                  icon = "file",
                                  **target
                                  )
@@ -2756,15 +2758,15 @@ class S3CRUD(S3Method):
                     if row_id:
                         rappend(str(row_id))
                 s3crud.action_button(labels.DELETE, delete_url,
-                                     _class="delete-btn",
-                                     icon=icon,
-                                     restrict=restrict,
+                                     _class = "delete-btn",
+                                     icon = icon,
+                                     restrict = restrict,
                                      **target
                                      )
             else:
                 s3crud.action_button(labels.DELETE, delete_url,
-                                     _class="delete-btn",
-                                     icon=icon,
+                                     _class = "delete-btn",
+                                     icon = icon,
                                      **target
                                      )
 
@@ -2774,7 +2776,7 @@ class S3CRUD(S3Method):
                 copy_url = iframe_safe(URL(args = args + ["copy"]))
             s3crud.action_button(labels.COPY,
                                  copy_url,
-                                 icon="icon-copy",
+                                 icon = "icon-copy",
                                  **target
                                  )
 
@@ -2936,9 +2938,9 @@ class S3CRUD(S3Method):
             method = result.method
             if method == result.METHOD.CREATE:
                 item = xml.json_message(True, 201, "Created as %s?%s.id=%s" %
-                        (str(r.url(method="",
-                                   representation="html",
-                                   vars={},
+                        (str(r.url(method = "",
+                                   representation = "html",
+                                   vars = {},
                                   )
                             ),
                          r.name, result.id)
