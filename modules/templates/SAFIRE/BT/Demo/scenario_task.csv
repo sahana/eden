@@ -1,5 +1,5 @@
 Scenario,Parent,Priority,Task,Comments
-Aircraft Crash 1,,Normal,Investigate,Task Comments
+Aircraft Crash 1,,Normal,Investigate,
 Landslide Search and Rescue,,Normal,Identify and share search area,
 Landslide Search and Rescue,Identify and share search area,Normal,Report number of missing persons,
 Water evacuation transport only,,Low,Report the number of people to evacuate,

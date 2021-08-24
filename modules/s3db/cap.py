@@ -132,6 +132,8 @@ def get_cap_options():
         "flood.flashFlood": T("Flash Flood"),
         "flood.highWater": T("High Water"),
         "flood.overlandFlowFlood": T("Overland Flow Flood"),
+        # Added for BT:
+        "flood.riverineFlood": T("Riverine Flood"),
         "flood.tsunami": T("Tsunami"),
         "geophysical.avalanche": T("Avalanche"),
         "geophysical.earthquake": T("Earthquake"),

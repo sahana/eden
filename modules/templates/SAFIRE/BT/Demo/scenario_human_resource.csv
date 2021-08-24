@@ -1,9 +1,9 @@
 Scenario,Job Title,Comments
-Aircraft Crash 1,Scout,HR Comments
-Building inferno,Fire Marshall
-Building inferno,Fire fighters
-Building inferno,Evacuation Team
-Building inferno,Cleanup Team
+Aircraft Crash 1,Scout,
+Building inferno,Fire Marshall,
+Building inferno,Fire fighters,
+Building inferno,Evacuation Team,
+Building inferno,Cleanup Team,
 Water Evacuation Large Group,Boat Captain,1 person
 Water Evacuation Large Group,Boat Crew,1 person
 Water Evacuation Large Group,Docking Crew,6 people

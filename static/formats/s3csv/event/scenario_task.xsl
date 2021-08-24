@@ -38,7 +38,6 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
 
-        <xsl:variable name="ScenarioName" select="col[@field='Scenario']/text()"/>
         <xsl:variable name="Priority">
             <xsl:call-template name="uppercase">
                 <xsl:with-param name="string">
@@ -48,9 +47,6 @@
         </xsl:variable>
 
         <resource name="event_scenario_task">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$ScenarioName"/>
-            </xsl:attribute>
 
             <!-- Link to Scenario -->
             <reference field="scenario_id" resource="event_scenario">

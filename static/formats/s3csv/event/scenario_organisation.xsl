@@ -4,11 +4,11 @@
     xmlns:org="http://eden.sahanafoundation.org/org">
 
     <!-- **********************************************************************
-         Scenario Assets - CSV Import Stylesheet
+         Scenario Organisations - CSV Import Stylesheet
 
          CSV fields:
-         Scenario................event_scenario_asset.scenario_id$name
-         Item....................event_scenario_asset.item_id$name
+         Scenario................event_scenario_organisation.scenario_id$name
+         Organisation............event_scenario_asset.item_id$name
          Comments................event_scenario_asset.comments
 
     *********************************************************************** -->
@@ -16,7 +16,8 @@
     <xsl:output method="xml"/>
 
     <!-- Indexes for faster processing -->
-    <xsl:key name="scenarios" match="row" use="col[@field='Scenario']"/>
+    <xsl:key name="organisations" match="row" use="col[@field='Scenario']"/>
+    <xsl:key name="scenarios" match="row" use="col[@field='Organisation']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -26,7 +27,12 @@
                 <xsl:call-template name="Scenario"/>
             </xsl:for-each>
 
-            <!-- Scenario Assets -->
+            <!-- Organisations -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisations', col[@field='Organisation'])[1])]">
+                <xsl:call-template name="Organisation"/>
+            </xsl:for-each>
+
+            <!-- Scenario Organisations -->
             <xsl:apply-templates select="table/row"/>
 
         </s3xml>
@@ -35,7 +41,7 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
 
-        <resource name="event_scenario_asset">
+        <resource name="event_scenario_organisation">
 
             <!-- Link to Scenario -->
             <reference field="scenario_id" resource="event_scenario">
@@ -44,16 +50,29 @@
                 </xsl:attribute>
             </reference>
 
-            <!-- Item -->
-            <reference field="item_id" resource="supply_item">
-                <resource name="supply_item">
-                    <data field="name"><xsl:value-of select="col[@field='Item']"/></data>
-                </resource>
+            <!-- Link to Organisation -->
+            <reference field="organisation_id" resource="org_organisation">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="col[@field='Organisation']"/>
+                </xsl:attribute>
             </reference>
 
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
         </resource>
 
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Organisation">
+
+        <xsl:variable name="OrganisationName" select="col[@field='Organisation']/text()"/>
+
+        <resource name="org_organisation">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$OrganisationName"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$OrganisationName"/></data>
+        </resource>
     </xsl:template>
 
     <!-- ****************************************************************** -->

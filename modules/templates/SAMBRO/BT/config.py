@@ -14,6 +14,12 @@ def config(settings):
     settings.base.system_name = T("Bhutan Warning and Situational-Awareness System")
     settings.base.system_name_short = T("DDM Bhutan")
 
+    # PrePopulate data
+    #settings.base.prepopulate.append("SAMBRO/BT")
+    settings.base.prepopulate_demo = ("default/users",
+                                      "SAMBRO/BT/Demo",
+                                      )
+
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "SAMBRO.BT"
     settings.base.theme_base = "default"
