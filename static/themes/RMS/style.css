@@ -97,6 +97,10 @@
     margin-top: -15px;
 }
 
+/* WMS Dashboard Shipments */
+.ship-card {
+    border: #ccc 1px solid;
+}
 /* WMS Dashboard Alerts */
 .alert-card {
     border: #ccc 1px solid;

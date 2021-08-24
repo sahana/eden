@@ -556,7 +556,7 @@ class inv_dashboard(S3CustomController):
                              DIV(ICON("briefcase"),
                                  _class = "columns medium-1",
                                  ),
-                             _class = "row",
+                             _class = "ship-card row",
                              ),
                         ]
         sappend = shipment_rows.append
@@ -605,7 +605,7 @@ class inv_dashboard(S3CustomController):
                         DIV(filing_opts_get(row.filing_status),
                             _class = "columns medium-1",
                             ),
-                        _class = "row",
+                        _class = "ship-card row",
                         ))
 
         shipments = DIV(*shipment_rows)
