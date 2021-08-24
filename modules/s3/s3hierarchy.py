@@ -95,9 +95,7 @@ class S3HierarchyCRUD(S3Method):
                 r.error(405, "HierarchyCRUD not yet supported for individual Components")
             else:
                 record = None
-                # @ToDo: This won't work for e.g. components defined with link tables
-                ctable = component.table
-                _filter = (ctable[component.fkey] == r.id)
+                _filter = r.resource.rfilter.get_query() & r.component._join(implicit = True)
         else:
             record = r.record
             # @todo: apply all resource filters?

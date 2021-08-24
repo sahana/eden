@@ -128,7 +128,6 @@ def inv_itn_label():
 class InvWarehouseModel(S3Model):
 
     names = ("inv_warehouse",
-             "inv_warehouse_location",
              "inv_warehouse_type",
              )
 
@@ -403,68 +402,6 @@ class InvWarehouseModel(S3Model):
                   super_entity = ("pr_pentity", "org_site"),
                   update_realm = True,
                   )
-
-        if settings.get_inv_warehouse_locations():
-            self.add_components(tablename,
-                                inv_warehouse_location = "warehouse_id",
-                                )
-
-            # ---------------------------------------------------------------------
-            # Warehouse Locations (Bins)
-            # - the default is to simply have a freetext field, but some deployments,
-            #   like RMS, want to have these predefined and structured 
-            #
-            tablename = "inv_warehouse_location"
-            define_table(tablename,
-                         Field("warehouse_id", "reference inv_warehouse",
-                               ondelete = "CASCADE",
-                               # Only accessed via component tabs, or custom UI
-                               readable = False,
-                               writable = False,
-                               ),
-                         Field("name", length=64, notnull=True,
-                               label = T("Name"),
-                               requires = [IS_NOT_EMPTY(),
-                                           IS_LENGTH(64),
-                                           ],
-                               ),
-                         Field("parent", "reference inv_warehouse_location", # This form of hierarchy may not work on all Databases
-                               label = T("Within"),
-                               ondelete = "RESTRICT",
-                               # Only accessed via S3HierarchyCRUD
-                               readable = False,
-                               writable = False,
-                               ),
-                         #s3_comments(),
-                         *s3_meta_fields())
-
-            # Table Configuration
-            configure(tablename,
-                      deduplicate = S3Duplicate(primary = ["name"],
-                                                secondary = ["parent"],
-                                                ),
-                      hierarchy = "parent",
-                      # Currently only used by S3CascadeSelectWidget, which isn't required here
-                      #hierarchy_levels = ["Aisle",
-                      #                    "Rack",
-                      #                    "Shelf",
-                      #                    ],
-                      # No point in seeing an Open menu item
-                      hierarchy_method_no_open = True
-                      )
-
-            # CRUD strings
-            crud_strings[tablename] = Storage(
-               label_create = T("Create Warehouse Location"),
-               title_display = T("Warehouse Location Details"),
-               title_list = T("Warehouse Locations"),
-               title_update = T("Edit Warehouse Location"),
-               label_list_button = T("List Warehouse Locations"),
-               label_delete_button = T("Delete Warehouse Location"),
-               msg_record_created = T("Warehouse Location added"),
-               msg_record_modified = T("Warehouse Location updated"),
-               msg_record_deleted = T("Warehouse Location deleted"),
-               msg_list_empty = T("No Warehouse Locations currently registered"))
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -3033,6 +2970,8 @@ def inv_tabs(r):
                         (T(recv_label), "recv"),
                         (T(send_label), "send"),
                         ]
+                if settings.get_inv_warehouse_locations():
+                    tabs.append((T("Bins"), "layout", {}, "hierarchy"))
                 if settings.has_module("proc"):
                     tabs.append((T("Planned Procurements"), "plan"))
                 if settings.get_inv_minimums():
@@ -3074,8 +3013,6 @@ def inv_rheader(r):
                 ]
         permit = current.auth.s3_has_permission
         settings = current.deployment_settings
-        if settings.get_inv_warehouse_locations():
-            tabs.append((T("Locations"), "warehouse_location", {}, "hierarchy"))
         if settings.has_module("hrm"):
             STAFF = settings.get_hrm_staff_label()
             tabs.append((STAFF, "human_resource"))

@@ -19,7 +19,7 @@ def config(settings):
         http://eden.sahanafoundation.org/wiki/Deployments/IFRC
 
         This version was developed for the Americas Zone
-        NB Apellido Paterno pr_person.middle_name matches to auth_user.last_name
+        Hence Apellido Paterno (pr_person.middle_name) matches to auth_user.last_name
     """
 
     T = current.T
@@ -3847,6 +3847,23 @@ Thank you"""
         return attr
 
     settings.customise_org_organisation_controller = customise_org_organisation_controller
+
+    # -------------------------------------------------------------------------
+    def customise_org_site_layout_resource(r, tablename):
+
+        current.response.s3.crud_strings[tablename] = Storage(
+           label_create = T("Create Warehouse Location"),
+           title_display = T("Warehouse Location Details"),
+           title_list = T("Warehouse Locations"),
+           title_update = T("Edit Warehouse Location"),
+           label_list_button = T("List Warehouse Locations"),
+           label_delete_button = T("Delete Warehouse Location"),
+           msg_record_created = T("Warehouse Location added"),
+           msg_record_modified = T("Warehouse Location updated"),
+           msg_record_deleted = T("Warehouse Location deleted"),
+           msg_list_empty = T("No Warehouse Locations currently registered"))
+
+    settings.customise_org_site_layout_resource = customise_org_site_layout_resource
 
     # -------------------------------------------------------------------------
     def customise_pr_address_resource(r, tablename):

@@ -46,6 +46,7 @@ __all__ = ("OrgOrganisationModel",
            "OrgSiteDetailsModel",
            "OrgSiteEventModel",
            "OrgSiteGroupModel",
+           "OrgSiteLayoutModel",
            "OrgSiteNameModel",
            "OrgSiteShiftModel",
            "OrgSiteTagModel",
@@ -3361,6 +3362,12 @@ class OrgSiteModel(S3Model):
                                             "actuate": "hide",
                                             },
 
+                       # Layout
+                       org_site_layout = ({"name": "layout",
+                                           "joinby": "site_id",
+                                           },
+                                          ),
+
                        # Locations
                        org_site_location = ({"name": "location",
                                              "joinby": "site_id",
@@ -3595,7 +3602,7 @@ class OrgSiteModel(S3Model):
                 code = prefix[:-suffix_length] + suffix
                 query = (stable.code == code) & (stable.site_id != site_id)
                 duplicate = db(query).select(stable.site_id,
-                                             limitby = (0, 1),
+                                             limitby = (0, 1)
                                              ).first()
                 if not duplicate:
                     return code
@@ -3639,7 +3646,7 @@ class OrgSiteModel(S3Model):
             # Look up from record
             row = db(table.site_id == site_id).select(table.name,
                                                       table.code,
-                                                      limitby = (0, 1),
+                                                      limitby = (0, 1)
                                                       ).first()
             if not row:
                 # Record doesn't exist
@@ -3998,6 +4005,66 @@ class OrgSiteGroupModel(S3Model):
                                             ondelete = "CASCADE",
                                             ),
                           *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class OrgSiteLayoutModel(S3Model):
+    """
+        Organisation of space within a site
+
+        e.g. Building / Floor / Room
+             @ToDo: Replace org_room
+        e.g. Aisle / Rack / Shelf for Warehouses
+    """
+
+    names = ("org_site_layout",
+             )
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Sites <> Org Groups link table
+        #
+        tablename = "org_site_layout"
+        self.define_table(tablename,
+                          # Component not instance
+                          self.super_link("site_id", "org_site"),
+                          Field("name", length=64, notnull=True,
+                               label = current.T("Name"),
+                               requires = [IS_NOT_EMPTY(),
+                                           IS_LENGTH(64),
+                                           ],
+                               ),
+                         Field("parent", "reference org_site_layout", # This form of hierarchy may not work on all Databases
+                               ondelete = "RESTRICT",
+                               # Only accessed via S3HierarchyCRUD
+                               #label = T("Within"),
+                               readable = False,
+                               writable = False,
+                               ),
+                         #s3_comments(),
+                         *s3_meta_fields())
+
+        # Table Configuration
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ["name"],
+                                                 secondary = ["parent"],
+                                                 ),
+                       hierarchy = "parent",
+                       # If using S3CascadeSelectWidget, then can define levels in Template, e.g.:
+                       #hierarchy_levels = [T("Building"),
+                       #                    T("Floor"),
+                       #                    T("Room"),
+                       #                    ],
+                       #hierarchy_levels = [T("Aisle"),
+                       #                    T("Rack"),
+                       #                    T("Shelf"),
+                       #                    ],
+                       # No point in seeing an Open menu item as no more details made visible by this
+                       hierarchy_method_no_open = True
+                       )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -4865,7 +4932,9 @@ def org_facility_rheader(r, tabs=None):
 class OrgRoomModel(S3Model):
     """
         Rooms are a location within a Site
-        - used by Asset module
+        - used by Asset module & DVR module (for activities)
+
+        @ToDO: Deprecate & replace by org_site_layout
     """
 
     names = ("org_room",
