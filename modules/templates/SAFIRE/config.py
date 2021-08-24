@@ -284,8 +284,10 @@ def config(settings):
 
                 editable = current.auth.s3_has_permission("UPDATE", "event_incident", record_id)
 
-                if editable:
+                if editable and r.method == "plan":
                     # Dropdown of Scenarios to select
+                    # @ToDo: Move this to a Popup behind an Action Button, to make it clearer that this isn't a maintained link
+                    # @ToDo: Also add 'Clear' button to clear all elements & start from a blank slate
                     stable = current.s3db.event_scenario
                     query = (stable.incident_type_id == incident_type_id) & \
                             (stable.deleted == False)
@@ -300,7 +302,7 @@ def config(settings):
                         dappend(OPTION(T("Select Scenario")))
                         for s in scenarios:
                             dappend(OPTION(s.name, _value=s.id))
-                        scenarios = TR(TH("%s: " % T("Scenario")),
+                        scenarios = TR(TH("%s: " % T("Apply Scenario")),
                                        dropdown,
                                        )
                         s3 = current.response.s3
