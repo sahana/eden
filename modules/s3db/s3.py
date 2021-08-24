@@ -27,9 +27,10 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3HierarchyModel",
-           "S3DashboardModel",
+__all__ = ("S3DashboardModel",
            "S3DynamicTablesModel",
+           "S3HierarchyModel",
+           "s3_table_random_name",
            "s3_table_rheader",
            "s3_scheduler_rheader",
            )
@@ -38,38 +39,6 @@ import random
 
 from gluon import *
 from ..s3 import *
-
-# =============================================================================
-class S3HierarchyModel(S3Model):
-    """ Model for stored object hierarchies """
-
-    names = ("s3_hierarchy",
-             )
-
-    def model(self):
-
-        # ---------------------------------------------------------------------
-        # Stored Object Hierarchy
-        #
-        tablename = "s3_hierarchy"
-        self.define_table(tablename,
-                          Field("tablename", length=64),
-                          Field("dirty", "boolean",
-                                default = False,
-                                ),
-                          Field("hierarchy", "json"),
-                          *S3MetaFields.timestamps())
-
-        # ---------------------------------------------------------------------
-        # Return global names to s3.*
-        #
-        return {}
-
-    # -------------------------------------------------------------------------
-    def defaults(self):
-        """ Safe defaults if module is disabled """
-
-        return {}
 
 # =============================================================================
 class S3DashboardModel(S3Model):
@@ -128,12 +97,6 @@ class S3DashboardModel(S3Model):
         return {}
 
     # -------------------------------------------------------------------------
-    def defaults(self):
-        """ Safe defaults if module is disabled """
-
-        return {}
-
-    # -------------------------------------------------------------------------
     @staticmethod
     def dashboard_onaccept(form):
         """
@@ -142,15 +105,15 @@ class S3DashboardModel(S3Model):
                   controller/function
         """
 
-        db = current.db
-
         try:
             record_id = form.vars.id
         except AttributeError:
             return
 
+        db = current.db
+
         table = current.s3db.s3_dashboard
-        query = table.id == record_id
+        query = (table.id == record_id)
 
         row = db(query).select(table.id,
                                table.controller,
@@ -176,7 +139,6 @@ class S3DynamicTablesModel(S3Model):
 
     names = ("s3_table",
              "s3_table_id",
-             "s3_table_random_name",
              "s3_field",
              "s3_field_id",
              )
@@ -190,8 +152,6 @@ class S3DynamicTablesModel(S3Model):
 
         define_table = self.define_table
         crud_strings = s3.crud_strings
-
-        s3_table_random_name = self.s3_table_random_name
 
         # ---------------------------------------------------------------------
         # Dynamic Table
@@ -261,7 +221,9 @@ class S3DynamicTablesModel(S3Model):
         )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename, show_link=True)
+        represent = S3Represent(lookup = tablename,
+                                show_link = True,
+                                )
         table_id = S3ReusableField("table_id", "reference %s" % tablename,
                                    label = T("Table"),
                                    represent = represent,
@@ -389,7 +351,9 @@ class S3DynamicTablesModel(S3Model):
         )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename, show_link=True)
+        represent = S3Represent(lookup = tablename,
+                                show_link = True,
+                                )
         field_id = S3ReusableField("field_id", "reference %s" % tablename,
                                    label = T("Field"),
                                    represent = represent,
@@ -404,21 +368,8 @@ class S3DynamicTablesModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {"s3_table_id": table_id,
-                "s3_table_random_name": s3_table_random_name,
                 "s3_field_id": field_id,
                 }
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def s3_table_random_name():
-        """
-            Generate a random name
-
-            @return: an 8-character random name
-        """
-
-        alpha = "abcdefghijklmnopqrstuvwxyz"
-        return ''.join(random.choice(alpha) for _ in range(8))
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -435,8 +386,8 @@ class S3DynamicTablesModel(S3Model):
         table._before_update.append(lambda s, data: update_default(data))
 
     # -------------------------------------------------------------------------
-    @classmethod
-    def s3_table_name_update_default(cls, data):
+    @staticmethod
+    def s3_table_name_update_default(data):
         """
             Set a new default table name when the current default
             is written (to prevent duplicates, i.e. single-use default)
@@ -453,7 +404,7 @@ class S3DynamicTablesModel(S3Model):
         if not name or name == field.default:
             # The name currently being written is the default,
             # => set a new default for subsequent writes
-            field.default = "%s_%s" % (DYNAMIC_PREFIX, cls.s3_table_random_name())
+            field.default = "%s_%s" % (DYNAMIC_PREFIX, s3_table_random_name())
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -546,7 +497,7 @@ class S3DynamicTablesModel(S3Model):
                 if record_id:
                     query &= (table.id != record_id)
                 row = db(query).select(table.id,
-                                       limitby = (0, 1),
+                                       limitby = (0, 1)
                                        ).first()
                 if row:
                     form.errors["name"] = "A field with this name already exists in this table"
@@ -584,7 +535,7 @@ class S3DynamicTablesModel(S3Model):
                 ttable = current.s3db.s3_table
                 query = ttable.id == table_id
                 row = db(query).select(ttable.name,
-                                       limitby = (0, 1),
+                                       limitby = (0, 1)
                                        ).first()
                 tablename = row.name
                 component_alias = tablename.split("_", 1)[1]
@@ -599,7 +550,9 @@ class S3DynamicTablesModel(S3Model):
                     (table.deleted != True)
             if record_id:
                 query &= (table.id != record_id)
-            row = db(query).select(table.id, limitby=(0, 1)).first()
+            row = db(query).select(table.id,
+                                   limitby = (0, 1)
+                                   ).first()
             if row:
                 form.errors["component_alias"] = "A component with this alias already exists for this master table"
 
@@ -622,7 +575,7 @@ class S3DynamicTablesModel(S3Model):
         row = db(table.id == record_id).select(table.id,
                                                table.component_key,
                                                table.field_type,
-                                               limitby = (0, 1),
+                                               limitby = (0, 1)
                                                ).first()
 
         master = None
@@ -635,6 +588,43 @@ class S3DynamicTablesModel(S3Model):
                 master = ktablename
 
         row.update_record(master = master)
+
+# =============================================================================
+class S3HierarchyModel(S3Model):
+    """ Model for stored object hierarchies """
+
+    names = ("s3_hierarchy",
+             )
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Stored Object Hierarchy
+        #
+        tablename = "s3_hierarchy"
+        self.define_table(tablename,
+                          Field("tablename", length=64),
+                          Field("dirty", "boolean",
+                                default = False,
+                                ),
+                          Field("hierarchy", "json"),
+                          *S3MetaFields.timestamps())
+
+        # ---------------------------------------------------------------------
+        # Return global names to s3.*
+        #
+        return {}
+
+# =============================================================================
+def s3_table_random_name():
+    """
+        Generate a random name
+
+        @return: an 8-character random name
+    """
+
+    alpha = "abcdefghijklmnopqrstuvwxyz"
+    return ''.join(random.choice(alpha) for _ in range(8))
 
 # =============================================================================
 def s3_table_rheader(r, tabs=None):

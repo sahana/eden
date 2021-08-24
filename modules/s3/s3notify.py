@@ -110,8 +110,9 @@ class S3Notifications(object):
                                                   rtable.url,
                                                   rtable.last_check_time,
                                                   ftable.query,
-                                                  join=join,
-                                                  left=left).first()
+                                                  join = join,
+                                                  left = left,
+                                                  ).first()
         if not row:
             return True
 
@@ -123,7 +124,7 @@ class S3Notifications(object):
         auth_token = str(uuid4())
 
         # Store the auth_token in the subscription record
-        r.update_record(auth_token=auth_token)
+        r.update_record(auth_token = auth_token)
         db.commit()
 
         # Construct the send-URL
@@ -212,13 +213,15 @@ class S3Notifications(object):
         if success:
             last_check_time = datetime.datetime.utcnow()
             next_check_time = last_check_time + interval
-            r.update_record(auth_token=None,
-                            locked=False,
-                            last_check_time=last_check_time,
-                            next_check_time=next_check_time)
+            r.update_record(auth_token = None,
+                            locked = False,
+                            last_check_time = last_check_time,
+                            next_check_time = next_check_time,
+                            )
         else:
-            r.update_record(auth_token=None,
-                            locked=False)
+            r.update_record(auth_token = None,
+                            locked = False,
+                            )
         db.commit()
 
         # Done
@@ -259,8 +262,8 @@ class S3Notifications(object):
         notify_on = subscription["notify_on"]
         methods = subscription["method"]
         if not notify_on or not methods:
-            return json_message(message="No notifications configured "
-                                        "for this subscription")
+            return json_message(message = "No notifications configured "
+                                          "for this subscription")
 
         # Authorization (pe_id must not be None)
         pe_id = subscription["pe_id"]
@@ -275,14 +278,14 @@ class S3Notifications(object):
 
         # Extract the data
         data = resource.select(fields,
-                               represent=True,
-                               raw_data=True)
+                               represent = True,
+                               raw_data = True)
         rows = data["rows"]
 
         # How many records do we have?
         numrows = len(rows)
         if not numrows:
-            return json_message(message="No records found")
+            return json_message(message = "No records found")
 
         #_debug("%s rows:" % numrows)
 
@@ -339,9 +342,9 @@ class S3Notifications(object):
             subject = subject(resource, data, meta_data)
 
         from string import Template
-        subject = Template(subject).safe_substitute(S="%(systemname)s",
-                                                    s="%(systemname_short)s",
-                                                    r="%(resource)s")
+        subject = Template(subject).safe_substitute(S = "%(systemname)s",
+                                                    s = "%(systemname_short)s",
+                                                    r = "%(resource)s")
         subject = subject % meta_data
 
         # Attachment
@@ -429,12 +432,13 @@ class S3Notifications(object):
             try:
                 sent = send(pe_id,
                             # RFC 2822
-                            subject=s3_truncate(subject, 78),
-                            message=message,
-                            contact_method=method,
-                            system_generated=True,
-                            document_ids=document_ids,
-                            **send_data)
+                            subject = s3_truncate(subject, 78),
+                            message = message,
+                            contact_method = method,
+                            system_generated = True,
+                            document_ids = document_ids,
+                            **send_data
+                            )
             except:
                 exc_info = sys.exc_info()[:2]
                 error = ("%s: %s" % (exc_info[0].__name__, exc_info[1]))
@@ -456,9 +460,9 @@ class S3Notifications(object):
             message = ", ".join(errors)
         else:
             message = "Success"
-        return json_message(success=success,
-                            statuscode=200 if success else 403,
-                            message=message)
+        return json_message(success = success,
+                            statuscode = 200 if success else 403,
+                            message = message)
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -493,7 +497,8 @@ class S3Notifications(object):
         mtime = last_check.min()
         rows = db(query).select(tname,
                                 mtime,
-                                groupby=tname)
+                                groupby = tname,
+                                )
 
         if not rows:
             return None
@@ -514,8 +519,9 @@ class S3Notifications(object):
             else:
                 query = (modified_on >= msince)
             update = db(query).select(modified_on,
-                                      orderby=~(modified_on),
-                                      limitby=(0, 1)).first()
+                                      orderby = ~(modified_on),
+                                      limitby = (0, 1)
+                                      ).first()
             if update:
                 radd((tablename, update.modified_on))
 
@@ -541,7 +547,9 @@ class S3Notifications(object):
                 ((next_check == None) | \
                  (next_check <= now)) & \
                 query
-        return db(query).select(rtable.id, join=join)
+        return db(query).select(rtable.id,
+                                join = join,
+                                )
 
     # -------------------------------------------------------------------------
     @classmethod

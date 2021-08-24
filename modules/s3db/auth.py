@@ -27,14 +27,16 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("AuthDomainApproverModel",
-           "AuthUserOptionsModel",
-           "AuthConsentModel",
+__all__ = ("AuthConsentModel",
+           "AuthDomainApproverModel",
            "AuthMasterKeyModel",
-           "auth_Consent",
-           "auth_user_options_get_osm",
-           "auth_UserRepresent",
+           "AuthUserNotificationModel",
+           "AuthUserOptionsModel",
            "AuthUserTempModel",
+           "auth_consent_option_hash_fields",
+           "auth_user_options_get_osm",
+           "auth_Consent",
+           "auth_UserRepresent",
            )
 
 import datetime
@@ -46,111 +48,8 @@ from ..s3 import *
 from ..s3dal import original_tablename
 from ..s3layouts import S3PopupLink
 
-# =============================================================================
-class AuthDomainApproverModel(S3Model):
-
-    names = ("auth_organisation",)
-
-    def model(self):
-
-        T = current.T
-
-        # ---------------------------------------------------------------------
-        # Domain table:
-        # When users register their email address is checked against this list.
-        #   - If the Domain matches, then they are automatically assigned to the
-        #     Organization.
-        #   - If there is no Approvals email then the user is automatically approved.
-        #   - If there is an Approvals email then the approval request goes to this
-        #     address
-        #   - If a user registers for an Organization & the domain doesn't match (or
-        #     isn't listed) then the approver gets the request
-        #
-        if current.deployment_settings.get_auth_registration_requests_organisation():
-            ORG_HELP = T("If this field is populated then a user who specifies this Organization when signing up will be assigned as a Staff of this Organization unless their domain doesn't match the domain field.")
-        else:
-            ORG_HELP = T("If this field is populated then a user with the Domain specified will automatically be assigned as a Staff of this Organization")
-
-        DOMAIN_HELP = T("If a user verifies that they own an Email Address with this domain, the Approver field is used to determine whether & by whom further approval is required.")
-        APPROVER_HELP = T("The Email Address to which approval requests are sent (normally this would be a Group mail rather than an individual). If the field is blank then requests are approved automatically if the domain matches.")
-
-        tablename = "auth_organisation"
-        self.define_table(tablename,
-                          self.org_organisation_id(
-                                comment=DIV(_class = "tooltip",
-                                            _title = "%s|%s" % (current.messages.ORGANISATION,
-                                                                ORG_HELP,
-                                                                ),
-                                            ),
-                                ),
-                          Field("domain",
-                                label = T("Domain"),
-                                comment=DIV(_class = "tooltip",
-                                            _title = "%s|%s" % (T("Domain"),
-                                                                DOMAIN_HELP,
-                                                                ),
-                                            ),
-                                ),
-                          Field("approver",
-                                label = T("Approver"),
-                                requires = IS_EMPTY_OR(IS_EMAIL()),
-                                comment=DIV(_class = "tooltip",
-                                            _title = "%s|%s" % (T("Approver"),
-                                                                APPROVER_HELP,
-                                                                ),
-                                            ),
-                                ),
-                          s3_comments(),
-                          *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
-
-
-# =============================================================================
-class AuthUserOptionsModel(S3Model):
-    """ Model to store per-user configuration options """
-
-    names = ("auth_user_options",)
-
-    def model(self):
-
-        T = current.T
-
-        # ---------------------------------------------------------------------
-        # User Options
-        #
-        OAUTH_KEY_HELP = "%s|%s|%s" % (T("OpenStreetMap OAuth Consumer Key"),
-                                       T("In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreetMap server.") % \
-                                            {"name_short": current.deployment_settings.get_system_name_short()},
-                                       T("Go to %(url)s, sign up & then register your application. You can put any URL in & you only need to select the 'modify the map' permission.") % \
-                                            {"url": A("http://www.openstreetmap.org",
-                                                      _href="http://www.openstreetmap.org",
-                                                      _target="blank",
-                                                      ),
-                                             },
-                                       )
-
-        self.define_table("auth_user_options",
-                          self.super_link("pe_id", "pr_pentity"),
-                          Field("user_id", current.auth.settings.table_user),
-                          Field("osm_oauth_consumer_key",
-                                label = T("OpenStreetMap OAuth Consumer Key"),
-                                comment = DIV(_class="stickytip",
-                                              _title=OAUTH_KEY_HELP,
-                                              ),
-                                ),
-                          Field("osm_oauth_consumer_secret",
-                                label = T("OpenStreetMap OAuth Consumer Secret"),
-                                ),
-                          *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
+# Read-only hash fields (enabled in controller if permissible)
+auth_consent_option_hash_fields = ("name", "description")
 
 # =============================================================================
 class AuthConsentModel(S3Model):
@@ -161,7 +60,6 @@ class AuthConsentModel(S3Model):
 
     names = ("auth_processing_type",
              "auth_consent_option",
-             "auth_consent_option_hash_fields",
              "auth_consent",
              "auth_consent_assertion",
              )
@@ -312,9 +210,6 @@ class AuthConsentModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        # Read-only hash fields (enabled in controller if permissible)
-        hash_fields = ("name", "description")
-
         # List fields
         list_fields = ["id",
                        "type_id",
@@ -397,8 +292,7 @@ class AuthConsentModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {"auth_consent_option_hash_fields": hash_fields,
-                }
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -426,7 +320,7 @@ class AuthConsentModel(S3Model):
         row = db(query).select(table.id,
                                table.obsolete,
                                table.valid_until,
-                               limitby = (0, 1),
+                               limitby = (0, 1)
                                ).first()
         if not row:
             return
@@ -471,7 +365,7 @@ class AuthConsentModel(S3Model):
                                ctable.person_id,
                                ttable.id,
                                join = join,
-                               limitby = (0, 1),
+                               limitby = (0, 1)
                                ).first()
         if not row:
             return
@@ -493,6 +387,68 @@ class AuthConsentModel(S3Model):
 
         query = ctable.id.belongs(set(row.id for row in rows))
         db(query).update(expires_on = today)
+
+# =============================================================================
+class AuthDomainApproverModel(S3Model):
+
+    names = ("auth_organisation",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Domain table:
+        # When users register their email address is checked against this list.
+        #   - If the Domain matches, then they are automatically assigned to the
+        #     Organization.
+        #   - If there is no Approvals email then the user is automatically approved.
+        #   - If there is an Approvals email then the approval request goes to this
+        #     address
+        #   - If a user registers for an Organization & the domain doesn't match (or
+        #     isn't listed) then the approver gets the request
+        #
+        if current.deployment_settings.get_auth_registration_requests_organisation():
+            ORG_HELP = T("If this field is populated then a user who specifies this Organization when signing up will be assigned as a Staff of this Organization unless their domain doesn't match the domain field.")
+        else:
+            ORG_HELP = T("If this field is populated then a user with the Domain specified will automatically be assigned as a Staff of this Organization")
+
+        DOMAIN_HELP = T("If a user verifies that they own an Email Address with this domain, the Approver field is used to determine whether & by whom further approval is required.")
+        APPROVER_HELP = T("The Email Address to which approval requests are sent (normally this would be a Group mail rather than an individual). If the field is blank then requests are approved automatically if the domain matches.")
+
+        tablename = "auth_organisation"
+        self.define_table(tablename,
+                          self.org_organisation_id(
+                                comment = DIV(_class = "tooltip",
+                                              _title = "%s|%s" % (current.messages.ORGANISATION,
+                                                                  ORG_HELP,
+                                                                  ),
+                                              ),
+                                ),
+                          Field("domain",
+                                label = T("Domain"),
+                                comment = DIV(_class = "tooltip",
+                                              _title = "%s|%s" % (T("Domain"),
+                                                                  DOMAIN_HELP,
+                                                                  ),
+                                              ),
+                                ),
+                          Field("approver",
+                                label = T("Approver"),
+                                requires = IS_EMPTY_OR(IS_EMAIL()),
+                                comment = DIV(_class = "tooltip",
+                                              _title = "%s|%s" % (T("Approver"),
+                                                                  APPROVER_HELP,
+                                                                  ),
+                                              ),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class AuthMasterKeyModel(S3Model):
@@ -550,6 +506,123 @@ class AuthMasterKeyModel(S3Model):
         #
         return {"auth_masterkey_id": masterkey_id,
                 }
+
+# =============================================================================
+class AuthUserOptionsModel(S3Model):
+    """ Model to store per-user configuration options """
+
+    names = ("auth_user_options",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # User Options
+        #
+        OAUTH_KEY_HELP = "%s|%s|%s" % (T("OpenStreetMap OAuth Consumer Key"),
+                                       T("In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreetMap server.") % \
+                                            {"name_short": current.deployment_settings.get_system_name_short()},
+                                       T("Go to %(url)s, sign up & then register your application. You can put any URL in & you only need to select the 'modify the map' permission.") % \
+                                            {"url": A("http://www.openstreetmap.org",
+                                                      _href = "http://www.openstreetmap.org",
+                                                      _target = "blank",
+                                                      ),
+                                             },
+                                       )
+
+        self.define_table("auth_user_options",
+                          self.super_link("pe_id", "pr_pentity"),
+                          Field("user_id", current.auth.settings.table_user),
+                          Field("osm_oauth_consumer_key",
+                                label = T("OpenStreetMap OAuth Consumer Key"),
+                                comment = DIV(_class = "stickytip",
+                                              _title = OAUTH_KEY_HELP,
+                                              ),
+                                ),
+                          Field("osm_oauth_consumer_secret",
+                                label = T("OpenStreetMap OAuth Consumer Secret"),
+                                ),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class AuthUserNotificationModel(S3Model):
+    """ Model for System Notifications """
+
+    names = ("auth_user_notification",
+             )
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # System Notifications
+        #
+        tablename = "auth_user_notification"
+        self.define_table(tablename,
+                          Field("user_id", current.auth.settings.table_user),
+                          # Text to present to the User
+                          Field("name"),
+                          # Link to allow the User to handle it
+                          Field("url",
+                                requires = IS_EMPTY_OR(IS_URL()),
+                                ),
+                          #Field("priority"),
+                          # Way of being able to remove the Notification if it gets handled:
+                          Field("type"),
+                          Field("tablename"),
+                          Field("record_id", "integer"),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Return global names to s3.*
+        #
+        return {}
+
+# =============================================================================
+class AuthUserTempModel(S3Model):
+    """
+        Model to store complementary data for pending user accounts
+        after self-registration
+    """
+
+    names = ("auth_user_temp",
+             )
+
+    def model(self):
+
+        utable = current.auth.settings.table_user
+
+        # ---------------------------------------------------------------------
+        # Temporary User Table
+        # - interim storage of registration data that can be used to
+        #   create complementary records about a user once their account
+        #   is approved
+        #
+        self.define_table("auth_user_temp",
+                          Field("user_id", utable),
+                          Field("home"),
+                          Field("mobile"),
+                          Field("image", "upload",
+                                length = current.MAX_FILENAME_LENGTH,
+                                ),
+                          Field("consent"),
+                          Field("custom", "json",
+                                requires = IS_EMPTY_OR(IS_JSONS3()),
+                                ),
+                          S3MetaFields.uuid(),
+                          S3MetaFields.created_on(),
+                          S3MetaFields.modified_on(),
+                          )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class auth_Consent(object):
@@ -836,9 +909,6 @@ class auth_Consent(object):
         today = timestmp.date() if timestmp else request.utcnow.date()
         vsign = request.env.remote_addr
 
-        # Consent option hash fields
-        hash_fields = s3db.auth_consent_option_hash_fields
-
         # Parse the value
         parsed = cls.parse(value)
 
@@ -846,7 +916,7 @@ class auth_Consent(object):
         ttable = s3db.auth_processing_type
         otable = s3db.auth_consent_option
 
-        option_fields = {"id", "validity_period"} | set(hash_fields)
+        option_fields = {"id", "validity_period"} | set(auth_consent_option_hash_fields)
         fields = [ttable.code] + [otable[fn] for fn in option_fields]
 
         join = ttable.on(ttable.id == otable.type_id)
@@ -859,7 +929,7 @@ class auth_Consent(object):
         valid_options = {}
         for row in rows:
             option = row.auth_consent_option
-            context = {fn: option[fn] for fn in hash_fields}
+            context = {fn: option[fn] for fn in auth_consent_option_hash_fields}
             valid_options[option.id] = {"code": row.auth_processing_type.code,
                                         "hash": cls.get_hash(context),
                                         "valid_for": option.validity_period,
@@ -923,7 +993,7 @@ class auth_Consent(object):
         join = ptable.on(ptable.pe_id == ltable.pe_id)
         person = db(ltable.user_id == user_id).select(ptable.id,
                                                       join = join,
-                                                      limitby = (0, 1),
+                                                      limitby = (0, 1)
                                                       ).first()
         if person:
             person_id = person.id
@@ -933,7 +1003,7 @@ class auth_Consent(object):
             row = db(ttable.user_id == user_id).select(ttable.id,
                                                        ttable.consent,
                                                        ttable.created_on,
-                                                       limitby = (0, 1),
+                                                       limitby = (0, 1)
                                                        ).first()
             if row and row.consent:
                 # Track consent
@@ -942,7 +1012,7 @@ class auth_Consent(object):
                           )
 
                 # Reset consent response in temp user record
-                row.update_record(consent=None)
+                row.update_record(consent = None)
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -1005,8 +1075,7 @@ class auth_Consent(object):
         ttable = s3db.auth_processing_type
         otable = s3db.auth_consent_option
 
-        hash_fields = s3db.auth_consent_option_hash_fields
-        option_fields = {"id"} | set(hash_fields)
+        option_fields = {"id"} | set(auth_consent_option_hash_fields)
         fields = [otable[fn] for fn in option_fields]
 
         join = ttable.on((ttable.id == otable.type_id) & \
@@ -1017,12 +1086,12 @@ class auth_Consent(object):
             query &= (otable.obsolete == False)
         option = db(query).select(*fields,
                                   join = join,
-                                  limitby = (0, 1),
+                                  limitby = (0, 1)
                                   ).first()
         if not option:
             raise ValueError("Invalid consent option for processing type")
 
-        ohash = cls.get_hash([(fn, option[fn]) for fn in hash_fields])
+        ohash = cls.get_hash([(fn, option[fn]) for fn in auth_consent_option_hash_fields])
         consent = (("person_id", person_id),
                    ("context", context),
                    ("date", timestmp.isoformat()),
@@ -1056,9 +1125,6 @@ class auth_Consent(object):
         db = current.db
         s3db = current.s3db
 
-        # Consent option hash fields
-        hash_fields = s3db.auth_consent_option_hash_fields
-
         # Load consent record and referenced option
         otable = s3db.auth_consent_option
         ctable = s3db.auth_consent
@@ -1073,14 +1139,17 @@ class auth_Consent(object):
                   ctable.vsign,
                   ctable.vhash,
                   ctable.consenting,
-                  ] + [otable[fn] for fn in hash_fields]
+                  ] + [otable[fn] for fn in auth_consent_option_hash_fields]
 
-        row = db(query).select(join=join, limitby=(0, 1), *fields).first()
+        row = db(query).select(join = join,
+                               limitby = (0, 1)
+                               *fields
+                               ).first()
         if not row:
             return False
 
         option = row.auth_consent_option
-        context = {fn: option[fn] for fn in hash_fields}
+        context = {fn: option[fn] for fn in auth_consent_option_hash_fields}
 
         consent = row.auth_consent
         verify = {"date": consent.date.isoformat(),
@@ -1135,7 +1204,9 @@ class auth_Consent(object):
                 (otable.valid_from <= today) & \
                 (otable.obsolete == False) & \
                 (otable.deleted == False)
-        rows = current.db(query).select(otable.id, join=join)
+        rows = current.db(query).select(otable.id,
+                                        join = join,
+                                        )
 
         return set(row.id for row in rows)
 
@@ -1173,7 +1244,9 @@ class auth_Consent(object):
                 ((ctable.expires_on == None) | (ctable.expires_on > today)) & \
                 (ctable.consenting == True) & \
                 (ctable.deleted == False)
-        row = current.db(query).select(ctable.id, limitby = (0, 1)).first()
+        row = current.db(query).select(ctable.id,
+                                       limitby = (0, 1)
+                                       ).first()
 
         return row is not None
 
@@ -1311,53 +1384,14 @@ def auth_user_options_get_osm(pe_id):
     db = current.db
     table = current.s3db.auth_user_options
     query = (table.pe_id == pe_id)
-    record = db(query).select(limitby=(0, 1)).first()
+    record = db(query).select(table.osm_oauth_consumer_key,
+                              table.osm_oauth_consumer_secret,
+                              limitby = (0, 1)
+                              ).first()
     if record:
         return record.osm_oauth_consumer_key, record.osm_oauth_consumer_secret
     else:
         return None
-
-# =============================================================================
-class AuthUserTempModel(S3Model):
-    """
-        Model to store complementary data for pending user accounts
-        after self-registration
-    """
-
-    names = ("auth_user_temp",
-             )
-
-    def model(self):
-
-        utable = current.auth.settings.table_user
-
-        # ---------------------------------------------------------------------
-        # Temporary User Table
-        # - interim storage of registration data that can be used to
-        #   create complementary records about a user once their account
-        #   is approved
-        #
-        self.define_table("auth_user_temp",
-                          Field("user_id", utable),
-                          Field("home"),
-                          Field("mobile"),
-                          Field("image", "upload",
-                                length = current.MAX_FILENAME_LENGTH,
-                                ),
-                          Field("consent"),
-                          Field("custom", "json",
-                                requires = IS_EMPTY_OR(IS_JSONS3()),
-                                ),
-                          S3MetaFields.uuid(),
-                          S3MetaFields.created_on(),
-                          S3MetaFields.modified_on(),
-                          )
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
-
 
 # =============================================================================
 class auth_UserRepresent(S3Represent):

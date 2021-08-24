@@ -196,6 +196,7 @@ class PRPersonEntityModel(S3Model):
                            deploy_alert = T("Deployment Alert"),
                            dvi_body = T("Body"),
                            dvi_morgue = T("Morgue"),
+                           #event_alert = T("Alert"),
                            fire_station = T("Fire Station"),
                            hms_hospital = T("Hospital"),
                            hrm_training_event = T("Training Event"),

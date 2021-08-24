@@ -18,7 +18,7 @@ class Daily():
         request = current.request
 
         now = request.utcnow
-        month_past = now - datetime.timedelta(weeks=4)
+        month_past = now - datetime.timedelta(weeks = 4)
 
         # Cleanup Scheduler logs
         table = s3db.scheduler_run

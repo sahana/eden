@@ -331,6 +331,8 @@ class inv_dashboard(S3CustomController):
         T = current.T
         db = current.db
         s3db = current.s3db
+        user = current.auth.user
+        user_id = user.id
 
         # Shipments
         stable = s3db.inv_send
@@ -609,7 +611,27 @@ class inv_dashboard(S3CustomController):
         shipments = DIV(*shipment_rows)
 
         # Alerts
-        alerts = DIV(I(T("Alerts...")))
+        table = s3db.auth_user_notification
+        query = (table.user_id == user_id) & \
+                (table.deleted == False)
+        rows = db(query).select(table.name,
+                                table.url,
+                                orderby = ~table.created_on,
+                                )
+        alert_rows = []
+        for row in rows:
+            alert_rows.append(DIV(A(DIV(ICON("bell-o"),
+                                        _class = "columns medium-1"
+                                        ),
+                                    DIV(row.name,
+                                        _class = "columns medium-11"
+                                        ),
+                                    _href = row.url,
+                                    _target = "_blank",
+                                    ),
+                                  _class = "alert-card row",
+                                  ))
+        alerts = DIV(*alert_rows)
 
         # Capacity
         # Define the Pivot Table
@@ -627,11 +649,11 @@ class inv_dashboard(S3CustomController):
 
         # KPI
         # Which Warehouses are we responsible for?
-        user = current.auth.user
         wtable = s3db.inv_warehouse
         gtable = db.auth_group
         mtable = db.auth_membership
-        query = (mtable.user_id == user.id) & \
+        query = (mtable.user_id == user_id) & \
+                (mtable.deleted == False) & \
                 (mtable.group_id == gtable.id) & \
                 (gtable.uuid.belongs("ORG_ADMIN",
                                      "logs_manager",

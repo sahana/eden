@@ -9656,6 +9656,7 @@ class ICON(I):
             "attachment": "fa-paperclip",
             "bar-chart": "fa-bar-chart",
             "bars": "fa-bars",
+            "bell-o": "fa-bell-o",
             "book": "fa-book",
             "bookmark": "fa-bookmark",
             "bookmark-empty": "fa-bookmark-o",

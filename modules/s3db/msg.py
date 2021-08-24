@@ -394,7 +394,7 @@ class MessageModel(S3Model):
                           # came in on allows correlation to Outbound
                           # messages (campaign_message, deployment_alert, etc)
                           self.msg_channel_id(),
-                          s3_datetime(default="now"),
+                          s3_datetime(default = "now"),
                           Field("body", "text",
                                 label = T("Message"),
                                 ),
@@ -465,10 +465,10 @@ class MessageModel(S3Model):
 
         opt_msg_status = S3ReusableField("status", "integer",
                                          notnull = True,
-                                         requires = IS_IN_SET(MSG_STATUS_OPTS,
-                                                              zero = None),
                                          default = 1,
                                          label = T("Status"),
+                                         requires = IS_IN_SET(MSG_STATUS_OPTS,
+                                                              zero = None),
                                          represent = lambda opt: \
                                                      MSG_STATUS_OPTS.get(opt,
                                                                  UNKNOWN_OPT)
@@ -637,16 +637,16 @@ class MessageContactModel(S3Model):
 
         # CRUD strings
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create=T("Contact Form"),
-            title_display=T("Contact Details"),
-            title_list=T("Contacts"),
-            title_update=T("Edit Contact"),
-            label_list_button=T("List Contacts"),
-            label_delete_button=T("Delete Contact"),
-            msg_record_created=T("Contact added"),
-            msg_record_modified=T("Contact updated"),
-            msg_record_deleted=T("Contact deleted"),
-            msg_list_empty=T("No Contacts currently registered"))
+            label_create = T("Contact Form"),
+            title_display = T("Contact Details"),
+            title_list = T("Contacts"),
+            title_update = T("Edit Contact"),
+            label_list_button = T("List Contacts"),
+            label_delete_button = T("Delete Contact"),
+            msg_record_created = T("Contact added"),
+            msg_record_modified = T("Contact updated"),
+            msg_record_deleted = T("Contact deleted"),
+            msg_list_empty = T("No Contacts currently registered"))
 
         # ---------------------------------------------------------------------
         return {}
@@ -2573,18 +2573,18 @@ class BaseStationModel(S3Model):
 
         # CRUD strings
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create=T("Create Base Station"),
-            title_display=T("Base Station Details"),
-            title_list=T("Base Stations"),
-            title_update=T("Edit Base Station"),
-            title_upload=T("Import Base Stations"),
-            title_map=T("Map of Base Stations"),
-            label_list_button=T("List Base Stations"),
-            label_delete_button=T("Delete Base Station"),
-            msg_record_created=T("Base Station added"),
-            msg_record_modified=T("Base Station updated"),
-            msg_record_deleted=T("Base Station deleted"),
-            msg_list_empty=T("No Base Stations currently registered"))
+            label_create = T("Create Base Station"),
+            title_display = T("Base Station Details"),
+            title_list = T("Base Stations"),
+            title_update = T("Edit Base Station"),
+            title_upload = T("Import Base Stations"),
+            title_map = T("Map of Base Stations"),
+            label_list_button = T("List Base Stations"),
+            label_delete_button = T("Delete Base Station"),
+            msg_record_created = T("Base Station added"),
+            msg_record_modified = T("Base Station updated"),
+            msg_record_deleted = T("Base Station deleted"),
+            msg_list_empty = T("No Base Stations currently registered"))
 
         self.configure(tablename,
                        deduplicate = S3Duplicate(),
