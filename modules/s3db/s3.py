@@ -156,7 +156,7 @@ class S3DashboardModel(S3Model):
                                table.controller,
                                table.function,
                                table.active,
-                               limitby = (0, 1),
+                               limitby = (0, 1)
                                ).first()
         if not row:
             return

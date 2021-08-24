@@ -608,8 +608,8 @@ class inv_dashboard(S3CustomController):
 
         shipments = DIV(*shipment_rows)
 
-        # Notifications
-        notifications = DIV(I(T("Notifications...")))
+        # Alerts
+        alerts = DIV(I(T("Alerts...")))
 
         # Capacity
         # Define the Pivot Table
@@ -686,7 +686,7 @@ class inv_dashboard(S3CustomController):
                                                                    SHIP_STATUS_RETURNING,
                                                                    ]))
                                   )
-        # @ToDo: Filter by last month?
+        # @ToDo: Filter by hurricane season (current or last)
         srows = sresource.select(fields,
                                  as_rows = True,
                                  )
@@ -713,26 +713,26 @@ class inv_dashboard(S3CustomController):
         for row in warehouses:
             free_capacities.append(LI("%s: %s m3" % (row.name, float_represent(row.free_capacity, precision=1))))
 
-        kpi = UL(LI("%s: %s" % (T("Number of warehouses"), len(warehouses))),
+        kpi = UL(LI("%s: %s kg" % (T("Total weight stockpiled"), float_represent(stockpile_weight, precision=1))),
+                 LI("%s: %s m3" % (T("Total volume stockpiled"), float_represent(stockpile_volume, precision=1))),
                  LI("%s: %s" % (T("Number of Shipments sent"), num_shipments)),
                  LI("%s: %s kg" % (T("Total weight sent"), float_represent(shipments_weight, precision=1))),
                  LI("%s: %s m3" % (T("Total volume sent"), float_represent(shipments_volume, precision=3))),
-                 LI("%s: %s kg" % (T("Total weight stockpiled"), float_represent(stockpile_weight, precision=1))),
-                 LI("%s: %s m3" % (T("Total volume stockpiled"), float_represent(stockpile_volume, precision=1))),
+                 LI("%s: %s" % (T("Number of warehouses"), len(warehouses))),
                  LI("%s:" % T("Remaining stockpile capacities available"),
                     free_capacities
                     ),
                  )
 
         # Preparedness Checklist
-        checklist = UL()
+        #checklist = UL()
 
         output = {"title": T("Dashboard"),
                   "shipments": shipments,
-                  "notifications": notifications,
+                  "alerts": alerts,
                   "capacity": capacity,
                   "kpi": kpi,
-                  "checklist": checklist,
+                  #"checklist": checklist,
                   }
 
         # Custom view
