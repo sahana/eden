@@ -1290,7 +1290,7 @@ class S3SupplyDistributionModel(S3Model):
         A Distribution is an Item (which could be a Kit) distributed to a single Location
         - usually as part of an Activity
 
-        @ToDo: Deprecate this in favour of S3ProjectActivityItemModel?
+        @ToDo: Deprecate this in favour of ProjectActivityItemModel?
                - not based on stats, but simpler as less joins.
                - could be based on stats if we make all supply_item into stats_parameter instances
     """
