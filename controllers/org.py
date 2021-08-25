@@ -269,7 +269,18 @@ def site():
     def prep(r):
         if r.representation != "json" and \
            r.method not in ("search_ac", "search_address_ac", "site_contact_person"):
-            return False
+            if r.id:
+                # Redirect to the instance controller
+                (prefix, resourcename, id) = s3db.get_instance(db.org_site, r.id)
+                args = r.args
+                args[0] = id
+                redirect(URL(c=prefix, f=resourcename,
+                             args = args,
+                             vars = r.get_vars,
+                             ))
+            else:
+                # Not supported
+                return False
 
         # Location Filter
         s3db.gis_location_filter(r)

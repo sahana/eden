@@ -108,7 +108,8 @@ class S3HierarchyCRUD(S3Method):
             r.error(405, "No hierarchy configured for %s" % tablename)
 
         # Widget ID
-        widget_id = "%s-hierarchy" % tablename
+        # - can be passed in from s3.ui.hierarchicalopts.js
+        widget_id = r.get_vars.get("widget_id", "%s-hierarchy" % tablename)
 
         # Render the tree
         tree = self.render_tree(hierarchy, widget_id, record=record)

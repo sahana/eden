@@ -4890,11 +4890,11 @@ class S3Config(Storage):
         """
         return self.inv.get("warehouse_code_unique", False)
 
-    def get_inv_warehouse_locations(self):
+    def get_inv_bin_site_layout(self):
         """
-            Use structured Warehouse Locations rather than just freetext Bin field
+            Use structured Org Site Layout rather than just freetext Bin field
         """
-        return self.inv.get("warehouse_locations", False)
+        return self.inv.get("bin_site_layout", False)
 
     # -------------------------------------------------------------------------
     # IRS

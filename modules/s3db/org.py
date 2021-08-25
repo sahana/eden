@@ -47,10 +47,10 @@ __all__ = ("OrgOrganisationModel",
            "OrgSiteEventModel",
            "OrgSiteGroupModel",
            "OrgSiteLayoutModel",
+           "OrgSiteLocationModel",
            "OrgSiteNameModel",
            "OrgSiteShiftModel",
            "OrgSiteTagModel",
-           "OrgSiteLocationModel",
            "OrgFacilityModel",
            "OrgRoomModel",
            "OrgOfficeModel",
@@ -168,9 +168,10 @@ class OrgOrganisationModel(S3Model):
                                         IS_ONE_OF(db, "org_organisation_type.id",
                                                   type_represent,
                                                   # If limiting to just 1 level of parent
-                                                  #filterby="parent",
-                                                  #filter_opts=(None,),
-                                                  orderby="org_organisation_type.name"))
+                                                  #filterby = "parent",
+                                                  #filter_opts = (None,),
+                                                  orderby = "org_organisation_type.name",
+                                                  ))
             organisation_type_widget = S3HierarchyWidget(lookup = "org_organisation_type",
                                                          represent = type_represent,
                                                          multiple = multiple_organisation_types,
@@ -283,7 +284,8 @@ class OrgOrganisationModel(S3Model):
                                                       # IFRC requirement
                                                       filterby = "parent",
                                                       filter_opts = (None,),
-                                                      orderby = "org_region.name"))
+                                                      orderby = "org_region.name",
+                                                      ))
                 # IFRC: Only show the Regions, not the Zones
                 opts_filter = ("parent", (None,))
             else:
@@ -4020,9 +4022,12 @@ class OrgSiteLayoutModel(S3Model):
     """
 
     names = ("org_site_layout",
+             "org_site_layout_id",
              )
 
     def model(self):
+
+        T = current.T
 
         # ---------------------------------------------------------------------
         # Sites <> Org Groups link table
@@ -4032,7 +4037,7 @@ class OrgSiteLayoutModel(S3Model):
                           # Component not instance
                           self.super_link("site_id", "org_site"),
                           Field("name", length=64, notnull=True,
-                               label = current.T("Name"),
+                               label = T("Name"),
                                requires = [IS_NOT_EMPTY(),
                                            IS_LENGTH(64),
                                            ],
@@ -4064,6 +4069,96 @@ class OrgSiteLayoutModel(S3Model):
                        #                    ],
                        # No point in seeing an Open menu item as no more details made visible by this
                        hierarchy_method_no_open = True
+                       )
+
+        # Reusable field for other tables to reference
+        represent = S3Represent(lookup = tablename)
+        hierarchy_represent = S3Represent(lookup = tablename,
+                                          hierarchy = "%s / %s",
+                                          )
+        layout_id = S3ReusableField("layout_id", "reference %s" % tablename,
+                                    label = T("Location within Site"),
+                                    ondelete = "SET NULL",
+                                    represent = hierarchy_represent,
+                                    requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(current.db, "org_site_layout.id",
+                                                          hierarchy_represent
+                                                          )),
+                                    sortby = "name",
+                                    widget = S3HierarchyWidget(lookup = tablename,
+                                                               represent = represent,
+                                                               multiple = False,
+                                                               # Default anyway
+                                                               #leafonly = True,
+                                                               # Can be set for specific contexts to filter to locations within the relevant site
+                                                               #filter = filter, 
+                                                               ),
+                                    )
+
+        # Pass names back to global scope (s3.*)
+        return {"org_site_layout_id": layout_id,
+                }
+
+# =============================================================================
+class OrgSiteLocationModel(S3Model):
+    """
+        Site Location Model
+        - Locations served by a Site/Facility
+    """
+
+    names = ("org_site_location",)
+
+    def model(self):
+
+        T = current.T
+        auth = current.auth
+
+        # ---------------------------------------------------------------------
+        # Sites <> Locations Link Table
+        #
+        tablename = "org_site_location"
+        self.define_table(tablename,
+                          # Component not instance
+                          self.super_link("site_id", "org_site",
+                                          label = current.deployment_settings.get_org_site_label(),
+                                          instance_types = auth.org_site_types,
+                                          orderby = "org_site.name",
+                                          realms = auth.permission.permitted_realms("org_site",
+                                                                                    method="create"),
+                                          not_filterby = "obsolete",
+                                          not_filter_opts = (True,),
+                                          readable = True,
+                                          writable = True,
+                                          represent = self.org_site_represent,
+                                          ),
+                          self.gis_location_id(
+                            #represent = self.gis_LocationRepresent(sep=", "),
+                            represent = S3Represent(lookup="gis_location"),
+                            requires = IS_LOCATION(),
+                            widget = S3LocationAutocompleteWidget()
+                          ),
+                          *s3_meta_fields()
+                          )
+
+        # CRUD Strings
+        site_label = current.deployment_settings.get_org_site_label()
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("New Location"),
+            title_display = T("Location"),
+            title_list = T("Locations"),
+            title_update = T("Edit Location"),
+            title_upload = T("Import Location data"),
+            label_list_button = T("List Locations"),
+            msg_record_created = T("Location added to %(site_label)s") % {"site_label": site_label},
+            msg_record_modified = T("Location updated"),
+            msg_record_deleted = T("Location removed from %(site_label)s") % {"site_label": site_label},
+            msg_list_empty = T("No Locations found for this %(site_label)s") % {"site_label": site_label})
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("site_id",
+                                                            "location_id",
+                                                            ),
+                                                 ),
                        )
 
         # Pass names back to global scope (s3.*)
@@ -4190,71 +4285,6 @@ class OrgSiteTagModel(S3Model):
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary = ("site_id",
                                                             "tag",
-                                                            ),
-                                                 ),
-                       )
-
-        # Pass names back to global scope (s3.*)
-        return {}
-
-# =============================================================================
-class OrgSiteLocationModel(S3Model):
-    """
-        Site Location Model
-        - Locations served by a Site/Facility
-    """
-
-    names = ("org_site_location",)
-
-    def model(self):
-
-        T = current.T
-        auth = current.auth
-
-        # ---------------------------------------------------------------------
-        # Sites <> Locations Link Table
-        #
-        tablename = "org_site_location"
-        self.define_table(tablename,
-                          # Component not instance
-                          self.super_link("site_id", "org_site",
-                                          label = current.deployment_settings.get_org_site_label(),
-                                          instance_types = auth.org_site_types,
-                                          orderby = "org_site.name",
-                                          realms = auth.permission.permitted_realms("org_site",
-                                                                                    method="create"),
-                                          not_filterby = "obsolete",
-                                          not_filter_opts = (True,),
-                                          readable = True,
-                                          writable = True,
-                                          represent = self.org_site_represent,
-                                          ),
-                          self.gis_location_id(
-                            #represent = self.gis_LocationRepresent(sep=", "),
-                            represent = S3Represent(lookup="gis_location"),
-                            requires = IS_LOCATION(),
-                            widget = S3LocationAutocompleteWidget()
-                          ),
-                          *s3_meta_fields()
-                          )
-
-        # CRUD Strings
-        site_label = current.deployment_settings.get_org_site_label()
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("New Location"),
-            title_display = T("Location"),
-            title_list = T("Locations"),
-            title_update = T("Edit Location"),
-            title_upload = T("Import Location data"),
-            label_list_button = T("List Locations"),
-            msg_record_created = T("Location added to %(site_label)s") % {"site_label": site_label},
-            msg_record_modified = T("Location updated"),
-            msg_record_deleted = T("Location removed from %(site_label)s") % {"site_label": site_label},
-            msg_list_empty = T("No Locations found for this %(site_label)s") % {"site_label": site_label})
-
-        self.configure(tablename,
-                       deduplicate = S3Duplicate(primary = ("site_id",
-                                                            "location_id",
                                                             ),
                                                  ),
                        )

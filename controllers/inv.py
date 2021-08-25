@@ -535,6 +535,19 @@ def inv_item():
                                insertable = False,
                                )
         else:
+            if settings.get_inv_direct_stock_edits() and \
+               settings.get_inv_bin_site_layout():
+                # Limit to Bins from this site
+                s3.scripts.append("/%s/static/scripts/S3/s3.inv_item.js" % r.application)
+                if r.record:
+                    site_id = r.record.site_id
+                    f = r.table.layout_id
+                    # We can't update this dynamically
+                    #f.requires.other.set_filter(filterby = "site_id",
+                    #                            filter_opts = [site_id],
+                    #                            )
+                    f.widget.filter = (s3db.org_site_layout.site_id == site_id)
+
             tablename = "inv_inv_item"
             s3.crud_strings[tablename].msg_list_empty = T("No Stock currently registered")
 
@@ -722,7 +735,7 @@ def inv_item_quantity():
 # -----------------------------------------------------------------------------
 def inv_item_packs():
     """
-        Called by S3OptionsFilter to provide the pack options for a
+        Called by filterOptionsS3 to provide the pack options for a
             particular Item
 
         Access via the .json representation to avoid work rendering menus, etc
@@ -739,7 +752,8 @@ def inv_item_packs():
             (table.item_id == ptable.item_id)
     records = db(query).select(ptable.id,
                                ptable.name,
-                               ptable.quantity)
+                               ptable.quantity,
+                               )
     output = records.json()
 
     response.headers["Content-Type"] = "application/json"

@@ -443,6 +443,7 @@ class InventoryModel(S3Model):
         NONE = current.messages["NONE"]
 
         settings = current.deployment_settings
+        bin_site_layout = settings.get_inv_bin_site_layout()
         direct_stock_edits = settings.get_inv_direct_stock_edits()
         track_pack_values = settings.get_inv_track_pack_values()
         WAREHOUSE = T(settings.get_inv_facility_label())
@@ -497,7 +498,13 @@ class InventoryModel(S3Model):
                                 label = T("Bin"),
                                 represent = lambda v: v or NONE,
                                 requires = IS_LENGTH(16),
+                                readable = not bin_site_layout,
+                                writable = not bin_site_layout,
                                 ),
+                          self.org_site_layout_id(label = T("Bin"),
+                                                  readable = bin_site_layout,
+                                                  writable = bin_site_layout,
+                                                  ),
                           # e.g.: Allow items to be marked as 'still on the shelf but allocated to an outgoing shipment'
                           Field("status", "integer",
                                 default = 0, # Only Items with this Status can be allocated to Outgoing Shipments
@@ -2973,7 +2980,7 @@ def inv_tabs(r):
                         (T(recv_label), "recv"),
                         (T(send_label), "send"),
                         ]
-                if settings.get_inv_warehouse_locations():
+                if settings.get_inv_bin_site_layout():
                     tabs.append((T("Bins"), "layout", {}, "hierarchy"))
                 if settings.has_module("proc"):
                     tabs.append((T("Planned Procurements"), "plan"))
@@ -3798,13 +3805,14 @@ class InventoryAdjustModel(S3Model):
                         )
 
         # Reusable Field
+        inv_adj_represent = inv_InvAdjRepresent()
         adj_id = S3ReusableField("adj_id", "reference %s" % tablename,
                                  label = T("Inventory Adjustment"),
                                  ondelete = "RESTRICT",
-                                 represent = self.inv_adj_represent,
+                                 represent = inv_adj_represent,
                                  requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "inv_adj.id",
-                                                          self.inv_adj_represent,
+                                                          inv_adj_represent,
                                                           orderby = "inv_adj.adjustment_date",
                                                           sort = True,
                                                           )),
@@ -4131,39 +4139,6 @@ class InventoryAdjustModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def inv_adj_represent(record_id, row=None, show_link=True):
-        """
-            Represent an Inventory Adjustment
-        """
-
-        if row:
-            table = current.db.inv_adj
-        elif not record_id:
-            return current.messages["NONE"]
-        else:
-            db = current.db
-            table = db.inv_adj
-            row = db(table.id == record_id).select(table.adjustment_date,
-                                                   table.adjuster_id,
-                                                   limitby = (0, 1),
-                                                   ).first()
-
-        try:
-            reprstr = "%s - %s" % (
-                    table.adjuster_id.represent(row.adjuster_id),
-                    table.adjustment_date.represent(row.adjustment_date),
-                    )
-        except AttributeError:
-            # Record not found, or not all required fields in row
-            return current.messages.UNKNOWN_OPT
-        else:
-            if show_link:
-                return SPAN(reprstr)
-            else:
-                return reprstr
-
-    # ---------------------------------------------------------------------
-    @staticmethod
     def inv_adj_item_represent(record_id, row=None, show_link=True):
         """
             Represent an Inventory Adjustment Item
@@ -4452,16 +4427,23 @@ def inv_item_total_volume(row):
 # =============================================================================
 def inv_prep(r):
     """
-        Used in site REST controllers to Filter out items which are
-        already in this inventory
+        Used in site REST controllers
+        - Filter out items which are already in this inventory
+        - Limit to Bins from this site
     """
 
+    settings = current.deployment_settings
+    if not settings.get_inv_direct_stock_edits():
+        # Can't create/edit stock so no point configuring this workflow
+        return
+
     if r.component:
-        if r.component.name == "inv_item":
+        if r.component_name == "inv_item":
             db = current.db
             table = db.inv_inv_item
             # Filter out items which are already in this inventory
-            query = (table.site_id == r.record.site_id) & \
+            site_id = r.record.site_id
+            query = (table.site_id == site_id) & \
                     (table.deleted == False)
             inv_item_rows = db(query).select(table.item_id)
             item_ids = [row.item_id for row in inv_item_rows]
@@ -4473,15 +4455,24 @@ def inv_prep(r):
                                                         ).first()
                 item_ids.remove(item.item_id)
             table.item_id.requires.set_filter(not_filterby = "id",
-                                              not_filter_opts = item_ids)
+                                              not_filter_opts = item_ids,
+                                              )
 
-        elif r.component.name == "send":
-            # Default to the Search tab in the location selector widget1
-            current.response.s3.gis.tab = "search"
-            #if current.request.get_vars.get("select", "sent") == "incoming":
-            #    # Display only incoming shipments which haven't been received yet
-            #    filter = (current.s3db.inv_send.status == SHIP_STATUS_SENT)
-            #    r.resource.add_component_filter("send", filter)
+            if settings.get_inv_bin_site_layout():
+                # Limit to Bins from this site
+                f = table.layout_id
+                f.requires.other.set_filter(filterby = "site_id",
+                                            filter_opts = [site_id],
+                                            )
+                f.widget.filter = (current.s3db.org_site_layout.site_id == site_id)
+
+        #elif r.component_name == "send":
+        #    # Default to the Search tab in the location selector widget1
+        #    current.response.s3.gis.tab = "search"
+        #    #if current.request.get_vars.get("select", "sent") == "incoming":
+        #    #    # Display only incoming shipments which haven't been received yet
+        #    #    filter = (current.s3db.inv_send.status == SHIP_STATUS_SENT)
+        #    #    r.resource.add_component_filter("send", filter)
 
 # =============================================================================
 def inv_remove(inv_rec,
@@ -5630,10 +5621,7 @@ def inv_warehouse_free_capacity(site_id):
     tablename = "inv_warehouse"
     customise = current.deployment_settings.customise_resource(tablename)
     if customise:
-        r = S3Request(prefix = "inv",
-                      name = "warehouse",
-                      r = current.request,
-                      )
+        r = S3Request()
         customise(r, tablename)
     on_free_capacity_update = s3db.get_config(tablename, "on_free_capacity_update")
     if on_free_capacity_update:
@@ -5720,12 +5708,54 @@ def inv_expiry_date_represent(date):
         return dtstr
 
 # =============================================================================
+class inv_InvAdjRepresent(S3Represent):
+    """
+        Represent an Inventory Adjustment
+    """
+
+    def __init__(self,
+                 show_link = True,
+                 field_sep = " - ",
+                 **attr
+                 ):
+
+        super(inv_InvAdjRepresent, self).__init__(lookup = "inv_adj",
+                                                  fields = ["adjuster_id",
+                                                            "adjustment_date",
+                                                            ],
+                                                  show_link = show_link,
+                                                  field_sep = field_sep,
+                                                  **attr
+                                                  )
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row, prefix=None):
+        """
+            Represent the referenced row.
+            (in foreign key representations)
+
+            @param row: the row
+            @param prefix: prefix for hierarchical representation
+
+            @return: the representation of the Row, or None if there
+                     is an error in the Row
+        """
+
+        # ToDo: Bulk lookup of the adjuster_id represents
+        table = current.s3db.inv_adj
+
+        v = self.field_sep.join((table.adjuster_id.represent(row.adjuster_id),
+                                 table.adjustment_date.represent(row.adjustment_date),
+                                 ))
+        return v
+
+# =============================================================================
 class inv_InvItemRepresent(S3Represent):
+    """
+        Represent an Inventory Item
+    """
 
     def __init__(self):
-        """
-            Constructor
-        """
 
         super(inv_InvItemRepresent, self).__init__(lookup = "inv_inv_item")
 

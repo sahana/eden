@@ -155,9 +155,10 @@ class EventModel(S3Model):
                                         IS_ONE_OF(db, "event_event_type.id",
                                                   type_represent,
                                                   # If limiting to just 1 level of parent
-                                                  #filterby="parent",
-                                                  #filter_opts=(None,),
-                                                  orderby="event_event_type.name"))
+                                                  #filterby = "parent",
+                                                  #filter_opts = (None,),
+                                                  orderby = "event_event_type.name",
+                                                  ))
             event_type_widget = S3HierarchyWidget(lookup = "event_event_type",
                                                   represent = type_represent,
                                                   multiple = False,
@@ -324,10 +325,11 @@ class EventModel(S3Model):
                                    requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "event_event.id",
                                                           represent,
-                                                          filterby="closed",
-                                                          filter_opts=(False,),
-                                                          orderby="event_event.name",
-                                                          sort=True)),
+                                                          filterby = "closed",
+                                                          filter_opts = (False,),
+                                                          orderby = "event_event.name",
+                                                          sort = True,
+                                                          )),
                                    represent = represent,
                                    label = label,
                                    ondelete = "CASCADE",
@@ -1517,9 +1519,10 @@ class IncidentTypeModel(S3Model):
                                         IS_ONE_OF(db, "event_incident_type.id",
                                                   type_represent,
                                                   # If limiting to just 1 level of parent
-                                                  #filterby="parent",
-                                                  #filter_opts=(None,),
-                                                  orderby = "event_incident_type.name"))
+                                                  #filterby = "parent",
+                                                  #filter_opts = (None,),
+                                                  orderby = "event_incident_type.name",
+                                                  ))
             incident_type_widget = S3HierarchyWidget(lookup = "event_incident_type",
                                                      represent = type_represent,
                                                      multiple = False,
@@ -1555,6 +1558,7 @@ class IncidentTypeModel(S3Model):
             label = T("Ticket Type")
         else:
             label = T("Incident Type")
+
         incident_type_id = S3ReusableField("incident_type_id", "reference %s" % tablename,
                                            label = label,
                                            ondelete = "RESTRICT",
@@ -1562,12 +1566,14 @@ class IncidentTypeModel(S3Model):
                                            requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "event_incident_type.id",
                                                                   type_represent,
-                                                                  orderby="event_incident_type.name",
-                                                                  sort=True)),
+                                                                  orderby = "event_incident_type.name",
+                                                                  sort = True,
+                                                                  )),
                                            sortby = "name",
                                            widget = incident_type_widget,
                                            comment = incident_type_comment,
                                            )
+
         self.configure(tablename,
                        deduplicate = S3Duplicate(),
                        hierarchy = hierarchy,
@@ -1617,8 +1623,8 @@ class IncidentTypeTagModel(S3Model):
         self.define_table(tablename,
                           self.event_incident_type_id(),
                           # key is a reserved word in MySQL
-                          Field("tag", label=T("Key")),
-                          Field("value", label=T("Value")),
+                          Field("tag", label = T("Key")),
+                          Field("value", label = T("Value")),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -3836,7 +3842,7 @@ class IncidentModel(S3Model):
                                                      #                     translate = True)
                                                      ))
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         incident_id = S3ReusableField("incident_id", "reference %s" % tablename,
                                       label = label,
                                       ondelete = "RESTRICT",

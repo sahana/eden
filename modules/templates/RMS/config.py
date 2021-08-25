@@ -802,8 +802,8 @@ def config(settings):
                                }
     # Calculate Warehouse Free Capacity
     settings.inv.warehouse_free_capacity_calculated = True
-    # Use structured Warehouse Locations
-    settings.inv.warehouse_locations = True
+    # Use structured Bins
+    settings.inv.bin_site_layout = True
 
     # Disable Alternate Items
     settings.supply.use_alt_name = False

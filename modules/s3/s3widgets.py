@@ -51,7 +51,7 @@ __all__ = ("S3ACLWidget",
            "S3HierarchyWidget",
            "S3HumanResourceAutocompleteWidget",
            "S3ImageCropWidget",
-           "S3InvBinWidget",
+           #"S3InvBinWidget",
            "S3KeyValueWidget",
            # Only used inside this module
            #"S3LatLonWidget",
@@ -4388,6 +4388,7 @@ class S3InvBinWidget(FormWidget):
     """
         Widget used by S3CRUD to offer the user matching bins where
         stock items can be placed
+        - not currently used
     """
 
     def __init__(self,
@@ -4406,7 +4407,7 @@ class S3InvBinWidget(FormWidget):
                         requires = field.requires,
                         _id = "i_%s_%s" % (self.tablename, field.name),
                         _name = field.name,
-                       )
+                        )
         id = None
         function = self.tablename[4:]
         if len(request.args) > 2:
@@ -4414,9 +4415,8 @@ class S3InvBinWidget(FormWidget):
                 id = request.args[2]
 
         if id == None or tracktable[id] == None:
-            return TAG[""](
-                           new_div
-                          )
+            return TAG[""](new_div,
+                           )
 
         record = tracktable[id]
         site_id = s3db.inv_recv[record.recv_id].site_id
@@ -4429,11 +4429,11 @@ class S3InvBinWidget(FormWidget):
                 (stocktable.expiry_date == record.expiry_date) & \
                 (stocktable.supply_org_id == record.supply_org_id)
         rows = current.db(query).select(stocktable.bin,
-                                        stocktable.id)
+                                        stocktable.id,
+                                        )
         if len(rows) == 0:
-            return TAG[""](
-                           new_div
-                          )
+            return TAG[""](new_div,
+                           )
         bins = []
         for row in rows:
             bins.append(OPTION(row.bin))
@@ -7870,13 +7870,14 @@ class S3HierarchyWidget(FormWidget):
         widget = DIV(hidden_input,
                      DIV(header,
                          DIV(h.html("%s-tree" % widget_id,
-                                    none=self.none,
+                                    none = self.none,
                                     ),
                              _class = "s3-hierarchy-tree",
                              ),
                          _class = "s3-hierarchy-wrapper",
                          ),
-                     **attr)
+                     **attr
+                     )
         widget.add_class("s3-hierarchy-widget")
 
         s3 = current.response.s3
