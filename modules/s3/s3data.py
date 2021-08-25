@@ -410,8 +410,10 @@ class S3DataTable(object):
         # Nothing using currently
         #if s3.dataTable_pagingType:
         #    attr.dt_pagingType = s3.dataTable_pagingType
-        if s3.dataTable_group:
-            attr.dt_group = s3.dataTable_group
+        # Nothing using currently
+        # Was used only by inv/inv_item
+        #if s3.dataTable_group:
+        #    attr.dt_group = s3.dataTable_group
         # Nothing using currently
         # - and not worth enabling as not used by standard CRUD
         #if s3.dataTable_NoSearch:
@@ -658,7 +660,7 @@ class S3DataTable(object):
                                 before the first data item
                    dt_bulk_single: only allow a single row to be selected
                    dt_group: The column(s) that is(are) used to group the data
-                   dt_group_totals: The number of record in each group.
+                   dt_group_totals: The number of records in each group.
                                     This will be displayed in parenthesis
                                     after the group title.
                    dt_group_titles: The titles to be used for each group.

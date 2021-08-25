@@ -711,10 +711,9 @@ $.filterOptionsS3({
         self.configure(tablename,
                        # Lock the record so that it can't be meddled with
                        # - unless explicitly told to allow this
-                       create = direct_stock_edits,
                        deletable = direct_stock_edits,
                        editable = direct_stock_edits,
-                       listadd = direct_stock_edits,
+                       insertable = direct_stock_edits,
                        context = {"location": "site_id$location_id",
                                   },
                        deduplicate = self.inv_item_duplicate,
@@ -750,6 +749,10 @@ $.filterOptionsS3({
                          },
                         },
                        )
+
+        self.add_components(tablename,
+                            inv_adj_item = "inv_item_id",
+                            )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -3048,6 +3051,7 @@ def inv_rheader(r):
     elif tablename == "inv_inv_item":
         # Tabs
         tabs = [(T("Details"), None),
+                (T("Adjustments"), "adj_item"),
                 (T("Track Shipment"), "track_movement/"),
                 ]
         rheader_tabs = DIV(s3_rheader_tabs(r, tabs))
@@ -3849,7 +3853,8 @@ class InventoryAdjustModel(S3Model):
                      # Original inventory item
                      self.inv_item_id(ondelete = "RESTRICT",
                                       readable = False,
-                                      writable = False),
+                                      writable = False,
+                                      ),
                      self.supply_item_id(
                         ondelete = "RESTRICT"
                      ),
@@ -3964,8 +3969,8 @@ class InventoryAdjustModel(S3Model):
         """
 
         if value is None:
-            # We want the word "None" here, not just a bold dash
-            return B(T("None"))
+            # We want the word "None" here, not just a dash
+            return B(current.T("None"))
         else:
             return IS_FLOAT_AMOUNT.represent(value, precision=2)
 
