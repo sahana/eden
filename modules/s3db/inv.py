@@ -3783,7 +3783,7 @@ class InventoryAdjustModel(S3Model):
 
         self.configure(tablename,
                        super_entity = "doc_entity",
-                       onaccept = self.inv_adj_onaccept,
+                       create_onaccept = self.inv_adj_create_onaccept,
                        create_next = URL(args = ["[id]", "adj_item"]),
                        )
 
@@ -4068,6 +4068,11 @@ class InventoryAdjustModel(S3Model):
         # Go to the Inventory of the Site which has adjusted these items
         (prefix, resourcename, id) = s3db.get_instance(s3db.org_site,
                                                        site_id)
+        if resourcename == "warehouse" and \
+           current.deployment_settings.get_inv_warehouse_free_capacity_calculated():
+            # Update the Free Capacity for this Warehouse
+            inv_warehouse_free_capacity(site_id)
+
         redirect(URL(c = prefix,
                      f = resourcename,
                      args = [id, "inv_item"],
@@ -4075,7 +4080,7 @@ class InventoryAdjustModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def inv_adj_onaccept(form):
+    def inv_adj_create_onaccept(form):
         """
            When an adjustment record is created and it is of type inventory
            then an adj_item record for each inv_inv_item in the site will be
@@ -4094,8 +4099,18 @@ class InventoryAdjustModel(S3Model):
             query = (inv_item_table.site_id == site_id) & \
                     (inv_item_table.quantity > 0) & \
                     (inv_item_table.deleted == False)
-            row = db(query).select()
-            for inv_item in row:
+            rows = db(query).select(inv_item_table.id,
+                                    inv_item_table.item_id,
+                                    inv_item_table.item_pack_id,
+                                    inv_item_table.quantity,
+                                    inv_item_table.currency,
+                                    inv_item_table.status,
+                                    inv_item_table.pack_value,
+                                    inv_item_table.expiry_date,
+                                    inv_item_table.bin,
+                                    inv_item_table.owner_org_id,
+                                    )
+            for inv_item in rows:
                 # add an adjustment item record
                 adjitemtable.insert(reason = 0,
                                     adj_id = record_id,
@@ -5575,8 +5590,10 @@ def inv_warehouse_free_capacity(site_id):
     s3db = current.s3db
     table = s3db.inv_warehouse
 
-    warehouse = db(table.site_id == site_id).select(table.id,
+    warehouse = db(table.site_id == site_id).select(table.id,      # For update_record
+                                                    table.site_id, # For on_free_capacity_update hook
                                                     table.capacity,
+                                                    table.name,    # For on_free_capacity_update hook
                                                     limitby = (0, 1)
                                                     ).first()
     if not warehouse or not warehouse.capacity:
@@ -5605,6 +5622,22 @@ def inv_warehouse_free_capacity(site_id):
     free_capacity = round(warehouse.capacity - used_capacity, 1)
 
     warehouse.update_record(free_capacity = free_capacity)
+
+    # Hook to be configured in templates
+    # e.g. Generate Alert if e.g. free_capacity < 10% of capacity
+
+    # Customise the resource, to be sure that any hook is actually configured
+    tablename = "inv_warehouse"
+    customise = current.deployment_settings.customise_resource(tablename)
+    if customise:
+        r = S3Request(prefix = "inv",
+                      name = "warehouse",
+                      r = current.request,
+                      )
+        customise(r, tablename)
+    on_free_capacity_update = s3db.get_config(tablename, "on_free_capacity_update")
+    if on_free_capacity_update:
+        on_free_capacity_update(warehouse)
 
     # In case it's useful to CLI scripts
     return free_capacity

@@ -11,6 +11,8 @@ from s3 import ICON, IS_FLOAT_AMOUNT, s3_str, \
 from s3db.inv import SHIP_DOC_PENDING, SHIP_DOC_COMPLETE, \
                      SHIP_STATUS_SENT, SHIP_STATUS_RECEIVED, SHIP_STATUS_RETURNING
 
+from s3db.pr import OU
+
 THEME = "RMS"
 
 # =============================================================================
@@ -318,6 +320,157 @@ def deploy_index():
     # Custom view
     S3CustomController._view(THEME, "deploy_index.html")
     return output
+
+# =============================================================================
+def inv_operators_for_sites(site_ids):
+    """
+        Determine to whom Alerts should be sent for specific Site(s)
+
+        @ToDo: Use site_contact instead?
+            + Much faster/more generic lookup for the Server
+            - More to setup for the Users
+            Need to allow visibility of HRM
+            Need to expose field
+            Ideally do this automatically for new users? Hard!
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    stable = s3db.org_site
+    site_entities = db(stable.site_id.belongs(site_ids)).select(stable.site_id,
+                                                                stable.instance_type,
+                                                                )
+    # Sort by Instance Type
+    sites_by_type = {}
+    for row in site_entities:
+        instance_type = row.instance_type
+        if instance_type not in sites_by_type:
+            sites_by_type[instance_type] = []
+        sites_by_type[instance_type].append(row.site_id)
+
+    # Lookup Names & PE IDs
+    sites = {}
+    for instance_type in sites_by_type:
+        itable = s3db.table(instance_type)
+        instances = db(itable.site_id.belongs(sites_by_type[instance_type])).select(itable.name,
+                                                                                    itable.pe_id,
+                                                                                    itable.site_id,
+                                                                                    )
+        for row in instances:
+            sites[row.site_id] = {"name": row.name,
+                                  "pe_id": row.pe_id,
+                                  }
+    gtable = db.auth_group
+    mtable = db.auth_membership
+    utable = db.auth_user
+    ltable = s3db.pr_person_user
+
+    atable = s3db.pr_affiliation
+    rtable = s3db.pr_role
+
+    # Lookup realm for all wh_operator with default realm outside of loop
+    # NB The role name is specific to RMS template currently, which is the only one to use this workflow
+    # Incorporates a Bulk version of s3db.pr_realm()
+    query = (gtable.uuid == "wh_operator") & \
+            (gtable.id == mtable.group_id) & \
+            (mtable.pe_id == None) & \
+            (mtable.deleted == False) & \
+            (mtable.user_id == utable.id) & \
+            (utable.id == ltable.user_id) & \
+            (atable.pe_id == ltable.pe_id) & \
+            (atable.deleted == False) & \
+            (atable.role_id == rtable.id) & \
+            (rtable.deleted == False) & \
+            (rtable.role_type == OU)
+    wh_operators_default_realm = db(query).select(ltable.pe_id,
+                                                  ltable.user_id,
+                                                  utable.language,
+                                                  rtable.pe_id,
+                                                  )
+
+    for site_id in sites:
+
+        site = sites[site_id]
+        pe_id = site["pe_id"]
+
+        # Find the relevant wh_operator
+        # NB The role name is specific to RMS template currently, which is the only one to use this workflow
+        entities = s3db.pr_get_ancestors(pe_id)
+        entities.append(pe_id)
+
+        query = (gtable.uuid == "wh_operator") & \
+                (gtable.id == mtable.group_id) & \
+                (mtable.pe_id.belongs(entities)) & \
+                (mtable.deleted == False) & \
+                (mtable.user_id == utable.id) & \
+                (utable.id == ltable.user_id)
+        operators = db(query).select(ltable.pe_id,
+                                     ltable.user_id,
+                                     utable.language,
+                                     )
+        operators = list(operators)
+        for row in wh_operators_default_realm:
+            if row["pr_role.pe_id"] in entities:
+                operators.append(row)
+
+        if not operators:
+            # Send to logs_manager instead
+            # NB We lookup the ones with default realm inside the loop as we don't expect to hit this often
+            query = (gtable.uuid == "logs_manager") & \
+                    (gtable.id == mtable.group_id) & \
+                    ((mtable.pe_id.belongs(entities)) | \
+                     (mtable.pe_id == None)) & \
+                    (mtable.deleted == False) & \
+                    (mtable.user_id == utable.id) & \
+                    (utable.id == ltable.user_id)
+            users = db(query).select(ltable.pe_id,
+                                     ltable.user_id,
+                                     utable.language,
+                                     mtable.pe_id,
+                                     )
+            operators = []
+            default_realm_lookups = []
+            for row in users:
+                if row["auth_membership.pe_id"]:
+                    # Definite match
+                    operators.append(row)
+                else:
+                    # Possible Match
+                    default_realm_lookups.append(row)
+
+            user_pe_id = [row["pr_person_user.pe_id"] for row in default_realm_lookups]
+            # Bulk version of s3db.pr_realm()
+            query = (atable.deleted != True) & \
+                    (atable.role_id == rtable.id) & \
+                    (atable.pe_id.belongs(user_pe_id)) & \
+                    (rtable.deleted != True) & \
+                    (rtable.role_type == OU) & \
+                    (atable.pe_id == ltable.pe_id) & \
+                    (ltable.user_id == utable.id)
+            logs_managers_default_realm = db(query).select(ltable.pe_id,
+                                                           ltable.user_id,
+                                                           utable.language,
+                                                           rtable.pe_id,
+                                                           )
+            for row in logs_managers_default_realm:
+                if row["pr_role.pe_id"] in entities:
+                    operators.append(row)
+
+            if not operators:
+                # Send to ADMIN instead
+                query = (gtable.uuid == "ADMIN") & \
+                        (gtable.id == mtable.group_id) & \
+                        (mtable.deleted == False) & \
+                        (mtable.user_id == utable.id) & \
+                        (utable.id == ltable.user_id)
+                operators = db(query).select(ltable.pe_id,
+                                             ltable.user_id,
+                                             utable.language,
+                                             )
+            site["operators"] = operators
+
+    return sites
 
 # =============================================================================
 class inv_dashboard(S3CustomController):

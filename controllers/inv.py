@@ -1656,15 +1656,17 @@ def adj():
                     doc_table.person_id.readable = doc_table.person_id.writable = False
                     doc_table.location_id.readable = doc_table.location_id.writable = False
             else:
-                # if an adjustment has been selected and it has been completed
-                # then make the fields read only
-                if r.record and r.record.status:
-                    table.adjuster_id.writable = False
+                if r.record:
+                    # Don't allow switching Site after Adjustment created as the Items in the Adjustment match the original Site
                     table.site_id.writable = False
-                    table.comments.writable = False
+                    if r.record.status:
+                        # Don't allow modifying completed adjustments
+                        table.adjuster_id.writable = False
+                        table.comments.writable = False
                 else:
                     if "item" in get_vars and "site" in get_vars:
                         # Create a adj record with a single adj_item record
+                        # e.g. coming from New Adjustment button on inv/inv_item/x/adj_item tab
                         # @ToDo: This should really be a POST, not a GET
                         inv_item_table = s3db.inv_inv_item
                         inv_item = db(inv_item_table.id == get_vars.item).select(inv_item_table.id,
@@ -1700,7 +1702,7 @@ def adj():
                                                           old_pack_value = inv_item.pack_value,
                                                           new_pack_value = inv_item.pack_value,
                                                           expiry_date = inv_item.expiry_date,
-                                                          bin = inv_item.bin, # @ToDo: Handle org_site_layout
+                                                          bin = inv_item.bin,
                                                           old_owner_org_id = inv_item.owner_org_id,
                                                           new_owner_org_id = inv_item.owner_org_id,
                                                           )

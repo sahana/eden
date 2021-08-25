@@ -3508,12 +3508,51 @@ Thank you"""
     settings.customise_inv_send_controller = customise_inv_send_controller
 
     # -------------------------------------------------------------------------
+    def on_free_capacity_update(warehouse):
+        """
+            Generate an Alert if Free Capacity < Capacity
+        """
+
+        free_capacity = warehouse.free_capacity
+        if free_capacity / warehouse.capacity < 0.1:
+            site_id = warehouse.site_id
+            warehouse_id = warehouse.id
+            warehouse_name = warehouse.name
+            url = URL(c="inv", f="warehouse",
+                      args = warehouse_id,
+                      )
+            alert = "%(warehouse_name)s Warehouse has only %(free_capacity)s capacity free" % \
+                        {"warehouse_name": warehouse_name,
+                         "free_capacity": free_capacity,
+                         }
+            from .controllers import inv_operators_for_sites
+            operators = inv_operators_for_sites([site_id])[site_id]["operators"]
+            s3db = current.s3db
+            insert = s3db.auth_user_notification.insert
+            for row in operators:
+                # Add Alert to Dashboard
+                insert(user_id = row["pr_person_user.user_id"],
+                       name = alert,
+                       url = url,
+                       type = "capacity",
+                       tablename = "inv_warehouse",
+                       record_id = warehouse_id,
+                       )
+            # @ToDo: Send i18n Email
+
+    # -------------------------------------------------------------------------
     def customise_inv_warehouse_resource(r, tablename):
+
+        s3db = current.s3db
 
         settings.inv.recv_tab_label = "Received/Incoming Shipments"
         settings.inv.send_tab_label = "Sent Shipments"
+
+        s3db.configure("inv_warehouse",
+                       on_free_capacity_update = on_free_capacity_update,
+                       )
+
         # Only Nepal RC use Warehouse Types
-        s3db = current.s3db
         field = s3db.inv_warehouse.warehouse_type_id
         field.readable = field.writable = False
         list_fields = s3db.get_config("inv_warehouse", "list_fields")
@@ -5225,6 +5264,67 @@ Thank you"""
                 db(current.s3db.req_req_item.req_id == req_id).update(realm_entity = realm_entity)
 
     # -------------------------------------------------------------------------
+    def on_req_approve(req_id, record, site_ids):
+        """
+            Notify the Warehouse Operator(s)
+            - Email
+            - Alert
+        """
+
+        from gluon import URL
+        from s3 import s3_str, S3DateTime
+        from .controllers import inv_operators_for_sites
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        session_s3 = current.session.s3
+
+        ui_language = session_s3.language
+        url = "%s%s" % (current.deployment_settings.get_base_public_url(),
+                        URL(c="req", f="req",
+                            args = [req_id, "req_item"],
+                            ))
+        req_ref = record.req_ref
+        date_required = record.date_required
+        date_represent = S3DateTime.date_represent # We want Dates not datetime which table.date_required uses
+        send_email = current.msg.send_by_pe_id
+        subject_T = T("Request Approved for Items from your Warehouse")
+        message_T = T("A new Request, %(reference)s, has been Approved for shipment from %(site)s by %(date_required)s. Please review at: %(url)s")
+
+        sites = inv_operators_for_sites(site_ids)
+
+        for site_id in sites:
+            site = sites[site_id]
+            # Send Localised Mail(s)
+            languages = {}
+            operators = site["operators"]
+            for row in operators:
+                language = row["auth_user.language"]
+                if language not in languages:
+                    languages[language] = []
+                languages[language].append(row["pr_person_user.pe_id"])
+            for language in languages:
+                T.force(language)
+                session_s3.language = language # for date_represent
+                subject = "%s: %s" % (s3_str(subject_T), req_ref)
+                message = s3_str(message_T) % {"date_required": date_represent(date_required),
+                                               "reference": req_ref,
+                                               "site": site["name"],
+                                               "url": url,
+                                               }
+                users = languages[language]
+                for pe_id in users:
+                    send_email(pe_id,
+                               subject = subject,
+                               message = message,
+                               )
+
+        # Restore language for UI
+        session_s3.language = ui_language
+        T.force(ui_language)
+
+    # -------------------------------------------------------------------------
     def customise_req_req_resource(r, tablename):
 
         from gluon import IS_NOT_EMPTY
@@ -5399,6 +5499,7 @@ Thank you"""
         s3db.configure(tablename,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
+                       on_req_approve = on_req_approve,
                        )
 
     settings.customise_req_req_resource = customise_req_req_resource
