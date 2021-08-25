@@ -830,7 +830,7 @@ class EventModel(S3Model):
         query = (ltable.event_id == event_id) & \
                 (ltable.forum_id == forum_id)
         exists = db(query).select(ltable.id,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1)
                                   ).first()
         if not exists:
             ltable.insert(event_id = event_id,
@@ -935,7 +935,7 @@ class EventModel(S3Model):
             table = db.cms_post
             rows = db(ltable.event_id == event).select(ltable.post_id)
             for row in rows:
-                db(table.id == row.post_id).update(expired=True)
+                db(table.id == row.post_id).update(expired = True)
 
 # =============================================================================
 class EventLocationModel(S3Model):

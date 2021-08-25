@@ -3792,6 +3792,11 @@ class InventoryAdjustModel(S3Model):
                             inv_adj_item = "adj_id",
                             )
 
+        self.set_method("inv", "adj",
+                        method = "close",
+                        action = self.adj_close,
+                        )
+
         # Reusable Field
         adj_id = S3ReusableField("adj_id", "reference %s" % tablename,
                                  label = T("Inventory Adjustment"),
@@ -3973,6 +3978,100 @@ class InventoryAdjustModel(S3Model):
             return B(current.T("None"))
         else:
             return IS_FLOAT_AMOUNT.represent(value, precision=2)
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def adj_close(r, **attr):
+        """ 
+            Close an Adjustment
+        """
+
+        adj_id = r.id
+        if not adj_id:
+            r.error(405, current.ERROR.BAD_METHOD)
+
+        auth = current.auth
+
+        # Check Permissions
+        if not auth.s3_has_permission("update", "inv_adj", record_id=adj_id):
+            r.unauthorised()
+
+        db = current.db
+        s3db = current.s3db
+
+        # Check current Status
+        atable = s3db.inv_adj
+        adj_rec = db(atable.id == adj_id).select(atable.status,
+                                                 atable.site_id,
+                                                 limitby = (0, 1)
+                                                 ).first()
+        if adj_rec.status != 0:
+            r.error(409, current.T("This adjustment has already been closed."))
+
+        aitable = s3db.inv_adj_item
+        inv_item_table = s3db.inv_inv_item
+        get_realm_entity = auth.get_realm_entity
+        site_id = adj_rec.site_id
+
+        # Go through all the adj_items
+        query = (aitable.adj_id == adj_id) & \
+                (aitable.deleted == False)
+        adj_items = db(query).select(aitable.id,
+                                     aitable.inv_item_id,
+                                     aitable.item_id,
+                                     aitable.item_pack_id,
+                                     aitable.currency,
+                                     aitable.bin,
+                                     aitable.old_pack_value,
+                                     aitable.expiry_date,
+                                     aitable.new_quantity,
+                                     aitable.old_owner_org_id,
+                                     aitable.new_owner_org_id,
+                                     aitable.new_status,
+                                     )
+        for adj_item in adj_items:
+            if adj_item.inv_item_id is None:
+                # Create a new stock item
+                inv_item = {"site_id": site_id,
+                            "item_id": adj_item.item_id,
+                            "item_pack_id": adj_item.item_pack_id,
+                            "currency": adj_item.currency,
+                            "bin": adj_item.bin,
+                            "pack_value": adj_item.old_pack_value,
+                            "expiry_date": adj_item.expiry_date,
+                            "quantity": adj_item.new_quantity,
+                            "owner_org_id": adj_item.old_owner_org_id,
+                            }
+                inv_item_id = inv_item_table.insert(**inv_item)
+
+                # Apply the realm entity
+                inv_item["id"] = inv_item_id
+                realm_entity = get_realm_entity(inv_item_table, inv_item)
+                db(inv_item_table.id == inv_item_id).update(realm_entity = realm_entity)
+
+                # Add the inventory item id to the adjustment record
+                db(aitable.id == adj_item.id).update(inv_item_id = inv_item_id)
+
+            elif adj_item.new_quantity is not None:
+                # Update the existing stock item
+                db(inv_item_table.id == adj_item.inv_item_id).update(item_pack_id = adj_item.item_pack_id,
+                                                                     bin = adj_item.bin,
+                                                                     pack_value = adj_item.old_pack_value,
+                                                                     expiry_date = adj_item.expiry_date,
+                                                                     quantity = adj_item.new_quantity,
+                                                                     owner_org_id = adj_item.new_owner_org_id,
+                                                                     status = adj_item.new_status,
+                                                                     )
+        # Change the status of the adj record to Complete
+        db(atable.id == adj_id).update(status = 1)
+
+        # Go to the Inventory of the Site which has adjusted these items
+        (prefix, resourcename, id) = s3db.get_instance(s3db.org_site,
+                                                       site_id)
+        redirect(URL(c = prefix,
+                     f = resourcename,
+                     args = [id, "inv_item"],
+                     ))
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -5552,8 +5651,10 @@ def inv_adj_rheader(r):
                     # if row == None:
                     close_btn = A(T("Complete Adjustment"),
                                   _href = URL(c = "inv",
-                                              f = "adj_close",
-                                              args = [record.id]
+                                              f = "adj",
+                                              args = [record.id,
+                                                      "close",
+                                                      ]
                                               ),
                                   _id = "adj_close",
                                   _class = "action-btn"
