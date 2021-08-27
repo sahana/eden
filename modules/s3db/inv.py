@@ -682,6 +682,11 @@ $.filterOptionsS3({
                                  )
 
         # List fields
+        if bin_site_layout:
+            bin_field = "layout_id"
+        else:
+            bin_field = "bin"
+
         if track_pack_values:
             list_fields = ["site_id",
                            "item_id",
@@ -693,7 +698,7 @@ $.filterOptionsS3({
                            "pack_value",
                            (T("Total Value"), "total_value"),
                            "currency",
-                           "bin",
+                           bin_field,
                            "supply_org_id",
                            "status",
                            ]
@@ -703,7 +708,7 @@ $.filterOptionsS3({
                            "item_id$code",
                            "item_id$item_category_id",
                            "quantity",
-                           "bin",
+                           bin_field,
                            "owner_org_id",
                            "supply_org_id",
                            "status",
@@ -739,7 +744,7 @@ $.filterOptionsS3({
                             "title": T("Warehouse Stock Report"),
                             "fields": [(T("Warehouse"), "site_id$name"),
                                        "item_id$item_category_id",
-                                       "bin",
+                                       bin_field,
                                        "item_id$name",
                                        "quantity",
                                        "pack_value",
@@ -861,6 +866,7 @@ $.filterOptionsS3({
         pack_value = data_get("pack_value")
         currency = data_get("currency")
         item_bin = data_get("bin")
+        item_layout_id = data_get("layout_id")
 
         # Must match all of these exactly
         query = (table.site_id == site_id) & \
@@ -870,7 +876,8 @@ $.filterOptionsS3({
                 (table.supply_org_id == supply_org_id) & \
                 (table.pack_value == pack_value) & \
                 (table.currency == currency) & \
-                (table.bin == item_bin)
+                (table.bin == item_bin) & \
+                (table.layout_id == item_layout_id)
 
         duplicate = current.db(query).select(table.id,
                                              table.quantity,
@@ -924,6 +931,7 @@ class InventoryTrackingModel(S3Model):
         item_pack_id = self.supply_item_pack_id
         req_item_id = self.req_item_id
         req_ref = self.req_req_ref
+
         shipment_status = inv_shipment_status_labels()
         tracking_status = {TRACK_STATUS_UNKNOWN: T("Unknown"),
                            TRACK_STATUS_PREPARING: T("In Process"),
@@ -935,16 +943,17 @@ class InventoryTrackingModel(S3Model):
                            }
 
         NONE = current.messages["NONE"]
-
         SITE_LABEL = settings.get_org_site_label()
-        show_org = settings.get_inv_send_show_org()
-        show_transport = settings.get_inv_send_show_mode_of_transport()
-        show_req_ref = settings.get_req_use_req_number()
-        type_default = settings.get_inv_send_type_default()
+
+        bin_site_layout = settings.get_inv_bin_site_layout()
+        document_filing = settings.get_inv_document_filing()
+        itn_label = inv_itn_label()
         time_in = settings.get_inv_send_show_time_in()
         recv_shortname = settings.get_inv_recv_shortname()
-        itn_label = inv_itn_label()
-        document_filing = settings.get_inv_document_filing()
+        show_org = settings.get_inv_send_show_org()
+        show_req_ref = settings.get_req_use_req_number()
+        show_transport = settings.get_inv_send_show_mode_of_transport()
+        type_default = settings.get_inv_send_type_default()
 
         is_logged_in = auth.is_logged_in
         user = auth.user
@@ -1181,7 +1190,7 @@ class InventoryTrackingModel(S3Model):
             msg_list_empty = T("No Sent Shipments"))
 
         # Reusable Field
-        inv_send_represent = self.inv_send_represent
+        inv_send_represent = inv_SendRepresent(show_link = True)
         send_id = S3ReusableField("send_id", "reference %s" % tablename,
                                   label = T("Send Shipment"),
                                   ondelete = "RESTRICT",
@@ -1415,7 +1424,7 @@ class InventoryTrackingModel(S3Model):
             recv_id_label = T("Receive Shipment")
 
         # Reusable Field
-        inv_recv_represent = self.inv_recv_represent
+        inv_recv_represent = inv_RecvRepresent(show_link = True)
         recv_id = S3ReusableField("recv_id", "reference %s" % tablename,
                                   label = recv_id_label,
                                   ondelete = "RESTRICT",
@@ -1673,8 +1682,15 @@ class InventoryTrackingModel(S3Model):
                            label = T("Bin"),
                            represent = s3_string_represent,
                            requires = IS_LENGTH(16),
-                                writable = False,
+                           readable = not bin_site_layout,
+                           #writable = not bin_site_layout,
+                           writable = False,
                            ),
+                     self.org_site_layout_id(label = T("Bin"),
+                                             readable = bin_site_layout,
+                                             #writable = bin_site_layout,
+                                             writable = False,
+                                             ),
                      Field("item_source_no", length=16,
                            label = itn_label,
                            represent = s3_string_represent,
@@ -1763,7 +1779,13 @@ $.filterOptionsS3({
                            label = T("Bin"),
                            represent = s3_string_represent,
                            requires = IS_LENGTH(16),
+                           readable = not bin_site_layout,
+                           writable = not bin_site_layout,
                            ),
+                     self.org_site_layout_id(label = T("Bin"),
+                                             readable = bin_site_layout,
+                                             writable = bin_site_layout,
+                                             ),
                      inv_item_id("recv_inv_item_id",
                                  label = T("Receiving Inventory"),
                                  ondelete = "RESTRICT",
@@ -1785,6 +1807,11 @@ $.filterOptionsS3({
                                                 (T("Bin"),
                                                  T("The Bin in which the Item is being stored (optional)."))),
                            ),
+                     self.org_site_layout_id("recv_bin_id",
+                                             label = T("Add to Bin"),
+                                             readable = False,
+                                             writable = False,
+                                             ),
                      Field("item_source_no", length=16,
                            label = itn_label,
                            represent = s3_string_represent,
@@ -1889,6 +1916,32 @@ $.filterOptionsS3({
                          ),
             ]
 
+        if bin_site_layout:
+            bin_field = "layout_id"
+            recv_bin_field = "recv_bin_id"
+        else:
+            bin_field = "bin"
+            recv_bin_field = "recv_bin"
+
+        list_fields = ["status",
+                       "item_source_no",
+                       "item_id",
+                       "item_pack_id",
+                       "send_id",
+                       "recv_id",
+                       "quantity",
+                       (T("Total Weight (kg)"), "total_weight"),
+                       (T("Total Volume (m3)"), "total_volume"),
+                       "currency",
+                       "pack_value",
+                       bin_field,
+                       "return_quantity",
+                       "recv_quantity",
+                       recv_bin_field,
+                       "owner_org_id",
+                       "supply_org_id",
+                       ]
+
         # Resource configuration
         configure(tablename,
                   extra_fields = ["quantity",
@@ -1899,25 +1952,7 @@ $.filterOptionsS3({
                                   "item_pack_id$quantity",
                                   ],
                   filter_widgets = filter_widgets,
-                  list_fields = ["id",
-                                 "status",
-                                 "item_source_no",
-                                 "item_id",
-                                 "item_pack_id",
-                                 "send_id",
-                                 "recv_id",
-                                 "quantity",
-                                 (T("Total Weight (kg)"), "total_weight"),
-                                 (T("Total Volume (m3)"), "total_volume"),
-                                 "currency",
-                                 "pack_value",
-                                 "bin",
-                                 "return_quantity",
-                                 "recv_quantity",
-                                 "recv_bin",
-                                 "owner_org_id",
-                                 "supply_org_id",
-                                 ],
+                  list_fields = list_fields,
                   onaccept = inv_track_item_onaccept,
                   onvalidation = self.inv_track_item_onvalidate,
                   )
@@ -2098,82 +2133,43 @@ $.filterOptionsS3({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def inv_send_represent(record_id, row=None, show_link=True):
-        """
-            Represent a Sent Shipment
-
-            @ToDo: S3Represent
-        """
-
-        if row:
-            record_id = row.id
-            table = current.db.inv_send
-        elif not record_id:
-            return current.messages["NONE"]
-        else:
-            db = current.db
-            table = db.inv_send
-            row = db(table.id == record_id).select(table.date,
-                                                   table.send_ref,
-                                                   table.to_site_id,
-                                                   limitby=(0, 1),
-                                                   ).first()
-        try:
-            send_ref_string = table.send_ref.represent(row.send_ref,
-                                                       show_link = False,
-                                                       )
-            to_string = table.to_site_id.represent(row.to_site_id,
-                                                   show_link = False,
-                                                   )
-            date_string = table.date.represent(row.date)
-        except AttributeError:
-            # Record not found, or not all required fields in row
-            return current.messages.UNKNOWN_OPT
-        else:
-            T = current.T
-            represent  = "%s (%s: %s %s %s)" % (send_ref_string,
-                                                T("To"),
-                                                to_string,
-                                                T("on"),
-                                                date_string,
-                                                )
-            if show_link:
-                return A(represent,
-                         _href = URL(c="inv", f="send", args=[record_id]))
-            else:
-                return represent
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def inv_send_form(r, **attr):
         """
             Generate a PDF of a Waybill
         """
 
+        T = current.T
         db = current.db
+        settings = current.deployment_settings
+
         table = db.inv_send
         tracktable = db.inv_track_item
+
         table.date.readable = True
+        # Hide the inv_item field
+        tracktable.send_inv_item_id.readable = False
+        tracktable.recv_inv_item_id.readable = False
 
         record = db(table.id == r.id).select(table.send_ref,
                                              limitby = (0, 1)
                                              ).first()
         send_ref = record.send_ref
-        # hide the inv_item field
-        tracktable.send_inv_item_id.readable = False
-        tracktable.recv_inv_item_id.readable = False
 
-        T = current.T
+        if settings.get_inv_bin_site_layout():
+            bin_field = "bin"
+        else:
+            bin_field = "layout_id"
+
         list_fields = [(T("Item Code"), "item_id$code"),
                        "item_id",
                        (T("Weight (kg)"), "item_id$weight"),
                        (T("Volume (m3)"), "item_id$volume"),
-                       "bin",
+                       bin_field,
                        "item_source_no",
                        "item_pack_id",
                        "quantity",
                        ]
-        settings = current.deployment_settings
+
         if r.record.req_ref:
             # This Shipment relates to a request
             # - show the req_item comments
@@ -2182,6 +2178,7 @@ $.filterOptionsS3({
             list_fields.extend(("currency",
                                 "pack_value",
                                 ))
+
         from s3.s3export import S3Exporter
         exporter = S3Exporter().pdf
         return exporter(r.resource,
@@ -2201,67 +2198,22 @@ $.filterOptionsS3({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def inv_recv_represent(record_id, row=None, show_link=True):
-        """
-            Represent a Received Shipment
-
-            @ToDo: S3Represent
-        """
-
-        if row:
-            record_id = row.id
-            table = current.db.inv_recv
-        elif not record_id:
-            return current.messages["NONE"]
-        else:
-            db = current.db
-            table = db.inv_recv
-            row = db(table.id == record_id).select(table.date,
-                                                   table.recv_ref,
-                                                   table.from_site_id,
-                                                   table.organisation_id,
-                                                   limitby = (0, 1),
-                                                   ).first()
-
-        recv_ref_string = table.send_ref.represent(row.recv_ref,
-                                                   show_link = False,
-                                                   )
-        if row.from_site_id:
-            from_string = table.from_site_id.represent(row.from_site_id,
-                                                       show_link = False,
-                                                       )
-        else:
-            from_string = table.organisation_id.represent(row.organisation_id,
-                                                          show_link = False,
-                                                          )
-        date_string = table.date.represent(row.date)
-
-        T = current.T
-        represent  = "%s (%s: %s %s %s)" % (recv_ref_string,
-                                            T("From"),
-                                            from_string,
-                                            T("on"),
-                                            date_string,
-                                            )
-        if show_link:
-            return A(represent,
-                     _href = URL(c="inv", f="recv", args=[record_id]),
-                     )
-        else:
-            return represent
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def inv_recv_onaccept(form):
         """
            When a inv recv record is created then create the recv_ref.
         """
 
+        record_id = form.vars.id
+
         db = current.db
         rtable = db.inv_recv
+
         # If the recv_ref is None then set it up
-        record_id = form.vars.id
-        record = rtable[record_id]
+        record = db(rtable.id == record_id).select(rtable.id,
+                                                   rtable.recv_ref,
+                                                   rtable.site_id,
+                                                   limitby = (0, 1)
+                                                   ).first()
         if not record.recv_ref:
             # AR Number
             code = current.s3db.supply_get_shipping_code(
@@ -2269,7 +2221,7 @@ $.filterOptionsS3({
                     record.site_id,
                     rtable.recv_ref,
                     )
-            db(rtable.id == record_id).update(recv_ref = code)
+            record.update_record(recv_ref = code)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2316,17 +2268,28 @@ $.filterOptionsS3({
 
         T = current.T
         db = current.db
+        settings = current.deployment_settings
 
         table = db.inv_recv
         track_table = db.inv_track_item
+
         table.date.readable = True
         table.site_id.readable = True
         track_table.recv_quantity.readable = True
-        table.site_id.label = T("By %(site)s") % {"site": T(current.deployment_settings.get_inv_facility_label())}
+
+        table.site_id.label = T("By %(site)s") % {"site": T(settings.get_inv_facility_label())}
         table.site_id.represent = current.s3db.org_site_represent
 
-        record = table[r.id]
+        record = db(table.id == r.id).select(table.recv_ref,
+                                             limitby = (0, 1)
+                                             ).first()
         recv_ref = record.recv_ref
+
+        if settings.get_inv_bin_site_layout():
+            bin_field = "bin"
+        else:
+            bin_field = "layout_id"
+
         list_fields = ["item_id",
                        (T("Weight (kg)"), "item_id$weight"),
                        (T("Volume (m3)"), "item_id$volume"),
@@ -2336,14 +2299,15 @@ $.filterOptionsS3({
                        "recv_quantity",
                        "currency",
                        "pack_value",
-                       "bin"
+                       bin_field,
                        ]
+
         from s3.s3export import S3Exporter
         exporter = S3Exporter().pdf
         return exporter(r.resource,
                         request = r,
                         method = "list",
-                        pdf_title = T(current.deployment_settings.get_inv_recv_form_name()),
+                        pdf_title = T(settings.get_inv_recv_form_name()),
                         pdf_filename = recv_ref,
                         list_fields = list_fields,
                         pdf_hide_comments = True,
@@ -2364,11 +2328,14 @@ $.filterOptionsS3({
 
         T = current.T
         db = current.db
+
         table = db.inv_recv
+
         table.date.readable = True
         table.type.readable = False
         field = table.site_id
         field.readable = True
+
         field.label = T("By %(site)s") % \
             {"site": T(current.deployment_settings.get_inv_facility_label())}
         field.represent = current.s3db.org_site_represent
@@ -2403,7 +2370,7 @@ $.filterOptionsS3({
     @staticmethod
     def inv_send_ref_represent(value, show_link=True):
         """
-            Represent for the Tall Out number,
+            Represent for the Way Bill,
             if show_link is True then it will generate a link to the pdf
         """
         if value:
@@ -2465,7 +2432,7 @@ $.filterOptionsS3({
             If the inv. item is coming out of a warehouse then the inv. item details
             need to be copied across (org, expiry etc)
 
-            If the inv. item is being received then their might be a selected bin
+            If the inv. item is being received then there might be a selected bin
             ensure that the correct bin is selected and save those details.
         """
 
@@ -2477,11 +2444,23 @@ $.filterOptionsS3({
             db = current.db
             itable = db.inv_inv_item
             query = (itable.id == send_inv_item_id)
-            record = db(query).select(limitby=(0, 1)).first()
+            record = db(query).select(itable.item_id,
+                                      itable.item_source_no,
+                                      itable.expiry_date,
+                                      itable.bin,
+                                      itable.layout_id,
+                                      itable.owner_org_id,
+                                      itable.supply_org_id,
+                                      itable.pack_value,
+                                      itable.currency,
+                                      itable.status,
+                                      limitby = (0, 1)
+                                      ).first()
             form_vars.item_id = record.item_id
             form_vars.item_source_no = record.item_source_no
             form_vars.expiry_date = record.expiry_date
             form_vars.bin = record.bin
+            form_vars.layout_id = record.layout_id
             form_vars.owner_org_id = record.owner_org_id
             form_vars.supply_org_id = record.supply_org_id
             form_vars.pack_value = record.pack_value
@@ -2492,7 +2471,8 @@ $.filterOptionsS3({
             stable = current.s3db.org_site
             query = query & (itable.site_id == stable.id)
             record = db(query).select(stable.organisation_id,
-                                      limitby=(0, 1)).first()
+                                      limitby = (0, 1)
+                                      ).first()
             form_vars.track_org_id = record.organisation_id
 
         if not form_vars.recv_quantity and "quantity" in form_vars:
@@ -2626,6 +2606,8 @@ $.filterOptionsS3({
         iitable = s3db.inv_inv_item
         insert = s3db.inv_kitting_item.insert
 
+        bin_site_layout = current.deployment_settings.get_inv_bin_site_layout()
+
         # Get contents of this kit
         query = (ktable.parent_item_id == item_id)
         rows = db(query).select(ktable.item_id,
@@ -2642,7 +2624,10 @@ $.filterOptionsS3({
         quantity = quantity * pack_qty
 
         ii_id_field = iitable.id
-        ii_bin_field = iitable.bin
+        if bin_site_layout:
+            ii_bin_field = iitable.layout_id
+        else:
+            ii_bin_field = iitable.bin
         ii_pack_field = iitable.item_pack_id
         ii_qty_field = iitable.quantity
         ii_expiry_field = iitable.expiry_date
@@ -2716,15 +2701,19 @@ $.filterOptionsS3({
                 inv_remove(wh_item, amount)
 
                 # Add to Pick List
-                insert(site_id = site_id,
-                       kitting_id = kitting_id,
-                       item_id = ritem_id,
-                       item_pack_id = wh_item.item_pack_id,
-                       bin = wh_item.bin,
-                       item_source_no = wh_item.item_source_no,
-                       quantity = amount,
-                       inv_item_id = wh_item.id,
-                       )
+                new_record = {"site_id": site_id,
+                              "kitting_id": kitting_id,
+                              "item_id": ritem_id,
+                              "item_pack_id": wh_item.item_pack_id,
+                              "item_source_no": wh_item.item_source_no,
+                              "quantity": amount,
+                              "inv_item_id": wh_item.id,
+                              }
+                if bin_site_layout:
+                    new_record["layout_id"] = wh_item.layout_id
+                else:
+                    new_record["bin"] = wh_item.bin
+                insert(**new_record)
 
                 # Update how much is still required
                 required -= amount
@@ -3126,10 +3115,9 @@ def inv_rheader(r):
 
         # Get site data
         table = s3db.inv_inv_item
-        irecord = current.db(table.id == record.send_inv_item_id).select(
-                                                        table.site_id,
-                                                        limitby = (0, 1)
-                                                        ).first()
+        irecord = current.db(table.id == record.send_inv_item_id).select(table.site_id,
+                                                                         limitby = (0, 1)
+                                                                         ).first()
         # Header
         if irecord:
             rheader = DIV(
@@ -3600,8 +3588,9 @@ def inv_recv_rheader(r):
                              ),
                           TR(TH("%s: " % table.send_ref.label),
                              table.send_ref.represent(record.send_ref),
-                             TH("%s: " % table.recv_ref.label),
-                             table.recv_ref.represent(record.recv_ref),
+                             # Duplicate! req_ref?
+                             #TH("%s: " % table.recv_ref.label),
+                             #table.recv_ref.represent(record.recv_ref),
                              ),
                           TR(TH("%s: " % table.comments.label),
                              TD(record.comments or "", _colspan=3),
@@ -3724,6 +3713,7 @@ class InventoryAdjustModel(S3Model):
         auth = current.auth
 
         settings = current.deployment_settings
+        bin_site_layout = settings.get_inv_bin_site_layout()
         track_pack_values = settings.get_inv_track_pack_values()
 
         organisation_id = self.org_organisation_id
@@ -3805,7 +3795,7 @@ class InventoryAdjustModel(S3Model):
                         )
 
         # Reusable Field
-        inv_adj_represent = inv_InvAdjRepresent()
+        inv_adj_represent = inv_AdjRepresent()
         adj_id = S3ReusableField("adj_id", "reference %s" % tablename,
                                  label = T("Inventory Adjustment"),
                                  ondelete = "RESTRICT",
@@ -3926,7 +3916,13 @@ class InventoryAdjustModel(S3Model):
                            requires = IS_LENGTH(16),
                            # @ToDo:
                            #widget = S3InvBinWidget("inv_adj_item")
+                           readable = not bin_site_layout,
+                           writable = not bin_site_layout,
                            ),
+                     self.org_site_layout_id(label = T("Bin"),
+                                             readable = bin_site_layout,
+                                             writable = bin_site_layout,
+                                             ),
                      # Organisation that owned this item before
                      organisation_id("old_owner_org_id",
                                      label = T("Current Owned By (Organization/Branch)"),
@@ -3944,13 +3940,14 @@ class InventoryAdjustModel(S3Model):
                      *s3_meta_fields())
 
         # Reusable Field
+        inv_adj_item_represent = inv_AdjItemRepresent()
         adj_item_id = S3ReusableField("adj_item_id", "reference %s" % tablename,
                                       label = T("Inventory Adjustment Item"),
                                       ondelete = "RESTRICT",
-                                      represent = self.inv_adj_item_represent,
+                                      represent = inv_adj_item_represent,
                                       requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "inv_adj_item.id",
-                                                              self.inv_adj_item_represent,
+                                                              inv_adj_item_represent,
                                                               orderby = "inv_adj_item.item_id",
                                                               sort = True,
                                                               )
@@ -4030,6 +4027,7 @@ class InventoryAdjustModel(S3Model):
                                      aitable.item_pack_id,
                                      aitable.currency,
                                      aitable.bin,
+                                     aitable.layout_id,
                                      aitable.old_pack_value,
                                      aitable.expiry_date,
                                      aitable.new_quantity,
@@ -4045,6 +4043,7 @@ class InventoryAdjustModel(S3Model):
                             "item_pack_id": adj_item.item_pack_id,
                             "currency": adj_item.currency,
                             "bin": adj_item.bin,
+                            "layout_id": adj_item.layout_id,
                             "pack_value": adj_item.old_pack_value,
                             "expiry_date": adj_item.expiry_date,
                             "quantity": adj_item.new_quantity,
@@ -4064,6 +4063,7 @@ class InventoryAdjustModel(S3Model):
                 # Update the existing stock item
                 db(inv_item_table.id == adj_item.inv_item_id).update(item_pack_id = adj_item.item_pack_id,
                                                                      bin = adj_item.bin,
+                                                                     layout_id = adj_item.layout_id,
                                                                      pack_value = adj_item.old_pack_value,
                                                                      expiry_date = adj_item.expiry_date,
                                                                      quantity = adj_item.new_quantity,
@@ -4116,6 +4116,7 @@ class InventoryAdjustModel(S3Model):
                                     inv_item_table.pack_value,
                                     inv_item_table.expiry_date,
                                     inv_item_table.bin,
+                                    inv_item_table.layout_id,
                                     inv_item_table.owner_org_id,
                                     )
             for inv_item in rows:
@@ -4133,51 +4134,10 @@ class InventoryAdjustModel(S3Model):
                                     new_pack_value = inv_item.pack_value,
                                     expiry_date = inv_item.expiry_date,
                                     bin = inv_item.bin,
+                                    layout_id = inv_item.layout_id,
                                     old_owner_org_id = inv_item.owner_org_id,
                                     new_owner_org_id = inv_item.owner_org_id,
                                     )
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def inv_adj_item_represent(record_id, row=None, show_link=True):
-        """
-            Represent an Inventory Adjustment Item
-        """
-
-        if row:
-            table = current.db.inv_adj_item
-        elif not record_id:
-            return current.messages["NONE"]
-        else:
-            db = current.db
-            table = db.inv_adj_item
-            row = db(table.id == record_id).select(table.item_id,
-                                                   table.old_quantity,
-                                                   table.new_quantity,
-                                                   table.item_pack_id,
-                                                   limitby = (0, 1),
-                                                   ).first()
-        changed_quantity = 0
-        try:
-            if row.new_quantity and row.old_quantity:
-                changed_quantity = row.new_quantity - row.old_quantity
-            item_id = row.item_id
-            pack_id = row.item_pack_id
-        except AttributeError:
-            # Item not found, or not all required fields in row
-            return current.messages.UNKNOWN_OPT
-        else:
-            reprstr = "%s:%s %s" % (
-                        table.item_id.represent(item_id,
-                                                show_link = show_link,
-                                                ),
-                        changed_quantity,
-                        table.item_pack_id.represent(pack_id),
-                        )
-            if show_link:
-                return SPAN(reprstr)
-            else:
-                return reprstr
 
 # =============================================================================
 class InventoryMinimumModel(S3Model):
@@ -4540,11 +4500,15 @@ def inv_stock_movements(resource, selectors, orderby):
     """
 
     # Extract the stock item data
+    if current.deployment_settings.get_inv_bin_site_layout():
+        bin_field = "layout_id"
+    else:
+        bin_field = "bin"
     selectors = ["id",
                  "site_id",
                  "site_id$name",
                  "item_id$item_category_id",
-                 "bin",
+                 bin_field,
                  "item_id$name",
                  "quantity",
                  ]
@@ -4777,102 +4741,27 @@ def inv_send_controller():
     T = current.T
     db = current.db
     s3db = current.s3db
-    sendtable = s3db.inv_send
-    tracktable = s3db.inv_track_item
-    iitable = s3db.inv_inv_item
 
-    request = current.request
-    response = current.response
-    s3 = response.s3
+    sendtable = s3db.inv_send
 
     # Limit site_id to sites the user has permissions for
     error_msg = T("You do not have permission for any facility to send a shipment.")
     current.auth.permitted_facilities(table=sendtable, error_msg=error_msg)
 
-    # Set Validator for checking against the number of items in the warehouse
-    req_vars = request.vars
-    send_inv_item_id = req_vars.send_inv_item_id
-    if send_inv_item_id:
-        if not req_vars.item_pack_id:
-            req_vars.item_pack_id = db(iitable.id == send_inv_item_id).select(
-                                            iitable.item_pack_id,
-                                            limitby = (0, 1)
-                                            ).first().item_pack_id
-        tracktable.quantity.requires = IS_AVAILABLE_QUANTITY(send_inv_item_id,
-                                                             req_vars.item_pack_id,
-                                                             )
-
-    def set_send_attr(status):
-        sendtable.send_ref.writable = False
-        if status == SHIP_STATUS_IN_PROCESS:
-            sendtable.send_ref.readable = False
-        else:
-            # Make all fields writable False
-            for field in sendtable.fields:
-                sendtable[field].writable = False
-
-    def set_track_attr(status):
-        # By default Make all fields writable False
-        for field in tracktable.fields:
-            tracktable[field].writable = False
-        # Hide some fields
-        tracktable.send_id.readable = False
-        tracktable.recv_id.readable = False
-        tracktable.bin.readable = False
-        tracktable.item_id.readable = False
-        tracktable.recv_quantity.readable = False
-        tracktable.return_quantity.readable = False
-        tracktable.expiry_date.readable = False
-        tracktable.owner_org_id.readable = False
-        tracktable.supply_org_id.readable = False
-        tracktable.adj_item_id.readable = False
-        if status == TRACK_STATUS_PREPARING:
-            # Show some fields
-            tracktable.send_inv_item_id.writable = True
-            tracktable.item_pack_id.writable = True
-            tracktable.quantity.writable = True
-            #tracktable.req_quantity.readable = True
-            tracktable.comments.writable = True
-            # Hide some fields
-            tracktable.currency.readable = False
-            tracktable.pack_value.readable = False
-            tracktable.item_source_no.readable = False
-            tracktable.inv_item_status.readable = False
-        elif status == TRACK_STATUS_ARRIVED:
-            # Shipment arrived display some extra fields at the destination
-            tracktable.item_source_no.readable = True
-            tracktable.recv_quantity.readable = True
-            tracktable.return_quantity.readable = True
-            tracktable.recv_bin.readable = True
-            tracktable.currency.readable = True
-            tracktable.pack_value.readable = True
-        elif status == TRACK_STATUS_RETURNING:
-            tracktable.return_quantity.readable = True
-            tracktable.return_quantity.writable = True
-            tracktable.currency.readable = False
-            tracktable.pack_value.readable = False
+    response = current.response
+    s3 = response.s3
 
     def prep(r):
-        record = db(sendtable.id == r.id).select(sendtable.status,
-                                                 sendtable.req_ref,
-                                                 limitby = (0, 1)
-                                                 ).first()
+        record = r.record
         if record:
             status = record.status
             if status != SHIP_STATUS_IN_PROCESS:
                 # Now that the shipment has been sent,
                 # lock the record so that it can't be meddled with
                 s3db.configure("inv_send",
-                               create = False,
                                deletable = False,
                                editable = False,
-                               listadd = False,
-                               )
-                s3db.configure("inv_track_item",
-                               create = False,
-                               deletable = False,
-                               editable = False,
-                               listadd = False,
+                               insertable = False,
                                )
 
         if r.component:
@@ -4884,13 +4773,94 @@ def inv_send_controller():
                 table.date.readable = table.date.writable = False
 
             elif r.component_name == "track_item":
-                record = r.record
-                values = current.deployment_settings.get_inv_track_pack_values()
+
+                # Security-wise, we are already covered by configure()
+                # Performance-wise, we should optimise for UI-acessible flows
+                #method = r.method
+                #if method in ("create", "delete"):
+                #    # Can only create or delete track items for a send record
+                #    # if the status is preparing
+                #    if status != SHIP_STATUS_IN_PROCESS:
+                #        return False
+                #    if method == "delete":
+                #        return inv_track_item_deleting(r.component_id)
+
+                tracktable = s3db.inv_track_item
+                iitable = s3db.inv_inv_item
+
+                # Set Validator for checking against the number of items in the warehouse
+                req_vars = r.vars
+                send_inv_item_id = req_vars.send_inv_item_id
+                if send_inv_item_id:
+                    if not req_vars.item_pack_id:
+                        req_vars.item_pack_id = db(iitable.id == send_inv_item_id).select(iitable.item_pack_id,
+                                                                                          limitby = (0, 1)
+                                                                                          ).first().item_pack_id
+                    tracktable.quantity.requires = IS_AVAILABLE_QUANTITY(send_inv_item_id,
+                                                                         req_vars.item_pack_id,
+                                                                         )
+
+                settings = current.deployment_settings
+                bin_site_layout = settings.get_inv_bin_site_layout()
+                track_pack_values = settings.get_inv_track_pack_values()
+
+                def set_track_attr(status):
+                    # By default Make all fields writable False
+                    for field in tracktable.fields:
+                        tracktable[field].writable = False
+                    # Hide some fields
+                    tracktable.send_id.readable = False
+                    tracktable.recv_id.readable = False
+                    tracktable.bin.readable = False
+                    tracktable.layout_id.readable = False
+                    tracktable.item_id.readable = False
+                    tracktable.recv_quantity.readable = False
+                    tracktable.return_quantity.readable = False
+                    tracktable.expiry_date.readable = False
+                    tracktable.owner_org_id.readable = False
+                    tracktable.supply_org_id.readable = False
+                    tracktable.adj_item_id.readable = False
+                    if status == TRACK_STATUS_PREPARING:
+                        # Show some fields
+                        tracktable.send_inv_item_id.writable = True
+                        tracktable.item_pack_id.writable = True
+                        tracktable.quantity.writable = True
+                        #tracktable.req_quantity.readable = True
+                        tracktable.comments.writable = True
+                        # Hide some fields
+                        tracktable.currency.readable = False
+                        tracktable.pack_value.readable = False
+                        tracktable.item_source_no.readable = False
+                        tracktable.inv_item_status.readable = False
+                    elif status == TRACK_STATUS_ARRIVED:
+                        # Shipment arrived display some extra fields at the destination
+                        tracktable.item_source_no.readable = True
+                        tracktable.recv_quantity.readable = True
+                        tracktable.return_quantity.readable = True
+                        if bin_site_layout:
+                            tracktable.recv_bin_id.readable = True
+                        else:
+                            tracktable.recv_bin.readable = True
+                        if track_pack_values:
+                            tracktable.currency.readable = True
+                            tracktable.pack_value.readable = True
+                    elif status == TRACK_STATUS_RETURNING:
+                        tracktable.return_quantity.readable = True
+                        tracktable.return_quantity.writable = True
+                        tracktable.currency.readable = False
+                        tracktable.pack_value.readable = False
+
+                if bin_site_layout:
+                    bin_field = "layout_id"
+                else:
+                    bin_field = "bin"
+
                 if status in (SHIP_STATUS_RECEIVED, SHIP_STATUS_CANCEL):
-                    list_fields = ["status",
+                    deletable = editable = insertable = False
+                    list_fields = [#"status",
                                    "item_id",
                                    "item_pack_id",
-                                   "bin",
+                                   bin_field,
                                    "quantity",
                                    "recv_quantity",
                                    "return_quantity",
@@ -4899,36 +4869,44 @@ def inv_send_controller():
                                    "inv_item_status",
                                    "comments",
                                    ]
-                    if values:
+                    if track_pack_values:
                         list_fields.insert(6, "pack_value")
                         list_fields.insert(6, "currency")
+
                 elif status == SHIP_STATUS_RETURNING:
-                    list_fields = ["status",
+                    deletable = insertable = False
+                    editable = True
+                    list_fields = [#"status",
                                    "item_id",
                                    "item_pack_id",
                                    "quantity",
                                    "return_quantity",
-                                   "bin",
+                                   bin_field,
                                    "owner_org_id",
                                    "supply_org_id",
                                    "inv_item_status",
                                    ]
-                    if values:
-                        list_fields.insert(4, "pack_value")
-                        list_fields.insert(4, "currency")
+                    if track_pack_values:
+                        list_fields.insert(3, "pack_value")
+                        list_fields.insert(3, "currency")
+
                 else:
-                    list_fields = ["status",
+                    if status == SHIP_STATUS_IN_PROCESS:
+                        deletable = editable = insertable = True
+                    else:
+                        deletable = editable = insertable = False
+                    list_fields = [#"status",
                                    "item_id",
                                    "item_pack_id",
                                    "quantity",
-                                   "bin",
+                                   bin_field,
                                    "owner_org_id",
                                    "supply_org_id",
                                    "inv_item_status",
                                    ]
-                    if values:
-                        list_fields.insert(5, "pack_value")
-                        list_fields.insert(5, "currency")
+                    if track_pack_values:
+                        list_fields.insert(4, "pack_value")
+                        list_fields.insert(4, "currency")
                     if record.req_ref and r.interactive:
                         s3db.configure("inv_track_item",
                                        extra_fields = ["req_item_id"],
@@ -4937,20 +4915,16 @@ def inv_send_controller():
                             Field.Method("quantity_needed",
                                          inv_track_item_quantity_needed
                                          )
-                        list_fields.insert(3, (T("Quantity Needed"),
+                        list_fields.insert(2, (T("Quantity Needed"),
                                                "quantity_needed"))
 
                 s3db.configure("inv_track_item",
+                               # Lock the record so it can't be fiddled with
+                               deletable = deletable,
+                               editable = editable,
+                               insertable = insertable,
                                list_fields = list_fields,
                                )
-
-                # Can only create or delete track items for a send record if the status is preparing
-                method = r.method
-                if method in ("create", "delete"):
-                    if status != SHIP_STATUS_IN_PROCESS:
-                        return False
-                    if method == "delete":
-                        return inv_track_item_deleting(r.component_id)
 
                 # Filter out Items which have Quantity 0, are Expired or in Bad condition
                 query = (iitable.quantity > 0) & \
@@ -5000,9 +4974,9 @@ def inv_send_controller():
                         crud_strings.title_update = \
                         crud_strings.title_display = T("Review Incoming Shipment to Receive")
         else:
-            if r.id and request.get_vars.get("received"):
+            if record and r.get_vars.get("received"):
                 # "received" must not propagate:
-                del request.get_vars["received"]
+                del r.get_vars["received"]
                 # Set the items to being received
                 # @ToDo: Check Permissions & Avoid DB updates in GETs
                 db(sendtable.id == r.id).update(status = SHIP_STATUS_RECEIVED)
@@ -5045,50 +5019,35 @@ def inv_send_controller():
                     for item in ritems:
                         if item.item_pack_id in fulfil_qty:
                             quantity_fulfil = fulfil_qty[item.item_pack_id]
-                            db(ritable.id == item.id).update(quantity_fulfil=quantity_fulfil)
+                            db(ritable.id == item.id).update(quantity_fulfil = quantity_fulfil)
                             req_quantity = item.quantity * item.pack_quantity()
                             complete = quantity_fulfil >= req_quantity
 
                     # Update overall Request Status
                     if complete:
                         # REQ_STATUS_COMPLETE
-                        db(rtable.id == req_id).update(fulfil_status=2)
+                        db(rtable.id == req_id).update(fulfil_status = 2)
                     else:
                         # REQ_STATUS_PARTIAL
-                        db(rtable.id == req_id).update(fulfil_status=1)
+                        db(rtable.id == req_id).update(fulfil_status = 1)
                 response.confirmation = T("Shipment received")
-            # else set the inv_send attributes
-            elif r.id:
-                record = db(sendtable.id == r.id).select(sendtable.status,
-                                                         limitby = (0, 1)
-                                                         ).first()
-                set_send_attr(record.status)
             else:
-                set_send_attr(SHIP_STATUS_IN_PROCESS)
-                sendtable.send_ref.readable = False
-        return True
+                # Set the inv_send attributes
+                def set_send_attr(status):
+                    sendtable.send_ref.writable = False
+                    if status == SHIP_STATUS_IN_PROCESS:
+                        sendtable.send_ref.readable = False
+                    else:
+                        # Make all fields writable False
+                        for field in sendtable.fields:
+                            sendtable[field].writable = False
 
-    args = request.args
-    if len(args) > 1 and args[1] == "track_item":
-        # Shouldn't fail but...
-        # if user enters the send id then it could so wrap in a try...
-        try:
-            status = db(sendtable.id == args[0]).select(sendtable.status,
-                                                        limitby = (0, 1),
-                                                        ).first().status
-        except AttributeError:
-            status = None
-        if status:
-            editable = False
-            if status == SHIP_STATUS_RETURNING:
-                editable = True
-            # remove CRUD generated buttons in the tabs
-            s3db.configure("inv_track_item",
-                           create = False,
-                           deletable = False,
-                           editable = editable,
-                           listadd = False,
-                           )
+                if record:
+                    set_send_attr(status)
+                else:
+                    set_send_attr(SHIP_STATUS_IN_PROCESS)
+                    sendtable.send_ref.readable = False
+        return True
 
     s3.prep = prep
     output = current.rest_controller("inv", "send",
@@ -5141,7 +5100,7 @@ def inv_send_onaccept(form):
                 formvars.item_pack_id = row.item_pack_id
                 formvars.send_inv_item_id = row.id
                 # Call inv_track_item_onaccept to remove inv_item from stock
-                inv_track_item_onaccept(Storage(vars=formvars))
+                inv_track_item_onaccept(Storage(vars = formvars))
 
     stable = db.inv_send
     # If the send_ref is None then set it up
@@ -5158,6 +5117,8 @@ def inv_send_onaccept(form):
 def inv_send_process():
     """
         Process a Shipment
+
+        @ToDo: Rewrite as S3Method
     """
 
     request = current.request
@@ -5170,7 +5131,7 @@ def inv_send_process():
     auth = current.auth
     db = current.db
     s3db = current.s3db
-    stable = db.inv_send
+    stable = s3db.inv_send
 
     session = current.session
 
@@ -5448,6 +5409,10 @@ def inv_track_item_onaccept(form):
                                                           limitby = (0, 1)
                                                           ).first()
         recv_site_id = recv_rec.site_id
+        if current.deployment_settings.get_inv_bin_site_layout():
+            bin_query = (inv_item_table.layout_id == record.recv_bin_id)
+        else:
+            bin_query = (inv_item_table.bin == record.recv_bin)
         query = (inv_item_table.site_id == recv_site_id) & \
                 (inv_item_table.item_id == record.item_id) & \
                 (inv_item_table.item_pack_id == record.item_pack_id) & \
@@ -5455,7 +5420,7 @@ def inv_track_item_onaccept(form):
                 (inv_item_table.status == record.inv_item_status) & \
                 (inv_item_table.pack_value == record.pack_value) & \
                 (inv_item_table.expiry_date == record.expiry_date) & \
-                (inv_item_table.bin == record.recv_bin) & \
+                bin_query & \
                 (inv_item_table.owner_org_id == record.owner_org_id) & \
                 (inv_item_table.item_source_no == record.item_source_no) & \
                 (inv_item_table.status == record.inv_item_status) & \
@@ -5486,6 +5451,7 @@ def inv_track_item_onaccept(form):
                         "pack_value": record.pack_value,
                         "expiry_date": record.expiry_date,
                         "bin": record.recv_bin,
+                        "layout_id": record.recv_bin_id,
                         "owner_org_id": record.owner_org_id,
                         "supply_org_id": record.supply_org_id,
                         "quantity": record.recv_quantity,
@@ -5531,7 +5497,8 @@ def inv_track_item_onaccept(form):
             query = (tracktable.recv_id == record.recv_id) & \
                     (tracktable.adj_item_id != None)
             adj_rec = db(query).select(tracktable.adj_item_id,
-                                       limitby = (0, 1)).first()
+                                       limitby = (0, 1)
+                                       ).first()
             adjitemtable = s3db.inv_adj_item
             if adj_rec:
                 adj_id = db(adjitemtable.id == adj_rec.adj_item_id).select(adjitemtable.adj_id,
@@ -5566,6 +5533,7 @@ def inv_track_item_onaccept(form):
                                               new_pack_value = record.pack_value,
                                               expiry_date = record.expiry_date,
                                               bin = record.recv_bin,
+                                              layout_id = record.recv_bin_id,
                                               comments = record.comments,
                                               )
             # Copy the adj_item_id to the tracking record
@@ -5621,7 +5589,16 @@ def inv_warehouse_free_capacity(site_id):
     tablename = "inv_warehouse"
     customise = current.deployment_settings.customise_resource(tablename)
     if customise:
-        r = S3Request()
+        request = current.request
+        prefix = request.controller
+        name = request.function
+        if prefix == "default":
+            # Prepop
+            prefix = "inv"
+        if name == "index":
+            # Prepop
+            name = "warehouse"
+        r = S3Request(prefix, name)
         customise(r, tablename)
     on_free_capacity_update = s3db.get_config(tablename, "on_free_capacity_update")
     if on_free_capacity_update:
@@ -5708,7 +5685,7 @@ def inv_expiry_date_represent(date):
         return dtstr
 
 # =============================================================================
-class inv_InvAdjRepresent(S3Represent):
+class inv_AdjRepresent(S3Represent):
     """
         Represent an Inventory Adjustment
     """
@@ -5719,14 +5696,44 @@ class inv_InvAdjRepresent(S3Represent):
                  **attr
                  ):
 
-        super(inv_InvAdjRepresent, self).__init__(lookup = "inv_adj",
-                                                  fields = ["adjuster_id",
-                                                            "adjustment_date",
-                                                            ],
-                                                  show_link = show_link,
-                                                  field_sep = field_sep,
-                                                  **attr
-                                                  )
+        super(inv_AdjRepresent, self).__init__(lookup = "inv_adj",
+                                               fields = ["adjuster_id",
+                                                         "adjustment_date",
+                                                         ],
+                                               show_link = show_link,
+                                               field_sep = field_sep,
+                                               **attr
+                                               )
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: never used for custom fns (retained for API compatibility)
+        """
+
+        fields = self.fields
+        fields.append(key)
+
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = current.db(query).select(*fields)
+        self.queries += 1
+
+        table = current.db.inv_adj_item
+
+        # Bulk-represent adjuster_ids
+        adjuster_ids = [row.adjuster_id for row in rows]
+        if adjuster_ids:
+            # Results cached in the represent class
+            table.adjuster_id.represent.bulk(adjuster_ids)
+
+        return rows
 
     # -------------------------------------------------------------------------
     def represent_row(self, row, prefix=None):
@@ -5741,12 +5748,94 @@ class inv_InvAdjRepresent(S3Represent):
                      is an error in the Row
         """
 
-        # ToDo: Bulk lookup of the adjuster_id represents
         table = current.s3db.inv_adj
 
         v = self.field_sep.join((table.adjuster_id.represent(row.adjuster_id),
                                  table.adjustment_date.represent(row.adjustment_date),
                                  ))
+        return v
+
+# =============================================================================
+class inv_AdjItemRepresent(S3Represent):
+    """
+        Represent an Inventory Adjustment Item
+    """
+
+    def __init__(self,
+                 show_link = False,
+                 **attr
+                 ):
+
+        super(inv_AdjItemRepresent, self).__init__(lookup = "inv_adj_item",
+                                                   fields = ["item_id",
+                                                             "old_quantity",
+                                                             "new_quantity",
+                                                             "item_pack_id",
+                                                             ],
+                                                   show_link = show_link,
+                                                   **attr
+                                                   )
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: never used for custom fns (retained for API compatibility)
+        """
+
+        fields = self.fields
+        fields.append(key)
+
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = current.db(query).select(*fields)
+        self.queries += 1
+
+        table = current.db.inv_adj_item
+
+        # Bulk-represent item_ids
+        item_ids = [row.item_id for row in rows]
+        if item_ids:
+            # Results cached in the represent class
+            table.item_id.represent.bulk(item_ids)
+
+        # Bulk-represent item_pack_ids
+        item_pack_ids = [row.item_pack_id for row in rows]
+        if item_pack_ids:
+            # Results cached in the represent class
+            table.item_pack_id.represent.bulk(item_pack_ids)
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row, prefix=None):
+        """
+            Represent the referenced row.
+            (in foreign key representations)
+
+            @param row: the row
+            @param prefix: prefix for hierarchical representation
+
+            @return: the representation of the Row, or None if there
+                     is an error in the Row
+        """
+
+        table = current.s3db.inv_adj_item
+
+        if row.new_quantity and row.old_quantity:
+            changed_quantity = row.new_quantity - row.old_quantity
+        else:
+            changed_quantity = 0
+
+        v = "%s:%s %s" % (table.item_id.represent(row.item_id),
+                          changed_quantity,
+                          table.item_pack_id.represent(row.item_pack_id),
+                          )
         return v
 
 # =============================================================================
@@ -5757,6 +5846,8 @@ class inv_InvItemRepresent(S3Represent):
 
     def __init__(self):
 
+        self.bin_site_layout = current.deployment_settings.get_inv_bin_site_layout()
+
         super(inv_InvItemRepresent, self).__init__(lookup = "inv_inv_item")
 
     # -------------------------------------------------------------------------
@@ -5766,13 +5857,19 @@ class inv_InvItemRepresent(S3Represent):
 
             @param key: the key Field
             @param values: the values
-            @param fields: unused (retained for API compatibility)
+            @param fields: never used for custom fns (retained for API compatibility)
         """
 
         s3db = current.s3db
 
         itable = s3db.inv_inv_item
         stable = s3db.supply_item
+
+        bin_site_layout = self.bin_site_layout
+        if bin_site_layout:
+            bin_field = itable.layout_id
+        else:
+            bin_field = itable.bin
 
         left = stable.on(stable.id == itable.item_id)
         if len(values) == 1:
@@ -5783,7 +5880,7 @@ class inv_InvItemRepresent(S3Represent):
                                         stable.name,
                                         stable.um,
                                         itable.item_source_no,
-                                        itable.bin,
+                                        bin_field,
                                         itable.expiry_date,
                                         itable.owner_org_id,
                                         left = left
@@ -5795,7 +5892,16 @@ class inv_InvItemRepresent(S3Represent):
         organisation_id = str(itable.owner_org_id)
         organisation_ids = [row[organisation_id] for row in rows]
         if organisation_ids:
+            # Results cached in the represent class
             itable.owner_org_id.represent.bulk(organisation_ids)
+
+        if bin_site_layout:
+            # Bulk-represent layout_ids
+            layout_id = str(itable.layout_id)
+            layout_ids = [row[layout_id] for row in rows]
+            if layout_ids:
+                # Results cached in the represent class
+                itable.layout_id.represent.bulk(layout_ids)
 
         return rows
 
@@ -5816,7 +5922,10 @@ class inv_InvItemRepresent(S3Represent):
 
         ctn = stringify(iitem.item_source_no)
         org = itable.owner_org_id.represent(iitem.owner_org_id)
-        item_bin = stringify(iitem.bin)
+        if self.bin_site_layout:
+            item_bin = itable.layout_id.represent(iitem.layout_id)
+        else:
+            item_bin = stringify(iitem.bin)
 
         expires = iitem.expiry_date
         if expires:
@@ -5834,5 +5943,166 @@ class inv_InvItemRepresent(S3Represent):
                 append(string)
                 append(" - ")
         return TAG[""](items[:-1])
+
+# =============================================================================
+class inv_RecvRepresent(S3Represent):
+    """
+        Represent a Received Shipment
+    """
+
+    def __init__(self,
+                 show_link = False,
+                 ):
+
+        super(inv_RecvRepresent, self).__init__(lookup = "inv_recv",
+                                                fields = ["date",
+                                                          "recv_ref",
+                                                          "from_site_id",
+                                                          "organisation_id",
+                                                          ],
+                                                show_link = show_link,
+                                                )
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: never used for custom fns (retained for API compatibility)
+        """
+
+        fields = self.fields
+        fields.append(key)
+
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = current.db(query).select(*fields)
+        self.queries += 1
+
+        table = current.db.inv_recv
+
+        # Bulk-represent site_ids
+        site_ids = [row.from_site_id for row in rows]
+        if site_ids:
+            # Results cached in the represent class
+            table.from_site_id.represent.bulk(site_ids, show_link = False)
+
+        # Bulk-represent organisation_ids
+        organisation_ids = [row.organisation_id for row in rows]
+        if organisation_ids:
+            # Results cached in the represent class
+            table.organisation_id.represent.bulk(organisation_ids, show_link = False)
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        table = current.s3db.inv_recv
+
+        from_site_id = row.from_site_id
+        if from_site_id:
+            from_string = table.from_site_id.represent(from_site_id,
+                                                       show_link = False,
+                                                       )
+        else:
+            from_string = table.organisation_id.represent(row.organisation_id,
+                                                          show_link = False,
+                                                          )
+        date_string = table.date.represent(row.date)
+
+        T = current.T
+
+        v = "%s (%s: %s %s %s)" % (row.recv_ref,
+                                   T("From"),
+                                   from_string,
+                                   T("on"),
+                                   date_string,
+                                   )
+
+        return v
+
+# =============================================================================
+class inv_SendRepresent(S3Represent):
+    """
+        Represent a Sent Shipment
+    """
+
+    def __init__(self,
+                 show_link = False,
+                 ):
+
+        super(inv_SendRepresent, self).__init__(lookup = "inv_send",
+                                                fields = ["date",
+                                                          "send_ref",
+                                                          "to_site_id",
+                                                          ],
+                                                show_link = show_link,
+                                                )
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: never used for custom fns (retained for API compatibility)
+        """
+
+        fields = self.fields
+        fields.append(key)
+
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = current.db(query).select(*fields)
+        self.queries += 1
+
+        table = current.db.inv_send
+
+        # Bulk-represent site_ids
+        site_ids = [row.to_site_id for row in rows]
+        if site_ids:
+            # Results cached in the represent class
+            table.to_site_id.represent.bulk(site_ids, show_link = False)
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        table = current.s3db.inv_send
+
+        to_string = table.to_site_id.represent(row.to_site_id,
+                                               show_link = False,
+                                               )
+        date_string = table.date.represent(row.date)
+
+        T = current.T
+
+        v = "%s (%s: %s %s %s)" % (row.send_ref,
+                                   T("To"),
+                                   to_string,
+                                   T("on"),
+                                   date_string,
+                                   )
+
+        return v
 
 # END =========================================================================

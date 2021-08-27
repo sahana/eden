@@ -598,7 +598,7 @@ class RequestModel(S3Model):
         fact_fields = report_fields + [(T("Requests"), "id")]
 
         # Reusable Field
-        req_represent = self.req_represent
+        req_represent = req_ReqRepresent(show_link = True)
         req_id = S3ReusableField("req_id", "reference %s" % tablename,
                                  label = T("Request"),
                                  ondelete = "CASCADE",
@@ -778,55 +778,6 @@ class RequestModel(S3Model):
         return {"req_req_id": dummy("req_id"),
                 "req_req_ref": dummy("req_ref"),
                 }
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def req_represent(req_id, row=None, show_link=True, pdf=False):
-        """
-            Represent a Request
-
-            @todo: document parameters
-            @todo: S3Represent
-        """
-
-        if row:
-            table = current.db.req_req
-        elif not req_id:
-            return current.messages["NONE"]
-        else:
-            req_id = int(req_id)
-            if req_id:
-                db = current.db
-                table = db.req_req
-                row = db(table.id == req_id).select(table.date,
-                                                    table.req_ref,
-                                                    table.site_id,
-                                                    limitby = (0, 1)
-                                                    ).first()
-        try:
-            if row.req_ref:
-                req = row.req_ref
-            else:
-                req = "%s - %s" % (table.site_id.represent(row.site_id,
-                                                           show_link=False),
-                                   table.date.represent(row.date))
-        except:
-            return current.messages.UNKNOWN_OPT
-
-        if show_link:
-            if pdf:
-                args = [req_id, "form"]
-                _title = current.T("Open PDF")
-            else:
-                args = [req_id]
-                _title = current.T("Go to Request")
-            return A(req,
-                     _href = URL(c="req", f="req",
-                                 args=args,
-                                 ),
-                     _title = _title)
-        else:
-            return req
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2459,8 +2410,8 @@ class RequestNeedsModel(S3Model):
                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "req_need.id",
                                                           represent,
-                                                          orderby="req_need.date",
-                                                          sort=True,
+                                                          orderby = "req_need.date",
+                                                          sort = True,
                                                           )),
                                   sortby = "date",
                                   )
@@ -2983,7 +2934,7 @@ $.filterOptionsS3({
                             req_need_response_line = "need_line_id",
                             )
 
-        #represent = S3Represent(lookup=tablename)
+        #represent = S3Represent(lookup = tablename)
         need_line_id = S3ReusableField("need_line_id", "reference %s" % tablename,
                                        label = T("Need"),
                                        ondelete = "SET NULL",
@@ -2991,8 +2942,8 @@ $.filterOptionsS3({
                                        requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "req_need_line.id",
                                                               #represent,
-                                                              #orderby="req_need_line.date",
-                                                              #sort=True,
+                                                              #orderby = "req_need_line.date",
+                                                              #sort = True,
                                                               )),
                                        sortby = "date",
                                        )
@@ -3084,7 +3035,7 @@ class RequestNeedsPersonModel(S3Model):
                           Field("status", "integer",
                                 default = 4, # Invited
                                 label = T("Status"),
-                                represent = S3Represent(options=status_opts),
+                                represent = S3Represent(options = status_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(status_opts)),
                                 ),
@@ -3092,9 +3043,9 @@ class RequestNeedsPersonModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = S3Duplicate(primary=("need_id",
-                                                          "person_id",
-                                                          ),
+                       deduplicate = S3Duplicate(primary = ("need_id",
+                                                            "person_id",
+                                                            ),
                                                  ),
                        )
 
@@ -3334,8 +3285,8 @@ class RequestNeedsResponseModel(S3Model):
                                            requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "req_need_response.id",
                                                                   represent,
-                                                                  orderby="req_need_response.date",
-                                                                  sort=True,
+                                                                  orderby = "req_need_response.date",
+                                                                  sort = True,
                                                                   )),
                                            sortby = "date",
                                            )
@@ -3507,16 +3458,16 @@ class RequestNeedsResponseOrganisationModel(S3Model):
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(project_organisation_roles)
                                             ),
-                                represent = S3Represent(options=project_organisation_roles),
+                                represent = S3Represent(options = project_organisation_roles),
                                 ),
                           s3_comments(),
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = S3Duplicate(primary=("need_response_id",
-                                                          "organisation_id",
-                                                          "role",
-                                                          ),
+                       deduplicate = S3Duplicate(primary = ("need_response_id",
+                                                            "organisation_id",
+                                                            "role",
+                                                            ),
                                                  ),
                        )
 
@@ -6448,5 +6399,76 @@ $.filterOptionsS3({
 
     # Reset to standard submit button
     s3.crud.submit_button = T("Save")
+
+# =============================================================================
+class req_ReqRepresent(S3Represent):
+    """
+        Represent a Request
+    """
+
+    def __init__(self,
+                 show_link = False,
+                 ):
+
+        super(req_ReqRepresent, self).__init__(lookup = "req_req",
+                                               fields = ["date",
+                                                         "req_ref",
+                                                         "site_id",
+                                                         ],
+                                               show_link = show_link,
+                                               )
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: never used for custom fns (retained for API compatibility)
+        """
+
+        fields = self.fields
+        fields.append(key)
+
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = current.db(query).select(*fields)
+        self.queries += 1
+
+        table = current.db.req_req
+
+        # Bulk-represent site_ids for rows with no req_ref
+        site_ids = [row.site_id for row in rows if not row.req_ref]
+        if site_ids:
+            # Results cached in the represent class
+            table.site_id.represent.bulk(site_ids, show_link = False)
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        if row.req_ref:
+            v = row.req_ref
+        else:
+            table = current.s3db.req_req
+
+            site_string = table.site_id.represent(row.site_id,
+                                                  show_link = False,
+                                                  )
+            date_string = table.date.represent(row.date)
+
+            v = "%s - %s" % (site_string,
+                             date_string)
+
+        return v
 
 # END =========================================================================

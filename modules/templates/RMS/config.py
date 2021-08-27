@@ -227,7 +227,7 @@ def config(settings):
             recv_id = record.recv_id
             if recv_id:
                 rtable = s3db.inv_recv
-                recv = db(stable.id == recv_id).select(rtable.realm_entity,
+                recv = db(rtable.id == recv_id).select(rtable.realm_entity,
                                                        limitby = (0, 1)
                                                        ).first()
                 return recv.realm_entity
@@ -3121,7 +3121,8 @@ Thank you"""
                             "title": T("Stock Position Report"),
                             "fields": [(T("Warehouse"), "site_id$name"),
                                        "item_id$item_category_id",
-                                       "bin",
+                                       #"bin",
+                                       "layout_id",
                                        "item_id$name",
                                        "quantity",
                                        "pack_value",
@@ -3142,7 +3143,8 @@ Thank you"""
                             "title": T("Weight and Volume Report"),
                             "fields": [(T("Warehouse"), "site_id$name"),
                                        "item_id$item_category_id",
-                                       "bin",
+                                       #"bin",
+                                       "layout_id",
                                        "item_id$name",
                                        "quantity",
                                        "item_id$weight",
@@ -3165,7 +3167,8 @@ Thank you"""
                             "title": T("Stock Movements Report"),
                             "fields": [(T("Warehouse"), "site_id$name"),
                                        "item_id$item_category_id",
-                                       "bin",
+                                       #"bin",
+                                       "layout_id",
                                        "item_id$name",
                                        (T("Origin/Destination"), "sites"),
                                        (T("Documents"), "documents"),
@@ -5733,7 +5736,7 @@ class PrintableShipmentForm(S3Method):
         header_row = header_data.rows[0]
         pdf_filename = header_row["_row"]["req_req.req_ref"]
 
-        # Component (=inv_track_item)
+        # Component (=req_item)
         component = resource.components["req_item"]
         body_fields = ["item_id",
                        "item_pack_id",
@@ -5924,7 +5927,8 @@ class PrintableShipmentForm(S3Method):
 
         # Component (=inv_track_item)
         component = resource.components["track_item"]
-        body_fields = ["bin",
+        body_fields = [#"bin",
+                       "layout_id",
                        "item_id",
                        "item_pack_id",
                        "quantity",
@@ -6092,7 +6096,8 @@ class PrintableShipmentForm(S3Method):
 
         # Component (=inv_track_item)
         component = resource.components["track_item"]
-        body_fields = ["recv_bin",
+        body_fields = [#"recv_bin",
+                       "recv_bin_id",
                        "item_id",
                        "item_pack_id",
                        "recv_quantity",

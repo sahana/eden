@@ -3301,7 +3301,7 @@ class OrgSiteModel(S3Model):
             widget = None
             comment = None
 
-        org_site_represent = org_SiteRepresent(show_link=True)
+        org_site_represent = org_SiteRepresent(show_link = True)
 
         site_id = lambda: self.super_link("site_id", "org_site",
                                           comment = comment,

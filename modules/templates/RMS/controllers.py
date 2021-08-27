@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import datetime
 from os import path
 
 from gluon import *
@@ -487,6 +488,18 @@ class inv_dashboard(S3CustomController):
         user = current.auth.user
         user_id = user.id
 
+        # Huuricane Season lasts from 1/6 to 30/11
+        now = current.request.utcnow
+        if 5 < now.month < 12:
+            SEASON = T("this Season")
+            SEASON_START = datetime.date(now.year, 6, 1)
+            SEASON_END = None
+        else:
+            SEASON = T("last Season")
+            last_year = now.year - 1
+            SEASON_START = datetime.date(last_year, 6, 1)
+            SEASON_END = datetime.date(last_year, 12, 1)
+
         # Shipments
         stable = s3db.inv_send
         fields = ["id",
@@ -855,16 +868,15 @@ class inv_dashboard(S3CustomController):
                   "track_item.item_id$weight", # extra_fields
                   "track_item.item_id$volume", # extra_fields
                   ]
-        sresource = s3db.resource("inv_send",
-                                  filter = (stable.status.belongs([SHIP_STATUS_SENT,
-                                                                   SHIP_STATUS_RECEIVED,
-                                                                   SHIP_STATUS_RETURNING,
-                                                                   ]))
-                                  )
-        # @ToDo: Filter by hurricane season (current or last)
-        srows = sresource.select(fields,
-                                 as_rows = True,
-                                 )
+        query = (stable.status.belongs([SHIP_STATUS_SENT,
+                                        SHIP_STATUS_RECEIVED,
+                                        SHIP_STATUS_RETURNING,
+                                        ])) & \
+                (stable.date > SEASON_START)
+        if SEASON_END:
+            query &= (stable.date > SEASON_END)
+        sresource = s3db.resource("inv_send", filter = query)
+        srows = sresource.select(fields, as_rows = True)
         num_shipments = len(set([row["inv_send.id"] for row in srows]))
         shipments_weight = 0
         shipments_volume = 0
@@ -890,9 +902,9 @@ class inv_dashboard(S3CustomController):
 
         kpi = UL(LI("%s: %s kg" % (T("Total weight stockpiled"), float_represent(stockpile_weight, precision=1))),
                  LI("%s: %s m3" % (T("Total volume stockpiled"), float_represent(stockpile_volume, precision=1))),
-                 LI("%s: %s" % (T("Number of Shipments sent"), num_shipments)),
-                 LI("%s: %s kg" % (T("Total weight sent"), float_represent(shipments_weight, precision=1))),
-                 LI("%s: %s m3" % (T("Total volume sent"), float_represent(shipments_volume, precision=3))),
+                 LI("%s %s: %s" % (T("Number of Shipments sent"), SEASON, num_shipments)),
+                 LI("%s %s: %s kg" % (T("Total weight sent"), SEASON, float_represent(shipments_weight, precision=1))),
+                 LI("%s %s: %s m3" % (T("Total volume sent"), SEASON, float_represent(shipments_volume, precision=3))),
                  LI("%s: %s" % (T("Number of warehouses"), len(warehouses))),
                  LI("%s:" % T("Remaining stockpile capacities available"),
                     free_capacities

@@ -1718,14 +1718,16 @@ def send_req():
     r_req = db(table.id == req_id).select(table.req_ref,
                                           table.requester_id,
                                           table.site_id,
-                                          limitby=(0, 1)).first()
+                                          limitby = (0, 1)
+                                          ).first()
 
     # User must have permissions over facility which is sending
     (prefix, resourcename, id) = s3db.get_instance(db.org_site, site_id)
     if not site_id or not auth.s3_has_permission("update",
                                                  "%s_%s" % (prefix,
                                                             resourcename),
-                                                 record_id=id):
+                                                 record_id = id
+                                                 ):
         session.error = T("You do not have permission to send this shipment.")
         redirect(URL(c="req", f="req",
                      args = [req_id]))
@@ -1795,6 +1797,7 @@ def send_req():
                 ii_expiry_field,
                 ii_purchase_field,
                 iitable.bin,
+                iitable.layout_id,
                 iitable.owner_org_id,
                 iitable.supply_org_id,
                 sip_quantity_field,
@@ -1878,6 +1881,7 @@ def send_req():
                    pack_value = iitem.pack_value,
                    currency = iitem.currency,
                    bin = iitem.bin,
+                   layout_id = iitem.layout_id,
                    expiry_date = iitem.expiry_date,
                    owner_org_id = iitem.owner_org_id,
                    supply_org_id = iitem.supply_org_id,
@@ -1903,6 +1907,7 @@ def send_req():
                    pack_value = iitem.pack_value,
                    currency = iitem.currency,
                    bin = iitem.bin,
+                   layout_id = iitem.layout_id,
                    expiry_date = iitem.expiry_date,
                    owner_org_id = iitem.owner_org_id,
                    supply_org_id = iitem.supply_org_id,
