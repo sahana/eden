@@ -3511,37 +3511,234 @@ Thank you"""
     settings.customise_inv_send_controller = customise_inv_send_controller
 
     # -------------------------------------------------------------------------
+    def stock_limit_alerts(warehouse):
+        """
+            Generate an Alert if Stock Level falls below Minimum
+            Cancel Alerts if Stock Level is above Minimum
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        site_id = warehouse.site_id
+
+        # Read Minimums
+        mtable = s3db.inv_minimum
+        query = (mtable.site_id == site_id) &\
+                (mtable.deleted == False)
+
+        minimums = db(query).select(mtable.id,
+                                    mtable.item_id,
+                                    mtable.quantity,
+                                    )
+        item_ids = [row.item_id for row in minimums]
+
+        # Read current stock for each
+        itable = s3db.inv_inv_item
+        ptable = s3db.supply_item_pack
+        query = (itable.site_id == site_id) &\
+                (itable.item_id.belongs(item_ids)) &\
+                (itable.item_pack_id == ptable.id) &\
+                (itable.deleted == False)
+        inventory = db(query).select(itable.item_id,
+                                     itable.quantity,
+                                     ptable.quantity,
+                                     )
+
+        ntable = s3db.auth_user_notification
+        nquery = (ntable.tablename == "inv_minimum")
+
+        alerts = []
+
+        for row in minimums:
+            # What is the Stock for this Item?
+            item_id = row.item_id
+            minimum = row.quantity
+            minimum_id = row.id
+            stock = 0
+            for row in inventory:
+                if row["inv_inv_item.item_id"] == item_id:
+                    stock += row["inv_inv_item.item_id"] * row["supply_item_pack.item_id"]
+            query = nquery & (ntable.record_id == minimum_id)
+            if stock < minimum:
+                # Add Alert, if there is not one already present
+                query &= (ntable.deleted == False)
+                exists = current.db(query).select(table.id,
+                                                  limitby = (0, 1)
+                                                  ).first()
+                if not exists:
+                    alerts.append((item_id, stock, minimum_id))
+            else:
+                # Remove any Minimum Alerts for this Item/Warehouse
+                resource = s3db.resource("auth_user_notification", filter = query)
+                resource.delete()
+
+        if alerts:
+            # Generate Alerts
+            warehouse_name = warehouse.name
+
+            from .controllers import inv_operators_for_sites
+            operators = inv_operators_for_sites([site_id])[site_id]["operators"]
+            languages = {}
+            for row in operators:
+                language = row["auth_user.language"]
+                if language not in languages:
+                    languages[language] = []
+                languages[language].append((row["pr_person_user.pe_id"], row["pr_person_user.user_id"]))
+
+            # Bulk Lookup Item Represents
+            # - assumes that we are not using translate = True!
+            item_ids = [alert[0] for alert in alerts]
+            items = itable.item_id.represent.bulk(item_ids)
+
+            url = URL(c="inv", f="warehouse",
+                      args = [warehouse_id, "inv_item"],
+                      )
+            send_email = current.msg.send_by_pe_id
+            insert = ntable.insert
+
+            T = current.T
+            session = current.session
+            #session_s3 = session.s3
+            ui_language = session.s3.language
+
+            subject_T = T("%(item)s replenishment needed in %(site)s Warehouse. %(quantity)s remaining")
+            message_T = T("%(item)s replenishment needed in %(site)s Warehouse. %(quantity)s remaining. Please review at: %(url)s")
+            alert_T = T("%(item)s replenishment needed in %(site)s Warehouse. %(quantity)s remaining")
+
+            for alert in alerts:
+                item_id = alert[0]
+                item = items.get(item_id)
+                quantity = alert[1]
+                minimum_id = alert[2]
+                for language in languages:
+                    T.force(language)
+                    #session_s3.language = language # for date_represent
+                    subject = s3_str(subject_T) % {"item": item,
+                                                   "site": warehouse_name,
+                                                   "quantity": quantity,
+                                                   }
+                    message = s3_str(message_T) % {"item": item,
+                                                   "site": warehouse_name,
+                                                   "quantity": quantity,
+                                                   "url": url,
+                                                   }
+                    alert = s3_str(alert_T) % {"item": item,
+                                               "site": warehouse_name,
+                                               "quantity": quantity,
+                                               }
+                    users = languages[language]
+                    for user in users:
+                        send_email(user[0],
+                                   subject = subject,
+                                   message = message,
+                                   )
+                        # Add Alert to Dashboard
+                        insert(user_id = user[1],
+                               name = alert,
+                               url = url,
+                               tablename = "inv_minimum",
+                               record_id = minimum_id,
+                               )
+
+                # Restore language for UI
+                #session_s3.language = ui_language
+                T.force(ui_language)
+
+                # Interactive Notification
+                alert = s3_str(alert_T) % {"item": item,
+                                           "site": warehouse_name,
+                                           "quantity": quantity,
+                                           }
+                session.warning.append(alert)
+
+    # -------------------------------------------------------------------------
     def on_free_capacity_update(warehouse):
         """
-            Generate an Alert if Free Capacity < Capacity
+            Generate an Alert if Free Capacity < 10% of Capacity
+            Cancel Alerts if Free capacity is above this
+            Trigger Stock Limit Alert creation/cancellation
         """
+
+        s3db = current.s3db
+
+        warehouse_id = warehouse.id
+
+        table = s3db.auth_user_notification
+        query = (table.tablename == "inv_warehouse") & \
+                (table.record_id == warehouse_id) & \
+                (table.type == "capacity")
 
         free_capacity = warehouse.free_capacity
         if free_capacity / warehouse.capacity < 0.1:
-            site_id = warehouse.site_id
-            warehouse_id = warehouse.id
-            warehouse_name = warehouse.name
-            url = URL(c="inv", f="warehouse",
-                      args = warehouse_id,
-                      )
-            alert = "%(warehouse_name)s Warehouse has only %(free_capacity)s capacity free" % \
-                        {"warehouse_name": warehouse_name,
-                         "free_capacity": free_capacity,
-                         }
-            from .controllers import inv_operators_for_sites
-            operators = inv_operators_for_sites([site_id])[site_id]["operators"]
-            s3db = current.s3db
-            insert = s3db.auth_user_notification.insert
-            for row in operators:
-                # Add Alert to Dashboard
-                insert(user_id = row["pr_person_user.user_id"],
-                       name = alert,
-                       url = url,
-                       type = "capacity",
-                       tablename = "inv_warehouse",
-                       record_id = warehouse_id,
-                       )
-            # @ToDo: Send i18n Email
+            # Generate Capacity Alert, if there is not one already present
+            query = query & (table.deleted == False)
+            exists = current.db(query).select(table.id,
+                                              limitby = (0, 1)
+                                              ).first()
+            if not exists:
+                site_id = warehouse.site_id
+                warehouse_name = warehouse.name
+                url = URL(c="inv", f="warehouse",
+                          args = warehouse_id,
+                          )
+                send_email = current.msg.send_by_pe_id
+                
+                T = current.T
+                session_s3 = current.session.s3
+                ui_language = session_s3.language
+
+                subject_T = T("Stockpile Capacity in %(site)s Warehouse is less than %(free_capacity)s")
+                message_T = T("Stockpile Capacity in %(site)s Warehouse is less than %(free_capacity)s. Please review at: %(url)s")
+                alert_T = T("Stockpile Capacity in %(site)s Warehouse is less than %(free_capacity)s")
+                            
+                from .controllers import inv_operators_for_sites
+                operators = inv_operators_for_sites([site_id])[site_id]["operators"]
+                insert = ntable.insert
+                languages = {}
+                for row in operators:
+                    language = row["auth_user.language"]
+                    if language not in languages:
+                        languages[language] = []
+                    languages[language].append((row["pr_person_user.pe_id"], row["pr_person_user.user_id"]))
+                for language in languages:
+                    T.force(language)
+                    #session_s3.language = language # for date_represent
+                    subject = s3_str(subject_T) % {"site": warehouse_name,
+                                                   "free_capacity": free_capacity,
+                                                   }
+                    message = s3_str(message_T) % {"site": warehouse_name,
+                                                   "free_capacity": free_capacity,
+                                                   "url": url,
+                                                   }
+                    alert = s3_str(alert_T) % {"site": warehouse_name,
+                                               "free_capacity": free_capacity,
+                                               }
+                    users = languages[language]
+                    for user in users:
+                        send_email(user[0],
+                                   subject = subject,
+                                   message = message,
+                                   )
+                        # Add Alert to Dashboard
+                        insert(user_id = user[1],
+                               name = alert,
+                               url = url,
+                               type = "capacity",
+                               tablename = "inv_warehouse",
+                               record_id = warehouse_id,
+                               )
+
+                # Restore language for UI
+                #session_s3.language = ui_language
+                T.force(ui_language)
+        else:
+            # Remove any Capacity Alerts
+            resource = s3db.resource("auth_user_notification", filter = query)
+            resource.delete()
+
+        # Trigger Stock Limit Alert creation/cancellation
+        stock_limit_alerts(warehouse)
 
     # -------------------------------------------------------------------------
     def customise_inv_warehouse_resource(r, tablename):
@@ -5271,7 +5468,7 @@ Thank you"""
         """
             Notify the Warehouse Operator(s)
             - Email
-            - Alert
+            - Dashboard Alert
         """
 
         from gluon import URL
@@ -5282,8 +5479,8 @@ Thank you"""
         db = current.db
         s3db = current.s3db
         session_s3 = current.session.s3
-
         ui_language = session_s3.language
+
         url = "%s%s" % (current.deployment_settings.get_base_public_url(),
                         URL(c="req", f="req",
                             args = [req_id, "req_item"],
@@ -5294,34 +5491,50 @@ Thank you"""
         send_email = current.msg.send_by_pe_id
         subject_T = T("Request Approved for Items from your Warehouse")
         message_T = T("A new Request, %(reference)s, has been Approved for shipment from %(site)s by %(date_required)s. Please review at: %(url)s")
+        alert_T = T("Request %(reference)s for items from %(site)s by %(date_required)s")
 
+        insert = s3db.auth_user_notification.insert
         sites = inv_operators_for_sites(site_ids)
 
         for site_id in sites:
             site = sites[site_id]
-            # Send Localised Mail(s)
+            site_name = site["name"]
+            # Send Localised Alerts & Mail(s)
             languages = {}
             operators = site["operators"]
             for row in operators:
                 language = row["auth_user.language"]
                 if language not in languages:
                     languages[language] = []
-                languages[language].append(row["pr_person_user.pe_id"])
+                languages[language].append((row["pr_person_user.pe_id"], row["pr_person_user.user_id"]))
             for language in languages:
                 T.force(language)
                 session_s3.language = language # for date_represent
+                date = date_represent(date_required)
                 subject = "%s: %s" % (s3_str(subject_T), req_ref)
-                message = s3_str(message_T) % {"date_required": date_represent(date_required),
+                message = s3_str(message_T) % {"date_required": date,
                                                "reference": req_ref,
-                                               "site": site["name"],
+                                               "site": site_name,
                                                "url": url,
                                                }
+                alert = s3_str(alert_T) % {"date_required": date,
+                                           "reference": req_ref,
+                                           "site": site_name,
+                                           }
+
                 users = languages[language]
-                for pe_id in users:
-                    send_email(pe_id,
+                for user in users:
+                    send_email(user[0],
                                subject = subject,
                                message = message,
                                )
+                    insert(user_id = user[1],
+                           name = alert,
+                           url = url,
+                           type = "req_fulfil",
+                           tablename = "req_req",
+                           record_id = req_id,
+                           )
 
         # Restore language for UI
         session_s3.language = ui_language

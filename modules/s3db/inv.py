@@ -5595,16 +5595,7 @@ def inv_warehouse_free_capacity(site_id):
     tablename = "inv_warehouse"
     customise = current.deployment_settings.customise_resource(tablename)
     if customise:
-        request = current.request
-        prefix = request.controller
-        name = request.function
-        if prefix == "default":
-            # Prepop
-            prefix = "inv"
-        if name == "index":
-            # Prepop
-            name = "warehouse"
-        r = S3Request(prefix, name, args=[], vars={})
+        r = S3Request("inv", "warehouse", args=[], vars={})
         customise(r, tablename)
     on_free_capacity_update = s3db.get_config(tablename, "on_free_capacity_update")
     if on_free_capacity_update:

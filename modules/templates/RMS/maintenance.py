@@ -4,8 +4,11 @@ import datetime
 import os
 import time
 
-from gluon import current
+from gluon import current, URL
 from gluon.settings import global_settings
+
+from s3 import s3_str, S3DateTime
+from .controllers import inv_operators_for_sites
 
 # =============================================================================
 class Daily():
@@ -58,7 +61,7 @@ class Daily():
         return
 
         # Check for Expiring Stock
-        # @ToDo: Complete
+        # @ToDo: Do we need to remove alerts? Currently think that doesn't happen automatically
         ninety_days = now + datetime.timedelta(days = 90)
         table = s3db.inv_inv_item
         rows = db(table.expiry_date < ninety_days).select(table.id,
@@ -66,26 +69,114 @@ class Daily():
                                                           table.item_id,
                                                           table.expiry_date,
                                                           table.quantity,
-                                                          table.bin,
+                                                          table.layout_id,
                                                           )
         if len(rows):
-            # Bulk Represent Sites
-            # Bulk Represent Items
+
+            ntable = s3db.auth_user_notification
+            nquery = (ntable.tablename == "inv_inv_item")
+
+            alerts = []
+
             for row in rows:
-                # Dashboard Alerts
-                # Which User(s) should we Alert?
-                # Check if we already have an Alert
-                ntable = s3db.auth_user_notification
                 record_id = row.id
-                # Add Alert
-                ntable.insert(user_id = user_id,
-                              # @ToDo: i18n
-                              name = "%(quantity)s %(item)s in %(bin)s from %(site)s will expire on %(date)s",
-                              url = URL(c="inv", f="inv_item", args=record_id),
-                              type = "expiry",
-                              tablename = "inv_inv_item",
-                              record_id = record_id,
-                              )
-                # Send i18n emails
+                # Add Alert, if there is not one already present
+                query = nquery & (ntable.record_id == record_id) & \
+                                 (ntable.deleted == False)
+                exists = current.db(query).select(table.id,
+                                                  limitby = (0, 1)
+                                                  ).first()
+                if not exists:
+                    alerts.append((record_id, row.site_id, row.item_id, row.expiry_date, row.quantity, row.layout_id))         
+
+            if alerts:
+                T = current.T
+                session_s3 = current.session.s3
+                ui_language = session_s3.language
+
+                site_ids = [alert[1] for alert in alerts]
+
+                # Lookup Site Operators
+                sites = inv_operators_for_sites(site_ids)
+
+                # Bulk Represent Items
+                # - assumes that we are not using translate = True!
+                item_ids = [alert[2] for alert in alerts]
+                items = table.item_id.represent.bulk(item_ids)
+
+                # Bulk Represent Bins
+                layout_ids = [alert[5] for alert in alerts]
+                bins = table.layout_id.represent.bulk(layout_ids)
+
+                date_represent = S3DateTime.date_represent # We don't want to highlight in red!
+                send_email = current.msg.send_by_pe_id
+                subject_T = T("%(quantity)s %(item)s in %(bin)s from %(site)s Warehouse will expire on %(date)s")
+                message_T = T("%(quantity)s %(item)s in %(bin)s from %(site)s Warehouse will expire on %(date)s. Please review at: %(url)s")
+                alert_T = T("%(quantity)s %(item)s in %(bin)s from %(site)s Warehouse will expire on %(date)s")
+
+                insert = ntable.insert
+
+                for alert in alerts:
+                    record_id = alert[0]
+                    url = "%s%s" % (current.deployment_settings.get_base_public_url(),
+                                    URL(c="inv", f="inv_item",
+                                        args = record_id,
+                                        ))
+                    site = sites[alert[1]]
+                    site_name = site["name"]
+                    item = items.get(alert[2])
+                    expiry_date = alert[3]
+                    quantity = alert[4]
+                    bin = bins.get(alert[5])
+
+                    # Send Localised Alerts & Mail(s)
+                    languages = {}
+                    operators = site["operators"]
+                    for row in operators:
+                        language = row["auth_user.language"]
+                        if language not in languages:
+                            languages[language] = []
+                        languages[language].append((row["pr_person_user.pe_id"], row["pr_person_user.user_id"]))
+                    for language in languages:
+                        T.force(language)
+                        session_s3.language = language # for date_represent
+                        date = date_represent(expiry_date)
+                        subject = s3_str(subject_T) % {"quantity": quantity,
+                                                       "item": item,
+                                                       "bin": bin,
+                                                       "site": site_name,
+                                                       "date": date,
+                                                       }
+                        message = s3_str(message_T) % {"quantity": quantity,
+                                                       "item": item,
+                                                       "bin": bin,
+                                                       "site": site_name,
+                                                       "date": date,
+                                                       "url": url,
+                                                       }
+                        alert = s3_str(alert_T) % {"quantity": quantity,
+                                                   "item": item,
+                                                   "bin": bin,
+                                                   "site": site_name,
+                                                   "date": date,
+                                                   }
+
+                        users = languages[language]
+                        for user in users:
+                            send_email(user[0],
+                                       subject = subject,
+                                       message = message,
+                                       )
+                            insert(user_id = user[1],
+                                   name = alert,
+                                   url = url,
+                                   type = "expiry",
+                                   tablename = "inv_inv_item",
+                                   record_id = record_id,
+                                   )
+
+                # Restore language for UI
+                session_s3.language = ui_language
+                T.force(ui_language)
 
 # END =========================================================================
