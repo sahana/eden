@@ -794,6 +794,8 @@ $.filterOptionsS3({
     def inv_inv_item_onaccept(form):
         """
             Update the Free Capacity of the Warehouse
+
+            - only called when settings.get_inv_warehouse_free_capacity_calculated()
         """
 
         site_id = form.vars.get("site_id")
@@ -5232,6 +5234,10 @@ def inv_send_process():
                                              recv_id = recv_id,
                                              )
 
+    if current.deployment_settings.get_inv_warehouse_free_capacity_calculated():
+        # Update the Warehouse Free capacity
+        inv_warehouse_free_capacity(send_record.site_id)
+
     session.confirmation = T("Shipment Items sent from Warehouse")
     if req_rec:
         session.confirmation = T("Request Status updated")
@@ -5244,7 +5250,7 @@ def inv_track_item_deleting(record_id):
     """
        A track item can only be deleted if the status is Preparing
        When a track item record is deleted and it is linked to an inv_item
-       then the inv_item quantity will be reduced.
+       then the inv_item quantity will be adjusted.
     """
 
     db = current.db
@@ -5598,7 +5604,7 @@ def inv_warehouse_free_capacity(site_id):
         if name == "index":
             # Prepop
             name = "warehouse"
-        r = S3Request(prefix, name)
+        r = S3Request(prefix, name, args=[], vars={})
         customise(r, tablename)
     on_free_capacity_update = s3db.get_config(tablename, "on_free_capacity_update")
     if on_free_capacity_update:

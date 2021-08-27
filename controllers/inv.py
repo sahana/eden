@@ -791,7 +791,7 @@ def send_process():
 # -----------------------------------------------------------------------------
 def send_returns():
     """
-        This will cancel a shipment that has been sent
+        This will return a shipment that has been sent
 
         @ToDo: Rewrite as S3Method
         @todo need to roll back commitments
@@ -815,7 +815,8 @@ def send_returns():
 
     if session.error:
         redirect(URL(c="inv", f="send",
-                     args=[send_id]))
+                     args = [send_id],
+                     ))
 
     rtable = s3db.inv_recv
     tracktable = s3db.inv_track_item
@@ -863,6 +864,7 @@ def return_process():
         session.error = T("You do not have permission to return this sent shipment.")
 
     send_record = db(stable.id == send_id).select(stable.status,
+                                                  stable.site_id,
                                                   limitby = (0, 1)
                                                   ).first()
     from s3db.inv import inv_ship_status
@@ -875,7 +877,6 @@ def return_process():
                      ))
 
     invtable = s3db.inv_inv_item
-    rtable = s3db.inv_recv
     tracktable = s3db.inv_track_item
 
     # Okay no error so far, let's move the goods back into the warehouse
@@ -893,7 +894,7 @@ def return_process():
         if return_qnty == None:
             return_qnty = 0
         # update the receive quantity in the tracking record
-        tracktable[track_item.id] = dict(recv_quantity = track_item.quantity - return_qnty)
+        db(tracktable.id == track_item.id).update(recv_quantity = track_item.quantity - return_qnty)
         if return_qnty:
             db(invtable.id == send_inv_id).update(quantity = invtable.quantity + return_qnty)
 
@@ -907,15 +908,20 @@ def return_process():
                                                         ).first()
     if recv_row:
         recv_id = recv_row.recv_id
-        db(rtable.id == recv_id).update(date = request.utcnow,
-                                        status = inv_ship_status["RECEIVED"],
-                                        owned_by_user = None,
-                                        owned_by_group = ADMIN,
-                                        )
+        db(s3db.inv_recv.id == recv_id).update(date = request.utcnow,
+                                               status = inv_ship_status["RECEIVED"],
+                                               owned_by_user = None,
+                                               owned_by_group = ADMIN,
+                                               )
 
     # Change the status for all track items in this shipment to Received
     from s3db.inv import inv_tracking_status
     db(tracktable.send_id == send_id).update(status = inv_tracking_status["RECEIVED"])
+
+    if settings.get_inv_warehouse_free_capacity_calculated():
+        # Update the Warehouse Free capacity
+        from s3db.inv import inv_warehouse_free_capacity
+        inv_warehouse_free_capacity(send_record.site_id)
 
     redirect(URL(f = "send",
                  args = [send_id],
@@ -940,6 +946,7 @@ def send_cancel():
         session.error = T("You do not have permission to cancel this sent shipment.")
 
     send_record = db(stable.id == send_id).select(stable.status,
+                                                  stable.site_id,
                                                   limitby = (0, 1)
                                                   ).first()
 
@@ -973,7 +980,6 @@ def send_cancel():
                                         owned_by_group = ADMIN,
                                         )
 
-
     # Change the track items status to canceled and then delete them
     # If they are linked to a request then the in transit total will also be reduced
     # Records can only be deleted if the status is In Process (or preparing)
@@ -986,6 +992,11 @@ def send_cancel():
         inv_track_item_deleting(track_item.id)
     # Now change the status to (cancelled)
     db(tracktable.send_id == send_id).update(status = tracking_status["CANCEL"])
+
+    if settings.get_inv_warehouse_free_capacity_calculated():
+        # Update the Warehouse Free capacity
+        from s3db.inv import inv_warehouse_free_capacity
+        inv_warehouse_free_capacity(send_record.site_id)
 
     session.confirmation = T("Sent Shipment canceled and items returned to Warehouse")
 
@@ -1461,6 +1472,11 @@ def recv_process():
                          record = Storage(track_item),
                          ))
 
+    if settings.get_inv_warehouse_free_capacity_calculated():
+        # Update the Warehouse Free capacity
+        from s3db.inv import inv_warehouse_free_capacity
+        inv_warehouse_free_capacity(recv_record.site_id)
+
     # Done => confirmation message, open the record
     session.confirmation = T("Shipment Items Received")
     redirect(URL(c="inv", f="recv", args=[recv_id]))
@@ -1485,6 +1501,7 @@ def recv_cancel():
         redirect(URL(c="inv", f="recv", args=[recv_id]))
 
     recv_record = db(rtable.id == recv_id).select(rtable.status,
+                                                  rtable.site_id,
                                                   limitby = (0, 1)
                                                   ).first()
 
@@ -1565,6 +1582,12 @@ def recv_cancel():
                                         owned_by_user = None,
                                         owned_by_group = ADMIN
                                         )
+
+    if settings.get_inv_warehouse_free_capacity_calculated():
+        # Update the Warehouse Free capacity
+        from s3db.inv import inv_warehouse_free_capacity
+        inv_warehouse_free_capacity(recv_record.site_id)
+
     redirect(URL(c="inv", f="recv",
                  args = [recv_id]
                  ))
