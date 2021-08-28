@@ -1061,7 +1061,8 @@ $.filterOptionsS3({
             query = (table.deleted != True) & \
                     (table.code.lower() == code.lower())
             duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
+                                                 limitby = (0, 1)
+                                                 ).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -1085,7 +1086,8 @@ $.filterOptionsS3({
                 query &= (table.catalog_id == catalog_id)
 
             duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
+                                                 limitby = (0, 1)
+                                                 ).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE

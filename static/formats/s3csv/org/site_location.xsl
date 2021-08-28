@@ -6,7 +6,6 @@
          Site Locations - CSV Import Stylesheet
 
          CSV fields:
-         Name.................................gis_location.name
          Facility.............................org_site.name
          Facility Type........................org_site.instance_type
          Country.................optional.....gis_location.L0 Name or ISO2
@@ -16,6 +15,7 @@
          L4......................optional.....gis_location.L4 (not commonly-used)
          L5......................optional.....gis_location.L5 (not commonly-used)
          WKT.....................optional.....gis_location.WKT (Polygon)
+         Name....................optional.....gis_location.name (for Polygon)
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -145,8 +145,8 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
-        <xsl:variable name="FacilityType" select="col[@field='Facility Type']/text()"/>
 
+        <xsl:variable name="FacilityType" select="col[@field='Facility Type']/text()"/>
         <xsl:variable name="resourcename">
             <xsl:choose>
                 <xsl:when test="$FacilityType='Office'">org_office</xsl:when>
@@ -159,9 +159,15 @@
                 <xsl:otherwise>org_office</xsl:otherwise>
             </xsl:choose>
         </xsl:variable>
+        <xsl:variable name="country">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Country"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="wkt" select="col[@field='WKT']/text()"/>
 
         <!-- Polygon -->
-        <xsl:if test="col[@field='WKT']!=''">
+        <xsl:if test="$wkt!=''">
             <xsl:call-template name="Location"/>
         </xsl:if>
 
@@ -178,8 +184,8 @@
                 </xsl:attribute>
             </reference>
 
-            <!-- Link to Location - @ToDo fix to work with col[@field=$Country] -->
-            <xsl:if test="col[@field='WKT']!='' or col[@field='Country']!=''">
+            <!-- Link to Location -->
+            <xsl:if test="$country!='' or $wkt!=''">
                 <xsl:call-template name="LocationReference"/>
             </xsl:if>
 
@@ -599,7 +605,11 @@
 
             <xsl:otherwise>
                 <!-- Lx -->
-                <xsl:variable name="l0" select="col[@field='Country']/text()"/>
+                <xsl:variable name="l0">
+                    <xsl:call-template name="GetColumnValue">
+                        <xsl:with-param name="colhdrs" select="$Country"/>
+                    </xsl:call-template>
+                </xsl:variable>
                 <xsl:variable name="l1" select="col[@field='L1']/text()"/>
                 <xsl:variable name="l2" select="col[@field='L2']/text()"/>
                 <xsl:variable name="l3" select="col[@field='L3']/text()"/>
@@ -686,7 +696,11 @@
     <xsl:template name="Location">
 
         <xsl:variable name="Name" select="col[@field='Name']/text()"/>
-        <xsl:variable name="l0" select="col[@field='Country']/text()"/>
+        <xsl:variable name="l0">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Country"/>
+            </xsl:call-template>
+        </xsl:variable>
         <xsl:variable name="l1" select="col[@field='L1']/text()"/>
         <xsl:variable name="l2" select="col[@field='L2']/text()"/>
         <xsl:variable name="l3" select="col[@field='L3']/text()"/>
@@ -722,7 +736,7 @@
         <xsl:variable name="l4id" select="concat('L4/', $countrycode, '/', $l1, '/', $l2, '/', $l3, '/', $l4)"/>
         <xsl:variable name="l5id" select="concat('L5/', $countrycode, '/', $l1, '/', $l2, '/', $l3, '/', $l4, '/', $l5)"/>
 
-        <!-- Organisation Location -->
+        <!-- Specific Location -->
         <resource name="gis_location">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$wkt"/>
@@ -772,7 +786,7 @@
                 </xsl:otherwise>
             </xsl:choose>
             <data field="name"><xsl:value-of select="$Name"/></data>
-            <data field="wkt"><xsl:value-of select="col[@field='WKT']"/></data>
+            <data field="wkt"><xsl:value-of select="$wkt"/></data>
         </resource>
 
     </xsl:template>

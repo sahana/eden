@@ -1,0 +1,7 @@
+Facility,Facility Type,Name,Parent
+Guadeloupe,Warehouse,Aisle 1,
+Guadeloupe,Warehouse,Rack 1,Aisle 1
+Guadeloupe,Warehouse,Shelf 1,Rack 1
+Martinique,Warehouse,Aisle 1,
+Martinique,Warehouse,Rack 1,Aisle 1
+Martinique,Warehouse,Shelf 1,Rack 1

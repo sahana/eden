@@ -37,12 +37,8 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
-        <xsl:variable name="CategoryName">
-            <xsl:value-of select="col[@field='Category']"/>
-        </xsl:variable>
-        <xsl:variable name="Parent">
-            <xsl:value-of select="col[@field='Parent Category']"/>
-        </xsl:variable>
+        <xsl:variable name="CategoryName" select="col[@field='Category']/text()"/>
+        <xsl:variable name="Parent" select="col[@field='Parent Category']/text()"/>
 
         <resource name="supply_item_category">
 

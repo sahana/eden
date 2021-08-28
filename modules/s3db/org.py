@@ -4054,7 +4054,7 @@ class OrgSiteLayoutModel(S3Model):
 
         # Table Configuration
         self.configure(tablename,
-                       deduplicate = S3Duplicate(primary = ["name"],
+                       deduplicate = S3Duplicate(primary = ["name", "site_id"],
                                                  secondary = ["parent"],
                                                  ),
                        hierarchy = "parent",
