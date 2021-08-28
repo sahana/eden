@@ -1,4 +1,4 @@
 Name,Layout
-Initial Disaster Assessment (IDA),"{1:{'type':'question','code':'I1'},2:{'type':'question','code':'I2'}}"
+Initial Disaster Assessment (IDA),"{1:{'type':'question','code':'I1'},2:{'type':'question','code':'I2'},3:{'type':'question','code':'I3'}}"
 Preliminary Damage and Needs Assessment (PDNA),"{1:{'type':'question','code':'P1'},2:{'type':'question','code':'P2'}}"
 Detailed Damage Assessment,"{1:{'type':'question','code':'D1'}}"
