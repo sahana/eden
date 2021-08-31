@@ -58,10 +58,9 @@ class Daily():
         table = s3db.s3_import_upload
         db(table.created_on < week_past).delete()
 
-        return
-
         # Check for Expiring Stock
-        # @ToDo: Do we need to remove alerts? Currently think that doesn't happen automatically
+        # @ToDo: Do we need to remove alerts?
+        # - currently think that doesn't happen automatically
         ninety_days = now + datetime.timedelta(days = 90)
         table = s3db.inv_inv_item
         rows = db(table.expiry_date < ninety_days).select(table.id,
@@ -102,7 +101,7 @@ class Daily():
                 # Bulk Represent Items
                 # - assumes that we are not using translate = True!
                 item_ids = [alert[2] for alert in alerts]
-                items = table.item_id.represent.bulk(item_ids)
+                items = table.item_id.represent.bulk(item_ids, show_link=False)
 
                 # Bulk Represent Bins
                 layout_ids = [alert[5] for alert in alerts]

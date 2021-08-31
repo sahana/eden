@@ -2770,7 +2770,7 @@ Thank you"""
             logo = org.logo
             if logo:
                 logo = org_organisation_logo(org)
-            elif current.deployment_settings.get_org_branches():
+            elif settings.get_org_branches():
                 from s3db.org import org_root_organisation
                 root_org = current.cache.ram(
                     # Common key with auth.root_org
@@ -3594,9 +3594,11 @@ Thank you"""
             #from gluon import URL
             from s3 import s3_str
 
-            url = URL(c="inv", f="warehouse",
-                      args = [warehouse.id, "inv_item"],
-                      )
+            url = "%s%s" % (settings.get_base_public_url(),
+                            URL(c="inv", f="warehouse",
+                                args = [warehouse.id, "inv_item"],
+                                ),
+                            )
             send_email = current.msg.send_by_pe_id
             insert = ntable.insert
 
@@ -3685,9 +3687,11 @@ Thank you"""
                 from s3 import s3_str
                 site_id = warehouse.site_id
                 warehouse_name = warehouse.name
-                url = URL(c="inv", f="warehouse",
-                          args = warehouse_id,
-                          )
+                url = "%s%s" % (settings.get_base_public_url(),
+                                URL(c="inv", f="warehouse",
+                                    args = warehouse_id,
+                                    ),
+                                )
                 send_email = current.msg.send_by_pe_id
                 
                 T = current.T
@@ -4063,8 +4067,6 @@ Thank you"""
 
             return result
         s3.prep = custom_prep
-
-        settings = current.deployment_settings
 
         if type_filter == "Supplier":
             # Suppliers have simpler Tabs (hide Offices, Warehouses and Contacts)
@@ -5487,7 +5489,7 @@ Thank you"""
         session_s3 = current.session.s3
         ui_language = session_s3.language
 
-        url = "%s%s" % (current.deployment_settings.get_base_public_url(),
+        url = "%s%s" % (settings.get_base_public_url(),
                         URL(c="req", f="req",
                             args = [req_id, "req_item"],
                             ))
