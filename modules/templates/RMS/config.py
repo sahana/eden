@@ -782,7 +782,6 @@ def config(settings):
     #settings.inv.collapse_tabs = True
     # Uncomment if you need a simpler (but less accountable) process for managing stock levels
     #settings.inv.direct_stock_edits = True
-    #settings.inv.org_dependent_warehouse_types = True
     # Settings for HNRC:
     settings.inv.stock_count = False
     settings.inv.item_status = {#0: current.messages["NONE"], # Not defined yet
@@ -800,6 +799,9 @@ def config(settings):
                                36: T("Consignment"), # Borrowed
                                37: T("In Transit"),  # Loaning warehouse space to another agency
                                }
+    # Link Shipments to Multiple Requests
+    settings.inv.send_req_multi = True
+    settings.inv.recv_req_multi = True
     # Calculate Warehouse Free Capacity
     settings.inv.warehouse_free_capacity_calculated = True
     # Use structured Bins
@@ -824,6 +826,8 @@ def config(settings):
     #settings.req.document_filing = True
     # Should Requests ask whether Transportation is required?
     settings.req.ask_transport = True
+    # Request Numbers are entered manually
+    settings.req.generate_req_number = False
     settings.req.pack_values = False
     # HNRC disable Request Matching as don't want users making requests to see what stock is available
     # PIRAC want this to be done by the Logistics Approver
@@ -3400,12 +3404,10 @@ Thank you"""
         f.requires = IS_IN_SET(transport_opts)
         f.represent = S3Represent(options = transport_opts)
 
-        from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineLink
+        from s3 import S3SQLCustomForm, S3SQLInlineLink
         crud_form = S3SQLCustomForm(S3SQLInlineLink("req",
                                                     field = "req_id",
                                                     label = T("Request Number"),
-                                                    # @ToDo: Filter appropriately
-                                                    #requires = IS_ONE_OF()
                                                     ),
                                     #"send_ref", # Always calculate automatically?
                                     "site_id",
@@ -3491,6 +3493,27 @@ Thank you"""
                                            )
                             s3db.inv_send.filing_status.writable = True
 
+                elif r.component_name == "track_item":
+                    # Limit to Items in the Request, and requested from this site
+                    # @ToDo: Also limit quantity
+                    db = current.db
+                    s3db = current.s3db
+                    srtable = s3db.inv_send_req
+                    reqs = db(srtable.send_id == r.id).select(srtable.req_id)
+                    req_ids = [row.req_id for row in reqs]
+                    ritable = s3db.req_req_item
+                    if len(req_ids) == 1:
+                        req_query = (ritable.req_id == req_ids[0])
+                    else:
+                        req_query = (ritable.req_id.belongs(req_ids))
+                    query = req_query & \
+                            (ritable.site_id == record.site_id)
+                    request_items = db(query).select(ritable.item_id)
+                    req_item_ids = [row.item_id for row in request_items]
+                    query = (s3db.inv_inv_item.item_id.belongs(req_item_ids))
+                    dbset = s3db.inv_track_item.send_inv_item_id.requires.dbset(query)
+                    s3db.inv_track_item.send_inv_item_id.requires.dbset = dbset
+                
                 elif r.component_name == "document":
                     s3.crud_strings["doc_document"].label_create = T("File Signed Document")
                     field = current.s3db.doc_document.name
@@ -3502,6 +3525,34 @@ Thank you"""
                     #from s3 import S3Represent
                     field.requires = IS_IN_SET(document_type_opts)
                     field.represent = S3Represent(options = document_type_opts)
+
+            elif r.method in ("create", "update"):
+                # Filter Requests to those which are:
+                # - Approved
+                # - Have Items Requested From our sites
+                s3db = current.s3db
+                sites = s3db.inv_send.site_id.requires.options(zero = False)
+                site_ids = [site[0] for site in sites]
+                rtable = s3db.req_req
+                ritable = s3db.req_req_item
+                if len(site_ids) > 1:
+                    site_query = (ritable.site_id.belongs(site_ids))
+                    s3.scripts.append("/%s/static/themes/RMS/js/inv_send.js" % r.application)
+                else:
+                    site_query = (ritable.site_id == site_ids)
+                query = (rtable.workflow_status == 3) & \
+                        (rtable.deleted == False) & \
+                        (rtable.id == ritable.req_id) & \
+                        site_query & \
+                        (ritable.deleted == False)
+                dbset = current.db(query)
+
+                from s3 import IS_ONE_OF
+                f = s3db.inv_send_req.req_id 
+                f.requires = IS_ONE_OF(dbset, "req_req.id",
+                                       f.represent,
+                                       sort = True,
+                                       )
 
             return result
         s3.prep = custom_prep
@@ -5472,7 +5523,22 @@ Thank you"""
                 db(current.s3db.req_req_item.req_id == req_id).update(realm_entity = realm_entity)
 
     # -------------------------------------------------------------------------
-    def on_req_approve(req_id, record, site_ids):
+    def on_req_approve(req_id):
+        """
+            Remove Dashboard Alert
+        """
+
+        s3db = current.s3db
+        ntable = s3db.auth_user_notification
+        query = (ntable.user_id == current.auth.user.id) & \
+                (ntable.type == "req_approve") & \
+                (ntable.record_id == req_id)
+
+        resource = s3db.resource("auth_user_notification", filter = query)
+        resource.delete()
+
+    # -------------------------------------------------------------------------
+    def on_req_approved(req_id, record, site_ids):
         """
             Notify the Warehouse Operator(s)
             - Email
@@ -5549,18 +5615,126 @@ Thank you"""
         T.force(ui_language)
 
     # -------------------------------------------------------------------------
+    def on_req_submit(req_id, record, site, approvers):
+        """
+            Notify the Approvers
+            - Email
+            - Dashboard Alert
+        """
+
+        #from gluon import URL
+        from s3 import s3_fullname, s3_str, S3DateTime
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        session_s3 = current.session.s3
+        ui_language = session_s3.language
+
+        url = "%s%s" % (settings.get_base_public_url(),
+                        URL(c="req", f="req",
+                            args = [req_id],
+                            ))
+        req_ref = record.req_ref
+        date_required = record.date_required
+        date_represent = S3DateTime.date_represent # We want Dates not datetime which table.date_required uses
+        requester = s3_fullname(record.requester_id)
+        site_name = site.name
+        send_email = current.msg.send_by_pe_id
+        subject_T = T("Request submitted for Approval")
+        message_T = T("A new Request, %(reference)s, has been submitted for Approval by %(person)s for delivery to %(site)s by %(date_required)s. Please review at: %(url)s")
+        alert_T = T("A new Request, %(reference)s, has been submitted for Approval by %(person)s for delivery to %(site)s by %(date_required)s")
+
+        insert = s3db.auth_user_notification.insert
+
+        # Send Localised Alerts & Mail(s)
+        languages = {}
+        for row in approvers:
+            language = row["auth_user.language"]
+            if language not in languages:
+                languages[language] = []
+            languages[language].append((row["pr_person_user.pe_id"], row["pr_person_user.user_id"]))
+        for language in languages:
+            T.force(language)
+            session_s3.language = language # for date_represent
+            date = date_represent(date_required)
+            subject = "%s: %s" % (s3_str(subject_T), req_ref)
+            message = s3_str(message_T) % {"date_required": date_represent(date_required),
+                                           "reference": req_ref,
+                                           "person": requester,
+                                           "site": site_name,
+                                           "url": url,
+                                           }
+            alert = s3_str(alert_T) % {"date_required": date,
+                                       "reference": req_ref,
+                                       "person": requester,
+                                       "site": site_name,
+                                       }
+
+            users = languages[language]
+            for user in users:
+                send_email(user[0],
+                           subject = subject,
+                           message = message,
+                           )
+                insert(user_id = user[1],
+                       name = alert,
+                       url = url,
+                       type = "req_approve",
+                       tablename = "req_req",
+                       record_id = req_id,
+                       )
+
+        # Restore language for UI
+        session_s3.language = ui_language
+        T.force(ui_language)
+
+    # -------------------------------------------------------------------------
+    def req_sites(r, **attr):
+        """
+            Lookup to limit sites to those requested_from the selected Requests' Items
+            Accessed from inv_item.js
+            Access via the .json representation to avoid work rendering menus, etc
+        """
+
+        
+        req_id = r.get_vars.get("req_id")
+        if not req_id:
+            return
+        req_id = req_id.split(",")
+
+        s3db = current.s3db
+        available_sites = s3db.inv_send.site_id.requires.options(zero = False)
+
+        ritable = s3db.req_req_item
+        if len(req_id) == 1:
+            query = (ritable.req_id == req_id[0])
+        else:
+            query = (ritable.req_id.belongs(req_id))
+        request_items = current.db(query).select(ritable.site_id)
+        requested_sites = set([int(row.site_id) for row in request_items if row.site_id])
+        intersect_sites = []
+        for site in available_sites:
+            if int(site[0]) in requested_sites:
+                intersect_sites.append(site)
+
+        import json
+        SEPARATORS = (",", ":")
+        current.response.headers["Content-Type"] = "application/json"
+        return json.dumps(intersect_sites, separators=SEPARATORS)
+
+    # -------------------------------------------------------------------------
     def customise_req_req_resource(r, tablename):
 
         from gluon import IS_NOT_EMPTY
-        from s3db.req import req_ref_represent
+        from s3db.req import req_ReqRefRepresent
 
         auth = current.auth
         s3db = current.s3db
 
         table = s3db.req_req
         f = table.req_ref
-        f.represent = lambda v, show_link=True, pdf=True: \
-            req_ref_represent(v, show_link, pdf)
+        f.represent = req_ReqRefRepresent(show_link=True, pdf=True)
         f.requires = IS_NOT_EMPTY()
         f.widget = None
         table.priority.readable = table.priority.writable = False
@@ -5693,6 +5867,12 @@ Thank you"""
                             action = PrintableShipmentForm,
                             )
 
+            # Lookup to limit sites to those requested_from the selected Requests' Items
+            s3db.set_method("req", "req",
+                            method = "sites",
+                            action = req_sites,
+                            )
+
         from s3 import S3OptionsFilter
         filter_widgets = [S3OptionsFilter("workflow_status",
                                           cols = 5,
@@ -5724,6 +5904,8 @@ Thank you"""
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        on_req_approve = on_req_approve,
+                       on_req_approved = on_req_approved,
+                       on_req_submit = on_req_submit,
                        )
 
     settings.customise_req_req_resource = customise_req_req_resource

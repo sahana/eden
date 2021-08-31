@@ -453,9 +453,9 @@ def req_controller(template = False):
             pass
 
         elif r.representation == "geojson":
-            req_ref_represent = table.req_ref.represent
-            table.req_ref.represent = lambda v, show_link=False, pdf=False: \
-                req_ref_represent(v, show_link)
+            # Default anyway
+            # from s3db.req import req_ReqRefRepresent
+            #table.req_ref.represent = req_ReqRefRepresent()
             # Load these models now as they'll be needed when we encode
             mtable = s3db.gis_marker
             s3db.configure("req_req",

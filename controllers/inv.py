@@ -662,12 +662,6 @@ def inv_item():
                                 rheader = inv_rheader,
                                 )
 
-    # Handled via insertable=False
-    #if not settings.get_inv_direct_stock_edits() and \
-    #   isinstance(output, dict) and \
-    #   "add_btn" in output:
-    #    del output["add_btn"]
-
     return output
 
 # -----------------------------------------------------------------------------
@@ -697,10 +691,6 @@ def track_movement():
     output = s3_rest_controller("inv", "track_item",
                                 rheader = inv_rheader,
                                 )
-    # Handled via insertable = False
-    #if isinstance(output, dict) and \
-    #   "add_btn" in output:
-    #    del output["add_btn"]
 
     return output
 
@@ -1054,25 +1044,8 @@ def recv():
         record = r.record
         if record:
             status = record.status
-            if status not in (SHIP_STATUS_IN_PROCESS, SHIP_STATUS_SENT):
-                # Now that the shipment has been sent
-                # lock the record so that it can't be meddled with
-                s3db.configure("inv_recv",
-                               create = False,
-                               deletable = False,
-                               editable = False,
-                               listadd = False,
-                               )
-
-            # Moved to recv_process as we shouldn't assume this just by looking at it!:
-            # The inv_recv record might be created when the shipment is sent and so it
-            # might not have the recipient identified. If it is null then set it to
-            # the person who is logged in (the default)
-            #if record.recipient_id is None:
-            #    db(recvtable.id == r.id).update(recipient_id = auth.s3_logged_in_person())
 
         if r.component:
-
             if r.component_name == "document":
                 # Simplify a little
                 table = s3db.doc_document
@@ -1259,10 +1232,27 @@ def recv():
                 # Default the Supplier/Donor to the Org sending the shipment
                 tracktable.supply_org_id.default = record.organisation_id
         else:
+            # No Component
             # Configure which fields in inv_recv are readable/writable
             # depending on status
             if record:
-                set_recv_attr(status)
+                if status not in (SHIP_STATUS_IN_PROCESS, SHIP_STATUS_SENT):
+                    # Now that the shipment has been sent
+                    # lock the record so that it can't be meddled with
+                        if settings.get_inv_document_filing():
+                            # Still allow access to filing_status
+                            set_recv_attr(status)
+                            recvtable.filing_status.writable = True
+                            s3db.configure("inv_recv",
+                                           deletable = False,
+                                           )
+                        else:
+                            s3db.configure("inv_recv",
+                                           deletable = False,
+                                           editable = False,
+                                           )
+                else:
+                    set_recv_attr(status)
             else:
                 set_recv_attr(SHIP_STATUS_IN_PROCESS)
                 recvtable.recv_ref.readable = False
@@ -1315,7 +1305,7 @@ def req_items_for_inv(site_id, quantity_type):
 
     # Because groupby doesn't follow the orderby, this will remove any
     # duplicate req_item, using the first record according to the orderby
-    # req_items = req_items.as_dict( key = "req_req_item.item_id") <- doensn't work
+    # req_items = req_items.as_dict( key = "req_req_item.item_id") <- doesn't work
     # @todo: web2py Rows.as_dict function could be extended to enable this functionality instead
     req_item_ids = []
     unique_req_items = Storage()
@@ -1826,17 +1816,6 @@ def adj():
         return output
     s3.postp = postp
 
-    # Moved to Prep:
-    #args = request.args
-    #if len(args) > 1 and args[1] == "adj_item" and \
-    #   table[args[0]].status:
-    #    # remove CRUD generated buttons in the tabs
-    #    s3db.configure("inv_adj_item",
-    #                   deletable = False,
-    #                   editable = False,
-    #                   insertable = False,
-    #                   )
-
     from s3db.inv import inv_adj_rheader
     output = s3_rest_controller(rheader = inv_adj_rheader,
                                 )
@@ -1947,10 +1926,6 @@ def facility():
 # -----------------------------------------------------------------------------
 def facility_type():
     return s3_rest_controller("org")
-
-# -----------------------------------------------------------------------------
-#def warehouse_location():
-#    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def project():

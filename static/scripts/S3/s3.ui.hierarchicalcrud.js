@@ -228,7 +228,7 @@
                 ajaxURL = ajaxURL + '?node=' + record_id;
                 var tree = this.tree,
                     treeID = this.treeID;
-                $.getJSONS3(ajaxURL, function (data) {
+                $.getJSONS3(ajaxURL, function(data) {
                     if (data.label) {
                         tree.jstree('rename_node', node, data.label);
                     }

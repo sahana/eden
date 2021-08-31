@@ -64,13 +64,13 @@ __all__ = ("RequestModel",
            "req_inline_form",
            #"req_is_approver",
            "req_match",
-           "req_ref_represent",
            "req_rheader",
            "req_send_commit",
            "req_tabs",
            "req_update_status",
            "req_RequesterRepresent",
            "req_ReqItemRepresent",
+           "req_ReqRefRepresent",
            )
 
 from gluon import *
@@ -281,7 +281,6 @@ class RequestModel(S3Model):
         req_ref = S3ReusableField("req_ref", "string",
                                   label = T("%(REQ)s Number") %
                                           {"REQ": settings.get_req_shortname()},
-                                  represent = req_ref_represent,
                                   writable = False,
                                   )
 
@@ -301,8 +300,8 @@ class RequestModel(S3Model):
                                 readable = not default_type,
                                 writable = not default_type,
                                 ),
-                          req_ref(represent = lambda v, row=None: \
-                                              req_ref_represent(v, show_link=False),
+                          req_ref(# Adds no value when not using show_link
+                                  #represent = req_ReqRefRepresent(),
                                   readable = use_req_number,
                                   writable = use_req_number,
                                   widget = lambda f, v: \
@@ -604,11 +603,10 @@ class RequestModel(S3Model):
                                  ondelete = "CASCADE",
                                  represent = req_represent,
                                  requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(db,
-                                                          "req_req.id",
+                                                IS_ONE_OF(db, "req_req.id",
                                                           req_represent,
                                                           orderby = "req_req.date",
-                                                          sort = True
+                                                          sort = True,
                                                           )
                                                 ),
                                  sortby = "date",
@@ -776,7 +774,7 @@ class RequestModel(S3Model):
         dummy = S3ReusableField.dummy
 
         return {"req_req_id": dummy("req_id"),
-                "req_req_ref": dummy("req_ref"),
+                "req_req_ref": dummy("req_ref", "string"),
                 }
 
     # -------------------------------------------------------------------------
@@ -813,6 +811,8 @@ class RequestModel(S3Model):
         record = r.record
         req_id = record.id
         # Make a copy of the request record
+        #if settings.get_req_generate_req_number():
+        # But we have no option but to generate for a non-interactive addition
         if settings.get_req_use_req_number():
             code = s3db.supply_get_shipping_code(settings.get_req_shortname(),
                                                  record.site_id,
@@ -1097,54 +1097,60 @@ class RequestModel(S3Model):
                 (atable.person_id == ptable.id) & \
                 (ptable.pe_id == ltable.pe_id) & \
                 (ltable.user_id == utable.id)
-        approvers = db(query).select(ptable.pe_id,
+        approvers = db(query).select(ltable.pe_id,
+                                     ltable.user_id, # For custom hooks (e.g. RMS)
                                      utable.language,
                                      )
         if not approvers:
             current.session.error = current.T("No Request Approver defined")
             redirect(URL(args = req_id))
 
-        # Send Localised Mail(s)
         T = current.T
-        languages = {}
-        for row in approvers:
-            language = row["auth_user.language"]
-            if language not in languages:
-                languages[language] = []
-            languages[language].append(row["pr_person.pe_id"])
-        session_s3 = current.session.s3
-        ui_language = session_s3.language
-        url = "%s%s" % (current.deployment_settings.get_base_public_url(),
-                        URL(c="req", f="req",
-                            args = req_id,
-                            ))
-        req_ref = record.req_ref
-        requester = record.requester_id
-        date_required = record.date_required
-        date_represent = S3DateTime.date_represent # We want Dates not datetime which table.date_required uses
-        site_name = site.name
-        send_email = current.msg.send_by_pe_id
-        subject_T = T("Request submitted for Approval")
-        message_T = T("A new Request, %(reference)s, has been submitted for Approval by %(person)s for delivery to %(site)s by %(date_required)s. Please review at: %(url)s")
-        for language in languages:
-            T.force(language)
-            session_s3.language = language # for date_represent
-            subject = "%s: %s" % (s3_str(subject_T), req_ref)
-            message = s3_str(message_T) % {"date_required": date_represent(date_required),
-                                           "reference": req_ref,
-                                           "person": requester,
-                                           "site": site_name,
-                                           "url": url,
-                                           }
-            users = languages[language]
-            for pe_id in users:
-                send_email(pe_id,
-                           subject = subject,
-                           message = message,
-                           )
-        # Restore language for UI
-        session_s3.language = ui_language
-        T.force(ui_language)
+        on_req_submit = s3db.get_config("req_req", "on_req_submit")
+        if on_req_submit:
+            # Custom Notification processing (e.g. RMS)
+            on_req_submit(req_id, record, site, approvers)
+        else:
+            # Send Localised Mail(s)
+            languages = {}
+            for row in approvers:
+                language = row["auth_user.language"]
+                if language not in languages:
+                    languages[language] = []
+                languages[language].append(row["pr_person_user.pe_id"])
+            session_s3 = current.session.s3
+            ui_language = session_s3.language
+            url = "%s%s" % (current.deployment_settings.get_base_public_url(),
+                            URL(c="req", f="req",
+                                args = req_id,
+                                ))
+            req_ref = record.req_ref
+            requester = s3_fullname(record.requester_id)
+            date_required = record.date_required
+            date_represent = S3DateTime.date_represent # We want Dates not datetime which table.date_required uses
+            site_name = site.name
+            send_email = current.msg.send_by_pe_id
+            subject_T = T("Request submitted for Approval")
+            message_T = T("A new Request, %(reference)s, has been submitted for Approval by %(person)s for delivery to %(site)s by %(date_required)s. Please review at: %(url)s")
+            for language in languages:
+                T.force(language)
+                session_s3.language = language # for date_represent
+                subject = "%s: %s" % (s3_str(subject_T), req_ref)
+                message = s3_str(message_T) % {"date_required": date_represent(date_required),
+                                               "reference": req_ref,
+                                               "person": requester,
+                                               "site": site_name,
+                                               "url": url,
+                                               }
+                users = languages[language]
+                for pe_id in users:
+                    send_email(pe_id,
+                               subject = subject,
+                               message = message,
+                               )
+            # Restore language for UI
+            session_s3.language = ui_language
+            T.force(ui_language)
 
         # Update the Status
         db(rtable.id == req_id).update(workflow_status = 2) # Submitted
@@ -1216,6 +1222,11 @@ class RequestModel(S3Model):
                        person_id = person_id,
                        title = approver["title"],
                        )
+        # Call any Template-specific Hook
+        # e.g. RMS
+        on_req_approve = s3db.get_config("req_req", "on_req_approve")
+        if on_req_approve:
+            on_req_approve(req_id)
 
         # Have all Approvers approved the Request?
         if len(approvers) == len(approved) + 1:
@@ -1224,9 +1235,9 @@ class RequestModel(S3Model):
                                            )
             # Call any Template-specific Hook
             # e.g. RMS
-            on_req_approve = s3db.get_config("req_req", "on_req_approve")
-            if on_req_approve:
-                on_req_approve(req_id, record, set(site_ids))
+            on_req_approved = s3db.get_config("req_req", "on_req_approved")
+            if on_req_approved:
+                on_req_approved(req_id, record, set(site_ids))
 
         current.session.confirmation = current.T("Request Approved")
         redirect(URL(args = req_id))
@@ -1275,7 +1286,7 @@ class RequestModel(S3Model):
 
             update = {}
 
-            if settings.get_req_use_req_number() and not record.req_ref:
+            if settings.get_req_generate_req_number() and not record.req_ref:
                 # Auto-generate req_ref
                 from s3db.supply import supply_get_shipping_code
                 code = supply_get_shipping_code(settings.get_req_shortname(),
@@ -4354,39 +4365,6 @@ class CommitSkillModel(S3Model):
             if req:
                 req_update_commit_quantities_and_status(req)
 
-# =============================================================================
-def req_ref_represent(value, show_link=True, pdf=False):
-    """
-        Represent for the Request Reference
-        if show_link is True then it will generate a link to the record
-        if pdf is True then it will generate a link to the PDF
-
-        @todo: document parameters
-        @todo: S3Represent
-    """
-
-    if value:
-        if show_link:
-            db = current.db
-            table = db.req_req
-            req_row = db(table.req_ref == value).select(table.id,
-                                                        limitby = (0, 1)
-                                                        ).first()
-            if req_row:
-                if pdf:
-                    args = [req_row.id, "form"]
-                else:
-                    args = [req_row.id]
-                return A(value,
-                         _href = URL(c="req", f="req",
-                                     args = args,
-                                     extension = "",
-                                     ),
-                         )
-        return B(value)
-
-    return current.messages["NONE"]
-
 # -------------------------------------------------------------------------
 def req_tabs(r, match=True):
     """
@@ -4842,17 +4820,18 @@ def req_rheader(r, check_page=False):
                     tabs.append((T("Check"), "check"))
                 if use_workflow:
                     if workflow_status == 1: # Draft
-                        submit_btn = A(T("Submit for Approval"),
-                                       _href = URL(c = "req",
-                                                   f = "req",
-                                                   args = [req_id, "submit"]
-                                                   ),
-                                       _id = "req-submit",
-                                       _class = "action-btn",
-                                       )
-                        s3.jquery_ready.append('''S3.confirmClick('#req-submit','%s')''' \
-                                % T("Are you sure you want to submit this request?"))
-                        s3.rfooter = TAG[""](submit_btn)
+                        if current.auth.s3_has_permission("update", "req_req", record_id=req_id):
+                            submit_btn = A(T("Submit for Approval"),
+                                           _href = URL(c = "req",
+                                                       f = "req",
+                                                       args = [req_id, "submit"]
+                                                       ),
+                                           _id = "req-submit",
+                                           _class = "action-btn",
+                                           )
+                            s3.jquery_ready.append('''S3.confirmClick('#req-submit','%s')''' \
+                                    % T("Are you sure you want to submit this request?"))
+                            s3.rfooter = TAG[""](submit_btn)
                     elif workflow_status == 2: # Submitted
                         if req_is_approver(site_id):
                             # Have they already approved?
@@ -4874,6 +4853,21 @@ def req_rheader(r, check_page=False):
                                 s3.jquery_ready.append('''S3.confirmClick('#req-approve','%s')''' \
                                         % T("Are you sure you want to approve this request?"))
                                 s3.rfooter = TAG[""](approve_btn)
+                    elif workflow_status == 3: # Approved
+                        # @ToDo: Check for permission on sites requested_from
+                        if current.auth.s3_has_permission("create", "inv_send"):
+                            fulfil_btn = A(T("Fulfil Request"),
+                                           _href = URL(c = "inv",
+                                                       f = "send",
+                                                       args = ["create"],
+                                                       vars = {"req_id": req_id},
+                                                       ),
+                                           _id = "req-fulfil",
+                                           _class = "action-btn",
+                                           )
+                            s3.jquery_ready.append('''S3.confirmClick('#req-fulfil','%s')''' \
+                                    % T("Are you sure you want to fulfil this request?"))
+                            s3.rfooter = TAG[""](fulfil_btn)
 
         if not check_page:
             rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -5953,6 +5947,8 @@ def req_add_from_template(req_id):
         raise RuntimeError("Template not found: %s" % req_id)
 
     settings = current.deployment_settings
+    #if settings.get_req_generate_req_number():
+    # But we have no option but to generate for a non-interactive addition
     if settings.get_req_use_req_number():
         code = s3db.supply_get_shipping_code(settings.get_req_shortname(),
                                              template.site_id,
@@ -6470,5 +6466,65 @@ class req_ReqRepresent(S3Represent):
                              date_string)
 
         return v
+
+# =============================================================================
+class req_ReqRefRepresent(S3Represent):
+    """
+        Represent a Request Reference
+    """
+
+    def __init__(self,
+                 show_link = False,
+                 pdf = False,
+                 ):
+
+        self.pdf = pdf
+
+        super(req_ReqRefRepresent, self).__init__(lookup = "req_req",
+                                                  key = "req_ref",
+                                                  fields = ["id",
+                                                            ],
+                                                  show_link = show_link,
+                                                  )
+
+    # -------------------------------------------------------------------------
+    def link(self, k, v, row=None):
+        """
+            Represent a (key, value) as hypertext link.
+
+                - Typically, k is a foreign key value, and v the
+                  representation of the referenced record, and the link
+                  shall open a read view of the referenced record.
+
+                - In the base class, the linkto-parameter expects a URL (as
+                  string) with "[id]" as placeholder for the key.
+
+            @param k: the key
+            @param v: the representation of the key
+            @param row: the row with this key (unused in the base class)
+        """
+
+        if self.linkto:
+            k = s3_str(row.id)
+            _href = self.linkto.replace("[id]", k) \
+                               .replace("%5Bid%5D", k)
+            
+            if self.pdf:
+                _href = "%s/%s" % (_href,
+                                   "form",
+                                   )
+            return A(v, _href=_href)
+        else:
+            return v
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        return row.req_ref or current.messages["NONE"]
 
 # END =========================================================================

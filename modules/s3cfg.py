@@ -4733,6 +4733,12 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Inventory Management Settings
     #
+    def get_inv_bin_site_layout(self):
+        """
+            Use structured Org Site Layout rather than just freetext Bin field
+        """
+        return self.inv.get("bin_site_layout", False)
+
     def get_inv_collapse_tabs(self):
         return self.inv.get("collapse_tabs", True)
 
@@ -4778,6 +4784,20 @@ class S3Config(Storage):
             Whether Warehouse Types vary by Organisation
         """
         return self.inv.get("org_dependent_warehouse_types", False)
+
+    def get_inv_send_req_multi(self):
+        """
+            Whether Outbound Shipments can link to multiple Requests
+            - and hence use inv_send_req link table
+        """
+        return self.inv.get("send_req_multi", False)
+
+    def get_inv_recv_req_multi(self):
+        """
+            Whether Incoming Shipments can link to multiple Requests
+            - and hence use inv_recv_req link table
+        """
+        return self.inv.get("recv_req_multi", False)
 
     def get_inv_send_show_mode_of_transport(self):
         """
@@ -4889,13 +4909,6 @@ class S3Config(Storage):
             Validate for Unique Warehouse Codes
         """
         return self.inv.get("warehouse_code_unique", False)
-
-    def get_inv_bin_site_layout(self):
-        """
-            Use structured Org Site Layout rather than just freetext Bin field
-        """
-        return self.inv.get("bin_site_layout", False)
-
     # -------------------------------------------------------------------------
     # IRS
     #

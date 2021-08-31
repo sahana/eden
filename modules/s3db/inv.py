@@ -980,6 +980,8 @@ class InventoryTrackingModel(S3Model):
         radio_widget = lambda field, value: \
                               RadioWidget().widget(field, value, cols = 2)
 
+        from .req import req_ReqRefRepresent
+
         # ---------------------------------------------------------------------
         # Send (Outgoing / Dispatch / etc)
         #
@@ -994,7 +996,8 @@ class InventoryTrackingModel(S3Model):
                      # Instance
                      super_link("doc_id", "doc_entity"),
                      send_ref(),
-                     req_ref(readable = show_req_ref,
+                     req_ref(represent = req_ReqRefRepresent(show_link = True),
+                             readable = show_req_ref,
                              writable = show_req_ref,
                              ),
                      # This is a component, so needs to be a super_link
@@ -3294,9 +3297,37 @@ def inv_send_rheader(r):
                 site = db(stable.site_id == to_site_id).select(stable.location_id,
                                                                limitby = (0, 1)
                                                                ).first()
-                address = s3db.gis_LocationRepresent(address_only=True)(site.location_id)
+                address = s3db.gis_LocationRepresent(address_only = True)(site.location_id)
             else:
                 address = current.messages["NONE"]
+            if settings.get_inv_send_req_multi():
+                req_ref_label = TH("%s: " % table.req_ref.label)
+                ltable = s3db.inv_send_req
+                rtable = s3db.req_req
+                query = (ltable.send_id == send_id) & \
+                        (ltable.req_id == rtable.id)
+                rows = db(query).select(rtable.id,
+                                        rtable.req_ref,
+                                        )
+                from .req import req_ReqRefRepresent
+                if len(rows) == 1:
+                    row = rows.first()
+                    req_ref_value = TD(req_ReqRefRepresent(show_link = True)(row.req_ref, row))
+                else:
+                    # Cache values in class
+                    refs = [row.req_ref for row in rows]
+                    represent = req_ReqRefRepresent(show_link = True)
+                    represent.bulk(refs, rows, show_link=True)
+                    refs_repr = [s3_str(represent(ref)) for ref in refs]
+                    refs_repr = ", ".join(refs_repr)
+                    req_ref_value = TD(XML(refs_repr))
+            elif settings.get_req_use_req_number():
+                req_ref_label = TH("%s: " % table.req_ref.label)
+                from .req import req_ReqRefRepresent
+                req_ref_value = TD(req_ReqRefRepresent(show_link = True)(record.req_ref))
+            else:
+                req_ref_label = ""
+                req_ref_value = ""
             shipment_details = TABLE(
                           TR(TD(T(settings.get_inv_send_form_name().upper()),
                                 _colspan=2, _class="pdf_title"),
@@ -3307,8 +3338,8 @@ def inv_send_rheader(r):
                              ),
                           TR(TH("%s: " % table.send_ref.label),
                              TD(table.send_ref.represent(record.send_ref)),
-                             TH("%s: " % table.req_ref.label),
-                             TD(table.req_ref.represent(record.req_ref)),
+                             req_ref_label,
+                             req_ref_value,
                              ),
                           TR(TH("%s: " % table.date.label),
                              table.date.represent(record.date),
@@ -4754,17 +4785,21 @@ def inv_send_controller():
     s3 = response.s3
 
     def prep(r):
+        settings = current.deployment_settings
         record = r.record
         if record:
             status = record.status
-            if status != SHIP_STATUS_IN_PROCESS:
-                # Now that the shipment has been sent,
-                # lock the record so that it can't be meddled with
-                s3db.configure("inv_send",
-                               deletable = False,
-                               editable = False,
-                               insertable = False,
-                               )
+        elif r.method == "create":
+            req_id = r.get_vars.get("req_id")
+            if req_id:
+                if settings.get_inv_send_req_multi():
+                    s3db.inv_send_req.req_id.default = req_id
+                else:
+                    rtable = s3db.req_req
+                    req = db(rtable.id == req_id).select(rtable.req_ref,
+                                                         limitby = (0, 1)
+                                                         ).first()
+                    sendtable.req_ref.default = req.req_ref
 
         if r.component:
             if r.component_name == "document":
@@ -4784,8 +4819,8 @@ def inv_send_controller():
                 #    # if the status is preparing
                 #    if status != SHIP_STATUS_IN_PROCESS:
                 #        return False
-                #    if method == "delete":
-                #        return inv_track_item_deleting(r.component_id)
+                if r.method == "delete":
+                    return inv_track_item_deleting(r.component_id)
 
                 tracktable = s3db.inv_track_item
                 iitable = s3db.inv_inv_item
@@ -4802,7 +4837,6 @@ def inv_send_controller():
                                                                          req_vars.item_pack_id,
                                                                          )
 
-                settings = current.deployment_settings
                 bin_site_layout = settings.get_inv_bin_site_layout()
                 track_pack_values = settings.get_inv_track_pack_values()
 
@@ -4969,20 +5003,22 @@ def inv_send_controller():
                     set_track_attr(TRACK_STATUS_PREPARING)
                 if r.interactive:
                     crud_strings = s3.crud_strings.inv_send
-                    if record.status == SHIP_STATUS_IN_PROCESS:
+                    if status == SHIP_STATUS_IN_PROCESS:
                         crud_strings.title_update = \
                         crud_strings.title_display = T("Process Shipment to Send")
                     elif "site_id" in req_vars and status == SHIP_STATUS_SENT:
                         crud_strings.title_update = \
                         crud_strings.title_display = T("Review Incoming Shipment to Receive")
         else:
+            # No Component
             if record and r.get_vars.get("received"):
-                # "received" must not propagate:
-                del r.get_vars["received"]
                 # Set the items to being received
                 # @ToDo: Check Permissions & Avoid DB updates in GETs
-                db(sendtable.id == r.id).update(status = SHIP_STATUS_RECEIVED)
-                db(tracktable.send_id == r.id).update(status = TRACK_STATUS_ARRIVED)
+                # "received" must not propagate:
+                del r.get_vars["received"]
+                send_id = r.id
+                db(sendtable.id == send_id).update(status = SHIP_STATUS_RECEIVED)
+                db(tracktable.send_id == send_id).update(status = TRACK_STATUS_ARRIVED)
                 req_ref = record.req_ref
                 if req_ref:
                     # Update the Request Status
@@ -5003,7 +5039,7 @@ def inv_send_controller():
                     # Get all Received Shipments in-system for this request
                     query = (sendtable.status == SHIP_STATUS_RECEIVED) & \
                             (sendtable.req_ref == req_ref) & \
-                            (tracktable.send_id == r.id) & \
+                            (tracktable.send_id == send_id) & \
                             (tracktable.deleted == False)
                     sitems = db(query).select(tracktable.item_pack_id,
                                               tracktable.quantity,
@@ -5045,7 +5081,24 @@ def inv_send_controller():
                             sendtable[field].writable = False
 
                 if record:
-                    set_send_attr(status)
+                    if status != SHIP_STATUS_IN_PROCESS:
+                        # Now that the shipment has been sent,
+                        # lock the record so that it can't be meddled with
+                        if settings.get_inv_document_filing():
+                            # Still allow access to filing_status
+                            set_send_attr(status)
+                            sendtable.filing_status.writable = True
+                            s3db.configure("inv_send",
+                                           deletable = False,
+                                           )
+                        else:
+                            s3db.configure("inv_send",
+                                           deletable = False,
+                                           editable = False,
+                                           )
+                        
+                    else:
+                        set_send_attr(status)
                 else:
                     set_send_attr(SHIP_STATUS_IN_PROCESS)
                     sendtable.send_ref.readable = False
@@ -5234,9 +5287,20 @@ def inv_send_process():
                                              recv_id = recv_id,
                                              )
 
-    if current.deployment_settings.get_inv_warehouse_free_capacity_calculated():
+    settings = current.deployment_settings
+    if settings.get_inv_warehouse_free_capacity_calculated():
         # Update the Warehouse Free capacity
         inv_warehouse_free_capacity(send_record.site_id)
+
+    # Customise the resource, to be sure that any hook is actually configured
+    tablename = "inv_send"
+    customise = settings.customise_resource(tablename)
+    if customise:
+        r = S3Request("inv", "send", args=[], vars={})
+        customise(r, tablename)
+    on_inv_send_process = s3db.get_config(tablename, "on_inv_send_process")
+    if on_inv_send_process:
+        on_inv_send_process(send_record)
 
     session.confirmation = T("Shipment Items sent from Warehouse")
     if req_rec:
