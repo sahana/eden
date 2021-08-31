@@ -5722,7 +5722,7 @@ class inv_AdjRepresent(S3Represent):
         rows = current.db(query).select(*fields)
         self.queries += 1
 
-        table = current.db.inv_adj_item
+        table = current.db.inv_adj
 
         # Bulk-represent adjuster_ids
         adjuster_ids = [row.adjuster_id for row in rows]

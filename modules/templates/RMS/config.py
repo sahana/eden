@@ -3558,12 +3558,12 @@ Thank you"""
             stock = 0
             for row in inventory:
                 if row["inv_inv_item.item_id"] == item_id:
-                    stock += row["inv_inv_item.item_id"] * row["supply_item_pack.item_id"]
+                    stock += (row["inv_inv_item.quantity"] * row["supply_item_pack.quantity"])
             query = nquery & (ntable.record_id == minimum_id)
             if stock < minimum:
                 # Add Alert, if there is not one already present
                 query &= (ntable.deleted == False)
-                exists = current.db(query).select(table.id,
+                exists = current.db(query).select(ntable.id,
                                                   limitby = (0, 1)
                                                   ).first()
                 if not exists:
@@ -3589,10 +3589,13 @@ Thank you"""
             # Bulk Lookup Item Represents
             # - assumes that we are not using translate = True!
             item_ids = [alert[0] for alert in alerts]
-            items = itable.item_id.represent.bulk(item_ids)
+            items = itable.item_id.represent.bulk(item_ids, show_link=False)
+
+            from gluon import URL
+            from s3 import s3_str
 
             url = URL(c="inv", f="warehouse",
-                      args = [warehouse_id, "inv_item"],
+                      args = [warehouse.id, "inv_item"],
                       )
             send_email = current.msg.send_by_pe_id
             insert = ntable.insert

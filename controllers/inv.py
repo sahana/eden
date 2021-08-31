@@ -1748,12 +1748,17 @@ def adj():
                     doc_table.location_id.readable = doc_table.location_id.writable = False
             else:
                 if r.record:
-                    # Don't allow switching Site after Adjustment created as the Items in the Adjustment match the original Site
-                    table.site_id.writable = False
                     if r.record.status:
                         # Don't allow modifying completed adjustments
-                        table.adjuster_id.writable = False
-                        table.comments.writable = False
+                        #table.adjuster_id.writable = False
+                        #table.comments.writable = False
+                        s3db.configure("inv_adj",
+                                       deletable = False,
+                                       editable = False,
+                                       )
+                    else:
+                        # Don't allow switching Site after Adjustment created as the Items in the Adjustment match the original Site
+                        table.site_id.writable = False
                 else:
                     if "item" in get_vars and "site" in get_vars:
                         # Create a adj record with a single adj_item record
@@ -1779,7 +1784,7 @@ def adj():
                                               adjustment_date = request.utcnow,
                                               status = 0,
                                               category = 1,
-                                              comments = "Adjust %s" % inv_item_table.item_id.represent(item_id),
+                                              comments = "Adjust %s" % inv_item_table.item_id.represent(item_id, show_link=False),
                                               )
                         adjitemtable = s3db.inv_adj_item
                         adj_item_id = adjitemtable.insert(reason = 0,
