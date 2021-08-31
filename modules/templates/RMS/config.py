@@ -3,7 +3,7 @@
 import datetime
 from collections import OrderedDict
 
-from gluon import current, IS_IN_SET
+from gluon import current, IS_IN_SET, URL
 from gluon.storage import Storage
 
 from s3 import S3Method, S3Represent
@@ -1554,7 +1554,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_hrm_home():
 
-        from gluon import URL
+        #from gluon import URL
         from s3 import s3_redirect_default
 
         has_role = current.auth.s3_has_role
@@ -2881,7 +2881,7 @@ Thank you"""
                 result = True
 
             if r.component_name == "training_event_report" and r.component_id:
-                from gluon.html import A, DIV, URL
+                from gluon.html import A, DIV#, URL
                 from s3 import ICON
                 s3.rfooter = DIV(A(ICON("print"),
                                  " ",
@@ -3591,7 +3591,7 @@ Thank you"""
             item_ids = [alert[0] for alert in alerts]
             items = itable.item_id.represent.bulk(item_ids, show_link=False)
 
-            from gluon import URL
+            #from gluon import URL
             from s3 import s3_str
 
             url = URL(c="inv", f="warehouse",
@@ -3612,7 +3612,7 @@ Thank you"""
             for alert in alerts:
                 item_id = alert[0]
                 item = items.get(item_id)
-                quantity = alert[1]
+                quantity = int(alert[1])
                 minimum_id = alert[2]
                 for language in languages:
                     T.force(language)
@@ -3667,19 +3667,22 @@ Thank you"""
 
         warehouse_id = warehouse.id
 
-        table = s3db.auth_user_notification
-        query = (table.tablename == "inv_warehouse") & \
-                (table.record_id == warehouse_id) & \
-                (table.type == "capacity")
+        ntable = s3db.auth_user_notification
+        query = (ntable.tablename == "inv_warehouse") & \
+                (ntable.record_id == warehouse_id) & \
+                (ntable.type == "capacity")
 
         free_capacity = warehouse.free_capacity
-        if free_capacity / warehouse.capacity < 0.1:
+        threshold = warehouse.capacity * 0.1
+        if free_capacity < threshold:
             # Generate Capacity Alert, if there is not one already present
-            query = query & (table.deleted == False)
-            exists = current.db(query).select(table.id,
+            query = query & (ntable.deleted == False)
+            exists = current.db(query).select(ntable.id,
                                               limitby = (0, 1)
                                               ).first()
             if not exists:
+                #from gluon import URL
+                from s3 import s3_str
                 site_id = warehouse.site_id
                 warehouse_name = warehouse.name
                 url = URL(c="inv", f="warehouse",
@@ -3691,9 +3694,9 @@ Thank you"""
                 session_s3 = current.session.s3
                 ui_language = session_s3.language
 
-                subject_T = T("Stockpile Capacity in %(site)s Warehouse is less than %(free_capacity)s")
-                message_T = T("Stockpile Capacity in %(site)s Warehouse is less than %(free_capacity)s. Please review at: %(url)s")
-                alert_T = T("Stockpile Capacity in %(site)s Warehouse is less than %(free_capacity)s")
+                subject_T = T("Stockpile Capacity in %(site)s Warehouse is less than %(threshold)s m3")
+                message_T = T("Stockpile Capacity in %(site)s Warehouse is less than %(threshold)s m3. Please review at: %(url)s")
+                alert_T = T("Stockpile Capacity in %(site)s Warehouse is less than %(threshold)s m3")
                             
                 from .controllers import inv_operators_for_sites
                 operators = inv_operators_for_sites([site_id])[site_id]["operators"]
@@ -3708,14 +3711,14 @@ Thank you"""
                     T.force(language)
                     #session_s3.language = language # for date_represent
                     subject = s3_str(subject_T) % {"site": warehouse_name,
-                                                   "free_capacity": free_capacity,
+                                                   "threshold": threshold,
                                                    }
                     message = s3_str(message_T) % {"site": warehouse_name,
-                                                   "free_capacity": free_capacity,
+                                                   "threshold": threshold,
                                                    "url": url,
                                                    }
                     alert = s3_str(alert_T) % {"site": warehouse_name,
-                                               "free_capacity": free_capacity,
+                                               "threshold": threshold,
                                                }
                     users = languages[language]
                     for user in users:
@@ -5241,7 +5244,7 @@ Thank you"""
 
             if r.representation == "plain":
                 # Map Popup
-                from gluon import A, TABLE, TR, TD, B, URL
+                from gluon import A, TABLE, TR, TD, B#, URL
                 s3db = current.s3db
                 table = s3db.project_project
                 project_id = r.record.project_id
@@ -5474,7 +5477,7 @@ Thank you"""
             - Dashboard Alert
         """
 
-        from gluon import URL
+        #from gluon import URL
         from s3 import s3_str, S3DateTime
         from .controllers import inv_operators_for_sites
 

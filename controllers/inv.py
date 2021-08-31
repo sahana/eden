@@ -1763,6 +1763,7 @@ def adj():
                     if "item" in get_vars and "site" in get_vars:
                         # Create a adj record with a single adj_item record
                         # e.g. coming from New Adjustment button on inv/inv_item/x/adj_item tab
+                        # e.g. coming from Adjust Stock Item button on inv/site/inv_item/x tab
                         # @ToDo: This should really be a POST, not a GET
                         inv_item_table = s3db.inv_inv_item
                         inv_item = db(inv_item_table.id == get_vars.item).select(inv_item_table.id,
