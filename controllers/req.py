@@ -1028,35 +1028,6 @@ def req_item():
     return output
 
 # -----------------------------------------------------------------------------
-def req_item_packs():
-    """
-        Called by S3OptionsFilter to provide the pack options for an Item
-
-        Access via the .json representation to avoid work rendering menus, etc
-    """
-
-    req_item_id = None
-    args = request.args
-    if len(args) == 1 and args[0].isdigit():
-        req_item_id = args[0]
-    else:
-        for v in request.vars:
-            if "." in v and v.split(".", 1)[1] == "req_item_id":
-                req_item_id = request.vars[v]
-                break
-
-    table = s3db.supply_item_pack
-    ritable = s3db.req_req_item
-    query = (ritable.id == req_item_id) & \
-            (ritable.item_id == table.item_id)
-
-    response.headers["Content-Type"] = "application/json"
-    return db(query).select(table.id,
-                            table.name,
-                            table.quantity,
-                            ).json()
-
-# -----------------------------------------------------------------------------
 def req_item_inv_item():
     """
         Shows the inventory items which match a requested item
@@ -1571,7 +1542,7 @@ def commit_rheader(r):
             return rheader
     return None
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 def send():
     """ RESTful CRUD controller """
 
@@ -1581,18 +1552,7 @@ def send():
 
     return s3db.inv_send_controller()
 
-# ==============================================================================
-def send_commit():
-    """
-        Send a Shipment containing all items in a Commitment
-
-        @ToDo: Rewrite as S3Method
-                - means that permissions are better-controlled
-    """
-
-    return s3db.req_send_commit()
-
-# =============================================================================
+# -----------------------------------------------------------------------------
 def commit_item():
     """ REST Controller """
 
@@ -1614,6 +1574,89 @@ def commit_item():
 
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+def approver():
+    """ Approvers Controller """
+
+    # We need a more complex control: leave to template
+    #if not auth.s3_has_role("ADMIN"):
+    #    s3.filter = auth.filter_by_root_org(s3db.req_approver)
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def need():
+    """
+        RESTful CRUD Controller for Needs
+    """
+
+    def prep(r):
+        if r.component_name == "impact":
+            s3db.stats_impact.location_id.default = r.record.location_id
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller(rheader = s3db.req_rheader)
+
+# -----------------------------------------------------------------------------
+def need_line():
+    """
+        RESTful CRUD Controller for Need Lines
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def need_response():
+    """
+        RESTful CRUD Controller for Need Responses (i.e. Activity Groups)
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def need_response_line():
+    """
+        RESTful CRUD Controller for Need Response Lines (i.e. Activities)
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def order_item():
+    """
+        RESTful CRUD Controller for Order Items
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def facility():
+
+    # Open record in this controller after creation
+    s3db.configure("org_facility",
+                   create_next = URL(c="req", f="facility",
+                                     args = ["[id]", "read"]),
+                   )
+
+    return s3db.org_facility_controller()
+
+# -----------------------------------------------------------------------------
+def project_req():
+    """ RESTful CRUD controller for options.s3json lookups """
+
+    if auth.permission.format != "s3json":
+        return ""
+
+    # Pre-process
+    def prep(r):
+        if r.method != "options":
+            return False
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
 # =============================================================================
 def commit_req():
     """
@@ -1621,6 +1664,8 @@ def commit_req():
         - i.e. copy data from a req into a commitment
         arg: req_id
         vars: site_id
+
+        @ToDo: Rewrite as Method
     """
 
     req_id = request.args[0]
@@ -1694,7 +1739,18 @@ def commit_req():
     # Redirect to commit
     redirect(URL(c="req", f="commit", args=[commit_id, "commit_item"]))
 
-# =============================================================================
+# -----------------------------------------------------------------------------
+def send_commit():
+    """
+        Send a Shipment containing all items in a Commitment
+
+        @ToDo: Rewrite as Method
+                - means that permissions are better-controlled
+    """
+
+    return s3db.req_send_commit()
+
+# -----------------------------------------------------------------------------
 def send_req():
     """
         Function to send items for a Request.
@@ -1702,7 +1758,7 @@ def send_req():
         arg: req_id
         vars: site_id
 
-        @ToDo: Rewrite as S3Method
+        @ToDo: Rewrite as Method
         @ToDo: Support for inv_send_req_multi (not needed for RMS)
     """
 
@@ -1925,16 +1981,21 @@ def send_req():
 # =============================================================================
 def commit_item_json():
     """
-        Used by s3.supply.js
+        Used by s3.supply.js for the ajax_more quantity represent of req_items
 
         Access via the .json representation to avoid work rendering menus, etc
     """
 
+    try:
+        req_item_id = request.args[0]
+    except:
+        raise HTTP(400, current.xml.json_message(False, 400, "No value provided!"))
+
+    stable = s3db.org_site
     ctable = s3db.req_commit
     itable = s3db.req_commit_item
-    stable = s3db.org_site
-    #ctable.date.represent = lambda dt: dt[:10]
-    query = (itable.req_item_id == request.args[0]) & \
+
+    query = (itable.req_item_id == req_item_id) & \
             (ctable.id == itable.commit_id) & \
             (ctable.site_id == stable.id) & \
             (itable.deleted == False)
@@ -1945,140 +2006,151 @@ def commit_item_json():
                                orderby = db.req_commit.date,
                                )
 
-    json_str = '''[%s,%s''' % (json.dumps({"id": s3_str(T("Committed")),
-                                           "quantity": "#"
-                                           }),
-                               records.json()[1:],
-                               )
+    output = [{"id": s3_str(T("Committed")),
+               "quantity": "#",
+               }]
+    for row in records:
+        quantity = row["req_commit_item.quantity"]
+        name = row["org_site.name"]
+        row = row["req_commit"]
+        output.append({"id": row.id,
+                       "date": row.date.date().isoformat(),
+                       "quantity": quantity,
+                       "name": name,
+                       })
+
+    SEPARATORS = (",", ":")
+    output = json.dumps(output, separators=SEPARATORS)
 
     response.headers["Content-Type"] = "application/json"
-    return json_str
+    return output
 
-# =============================================================================
-def approver():
-    """ Approvers Controller """
-
-    # We need a more complex control: leave to template
-    #if not auth.s3_has_role("ADMIN"):
-    #    s3.filter = auth.filter_by_root_org(s3db.req_approver)
-
-    return s3_rest_controller()
-
-# =============================================================================
-def fema():
+# -----------------------------------------------------------------------------
+def recv_item_json():
     """
-        Custom Report to list all open requests for items that FEMA can supply
+       Used by s3.supply.js for the ajax_more quantity represent of req_items
 
-        @ToDo: Filter to just Sites that FEMA support
+       Access via the .json representation to avoid work rendering menus, etc
     """
 
+    try:
+        req_item_id = request.args[0]
+    except:
+        raise HTTP(400, current.xml.json_message(False, 400, "No value provided!"))
+
+    from s3db.inv import inv_ship_status
+
+    stable = s3db.org_site
+    rtable = s3db.inv_recv
+    ittable = s3db.inv_track_item
+
+    query = (ittable.req_item_id == req_item_id) & \
+            (rtable.id == ittable.recv_id) & \
+            (rtable.site_id == stable.id) & \
+            (rtable.status == inv_ship_status["RECEIVED"]) & \
+            (ittable.deleted == False)
+    records = db(query).select(rtable.id,
+                               rtable.date,
+                               stable.name,
+                               ittable.quantity,
+                               )
+
+    output = [{"id": s3_str(T("Received")),
+               "quantity": "#",
+               }]
+    for row in records:
+        quantity = row["inv_track_item.quantity"]
+        name = row["org_site.name"]
+        row = row["inv_recv"]
+        output.append({"id": row.id,
+                       "date": row.date.date().isoformat(),
+                       "quantity": quantity,
+                       "name": name,
+                       })
+
+    SEPARATORS = (",", ":")
+    output = json.dumps(output, separators=SEPARATORS)
+
+    response.headers["Content-Type"] = "application/json"
+    return output
+
+# -----------------------------------------------------------------------------
+def send_item_json():
+    """
+       Used by s3.supply.js for the ajax_more quantity represent of req_items
+
+       Access via the .json representation to avoid work rendering menus, etc
+    """
+
+    try:
+        req_item_id = request.args[0]
+    except:
+        raise HTTP(400, current.xml.json_message(False, 400, "No value provided!"))
+
+    from s3db.inv import inv_ship_status
+
+    stable = s3db.org_site
+    istable = s3db.inv_send
+    ittable = s3db.inv_track_item
+
+    query = (ittable.req_item_id == req_item_id) & \
+            (istable.id == ittable.send_id) & \
+            (istable.site_id == stable.id) & \
+            ((istable.status == inv_ship_status["SENT"]) | \
+             (istable.status == inv_ship_status["RECEIVED"])) & \
+            (ittable.deleted == False)
+    records = db(query).select(istable.id,
+                               istable.date,
+                               stable.name,
+                               ittable.quantity,
+                               )
+
+    output = [{"id": s3_str(T("Sent")),
+               "quantity": "#",
+               }]
+    for row in records:
+        quantity = row["inv_track_item.quantity"]
+        name = row["org_site.name"]
+        row = row["inv_send"]
+        output.append({"id": row.id,
+                       "date": row.date.date().isoformat(),
+                       "quantity": quantity,
+                       "name": name,
+                       })
+
+    SEPARATORS = (",", ":")
+    output = json.dumps(output, separators=SEPARATORS)
+
+    response.headers["Content-Type"] = "application/json"
+    return output
+
+# -----------------------------------------------------------------------------
+def req_item_packs():
+    """
+        Called by S3OptionsFilter to provide the pack options for an Item
+
+        Access via the .json representation to avoid work rendering menus, etc
+    """
+
+    req_item_id = None
+    args = request.args
+    if len(args) == 1 and args[0].isdigit():
+        req_item_id = args[0]
+    else:
+        for v in request.vars:
+            if "." in v and v.split(".", 1)[1] == "req_item_id":
+                req_item_id = request.vars[v]
+                break
+
+    table = s3db.supply_item_pack
     ritable = s3db.req_req_item
-    rtable = db.req_req
-    itable = db.supply_item
-    ictable = db.supply_item_category
-    citable = db.supply_catalog_item
-    query = (ictable.name == "FEMA") & \
-            (citable.item_category_id == ictable.id) & \
-            (citable.item_id == itable.id) & \
-            (itable.deleted != True)
-    fema_items = db(query).select(itable.id)
-    fema_item_ids = [item.id for item in fema_items]
+    query = (ritable.id == req_item_id) & \
+            (ritable.item_id == table.item_id)
 
-    REQ_STATUS_COMPLETE = 2
-    s3.filter = (rtable.deleted != True) & \
-                (rtable.is_template == False) & \
-                (rtable.commit_status != REQ_STATUS_COMPLETE) & \
-                (rtable.transit_status != REQ_STATUS_COMPLETE) & \
-                (rtable.fulfil_status != REQ_STATUS_COMPLETE) & \
-                (ritable.req_id == rtable.id) & \
-                (ritable.quantity > ritable.quantity_commit) & \
-                (ritable.quantity > ritable.quantity_transit) & \
-                (ritable.quantity > ritable.quantity_fulfil) & \
-                (ritable.deleted != True) & \
-                (ritable.item_id.belongs(fema_item_ids))
-
-    # Filter Widgets
-    filter_widgets = [
-        s3base.S3OptionsFilter("req_id$site_id",
-                               label = T("Facility"),
-                               #cols = 3,
-                               ),
-    ]
-    s3db.configure("req_req_item", filter_widgets = filter_widgets)
-
-    return req_item()
-
-# =============================================================================
-def need():
-    """
-        RESTful CRUD Controller for Needs
-    """
-
-    def prep(r):
-        if r.component_name == "impact":
-            s3db.stats_impact.location_id.default = r.record.location_id
-        return True
-    s3.prep = prep
-
-    return s3_rest_controller(rheader = s3db.req_rheader)
-
-# -----------------------------------------------------------------------------
-def need_line():
-    """
-        RESTful CRUD Controller for Need Lines
-    """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def need_response():
-    """
-        RESTful CRUD Controller for Need Responses (i.e. Activity Groups)
-    """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def need_response_line():
-    """
-        RESTful CRUD Controller for Need Response Lines (i.e. Activities)
-    """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def order_item():
-    """
-        RESTful CRUD Controller for Order Items
-    """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def facility():
-
-    # Open record in this controller after creation
-    s3db.configure("org_facility",
-                   create_next = URL(c="req", f="facility",
-                                     args = ["[id]", "read"]),
-                   )
-
-    return s3db.org_facility_controller()
-
-# -----------------------------------------------------------------------------
-def project_req():
-    """ RESTful CRUD controller for options.s3json lookups """
-
-    if auth.permission.format != "s3json":
-        return ""
-
-    # Pre-process
-    def prep(r):
-        if r.method != "options":
-            return False
-        return True
-    s3.prep = prep
-
-    return s3_rest_controller()
+    response.headers["Content-Type"] = "application/json"
+    return db(query).select(table.id,
+                            table.name,
+                            table.quantity,
+                            ).json()
 
 # END =========================================================================

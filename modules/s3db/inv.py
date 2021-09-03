@@ -46,6 +46,7 @@ __all__ = ("InvWarehouseModel",
            "inv_send_controller",
            "inv_send_onaccept",
            #"inv_send_process",
+           #"inv_send_received",
            "inv_send_rheader",
            "inv_ship_status",
            "inv_stock_movements",
@@ -1235,6 +1236,11 @@ class InventoryTrackingModel(S3Model):
         set_method("inv", "send",
                    method = "send_process",
                    action = inv_send_process)
+
+        # Confirm Shipment Received
+        set_method("inv", "send",
+                   method = "send_received",
+                   action = inv_send_received)
 
         # Display Timeline
         set_method("inv", "send",
@@ -3475,8 +3481,9 @@ def inv_send_rheader(r):
                             T("Confirm that some items were returned from a delivery to beneficiaries and they will be accepted back into stock."))
                         action.append(A(T("Confirm Shipment Received"),
                                         _href = URL(f = "send",
-                                                    args = [record.id],
-                                                    vars = {"received": 1},
+                                                    args = [record.id,
+                                                            "received",
+                                                            ],
                                                     ),
                                         _id = "send-receive",
                                         _class = "action-btn",
@@ -5027,113 +5034,50 @@ def inv_send_controller():
                         crud_strings.title_display = T("Review Incoming Shipment to Receive")
         else:
             # No Component
-            if record and r.get_vars.get("received"):
-                # Set the items to being received
-                send_id = r.id
-                if not current.auth.s3_has_permission("update", sendtable,
-                                                      record_id = send_id):
-                    r.unauthorised()
-                # @ToDo: Avoid DB updates in GETs
-                # "received" must not propagate:
-                del r.get_vars["received"]
-                db(sendtable.id == send_id).update(status = SHIP_STATUS_RECEIVED)
-                db(tracktable.send_id == send_id).update(status = TRACK_STATUS_ARRIVED)
-                # @ToDo: if req_multi:
-                req_ref = record.req_ref
-                if req_ref:
-                    # Update the Request Status
-                    rtable = s3db.req_req
-                    req_id = db(rtable.req_ref == req_ref).select(rtable.id,
-                                                                  limitby = (0, 1)
-                                                                  ).first()
-                    # Get the full list of items in the request
-                    ritable = s3db.req_req_item
-                    query = (ritable.req_id == req_id) & \
-                            (ritable.deleted == False)
-                    ritems = db(query).select(ritable.id,
-                                              ritable.item_pack_id,
-                                              ritable.quantity,
-                                              # Virtual Field
-                                              #ritable.pack_quantity,
-                                              )
-                    # Get all Received Shipments in-system for this request
-                    query = (sendtable.status == SHIP_STATUS_RECEIVED) & \
-                            (sendtable.req_ref == req_ref) & \
-                            (tracktable.send_id == send_id) & \
-                            (tracktable.deleted == False)
-                    sitems = db(query).select(tracktable.item_pack_id,
-                                              tracktable.quantity,
-                                              # Virtual Field
-                                              #tracktable.pack_quantity,
-                                              )
-                    fulfil_qty = {}
-                    for item in sitems:
-                        item_pack_id = item.item_pack_id
-                        if item_pack_id in fulfil_qty:
-                            fulfil_qty[item_pack_id] += (item.quantity * item.pack_quantity())
-                        else:
-                            fulfil_qty[item_pack_id] = (item.quantity * item.pack_quantity())
-                    complete = False
-                    for item in ritems:
-                        if item.item_pack_id in fulfil_qty:
-                            quantity_fulfil = fulfil_qty[item.item_pack_id]
-                            db(ritable.id == item.id).update(quantity_fulfil = quantity_fulfil)
-                            req_quantity = item.quantity * item.pack_quantity()
-                            complete = quantity_fulfil >= req_quantity
+            # Set the inv_send attributes
+            def set_send_attr(status):
+                sendtable.send_ref.writable = False
+                if status == SHIP_STATUS_IN_PROCESS:
+                    sendtable.send_ref.readable = False
+                else:
+                    # Make all fields writable False
+                    for field in sendtable.fields:
+                        sendtable[field].writable = False
+                    if settings.get_inv_send_req_multi():
+                        s3db.inv_send_req.req_id.writable = False
 
-                    # Update overall Request Status
-                    if complete:
-                        # REQ_STATUS_COMPLETE
-                        db(rtable.id == req_id).update(fulfil_status = 2)
-                    else:
-                        # REQ_STATUS_PARTIAL
-                        db(rtable.id == req_id).update(fulfil_status = 1)
-                response.confirmation = T("Shipment received")
-            else:
-                # Set the inv_send attributes
-                def set_send_attr(status):
-                    sendtable.send_ref.writable = False
-                    if status == SHIP_STATUS_IN_PROCESS:
-                        sendtable.send_ref.readable = False
-                    else:
-                        # Make all fields writable False
-                        for field in sendtable.fields:
-                            sendtable[field].writable = False
-                        if settings.get_inv_send_req_multi():
-                            s3db.inv_send_req.req_id.writable = False
-
-                if record:
-                    if status != SHIP_STATUS_IN_PROCESS:
-                        # Now that the shipment has been sent,
-                        # lock the record so that it can't be meddled with
-                        if settings.get_inv_document_filing():
-                            dtable = s3db.doc_document
-                            filed = db(dtable.doc_id == record.doc_id).select(dtable.id,
-                                                                              limitby = (0, 1)
-                                                                              )
-                            if filed:
-                                # Still allow access to filing_status
-                                set_send_attr(status)
-                                sendtable.filing_status.writable = True
-                                s3db.configure("inv_send",
-                                               deletable = False,
-                                               )
-                            else:
-                                s3db.configure("inv_send",
-                                               deletable = False,
-                                               editable = False,
-                                               )
+            if record:
+                if status != SHIP_STATUS_IN_PROCESS:
+                    # Now that the shipment has been sent,
+                    # lock the record so that it can't be meddled with
+                    if settings.get_inv_document_filing():
+                        dtable = s3db.doc_document
+                        filed = db(dtable.doc_id == record.doc_id).select(dtable.id,
+                                                                          limitby = (0, 1)
+                                                                          )
+                        if filed:
+                            # Still allow access to filing_status
+                            set_send_attr(status)
+                            sendtable.filing_status.writable = True
+                            s3db.configure("inv_send",
+                                           deletable = False,
+                                           )
                         else:
                             s3db.configure("inv_send",
                                            deletable = False,
                                            editable = False,
                                            )
-                        
                     else:
-                        set_send_attr(status)
+                        s3db.configure("inv_send",
+                                       deletable = False,
+                                       editable = False,
+                                       )
+                    
                 else:
-                    set_send_attr(SHIP_STATUS_IN_PROCESS)
-                    sendtable.send_ref.readable = False
+                    set_send_attr(status)
+            else:
+                set_send_attr(SHIP_STATUS_IN_PROCESS)
+                sendtable.send_ref.readable = False
         return True
 
     s3.prep = prep
@@ -5384,6 +5328,94 @@ def inv_send_process(r, **attr):
     current.session.confirmation = T("Shipment Items sent from Warehouse")
     redirect(URL(f = "send",
                  args = [send_id, "track_item"]
+                 ))
+
+# =============================================================================
+def inv_send_received(r, **attr):
+    """
+        Confirm a Shipment has been Received
+
+        @ToDo: Avoid Writes in GETs
+    """
+
+    T = current.T
+
+    send_id = r.id
+
+    if not send_id:
+        r.error(405, T("Can only confirm a single shipment."),
+                next = URL(f = "send",
+                           ),
+                )
+
+    auth = current.auth
+    s3db = current.s3db
+    stable = s3db.inv_send
+
+    if not auth.s3_has_permission("update", stable,
+                                  record_id = send_id):
+        r.unauthorised()
+
+    db = current.db
+
+    db(stable.id == send_id).update(status = SHIP_STATUS_RECEIVED)
+    db(tracktable.send_id == send_id).update(status = TRACK_STATUS_ARRIVED)
+
+    # @ToDo: if req_multi:
+    req_ref = r.record.req_ref
+    if req_ref:
+        # Update the Request Status
+        rtable = s3db.req_req
+        req_id = db(rtable.req_ref == req_ref).select(rtable.id,
+                                                      limitby = (0, 1)
+                                                      ).first()
+        # Get the full list of items in the request
+        ritable = s3db.req_req_item
+        query = (ritable.req_id == req_id) & \
+                (ritable.deleted == False)
+        ritems = db(query).select(ritable.id,
+                                  ritable.item_pack_id,
+                                  ritable.quantity,
+                                  # Virtual Field
+                                  #ritable.pack_quantity,
+                                  )
+        # Get all Received Shipments in-system for this request
+        query = (stable.status == SHIP_STATUS_RECEIVED) & \
+                (stable.req_ref == req_ref) & \
+                (tracktable.send_id == send_id) & \
+                (tracktable.deleted == False)
+        sitems = db(query).select(tracktable.item_pack_id,
+                                  tracktable.quantity,
+                                  # Virtual Field
+                                  #tracktable.pack_quantity,
+                                  )
+        fulfil_qty = {}
+        for item in sitems:
+            item_pack_id = item.item_pack_id
+            if item_pack_id in fulfil_qty:
+                fulfil_qty[item_pack_id] += (item.quantity * item.pack_quantity())
+            else:
+                fulfil_qty[item_pack_id] = (item.quantity * item.pack_quantity())
+        complete = False
+        for item in ritems:
+            if item.item_pack_id in fulfil_qty:
+                quantity_fulfil = fulfil_qty[item.item_pack_id]
+                db(ritable.id == item.id).update(quantity_fulfil = quantity_fulfil)
+                req_quantity = item.quantity * item.pack_quantity()
+                complete = quantity_fulfil >= req_quantity
+
+        # Update overall Request Status
+        if complete:
+            # REQ_STATUS_COMPLETE
+            db(rtable.id == req_id).update(fulfil_status = 2)
+        else:
+            # REQ_STATUS_PARTIAL
+            db(rtable.id == req_id).update(fulfil_status = 1)
+
+    current.session.confirmation = T("Shipment received")
+    redirect(URL(c = "inv",
+                 f = "send",
+                 args = [send_id],
                  ))
 
 # =============================================================================

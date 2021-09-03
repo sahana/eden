@@ -1859,27 +1859,29 @@ $.filterOptionsS3({
     @classmethod
     def req_qnty_commit_represent(cls, quantity, show_link=True):
 
-        return cls.req_quantity_represent(quantity, "commit", show_link)
+        return cls.req_item_quantity_represent(quantity, "commit", show_link)
 
     # ---------------------------------------------------------------------
     @classmethod
     def req_qnty_transit_represent(cls, quantity, show_link=True):
 
-        return cls.req_quantity_represent(quantity, "transit", show_link)
+        return cls.req_item_quantity_represent(quantity, "transit", show_link)
 
     # ---------------------------------------------------------------------
     @classmethod
     def req_qnty_fulfil_represent(cls, quantity, show_link=True):
 
-        return cls.req_quantity_represent(quantity, "fulfil", show_link)
+        return cls.req_item_quantity_represent(quantity, "fulfil", show_link)
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def req_quantity_represent(quantity, qtype, show_link=True):
+    def req_item_quantity_represent(quantity, qtype, show_link=True):
         """
-            @todo: better docstring
-            @ToDo: There should be better control of this feature - currently this only works
-                   with req_items which are being matched by commit / send / recv
+            Allow Drill-down on req_req_item to see what:
+                req_commits contibute to the quantity_commit
+                inv_sends contibute to the quantity_transit
+                inv_recvs contibute to the quantity_fulfil
+            Uses s3.supply.js
         """
 
         if quantity and show_link and \
@@ -2003,9 +2005,6 @@ class RequestSkillModel(S3Model):
                                 ),
                           Field("quantity_transit", "integer",
                                 label = T("Quantity in Transit"),
-                                #represent = lambda quantity_transit: \
-                                # req_quantity_represent(quantity_transit,
-                                #                        "transit"),
                                 default = 0,
                                 requires = IS_INT_IN_RANGE(0, None),
                                 readable = show_transit,
@@ -5147,6 +5146,7 @@ def req_send_commit():
         Controller function to create a Shipment containing all
         items in a commitment (interactive)
 
+        @ToDo: Rewrite as Method
         @ToDo: Support for inv_send_req_multi (not needed for RMS)
     """
 
@@ -5404,9 +5404,9 @@ class req_CheckMethod(S3Method):
                                         #req_item.quantity_commit, # if use_commit
                                         #req_item.quantity_transit,
                                         #req_item.quantity_fulfil,
-                                        #req_quantity_represent(req_item.quantity_commit, "commit"), # if use_commit
-                                        #req_quantity_represent(req_item.quantity_fulfil, "fulfil"),
-                                        #req_quantity_represent(req_item.quantity_transit, "transit"),
+                                        #req_item_quantity_represent(req_item.quantity_commit, "commit"), # if use_commit
+                                        #req_item_quantity_represent(req_item.quantity_fulfil, "fulfil"),
+                                        #req_item_quantity_represent(req_item.quantity_transit, "transit"),
                                         quantity_outstanding,
                                         inv_quantity,
                                         status,
@@ -5575,9 +5575,9 @@ class req_CheckMethod(S3Method):
                                     #req_skill.quantity_commit, # if use_commit
                                     #req_skill.quantity_transit,
                                     #req_skill.quantity_fulfil,
-                                    #req_quantity_represent(req_skill.quantity_commit, "commit"), # if use_commit
-                                    #req_quantity_represent(req_skill.quantity_fulfil, "fulfil"),
-                                    #req_quantity_represent(req_skill.quantity_transit, "transit"),
+                                    #req_item_quantity_represent(req_skill.quantity_commit, "commit"), # if use_commit
+                                    #req_item_quantity_represent(req_skill.quantity_fulfil, "fulfil"),
+                                    #req_item_quantity_represent(req_skill.quantity_transit, "transit"),
                                     quantity_outstanding,
                                     org_quantity,
                                     status,

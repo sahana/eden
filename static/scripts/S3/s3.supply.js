@@ -1,11 +1,12 @@
 /**
-    Supply Static JS Code
+    Static JS Code related to Supply, Inv & Req
 */
 
 S3.supply = Object();
 
-/* Globals called by filterOptionsS3 when Item Packs filtered based on Items */
-
+/**
+ * Globals called by filterOptionsS3 when Item Packs filtered based on Items
+ */
 S3.supply.fncPrepItem = function(data) {
     for (var i = 0; i < data.length; i++) {
         if (data[i].quantity == 1) {
@@ -23,9 +24,40 @@ S3.supply.fncRepresentItem = function(record, PrepResult) {
     }
 }
 
+// ============================================================================
 $(document).ready(function() {
 
-    var ReqItemRow = $('#inv_track_item_req_item_id__row');
+    /**
+     * Incoming Shipments
+     * - Show/Hide fields according to Shipment Type
+     */
+    var InvRecvTypeChange = function() {
+        var RecvType = $("#inv_recv_type").val();
+        if (RecvType != undefined) {
+            if ( RecvType == 11) { // @ToDo: pass this value instead of hardcoding it - base on s3cfg.py 
+                // Internal Shipment 
+                $('[id^="inv_recv_from_site_id__row"]').show();
+                $('[id^="inv_recv_organisation_id__row"]').hide();
+            } else if ( RecvType >= 32) { // @ToDo: pass this value instead of hardcoding it - base on s3cfg.py 
+                // External Shipment: Donation, Purchase, Consignment, In-Transit
+                $('[id^="inv_recv_from_site_id__row"]').hide();
+                $('[id^="inv_recv_organisation_id__row"]').show();
+            } else {
+                // Unknown Type
+                $('[id^="inv_recv_from_site_id__row"]').hide();
+                $('[id^="inv_recv_organisation_id__row"]').hide();
+            }
+        }
+    };
+
+    InvRecvTypeChange();
+    $('#inv_recv_type').change(InvRecvTypeChange);
+
+    // ========================================================================
+    /**
+     * Outgoing Shipments
+     */
+	var ReqItemRow = $('#inv_track_item_req_item_id__row');
     if (ReqItemRow.length) {
         // Hide it by Default
         ReqItemRow.hide();
@@ -190,33 +222,9 @@ $(document).ready(function() {
 
     $('#inv_track_item_item_pack_id').change(InvItemPackIDChange);
 
-    // Show/Hide fields according to Shipment Type
-    var InvRecvTypeChange = function() {
-        var RecvType = $("#inv_recv_type").val();
-        if (RecvType != undefined) {
-            if ( RecvType == 11) { // @ToDo: pass this value instead of hardcoding it - base on s3cfg.py 
-                // Internal Shipment 
-                $('[id^="inv_recv_from_site_id__row"]').show();
-                $('[id^="inv_recv_organisation_id__row"]').hide();
-            } else if ( RecvType >= 32) { // @ToDo: pass this value instead of hardcoding it - base on s3cfg.py 
-                // External Shipment: Donation, Purchase, Consignment, In-Transit
-                $('[id^="inv_recv_from_site_id__row"]').hide();
-                $('[id^="inv_recv_organisation_id__row"]').show();
-            } else {
-                // Unknown Type
-                $('[id^="inv_recv_from_site_id__row"]').hide();
-                $('[id^="inv_recv_organisation_id__row"]').hide();
-            }
-        }
-    };
-
-    InvRecvTypeChange();
-    $('#inv_recv_type').change(InvRecvTypeChange);
-
     // ========================================================================
     /**
-     * Function to show the transactions related to request commit, transit &
-     * fulfil quantities
+     * req_item_quantity_represent
      */
 	$(document).on('click', '.quantity.ajax_more', function(e) {
 
@@ -250,16 +258,14 @@ $(document).ready(function() {
                 RecvURL,
                 UpdateURL = $('.action-btn', DIV.parent().parent().parent()).attr('href'),
                 req_item_id = re.exec(UpdateURL)[1],
-                url = S3.Ap.concat('/', App, '/', ShipmentType, '_item_json.json/', req_item_id);
-			//var url = S3.Ap.concat('/', App, '/', ShipmentType, '_item.s3json?/',
-			//		   ShipmentType, '_item.req_item_id=', req_item_id);
+                url = S3.Ap.concat('/req/', ShipmentType, '_item_json.json/', req_item_id);
 			$.ajax( {
 				url: url,
 				dataType: 'json',
 				context: DIV
 			}).done(function(data) {
                 RecvTable = '<table class="recv_table">';
-                for (i=0; i<data.length; i++) {
+                for (i = 0; i < data.length; i++) {
                     RecvTable += '<tr><td>';
                     if (i === 0) {
                         // Header Row
@@ -268,7 +274,7 @@ $(document).ready(function() {
                         RecvURL = S3.Ap.concat('/', App, '/', ShipmentType, '/',  data[i].id, '/track_item');
                         RecvTable += "<a href='" + RecvURL + "'>";
                         if (data[i].date !== null) {
-                            RecvTable += data[i].date.substring(0, 10) + ' - ';
+                            RecvTable += data[i].date;
                             RecvTable += data[i].name + '</a>';
                         } else {
                             RecvTable +=  ' - </a>';

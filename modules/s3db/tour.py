@@ -27,6 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 
     @todo: update for new template path modules/template
+    @ToDo: update to use foundation.joyride.js instead of jquery.joyride.js
 """
 
 __all__ = ("S3GuidedTourModel",
