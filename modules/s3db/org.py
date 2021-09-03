@@ -3244,7 +3244,6 @@ class OrgSiteModel(S3Model):
         NONE = messages["NONE"]
         OBSOLETE = messages.OBSOLETE
 
-        add_components = self.add_components
         set_method = self.set_method
 
         # =====================================================================
@@ -3356,105 +3355,105 @@ class OrgSiteModel(S3Model):
                        )
 
         # Components
-        add_components(tablename,
-                       # Facility Types
-                       org_facility_type = {"link": "org_site_facility_type",
-                                            "joinby": "site_id",
-                                            "key": "facility_type_id",
-                                            "actuate": "hide",
-                                            },
+        self.add_components(tablename,
+                            # Facility Types
+                            org_facility_type = {"link": "org_site_facility_type",
+                                                 "joinby": "site_id",
+                                                 "key": "facility_type_id",
+                                                 "actuate": "hide",
+                                                 },
 
-                       # Layout
-                       org_site_layout = ({"name": "layout",
-                                           "joinby": "site_id",
-                                           },
-                                          ),
+                            # Layout
+                            org_site_layout = ({"name": "layout",
+                                                "joinby": "site_id",
+                                                },
+                                               ),
 
-                       # Locations
-                       org_site_location = ({"name": "location",
+                            # Locations
+                            org_site_location = ({"name": "location",
+                                                  "joinby": "site_id",
+                                                 },
+                                                 ),
+
+                            # Local Names
+                            org_site_name = {"name": "name",
                                              "joinby": "site_id",
-                                            },
-                                            ),
+                                             },
 
-                       # Local Names
-                       org_site_name = {"name": "name",
+                            # Details and Status
+                            org_site_details = {"joinby": "site_id",
+                                                "multiple": False,
+                                                },
+                            org_site_status = {"name": "status",
+                                               "joinby": "site_id",
+                                               "multiple": False,
+                                               },
+                            # Services
+                            org_service = {"link": "org_service_site",
+                                           "joinby": "site_id",
+                                           "key": "service_id",
+                                           "actuate": "hide",
+                                           },
+
+                            # Events (Check-In/Check-Out)
+                            org_site_event = {"name": "event",
+                                              "joinby": "site_id",
+                                              },
+                            # Tags
+                            org_site_tag = {"name": "tag",
+                                            "joinby": "site_id",
+                                            },
+                            # Assets
+                            asset_asset = "site_id",
+
+                            # Documents
+                            doc_document = "site_id",
+                            doc_image = "site_id",
+
+                            # Human Resources
+                            # - direct component (suitable for Create/List)
+                            hrm_human_resource = "site_id",
+                            # - via link table (suitable for Assign)
+                            hrm_human_resource_site = "site_id",
+
+                            # Inventory
+                            inv_inv_item = "site_id",
+                            inv_minimum = "site_id",
+                            inv_recv = "site_id",
+                            inv_send = "site_id",
+
+                            # Groups: Coalitions/Networks
+                            org_group = {"link": "org_site_org_group",
+                                         "joinby": "site_id",
+                                         "key": "group_id",
+                                         "actuate": "hide",
+                                         },
+                            # Format for InlineComponent/filter_widget
+                            org_site_org_group = "site_id",
+
+                            # Needs
+                            req_need = {"name": "needs",
+                                        "link": "req_need_site",
                                         "joinby": "site_id",
+                                        "key": "need_id",
+                                        "multiple": False,
                                         },
 
-                       # Details and Status
-                       org_site_details = {"joinby": "site_id",
-                                           "multiple": False,
-                                           },
-                       org_site_status = {"name": "status",
-                                          "joinby": "site_id",
-                                          "multiple": False,
-                                          },
-                       # Services
-                       org_service = {"link": "org_service_site",
-                                      "joinby": "site_id",
-                                      "key": "service_id",
-                                      "actuate": "hide",
-                                      },
+                            # Requests
+                            req_req = "site_id",
+                            req_commit = "site_id",
 
-                       # Events (Check-In/Check-Out)
-                       org_site_event = {"name": "event",
+                            # Shifts
+                            #org_site_shift = "site_id",
+                            hrm_shift = {"link": "org_site_shift",
                                          "joinby": "site_id",
+                                         "key": "shift_id",
+                                         "actuate": "replace",
                                          },
-                       # Tags
-                       org_site_tag = {"name": "tag",
-                                       "joinby": "site_id",
-                                       },
-                       # Assets
-                       asset_asset = "site_id",
 
-                       # Documents
-                       doc_document = "site_id",
-                       doc_image = "site_id",
-
-                       # Human Resources
-                       # - direct component (suitable for Create/List)
-                       hrm_human_resource = "site_id",
-                       # - via link table (suitable for Assign)
-                       hrm_human_resource_site = "site_id",
-
-                       # Inventory
-                       inv_inv_item = "site_id",
-                       inv_minimum = "site_id",
-                       inv_recv = "site_id",
-                       inv_send = "site_id",
-
-                       # Groups: Coalitions/Networks
-                       org_group = {"link": "org_site_org_group",
-                                    "joinby": "site_id",
-                                    "key": "group_id",
-                                    "actuate": "hide",
-                                    },
-                       # Format for InlineComponent/filter_widget
-                       org_site_org_group = "site_id",
-
-                       # Needs
-                       req_need = {"name": "needs",
-                                   "link": "req_need_site",
-                                   "joinby": "site_id",
-                                   "key": "need_id",
-                                   "multiple": False,
-                                   },
-
-                       # Requests
-                       req_req = "site_id",
-                       req_commit = "site_id",
-
-                       # Shifts
-                       #org_site_shift = "site_id",
-                       hrm_shift = {"link": "org_site_shift",
-                                    "joinby": "site_id",
-                                    "key": "shift_id",
-                                    "actuate": "replace",
-                                    },
-
-                       # Procurement Plans
-                       proc_plan = "site_id",
-                       )
+                            # Procurement Plans
+                            proc_plan = "site_id",
+                            )
 
         # Pass names back to global scope (s3.*)
         return {"org_site_id": site_id,

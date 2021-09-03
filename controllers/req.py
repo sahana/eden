@@ -1592,12 +1592,6 @@ def send_commit():
 
     return s3db.req_send_commit()
 
-# -----------------------------------------------------------------------------
-def send_process():
-    """ Process a Shipment """
-
-    return s3db.inv_send_process()
-
 # =============================================================================
 def commit_item():
     """ REST Controller """
@@ -1709,7 +1703,7 @@ def send_req():
         vars: site_id
 
         @ToDo: Rewrite as S3Method
-                - means that permissions are better-controlled
+        @ToDo: Support for inv_send_req_multi (not needed for RMS)
     """
 
     req_id = request.args[0]
@@ -1730,7 +1724,8 @@ def send_req():
                                                  ):
         session.error = T("You do not have permission to send this shipment.")
         redirect(URL(c="req", f="req",
-                     args = [req_id]))
+                     args = [req_id],
+                     ))
 
     ritable = s3db.req_req_item
     iitable = s3db.inv_inv_item

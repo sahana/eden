@@ -698,16 +698,17 @@ def track_movement():
 def inv_item_quantity():
     """
         Access via the .json representation to avoid work rendering menus, etc
+        Called from s3.supply.js
     """
 
     try:
-        item_id = request.args[0]
+        inv_item_id = request.args[0]
     except:
         raise HTTP(400, current.xml.json_message(False, 400, "No value provided!"))
 
     table = s3db.inv_inv_item
     ptable = db.supply_item_pack
-    query = (table.id == item_id) & \
+    query = (table.id == inv_item_id) & \
             (table.item_pack_id == ptable.id)
     record = db(query).select(table.quantity,
                               ptable.quantity,
@@ -768,17 +769,6 @@ def send_commit():
     return req_send_commit()
 
 # -----------------------------------------------------------------------------
-def send_process():
-    """
-        Process a Shipment
-
-        @ToDo: Rewrite as S3Method
-    """
-
-    from s3db.inv import inv_send_process
-    return inv_send_process()
-
-# -----------------------------------------------------------------------------
 def send_returns():
     """
         This will return a shipment that has been sent
@@ -812,10 +802,10 @@ def send_returns():
     tracktable = s3db.inv_track_item
 
     # Okay no error so far, change the status to Returning
-    ADMIN = auth.get_system_roles().ADMIN
+    #ADMIN = auth.get_system_roles().ADMIN
     db(stable.id == send_id).update(status = inv_ship_status["RETURNING"],
-                                    owned_by_user = None,
-                                    owned_by_group = ADMIN,
+                                    #owned_by_user = None,
+                                    #owned_by_group = ADMIN,
                                     )
     recv_row = db(tracktable.send_id == send_id).select(tracktable.recv_id,
                                                         limitby = (0, 1)
@@ -824,8 +814,8 @@ def send_returns():
         recv_id = recv_row.recv_id
         db(rtable.id == recv_id).update(date = request.utcnow,
                                         status = inv_ship_status["RETURNING"],
-                                        owned_by_user = None,
-                                        owned_by_group = ADMIN,
+                                        #owned_by_user = None,
+                                        #owned_by_group = ADMIN,
                                         )
     # Set all track items to status of returning
     from s3db.inv import inv_tracking_status
@@ -888,10 +878,10 @@ def return_process():
         if return_qnty:
             db(invtable.id == send_inv_id).update(quantity = invtable.quantity + return_qnty)
 
-    ADMIN = auth.get_system_roles().ADMIN
+    #ADMIN = auth.get_system_roles().ADMIN
     db(stable.id == send_id).update(status = inv_ship_status["RECEIVED"],
-                                    owned_by_user = None,
-                                    owned_by_group = ADMIN,
+                                    #owned_by_user = None,
+                                    #owned_by_group = ADMIN,
                                     )
     recv_row = db(tracktable.send_id == send_id).select(tracktable.recv_id,
                                                         limitby = (0, 1)
@@ -900,8 +890,8 @@ def return_process():
         recv_id = recv_row.recv_id
         db(s3db.inv_recv.id == recv_id).update(date = request.utcnow,
                                                status = inv_ship_status["RECEIVED"],
-                                               owned_by_user = None,
-                                               owned_by_group = ADMIN,
+                                               #owned_by_user = None,
+                                               #owned_by_group = ADMIN,
                                                )
 
     # Change the status for all track items in this shipment to Received
@@ -954,10 +944,10 @@ def send_cancel():
 
     # Okay no error so far, let's delete that baby
     # Change the send and recv status to cancelled
-    ADMIN = auth.get_system_roles().ADMIN
+    #ADMIN = auth.get_system_roles().ADMIN
     db(stable.id == send_id).update(status = inv_ship_status["CANCEL"],
-                                    owned_by_user = None,
-                                    owned_by_group = ADMIN,
+                                    #owned_by_user = None,
+                                    #owned_by_group = ADMIN,
                                     )
     recv_row = db(tracktable.send_id == send_id).select(tracktable.recv_id,
                                                         limitby = (0, 1)
@@ -966,8 +956,8 @@ def send_cancel():
         recv_id = recv_row.recv_id
         db(rtable.id == recv_id).update(date = request.utcnow,
                                         status = inv_ship_status["CANCEL"],
-                                        owned_by_user = None,
-                                        owned_by_group = ADMIN,
+                                        #owned_by_user = None,
+                                        #owned_by_group = ADMIN,
                                         )
 
     # Change the track items status to canceled and then delete them
@@ -1015,6 +1005,8 @@ def set_recv_attr(status):
         # Make all fields writable False
         for field in recvtable.fields:
             recvtable[field].writable = False
+        if settings.get_inv_recv_req_multi():
+            s3db.inv_recv_req.req_id.writable = False
     if status == inv_ship_status["SENT"]:
         recvtable.date.writable = True
         recvtable.recipient_id.readable = recvtable.recipient_id.writable = True
@@ -1239,7 +1231,12 @@ def recv():
                 if status not in (SHIP_STATUS_IN_PROCESS, SHIP_STATUS_SENT):
                     # Now that the shipment has been sent
                     # lock the record so that it can't be meddled with
-                        if settings.get_inv_document_filing():
+                    if settings.get_inv_document_filing():
+                        dtable = s3db.doc_document
+                        filed = db(dtable.doc_id == record.doc_id).select(dtable.id,
+                                                                          limitby = (0, 1)
+                                                                          )
+                        if filed:
                             # Still allow access to filing_status
                             set_recv_attr(status)
                             recvtable.filing_status.writable = True
@@ -1251,6 +1248,11 @@ def recv():
                                            deletable = False,
                                            editable = False,
                                            )
+                    else:
+                        s3db.configure("inv_recv",
+                                       deletable = False,
+                                       editable = False,
+                                       )
                 else:
                     set_recv_attr(status)
             else:
@@ -1267,101 +1269,6 @@ def recv():
     output = s3_rest_controller(rheader = inv_recv_rheader,
                                 )
     return output
-
-# -----------------------------------------------------------------------------
-def req_items_for_inv(site_id, quantity_type):
-    """
-        Used by recv_process & send_process
-        returns a dict of unique req items (with min  db.req_req.date_required | db.req_req.date)
-        key = item_id
-        @param site_id: The inventory to find the req_items from
-        @param quantity_type: str ("commit", "transit" or "fulfil) The
-                              quantity type which will be used to determine if this item is still outstanding
-
-        @ToDo: Deprecate? Seems to not be called from anywhere
-    """
-
-    if not settings.has_module("req"):
-        return Storage()
-
-    table = s3db.req_req
-    itable = s3db.req_req_item
-    query = (table.site_id == site_id) & \
-            (table.id == itable.req_id) & \
-            (itable.item_pack_id == itable.item_pack_id) & \
-            (itable["quantity_%s" % quantity_type] < itable.quantity) & \
-            (table.cancel == False) & \
-            (table.deleted == False) & \
-            (itable.deleted == False)
-    req_items = db(query).select(itable.id,
-                                 itable.req_id,
-                                 itable.item_id,
-                                 itable.quantity,
-                                 itable["quantity_%s" % quantity_type],
-                                 itable.item_pack_id,
-                                 orderby = table.date_required | table.date,
-                                 #groupby = itable.item_id
-                                 )
-
-    # Because groupby doesn't follow the orderby, this will remove any
-    # duplicate req_item, using the first record according to the orderby
-    # req_items = req_items.as_dict( key = "req_req_item.item_id") <- doesn't work
-    # @todo: web2py Rows.as_dict function could be extended to enable this functionality instead
-    req_item_ids = []
-    unique_req_items = Storage()
-    for req_item in req_items:
-        if req_item.item_id not in req_item_ids:
-            # This item is not already in the dict
-            unique_req_items[req_item.item_id] = Storage(req_item.as_dict())
-            req_item_ids.append(req_item.item_id)
-
-    return unique_req_items
-
-# -----------------------------------------------------------------------------
-def req_item_in_shipment(shipment_item,
-                         shipment_type,
-                         req_items,
-                         ):
-    """
-        Checks if a shipment item is in a request and updates req_item
-        and the shipment.
-
-        @ToDo: Deprecate? Seems to not be called from anywhere
-    """
-
-    shipment_item_table = "inv_%s_item" % shipment_type
-    try:
-        item_id = shipment_item[shipment_item_table].item_id
-    except:
-        item_id = shipment_item.inv_inv_item.item_id
-
-    # Check for req_items
-    if item_id in req_items:
-        shipment_to_req_type = {"recv": "fulfil",
-                                "send": "transit",
-                                }
-        quantity_req_type = "quantity_%s" % shipment_to_req_type[shipment_type]
-
-        # This item has been requested from this inv
-        req_item = req_items[item_id]
-        req_item_id = req_item.id
-
-        # Update the req quantity
-        # convert the shipment items quantity into the req_tem.quantity_fulfil (according to pack)
-        quantity = req_item[quantity_req_type] + \
-                   (shipment_item[shipment_item_table].pack_quantity / \
-                    req_item.pack_quantity) * \
-                    shipment_item[shipment_item_table].quantity
-        quantity = min(quantity, req_item.quantity)  # Cap at req. quantity
-        db(s3db.req_req_item.id == req_item_id).update(quantity_req_type = quantity)
-
-        # Link the shipment_item to the req_item
-        db(s3db[shipment_item_table].id == shipment_item[shipment_item_table].id).update(req_item_id = req_item_id)
-
-        # Flag req record to update status_fulfil
-        return req_item.req_id, req_item.id
-    else:
-        return None, None
 
 # -----------------------------------------------------------------------------
 def recv_process():
@@ -1404,10 +1311,10 @@ def recv_process():
         redirect(URL(c="inv", f="recv", args=[recv_id]))
 
     # Update Receive record & lock for editing
-    ADMIN = auth.get_system_roles().ADMIN
+    #ADMIN = auth.get_system_roles().ADMIN
     data = {"status": inv_ship_status["RECEIVED"],
-            "owned_by_user": None,
-            "owned_by_group": ADMIN,
+            #"owned_by_user": None,
+            #"owned_by_group": ADMIN,
             }
 
     if not recv_record.recv_ref:
@@ -1444,8 +1351,8 @@ def recv_process():
         # Update the Send record & lock for editing
         stable = db.inv_send
         db(stable.id == send_id).update(status = inv_ship_status["RECEIVED"],
-                                        owned_by_user = None,
-                                        owned_by_group = ADMIN,
+                                        #owned_by_user = None,
+                                        #owned_by_group = ADMIN,
                                         )
 
     # Change the status for all track items in this shipment to UNLOADING
@@ -1557,11 +1464,11 @@ def recv_cancel():
             s3db.req_update_status(req_id)
 
     # Now set the recv record to cancelled and the send record to sent
-    ADMIN = auth.get_system_roles().ADMIN
+    #ADMIN = auth.get_system_roles().ADMIN
     db(rtable.id == recv_id).update(date = request.utcnow,
                                     status = inv_ship_status["CANCEL"],
-                                    owned_by_user = None,
-                                    owned_by_group = ADMIN
+                                    #owned_by_user = None,
+                                    #owned_by_group = ADMIN
                                     )
     if send_id != None:
         # The sent record is now set back to SENT so the source warehouse can
@@ -1569,8 +1476,8 @@ def recv_cancel():
         # IMPORTANT reports need to locate this record otherwise it can be
         # a mechanism to circumvent the auditing of stock
         db(stable.id == send_id).update(status = inv_ship_status["SENT"],
-                                        owned_by_user = None,
-                                        owned_by_group = ADMIN
+                                        #owned_by_user = None,
+                                        #owned_by_group = ADMIN
                                         )
 
     if settings.get_inv_warehouse_free_capacity_calculated():

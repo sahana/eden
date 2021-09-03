@@ -1585,8 +1585,8 @@ class RequestItemModel(S3Model):
                      Field("quantity", "double", notnull=True,
                            label = T("Quantity"),
                            represent = lambda v: \
-                            IS_FLOAT_AMOUNT.represent(v, precision=2),
-                           requires = IS_FLOAT_AMOUNT(minimum=1.0),
+                                IS_FLOAT_AMOUNT.represent(v, precision = 2),
+                           requires = IS_FLOAT_AMOUNT(minimum = 1.0),
                            ),
                      Field("pack_value", "double",
                            label = T("Estimated Value per Pack"),
@@ -1602,7 +1602,7 @@ class RequestItemModel(S3Model):
                            default = 0,
                            label = T("Quantity Committed"),
                            represent = self.req_qnty_commit_represent,
-                           requires = IS_FLOAT_AMOUNT(minimum=0.0),
+                           requires = IS_FLOAT_AMOUNT(minimum = 0.0),
                            readable = use_commit,
                            writable = use_commit and quantities_writable,
                            ),
@@ -1615,7 +1615,7 @@ class RequestItemModel(S3Model):
                            label = T("Quantity in Transit"),
                            represent = self.req_qnty_transit_represent,
                            default = 0,
-                           requires = IS_FLOAT_AMOUNT(minimum=0.0),
+                           requires = IS_FLOAT_AMOUNT(minimum = 0.0),
                            readable = show_qty_transit,
                            writable = show_qty_transit and quantities_writable,
                            ),
@@ -1623,11 +1623,11 @@ class RequestItemModel(S3Model):
                            label = T("Quantity Fulfilled"),
                            represent = self.req_qnty_fulfil_represent,
                            default = 0,
-                           requires = IS_FLOAT_AMOUNT(minimum=0.0),
+                           requires = IS_FLOAT_AMOUNT(minimum = 0.0),
                            writable = quantities_writable,
                            ),
                      Field.Method("pack_quantity",
-                                  self.supply_item_pack_quantity(tablename=tablename)
+                                  self.supply_item_pack_quantity(tablename = tablename)
                                   ),
                      s3_comments(),
                      *s3_meta_fields(),
@@ -1660,7 +1660,8 @@ class RequestItemModel(S3Model):
                                                               "req_req_item.id",
                                                               req_item_represent,
                                                               orderby = "req_req_item.id",
-                                                              sort = True)),
+                                                              sort = True,
+                                                              )),
                                       comment = DIV(_class = "tooltip",
                                                     _title = "%s|%s" % (T("Request Item"),
                                                                         T("Select Items from the Request")),
@@ -4376,10 +4377,9 @@ def req_tabs(r, match=True):
         @return: list of rheader tab definitions
     """
 
-    settings = current.deployment_settings
-
     tabs = []
 
+    settings = current.deployment_settings
     if settings.get_org_site_inv_req_tabs():
 
         has_permission = current.auth.s3_has_permission
@@ -4391,9 +4391,10 @@ def req_tabs(r, match=True):
             # Requests tab
             tabs = [(T("Requests"), "req")]
 
-            # Match-tab if applicable for the use-case and user
+            # Match-tab if configured, applicable for the use-case and user
             # is permitted to match requests
-            if match and has_permission("read", "req_req",
+            if match and settings.get_req_match_tab() \
+                     and has_permission("read", "req_req",
                                         c = r.controller,
                                         f = "req_match",
                                         ):
@@ -4421,8 +4422,6 @@ def req_update_status(req_id):
     db = current.db
     s3db = current.s3db
 
-    table = s3db.req_req_item
-
     is_none = {"commit": True,
                "transit": True,
                "fulfil": True,
@@ -4433,7 +4432,8 @@ def req_update_status(req_id):
                    "fulfil": True,
                    }
 
-    # Must check all items in the req (TODO really?)
+    # Read the Items in the Request
+    table = s3db.req_req_item
     query = (table.req_id == req_id) & \
             (table.deleted == False )
     req_items = db(query).select(table.quantity,
@@ -4458,6 +4458,10 @@ def req_update_status(req_id):
             status_update["%s_status" % status_type] = REQ_STATUS_NONE
         else:
             status_update["%s_status" % status_type] = REQ_STATUS_PARTIAL
+
+    if current.deployment_settings.get_req_workflow() and \
+       status_update["fulfil_status"] == REQ_STATUS_COMPLETE:
+        status_update["workflow_status"] = 4 # Completed
 
     db(s3db.req_req.id == req_id).update(**status_update)
 
@@ -5142,6 +5146,8 @@ def req_send_commit():
     """
         Controller function to create a Shipment containing all
         items in a commitment (interactive)
+
+        @ToDo: Support for inv_send_req_multi (not needed for RMS)
     """
 
     # Get the commit record

@@ -5942,6 +5942,12 @@ class S3Config(Storage):
         """
         return self.req.get("inline_forms", True)
 
+    def get_req_match_tab(self):
+        """
+            Whether to show the Match Requests tab
+        """
+        return self.req.get("match_tab", True)
+
     def get_req_prompt_match(self):
         """
             Whether a Requester is prompted to match each line item in an Item request

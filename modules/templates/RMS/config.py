@@ -829,6 +829,8 @@ def config(settings):
     # Request Numbers are entered manually
     settings.req.generate_req_number = False
     settings.req.pack_values = False
+    # Don't Match Requests (they are assigned instead)
+    settings.req.match_tab = False
     # HNRC disable Request Matching as don't want users making requests to see what stock is available
     # PIRAC want this to be done by the Logistics Approver
     settings.req.prompt_match = False
@@ -3341,24 +3343,7 @@ Thank you"""
 
             record = r.record
             if record:
-                if not r.component:
-                    from s3db.inv import inv_ship_status
-                    if record.status == inv_ship_status["RECEIVED"]:
-                        s3db = current.s3db
-                        dtable = s3db.doc_document
-                        query = (dtable.doc_id == record.doc_id) & \
-                                (dtable.deleted == False)
-                        filed = current.db(query).select(dtable.id,
-                                                         limitby = (0, 1)
-                                                         ).first()
-                        if filed:
-                            # Allow editing of Filing Status when the rest of the record is locked
-                            s3db.configure("inv_recv",
-                                           editable = True,
-                                           )
-                            s3db.inv_recv.filing_status.writable = True
-
-                elif r.component_name == "document":
+                if r.component_name == "document":
                     s3.crud_strings["doc_document"].label_create = T("File Signed Document")
                     field = current.s3db.doc_document.name
                     field.label = T("Type")
@@ -3376,6 +3361,69 @@ Thank you"""
         return attr
 
     settings.customise_inv_recv_controller = customise_inv_recv_controller
+
+    # -------------------------------------------------------------------------
+    def on_inv_send_process(record):
+        """
+            Remove req_fulfil Dashboard Alert if completed
+        """
+
+        from s3db.req import REQ_STATUS_COMPLETE, \
+                             REQ_STATUS_PARTIAL
+
+        db = current.db
+        s3db = current.s3db
+
+        # Which Requests did we act on & what is their Status?
+        srtable = s3db.inv_send_req
+        rtable = s3db.req_req
+        query = (srtable.send_id == record.id) & \
+                (srtable.req_id == rtable.id)
+        reqs = db(query).select(rtable.id,
+                                rtable.transit_status,
+                                )
+        req_ids_to_delete = []
+        req_ids_to_check = []
+        for row in reqs:
+            transit_status = row.transit_status
+            if transit_status == REQ_STATUS_COMPLETE:
+                req_ids_to_delete.append(row.id)
+            elif transit_status == REQ_STATUS_PARTIAL:
+                req_ids_to_check.append(row.id)
+
+        if req_ids_to_check:
+            ritable = s3db.req_req_item
+            query = (ritable.req_id.belongs(req_ids_to_check)) & \
+                    (ritable.site_id == record.site_id)
+            req_items = db(query).select(ritable.req_id,
+                                         ritable.quantity,
+                                         ritable.quantity_transit,
+                                         )
+            reqs = {}
+            for row in req_items:
+                if row.quantity_transit >=  row.quantity:
+                    item_complete = True
+                else:
+                    item_complete = False
+                req_id = row.req_id
+                if req_id in reqs:
+                    if reqs[req_id]:
+                        if not item_complete:
+                            # Any single Incomplete Item makes the Request Incomplete
+                            reqs[req_id] = False
+                else:
+                    reqs[req_id] = item_complete
+
+            for req_id in reqs:
+                if reqs[req_id]:
+                    req_ids_to_delete.append(req_id)
+
+        if req_ids_to_delete:
+            ntable = s3db.auth_user_notification
+            query = (ntable.type == "req_fulfil") & \
+                    (ntable.record_id.belongs(req_ids_to_delete))
+            resource = s3db.resource("auth_user_notification", filter = query)
+            resource.delete()
 
     # -------------------------------------------------------------------------
     def customise_inv_send_resource(r, tablename):
@@ -3450,6 +3498,7 @@ Thank you"""
                                       #"time_out",
                                       #"comments",
                                       ],
+                       on_inv_send_process = on_inv_send_process,
                        )
 
         # Custom Waybill
@@ -3476,44 +3525,87 @@ Thank you"""
 
             record = r.record
             if record:
-                if not r.component:
-                    from s3db.inv import inv_ship_status
-                    if record.status == inv_ship_status["SENT"]:
-                        s3db = current.s3db
-                        dtable = s3db.doc_document
-                        query = (dtable.doc_id == record.doc_id) & \
-                                (dtable.deleted == False)
-                        filed = current.db(query).select(dtable.id,
-                                                         limitby = (0, 1)
-                                                         ).first()
-                        if filed:
-                            # Allow editing of Filing Status when the rest of the record is locked
-                            s3db.configure("inv_send",
-                                           editable = True,
-                                           )
-                            s3db.inv_send.filing_status.writable = True
-
-                elif r.component_name == "track_item":
-                    # Limit to Items in the Request, and requested from this site
-                    # @ToDo: Also limit quantity
+                from s3db.inv import SHIP_STATUS_IN_PROCESS
+                if record.status == SHIP_STATUS_IN_PROCESS and \
+                   r.component_name == "track_item":
                     db = current.db
                     s3db = current.s3db
+                    # Allow populating req_item_id
+                    f = s3db.inv_track_item.req_item_id
+                    f.writable = True
+                    f.comment = None
+                    f.label = T("Request")
+                    # Limit send_inv_item_id to
+                    # - Items in the Request
+                    # - Items Requested from this site
+                    # - Items not yet Shipped
+                    site_id = record.site_id
                     srtable = s3db.inv_send_req
                     reqs = db(srtable.send_id == r.id).select(srtable.req_id)
                     req_ids = [row.req_id for row in reqs]
+                    iitable = s3db.inv_inv_item
+                    iptable = s3db.supply_item_pack
+                    rtable = s3db.req_req
                     ritable = s3db.req_req_item
+                    riptable = s3db.get_aliased(iptable, "req_item_pack")
                     if len(req_ids) == 1:
-                        req_query = (ritable.req_id == req_ids[0])
+                        query = (rtable.id == req_ids[0])
                     else:
-                        req_query = (ritable.req_id.belongs(req_ids))
-                    query = req_query & \
-                            (ritable.site_id == record.site_id)
-                    request_items = db(query).select(ritable.item_id)
-                    req_item_ids = [row.item_id for row in request_items]
-                    query = (s3db.inv_inv_item.item_id.belongs(req_item_ids))
+                        query = (rtable.id.belongs(req_ids))
+                    query &= (ritable.req_id == rtable.id) & \
+                             (ritable.site_id == site_id) & \
+                             (ritable.quantity_transit < ritable.quantity) & \
+                             (ritable.item_pack_id == riptable.id) & \
+                             (ritable.item_id == iitable.item_id) & \
+                             (iitable.site_id == site_id) & \
+                             (iitable.item_pack_id == iptable.id)
+                    items = db(query).select(iitable.id,
+                                             iitable.quantity,
+                                             iptable.quantity,
+                                             rtable.req_ref,
+                                             ritable.id,
+                                             ritable.quantity,
+                                             riptable.quantity,
+                                             )
+                    inv_data = {}
+                    inv_item_ids = []
+                    iiappend = inv_item_ids.append
+                    for row in items:
+                        inv_pack_quantity = row["supply_item_pack.quantity"]
+                        req_pack_quantity = row["req_item_pack.quantity"]
+                        req_ref = row["req_req.req_ref"]
+                        inv_row = row["inv_inv_item"]
+                        req_row = row["req_req_item"]
+                        inv_item_id = inv_row.id
+                        iiappend(inv_item_id)
+                        if inv_item_id in inv_data:
+                            inv_data[inv_item_id].append({"inv_quantity": inv_row.quantity * inv_pack_quantity,
+                                                          "req_item_id": req_row.id,
+                                                          "req_quantity": req_row.quantity * req_pack_quantity,
+                                                          "req_ref": req_ref,
+                                                          })
+                        else:
+                            inv_data[inv_item_id] = [{"inv_quantity": inv_row.quantity * inv_pack_quantity,
+                                                      "req_item_id": req_row.id,
+                                                      "req_quantity": req_row.quantity * req_pack_quantity,
+                                                      "req_ref": req_ref,
+                                                      }]
+                    # Remove req_ref when there are no duplicates to distinguish
+                    for inv_item_id in inv_data:
+                        this_data = inv_data[inv_item_id]
+                        if len(this_data) == 1:
+                            this_data[0].pop("req_ref")
+
+                    query = (iitable.id.belongs(inv_item_ids))
                     dbset = s3db.inv_track_item.send_inv_item_id.requires.dbset(query)
                     s3db.inv_track_item.send_inv_item_id.requires.dbset = dbset
-                
+
+                    # Apply req_item_id & quantity when item_id selected
+                    # - pass data to s3.supply.js
+                    import json
+                    SEPARATORS = (",", ":")
+                    s3.js_global.append('''S3.supply.inv_items=%s''' % json.dumps(inv_data, separators=SEPARATORS))
+
                 elif r.component_name == "document":
                     s3.crud_strings["doc_document"].label_create = T("File Signed Document")
                     field = current.s3db.doc_document.name
@@ -3529,7 +3621,7 @@ Thank you"""
             elif r.method in ("create", "update"):
                 # Filter Requests to those which are:
                 # - Approved
-                # - Have Items Requested From our sites
+                # - Have Items Requested From our sites which are not yet in-Transit/Fulfilled
                 s3db = current.s3db
                 sites = s3db.inv_send.site_id.requires.options(zero = False)
                 site_ids = [site[0] for site in sites]
@@ -3544,7 +3636,7 @@ Thank you"""
                         (rtable.deleted == False) & \
                         (rtable.id == ritable.req_id) & \
                         site_query & \
-                        (ritable.deleted == False)
+                        (ritable.quantity_transit < ritable.quantity)
                 dbset = current.db(query)
 
                 from s3 import IS_ONE_OF
@@ -5692,7 +5784,9 @@ Thank you"""
     # -------------------------------------------------------------------------
     def req_sites(r, **attr):
         """
-            Lookup to limit sites to those requested_from the selected Requests' Items
+            Lookup to limit
+                - from sites to those requested_from the selected Requests' remaining Items
+                - to sites to those from the selected Requests
             Accessed from inv_item.js
             Access via the .json representation to avoid work rendering menus, etc
         """
@@ -5704,24 +5798,44 @@ Thank you"""
         req_id = req_id.split(",")
 
         s3db = current.s3db
-        available_sites = s3db.inv_send.site_id.requires.options(zero = False)
 
+        # From Sites
+        available_from_sites = s3db.inv_send.site_id.requires.options(zero = False)
         ritable = s3db.req_req_item
         if len(req_id) == 1:
             query = (ritable.req_id == req_id[0])
         else:
             query = (ritable.req_id.belongs(req_id))
+        query &= (ritable.quantity_transit < ritable.quantity)
         request_items = current.db(query).select(ritable.site_id)
-        requested_sites = set([int(row.site_id) for row in request_items if row.site_id])
-        intersect_sites = []
-        for site in available_sites:
-            if int(site[0]) in requested_sites:
-                intersect_sites.append(site)
+        requested_from_sites = set([int(row.site_id) for row in request_items if row.site_id])
+        from_sites = []
+        for site in available_from_sites:
+            if int(site[0]) in requested_from_sites:
+                from_sites.append(site)
+
+        # To Sites
+        available_to_sites = s3db.inv_send.to_site_id.requires.options(zero = False)
+        rtable = s3db.req_req
+        if len(req_id) == 1:
+            query = (rtable.id == req_id[0])
+            limitby = (0, 1)
+        else:
+            query = (rtable.id.belongs(req_id))
+            limitby = None
+        requests = current.db(query).select(rtable.site_id,
+                                            limitby = limitby
+                                            )
+        requested_to_sites = set([int(row.site_id) for row in requests])
+        to_sites = []
+        for site in available_to_sites:
+            if site[0] and int(site[0]) in requested_to_sites:
+                to_sites.append(site)
 
         import json
         SEPARATORS = (",", ":")
         current.response.headers["Content-Type"] = "application/json"
-        return json.dumps(intersect_sites, separators=SEPARATORS)
+        return json.dumps((from_sites, to_sites), separators=SEPARATORS)
 
     # -------------------------------------------------------------------------
     def customise_req_req_resource(r, tablename):

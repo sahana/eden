@@ -960,15 +960,15 @@ class S3Model(object):
             ltable = None
 
         prefix, name = tn.split("_", 1)
-        component = Storage(defaults=hook.defaults,
-                            multiple=hook.multiple,
-                            tablename=tn,
-                            table=ctable,
-                            prefix=prefix,
-                            name=name,
-                            alias=alias,
-                            label=hook.label,
-                            plural=hook.plural,
+        component = Storage(defaults = hook.defaults,
+                            multiple = hook.multiple,
+                            tablename = tn,
+                            table = ctable,
+                            prefix = prefix,
+                            name = name,
+                            alias = alias,
+                            label = hook.label,
+                            plural = hook.plural,
                             )
 
         if hook.supertable is not None:
@@ -1744,14 +1744,16 @@ class S3Model(object):
         query = (supertable._id == superid)
         entry = db(query).select(supertable.instance_type,
                                  supertable.uuid,
-                                 limitby=(0, 1)).first()
+                                 limitby = (0, 1)
+                                 ).first()
         if entry:
             instance_type = entry.instance_type
             prefix, name = instance_type.split("_", 1)
             instancetable = current.s3db[entry.instance_type]
-            query = instancetable.uuid == entry.uuid
+            query = (instancetable.uuid == entry.uuid)
             record = db(query).select(instancetable.id,
-                                      limitby=(0, 1)).first()
+                                      limitby = (0, 1)
+                                      ).first()
             if record:
                 return (prefix, name, record.id)
         return (None, None, None)
@@ -1864,7 +1866,7 @@ class S3DynamicModel(object):
                 (ttable.deleted == False)
         row = current.db(query).select(ttable.title,
                                        ttable.settings,
-                                       limitby = (0, 1),
+                                       limitby = (0, 1)
                                        ).first()
         if row:
             # Configure CRUD strings
@@ -2282,13 +2284,13 @@ class S3DynamicModel(object):
 
         if fieldtype == "integer":
             parse = int
-            requires = IS_INT_IN_RANGE(minimum=minimum,
-                                       maximum=maximum,
+            requires = IS_INT_IN_RANGE(minimum = minimum,
+                                       maximum = maximum,
                                        )
         elif fieldtype == "double":
             parse = float
-            requires = IS_FLOAT_IN_RANGE(minimum=minimum,
-                                         maximum=maximum,
+            requires = IS_FLOAT_IN_RANGE(minimum = minimum,
+                                         maximum = maximum,
                                          )
         else:
             parse = None
