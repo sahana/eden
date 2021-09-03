@@ -45,6 +45,7 @@ __all__ = ("S3SupplyModel",
            "supply_ItemCategoryRepresent",
            "supply_get_shipping_code",
            "supply_item_pack_quantities",
+           "SupplyItemPackQuantity",
            )
 
 import re
@@ -91,7 +92,6 @@ class S3SupplyModel(S3Model):
              "supply_kit_item",
              "supply_item_represent",
              "supply_item_category_represent",
-             "supply_item_pack_quantity",
              )
 
     def model(self):
@@ -967,7 +967,6 @@ $.filterOptionsS3({
                 "supply_item_pack_id": item_pack_id,
                 "supply_item_represent": supply_item_represent,
                 "supply_item_category_represent": item_category_represent,
-                "supply_item_pack_quantity": SupplyItemPackQuantity,
                 "supply_item_pack_represent": item_pack_represent,
                 }
 
@@ -982,7 +981,6 @@ $.filterOptionsS3({
                 "supply_item_category_id": dummy("item_category_id"),
                 "supply_item_entity_id": dummy("item_entity_id"),
                 "supply_item_pack_id": dummy("item_pack_id"),
-                "supply_item_pack_quantity": lambda tablename: lambda row: 0,
                 }
 
     # -------------------------------------------------------------------------

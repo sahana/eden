@@ -78,6 +78,7 @@ from gluon.sqlhtml import StringWidget
 from gluon.storage import Storage
 from ..s3 import *
 from s3layouts import S3PopupLink
+from .supply import SupplyItemPackQuantity
 
 DEFAULT = "DEFAULT"
 
@@ -1627,7 +1628,7 @@ class RequestItemModel(S3Model):
                            writable = quantities_writable,
                            ),
                      Field.Method("pack_quantity",
-                                  self.supply_item_pack_quantity(tablename = tablename)
+                                  SupplyItemPackQuantity(tablename)
                                   ),
                      s3_comments(),
                      *s3_meta_fields(),
@@ -4051,7 +4052,8 @@ class CommitItemModel(S3Model):
                                 label = T("Quantity"),
                                 ),
                           Field.Method("pack_quantity",
-                                       self.supply_item_pack_quantity(tablename=tablename)),
+                                       SupplyItemPackQuantity(tablename)
+                                       ),
                           s3_comments(),
                           *s3_meta_fields())
 

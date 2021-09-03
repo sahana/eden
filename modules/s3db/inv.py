@@ -67,6 +67,7 @@ from gluon.storage import Storage
 
 from ..s3 import *
 from s3layouts import S3PopupLink
+from .supply import SupplyItemPackQuantity
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -559,9 +560,11 @@ class InventoryModel(S3Model):
                                 writable = False,
                                 ),
                           Field.Method("total_value",
-                                       self.inv_item_total_value),
+                                       self.inv_item_total_value
+                                       ),
                           Field.Method("pack_quantity",
-                                       self.supply_item_pack_quantity(tablename=tablename)),
+                                       SupplyItemPackQuantity(tablename)
+                                       ),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -1239,7 +1242,7 @@ class InventoryTrackingModel(S3Model):
 
         # Confirm Shipment Received
         set_method("inv", "send",
-                   method = "send_received",
+                   method = "received",
                    action = inv_send_received)
 
         # Display Timeline
@@ -1879,7 +1882,7 @@ $.filterOptionsS3({
                                   self.inv_track_item_total_value,
                                   ),
                      Field.Method("pack_quantity",
-                                  self.supply_item_pack_quantity(tablename=tablename),
+                                  SupplyItemPackQuantity(tablename),
                                   ),
                      Field.Method("total_volume",
                                   self.inv_track_item_total_volume,
@@ -5363,7 +5366,8 @@ def inv_send_received(r, **attr):
     db(stable.id == send_id).update(status = SHIP_STATUS_RECEIVED)
     db(tracktable.send_id == send_id).update(status = TRACK_STATUS_ARRIVED)
 
-    if current.deployment_settings.get_inv_send_req_multi():
+    inv_send_req_multi = current.deployment_settings.get_inv_send_req_multi()
+    if inv_send_req_multi:
         rtable = s3db.req_req
         srtable = s3db.inv_send_req
         reqs = db(srtable.send_id == send_id).select(srtable.req_id)
@@ -5391,8 +5395,12 @@ def inv_send_received(r, **attr):
                                       )
             # Get all Received Shipments in-system for this request
             query = (stable.status == SHIP_STATUS_RECEIVED) & \
-                    (stable.req_ref == req_ref) & \
                     (tracktable.send_id == send_id)
+            if inv_send_req_multi:
+                query &= (stable.id == srtable.send_id) & \
+                         (srtable.req_id == req_id)
+            else:
+                query &= (stable.req_ref == req_ref)
             sitems = db(query).select(tracktable.item_pack_id,
                                       tracktable.quantity,
                                       # Virtual Field

@@ -46,6 +46,7 @@ __all__ = ("S3ProcurementPlansModel",
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
+#from .supply import SupplyItemPackQuantity
 
 # =============================================================================
 class S3ProcurementPlansModel(S3Model):
@@ -183,7 +184,7 @@ class S3ProcurementPlansModel(S3Model):
                      #      "double",
                      #      compute = record_pack_quantity), # defined in supply
                      #Field.Method("pack_quantity",
-                     #             self.supply_item_pack_quantity(tablename=tablename)),
+                     #             SupplyItemPackQuantity(tablename)),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -397,11 +398,8 @@ class S3PurchaseOrdersModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
-                     #Field("pack_quantity",
-                     #      "double",
-                     #      compute = record_pack_quantity), # defined in supply
                      #Field.Method("pack_quantity",
-                     #             self.supply_item_pack_quantity(tablename=tablename)),
+                     #             SupplyItemPackQuantity(tablename)),
                      s3_comments(),
                      *s3_meta_fields())
 
