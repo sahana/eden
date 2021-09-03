@@ -3597,8 +3597,9 @@ Thank you"""
                             this_data[0].pop("req_ref")
 
                     query = (iitable.id.belongs(inv_item_ids))
-                    dbset = s3db.inv_track_item.send_inv_item_id.requires.dbset(query)
-                    s3db.inv_track_item.send_inv_item_id.requires.dbset = dbset
+                    f = s3db.inv_track_item.send_inv_item_id
+                    dbset = f.requires.dbset(query)
+                    f.requires.dbset = dbset
 
                     # Apply req_item_id & quantity when item_id selected
                     # - pass data to s3.supply.js
