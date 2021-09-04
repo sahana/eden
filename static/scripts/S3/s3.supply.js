@@ -121,7 +121,7 @@ $(document).ready(function() {
                 }
 
                 // Calculate Available Stock Quantity for this Pack
-                var Quantity = (data.iquantity * data.pquantity) / PackQuantity;
+                var Quantity = data.quantity / PackQuantity;
 
                 // Display Available Stock Quantity
                 var TotalQuantity = '<span id="TotalQuantity"> / ' + Quantity.toFixed(2) + ' ' + PackName + ' (' + i18n.in_inv + ')</span>';

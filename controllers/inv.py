@@ -1648,13 +1648,13 @@ def inv_item_packs():
     """
 
     try:
-        item_id = request.args[0]
+        inv_item_id = request.args[0]
     except:
         raise HTTP(400, current.xml.json_message(False, 400, "No value provided!"))
 
     table = s3db.inv_inv_item
     ptable = db.supply_item_pack
-    query = (table.id == item_id) & \
+    query = (table.id == inv_item_id) & \
             (table.item_id == ptable.item_id)
     records = db(query).select(ptable.id,
                                ptable.name,
@@ -1670,7 +1670,7 @@ def inv_item_quantity():
     """
         Access via the .json representation to avoid work rendering menus, etc
         Called from s3.supply.js
-        @ToDo: Extend to also lookup Packs (& Pack Quantities)
+        @ToDo: Extend to also lookup all Packs & Pack Quantities (to replace the filterOptionsS3 AJAX call to inv_item_packs)
     """
 
     try:
@@ -1687,10 +1687,9 @@ def inv_item_quantity():
                               limitby = (0, 1)
                               ).first()
 
-    d = {"iquantity" : record.inv_inv_item.quantity,
-         "pquantity" : record.supply_item_pack.quantity,
-         }
-    output = json.dumps(d)
+    data = {"quantity" : record.inv_inv_item.quantity * record.supply_item_pack.quantity,
+            }
+    output = json.dumps(data)
 
     response.headers["Content-Type"] = "application/json"
     return output
