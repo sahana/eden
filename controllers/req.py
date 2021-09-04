@@ -2040,18 +2040,15 @@ def recv_item_json():
 
     from s3db.inv import inv_ship_status
 
-    stable = s3db.org_site
     rtable = s3db.inv_recv
     ittable = s3db.inv_track_item
 
     query = (ittable.req_item_id == req_item_id) & \
             (rtable.id == ittable.recv_id) & \
-            (rtable.site_id == stable.id) & \
-            (rtable.status == inv_ship_status["RECEIVED"]) & \
-            (ittable.deleted == False)
+            (rtable.status == inv_ship_status["RECEIVED"])
     records = db(query).select(rtable.id,
                                rtable.date,
-                               stable.name,
+                               rtable.recv_ref,
                                ittable.quantity,
                                )
 
@@ -2060,12 +2057,11 @@ def recv_item_json():
                }]
     for row in records:
         quantity = row["inv_track_item.quantity"]
-        name = row["org_site.name"]
         row = row["inv_recv"]
         output.append({"id": row.id,
                        "date": row.date.date().isoformat(),
                        "quantity": quantity,
-                       "name": name,
+                       "name": row.recv_ref,
                        })
 
     SEPARATORS = (",", ":")
@@ -2089,19 +2085,16 @@ def send_item_json():
 
     from s3db.inv import inv_ship_status
 
-    stable = s3db.org_site
     istable = s3db.inv_send
     ittable = s3db.inv_track_item
 
     query = (ittable.req_item_id == req_item_id) & \
             (istable.id == ittable.send_id) & \
-            (istable.site_id == stable.id) & \
             ((istable.status == inv_ship_status["SENT"]) | \
-             (istable.status == inv_ship_status["RECEIVED"])) & \
-            (ittable.deleted == False)
+             (istable.status == inv_ship_status["RECEIVED"]))
     records = db(query).select(istable.id,
+                               istable.send_ref,
                                istable.date,
-                               stable.name,
                                ittable.quantity,
                                )
 
@@ -2110,12 +2103,11 @@ def send_item_json():
                }]
     for row in records:
         quantity = row["inv_track_item.quantity"]
-        name = row["org_site.name"]
         row = row["inv_send"]
         output.append({"id": row.id,
                        "date": row.date.date().isoformat(),
                        "quantity": quantity,
-                       "name": name,
+                       "name": row.send_ref,
                        })
 
     SEPARATORS = (",", ":")

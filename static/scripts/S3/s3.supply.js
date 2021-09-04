@@ -235,17 +235,21 @@ $(document).ready(function() {
 		if (DIV.hasClass('collapsed')) {
 
             var App,
-                ShipmentType;
+                ShipmentType,
+                Component;
 
 			if (DIV.hasClass('fulfil')) {
 				App = 'inv';
 				ShipmentType = 'recv';
+                Component = 'track_item';
 			} else if (DIV.hasClass('transit')) {
 				App = 'inv';
 				ShipmentType = 'send';
+                Component = 'track_item';
 			} else if (DIV.hasClass('commit')) {
 				App = 'req';
 				ShipmentType = 'commit';
+                Component = 'commit_item';
 			}
 			DIV.after('<div class="ajax_throbber quantity_req_ajax_throbber"/>')
 			   .removeClass('collapsed')
@@ -254,8 +258,8 @@ $(document).ready(function() {
 			// Get the req_item_id
 			var i,
                 re = /req_item\/(\d*).*/i,
-                RecvTable,
-                RecvURL,
+                ResultTable,
+                LineURL,
                 UpdateURL = $('.action-btn', DIV.parent().parent().parent()).attr('href'),
                 req_item_id = re.exec(UpdateURL)[1],
                 url = S3.Ap.concat('/req/', ShipmentType, '_item_json.json/', req_item_id);
@@ -264,27 +268,21 @@ $(document).ready(function() {
 				dataType: 'json',
 				context: DIV
 			}).done(function(data) {
-                RecvTable = '<table class="recv_table">';
+                ResultTable = '<table class="recv_table">';
                 for (i = 0; i < data.length; i++) {
-                    RecvTable += '<tr><td>';
+                    ResultTable += '<tr><td>';
                     if (i === 0) {
                         // Header Row
-                        RecvTable += data[0].id;
+                        ResultTable += data[0].id;
                     } else {
-                        RecvURL = S3.Ap.concat('/', App, '/', ShipmentType, '/',  data[i].id, '/track_item');
-                        RecvTable += "<a href='" + RecvURL + "'>";
-                        if (data[i].date !== null) {
-                            RecvTable += data[i].date;
-                            RecvTable += data[i].name + '</a>';
-                        } else {
-                            RecvTable +=  ' - </a>';
-                        }
+                        LineURL = S3.Ap.concat('/', App, '/', ShipmentType, '/',  data[i].id, '/' + Component);
+                        ResultTable += "<a href='" + LineURL + "'>" + data[i].name + ' - ' + data[i].date + '</a>';
                     }
-                    RecvTable += '</td><td>' + data[i].quantity + '</td></tr>';
+                    ResultTable += '</td><td>' + data[i].quantity + '</td></tr>';
                 }
-                RecvTable += '</table>';
+                ResultTable += '</table>';
                 $('.quantity_req_ajax_throbber', this.parent()).remove();
-                this.parent().after(RecvTable);
+                this.parent().after(ResultTable);
             });
 		} else {
 			DIV.removeClass('expanded')

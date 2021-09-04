@@ -1883,6 +1883,8 @@ $.filterOptionsS3({
                 inv_sends contibute to the quantity_transit
                 inv_recvs contibute to the quantity_fulfil
             Uses s3.supply.js
+
+            @ToDo: Build this for req_status_represent
         """
 
         if quantity and show_link and \
