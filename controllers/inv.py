@@ -1656,11 +1656,13 @@ def inv_item_packs():
     ptable = db.supply_item_pack
     query = (table.id == inv_item_id) & \
             (table.item_id == ptable.item_id)
-    records = db(query).select(ptable.id,
-                               ptable.name,
-                               ptable.quantity,
-                               )
-    output = records.json()
+    packs = db(query).select(ptable.id,
+                             ptable.name,
+                             ptable.quantity,
+                             )
+
+    SEPARATORS = (",", ":")
+    output = json.dumps(packs.as_list(), separators=SEPARATORS)
 
     response.headers["Content-Type"] = "application/json"
     return output
@@ -1668,9 +1670,9 @@ def inv_item_packs():
 # -----------------------------------------------------------------------------
 def inv_item_quantity():
     """
-        Access via the .json representation to avoid work rendering menus, etc
-        Called from s3.supply.js
+        Called from s3.supply.js to provide the pack options for a particular item
         @ToDo: Extend to also lookup all Packs & Pack Quantities (to replace the filterOptionsS3 AJAX call to inv_item_packs)
+        Access via the .json representation to avoid work rendering menus, etc
     """
 
     try:
@@ -1680,16 +1682,27 @@ def inv_item_quantity():
 
     table = s3db.inv_inv_item
     ptable = db.supply_item_pack
-    query = (table.id == inv_item_id) & \
-            (table.item_pack_id == ptable.id)
-    record = db(query).select(table.quantity,
-                              ptable.quantity,
-                              limitby = (0, 1)
-                              ).first()
+    inv_query = (table.id == inv_item_id)
 
-    data = {"quantity" : record.inv_inv_item.quantity * record.supply_item_pack.quantity,
+    query = inv_query & \
+            (table.item_pack_id == ptable.id)
+    inv_item = db(query).select(table.quantity,
+                                ptable.quantity,
+                                limitby = (0, 1)
+                                ).first()
+
+    query = inv_query & \
+            (table.item_id == ptable.item_id)
+    packs = db(query).select(ptable.id,
+                             ptable.name,
+                             ptable.quantity,
+                             )
+
+    data = {"quantity": inv_item["inv_inv_item.quantity"] * inv_item["supply_item_pack.quantity"],
+            "packs": packs.as_list(),
             }
-    output = json.dumps(data)
+    SEPARATORS = (",", ":")
+    output = json.dumps(data, separators=SEPARATORS)
 
     response.headers["Content-Type"] = "application/json"
     return output

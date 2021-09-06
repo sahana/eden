@@ -3251,6 +3251,38 @@ Thank you"""
     settings.customise_inv_inv_item_resource = customise_inv_inv_item_resource
 
     # -------------------------------------------------------------------------
+    def customise_inv_inv_item_controller(**attr):
+
+        ADMIN = current.auth.s3_has_role("ADMIN")
+        if ADMIN:
+            # ADMIN is allowed to Edit Inventory bypassing the need to use Adjustments
+            # - seems wrong to me as Adjustments aren't that heavy, but has been requested
+            settings.inv.direct_stock_edits = True
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            if not ADMIN and \
+               r.method == "import":
+                # Only ADMIN is allowed to Import Inventory
+                return False
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_inv_inv_item_controller = customise_inv_inv_item_controller
+
+    # -------------------------------------------------------------------------
     def customise_inv_recv_resource(r, tablename):
     
         #from gluon import IS_IN_SET
@@ -3579,30 +3611,55 @@ Thank you"""
                         inv_item_id = inv_row.id
                         iiappend(inv_item_id)
                         if inv_item_id in inv_data:
-                            inv_data[inv_item_id].append({"inv_quantity": inv_row.quantity * inv_pack_quantity,
-                                                          "req_item_id": req_row.id,
-                                                          "req_quantity": req_row.quantity * req_pack_quantity,
-                                                          "req_ref": req_ref,
-                                                          })
+                            inv_data[inv_item_id]["req_items"].append({"inv_quantity": inv_row.quantity * inv_pack_quantity,
+                                                                       "req_item_id": req_row.id,
+                                                                       "req_quantity": req_row.quantity * req_pack_quantity,
+                                                                       "req_ref": req_ref,
+                                                                       })
                         else:
-                            inv_data[inv_item_id] = [{"inv_quantity": inv_row.quantity * inv_pack_quantity,
-                                                      "req_item_id": req_row.id,
-                                                      "req_quantity": req_row.quantity * req_pack_quantity,
-                                                      "req_ref": req_ref,
-                                                      }]
+                            inv_data[inv_item_id] = {"req_items": [{"inv_quantity": inv_row.quantity * inv_pack_quantity,
+                                                                    "req_item_id": req_row.id,
+                                                                    "req_quantity": req_row.quantity * req_pack_quantity,
+                                                                    "req_ref": req_ref,
+                                                                    }],
+                                                     }
                     # Remove req_ref when there are no duplicates to distinguish
                     for inv_item_id in inv_data:
-                        this_data = inv_data[inv_item_id]
-                        if len(this_data) == 1:
-                            this_data[0].pop("req_ref")
+                        req_items = inv_data[inv_item_id]["req_items"]
+                        if len(req_items) == 1:
+                            req_items[0].pop("req_ref")
 
                     query = (iitable.id.belongs(inv_item_ids))
                     f = s3db.inv_track_item.send_inv_item_id
                     dbset = f.requires.dbset(query)
                     f.requires.dbset = dbset
 
-                    # Apply req_item_id & quantity when item_id selected
-                    # - pass data to s3.supply.js
+                    # Add Packs to replace the filterOptionsS3 lookup
+                    query &= (iitable.item_id == iptable.item_id)
+                    rows = db(query).select(iitable.id,
+                                            iptable.id,
+                                            iptable.name,
+                                            iptable.quantity,
+                                            )
+                    for row in rows:
+                        inv_item_id = row["inv_inv_item.id"]
+                        pack = row.supply_item_pack
+                        this_data = inv_data[inv_item_id]
+                        packs = this_data.get("packs")
+                        if not packs:
+                            this_data["packs"] = [{"id": pack.id,
+                                                   "name": pack.name,
+                                                   "quantity": pack.quantity,
+                                                   },
+                                                  ]
+                        else:
+                            this_data["packs"].append({"id": pack.id,
+                                                       "name": pack.name,
+                                                       "quantity": pack.quantity,
+                                                       })
+
+                    # Pass data to s3.supply.js
+                    # to Apply req_item_id & quantity when item_id selected
                     import json
                     SEPARATORS = (",", ":")
                     s3.js_global.append('''S3.supply.inv_items=%s''' % json.dumps(inv_data, separators=SEPARATORS))

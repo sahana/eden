@@ -203,10 +203,10 @@ class S3ReusableField(object):
             comment = ia.get("comment")
             if comment:
                 ia["comment"] = TAG[""](comment,
-                                        S3ScriptItem(script=script),
+                                        S3ScriptItem(script = script),
                                         )
             else:
-                ia["comment"] = S3ScriptItem(script=script)
+                ia["comment"] = S3ScriptItem(script = script)
 
         if ia.get("sortby") is not None:
             return FieldS3(name, self.__type, **ia)
@@ -458,9 +458,10 @@ class S3Represent(object):
         if self.list_type:
             # Is a list-type => use multiple
             return self.multiple(value,
-                                 rows=row,
-                                 list_type=False,
-                                 show_link=show_link)
+                                 rows = row,
+                                 list_type = False,
+                                 show_link = show_link,
+                                 )
 
         # Prefer the row over the value
         if row and self.table:

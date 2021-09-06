@@ -1756,8 +1756,9 @@ class InventoryTrackingModel(S3Model):
                                  requires = IS_EMPTY_OR(
                                               IS_ONE_OF(db, "inv_inv_item.id",
                                                         self.inv_item_represent,
-                                                        orderby="inv_inv_item.id",
-                                                        sort=True)),
+                                                        orderby = "inv_inv_item.id",
+                                                        sort = True,
+                                                        )),
                                  script = '''
 $.filterOptionsS3({
  'trigger':'send_inv_item_id',
@@ -3342,7 +3343,7 @@ def inv_send_rheader(r):
                     # Cache values in class
                     refs = [row.req_ref for row in rows]
                     represent = req_ReqRefRepresent(show_link = True)
-                    represent.bulk(refs, rows, show_link=True)
+                    represent.bulk(refs, rows, show_link = True)
                     refs_repr = [s3_str(represent(ref)) for ref in refs]
                     refs_repr = ", ".join(refs_repr)
                     req_ref_value = TD(XML(refs_repr))
@@ -4954,6 +4955,8 @@ def inv_send_controller():
                 else:
                     if status == SHIP_STATUS_IN_PROCESS:
                         deletable = editable = insertable = True
+                        # Disable default Packs lookup (as we use the s3.supply.js routine instead)
+                        tracktable.send_inv_item_id.comment = None
                     else:
                         deletable = editable = insertable = False
                     list_fields = [#"status",

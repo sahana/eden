@@ -1997,8 +1997,7 @@ def commit_item_json():
 
     query = (itable.req_item_id == req_item_id) & \
             (ctable.id == itable.commit_id) & \
-            (ctable.site_id == stable.id) & \
-            (itable.deleted == False)
+            (ctable.site_id == stable.id)
     records = db(query).select(ctable.id,
                                ctable.date,
                                stable.name,
@@ -2046,16 +2045,16 @@ def recv_item_json():
     query = (ittable.req_item_id == req_item_id) & \
             (rtable.id == ittable.recv_id) & \
             (rtable.status == inv_ship_status["RECEIVED"])
-    records = db(query).select(rtable.id,
-                               rtable.date,
-                               rtable.recv_ref,
-                               ittable.quantity,
-                               )
+    rows = db(query).select(rtable.id,
+                            rtable.date,
+                            rtable.recv_ref,
+                            ittable.quantity,
+                            )
 
     output = [{"id": s3_str(T("Received")),
                "quantity": "#",
                }]
-    for row in records:
+    for row in rows:
         quantity = row["inv_track_item.quantity"]
         row = row["inv_recv"]
         output.append({"id": row.id,
@@ -2092,16 +2091,16 @@ def send_item_json():
             (istable.id == ittable.send_id) & \
             ((istable.status == inv_ship_status["SENT"]) | \
              (istable.status == inv_ship_status["RECEIVED"]))
-    records = db(query).select(istable.id,
-                               istable.send_ref,
-                               istable.date,
-                               ittable.quantity,
-                               )
+    rows = db(query).select(istable.id,
+                            istable.send_ref,
+                            istable.date,
+                            ittable.quantity,
+                            )
 
     output = [{"id": s3_str(T("Sent")),
                "quantity": "#",
                }]
-    for row in records:
+    for row in rows:
         quantity = row["inv_track_item.quantity"]
         row = row["inv_send"]
         output.append({"id": row.id,
@@ -2138,11 +2137,15 @@ def req_item_packs():
     ritable = s3db.req_req_item
     query = (ritable.id == req_item_id) & \
             (ritable.item_id == table.item_id)
-
-    response.headers["Content-Type"] = "application/json"
-    return db(query).select(table.id,
+    rows = db(query).select(table.id,
                             table.name,
                             table.quantity,
-                            ).json()
+                            )
+
+    SEPARATORS = (",", ":")
+    output = json.dumps(rows.as_list(), separators=SEPARATORS)
+
+    response.headers["Content-Type"] = "application/json"
+    return output
 
 # END =========================================================================

@@ -291,8 +291,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                               ),
                         ),
                         M("Import Inventory", c="inv", f="inv_item", m="import",
-                          restrict=["ORG_ADMIN",
-                                    "logs_manager"]),
+                          restrict=["ADMIN"]),
                         M("Parameters", c="inv", link=False,
                           restrict=["ORG_ADMIN",
                                     "logs_manager"])(

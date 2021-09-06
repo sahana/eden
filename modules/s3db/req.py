@@ -6498,6 +6498,29 @@ class req_ReqRefRepresent(S3Represent):
                                                   )
 
     # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Lookup all rows referenced by values.
+            (in foreign key representations)
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: the fields to retrieve
+        """
+
+        fields = ["id",
+                  "req_ref",
+                  ]
+
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = current.db(query).select(*fields)
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
     def link(self, k, v, row=None):
         """
             Represent a (key, value) as hypertext link.
