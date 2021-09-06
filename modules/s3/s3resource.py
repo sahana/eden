@@ -2841,7 +2841,8 @@ class S3Resource(object):
                            parent.tablename == tn and field.name != fkey:
                             alias = "%s_%s_%s" % (parent.prefix,
                                                   "linked",
-                                                  parent.name)
+                                                  parent.name,
+                                                  )
                             ktable = get_aliased(db[tn], alias)
                             ktable._id = ktable[ktable._id.name]
                             tn = alias
@@ -2887,7 +2888,8 @@ class S3Resource(object):
                                        "list:st",
                                        "referen",
                                        "list:re",
-                                       "string"):
+                                       "string",
+                                       ):
                         requires = field.requires
                         if not isinstance(requires, (list, tuple)):
                             requires = [requires]
@@ -2939,7 +2941,7 @@ class S3Resource(object):
                     iSortCol = int(get_vars["iSortCol_%s" % i])
                 except (AttributeError, KeyError):
                     # iSortCol_x not present in get_vars => ignore
-                    columns.append(Storage(field=None))
+                    columns.append(Storage(field = None))
                     continue
 
                 # Map sortable-column index to the real list_fields
@@ -2958,7 +2960,7 @@ class S3Resource(object):
                 except IndexError:
                     # iSortCol specifies a non-existent column, i.e.
                     # iSortCol_x>=numcols => ignore
-                    columns.append(Storage(field=None))
+                    columns.append(Storage(field = None))
                 else:
                     columns.append(rfield)
 
@@ -3031,7 +3033,7 @@ class S3Resource(object):
         else:
             orderby = None
 
-        left_joins = left_joins.as_list(tablenames=list(left_joins.joins.keys()))
+        left_joins = left_joins.as_list(tablenames = list(left_joins.joins.keys()))
         return (searchq, orderby, left_joins)
 
     # -------------------------------------------------------------------------
@@ -3074,8 +3076,9 @@ class S3Resource(object):
                 # to retrieve all extra_fields for the dimension table
                 # and can't groupby (=must deduplicate afterwards)
                 rows = current.db(query).select(field,
-                                                left=left,
-                                                groupby=field)
+                                                left = left,
+                                                groupby = field,
+                                                )
                 colname = rfield.colname
                 if rfield.ftype[:5] == "list:":
                     values = []
@@ -3236,8 +3239,9 @@ class S3Resource(object):
             record_id = master.get(parent_id.name)
             if record_id:
                 fields = [parent.table[f] for f in lookup]
-                row = current.db(parent_id == record_id).select(limitby = (0, 1),
-                                                                *fields).first()
+                row = current.db(parent_id == record_id).select(*fields,
+                                                                limitby = (0, 1)
+                                                                ).first()
             if row:
                 for (k, v) in lookup.items():
                     if k in row:
