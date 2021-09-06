@@ -2102,7 +2102,7 @@ class S3Msg(object):
         # http://pythonhosted.org/feedparser
         # Python 3.x: Requires pip install sgmllib3k
         if sys.version_info[1] >= 7:
-            # Use 6.0.0b1 which is required for Python 3.7
+            # Use system version (6.0.0b1+) which is required for Python 3.7
             import feedparser
         else:
             # Python 3.6 requires 5.2.1 with 2to3 run on it to prevent SSL: CERTIFICATE_VERIFY_FAILED

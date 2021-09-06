@@ -9,7 +9,7 @@ Required: Python 2.4 or later
 Recommended: iconv_codec <http://cjkpython.i18n.org/>
 """
 
-__version__ = "5.2.1"
+__version__ = "5.2.1" # With 2to3 run on it for Python 3.6
 __license__ = """
 Copyright 2010-2015 Kurt McKee <contactme@kurtmckee.org>
 Copyright 2002-2008 Mark Pilgrim
