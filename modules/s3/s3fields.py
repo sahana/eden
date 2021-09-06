@@ -48,64 +48,6 @@ from .s3validators import IS_ISO639_2_LANGUAGE_CODE, IS_ONE_OF, IS_UTC_DATE, IS_
 from .s3widgets import S3CalendarWidget, S3DateWidget
 
 # =============================================================================
-class FieldS3(Field):
-    """
-        S3 extensions of the gluon.sql.Field class
-            - add "sortby" attribute (used by IS_ONE_OF)
-
-        @ToDo: Deprecate now that Field supports this natively via **others
-    """
-
-    def __init__(self, fieldname,
-                 type = "string",
-                 length = None,
-                 default = None,
-                 required = False,
-                 requires = "<default>",
-                 ondelete = "CASCADE",
-                 notnull = False,
-                 unique = False,
-                 uploadfield = True,
-                 widget = None,
-                 label = None,
-                 comment = None,
-                 writable = True,
-                 readable = True,
-                 update = None,
-                 authorize = None,
-                 autodelete = False,
-                 represent = None,
-                 uploadfolder = None,
-                 compute = None,
-                 sortby = None):
-
-        self.sortby = sortby
-
-        Field.__init__(self,
-                       fieldname,
-                       type = type,
-                       length = length,
-                       default = default,
-                       required = required,
-                       requires = requires,
-                       ondelete = ondelete,
-                       notnull = notnull,
-                       unique = unique,
-                       uploadfield = uploadfield,
-                       widget = widget,
-                       label = label,
-                       comment = comment,
-                       writable = writable,
-                       readable = readable,
-                       update = update,
-                       authorize = authorize,
-                       autodelete = autodelete,
-                       represent = represent,
-                       uploadfolder = uploadfolder,
-                       compute = compute,
-                       )
-
-# =============================================================================
 def s3_fieldmethod(name, f, represent=None, search_field=None):
     """
         Helper to attach a representation method to a Field.Method.
@@ -208,10 +150,7 @@ class S3ReusableField(object):
             else:
                 ia["comment"] = S3ScriptItem(script = script)
 
-        if ia.get("sortby") is not None:
-            return FieldS3(name, self.__type, **ia)
-        else:
-            return Field(name, self.__type, **ia)
+        return Field(name, self.__type, **ia)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1290,25 +1229,28 @@ def s3_role_required():
 
     T = current.T
     gtable = current.auth.settings.table_group
-    represent = S3Represent(lookup="auth_group", fields=["role"])
-    return FieldS3("role_required", gtable,
-                   sortby="role",
-                   requires = IS_EMPTY_OR(
+    represent = S3Represent(lookup = "auth_group",
+                            fields = ["role"],
+                            )
+    return Field("role_required", gtable,
+                 sortby = "role",
+                 requires = IS_EMPTY_OR(
                                 IS_ONE_OF(current.db, "auth_group.id",
                                           represent,
-                                          zero=T("Public"))),
-                   #widget = S3AutocompleteWidget("admin",
-                   #                              "group",
-                   #                              fieldname="role"),
-                   represent = represent,
-                   label = T("Role Required"),
-                   comment = DIV(_class="tooltip",
-                                 _title="%s|%s" % (T("Role Required"),
+                                          zero = T("Public"),
+                                          )),
+                 #widget = S3AutocompleteWidget("admin",
+                 #                              "group",
+                 #                              fieldname = "role"),
+                 represent = represent,
+                 label = T("Role Required"),
+                 comment = DIV(_class = "tooltip",
+                               _title = "%s|%s" % (T("Role Required"),
                                                    T("If this record should be restricted then select which role is required to access the record here."),
                                                    ),
-                                 ),
-                   ondelete = "RESTRICT",
-                   )
+                               ),
+                 ondelete = "RESTRICT",
+                 )
 
 # -----------------------------------------------------------------------------
 def s3_roles_permitted(name="roles_permitted", **attr):
@@ -1337,7 +1279,7 @@ def s3_roles_permitted(name="roles_permitted", **attr):
     if "ondelete" not in attr:
         attr["ondelete"] = "RESTRICT"
 
-    return FieldS3(name, "list:reference auth_group", **attr)
+    return Field(name, "list:reference auth_group", **attr)
 
 # =============================================================================
 def s3_comments(name="comments", **attr):
