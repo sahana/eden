@@ -215,8 +215,9 @@ def index2():
                                    pdf_groupby = "site_id",
                                    )
                     s3.filter = filter
-                    r = s3_request("inv", "inv_item",
-                                   vars={"orderby" : orderby})
+                    r = s3base.s3_request("inv", "inv_item",
+                                          vars = {"orderby" : orderby},
+                                          )
                     r.resource = resource
                     output = r(pdf_groupby = "site_id",
                                dt_group = 1,
@@ -266,7 +267,9 @@ def index2():
                                        dt_action_col = 1,
                                        )
                 return supply_items
-        r = s3_request(prefix = "inv", name = "inv_item")
+        r = s3base.s3_request(prefix = "inv",
+                              name = "inv_item",
+                              )
         return {"module_name": module_name,
                 "warehouses": warehouses,
                 "inventory": inventory,

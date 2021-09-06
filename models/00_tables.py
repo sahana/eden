@@ -12,6 +12,7 @@ import s3db as models
 current.models = models
 
 # Explicit import statements to have them reload automatically in debug mode
+# - still needed when not running debug
 import s3db.assess
 import s3db.asset
 import s3db.auth

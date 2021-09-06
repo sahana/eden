@@ -176,13 +176,17 @@ def template_read():
 
     # remove CRUD generated buttons in the tabs
     s3db.configure("survey_template",
-                   listadd=False,
-                   editable=False,
-                   deletable=False,
+                   listadd = False,
+                   editable = False,
+                   deletable = False,
                    )
 
-    r = s3_request("survey", "template", args=[template_id])
-    output = r(method="read", rheader=s3db.survey_template_rheader)
+    r = s3base.s3_request("survey", "template",
+                          args = [template_id],
+                          )
+    output = r(method = "read",
+               rheader = s3db.survey_template_rheader,
+               )
     return output
 
 # -----------------------------------------------------------------------------
@@ -219,7 +223,7 @@ def template_summary():
 
     output = s3_rest_controller("survey", "template",
                                 method = "list",
-                                rheader=s3db.survey_template_rheader,
+                                rheader = s3db.survey_template_rheader,
                                 )
     s3.actions = None
     return output
@@ -290,7 +294,7 @@ def series():
                    deletable = False,
                    )
 
-    output = s3_rest_controller(rheader=s3db.survey_series_rheader)
+    output = s3_rest_controller(rheader = s3db.survey_series_rheader)
     return output
 
 # -----------------------------------------------------------------------------

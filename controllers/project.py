@@ -1391,14 +1391,14 @@ def comments():
     field.writable = field.readable = False
 
     # Create S3Request for S3SQLForm
-    r = s3_request(prefix = "project",
-                   name = "comment",
-                   # Override task_id
-                   args = [],
-                   vars = None,
-                   # Override .loads
-                   extension = "html",
-                   )
+    r = s3base.s3_request(prefix = "project",
+                          name = "comment",
+                          # Override task_id
+                          args = [],
+                          vars = None,
+                          # Override .loads
+                          extension = "html",
+                          )
 
     # Customise resource
     r.customise_resource()

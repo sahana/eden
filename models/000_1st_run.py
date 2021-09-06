@@ -87,8 +87,7 @@ from gluon.storage import Storage
 # being interacted with.
 # Avoid using this where a method parameter could be used:
 # http://en.wikipedia.org/wiki/Anti_pattern#Programming_anti-patterns
-response.s3 = Storage()
-s3 = response.s3
+response.s3 = s3 = Storage()
 s3.gis = Storage() # Defined early for use by S3Config.
 
 current.cache = cache
@@ -99,7 +98,6 @@ current.MAX_FILENAME_LENGTH = 255 # Defined early for use by S3Config.
 
 # Import S3Config
 import s3cfg
-settings = s3cfg.S3Config()
-current.deployment_settings = deployment_settings = settings
+current.deployment_settings = deployment_settings = settings = s3cfg.S3Config()
 
 # END =========================================================================

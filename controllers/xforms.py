@@ -31,10 +31,10 @@ def forms():
         method = ["xform.%s" % extension]
         if len(args) > 1:
             method.insert(0, args[1])
-        r = s3_request(prefix, name,
-                       args = method,
-                       extension = None,
-                       )
+        r = s3base.s3_request(prefix, name,
+                              args = method,
+                              extension = None,
+                              )
         r.set_handler("xform", S3XForms)
         output = r()
     else:

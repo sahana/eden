@@ -2543,10 +2543,10 @@ class S3Config(Storage):
             'css' is a folder relative to static/styles
             - /jstree.css or /jstree.min.css is added as-required
         """
-        return self.ui.get("hierarchy_theme", dict(css = "plugins",
-                                                   icons = False,
-                                                   stripes = True,
-                                                   ))
+        return self.ui.get("hierarchy_theme", {"css": "plugins",
+                                               "icons": False,
+                                               "stripes": True,
+                                               })
 
     def get_ui_hierarchy_cascade_option_in_tree(self):
         """

@@ -172,11 +172,19 @@ def project():
 
 # =============================================================================
 def parameter():
-    """ REST controller for budget parameters """
+    """
+        REST controller for budget parameters
+        - should always be 1 & only 1 record
+    """
 
-    s3db.configure("budget_parameter", deletable=False)
+    s3db.configure("budget_parameter",
+                   deletable = False,
+                   )
+
     table = s3db.budget_parameter
-    record = db().select(table.id, limitby=(0, 1)).first()
+    record = db().select(table.id,
+                         limitby = (0, 1)
+                         ).first()
     if not record:
         record_id = table.insert()
     else:
@@ -188,7 +196,7 @@ def parameter():
         return output
     s3.postp = postp
 
-    r = s3_request(args=[str(record_id)])
+    r = s3base.s3_request(args = [str(record_id)])
     return r()
 
 # =============================================================================

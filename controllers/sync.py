@@ -18,7 +18,9 @@ def config():
 
     # Get the record ID of the first and only record
     table = s3db.sync_config
-    record = db().select(table.id, limitby=(0, 1)).first()
+    record = db().select(table.id,
+                         limitby = (0, 1)
+                         ).first()
     if not record:
         record_id = table.insert()
     else:
@@ -31,7 +33,9 @@ def config():
     s3.postp = postp
 
     # Can't do anything else than update here
-    r = s3_request(args=[str(record_id), "update"], extension="html")
+    r = s3base.s3_request(args = [str(record_id), "update"],
+                          extension = "html",
+                          )
     return r()
 
 # -----------------------------------------------------------------------------
@@ -296,11 +300,11 @@ def sync():
 
         # Request
         prefix, name = tablename.split("_", 1)
-        r = s3_request(prefix = prefix,
-                       name = name,
-                       args = ["sync"],
-                       get_vars = get_vars_new,
-                       )
+        r = s3base.s3_request(prefix = prefix,
+                              name = name,
+                              args = ["sync"],
+                              get_vars = get_vars_new,
+                              )
 
         # Response
         return r(mixed=mixed)

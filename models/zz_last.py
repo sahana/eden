@@ -45,7 +45,3 @@ if auth.permission.format in ("html",):
 
     # Add breadcrumbs
     menu.breadcrumbs = S3OptionsMenu.breadcrumbs
-
-# Set up plugins
-from plugins import PluginLoader
-PluginLoader.setup_all()
