@@ -8,8 +8,6 @@
 
 from gluon import current
 
-from s3compat import long
-
 # =============================================================================
 def drk_obscure_dob(record_id, field, value):
     """
@@ -36,7 +34,7 @@ def drk_person_anonymize():
     ANONYMOUS = "-"
 
     # Helper to produce an anonymous ID (pe_label)
-    anonymous_id = lambda record_id, f, v: "NN%06d" % long(record_id)
+    anonymous_id = lambda record_id, f, v: "NN%06d" % int(record_id)
 
     # General rule for attachments
     documents = ("doc_document", {"key": "doc_id",

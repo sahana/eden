@@ -12,7 +12,7 @@ import sys
 
 from gluon import current
 
-from s3compat import urllib_quote
+from urllib.parse import quote as urllib_quote
 
 VSETURL = "https://distribution.dcc-rules.de/valuesets"
 VSETID = "covid-19-lab-test-manufacturer-and-name"

@@ -47,7 +47,6 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3compat import basestring, xrange
 from s3layouts import S3PopupLink
 
 # =============================================================================
@@ -682,7 +681,7 @@ class S3StatsDemographicModel(S3Model):
         (last_period, year_end) = aggregated_period(None)
 
         # Test to see which date format we have based on how we were called
-        if isinstance(records, basestring):
+        if isinstance(records, str):
             from_json = True
             from dateutil.parser import parse
             records = json.loads(records)
@@ -1595,7 +1594,7 @@ def stats_year(row, tablename):
     elif start_date is NOT_PRESENT or not start_date :
         return [end_date.year]
     else:
-        return list(xrange(start_date.year, end_date.year + 1))
+        return list(range(start_date.year, end_date.year + 1))
 
 # =============================================================================
 def stats_year_options(tablename):
@@ -1652,7 +1651,7 @@ def stats_year_options(tablename):
     if not start_year or not end_year:
         return {start_year:start_year} or {end_year:end_year}
     years = {}
-    for year in xrange(start_year, end_year + 1):
+    for year in range(start_year, end_year + 1):
         years[year] = year
     return years
 

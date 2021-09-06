@@ -44,7 +44,6 @@ __all__ = ("S3NavigationItem",
 from gluon import *
 from gluon.storage import Storage
 
-from s3compat import basestring, xrange
 from .s3utils import s3_str
 
 # =============================================================================
@@ -151,7 +150,7 @@ class S3NavigationItem(object):
         """
 
         # Label
-        if isinstance(label, basestring) and translate:
+        if isinstance(label, str) and translate:
             self.label = current.T(label)
         else:
             self.label = label
@@ -758,7 +757,7 @@ class S3NavigationItem(object):
                 if args:
                     largs = [a for a in request.args if not a.isdigit()]
                     if len(args) == len(largs) and \
-                       all([args[i] == largs[i] for i in xrange(len(args))]):
+                       all([args[i] == largs[i] for i in range(len(args))]):
                         level = 5
                     else:
                         if len(rargs) >= len(args) > 0 and \
@@ -1958,7 +1957,7 @@ class S3ResourceHeader(object):
             label = field.label if field is not None else False
 
         # Render value
-        if not isinstance(value, basestring) and \
+        if not isinstance(value, str) and \
            not isinstance(value, DIV):
             value = s3_str(value)
 

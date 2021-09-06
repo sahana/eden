@@ -50,7 +50,6 @@ from gluon.sqlhtml import OptionsWidget
 from gluon.storage import Storage
 from gluon.validators import IS_IN_SET, IS_EMPTY_OR
 
-from s3compat import INTEGER_TYPES, basestring, xrange
 from .s3query import FS
 from .s3rest import S3Method
 from .s3utils import s3_flatlist, s3_has_foreign_key, s3_str, S3MarkupStripper, s3_represent_value
@@ -1507,7 +1506,7 @@ class S3PivotTableFact(object):
         else:
             # Numeric values required - some virtual fields
             # return '-' for None, so must type-check here:
-            values = [v for v in values if isinstance(v, INTEGER_TYPES + (float,))]
+            values = [v for v in values if isinstance(v, (int, float))]
 
             if method == "min":
                 try:
@@ -1673,7 +1672,7 @@ class S3PivotTableFact(object):
         selector = prefix(rfield.selector)
         for f in fields:
             if type(f) is tuple and \
-                isinstance(f[1], basestring) and \
+                isinstance(f[1], str) and \
                 prefix(f[1]) == selector:
                 label = f[0]
                 break
@@ -1961,7 +1960,7 @@ class S3PivotTable(object):
         if self.empty:
             location_ids = []
         else:
-            numeric = lambda x: isinstance(x, INTEGER_TYPES + (float,))
+            numeric = lambda x: isinstance(x, (int, float))
             row_repr = s3_str
 
             ids = {}
@@ -1970,7 +1969,7 @@ class S3PivotTable(object):
 
             # Group and sort the rows
             is_numeric = None
-            for i in xrange(self.numrows):
+            for i in range(self.numrows):
                 irow = irows[i]
                 total = irow[layer]
                 if is_numeric is None:
@@ -2092,7 +2091,7 @@ class S3PivotTable(object):
             irows = self.row
             rows = []
             rtail = (None, None)
-            for i in xrange(self.numrows):
+            for i in range(self.numrows):
                 irow = irows[i]
                 totals = [irow[layer] for layer in layers]
                 sort_total = totals[0]
@@ -2116,7 +2115,7 @@ class S3PivotTable(object):
             icols = self.col
             cols = []
             ctail = (None, None)
-            for i in xrange(self.numcols):
+            for i in range(self.numcols):
                 icol = icols[i]
                 totals = [icol[layer] for layer in layers]
                 sort_total = totals[0]
@@ -2143,11 +2142,11 @@ class S3PivotTable(object):
             # @todo: break up into subfunctions
             icell = self.cell
             cells = {}
-            for i in xrange(self.numrows):
+            for i in range(self.numrows):
                 irow = icell[i]
                 ridx = (i, OTHER) if rothers and i in rothers else (i,)
 
-                for j in xrange(self.numcols):
+                for j in range(self.numcols):
                     cell = irow[j]
                     cidx = (j, OTHER) if cothers and j in cothers else (j,)
 
@@ -2297,7 +2296,7 @@ class S3PivotTable(object):
                                 except AttributeError:
                                     continue
                                 if method == "sum" and \
-                                   isinstance(fvalue, INTEGER_TYPES + (float,)) and fvalue:
+                                   isinstance(fvalue, (int, float)) and fvalue:
                                     okeys.append(record_id)
                                 elif method == "count" and \
                                    fvalue is not None:
@@ -2601,9 +2600,9 @@ class S3PivotTable(object):
                 cells[(r, c)].append(item[pkey_colname])
 
         matrix = []
-        for r in xrange(len(rvalues)):
+        for r in range(len(rvalues)):
             row = []
-            for c in xrange(len(cvalues)):
+            for c in range(len(cvalues)):
                 row.append(cells[(r, c)])
             matrix.append(row)
 
@@ -2653,12 +2652,12 @@ class S3PivotTable(object):
         # Initialize cells
         if self.cell is None:
             self.cell = [[Storage()
-                          for i in xrange(numcols)]
-                         for j in xrange(numrows)]
+                          for i in range(numcols)]
+                         for j in range(numrows)]
         cells = self.cell
 
         all_values = []
-        for r in xrange(numrows):
+        for r in range(numrows):
 
             # Initialize row header
             row = rows[r]
@@ -2668,7 +2667,7 @@ class S3PivotTable(object):
             row_records = row[RECORDS]
             row_values = row[VALUES]
 
-            for c in xrange(numcols):
+            for c in range(numcols):
 
                 # Initialize column header
                 col = cols[c]
@@ -2730,7 +2729,7 @@ class S3PivotTable(object):
             del row[VALUES]
 
         # Compute column total
-        for c in xrange(numcols):
+        for c in range(numcols):
             col = cols[c]
             col[layer] = fact.compute(col[VALUES],
                                       totals = True,

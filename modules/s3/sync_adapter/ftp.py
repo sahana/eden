@@ -29,9 +29,10 @@
 
 import sys
 
+from io import StringIO
+
 from gluon import *
 
-from s3compat import StringIO
 from ..s3sync import S3SyncBaseAdapter
 from ..s3query import S3URLQuery, FS
 from ..s3rest import S3Request

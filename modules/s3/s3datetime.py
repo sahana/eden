@@ -59,8 +59,6 @@ import time
 
 from gluon import current
 
-from s3compat import INTEGER_TYPES, basestring, xrange
-
 # =============================================================================
 # Constants
 #
@@ -92,7 +90,7 @@ class S3DateTime(object):
 
         if calendar is None:
             calendar = current.calendar
-        elif isinstance(calendar, basestring):
+        elif isinstance(calendar, str):
             calendar = S3Calendar(calendar)
 
         if dt:
@@ -120,7 +118,7 @@ class S3DateTime(object):
 
         if calendar is None:
             calendar = current.calendar
-        elif isinstance(calendar, basestring):
+        elif isinstance(calendar, str):
             calendar = S3Calendar(calendar)
 
         if dt:
@@ -292,9 +290,9 @@ class S3DateTime(object):
         sign = 1
         offset_hrs = offset_min = 0
 
-        if isinstance(string, INTEGER_TYPES + (float,)):
+        if isinstance(string, (int,float)):
             offset_hrs = string
-        elif isinstance(string, basestring):
+        elif isinstance(string, str):
             if string[:3] == "UTC":
                 string = string[3:]
             string = string.strip()
@@ -1232,7 +1230,7 @@ class S3DateTimeParser(object):
             @return: a timetuple (y, m, d, hh, mm, ss)
         """
 
-        if not isinstance(string, basestring):
+        if not isinstance(string, str):
             raise TypeError("Invalid argument type: expected str, got %s" % type(string))
         try:
             result = self.grammar.parseString(string)
@@ -1250,7 +1248,7 @@ class S3DateTimeParser(object):
             @param dtfmt: the date/time format
         """
 
-        if not isinstance(dtfmt, basestring):
+        if not isinstance(dtfmt, str):
             raise TypeError("Invalid date/time format: %s (%s)" % (dtfmt, type(dtfmt)))
 
         import pyparsing as pp
@@ -1414,9 +1412,9 @@ class S3DateTimeParser(object):
         def numeric(minimum, maximum):
             """ Helper to define rules for zero-padded numeric values """
             zp = " ".join("%02d" % i \
-                 for i in xrange(minimum, min(10, maximum + 1)))
+                 for i in range(minimum, min(10, maximum + 1)))
             np = " ".join("%d" % i \
-                 for i in xrange(minimum, maximum + 1))
+                 for i in range(minimum, maximum + 1))
             return (oneOf(zp) ^ oneOf(np)).setParseAction(parse_int)
 
         # Day

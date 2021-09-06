@@ -45,16 +45,20 @@ import re
 import string
 import sys
 
+from io import StringIO
 try:
     from lxml import etree
 except ImportError:
     sys.stderr.write("ERROR: lxml module needed for XML handling\n")
     raise
+from urllib.parse import urlencode
+from urllib import request as urllib2
+from urllib.request import urlopen
+from urllib.error import HTTPError, URLError
 
 from gluon import current, redirect
 from gluon.html import *
 
-from s3compat import HTTPError, PY2, StringIO, urlencode, urllib2, urlopen, URLError
 #from .s3codec import S3Codec
 from .s3crud import S3CRUD
 from .s3datetime import s3_decode_iso_datetime
@@ -67,13 +71,6 @@ from s3db.msg import msg_parser_enabled
 
 PHONECHARS = string.digits
 TWITTERCHARS = "%s%s_" % (string.digits, string.ascii_letters)
-if PY2:
-    # Inverted permitted character sets for use with str.translate
-    # => faster, but not working for unicode and hence not supported in Py3
-    IDENTITYTRANS = ALLCHARS = string.maketrans("", "")
-    NOTPHONECHARS = ALLCHARS.translate(IDENTITYTRANS, PHONECHARS)
-    NOTTWITTERCHARS = ALLCHARS.translate(IDENTITYTRANS, TWITTERCHARS)
-
 TWITTER_MAX_CHARS = 140
 TWITTER_HAS_NEXT_SUFFIX = u' \u2026'
 TWITTER_HAS_PREV_PREFIX = u'\u2026 '
@@ -172,10 +169,7 @@ class S3Msg(object):
         else:
             default_country_code = settings.get_L10n_default_country_code()
 
-        if PY2:
-            clean = phone.translate(IDENTITYTRANS, NOTPHONECHARS)
-        else:
-            clean = "".join(c for c in phone if c in PHONECHARS)
+        clean = "".join(c for c in phone if c in PHONECHARS)
 
         # If number starts with a 0 then need to remove this & add the country code in
         if clean[0] == "0":
@@ -1394,10 +1388,7 @@ class S3Msg(object):
             letters, digits, and _
         """
 
-        if PY2:
-            return account.translate(IDENTITYTRANS, NOTTWITTERCHARS)
-        else:
-            return "".join(c for c in account if c in TWITTERCHARS)
+        return "".join(c for c in account if c in TWITTERCHARS)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2109,18 +2100,13 @@ class S3Msg(object):
             return "No Such RSS Channel: %s" % channel_id
 
         # http://pythonhosted.org/feedparser
-        if PY2:
-            # Use Stable v5.2.1
-            # - current known reason is to prevent SSL: CERTIFICATE_VERIFY_FAILED
-            import feedparser521 as feedparser
+        # Python 3.x: Requires pip install sgmllib3k
+        if sys.version_info[1] >= 7:
+            # Use 6.0.0b1 which is required for Python 3.7
+            import feedparser
         else:
-            # Python 3.x: Requires pip install sgmllib3k
-            if sys.version_info[1] >= 7:
-                # Use 6.0.0b1 which is required for Python 3.7
-                import feedparser
-            else:
-                # Python 3.6 requires 5.2.1 with 2to3 run on it to prevent SSL: CERTIFICATE_VERIFY_FAILED
-                import feedparser5213 as feedparser
+            # Python 3.6 requires 5.2.1 with 2to3 run on it to prevent SSL: CERTIFICATE_VERIFY_FAILED
+            import feedparser5213 as feedparser
 
         # Basic Authentication
         username = channel.username
@@ -2171,10 +2157,7 @@ class S3Msg(object):
                 return
         if d.bozo:
             # Something doesn't seem right
-            if PY2:
-                status = "ERROR: %s" % d.bozo_exception.message
-            else:
-                status = "ERROR: %s" % d.bozo_exception
+            status = "ERROR: %s" % d.bozo_exception
             S3Msg.update_channel_status(channel_id,
                                         status = status,
                                         period = (300, 3600),

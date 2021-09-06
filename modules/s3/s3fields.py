@@ -39,7 +39,6 @@ from gluon.sqlhtml import TimeWidget
 from gluon.storage import Storage
 from gluon.languages import lazyT
 
-from s3compat import PY2, basestring
 from s3dal import SQLCustomType
 from .s3datetime import S3DateTime
 from .s3navigation import S3ScriptItem
@@ -128,7 +127,7 @@ class S3ReusableField(object):
         else:
             widget = DEFAULT
 
-        if isinstance(widget, basestring):
+        if isinstance(widget, str):
             if widget == DEFAULT and "widget" in ia:
                 widget = ia["widget"]
             else:
@@ -256,18 +255,11 @@ class S3Represent(object):
 
         # Attributes to simulate being a function for sqlhtml's count_expected_args()
         # Make sure we indicate only 1 position argument
-        if PY2:
-            self.func_code = Storage(co_argcount = 1)
-            self.func_defaults = None
-        else:
-            self.__code__ = Storage(co_argcount = 1)
-            self.__defaults__ = None
+        self.__code__ = Storage(co_argcount = 1)
+        self.__defaults__ = None
 
         # Detect lookup_rows override
-        if PY2:
-            self.custom_lookup = self.lookup_rows.__func__ is not S3Represent.lookup_rows.__func__
-        else:
-            self.custom_lookup = self.lookup_rows.__func__ is not S3Represent.lookup_rows
+        self.custom_lookup = self.lookup_rows.__func__ is not S3Represent.lookup_rows
 
     # -------------------------------------------------------------------------
     def lookup_rows(self, key, values, fields=None):
@@ -575,7 +567,7 @@ class S3Represent(object):
         if self.options is not None:
             if self.translate:
                 T = current.T
-                self.theset = {opt: T(label) if isinstance(label, basestring) else label
+                self.theset = {opt: T(label) if isinstance(label, str) else label
                                for opt, label in self.options.items()}
             else:
                 self.theset = self.options
@@ -603,12 +595,12 @@ class S3Represent(object):
         # What type of renderer do we use?
         labels = self.labels
         # String template?
-        self.slabels = isinstance(labels, (basestring, lazyT))
+        self.slabels = isinstance(labels, (str, lazyT))
         # External renderer?
         self.clabels = callable(labels)
 
         # Hierarchy template
-        if isinstance(self.hierarchy, basestring):
+        if isinstance(self.hierarchy, str):
             self.htemplate = self.hierarchy
         else:
             self.htemplate = "%s > %s"
@@ -635,7 +627,7 @@ class S3Represent(object):
         table = self.table
         for _v in values:
             v = _v
-            if v is not None and table and isinstance(v, basestring):
+            if v is not None and table and isinstance(v, str):
                 try:
                     v = int(_v)
                 except ValueError:

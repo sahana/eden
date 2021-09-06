@@ -66,7 +66,6 @@ import time
 from gluon import *
 
 from ..s3 import *
-from s3compat import basestring
 
 TIME_FORMAT = "%b %d %Y %H:%M:%S"
 MSG_FORMAT = "%(now)s - %(category)s - %(data)s\n\n"
@@ -4371,7 +4370,7 @@ def setup_instance_settings_read(instance_id, deployment_id):
     from gluon.serializers import json as jsons # Need support for T()
     for setting in file_settings:
         current_value = file_settings[setting]
-        if not isinstance(current_value, basestring):
+        if not isinstance(current_value, str):
             # NB Storage & OrderedDict will come out as dict
             current_value = jsons(current_value)
         s = db_get(setting)

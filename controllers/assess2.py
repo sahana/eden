@@ -297,7 +297,7 @@ def rat_tables():
         if isinstance(opt, (list, tuple)):
             opts = opt
             vals = [str(set.get(o, o)) for o in opts]
-        #elif isinstance(opt, basestring):
+        #elif isinstance(opt, str):
         #    opts = opt.split("|")
         #    vals = [str(set.get(int(o), o)) for o in opts if o]
         elif isinstance(opt, int):
@@ -444,7 +444,7 @@ def rat_tables():
         id = form.vars.get("id", None)
 
         if id:
-            for x in xrange(2, 10):
+            for x in range(2, 10):
                 section = "assess_section%s" % x
                 set = db(db[section].assessment_id == id)
                 record = set.select(db[section].id, limitby=(0, 1)).first()
@@ -1200,7 +1200,7 @@ def rat_tables():
         99: T("Other (specify)")
     }
 
-    rat_ranking_opts = xrange(1, 7)
+    rat_ranking_opts = range(1, 7)
 
     tablename = "assess_section7"
     define_table(tablename,

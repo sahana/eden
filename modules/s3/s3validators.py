@@ -63,6 +63,8 @@ __all__ = ("IS_ACL",
 import datetime
 import json
 import re
+from functools import reduce
+from io import BytesIO
 from uuid import uuid4
 
 from gluon import current, IS_FLOAT_IN_RANGE, IS_INT_IN_RANGE, IS_IN_SET, \
@@ -70,7 +72,6 @@ from gluon import current, IS_FLOAT_IN_RANGE, IS_INT_IN_RANGE, IS_IN_SET, \
 from gluon.storage import Storage
 from gluon.validators import Validator, ValidationError
 
-from s3compat import BytesIO, STRING_TYPES, basestring, reduce, unichr
 from .s3datetime import S3DateTime
 from .s3utils import s3_orderby_fields, s3_str, s3_unicode
 
@@ -85,7 +86,7 @@ IBAN_SCHEMA = re.compile(r"([A-Z]{2})([0-9]{2})([0-9A-Z]{4,30})")
 def translate(text):
     if text is None:
         return None
-    elif isinstance(text, STRING_TYPES):
+    elif isinstance(text, str):
         if hasattr(current, "T"):
             return str(current.T(text))
     return s3_str(text)
@@ -183,7 +184,7 @@ class IS_JSONS3(Validator):
         """
 
         if value is None or \
-           self.native_json and isinstance(value, basestring):
+           self.native_json and isinstance(value, str):
             return value
         else:
             return json.dumps(value, separators = SEPARATORS)
@@ -538,7 +539,7 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
 
         # Strip the thousands-separator
         thousands_sep = current.deployment_settings.get_L10n_thousands_separator()
-        if thousands_sep and isinstance(value, basestring):
+        if thousands_sep and isinstance(value, str):
             value = s3_str(s3_unicode(value).replace(thousands_sep, ""))
 
         return IS_FLOAT_IN_RANGE.validate(self, value, record_id=record_id)
@@ -1122,7 +1123,7 @@ class IS_ONE_OF_EMPTY(Validator):
             # Multiple values
             if isinstance(value, list):
                 values = [str(v) for v in value]
-            elif isinstance(value, basestring):
+            elif isinstance(value, str):
                 if not value:
                     values = []
                 elif len(value) > 2 and value[0] == "|" and value[-1] == "|":
@@ -1595,7 +1596,7 @@ class IS_UTC_DATETIME(Validator):
         else:
             self.format = str(format)
 
-        if isinstance(calendar, basestring):
+        if isinstance(calendar, str):
             # Instantiate calendar by name
             from .s3datetime import S3Calendar
             calendar = S3Calendar(calendar)
@@ -1640,7 +1641,7 @@ class IS_UTC_DATETIME(Validator):
             @returns: the corresponding UTC datetime, timezone-naive
         """
 
-        if isinstance(value, basestring):
+        if isinstance(value, str):
 
             val = value.strip()
 
@@ -1788,7 +1789,7 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
 
         is_datetime = False
 
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             # Convert into date object
             dt = self.calendar.parse_date(value.strip(),
                                           dtfmt = self.format,
@@ -2109,7 +2110,7 @@ class IS_IN_SET_LAZY(Validator):
 
         multiple = self.multiple
         if multiple:
-            if isinstance(value, STRING_TYPES):
+            if isinstance(value, str):
                 values = [value]
             elif isinstance(value, (tuple, list)):
                 values = value
@@ -2214,9 +2215,9 @@ class IS_PHONE_NUMBER_SINGLE(Validator):
 
         error = False
 
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             value = value.strip()
-            if value and value[0] == unichr(8206):
+            if value and value[0] == chr(8206):
                 # Strip the LRM character
                 value = value[1:]
             requires = IS_MATCH(SINGLE_PHONE_NUMBER_PATTERN)
@@ -2284,7 +2285,7 @@ class IS_PHONE_NUMBER_MULTI(Validator):
         if value == "":
             # e.g. s3_mark_required test
             raise ValidationError(translate(self.error_message))
-        if value[0] == unichr(8206):
+        if value[0] == chr(8206):
             # Strip the LRM character
             value = value[1:]
         number = s3_str(value)

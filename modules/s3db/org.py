@@ -87,10 +87,11 @@ __all__ = ("OrgOrganisationModel",
 
 import json
 
+from io import BytesIO
+
 from gluon import *
 
 from ..s3 import *
-from s3compat import BytesIO
 from s3dal import Row
 from s3layouts import S3PopupLink
 

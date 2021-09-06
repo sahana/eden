@@ -301,7 +301,7 @@ class S3LogRecorder(object):
             return
         strbuf = self.strbuf
         if strbuf is None:
-            from s3compat import StringIO
+            from io import StringIO
             strbuf = StringIO()
         handler = logging.StreamHandler(strbuf)
 

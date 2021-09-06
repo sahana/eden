@@ -33,7 +33,6 @@ __all__ = ("S3XForms",
 
 from gluon import *
 
-from s3compat import basestring
 from .s3rest import S3Method
 from .s3utils import s3_unicode
 
@@ -213,7 +212,7 @@ class S3XFormsWidget(object):
 
         self.setstr("label", label)
         comment = field.comment
-        if comment and isinstance(comment, basestring):
+        if comment and isinstance(comment, str):
             # @todo: support LazyT, and extract hints from
             #        S3PopupLinks or other tooltip DIVs
             self.setstr("hint", comment)

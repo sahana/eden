@@ -176,7 +176,7 @@ def upload_bulk():
 
         image = request.body.read()
         # Convert to StringIO for onvalidation/import
-        from s3compat import StringIO
+        from io import StringIO
         image = StringIO(image)
         source = Storage()
         source.filename = name

@@ -76,7 +76,6 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3compat import basestring
 from s3layouts import S3PopupLink
 
 # =============================================================================
@@ -9176,7 +9175,7 @@ class DVRRegisterPayment(DVRRegisterCaseEvent):
             @return: tuple (updated, failed), number of records
         """
 
-        if isinstance(payments, basestring):
+        if isinstance(payments, str):
             try:
                 payments = json.loads(payments)
             except (ValueError, TypeError):

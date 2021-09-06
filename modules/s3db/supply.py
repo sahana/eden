@@ -54,7 +54,6 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3compat import xrange
 from s3dal import Row
 from s3layouts import S3PopupLink
 
@@ -1478,7 +1477,7 @@ class S3SupplyDistributionModel(S3Model):
             if not start_year or not end_year:
                 return {start_year:start_year} or {end_year:end_year}
             years = {}
-            for year in xrange(start_year, end_year + 1):
+            for year in range(start_year, end_year + 1):
                 years[year] = year
             return years
 
@@ -1769,7 +1768,7 @@ class S3SupplyDistributionModel(S3Model):
         elif not date:
             return [end_date.year]
         else:
-            return list(xrange(date.year, end_date.year + 1))
+            return list(range(date.year, end_date.year + 1))
 
 # =============================================================================
 class S3SupplyDistributionDVRActivityModel(S3Model):

@@ -83,12 +83,13 @@ __all__ = ("S3SurveyTemplateModel",
 
 import json
 
+from io import BytesIO, StringIO
+
 from gluon import *
 from gluon.storage import Storage
 from gluon.sqlhtml import *
 
 from ..s3 import *
-from s3compat import BytesIO, StringIO, xrange
 from s3chart import S3Chart
 
 DEBUG = False
@@ -2073,7 +2074,7 @@ $('#chart_btn').click(function(){
                 output["legend"] = legend
 
             if len(response_locations) > 0:
-                for i in xrange(len(response_locations)):
+                for i in range(len(response_locations)):
                     location = response_locations[i]
                     complete_id = location.complete_id
                     # Insert how we want this to appear on the map
@@ -3191,7 +3192,7 @@ class S3SurveyTranslateModel(S3Model):
                 strings = read_dict(lang_filename)
             except IOError:
                 strings = {}
-            for row in xrange(1, language_sheet.nrows):
+            for row in range(1, language_sheet.nrows):
                 original = language_sheet.cell_value(row, 0)
                 translation = language_sheet.cell_value(row, 1)
                 if (original not in strings) or translation != "":
@@ -3841,8 +3842,8 @@ class survey_DataMatrix():
         """ @todo: docstring """
 
         repr = ""
-        for row in xrange(self.lastRow+1):
-            for col in xrange(self.lastCol+1):
+        for row in range(self.lastRow+1):
+            for col in range(self.lastCol+1):
                 posn = survey_MatrixElement.getPosn(row, col)
                 if posn in self.matrix:
                     cell = self.matrix[posn]
@@ -3916,8 +3917,8 @@ class survey_DataMatrix():
         styleList = []
         row = rootElement.row
         col = rootElement.col
-        for v in xrange(rootElement.mergeV + 1):
-            for h in xrange(rootElement.mergeH + 1):
+        for v in range(rootElement.mergeV + 1):
+            for h in range(rootElement.mergeH + 1):
                 newPosn = "%s,%s" % (row + v, col + h)
                 styleList += self.matrix[newPosn].styleList
         return styleList
@@ -3935,8 +3936,8 @@ class survey_DataMatrix():
         row = rootElement.row
         col = rootElement.col
         posn = rootElement.posn()
-        for v in xrange(rootElement.mergeV + 1):
-            for h in xrange(rootElement.mergeH + 1):
+        for v in range(rootElement.mergeV + 1):
+            for h in range(rootElement.mergeH + 1):
                 newPosn = "%s,%s" % (row + v, col + h)
                 if newPosn == posn:
                     continue
@@ -3964,7 +3965,7 @@ class survey_DataMatrix():
             @todo: parameter description
         """
 
-        for r in xrange(startrow, endrow):
+        for r in range(startrow, endrow):
             posn = "%s,%s" % (r, startcol)
             if posn in self.matrix:
                 self.matrix[posn].styleList.append("boxL%s"%width)
@@ -3976,7 +3977,7 @@ class survey_DataMatrix():
             else:
                 self.addElement(survey_MatrixElement(r, endcol, "", "boxR%s"%width))
 
-        for c in xrange(startcol, endcol + 1):
+        for c in range(startcol, endcol + 1):
             posn = "%s,%s" % (startrow, c)
             if posn in self.matrix:
                 self.matrix[posn].styleList.append("boxT%s"%width)
@@ -5438,7 +5439,7 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
             raise Exception("Need to have the options specified")
         l = []
         lappend = l.append
-        for i in xrange(int(length)):
+        for i in range(int(length)):
             lappend(self.get(str(i + 1)))
         return l
 
@@ -6006,10 +6007,10 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
         height = 1
         codeNum = self.qstnNo
         labelWidth = maxWidth/2
-        for line in xrange(int(self.rowCnt)):
+        for line in range(int(self.rowCnt)):
             label = survey_T(self.rows[line], self.langDict)
             (lwidth, lheight) = (labelWidth, len(label) / (4 * labelWidth / 3) + 1)
-            for cell in xrange(int(self.colCnt)):
+            for cell in range(int(self.colCnt)):
                 code = "%s%s" % (self.question["code"], codeNum)
                 codeNum += 1
                 childWidget = self.getChildWidget(code)
@@ -6057,7 +6058,7 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
                                     )
         cell.merge(labelWidth - 1, 0)
         matrix.addElement(cell)
-        for line in xrange(int(self.rowCnt)):
+        for line in range(int(self.rowCnt)):
             # Add the label
             label = survey_T(self.rows[line], self.langDict)
             (lwidth, lheight) = (labelWidth, len(label)/(4 * labelWidth / 3) + 1)
@@ -6070,7 +6071,7 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
             matrix.addElement(cell)
             maxrow = row + lheight
             endcol = col + lwidth
-            for cell in xrange(int(self.colCnt)):
+            for cell in range(int(self.colCnt)):
                 code = "%s%s" % (self.question["code"], codeNum)
                 codeNum += 1
                 childWidget = self.getChildWidget(code)

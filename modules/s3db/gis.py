@@ -52,13 +52,13 @@ import json
 import os
 
 from collections import OrderedDict
+from io import BytesIO
 from uuid import uuid4
 
 from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3compat import BytesIO, basestring
 from s3layouts import S3PopupLink
 
 # Compact JSON encoding
@@ -521,7 +521,7 @@ class S3LocationModel(S3Model):
                 else:
                     Lx_ids = None
                 results = gis.geocode(addr_street, postcode, Lx_ids)
-                if isinstance(results, basestring):
+                if isinstance(results, str):
                     # Error
                     if settings.get_gis_ignore_geocode_errors():
                         # Just Warn
@@ -1198,10 +1198,10 @@ class S3LocationModel(S3Model):
 
                 _name_alt = row.get("gis_location_name_alt.name_alt", None)
                 _name_l10n = row.get("gis_location_name.name_l10n", None)
-                if isinstance(_name_alt, basestring):
+                if isinstance(_name_alt, str):
                     # Convert into list
                     _name_alt = [ _name_alt ]
-                if isinstance(_name_l10n, basestring):
+                if isinstance(_name_l10n, str):
                     _name_l10n = [ _name_l10n ]
 
                 alternate = dict(item)

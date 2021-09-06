@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
+from io import BytesIO
+
 from gluon import current, HTTP
 
 from s3 import S3Method, s3_decode_iso_datetime, s3_str
 from s3.codecs.xls import S3XLS
-from s3compat import BytesIO
 
 # =============================================================================
 class PerformanceIndicators(object):

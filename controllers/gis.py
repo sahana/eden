@@ -591,6 +591,7 @@ def location():
         # Use new gis.get_children() function
 
     if filters:
+        from functools import reduce
         from operator import __and__
         s3.filter = reduce(__and__, filters)
 
@@ -3691,8 +3692,8 @@ def maps():
 
         # Get the data from the POST
         source = request.body.read()
-        if isinstance(source, basestring):
-            from s3compat import StringIO
+        if isinstance(source, str):
+            from io import StringIO
             source = StringIO(source)
 
         # Decode JSON
@@ -3776,8 +3777,8 @@ def maps():
 
         # Get the data from the PUT
         source = request.body.read()
-        if isinstance(source, basestring):
-            from s3compat import StringIO
+        if isinstance(source, str):
+            from io import StringIO
             source = StringIO(source)
 
         # Decode JSON
@@ -3927,7 +3928,9 @@ def proxy():
     """
 
     import socket
-    from s3compat import URLError, urllib2, urlopen
+    from urllib import request as urllib2
+    from urllib.error import HTTPError
+    from urllib.request import urlopen
     import cgi
 
     if auth.is_logged_in():

@@ -82,7 +82,6 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3compat import long
 from s3layouts import S3PopupLink
 
 # =============================================================================
@@ -6417,7 +6416,7 @@ class event_IncidentAssignMethod(S3Method):
                 for incident_id in selected:
 
                     try:
-                        i_id = long(incident_id.strip())
+                        i_id = int(incident_id.strip())
                     except ValueError:
                         continue
 

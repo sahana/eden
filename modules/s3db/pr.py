@@ -127,6 +127,8 @@ __all__ = (# PR Base Entities
 import json
 import os
 
+from urllib.parse import urlencode
+
 from gluon import current, redirect, URL, \
                   A, DIV, H2, H3, H5, IMG, LABEL, P, SPAN, TABLE, TAG, TH, TR, \
                   IS_LENGTH, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, IS_EMAIL, \
@@ -135,7 +137,6 @@ from gluon.storage import Storage
 from gluon.sqlhtml import RadioWidget
 
 from ..s3 import *
-from s3compat import INTEGER_TYPES, basestring, long, urlencode
 from s3dal import Field, Row
 from s3layouts import S3PopupLink
 
@@ -4782,7 +4783,7 @@ class PRPresenceModel(S3Model):
         table = db.pr_presence
         popts = current.s3db.pr_presence_opts
 
-        if isinstance(form, INTEGER_TYPES + (str,)):
+        if isinstance(form, (int, str)):
             record_id = form
         elif hasattr(form, "vars"):
             record_id = form.vars.id
@@ -5758,7 +5759,7 @@ class PRDescriptionModel(S3Model):
         ntable = db.pr_note
         ptable = s3db.pr_person
 
-        if isinstance(form, INTEGER_TYPES + (str,)):
+        if isinstance(form, (int, str)):
             record_id = form
         elif hasattr(form, "vars"):
             record_id = form.vars.id
@@ -7098,7 +7099,7 @@ def pr_get_entities(pe_ids=None,
         pe_ids = []
     elif not isinstance(pe_ids, (list, set, tuple)):
         pe_ids = [pe_ids]
-    pe_ids = [long(pe_id) for pe_id in set(pe_ids)]
+    pe_ids = [int(pe_id) for pe_id in set(pe_ids)]
     query = (pe_table.deleted != True)
     if types:
         if not isinstance(types, (list, tuple)):
@@ -9234,7 +9235,7 @@ def pr_human_resource_update_affiliations(person_id):
     # Get all current HR records
     query = (htable.person_id == person_id) & \
             (htable.status == 1) & \
-            (htable.type.belongs((1,2))) & \
+            (htable.type.belongs((1, 2))) & \
             (htable.deleted != True)
     left = [otable.on(htable.organisation_id == otable.id),
             stable.on(htable.site_id == stable.site_id)]
@@ -9417,8 +9418,8 @@ def pr_get_pe_id(entity, record_id=None):
                 if isinstance(f, Row) and "pe_id" in f:
                     return f["pe_id"]
             return None
-    elif isinstance(entity, INTEGER_TYPES) or \
-         isinstance(entity, basestring) and entity.isdigit():
+    elif isinstance(entity, int) or \
+         isinstance(entity, str) and entity.isdigit():
         return entity
     else:
         return None
@@ -10149,7 +10150,7 @@ def pr_role_rebuild_path(role_id, skip=None, clear=False):
         query = (rtable.deleted != True) & \
                 (rtable.path.like("%%|%s|%%" % pe_id)) & \
                 (~(rtable.id.belongs(skip)))
-        db(query).update(path=None)
+        db(query).update(path = None)
 
     return path
 

@@ -46,7 +46,6 @@ from uuid import uuid4
 from gluon import current, DIV, INPUT
 from gluon.storage import Storage
 
-from s3compat import basestring
 from .s3datetime import s3_decode_iso_datetime, S3DateTime
 from .s3rest import S3Method
 from .s3utils import s3_str
@@ -123,7 +122,7 @@ class S3Organizer(S3Method):
                 if not filter_widget:
                     continue
                 filter_field = filter_widget.field
-                if isinstance(filter_field, basestring):
+                if isinstance(filter_field, str):
                     filter_field = prefix_selector(resource, filter_field)
                 if start and start.selector == filter_field or \
                    end and end.selector == filter_field:

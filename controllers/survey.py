@@ -454,7 +454,7 @@ def series_export_word(widget_list, lang_dict, title, logo):
     """
 
     import gluon.contrib.pyrtf as pyrtf
-    from s3compat import BytesIO
+    from io import BytesIO
 
     output  = BytesIO()
     doc     = pyrtf.Document(default_language=pyrtf.Languages.EnglishUK)
@@ -513,7 +513,7 @@ def series_export_spreadsheet(matrix, matrix_answers, logo):
         return output
 
     import math
-    from s3compat import BytesIO
+    from io import BytesIO
 
     # -------------------------------------------------------------------------
     def wrap_text(sheet, cell, style):
@@ -773,7 +773,7 @@ def series_export_spreadsheet(matrix, matrix_answers, logo):
     CELL_WIDTH = 480 # approximately 2 characters
     if max_col > 255:
         max_col = 255
-    for col in xrange(max_col + 1):
+    for col in range(max_col + 1):
         sheet1.col(col).width = CELL_WIDTH
 
     sheet2.write(0, 0, "Question Code")
@@ -1025,7 +1025,7 @@ def complete():
             Import Assessment Spreadsheet
         """
 
-        from s3compat import BytesIO
+        from io import BytesIO
 
         if series_id is None:
             response.error = T("Series details missing")
@@ -1047,7 +1047,7 @@ def complete():
                          vars={"viewing": "survey_series.%s" % series_id}))
         header = ""
         body = ""
-        for row in xrange(1, sheetM.nrows):
+        for row in range(1, sheetM.nrows):
             header += ',"%s"' % sheetM.cell_value(row, 0)
             code = sheetM.cell_value(row, 0)
             qstn = s3.survey_getQuestionFromCode(code, series_id)

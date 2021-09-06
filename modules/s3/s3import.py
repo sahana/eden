@@ -39,15 +39,20 @@ __all__ = ("S3Importer",
 import datetime
 import json
 import os
+import pickle
 import sys
 import uuid
 
 from copy import deepcopy
+from io import BytesIO, StringIO
 try:
     from lxml import etree
 except ImportError:
     sys.stderr.write("ERROR: lxml module needed for XML handling\n")
     raise
+from urllib import request as urllib2
+from urllib.request import urlopen
+from urllib.error import HTTPError, URLError
 
 from gluon import current, redirect, URL, \
                   A, B, DIV, INPUT, LI, P, TABLE, TBODY, TD, TFOOT, TH, TR, UL, \
@@ -55,7 +60,6 @@ from gluon import current, redirect, URL, \
 from gluon.storage import Storage, Messages
 from gluon.tools import callback, fetch
 
-from s3compat import basestring, pickle, urllib2, urlopen, BytesIO, StringIO, HTTPError, URLError
 from s3dal import Field
 from .s3datetime import s3_utc
 from .s3fields import S3Represent
@@ -710,7 +714,7 @@ class S3Importer(S3Method):
         template = attr.get(TEMPLATE, True)
         if template is True:
             args.extend([self.controller, "%s.csv" % self.function])
-        elif isinstance(template, basestring):
+        elif isinstance(template, str):
             # Standard location in static/formats/s3csv/<controller>/*
             if os.path.splitext(template)[1] not in KNOWN_SPREADSHEET_EXTENSIONS:
                 # Assume CSV if no known spreadsheet extension found
@@ -1850,7 +1854,7 @@ class S3ImportItem(object):
         if original is None:
             original = S3Resource.original(table, element,
                                            mandatory = self._mandatory_fields())
-        elif isinstance(original, basestring) and UID in table.fields:
+        elif isinstance(original, str) and UID in table.fields:
             # Single-component update in add-item => load the original now
             query = (table[UID] == original)
             pkeys = set(fname for fname in table.fields if table[fname].unique)
@@ -4713,12 +4717,8 @@ class S3BulkImporter(object):
         """
 
         # Check if the source file is accessible
-        from s3compat import PY2
         try:
-            if PY2:
-                openFile = open(filename, "r")
-            else:
-                openFile = open(filename, "r", encoding="utf-8")
+            openFile = open(filename, "r", encoding="utf-8")
         except IOError:
             return "Unable to open file %s" % filename
 
@@ -4818,12 +4818,8 @@ class S3BulkImporter(object):
         """
 
         # Check if the source file is accessible
-        from s3compat import PY2
         try:
-            if PY2:
-                openFile = open(filename, "r")
-            else:
-                openFile = open(filename, "r", encoding="utf-8")
+            openFile = open(filename, "r", encoding="utf-8")
         except IOError:
             return "Unable to open file %s" % filename
 

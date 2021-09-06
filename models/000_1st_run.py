@@ -97,9 +97,6 @@ current.cache = cache
 # NB This takes effect during the file renaming algorithm - the length of uploaded filenames is unaffected
 current.MAX_FILENAME_LENGTH = 255 # Defined early for use by S3Config.
 
-# Common compat imports (for controllers)
-from s3compat import basestring, long, reduce, xrange
-
 # Import S3Config
 import s3cfg
 settings = s3cfg.S3Config()

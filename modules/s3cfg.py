@@ -36,7 +36,6 @@ from collections import OrderedDict
 from gluon import current, URL
 from gluon.storage import Storage
 
-from s3compat import basestring, INTEGER_TYPES
 from s3theme import FORMSTYLES
 
 class S3Config(Storage):
@@ -2167,7 +2166,7 @@ class S3Config(Storage):
 
         setting = self.ui.get("formstyle", "default")
 
-        if isinstance(setting, basestring):
+        if isinstance(setting, str):
             # Try to find the corresponding _inline formstyle
             inline_formstyle_name = "%s_inline" % setting
             formstyle = FORMSTYLES.get(inline_formstyle_name)
@@ -4993,7 +4992,7 @@ class S3Config(Storage):
         """
         default_organisation = self.__lazy("org", "default_organisation", default=None)
         if default_organisation:
-            if not isinstance(default_organisation, INTEGER_TYPES):
+            if not isinstance(default_organisation, int):
                 # Check Session cache
                 default_organisation_id = current.session.s3.default_organisation_id
                 if default_organisation_id:
@@ -5022,7 +5021,7 @@ class S3Config(Storage):
         """
         default_site = self.org.get("default_site", None)
         if default_site:
-            if not isinstance(default_site, INTEGER_TYPES):
+            if not isinstance(default_site, int):
                 # Check Session cache
                 default_site_id = current.session.s3.default_site_id
                 if default_site_id:

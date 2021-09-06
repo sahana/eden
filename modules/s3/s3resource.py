@@ -39,6 +39,8 @@ __all__ = ("S3AxisFilter",
 import json
 import sys
 
+from functools import reduce
+from io import StringIO
 from itertools import chain
 
 try:
@@ -53,7 +55,6 @@ from gluon.validators import IS_EMPTY_OR
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3compat import StringIO, basestring, reduce, xrange
 from s3dal import Expression, Field, Row, Rows, Table, S3DAL, VirtualCommand
 from .s3data import S3DataTable, S3DataList
 from .s3datetime import s3_format_datetime
@@ -153,7 +154,7 @@ class S3Resource(object):
         table_alias = None
 
         if prefix is None:
-            if not isinstance(tablename, basestring):
+            if not isinstance(tablename, str):
                 if isinstance(tablename, Table):
                     table = tablename
                     table_alias = table._tablename
@@ -1272,7 +1273,7 @@ class S3Resource(object):
         if self._rows is None:
             self.load()
         rows = self._rows
-        for i in xrange(len(rows)):
+        for i in range(len(rows)):
             yield rows[i]
         return
 
@@ -1659,7 +1660,7 @@ class S3Resource(object):
                 if isinstance(s, etree._ElementTree):
                     t = s
                 elif format == "json":
-                    if isinstance(s, basestring):
+                    if isinstance(s, str):
                         source = StringIO(s)
                         t = xml.json2tree(s)
                     else:
@@ -2812,7 +2813,7 @@ class S3Resource(object):
                     numcols = 0
 
                 flist = []
-                for i in xrange(numcols):
+                for i in range(numcols):
                     try:
                         rfield = rfields[i]
                         field = rfield.field
@@ -2933,7 +2934,7 @@ class S3Resource(object):
 
             columns = []
             pkey = str(self._id)
-            for i in xrange(numcols):
+            for i in range(numcols):
                 try:
                     iSortCol = int(get_vars["iSortCol_%s" % i])
                 except (AttributeError, KeyError):
@@ -2944,7 +2945,7 @@ class S3Resource(object):
                 # Map sortable-column index to the real list_fields
                 # index: for every non-id non-sortable column to the
                 # left of sortable column subtract 1
-                for j in xrange(iSortCol):
+                for j in range(iSortCol):
                     if get_vars.get("bSortable_%s" % j, "true") == "false":
                         try:
                             if rfields[j].colname != pkey:
@@ -2962,7 +2963,7 @@ class S3Resource(object):
                     columns.append(rfield)
 
             # Process the orderby-fields
-            for i in xrange(len(columns)):
+            for i in range(len(columns)):
                 rfield = columns[i]
                 field = rfield.field
                 if field is None:

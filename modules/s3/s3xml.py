@@ -37,6 +37,8 @@ import os
 import re
 import sys
 
+from urllib import parse as urlparse
+from urllib.request import urlopen
 try:
     from lxml import etree
 except ImportError:
@@ -46,7 +48,6 @@ except ImportError:
 from gluon import current, HTTP, URL, IS_EMPTY_OR
 from gluon.storage import Storage
 
-from s3compat import INTEGER_TYPES, PY2, basestring, long, urlopen, urlparse, xrange
 from .s3codec import S3Codec
 from .s3datetime import s3_decode_iso_datetime, s3_encode_iso_datetime, s3_utc
 from .s3fields import S3RepresentLazy
@@ -223,7 +224,7 @@ class S3XML(S3Codec):
         """
 
         self.error = None
-        if isinstance(source, basestring) and source[:5] == "https":
+        if isinstance(source, str) and source[:5] == "https":
             try:
                 source = urlopen(source)
             except:
@@ -531,7 +532,7 @@ class S3XML(S3Codec):
         as_json = json.dumps
         SubElement = etree.SubElement
 
-        for i in xrange(0, len(rmap)):
+        for i in range(0, len(rmap)):
 
             r = rmap[i]
 
@@ -1431,7 +1432,7 @@ class S3XML(S3Codec):
                     v = value
                 elif field_type == "upload":
                     pass
-                elif isinstance(value, basestring) \
+                elif isinstance(value, str) \
                      and len(value) \
                      and decode_value:
                     try:
@@ -1443,9 +1444,9 @@ class S3XML(S3Codec):
                         error = sys.exc_info()[1]
 
                 if not skip_validation:
-                    if not isinstance(value, (basestring, list, tuple, bool)):
+                    if not isinstance(value, (str, list, tuple, bool)):
                         v = str(value)
-                    elif isinstance(value, basestring):
+                    elif isinstance(value, str):
                         v = s3_str(value)
                     else:
                         v = value
@@ -1456,7 +1457,7 @@ class S3XML(S3Codec):
                            table[f].requires:
                             filename, stream = field.retrieve(value)
                             v = filename
-                            if isinstance(stream, basestring):
+                            if isinstance(stream, str):
                                 # Regular file in file system => try open
                                 stream = open(stream, "rb")
                             if not error:
@@ -1817,7 +1818,7 @@ class S3XML(S3Codec):
             else:
                 # always <key>value</key>
                 element = etree.Element(key)
-            if not isinstance(value, basestring):
+            if not isinstance(value, str):
                 value = str(value)
             element.text = value
 
@@ -1897,7 +1898,7 @@ class S3XML(S3Codec):
                 elif k.startswith(attribute_prefix):
                     a = k[len(attribute_prefix):]
                     # ...is an attribute
-                    if not isinstance(m, basestring):
+                    if not isinstance(m, str):
                         m = str(m)
                     element.set(a, m)
                 else:
@@ -1957,7 +1958,7 @@ class S3XML(S3Codec):
             append = obj.append
             for child in element:
                 tag = child.tag
-                if not isinstance(tag, basestring):
+                if not isinstance(tag, str):
                     continue # skip comment nodes
                 if tag[0] == "{":
                     tag = tag.rsplit("}", 1)[1]
@@ -2240,9 +2241,9 @@ class S3XML(S3Codec):
 
             # Find the sheet
             try:
-                if isinstance(sheet, INTEGER_TYPES):
+                if isinstance(sheet, int):
                     ws = wb.sheet_by_index(sheet)
-                elif isinstance(sheet, basestring):
+                elif isinstance(sheet, str):
                     ws = wb.sheet_by_name(sheet)
                 elif sheet is None:
                     DEFAULT_SHEET_NAME = "SahanaData"
@@ -2318,7 +2319,7 @@ class S3XML(S3Codec):
                     elif t == XL_CELL_TEXT:
                         text = v.strip()
                     elif t == XL_CELL_NUMBER:
-                        text = str(long(v)) if long(v) == v else str(v)
+                        text = str(int(v)) if int(v) == v else str(v)
                     elif t == XL_CELL_DATE:
                         # Convert into an ISO datetime string
                         text = s3_encode_iso_datetime(decode_date(v))
@@ -2504,9 +2505,9 @@ class S3XML(S3Codec):
 
             # Find the sheet
             try:
-                if isinstance(sheet, INTEGER_TYPES):
+                if isinstance(sheet, int):
                     ws = wb[wb.worksheets[sheet].title]
-                elif isinstance(sheet, basestring):
+                elif isinstance(sheet, str):
                     ws = wb[sheet]
                 elif sheet is None:
                     DEFAULT_SHEET_NAME = "SahanaData"
@@ -2546,7 +2547,7 @@ class S3XML(S3Codec):
                     if isinstance(v, str):
                         text = v.strip()
                     elif isinstance(v, (int, float)):
-                        text = str(long(v)) if long(v) == v else str(v)
+                        text = str(int(v)) if int(v) == v else str(v)
                     elif isinstance(v, (datetime.datetime, datetime.date, datetime.time)):
                         # Convert into an ISO datetime string
                         #text = s3_encode_iso_datetime(decode_date(v))
@@ -2761,7 +2762,7 @@ class S3XML(S3Codec):
                 if e:
                     try:
                         s = s3_unicode(line, e)
-                        yield s.encode("utf-8") if PY2 else s
+                        yield s
                     except:
                         pass
                     else:
@@ -2769,7 +2770,7 @@ class S3XML(S3Codec):
                 for encoding in encodings:
                     try:
                         s = s3_unicode(line, encoding)
-                        yield s.encode("utf-8") if PY2 else s
+                        yield s
                     except:
                         continue
                     else:
@@ -2807,10 +2808,7 @@ class S3XML(S3Codec):
                 raise HTTP(400, body=cls.json_message(False, 400, e))
 
 
-        if PY2:
-            from StringIO import StringIO
-        else:
-            from io import StringIO
+        from io import StringIO
         if not isinstance(source, StringIO):
             try:
                 read_from_csv(source)
@@ -2820,7 +2818,7 @@ class S3XML(S3Codec):
                     fname, fmode = source.name, source.mode
                 except AttributeError:
                     fname = fmode = None
-                if not PY2 and fname and fmode and "b" not in fmode:
+                if fname and fmode and "b" not in fmode:
                     # Perhaps a file opened in text mode with wrong encoding,
                     # => try to reopen in binary mode
                     with open(fname, "rb") as bsource:
@@ -2851,7 +2849,7 @@ class S3EntityResolver(etree.Resolver):
 
         super(S3EntityResolver, self).__init__()
 
-        if isinstance(source, basestring):
+        if isinstance(source, str):
             self.source = source
         else:
             self.source = None

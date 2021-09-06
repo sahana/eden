@@ -4,13 +4,13 @@ import json
 import os
 
 from collections import OrderedDict
+from io import BytesIO
 
 from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 from gluon.languages import lazyT
 
-from s3compat import BytesIO
 from s3 import FS, s3_str, s3_truncate, s3_utc
 
 def config(settings):

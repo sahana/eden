@@ -90,12 +90,12 @@ import datetime
 import json
 
 from collections import OrderedDict
+from io import BytesIO
 
 from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3compat import BytesIO, xrange
 from s3layouts import S3PopupLink
 
 from .req import req_timeframe
@@ -1626,7 +1626,7 @@ class ProjectActivityModel(S3Model):
         elif not start_date:
             return [end_date.year]
         else:
-            return list(xrange(start_date.year, end_date.year + 1))
+            return list(range(start_date.year, end_date.year + 1))
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -12804,8 +12804,8 @@ def project_activity_year_options():
     query = (table.deleted == False)
     min_field = table.date.min()
     start_date_min = db(query).select(min_field,
-                                      orderby=min_field,
-                                      limitby=(0, 1)
+                                      orderby = min_field,
+                                      limitby = (0, 1)
                                       ).first()[min_field]
     if start_date_min:
         start_year = start_date_min.year
@@ -12814,8 +12814,8 @@ def project_activity_year_options():
 
     max_field = table.end_date.max()
     end_date_max = db(query).select(max_field,
-                                    orderby=max_field,
-                                    limitby=(0, 1)
+                                    orderby = max_field,
+                                    limitby = (0, 1)
                                     ).first()[max_field]
     if end_date_max:
         end_year = end_date_max.year
@@ -12825,7 +12825,7 @@ def project_activity_year_options():
     if not start_year or not end_year:
         return {start_year:start_year} or {end_year:end_year}
     years = {}
-    for year in xrange(start_year, end_year + 1):
+    for year in range(start_year, end_year + 1):
         years[year] = year
     return years
 
