@@ -2816,7 +2816,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
 
         rfilter = component.rfilter
         expected = org_organisation.on(
-                        (org_test_office.organisation_id == org_organisation.id) &
+                        (org_organisation.id == org_test_office.organisation_id) &
                         (org_test_office.office_type_id == 5))
         assertEqual(str(rfilter.get_joins(left=True)[0]), str(expected))
 

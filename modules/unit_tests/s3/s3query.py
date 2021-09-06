@@ -908,7 +908,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
                         (hrm_human_resource.deleted == False))
         expected_o = org_organisation.on(
                         hrm_human_resource.organisation_id == org_organisation.id)
-        expected_p = pr_person.on(pr_identity.person_id == pr_person.id)
+        expected_p = pr_person.on(pr_person.id == pr_identity.person_id)
 
         left = rfilter.get_joins(left=True, as_list=False)
         tablenames = list(left.keys())
@@ -1697,11 +1697,11 @@ class ResourceFieldTests(unittest.TestCase):
         assertTrue(isinstance(f.left["pr_identity"], list))
         assertEqual(len(f.left["pr_identity"]), 1)
         expected = pr_identity.on(
-                        (pr_person.id == pr_identity.person_id) &
+                        (pr_person.id == pr_identity.person_id) & \
                         (pr_identity.deleted == False))
         assertEqual(str(f.left["pr_identity"][0]), str(expected))
 
-        expected = (pr_identity.person_id == pr_person.id) & \
+        expected = (pr_person.id == pr_identity.person_id) & \
                    (pr_identity.deleted == False)
         assertEqual(str(f.join["pr_identity"]), str(expected))
 
@@ -1750,7 +1750,7 @@ class ResourceFieldTests(unittest.TestCase):
         assertEqual(str(f.left["project_task"][0]), str(expected_l))
         assertEqual(str(f.left["project_task"][1]), str(expected_r))
 
-        expected = (((project_task_project.project_id == project_project.id) &
+        expected = (((project_project.id == project_task_project.project_id) &
                      (project_task_project.deleted == False)) &
                     (project_task_project.task_id == project_task.id))
 
