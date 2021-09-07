@@ -3283,6 +3283,66 @@ Thank you"""
     settings.customise_inv_inv_item_controller = customise_inv_inv_item_controller
 
     # -------------------------------------------------------------------------
+    def on_inv_recv_process(row):
+        """
+            Update any req_order_item records
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        recv_id = row.id
+
+        # Lookup the PO for this receive
+        rtable = s3db.inv_recv
+        record = db(rtable.id == recv_id).select(rtable.purchase_ref,
+                                                 limitby = (0, 1)
+                                                 ).first()
+
+        purchase_ref = record.purchase_ref
+        if not purchase_ref:
+            return
+
+        # Lookup the REQs for this receive
+        rrtable = s3db.inv_recv_req
+        reqs = db(rrtable.recv_id == recv_id).select(rrtable.req_id)
+        req_ids = [row.req_id for row in reqs]
+
+        # Lookup the Order Items which match these REQs and PO
+        otable = s3db.req_order_item
+        if len(req_ids) > 1:
+            query = (otable.req_id.belongs(req_ids))
+        else:
+            query = (otable.req_id == req_ids[0])
+        query &= (otable.purchase_ref == purchase_ref)
+        orders = db(query).select(otable.id,
+                                  otable.item_id,
+                                  )
+        if not orders:
+            return
+
+        # Lookup the Matching Items in the Shipment
+        order_items = [row.item_id for row in orders]
+        ttable = s3db.inv_track_item
+        query = (ttable.recv_id == recv_id) & \
+                (ttable.item_id.belongs(order_items))
+        recv_items = db(query).select(ttable.item_id)
+        if not recv_items:
+            return
+        recv_items = [row.item_id for row in recv_items]
+        orders_to_update = []
+        for row in orders:
+            if row.item_id in recv_items:
+                orders_to_update.append(row.id)
+
+        if orders_to_update:
+            if len(orders_to_update) > 1:
+                query = (otable.id.belongs(orders_to_update))
+            else:
+                query = (otable.id == orders_to_update[0])
+            db(query).update(recv_id = recv_id)
+
+    # -------------------------------------------------------------------------
     def customise_inv_recv_resource(r, tablename):
     
         #from gluon import IS_IN_SET
@@ -3349,6 +3409,7 @@ Thank you"""
                                       "type",
                                       "status",
                                       ],
+                       on_inv_recv_process = on_inv_recv_process,
                        )
 
         # Custom GRN

@@ -117,7 +117,6 @@ from .s3validators import *
 
 DEFAULT = lambda:None
 repr_select = lambda l: len(l.name) > 48 and "%s..." % l.name[:44] or l.name
-sorted_locale = lambda x: sorted(x, key=locale.strxfrm)
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -3849,7 +3848,8 @@ class S3GroupedOptionsWidget(FormWidget):
 
         # Sort letters
         if letter_options:
-            all_letters = sorted_locale(letter_options.keys())
+            import locale
+            all_letters = sorted(letter_options.keys(), key=locale.strxfrm)
             first_letter = min(u"A", all_letters[0])
             last_letter = max(u"Z", all_letters[-1])
         else:

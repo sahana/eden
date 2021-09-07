@@ -5321,11 +5321,8 @@ def inv_send_process(r, **attr):
         # Update the Warehouse Free capacity
         inv_warehouse_free_capacity(send_record.site_id)
 
-    # Customise the resource, to be sure that any hook is actually configured
+    # Call on_inv_send_process hook if-configured
     tablename = "inv_send"
-    #customise = settings.customise_resource(tablename)
-    #if customise:
-    #    customise(r, tablename)
     on_inv_send_process = s3db.get_config(tablename, "on_inv_send_process")
     if on_inv_send_process:
         send_record.id = send_id
@@ -5572,6 +5569,13 @@ def inv_recv_process(r, **attr):
     if settings.get_inv_warehouse_free_capacity_calculated():
         # Update the Warehouse Free capacity
         inv_warehouse_free_capacity(recv_record.site_id)
+
+    # Call on_inv_recv_process hook if-configured
+    tablename = "inv_recv"
+    on_inv_recv_process = s3db.get_config(tablename, "on_inv_recv_process")
+    if on_inv_recv_process:
+        recv_record.id = recv_id
+        on_inv_recv_process(recv_record)
 
     # Done => confirmation message, open the record
     current.session.confirmation = T("Shipment Items Received")

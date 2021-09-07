@@ -1758,6 +1758,9 @@ def send_req():
         arg: req_id
         vars: site_id
 
+        Currently not exposed to UI
+        - deemed better to force users through Check process
+
         @ToDo: Rewrite as Method
         @ToDo: Support for inv_send_req_multi (not needed for RMS)
     """
