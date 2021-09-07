@@ -3448,6 +3448,30 @@ Thank you"""
                     field.requires = IS_IN_SET(document_type_opts)
                     field.represent = S3Represent(options = document_type_opts)
 
+            elif r.method in ("create", "update"):
+                # Filter Requests to those which are:
+                # - For Our Sites
+                # - Approved
+                s3db = current.s3db
+                sites = s3db.inv_recv.site_id.requires.options(zero = False)
+                site_ids = [site[0] for site in sites]
+                rtable = s3db.req_req
+                ritable = s3db.req_req_item
+                if len(site_ids) > 1:
+                    site_query = (rtable.site_id.belongs(site_ids))
+                    s3.scripts.append("/%s/static/themes/RMS/js/inv_recv.js" % r.application)
+                else:
+                   site_query = (rtable.site_id == site_ids[0])
+                query = site_query & \
+                        (rtable.workflow_status == 3)
+                dbset = current.db(query)
+                from s3 import IS_ONE_OF
+                f = s3db.inv_recv_req.req_id 
+                f.requires = IS_ONE_OF(dbset, "req_req.id",
+                                       f.represent,
+                                       sort = True,
+                                       )
+
             return result
         s3.prep = custom_prep
 
@@ -3750,9 +3774,8 @@ Thank you"""
                     site_query = (ritable.site_id.belongs(site_ids))
                     s3.scripts.append("/%s/static/themes/RMS/js/inv_send.js" % r.application)
                 else:
-                    site_query = (ritable.site_id == site_ids)
+                    site_query = (ritable.site_id == site_ids[0])
                 query = (rtable.workflow_status == 3) & \
-                        (rtable.deleted == False) & \
                         (rtable.id == ritable.req_id) & \
                         site_query & \
                         (ritable.quantity_transit < ritable.quantity)
@@ -5901,12 +5924,12 @@ Thank you"""
         T.force(ui_language)
 
     # -------------------------------------------------------------------------
-    def req_sites(r, **attr):
+    def req_send_sites(r, **attr):
         """
             Lookup to limit
                 - from sites to those requested_from the selected Requests' remaining Items
                 - to sites to those from the selected Requests
-            Accessed from inv_item.js
+            Accessed from inv_send.js
             Access via the .json representation to avoid work rendering menus, etc
         """
 
@@ -5943,12 +5966,68 @@ Thank you"""
             query = (rtable.id.belongs(req_id))
             limitby = None
         requests = current.db(query).select(rtable.site_id,
-                                            limitby = limitby
+                                            limitby = limitby,
                                             )
         requested_to_sites = set([int(row.site_id) for row in requests])
         to_sites = []
         for site in available_to_sites:
             if site[0] and int(site[0]) in requested_to_sites:
+                to_sites.append(site)
+
+        import json
+        SEPARATORS = (",", ":")
+        current.response.headers["Content-Type"] = "application/json"
+        return json.dumps((from_sites, to_sites), separators=SEPARATORS)
+
+    # -------------------------------------------------------------------------
+    def req_recv_sites(r, **attr):
+        """
+            Lookup to limit
+                - from sites to those requested_from the selected Requests' remaining Items
+                - to sites to those from the selected Requests
+            Accessed from inv_recv.js
+            Access via the .json representation to avoid work rendering menus, etc
+        """
+
+        
+        req_id = r.get_vars.get("req_id")
+        if not req_id:
+            return
+        req_id = req_id.split(",")
+
+        s3db = current.s3db
+
+        # From Sites
+        available_from_sites = s3db.inv_recv.from_site_id.requires.options(zero = False)
+        ritable = s3db.req_req_item
+        if len(req_id) == 1:
+            query = (ritable.req_id == req_id[0])
+        else:
+            query = (ritable.req_id.belongs(req_id))
+        query &= (ritable.quantity_transit < ritable.quantity)
+        request_items = current.db(query).select(ritable.site_id)
+        requested_from_sites = set([int(row.site_id) for row in request_items if row.site_id])
+        from_sites = []
+        for site in available_from_sites:
+            if site[0] and int(site[0]) in requested_from_sites:
+                from_sites.append(site)
+
+        # To Sites
+        available_to_sites = s3db.inv_recv.site_id.requires.options(zero = False)
+        rtable = s3db.req_req
+        if len(req_id) == 1:
+            query = (rtable.id == req_id[0])
+            limitby = (0, 1)
+        else:
+            query = (rtable.id.belongs(req_id))
+            limitby = None
+        requests = current.db(query).select(rtable.site_id,
+                                            limitby = limitby,
+                                            )
+        requested_to_sites = set([int(row.site_id) for row in requests])
+        to_sites = []
+        for site in available_to_sites:
+            if int(site[0]) in requested_to_sites:
                 to_sites.append(site)
 
         import json
@@ -6094,17 +6173,24 @@ Thank you"""
                            crud_form = crud_form,
                            )
 
+            set_method = s3db.set_method
             # Custom Request Form
-            s3db.set_method("req", "req",
-                            method = "form",
-                            action = PrintableShipmentForm,
-                            )
+            set_method("req", "req",
+                       method = "form",
+                       action = PrintableShipmentForm,
+                       )
 
             # Lookup to limit sites to those requested_from the selected Requests' Items
-            s3db.set_method("req", "req",
-                            method = "sites",
-                            action = req_sites,
-                            )
+            set_method("req", "req",
+                       method = "send_sites",
+                       action = req_send_sites,
+                       )
+
+            # Lookup to limit sites in an inv_recv when a Request is selected
+            set_method("req", "req",
+                       method = "recv_sites",
+                       action = req_recv_sites,
+                       )
 
         from s3 import S3OptionsFilter
         filter_widgets = [S3OptionsFilter("workflow_status",
