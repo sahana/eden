@@ -39,7 +39,6 @@ import json
 
 from gluon import IS_EMPTY_OR, IS_IN_SET, current
 
-from s3compat import basestring
 from .s3datetime import s3_parse_datetime
 from .s3forms import S3SQLCustomForm, S3SQLDummyField, S3SQLField, \
                      S3SQLForm, S3SQLInlineInstruction, S3SQLSectionBreak
@@ -140,7 +139,7 @@ class S3MobileFormList(object):
                 # Determine form title
                 if title is None:
                     title = " ".join(w.capitalize() for w in f.split("_"))
-                if isinstance(title, basestring):
+                if isinstance(title, str):
                     title = T(title)
 
                 # Provides (master-)data for download?
@@ -643,7 +642,7 @@ class S3MobileSchema(object):
                         selector = element.get("field")
                     elif etype:
                         mappend(element)
-                elif isinstance(element, basestring):
+                elif isinstance(element, str):
                     selector = element
                 else:
                     continue

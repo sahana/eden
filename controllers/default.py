@@ -972,7 +972,7 @@ def page():
         raise HTTP(404, "Page not found in CMS")
 
     if row.body:
-        from s3compat import StringIO
+        from io import StringIO
         try:
             body = current.response.render(StringIO(row.body), {})
         except:

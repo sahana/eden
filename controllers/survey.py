@@ -176,13 +176,17 @@ def template_read():
 
     # remove CRUD generated buttons in the tabs
     s3db.configure("survey_template",
-                   listadd=False,
-                   editable=False,
-                   deletable=False,
+                   listadd = False,
+                   editable = False,
+                   deletable = False,
                    )
 
-    r = s3_request("survey", "template", args=[template_id])
-    output = r(method="read", rheader=s3db.survey_template_rheader)
+    r = s3base.s3_request("survey", "template",
+                          args = [template_id],
+                          )
+    output = r(method = "read",
+               rheader = s3db.survey_template_rheader,
+               )
     return output
 
 # -----------------------------------------------------------------------------
@@ -219,7 +223,7 @@ def template_summary():
 
     output = s3_rest_controller("survey", "template",
                                 method = "list",
-                                rheader=s3db.survey_template_rheader,
+                                rheader = s3db.survey_template_rheader,
                                 )
     s3.actions = None
     return output
@@ -290,7 +294,7 @@ def series():
                    deletable = False,
                    )
 
-    output = s3_rest_controller(rheader=s3db.survey_series_rheader)
+    output = s3_rest_controller(rheader = s3db.survey_series_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -454,7 +458,7 @@ def series_export_word(widget_list, lang_dict, title, logo):
     """
 
     import gluon.contrib.pyrtf as pyrtf
-    from s3compat import BytesIO
+    from io import BytesIO
 
     output  = BytesIO()
     doc     = pyrtf.Document(default_language=pyrtf.Languages.EnglishUK)
@@ -513,7 +517,7 @@ def series_export_spreadsheet(matrix, matrix_answers, logo):
         return output
 
     import math
-    from s3compat import BytesIO
+    from io import BytesIO
 
     # -------------------------------------------------------------------------
     def wrap_text(sheet, cell, style):
@@ -773,7 +777,7 @@ def series_export_spreadsheet(matrix, matrix_answers, logo):
     CELL_WIDTH = 480 # approximately 2 characters
     if max_col > 255:
         max_col = 255
-    for col in xrange(max_col + 1):
+    for col in range(max_col + 1):
         sheet1.col(col).width = CELL_WIDTH
 
     sheet2.write(0, 0, "Question Code")
@@ -1025,7 +1029,7 @@ def complete():
             Import Assessment Spreadsheet
         """
 
-        from s3compat import BytesIO
+        from io import BytesIO
 
         if series_id is None:
             response.error = T("Series details missing")
@@ -1047,7 +1051,7 @@ def complete():
                          vars={"viewing": "survey_series.%s" % series_id}))
         header = ""
         body = ""
-        for row in xrange(1, sheetM.nrows):
+        for row in range(1, sheetM.nrows):
             header += ',"%s"' % sheetM.cell_value(row, 0)
             code = sheetM.cell_value(row, 0)
             qstn = s3.survey_getQuestionFromCode(code, series_id)

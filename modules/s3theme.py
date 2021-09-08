@@ -28,7 +28,6 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 """
-from lxml.html import submit_form
 
 __all__ = ("formstyle_bootstrap",
            "formstyle_foundation",
@@ -39,11 +38,11 @@ __all__ = ("formstyle_bootstrap",
            "FORMSTYLES",
            )
 
+from lxml.html import submit_form
+
 from gluon import CAT, DIV, FIELDSET, INPUT, LABEL, SELECT, \
                   TABLE, TAG, TD, TEXTAREA, TR
 from gluon.languages import lazyT
-
-from s3compat import basestring
 
 # =============================================================================
 class NAV(DIV):
@@ -389,7 +388,7 @@ def render_tooltip(label, comment, _class="tooltip"):
 
     if not comment:
         tooltip = ""
-    elif isinstance(comment, (lazyT, basestring)):
+    elif isinstance(comment, (lazyT, str)):
         if label is False:
             label = ""
         elif hasattr(label, "flatten"):

@@ -113,6 +113,7 @@ def person():
                                (FS("case.invalid") == None))
 
             if queries:
+                from functools import reduce
                 query = reduce(lambda a, b: a & b, queries)
                 resource.add_filter(query)
 

@@ -1,8 +1,8 @@
 {{extend "layout.html"}}
 {{=H2(T("Scanned Forms Upload"))}}
 {{inputBoxList = []}}
-{{if uploadformat == "image":}}{{from s3compat import xrange}}
-{{for eachpage in xrange(1, numpages + 1):}}
+{{if uploadformat == "image":}}
+{{for eachpage in range(1, numpages + 1):}}
 {{inputBoxList.append(TR(TD(T("Page")," %s" % eachpage), TD(INPUT(_type="file", _name="page%s" % eachpage, _class="required")), TD(DIV(_class="tooltip", _title="Comments|Upload pages in ascending order, all fields are required. Pages can be of any image format viz. (png, jpg, gif, bmp). Each image represent a single page."))))}}
 {{pass}}
 {{elif uploadformat == "pdf":}}

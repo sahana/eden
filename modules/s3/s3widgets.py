@@ -51,7 +51,7 @@ __all__ = ("S3ACLWidget",
            "S3HierarchyWidget",
            "S3HumanResourceAutocompleteWidget",
            "S3ImageCropWidget",
-           "S3InvBinWidget",
+           #"S3InvBinWidget",
            "S3KeyValueWidget",
            # Only used inside this module
            #"S3LatLonWidget",
@@ -111,7 +111,6 @@ from gluon.languages import lazyT
 from gluon.sqlhtml import *
 from gluon.storage import Storage
 
-from s3compat import INTEGER_TYPES, basestring, long, sorted_locale, xrange
 from .s3datetime import S3Calendar, S3DateTime
 from .s3utils import *
 from .s3validators import *
@@ -678,7 +677,7 @@ class S3AddPersonWidget(FormWidget):
         # Extract existing values
         if value:
             record_id = None
-            if isinstance(value, basestring) and not value.isdigit():
+            if isinstance(value, str) and not value.isdigit():
                 data, error = self.parse(value)
                 if not error:
                     if all(k in data for k in formfields):
@@ -1163,7 +1162,7 @@ class S3AddPersonWidget(FormWidget):
                      selected or newly created record
         """
 
-        if not isinstance(value, basestring) or value.isdigit():
+        if not isinstance(value, str) or value.isdigit():
             # Not a JSON object => return as-is
             return value, None
 
@@ -1626,7 +1625,7 @@ class S3AgeWidget(FormWidget):
             @param attributes: additional HTML attributes for the widget
         """
 
-        if isinstance(value, basestring) and value and not value.isdigit():
+        if isinstance(value, str) and value and not value.isdigit():
             # ISO String
             value = current.calendar.parse_date(value)
 
@@ -1769,7 +1768,7 @@ class S3AutocompleteWidget(FormWidget):
 
         if value:
             try:
-                value = long(value)
+                value = int(value)
             except ValueError:
                 pass
             text = s3_unicode(field.represent(value))
@@ -3103,7 +3102,7 @@ class S3WeeklyHoursWidget(FormWidget):
             @returns: UL instance
         """
 
-        if isinstance(rules, basestring) and rules:
+        if isinstance(rules, str) and rules:
             try:
                 rules = json.loads(rules)
             except JSONERRORS:
@@ -3580,7 +3579,7 @@ def S3GenericAutocompleteTemplate(post_process,
 
     if value:
         try:
-            value = long(value)
+            value = int(value)
         except ValueError:
             pass
         # Provide the representation for the current/default Value
@@ -3849,7 +3848,8 @@ class S3GroupedOptionsWidget(FormWidget):
 
         # Sort letters
         if letter_options:
-            all_letters = sorted_locale(letter_options.keys())
+            import locale
+            all_letters = sorted(letter_options.keys(), key=locale.strxfrm)
             first_letter = min(u"A", all_letters[0])
             last_letter = max(u"Z", all_letters[-1])
         else:
@@ -4187,7 +4187,7 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
 
         if value:
             try:
-                value = long(value)
+                value = int(value)
             except ValueError:
                 pass
             # Provide the representation for the current/default Value
@@ -4388,6 +4388,7 @@ class S3InvBinWidget(FormWidget):
     """
         Widget used by S3CRUD to offer the user matching bins where
         stock items can be placed
+        - not currently used
     """
 
     def __init__(self,
@@ -4406,7 +4407,7 @@ class S3InvBinWidget(FormWidget):
                         requires = field.requires,
                         _id = "i_%s_%s" % (self.tablename, field.name),
                         _name = field.name,
-                       )
+                        )
         id = None
         function = self.tablename[4:]
         if len(request.args) > 2:
@@ -4414,9 +4415,8 @@ class S3InvBinWidget(FormWidget):
                 id = request.args[2]
 
         if id == None or tracktable[id] == None:
-            return TAG[""](
-                           new_div
-                          )
+            return TAG[""](new_div,
+                           )
 
         record = tracktable[id]
         site_id = s3db.inv_recv[record.recv_id].site_id
@@ -4429,11 +4429,11 @@ class S3InvBinWidget(FormWidget):
                 (stocktable.expiry_date == record.expiry_date) & \
                 (stocktable.supply_org_id == record.supply_org_id)
         rows = current.db(query).select(stocktable.bin,
-                                        stocktable.id)
+                                        stocktable.id,
+                                        )
         if len(rows) == 0:
-            return TAG[""](
-                           new_div
-                          )
+            return TAG[""](new_div,
+                           )
         bins = []
         for row in rows:
             bins.append(OPTION(row.bin))
@@ -4655,7 +4655,7 @@ class S3LocationAutocompleteWidget(FormWidget):
 
         if value:
             try:
-                value = long(value)
+                value = int(value)
             except ValueError:
                 pass
             # Provide the representation for the current/default Value
@@ -5042,9 +5042,9 @@ class S3Selector(FormWidget):
         values = None
 
         if value:
-            if isinstance(value, basestring):
+            if isinstance(value, str):
                 if value.isdigit():
-                    record_id = long(value)
+                    record_id = int(value)
                 else:
                     try:
                         values = json.loads(value)
@@ -6436,7 +6436,7 @@ i18n.map_feature_required="%s"''' % (show_map_add,
         row_id = "%s_map_icon__row" % fieldname
         _formstyle = settings.ui.formstyle
         if not _formstyle or \
-           isinstance(_formstyle, basestring) and "foundation" in _formstyle:
+           isinstance(_formstyle, str) and "foundation" in _formstyle:
             # Default: Foundation
             # Need to add custom classes to core HTML markup
             map_icon = DIV(DIV(BUTTON(ICON("globe"),
@@ -6715,7 +6715,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         path = [str(record_id)]
         level = None
         append = None
-        for l in xrange(5, -1, -1):
+        for l in range(5, -1, -1):
             lx = value_get("L%s" % l)
             if lx:
                 if not level and not specific and l < 5:
@@ -6747,7 +6747,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                                 ltable.name,
                                                 limitby = limitby
                                                 ).as_dict()
-            for l in xrange(0, 6):
+            for l in range(0, 6):
                 if l in lx_ids:
                     lx_name = lx_names.get(lx_ids[l])["name"]
                 else:
@@ -7040,9 +7040,9 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                 level = location.level
                 if level:
                     # Accept all levels above and including the lowest selectable level
-                    for i in xrange(5, -1, -1):
+                    for i in range(5, -1, -1):
                         if "L%s" % i in levels:
-                            accepted_levels = set("L%s" % l for l in xrange(i, -1, -1))
+                            accepted_levels = set("L%s" % l for l in range(i, -1, -1))
                             break
                     if level not in accepted_levels:
                         return (values, msg or \
@@ -7402,7 +7402,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
             # Select All / Unselect All doesn't make sense if multiple == False
             header_opt = False
         if not isinstance(search_opt, bool) and \
-           (search_opt == "auto" or isinstance(search_opt, INTEGER_TYPES)):
+           (search_opt == "auto" or isinstance(search_opt, int)):
             max_options = 10 if search_opt == "auto" else search_opt
             if options_len > max_options:
                 search_opt = True
@@ -7563,7 +7563,7 @@ class S3CascadeSelectWidget(FormWidget):
 
             # The label for the selector
             row_id = "%s_level_%s" % (input_id, depth)
-            label = T(level) if isinstance(level, basestring) else level
+            label = T(level) if isinstance(level, str) else level
             if self.inline:
                 label = "%s:" % label
             label = LABEL(label, _for=row_id, _id="%s__label" % row_id)
@@ -7617,14 +7617,14 @@ class S3CascadeSelectWidget(FormWidget):
         # Currently selected values
         selected = []
         append = selected.append
-        if isinstance(value, basestring) and value and not value.isdigit():
+        if isinstance(value, str) and value and not value.isdigit():
             value = self.parse(value)[0]
         if not isinstance(value, (list, tuple, set)):
             values = [value]
         else:
             values = value
         for v in values:
-            if isinstance(v, INTEGER_TYPES) or str(v).isdigit():
+            if isinstance(v, int) or str(v).isdigit():
                 append(v)
 
         # Prepend value parser to field validator
@@ -7837,14 +7837,14 @@ class S3HierarchyWidget(FormWidget):
         # Currently selected values
         selected = []
         append = selected.append
-        if isinstance(value, basestring) and value and not value.isdigit():
+        if isinstance(value, str) and value and not value.isdigit():
             value = self.parse(value)[0]
         if not isinstance(value, (list, tuple, set)):
             values = [value]
         else:
             values = value
         for v in values:
-            if isinstance(v, INTEGER_TYPES) or str(v).isdigit():
+            if isinstance(v, int) or str(v).isdigit():
                 append(v)
 
         # Prepend value parser to field validator
@@ -7870,13 +7870,14 @@ class S3HierarchyWidget(FormWidget):
         widget = DIV(hidden_input,
                      DIV(header,
                          DIV(h.html("%s-tree" % widget_id,
-                                    none=self.none,
+                                    none = self.none,
                                     ),
                              _class = "s3-hierarchy-tree",
                              ),
                          _class = "s3-hierarchy-wrapper",
                          ),
-                     **attr)
+                     **attr
+                     )
         widget.add_class("s3-hierarchy-widget")
 
         s3 = current.response.s3
@@ -8180,7 +8181,7 @@ class S3PersonAutocompleteWidget(FormWidget):
 
         if value:
             try:
-                value = long(value)
+                value = int(value)
             except ValueError:
                 pass
             # Provide the representation for the current/default Value
@@ -8278,7 +8279,7 @@ class S3PentityAutocompleteWidget(FormWidget):
 
         if value:
             try:
-                value = long(value)
+                value = int(value)
             except ValueError:
                 pass
             # Provide the representation for the current/default Value
@@ -8416,7 +8417,7 @@ class S3SiteAutocompleteWidget(FormWidget):
 
         if value:
             try:
-                value = long(value)
+                value = int(value)
             except ValueError:
                 pass
             # Provide the representation for the current/default Value
@@ -8627,7 +8628,7 @@ class S3TimeIntervalWidget(FormWidget):
 
         if value is None:
             value = 0
-        elif isinstance(value, basestring):
+        elif isinstance(value, str):
             try:
                 value = int(value)
             except ValueError:
@@ -9656,6 +9657,7 @@ class ICON(I):
             "attachment": "fa-paperclip",
             "bar-chart": "fa-bar-chart",
             "bars": "fa-bars",
+            "bell-o": "fa-bell-o",
             "book": "fa-book",
             "bookmark": "fa-bookmark",
             "bookmark-empty": "fa-bookmark-o",

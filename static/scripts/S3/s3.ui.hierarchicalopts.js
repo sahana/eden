@@ -304,6 +304,32 @@
         },
 
         /**
+         * Reload Tree
+         * - called from scripts similar to filterOptionsS3
+         */
+        reload: function(ajaxURL) {
+            // Load the data
+            var self = this;
+            ajaxURL += '?widget_id=' + $(this.element).attr('id');
+
+            // Remove old JSTree
+            this.tree.jstree('destroy');
+
+            // Remove old Value(s)
+            this.input.val('');
+
+            $.getS3(ajaxURL, function (data) {
+
+                // Update the DOM
+                self.tree.html(data);
+
+                // Redraw the Tree
+                self.refresh();
+
+            }, 'html');
+        },
+
+        /**
          * Custom actions for option updates
          *
          * @param {string} key - they option key

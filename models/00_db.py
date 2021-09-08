@@ -139,9 +139,6 @@ from s3.s3data import *
 gis = s3base.GIS()
 current.gis = gis
 
-# s3_request
-s3_request = s3base.s3_request
-
 # Field Selectors
 FS = s3base.FS
 

@@ -43,7 +43,6 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3compat import PY2, xrange
 from s3dal import Expression, S3DAL
 from .s3utils import s3_orderby_fields, s3_str, s3_unicode, s3_set_extension
 
@@ -410,8 +409,10 @@ class S3DataTable(object):
         # Nothing using currently
         #if s3.dataTable_pagingType:
         #    attr.dt_pagingType = s3.dataTable_pagingType
-        if s3.dataTable_group:
-            attr.dt_group = s3.dataTable_group
+        # Nothing using currently
+        # Was used only by inv/inv_item
+        #if s3.dataTable_group:
+        #    attr.dt_group = s3.dataTable_group
         # Nothing using currently
         # - and not worth enabling as not used by standard CRUD
         #if s3.dataTable_NoSearch:
@@ -658,7 +659,7 @@ class S3DataTable(object):
                                 before the first data item
                    dt_bulk_single: only allow a single row to be selected
                    dt_group: The column(s) that is(are) used to group the data
-                   dt_group_totals: The number of record in each group.
+                   dt_group_totals: The number of records in each group.
                                     This will be displayed in parenthesis
                                     after the group title.
                    dt_group_titles: The titles to be used for each group.
@@ -709,8 +710,8 @@ class S3DataTable(object):
         config = Storage()
         config.id = id
 
-        # Py2 action-button labels are utf-8 encoded str (unicode in Py3)
-        config.utf8 = True if PY2 else False
+        # action-button labels are unicode in Py3
+        config.utf8 = False
 
         attr_get = attr.get
         config.dom = attr_get("dt_dom", settings.get_ui_datatables_dom())
@@ -904,7 +905,7 @@ class S3DataTable(object):
         if data:
             # Build the body rows (the actual data)
             rc = 0
-            for i in xrange(start, end):
+            for i in range(start, end):
                 row = data[i]
                 if rc % 2 == 0:
                     _class = "even"
@@ -972,7 +973,7 @@ class S3DataTable(object):
             action_col = attr.get("dt_action_col", 0)
         structure = {}
         aadata = []
-        for i in xrange(start, end):
+        for i in range(start, end):
             row = data[i]
             details = []
             for field in flist:

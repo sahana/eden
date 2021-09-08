@@ -36,7 +36,6 @@ from collections import OrderedDict
 from gluon import current, URL
 from gluon.storage import Storage
 
-from s3compat import basestring, INTEGER_TYPES
 from s3theme import FORMSTYLES
 
 class S3Config(Storage):
@@ -2167,7 +2166,7 @@ class S3Config(Storage):
 
         setting = self.ui.get("formstyle", "default")
 
-        if isinstance(setting, basestring):
+        if isinstance(setting, str):
             # Try to find the corresponding _inline formstyle
             inline_formstyle_name = "%s_inline" % setting
             formstyle = FORMSTYLES.get(inline_formstyle_name)
@@ -2544,10 +2543,10 @@ class S3Config(Storage):
             'css' is a folder relative to static/styles
             - /jstree.css or /jstree.min.css is added as-required
         """
-        return self.ui.get("hierarchy_theme", dict(css = "plugins",
-                                                   icons = False,
-                                                   stripes = True,
-                                                   ))
+        return self.ui.get("hierarchy_theme", {"css": "plugins",
+                                               "icons": False,
+                                               "stripes": True,
+                                               })
 
     def get_ui_hierarchy_cascade_option_in_tree(self):
         """
@@ -4733,6 +4732,12 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Inventory Management Settings
     #
+    def get_inv_bin_site_layout(self):
+        """
+            Use structured Org Site Layout rather than just freetext Bin field
+        """
+        return self.inv.get("bin_site_layout", False)
+
     def get_inv_collapse_tabs(self):
         return self.inv.get("collapse_tabs", True)
 
@@ -4753,6 +4758,12 @@ class S3Config(Storage):
             Manage Minimum Stock Levels
         """
         return self.inv.get("minimums", False)
+
+    def get_inv_stock_cards(self):
+        """
+            Use Stock Cards
+        """
+        return self.inv.get("stock_cards", False)
 
     def get_inv_recv_tab_label(self):
         label = self.inv.get("recv_tab_label")
@@ -4778,6 +4789,20 @@ class S3Config(Storage):
             Whether Warehouse Types vary by Organisation
         """
         return self.inv.get("org_dependent_warehouse_types", False)
+
+    def get_inv_send_req_multi(self):
+        """
+            Whether Outbound Shipments can link to multiple Requests
+            - and hence use inv_send_req link table
+        """
+        return self.inv.get("send_req_multi", False)
+
+    def get_inv_recv_req_multi(self):
+        """
+            Whether Incoming Shipments can link to multiple Requests
+            - and hence use inv_recv_req link table
+        """
+        return self.inv.get("recv_req_multi", False)
 
     def get_inv_send_show_mode_of_transport(self):
         """
@@ -4889,13 +4914,6 @@ class S3Config(Storage):
             Validate for Unique Warehouse Codes
         """
         return self.inv.get("warehouse_code_unique", False)
-
-    def get_inv_warehouse_locations(self):
-        """
-            Use structured Warehouse Locations rather than just freetext Bin field
-        """
-        return self.inv.get("warehouse_locations", False)
-
     # -------------------------------------------------------------------------
     # IRS
     #
@@ -4980,7 +4998,7 @@ class S3Config(Storage):
         """
         default_organisation = self.__lazy("org", "default_organisation", default=None)
         if default_organisation:
-            if not isinstance(default_organisation, INTEGER_TYPES):
+            if not isinstance(default_organisation, int):
                 # Check Session cache
                 default_organisation_id = current.session.s3.default_organisation_id
                 if default_organisation_id:
@@ -5009,7 +5027,7 @@ class S3Config(Storage):
         """
         default_site = self.org.get("default_site", None)
         if default_site:
-            if not isinstance(default_site, INTEGER_TYPES):
+            if not isinstance(default_site, int):
                 # Check Session cache
                 default_site_id = current.session.s3.default_site_id
                 if default_site_id:
@@ -5928,6 +5946,12 @@ class S3Config(Storage):
             Whether Requests module should use inline forms for Items/Skills
         """
         return self.req.get("inline_forms", True)
+
+    def get_req_match_tab(self):
+        """
+            Whether to show the Match Requests tab
+        """
+        return self.req.get("match_tab", True)
 
     def get_req_prompt_match(self):
         """

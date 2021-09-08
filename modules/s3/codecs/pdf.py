@@ -30,8 +30,11 @@
 
 __all__ = ("S3RL_PDF",)
 
-from copy import deepcopy
 import os
+import unicodedata
+
+from copy import deepcopy
+from io import BytesIO
 
 from gluon import current, redirect, URL, \
                   A, DIV, H1, H2, H3, H4, H5, H6, IMG, P, \
@@ -40,12 +43,8 @@ from gluon.storage import Storage
 from gluon.contenttype import contenttype
 from gluon.languages import lazyT
 
-from s3compat import PY2, BytesIO, basestring, xrange
 from ..s3codec import S3Codec
 from ..s3utils import s3_strip_markup, s3_unicode, s3_str
-
-if not PY2:
-    import unicodedata
 
 try:
     from reportlab.graphics.shapes import Drawing, Line
@@ -345,12 +344,8 @@ class S3RL_PDF(S3Codec):
                 #if isinstance(filename, str):
                 #    filename = filename.encode("utf-8")
                 # Accent Folding
-                if PY2:
-                    def string_escape(s):
-                        return s.decode("string-escape").decode("utf-8")
-                else:
-                    def string_escape(s):
-                        return unicodedata.normalize("NFD", s).encode("ascii", "ignore").decode("utf-8")
+                def string_escape(s):
+                    return unicodedata.normalize("NFD", s).encode("ascii", "ignore").decode("utf-8")
                 filename = string_escape(filename)
             disposition = 'attachment; filename="%s"' % filename
             response.headers["Content-Type"] = contenttype(".pdf")
@@ -828,7 +823,7 @@ class S3PDFList(object):
         inline = self.styles["inline"]
         indented = self.styles["indented"]
 
-        if isinstance(value, (basestring, lazyT)):
+        if isinstance(value, (str, lazyT)):
             v = biDiText(value)
             if "\n" in v:
                 flowables = [Paragraph("<b>%s:</b>" % label, inline),
@@ -863,7 +858,7 @@ class S3PDFList(object):
             @returns: a BiDi-converted unicode string, or a list of Flowables
         """
 
-        if isinstance(value, (basestring, lazyT)):
+        if isinstance(value, (str, lazyT)):
             formatted = biDiText(value)
 
         elif isinstance(value, IMG):
@@ -891,7 +886,7 @@ class S3PDFList(object):
 
                 # Wrap in paragraph if string contains newlines or component is
                 # a block-element, preserving newlines and setting font weight
-                if isinstance(formatted, basestring) and (is_block or "\n" in formatted):
+                if isinstance(formatted, str) and (is_block or "\n" in formatted):
                     formatted = [Paragraph(formatted.replace("\n", "<br/>"), style)]
                 elif not isinstance(formatted, list):
                     formatted = [formatted]
@@ -908,13 +903,13 @@ class S3PDFList(object):
 
                 text = ""
                 for component in value.components:
-                    if isinstance(component, basestring):
+                    if isinstance(component, str):
                         # Concatenate consecutive strings
                         text = "".join((text, component))
                     else:
                         # Convert component
                         sub = self.format_value(rfield, component)
-                        if isinstance(sub, basestring):
+                        if isinstance(sub, str):
                             text = "".join((text, sub))
                             continue
                         elif text:
@@ -1071,7 +1066,7 @@ class S3PDFTable(object):
             @param value: the field value
         """
 
-        if isinstance(value, (basestring, lazyT)):
+        if isinstance(value, (str, lazyT)):
 
             pdf_value = biDiText(value)
 
@@ -1106,7 +1101,7 @@ class S3PDFTable(object):
                 # a block-element, preserving newlines and setting font weight
                 is_block = lambda e: isinstance(e, DIV) and \
                                      e.tag in ("h6", "h5", "h4", "h3", "h2", "h1", "p", "div")
-                if isinstance(pdf_value, basestring) and \
+                if isinstance(pdf_value, str) and \
                    (is_block(value) or "\n" in pdf_value):
                     pdf_value = Paragraph(pdf_value.replace("\n", "<br/>"), para_style)
 
@@ -1122,13 +1117,13 @@ class S3PDFTable(object):
 
                 text = ""
                 for component in value.components:
-                    if isinstance(component, basestring):
+                    if isinstance(component, str):
                         # Concatenate consecutive strings
                         text = "".join((text, component))
                     else:
                         # Convert component
                         sub = self.convert(rfield, component)
-                        if isinstance(sub, basestring):
+                        if isinstance(sub, str):
                             text = "".join((text, sub))
                             continue
                         elif text:
@@ -1322,7 +1317,7 @@ class S3PDFTable(object):
                 else:
                     temp_row = []
                     for col_index, item in enumerate(row):
-                        if col_index in para_cols and isinstance(item, basestring):
+                        if col_index in para_cols and isinstance(item, str):
                             col_widths[col_index] = min_width
                             para = main_doc.addParagraph(item,
                                                          style=para_style,
@@ -1745,7 +1740,7 @@ class S3html2pdf():
             return S3html2pdf.parse_img(html)
         elif isinstance(html, DIV):
             return self.parse_div(html)
-        elif isinstance(html, (basestring, lazyT)):
+        elif isinstance(html, (str, lazyT)):
             html = s3_str(html)
             if "<" in html:
                 html = s3_strip_markup(html)
@@ -2106,7 +2101,7 @@ class S3html2pdf():
 
                 # Column span
                 if colspan > 1:
-                    for i in xrange(1, colspan):
+                    for i in range(1, colspan):
                         rappend("")
                     sappend(("SPAN", cell, (colCnt + colspan - 1, rowCnt)))
                     colCnt += colspan

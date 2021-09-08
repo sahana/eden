@@ -9014,6 +9014,8 @@ $.filterOptionsS3({
     # -------------------------------------------------------------------------
     def customise_req_req_resource(r, tablename):
 
+        from s3db.req import req_ReqRefRepresent
+
         s3db = current.s3db
 
         # Request is mandatory
@@ -9021,8 +9023,7 @@ $.filterOptionsS3({
         field.requires = field.requires.other
 
         table = s3db.req_req
-        table.req_ref.represent = lambda v, show_link=True, pdf=True: \
-                s3db.req_ref_represent(v, show_link, pdf)
+        table.req_ref.represent = req_ReqRefRepresent(show_link=True, pdf=True)
         table.site_id.label = T("Deliver To")
         # Hide Drivers list_field
         list_fields = s3db.get_config("req_req", "list_fields")

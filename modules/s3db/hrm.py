@@ -82,7 +82,6 @@ from gluon.sqlhtml import RadioWidget
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3compat import long
 from s3layouts import S3PopupLink
 
 # Compact JSON encoding
@@ -10126,7 +10125,7 @@ def hrm_configure_salary(r):
         default_hr_id = hr_id
         if "human_resource.id" in r.get_vars:
             try:
-                default_hr_id = long(r.get_vars["human_resource.id"])
+                default_hr_id = int(r.get_vars["human_resource.id"])
             except ValueError:
                 pass
         if default_hr_id in hr_id:

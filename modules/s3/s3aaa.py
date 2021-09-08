@@ -43,6 +43,7 @@ import json
 import time
 
 from collections import OrderedDict
+from functools import reduce
 from uuid import uuid4
 
 #from gluon import *
@@ -56,7 +57,6 @@ from gluon.storage import Storage
 from gluon.tools import Auth, callback, DEFAULT, replace_id
 from gluon.utils import web2py_uuid
 
-from s3compat import basestring, reduce
 from s3dal import Row, Rows, Query, Table, Field, original_tablename
 from .s3datetime import S3DateTime
 from .s3error import S3PermissionError
@@ -3826,7 +3826,7 @@ Please go to %(url)s to approve this user."""
         if not user_id:
             # Anonymous
             user = None
-        elif isinstance(user_id, basestring) and not user_id.isdigit():
+        elif isinstance(user_id, str) and not user_id.isdigit():
             query = (utable[settings.login_userfield] == user_id)
         else:
             query = (utable.id == user_id)
@@ -4586,7 +4586,7 @@ Please go to %(url)s to approve this user."""
         check = set()
         resolve = set()
         for role in roles:
-            if isinstance(role, basestring):
+            if isinstance(role, str):
                 resolve.add(role)
             else:
                 check.add(role)
@@ -4948,7 +4948,7 @@ Please go to %(url)s to approve this user."""
 
         result = None
 
-        if isinstance(person_id, basestring) and not person_id.isdigit():
+        if isinstance(person_id, str) and not person_id.isdigit():
             # User email address
             utable = self.settings.table_user
             query = (utable.email == person_id)
@@ -6284,7 +6284,7 @@ class S3Permission(object):
                    "entity": entity,
                    }
 
-            if isinstance(group, basestring) and not group.isdigit():
+            if isinstance(group, str) and not group.isdigit():
                 gtable = self.auth.settings.table_group
                 query = (gtable.uuid == group) & \
                         (table.group_id == gtable.id)

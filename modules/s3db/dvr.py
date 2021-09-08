@@ -76,7 +76,6 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3compat import basestring
 from s3layouts import S3PopupLink
 
 # =============================================================================
@@ -325,24 +324,23 @@ class DVRCaseModel(S3Model):
                                ),
 
                      # Case type and reference number
-                     FieldS3("case_type_id", "reference dvr_case_type",
-                             label = T("Case Type"),
-                             represent = case_type_represent,
-                             requires = IS_EMPTY_OR(IS_ONE_OF(
-                                                db, "dvr_case_type.id",
-                                                case_type_represent,
-                                                )),
-                             sortby = "name",
-                             comment = S3PopupLink(c = "dvr",
-                                                   f = "case_type",
-                                                   title = ADD_CASE_TYPE,
-                                                   tooltip = T("Choose the case type from the drop-down, or click the link to create a new type"),
-                                                   # Always look up options from dvr/case
-                                                   # (required if inline in person form):
-                                                   vars = {"parent": "case",
-                                                           },
-                                                   ),
-                             ),
+                     Field("case_type_id", "reference dvr_case_type",
+                           label = T("Case Type"),
+                           represent = case_type_represent,
+                           requires = IS_EMPTY_OR(IS_ONE_OF(db, "dvr_case_type.id",
+                                                            case_type_represent,
+                                                            )),
+                           sortby = "name",
+                           comment = S3PopupLink(c = "dvr",
+                                                 f = "case_type",
+                                                 title = ADD_CASE_TYPE,
+                                                 tooltip = T("Choose the case type from the drop-down, or click the link to create a new type"),
+                                                 # Always look up options from dvr/case
+                                                 # (required if inline in person form):
+                                                 vars = {"parent": "case",
+                                                         },
+                                                 ),
+                           ),
                      # @todo: rename into "code"?
                      # @ToDo: Option to autogenerate these, like Waybills, et al
                      # @ToDo: Deprecate: We use pe_label as primary ID and Tags for any additional IDs to cross-reference to 3rd-party systems
@@ -4395,20 +4393,19 @@ class DVRCaseEconomyInformationModel(S3Model):
                                       label = T("Case Number"),
                                       ondelete = "CASCADE",
                                       ),
-                     FieldS3("housing_type_id", "reference dvr_housing_type",
-                             label = T("Housing Type"),
-                             represent = housing_type_represent,
-                             requires = IS_EMPTY_OR(IS_ONE_OF(
-                                                db, "dvr_housing_type.id",
-                                                housing_type_represent,
-                                                )),
-                             sortby = "name",
-                             comment = S3PopupLink(c = "dvr",
-                                                   f = "housing_type",
-                                                   title = ADD_HOUSING_TYPE,
-                                                   tooltip = T("Choose the housing type from the drop-down, or click the link to create a new type"),
-                                                   ),
-                             ),
+                     Field("housing_type_id", "reference dvr_housing_type",
+                           label = T("Housing Type"),
+                           represent = housing_type_represent,
+                           requires = IS_EMPTY_OR(IS_ONE_OF(db, "dvr_housing_type.id",
+                                                            housing_type_represent,
+                                                            )),
+                           sortby = "name",
+                           comment = S3PopupLink(c = "dvr",
+                                                 f = "housing_type",
+                                                 title = ADD_HOUSING_TYPE,
+                                                 tooltip = T("Choose the housing type from the drop-down, or click the link to create a new type"),
+                                                 ),
+                           ),
                      Field("monthly_costs", "double",
                            label = T("Monthly Costs"),
                            represent = float_represent,
@@ -9178,7 +9175,7 @@ class DVRRegisterPayment(DVRRegisterCaseEvent):
             @return: tuple (updated, failed), number of records
         """
 
-        if isinstance(payments, basestring):
+        if isinstance(payments, str):
             try:
                 payments = json.loads(payments)
             except (ValueError, TypeError):

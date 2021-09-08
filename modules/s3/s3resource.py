@@ -39,6 +39,8 @@ __all__ = ("S3AxisFilter",
 import json
 import sys
 
+from functools import reduce
+from io import StringIO
 from itertools import chain
 
 try:
@@ -53,7 +55,6 @@ from gluon.validators import IS_EMPTY_OR
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3compat import StringIO, basestring, reduce, xrange
 from s3dal import Expression, Field, Row, Rows, Table, S3DAL, VirtualCommand
 from .s3data import S3DataTable, S3DataList
 from .s3datetime import s3_format_datetime
@@ -153,7 +154,7 @@ class S3Resource(object):
         table_alias = None
 
         if prefix is None:
-            if not isinstance(tablename, basestring):
+            if not isinstance(tablename, str):
                 if isinstance(tablename, Table):
                     table = tablename
                     table_alias = table._tablename
@@ -1272,7 +1273,7 @@ class S3Resource(object):
         if self._rows is None:
             self.load()
         rows = self._rows
-        for i in xrange(len(rows)):
+        for i in range(len(rows)):
             yield rows[i]
         return
 
@@ -1659,7 +1660,7 @@ class S3Resource(object):
                 if isinstance(s, etree._ElementTree):
                     t = s
                 elif format == "json":
-                    if isinstance(s, basestring):
+                    if isinstance(s, str):
                         source = StringIO(s)
                         t = xml.json2tree(s)
                     else:
@@ -2812,7 +2813,7 @@ class S3Resource(object):
                     numcols = 0
 
                 flist = []
-                for i in xrange(numcols):
+                for i in range(numcols):
                     try:
                         rfield = rfields[i]
                         field = rfield.field
@@ -2840,7 +2841,8 @@ class S3Resource(object):
                            parent.tablename == tn and field.name != fkey:
                             alias = "%s_%s_%s" % (parent.prefix,
                                                   "linked",
-                                                  parent.name)
+                                                  parent.name,
+                                                  )
                             ktable = get_aliased(db[tn], alias)
                             ktable._id = ktable[ktable._id.name]
                             tn = alias
@@ -2886,7 +2888,8 @@ class S3Resource(object):
                                        "list:st",
                                        "referen",
                                        "list:re",
-                                       "string"):
+                                       "string",
+                                       ):
                         requires = field.requires
                         if not isinstance(requires, (list, tuple)):
                             requires = [requires]
@@ -2933,18 +2936,18 @@ class S3Resource(object):
 
             columns = []
             pkey = str(self._id)
-            for i in xrange(numcols):
+            for i in range(numcols):
                 try:
                     iSortCol = int(get_vars["iSortCol_%s" % i])
                 except (AttributeError, KeyError):
                     # iSortCol_x not present in get_vars => ignore
-                    columns.append(Storage(field=None))
+                    columns.append(Storage(field = None))
                     continue
 
                 # Map sortable-column index to the real list_fields
                 # index: for every non-id non-sortable column to the
                 # left of sortable column subtract 1
-                for j in xrange(iSortCol):
+                for j in range(iSortCol):
                     if get_vars.get("bSortable_%s" % j, "true") == "false":
                         try:
                             if rfields[j].colname != pkey:
@@ -2957,12 +2960,12 @@ class S3Resource(object):
                 except IndexError:
                     # iSortCol specifies a non-existent column, i.e.
                     # iSortCol_x>=numcols => ignore
-                    columns.append(Storage(field=None))
+                    columns.append(Storage(field = None))
                 else:
                     columns.append(rfield)
 
             # Process the orderby-fields
-            for i in xrange(len(columns)):
+            for i in range(len(columns)):
                 rfield = columns[i]
                 field = rfield.field
                 if field is None:
@@ -3030,7 +3033,7 @@ class S3Resource(object):
         else:
             orderby = None
 
-        left_joins = left_joins.as_list(tablenames=list(left_joins.joins.keys()))
+        left_joins = left_joins.as_list(tablenames = list(left_joins.joins.keys()))
         return (searchq, orderby, left_joins)
 
     # -------------------------------------------------------------------------
@@ -3073,8 +3076,9 @@ class S3Resource(object):
                 # to retrieve all extra_fields for the dimension table
                 # and can't groupby (=must deduplicate afterwards)
                 rows = current.db(query).select(field,
-                                                left=left,
-                                                groupby=field)
+                                                left = left,
+                                                groupby = field,
+                                                )
                 colname = rfield.colname
                 if rfield.ftype[:5] == "list:":
                     values = []
@@ -3235,8 +3239,9 @@ class S3Resource(object):
             record_id = master.get(parent_id.name)
             if record_id:
                 fields = [parent.table[f] for f in lookup]
-                row = current.db(parent_id == record_id).select(limitby = (0, 1),
-                                                                *fields).first()
+                row = current.db(parent_id == record_id).select(*fields,
+                                                                limitby = (0, 1)
+                                                                ).first()
             if row:
                 for (k, v) in lookup.items():
                     if k in row:

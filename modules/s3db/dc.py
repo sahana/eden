@@ -1328,10 +1328,6 @@ def dc_answer_form(r, tablename):
               ftable.label,
               qtable.id,
               qtable.code,
-              # @ToDo: Get all these from settings
-              #qtable.totals,
-              #qtable.grid,
-              #qtable.show_hidden,
               qtable.settings,
               ]
     if translate:
@@ -1346,6 +1342,7 @@ def dc_answer_form(r, tablename):
     codes = {}
     grids = {}
     grid_children = {}
+    grid_fields = {}
     show_hidden = {}
     questions = {}
     for question in rows:
@@ -1353,37 +1350,40 @@ def dc_answer_form(r, tablename):
         code = question["dc_question.code"]
         if code:
             codes[code] = field_name
-        # @ToDo: Get all these from settings
-        #totals = question["dc_question.totals"]
-        #if totals:
-        #    auto_totals[field_name] = {"codes": totals,
-        #                               "fields": [],
-        #                               }
-        #grid = question["dc_question.grid"]
-        #if grid:
-        #    len_grid = len(grid)
-        #    if len_grid == 2:
-        #        # Grid Pseudo-Question
-        #        if not code:
-        #            # @ToDo: Make mandatory in onvalidation
-        #            raise ValueError("Code required for Grid Questions")
-        #        rows = [s3_str(T(v)) for v in grid[0]]
-        #        cols = [s3_str(T(v)) for v in grid[1]]
-        #        fields = [[0 for x in range(len(rows))] for y in range(len(cols))]
-        #        grids[code] = {"r": rows,
-        #                       "c": cols,
-        #                       "f": fields,
-        #                       }
-        #    elif len_grid == 3:
-        #        # Child Question
-        #        grid_children[field_name] = grid
-        #    else:
-        #        current.log.warning("Invalid grid data for %s - ignoring" % (code or field_name))
-        #hides = question["dc_question.show_hidden"]
-        #if hides:
-        #    show_hidden[field_name] = {"codes": hides,
-        #                               "fields": [],
-        #                               }
+        settings = question["dc_question.settings"] or {}
+        total = settings.get("total")
+        if total:
+            auto_totals[field_name] = {"codes": total,
+                                       "fields": [],
+                                       }
+        grid = settings.get("grid")
+        if grid:
+            len_grid = len(grid)
+            if len_grid == 2:
+                # Grid Pseudo-Question
+                grid_child = False
+                if not code:
+                    # @ToDo: Make mandatory in onvalidation
+                    raise ValueError("Code required for Grid Questions")
+                rows = [s3_str(T(v)) for v in grid[0]]
+                cols = [s3_str(T(v)) for v in grid[1]]
+                fields = [[0 for x in range(len(rows))] for y in range(len(cols))]
+                grids[code] = {"r": rows,
+                               "c": cols,
+                               "f": fields,
+                               }
+            elif len_grid == 3:
+                # Child Question
+                grid_child = True
+                grid_children[field_name] = grid
+            else:
+                current.log.warning("Invalid grid data for %s - ignoring" % (code or field_name))
+                continue
+        hides = settings.get("hides")
+        if hides:
+            show_hidden[field_name] = {"codes": hides,
+                                       "fields": [],
+                                       }
 
         label = None
         if translate:
@@ -1394,6 +1394,12 @@ def dc_answer_form(r, tablename):
                                                  "code": code,
                                                  "label": label,
                                                  }
+        if grid and grid_child:
+            grid_code = grid[0]
+            if grid_code in grid_fields:
+                grid_fields[grid_code].append((label, field_name))
+            else:
+                grid_fields[grid_code] = [(label, field_name)]
 
     # Append questions to the form, with subheadings
     crud_fields = []
@@ -1414,6 +1420,9 @@ def dc_answer_form(r, tablename):
                 # Grid Pseudo-Question
                 fname = question["code"]
                 cappend(S3SQLDummyField(fname))
+                # Append all Children
+                for child in grid_fields[fname]:
+                    cappend(child)
         elif item_type == "subheading":
             text = None
             if translate:

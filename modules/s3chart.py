@@ -32,11 +32,11 @@
 
 __all__ = ["S3Chart"]
 
+from io import StringIO
+
 from gluon import current
 from gluon.storage import Storage
 from gluon.html import IMG
-
-from s3compat import StringIO
 
 # =============================================================================
 class S3Chart(object):

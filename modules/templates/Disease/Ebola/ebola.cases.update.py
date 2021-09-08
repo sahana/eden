@@ -56,7 +56,8 @@ location_names = {# GN
 import string
 import xlrd
 
-from s3compat import urlopen, urlparse
+from urllib import parse as urlparse
+from urllib.request import urlopen
 
 # Open the file from the remote server
 # @todo write the remote file to a temp file and then pass to load_workbook

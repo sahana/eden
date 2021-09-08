@@ -1,0 +1,10 @@
+First Name,Last Name,Email,Password,Role,Organisation
+Admin,User,admin@exampl.com,testing,ADMIN,Sahana Software Foundation
+Alert Editor,Timpu DDM,ddm_editor@example.com,testing,ALERT_EDITOR,Department of Disaster Management
+Alert Approver,Timpu DDM,ddm_approver@example.com,testing,ALERT_APPROVER,Department of Disaster Management
+Alert Editor,NCHM,nchm_editor@example.com,testing,ALERT_EDITOR,National Center for Hydrology and Meteorology
+Alert Approver,NCHM,nchm_approver@example.com,testing,ALERT_APPROVER,National Center for Hydrology and Meteorology
+Alert Editor,DoPH,doph_editor@example.com,testing,ALERT_EDITOR,Public Health
+Alert Approver,DoPH,doph_approver@example.com,testing,ALERT_APPROVER,Public Health
+Normal,User,normal_user@example.com,testing,,
+Authenticated,Red Cross,rc_user@example.com,testing,,Swiss Red Cross

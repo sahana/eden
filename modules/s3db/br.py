@@ -67,7 +67,6 @@ from gluon import *
 from gluon.storage import Messages, Storage
 
 from ..s3 import *
-from s3compat import long
 #from s3layouts import S3PopupLink
 
 CASE_GROUP = 7
@@ -4307,7 +4306,7 @@ def br_person_anonymize():
                         pr_person_obscure_dob as obscure_dob
 
     # Helper to produce an anonymous ID (pe_label)
-    anonymous_id = lambda record_id, f, v: "NN%06d" % long(record_id)
+    anonymous_id = lambda record_id, f, v: "NN%06d" % int(record_id)
 
     # General rule for attachments
     documents = ("doc_document", {"key": "doc_id",

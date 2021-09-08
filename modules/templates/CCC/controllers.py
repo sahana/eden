@@ -114,7 +114,8 @@ class donate(S3CustomController):
                 (table.deleted != True)
         item = current.db(query).select(table.body,
                                         table.id,
-                                        limitby=(0, 1)).first()
+                                        limitby = (0, 1)
+                                        ).first()
         if item:
             if ADMIN:
                 item1 = DIV(XML(item.body),
@@ -126,7 +127,7 @@ class donate(S3CustomController):
                                                   "resource": resource,
                                                   },
                                           ),
-                              _class="action-btn",
+                              _class = "action-btn",
                               ),
                             )
             else:
@@ -142,7 +143,7 @@ class donate(S3CustomController):
                                           "resource": resource,
                                           },
                                   ),
-                      _class="%s cms-edit" % _class,
+                      _class = "%s cms-edit" % _class,
                       )
         else:
             item1 = ""
@@ -203,7 +204,7 @@ class donor(S3CustomController):
                                                  "resource": resource,
                                                  },
                                          ),
-                             _class="action-btn",
+                             _class = "action-btn",
                              ),
                            )
             else:
@@ -219,7 +220,7 @@ class donor(S3CustomController):
                                          "resource": resource,
                                          },
                                  ),
-                     _class="%s cms-edit" % _class,
+                     _class = "%s cms-edit" % _class,
                      )
         else:
             item = ""
@@ -1333,7 +1334,8 @@ class register(S3CustomController):
         # Lookup Certificates
         ctable = s3db.hrm_certificate
         certificates = db(ctable.deleted == False).select(ctable.id,
-                                                          ctable.name)
+                                                          ctable.name,
+                                                          )
         certificates = {c.id:c.name for c in certificates}
 
         # Check Type of Registration
@@ -1668,8 +1670,8 @@ class register(S3CustomController):
             header = DIV(P("Please use this page to register your offer to Donate Goods or Professional Services."),
                          P("If instead you wish to Volunteer your time, please ",
                            A("Register as a Volunteer", _href=URL(args="register", vars={})),
-                           " or ",
-                           A("Volunteer Group", _href=URL(args="register", vars={"vol_group": 1})),
+                           #" or ",
+                           #A("Volunteer Group", _href=URL(args="register", vars={"vol_group": 1})),
                            ),
                          )
 

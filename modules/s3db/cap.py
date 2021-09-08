@@ -52,13 +52,15 @@ import datetime
 import os
 
 from collections import OrderedDict
+from io import StringIO
+from urllib import request as urllib2
+from urllib.error import HTTPError, URLError
 from uuid import uuid4
 
 from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3compat import HTTPError, StringIO, URLError, basestring, urllib2
 from s3layouts import S3PopupLink
 
 OIDPATTERN = r"^[^,<&\s]+$"
@@ -132,6 +134,8 @@ def get_cap_options():
         "flood.flashFlood": T("Flash Flood"),
         "flood.highWater": T("High Water"),
         "flood.overlandFlowFlood": T("Overland Flow Flood"),
+        # Added for BT:
+        "flood.riverineFlood": T("Riverine Flood"),
         "flood.tsunami": T("Tsunami"),
         "geophysical.avalanche": T("Avalanche"),
         "geophysical.earthquake": T("Earthquake"),
@@ -3936,7 +3940,7 @@ def list_string_represent(value, fmt=lambda v: v):
 
     if isinstance(value, list):
         output = ", ".join([fmt(i) for i in value])
-    elif isinstance(value, basestring):
+    elif isinstance(value, str):
         try:
             output = ", ".join([fmt(i) for i in value[1:-1].split("|")])
         except IndexError:

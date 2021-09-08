@@ -38,7 +38,6 @@ import math
 
 from gluon import current, DIV, H2, INPUT, SPAN, TABLE, TBODY, TD, TFOOT, TH, THEAD, TR
 
-from s3compat import INTEGER_TYPES, basestring
 from .s3rest import S3Method
 from .s3utils import s3_strip_markup, s3_str
 
@@ -1076,7 +1075,7 @@ class S3GroupedItems(object):
         self._aggregates = {}
 
         if groupby:
-            if isinstance(groupby, basestring):
+            if isinstance(groupby, str):
                 # Single grouping key
                 groupby = [groupby]
             else:
@@ -1499,7 +1498,7 @@ class S3GroupAggregate(object):
             result = len(set(values))
         else:
             values = [v for v in values
-                        if isinstance(v, INTEGER_TYPES + (float,))]
+                        if isinstance(v, (int, float))]
             if method == "sum":
                 try:
                     result = round(math.fsum(values), 2)

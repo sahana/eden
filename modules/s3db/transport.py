@@ -1009,7 +1009,7 @@ def transport_rheader(r, tabs=None):
                               ["location_id"],
                               ]
             if settings.has_module("req"):
-                tabs.extend(s3db.req_tabs(r))
+                tabs.extend(s3db.req_tabs(r, match=False))
             if settings.has_module("inv"):
                 tabs.extend(s3db.inv_tabs(r))
 

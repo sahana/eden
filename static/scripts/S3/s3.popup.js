@@ -29,17 +29,17 @@ function s3_popup_refresh_caller(popupData) {
         strategies,
         strategy;
 
-    // Is this a modal that is to refresh a datatable/datalist/map?
-    // => must specify ?refresh=list_id in the popup-URL, and for
+    // Is this a modal that is to refresh a Widget?
+    // => must specify ?refresh=widget_id in the popup-URL, and for
     //    datalists (optionally) &record_id=record_id in order to just
-    //    refresh this one record
+    //    refresh a single record
     var refresh = $_GET.refresh;
 
     if (undefined !== refresh) {
         if (! isNaN(parseInt(refresh))) {
             parentWindow.location.reload(true);
         }
-        // Update DataList/DataTable (if appropriate)
+        // Update Widget
         callerWidget = parentWindow.$('#' + refresh);
         if (callerWidget.hasClass('dl')) {
             // Refresh dataList
@@ -54,6 +54,10 @@ function s3_popup_refresh_caller(popupData) {
         } else if (callerWidget.hasClass('s3-organizer')) {
             try {
                 callerWidget.organizer('reload');
+            } catch(e) {}
+        } else if (callerWidget.children('div').hasClass('s3-hierarchy-tree')) {
+            try {
+                callerWidget.hierarchicalcrud('reload');
             } catch(e) {}
         } else {
             // Refresh dataTable

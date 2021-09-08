@@ -18,6 +18,8 @@ tweepy>=1.9
 xlrd>=0.7.1
 # Warning: S3XLS unresolved dependency: openpyxl required for XLSX import
 openpyxl>=3.0.7
+# Warning: S3MSG unresolved dependency: feedparser required for Feed import
+feedparser>=6.0.8
 # Warning: S3MSG unresolved dependency: sgmllib3k required for Feed import on Python 3.x
 sgmllib3k>=1.0.0
 # Warning: Vulnerability unresolved dependency: numpy required for Vulnerability module support

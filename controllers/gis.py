@@ -591,6 +591,7 @@ def location():
         # Use new gis.get_children() function
 
     if filters:
+        from functools import reduce
         from operator import __and__
         s3.filter = reduce(__and__, filters)
 
@@ -2938,19 +2939,19 @@ def feature_query():
     # Filter out any records without LatLon
     s3.filter = (table.lat != None) & (table.lon != None)
 
-    # Parse the Request
-    r = s3_request()
+    def prep(r):
+        if r.representation != "geojson":
+            r.error(415, ERROR.BAD_FORMAT,
+                    next = URL(c="default", f="index",
+                               args = None,
+                               vars = None,
+                               )
+                    )
 
-    if r.representation != "geojson":
-        session.error = ERROR.BAD_FORMAT
-        redirect(URL(c="default", f="index",
-                     args = None,
-                     vars = None))
+        return True
+    s3.prep = prep
 
-    # Execute the request
-    output = r()
-
-    return output
+    return s3_rest_controller()
 
 # =============================================================================
 def poi_type():
@@ -2982,8 +2983,8 @@ def poi():
                                             )
                         form = Storage(vars = form_vars)
                         s3db.gis_location_onvalidation(form)
-                        id = s3db.gis_location.insert(**form_vars)
-                        field.default = id
+                        location_id = s3db.gis_location.insert(**form_vars)
+                        field.default = location_id
                 # WKT from Feature?
                 wkt = get_vars.get("wkt", None)
                 if wkt is not None:
@@ -2991,8 +2992,8 @@ def poi():
                                         )
                     form = Storage(vars = form_vars)
                     s3db.gis_location_onvalidation(form)
-                    id = s3db.gis_location.insert(**form_vars)
-                    field.default = id
+                    location_id = s3db.gis_location.insert(**form_vars)
+                    field.default = location_id
 
             elif r.method in ("update", "update.popup"):
                 table = r.table
@@ -3169,17 +3170,17 @@ def display_features():
     # Parse the URL, check for implicit resources, extract the primary record
     # http://127.0.0.1:8000/eden/gis/display_features&module=pr&resource=person&instance=1&jresource=presence
     ok = 0
-    if "module" in request.vars:
-        res_module = request.vars.module
+    if "module" in get_vars:
+        res_module = get_vars.module
         ok +=1
-    if "resource" in request.vars:
-        resource = request.vars.resource
+    if "resource" in get_vars:
+        resource = get_vars.resource
         ok +=1
-    if "instance" in request.vars:
-        instance = int(request.vars.instance)
+    if "instance" in get_vars:
+        instance = int(get_vars.instance)
         ok +=1
-    if "jresource" in request.vars:
-        jresource = request.vars.jresource
+    if "jresource" in get_vars:
+        jresource = get_vars.jresource
         ok +=1
     if ok != 4:
         session.error = T("Insufficient vars: Need module, resource, jresource, instance")
@@ -3691,8 +3692,8 @@ def maps():
 
         # Get the data from the POST
         source = request.body.read()
-        if isinstance(source, basestring):
-            from s3compat import StringIO
+        if isinstance(source, str):
+            from io import StringIO
             source = StringIO(source)
 
         # Decode JSON
@@ -3776,8 +3777,8 @@ def maps():
 
         # Get the data from the PUT
         source = request.body.read()
-        if isinstance(source, basestring):
-            from s3compat import StringIO
+        if isinstance(source, str):
+            from io import StringIO
             source = StringIO(source)
 
         # Decode JSON
@@ -3927,7 +3928,9 @@ def proxy():
     """
 
     import socket
-    from s3compat import URLError, urllib2, urlopen
+    from urllib import request as urllib2
+    from urllib.error import HTTPError
+    from urllib.request import urlopen
     import cgi
 
     if auth.is_logged_in():

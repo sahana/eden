@@ -46,10 +46,11 @@ __all__ = ("OrgOrganisationModel",
            "OrgSiteDetailsModel",
            "OrgSiteEventModel",
            "OrgSiteGroupModel",
+           "OrgSiteLayoutModel",
+           "OrgSiteLocationModel",
            "OrgSiteNameModel",
            "OrgSiteShiftModel",
            "OrgSiteTagModel",
-           "OrgSiteLocationModel",
            "OrgFacilityModel",
            "OrgRoomModel",
            "OrgOfficeModel",
@@ -86,10 +87,11 @@ __all__ = ("OrgOrganisationModel",
 
 import json
 
+from io import BytesIO
+
 from gluon import *
 
 from ..s3 import *
-from s3compat import BytesIO
 from s3dal import Row
 from s3layouts import S3PopupLink
 
@@ -167,9 +169,10 @@ class OrgOrganisationModel(S3Model):
                                         IS_ONE_OF(db, "org_organisation_type.id",
                                                   type_represent,
                                                   # If limiting to just 1 level of parent
-                                                  #filterby="parent",
-                                                  #filter_opts=(None,),
-                                                  orderby="org_organisation_type.name"))
+                                                  #filterby = "parent",
+                                                  #filter_opts = (None,),
+                                                  orderby = "org_organisation_type.name",
+                                                  ))
             organisation_type_widget = S3HierarchyWidget(lookup = "org_organisation_type",
                                                          represent = type_represent,
                                                          multiple = multiple_organisation_types,
@@ -282,7 +285,8 @@ class OrgOrganisationModel(S3Model):
                                                       # IFRC requirement
                                                       filterby = "parent",
                                                       filter_opts = (None,),
-                                                      orderby = "org_region.name"))
+                                                      orderby = "org_region.name",
+                                                      ))
                 # IFRC: Only show the Regions, not the Zones
                 opts_filter = ("parent", (None,))
             else:
@@ -3241,7 +3245,6 @@ class OrgSiteModel(S3Model):
         NONE = messages["NONE"]
         OBSOLETE = messages.OBSOLETE
 
-        add_components = self.add_components
         set_method = self.set_method
 
         # =====================================================================
@@ -3298,7 +3301,7 @@ class OrgSiteModel(S3Model):
             widget = None
             comment = None
 
-        org_site_represent = org_SiteRepresent(show_link=True)
+        org_site_represent = org_SiteRepresent(show_link = True)
 
         site_id = lambda: self.super_link("site_id", "org_site",
                                           comment = comment,
@@ -3353,99 +3356,105 @@ class OrgSiteModel(S3Model):
                        )
 
         # Components
-        add_components(tablename,
-                       # Facility Types
-                       org_facility_type = {"link": "org_site_facility_type",
-                                            "joinby": "site_id",
-                                            "key": "facility_type_id",
-                                            "actuate": "hide",
-                                            },
+        self.add_components(tablename,
+                            # Facility Types
+                            org_facility_type = {"link": "org_site_facility_type",
+                                                 "joinby": "site_id",
+                                                 "key": "facility_type_id",
+                                                 "actuate": "hide",
+                                                 },
 
-                       # Locations
-                       org_site_location = ({"name": "location",
+                            # Layout
+                            org_site_layout = ({"name": "layout",
+                                                "joinby": "site_id",
+                                                },
+                                               ),
+
+                            # Locations
+                            org_site_location = ({"name": "location",
+                                                  "joinby": "site_id",
+                                                 },
+                                                 ),
+
+                            # Local Names
+                            org_site_name = {"name": "name",
                                              "joinby": "site_id",
-                                            },
-                                            ),
+                                             },
 
-                       # Local Names
-                       org_site_name = {"name": "name",
+                            # Details and Status
+                            org_site_details = {"joinby": "site_id",
+                                                "multiple": False,
+                                                },
+                            org_site_status = {"name": "status",
+                                               "joinby": "site_id",
+                                               "multiple": False,
+                                               },
+                            # Services
+                            org_service = {"link": "org_service_site",
+                                           "joinby": "site_id",
+                                           "key": "service_id",
+                                           "actuate": "hide",
+                                           },
+
+                            # Events (Check-In/Check-Out)
+                            org_site_event = {"name": "event",
+                                              "joinby": "site_id",
+                                              },
+                            # Tags
+                            org_site_tag = {"name": "tag",
+                                            "joinby": "site_id",
+                                            },
+                            # Assets
+                            asset_asset = "site_id",
+
+                            # Documents
+                            doc_document = "site_id",
+                            doc_image = "site_id",
+
+                            # Human Resources
+                            # - direct component (suitable for Create/List)
+                            hrm_human_resource = "site_id",
+                            # - via link table (suitable for Assign)
+                            hrm_human_resource_site = "site_id",
+
+                            # Inventory
+                            inv_inv_item = "site_id",
+                            inv_minimum = "site_id",
+                            inv_recv = "site_id",
+                            inv_send = "site_id",
+
+                            # Groups: Coalitions/Networks
+                            org_group = {"link": "org_site_org_group",
+                                         "joinby": "site_id",
+                                         "key": "group_id",
+                                         "actuate": "hide",
+                                         },
+                            # Format for InlineComponent/filter_widget
+                            org_site_org_group = "site_id",
+
+                            # Needs
+                            req_need = {"name": "needs",
+                                        "link": "req_need_site",
                                         "joinby": "site_id",
+                                        "key": "need_id",
+                                        "multiple": False,
                                         },
 
-                       # Details and Status
-                       org_site_details = {"joinby": "site_id",
-                                           "multiple": False,
-                                           },
-                       org_site_status = {"name": "status",
-                                          "joinby": "site_id",
-                                          "multiple": False,
-                                          },
-                       # Services
-                       org_service = {"link": "org_service_site",
-                                      "joinby": "site_id",
-                                      "key": "service_id",
-                                      "actuate": "hide",
-                                      },
+                            # Requests
+                            req_req = "site_id",
+                            req_commit = "site_id",
 
-                       # Events (Check-In/Check-Out)
-                       org_site_event = {"name": "event",
+                            # Shifts
+                            #org_site_shift = "site_id",
+                            hrm_shift = {"link": "org_site_shift",
                                          "joinby": "site_id",
+                                         "key": "shift_id",
+                                         "actuate": "replace",
                                          },
-                       # Tags
-                       org_site_tag = {"name": "tag",
-                                       "joinby": "site_id",
-                                       },
-                       # Assets
-                       asset_asset = "site_id",
 
-                       # Documents
-                       doc_document = "site_id",
-                       doc_image = "site_id",
-
-                       # Human Resources
-                       # - direct component (suitable for Create/List)
-                       hrm_human_resource = "site_id",
-                       # - via link table (suitable for Assign)
-                       hrm_human_resource_site = "site_id",
-
-                       # Inventory
-                       inv_inv_item = "site_id",
-                       inv_minimum = "site_id",
-                       inv_recv = "site_id",
-                       inv_send = "site_id",
-
-                       # Groups: Coalitions/Networks
-                       org_group = {"link": "org_site_org_group",
-                                    "joinby": "site_id",
-                                    "key": "group_id",
-                                    "actuate": "hide",
-                                    },
-                       # Format for InlineComponent/filter_widget
-                       org_site_org_group = "site_id",
-
-                       # Needs
-                       req_need = {"name": "needs",
-                                   "link": "req_need_site",
-                                   "joinby": "site_id",
-                                   "key": "need_id",
-                                   "multiple": False,
-                                   },
-
-                       # Requests
-                       req_req = "site_id",
-                       req_commit = "site_id",
-
-                       # Shifts
-                       #org_site_shift = "site_id",
-                       hrm_shift = {"link": "org_site_shift",
-                                    "joinby": "site_id",
-                                    "key": "shift_id",
-                                    "actuate": "replace",
-                                    },
-
-                       # Procurement Plans
-                       proc_plan = "site_id",
-                       )
+                            # Procurement Plans
+                            proc_plan = "site_id",
+                            )
 
         # Pass names back to global scope (s3.*)
         return {"org_site_id": site_id,
@@ -3595,7 +3604,7 @@ class OrgSiteModel(S3Model):
                 code = prefix[:-suffix_length] + suffix
                 query = (stable.code == code) & (stable.site_id != site_id)
                 duplicate = db(query).select(stable.site_id,
-                                             limitby = (0, 1),
+                                             limitby = (0, 1)
                                              ).first()
                 if not duplicate:
                     return code
@@ -3639,7 +3648,7 @@ class OrgSiteModel(S3Model):
             # Look up from record
             row = db(table.site_id == site_id).select(table.name,
                                                       table.code,
-                                                      limitby = (0, 1),
+                                                      limitby = (0, 1)
                                                       ).first()
             if not row:
                 # Record doesn't exist
@@ -4003,6 +4012,159 @@ class OrgSiteGroupModel(S3Model):
         return {}
 
 # =============================================================================
+class OrgSiteLayoutModel(S3Model):
+    """
+        Organisation of space within a site
+
+        e.g. Building / Floor / Room
+             @ToDo: Replace org_room
+        e.g. Aisle / Rack / Shelf for Warehouses
+    """
+
+    names = ("org_site_layout",
+             "org_site_layout_id",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Sites <> Org Groups link table
+        #
+        tablename = "org_site_layout"
+        self.define_table(tablename,
+                          # Component not instance
+                          self.super_link("site_id", "org_site"),
+                          Field("name", length=64, notnull=True,
+                               label = T("Name"),
+                               requires = [IS_NOT_EMPTY(),
+                                           IS_LENGTH(64),
+                                           ],
+                               ),
+                         Field("parent", "reference org_site_layout", # This form of hierarchy may not work on all Databases
+                               ondelete = "RESTRICT",
+                               # Only accessed via S3HierarchyCRUD
+                               #label = T("Within"),
+                               readable = False,
+                               writable = False,
+                               ),
+                         #s3_comments(),
+                         *s3_meta_fields())
+
+        # Table Configuration
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ["name", "site_id"],
+                                                 secondary = ["parent"],
+                                                 ),
+                       hierarchy = "parent",
+                       # If using S3CascadeSelectWidget, then can define levels in Template, e.g.:
+                       #hierarchy_levels = [T("Building"),
+                       #                    T("Floor"),
+                       #                    T("Room"),
+                       #                    ],
+                       #hierarchy_levels = [T("Aisle"),
+                       #                    T("Rack"),
+                       #                    T("Shelf"),
+                       #                    ],
+                       # No point in seeing an Open menu item as no more details made visible by this
+                       hierarchy_method_no_open = True
+                       )
+
+        # Reusable field for other tables to reference
+        represent = S3Represent(lookup = tablename)
+        hierarchy_represent = S3Represent(lookup = tablename,
+                                          hierarchy = "%s / %s",
+                                          )
+        layout_id = S3ReusableField("layout_id", "reference %s" % tablename,
+                                    label = T("Location within Site"),
+                                    ondelete = "SET NULL",
+                                    represent = hierarchy_represent,
+                                    requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(current.db, "org_site_layout.id",
+                                                          hierarchy_represent
+                                                          )),
+                                    sortby = "name",
+                                    widget = S3HierarchyWidget(lookup = tablename,
+                                                               represent = represent,
+                                                               multiple = False,
+                                                               # Default anyway
+                                                               #leafonly = True,
+                                                               # Can be set for specific contexts to filter to locations within the relevant site
+                                                               #filter = filter, 
+                                                               ),
+                                    )
+
+        # Pass names back to global scope (s3.*)
+        return {"org_site_layout_id": layout_id,
+                }
+
+# =============================================================================
+class OrgSiteLocationModel(S3Model):
+    """
+        Site Location Model
+        - Locations served by a Site/Facility
+    """
+
+    names = ("org_site_location",)
+
+    def model(self):
+
+        T = current.T
+        auth = current.auth
+
+        # ---------------------------------------------------------------------
+        # Sites <> Locations Link Table
+        #
+        tablename = "org_site_location"
+        self.define_table(tablename,
+                          # Component not instance
+                          self.super_link("site_id", "org_site",
+                                          label = current.deployment_settings.get_org_site_label(),
+                                          instance_types = auth.org_site_types,
+                                          orderby = "org_site.name",
+                                          realms = auth.permission.permitted_realms("org_site",
+                                                                                    method="create"),
+                                          not_filterby = "obsolete",
+                                          not_filter_opts = (True,),
+                                          readable = True,
+                                          writable = True,
+                                          represent = self.org_site_represent,
+                                          ),
+                          self.gis_location_id(
+                            #represent = self.gis_LocationRepresent(sep=", "),
+                            represent = S3Represent(lookup="gis_location"),
+                            requires = IS_LOCATION(),
+                            widget = S3LocationAutocompleteWidget()
+                          ),
+                          *s3_meta_fields()
+                          )
+
+        # CRUD Strings
+        site_label = current.deployment_settings.get_org_site_label()
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("New Location"),
+            title_display = T("Location"),
+            title_list = T("Locations"),
+            title_update = T("Edit Location"),
+            title_upload = T("Import Location data"),
+            label_list_button = T("List Locations"),
+            msg_record_created = T("Location added to %(site_label)s") % {"site_label": site_label},
+            msg_record_modified = T("Location updated"),
+            msg_record_deleted = T("Location removed from %(site_label)s") % {"site_label": site_label},
+            msg_list_empty = T("No Locations found for this %(site_label)s") % {"site_label": site_label})
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("site_id",
+                                                            "location_id",
+                                                            ),
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
 class OrgSiteNameModel(S3Model):
     """
         Site Names model
@@ -4123,71 +4285,6 @@ class OrgSiteTagModel(S3Model):
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary = ("site_id",
                                                             "tag",
-                                                            ),
-                                                 ),
-                       )
-
-        # Pass names back to global scope (s3.*)
-        return {}
-
-# =============================================================================
-class OrgSiteLocationModel(S3Model):
-    """
-        Site Location Model
-        - Locations served by a Site/Facility
-    """
-
-    names = ("org_site_location",)
-
-    def model(self):
-
-        T = current.T
-        auth = current.auth
-
-        # ---------------------------------------------------------------------
-        # Sites <> Locations Link Table
-        #
-        tablename = "org_site_location"
-        self.define_table(tablename,
-                          # Component not instance
-                          self.super_link("site_id", "org_site",
-                                          label = current.deployment_settings.get_org_site_label(),
-                                          instance_types = auth.org_site_types,
-                                          orderby = "org_site.name",
-                                          realms = auth.permission.permitted_realms("org_site",
-                                                                                    method="create"),
-                                          not_filterby = "obsolete",
-                                          not_filter_opts = (True,),
-                                          readable = True,
-                                          writable = True,
-                                          represent = self.org_site_represent,
-                                          ),
-                          self.gis_location_id(
-                            #represent = self.gis_LocationRepresent(sep=", "),
-                            represent = S3Represent(lookup="gis_location"),
-                            requires = IS_LOCATION(),
-                            widget = S3LocationAutocompleteWidget()
-                          ),
-                          *s3_meta_fields()
-                          )
-
-        # CRUD Strings
-        site_label = current.deployment_settings.get_org_site_label()
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("New Location"),
-            title_display = T("Location"),
-            title_list = T("Locations"),
-            title_update = T("Edit Location"),
-            title_upload = T("Import Location data"),
-            label_list_button = T("List Locations"),
-            msg_record_created = T("Location added to %(site_label)s") % {"site_label": site_label},
-            msg_record_modified = T("Location updated"),
-            msg_record_deleted = T("Location removed from %(site_label)s") % {"site_label": site_label},
-            msg_list_empty = T("No Locations found for this %(site_label)s") % {"site_label": site_label})
-
-        self.configure(tablename,
-                       deduplicate = S3Duplicate(primary = ("site_id",
-                                                            "location_id",
                                                             ),
                                                  ),
                        )
@@ -4865,7 +4962,9 @@ def org_facility_rheader(r, tabs=None):
 class OrgRoomModel(S3Model):
     """
         Rooms are a location within a Site
-        - used by Asset module
+        - used by Asset module & DVR module (for activities)
+
+        @ToDO: Deprecate & replace by org_site_layout
     """
 
     names = ("org_room",

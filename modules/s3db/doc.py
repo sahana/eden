@@ -37,13 +37,13 @@ __all__ = ("S3DocumentLibrary",
 
 import os
 
+from io import BytesIO
 from uuid import uuid4
 
 from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3compat import BytesIO
 
 # =============================================================================
 class S3DocumentLibrary(S3Model):

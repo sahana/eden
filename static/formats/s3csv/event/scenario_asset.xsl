@@ -26,7 +26,7 @@
                 <xsl:call-template name="Scenario"/>
             </xsl:for-each>
 
-            <!-- Scenario Tasks -->
+            <!-- Scenario Assets -->
             <xsl:apply-templates select="table/row"/>
 
         </s3xml>
@@ -35,12 +35,7 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
 
-        <xsl:variable name="ScenarioName" select="col[@field='Scenario']/text()"/>
-
         <resource name="event_scenario_asset">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$ScenarioName"/>
-            </xsl:attribute>
 
             <!-- Link to Scenario -->
             <reference field="scenario_id" resource="event_scenario">

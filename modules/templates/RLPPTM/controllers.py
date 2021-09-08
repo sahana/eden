@@ -2452,7 +2452,7 @@ class ocert(S3CustomController):
             # Generate verification hash
             vhash = self._vhash(organisation_id, purpose, token, appkey)
             if vhash:
-                from s3compat import urllib_quote
+                from urllib.parse import quote as urllib_quote
                 url = redirect_uri % {"token": urllib_quote(token),
                                       "vhash": urllib_quote(vhash),
                                       }

@@ -37,10 +37,12 @@ import os
 import re
 import sys
 
+from io import StringIO
+from urllib.request import urlopen
+
 from gluon import current, redirect, HTTP, URL
 from gluon.storage import Storage
 
-from s3compat import PY2, CLASS_TYPES, StringIO, basestring, urlopen
 from .s3datetime import s3_parse_datetime
 from .s3resource import S3Resource
 from .s3utils import s3_get_extension, s3_keep_messages, s3_remove_last_record_id, s3_store_last_record_id, s3_str
@@ -373,7 +375,7 @@ class S3Request(object):
             if handler is not None:
                 break
 
-        if isinstance(handler, CLASS_TYPES):
+        if isinstance(handler, type):
             return handler()
         else:
             return handler
@@ -435,7 +437,7 @@ class S3Request(object):
 
         if handler is None:
             handler = resource.crud
-        if isinstance(handler, CLASS_TYPES):
+        if isinstance(handler, type):
             handler = handler()
         return handler
 
@@ -535,14 +537,11 @@ class S3Request(object):
             # Read body JSON (e.g. from $.searchS3)
             body = self.body
             body.seek(0)
-            if PY2:
-                s = body.read()
-            else:
-                # Decode request body (=bytes stream) into a str
-                # - json.load/loads do not accept bytes in Py3 before 3.6
-                # - minor performance advantage by avoiding the need for
-                #   json.loads to detect the encoding
-                s = body.read().decode("utf-8")
+            # Decode request body (=bytes stream) into a str
+            # - json.load/loads do not accept bytes in Py3 before 3.6
+            # - minor performance advantage by avoiding the need for
+            #   json.loads to detect the encoding
+            s = body.read().decode("utf-8")
             try:
                 filters = json.loads(s)
             except ValueError:
@@ -571,7 +570,7 @@ class S3Request(object):
                 # Catch any non-str values
                 if type(value) is list:
                     value = [s3_str(item)
-                             if not isinstance(item, basestring) else item
+                             if not isinstance(item, str) else item
                              for item in value
                              ]
                 elif type(value) is not str:
@@ -661,7 +660,7 @@ class S3Request(object):
                                              self.name,
                                              component_name = self.component_name,
                                              method = self.method)
-            if isinstance(action, CLASS_TYPES):
+            if isinstance(action, type):
                 self.custom_action = action()
             else:
                 self.custom_action = action
@@ -1644,7 +1643,7 @@ class S3Request(object):
                 elif v.endswith(ext):
                     if isinstance(p, cgi.FieldStorage):
                         source.append((v, p.value))
-                    elif isinstance(p, basestring):
+                    elif isinstance(p, str):
                         source.append((v, StringIO(p)))
         else:
             s = self.body

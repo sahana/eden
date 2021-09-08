@@ -45,6 +45,7 @@ __all__ = ("S3SupplyModel",
            "supply_ItemCategoryRepresent",
            "supply_get_shipping_code",
            "supply_item_pack_quantities",
+           "SupplyItemPackQuantity",
            )
 
 import re
@@ -53,7 +54,6 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3compat import xrange
 from s3dal import Row
 from s3layouts import S3PopupLink
 
@@ -91,7 +91,6 @@ class S3SupplyModel(S3Model):
              "supply_kit_item",
              "supply_item_represent",
              "supply_item_category_represent",
-             "supply_item_pack_quantity",
              )
 
     def model(self):
@@ -606,10 +605,14 @@ $.filterOptionsS3({
                        supply_distribution_item = "item_id",
                        # Inventory Items
                        inv_inv_item = "item_id",
-                       # Order Items
+                       # Shipment Items
                        inv_track_item = "item_id",
+                       # Stock Cards
+                       inv_stock_card = "item_id",
                        # Procurement Plan Items
                        proc_plan_item = "item_id",
+                       # Order Items
+                       req_order_item = "item_id",
                        # Request Items
                        req_req_item = "item_id",
                        # Supply Kit Items
@@ -967,7 +970,6 @@ $.filterOptionsS3({
                 "supply_item_pack_id": item_pack_id,
                 "supply_item_represent": supply_item_represent,
                 "supply_item_category_represent": item_category_represent,
-                "supply_item_pack_quantity": SupplyItemPackQuantity,
                 "supply_item_pack_represent": item_pack_represent,
                 }
 
@@ -982,7 +984,6 @@ $.filterOptionsS3({
                 "supply_item_category_id": dummy("item_category_id"),
                 "supply_item_entity_id": dummy("item_entity_id"),
                 "supply_item_pack_id": dummy("item_pack_id"),
-                "supply_item_pack_quantity": lambda tablename: lambda row: 0,
                 }
 
     # -------------------------------------------------------------------------
@@ -1061,7 +1062,8 @@ $.filterOptionsS3({
             query = (table.deleted != True) & \
                     (table.code.lower() == code.lower())
             duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
+                                                 limitby = (0, 1)
+                                                 ).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -1085,7 +1087,8 @@ $.filterOptionsS3({
                 query &= (table.catalog_id == catalog_id)
 
             duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
+                                                 limitby = (0, 1)
+                                                 ).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -1290,7 +1293,7 @@ class S3SupplyDistributionModel(S3Model):
         A Distribution is an Item (which could be a Kit) distributed to a single Location
         - usually as part of an Activity
 
-        @ToDo: Deprecate this in favour of S3ProjectActivityItemModel?
+        @ToDo: Deprecate this in favour of ProjectActivityItemModel?
                - not based on stats, but simpler as less joins.
                - could be based on stats if we make all supply_item into stats_parameter instances
     """
@@ -1478,7 +1481,7 @@ class S3SupplyDistributionModel(S3Model):
             if not start_year or not end_year:
                 return {start_year:start_year} or {end_year:end_year}
             years = {}
-            for year in xrange(start_year, end_year + 1):
+            for year in range(start_year, end_year + 1):
                 years[year] = year
             return years
 
@@ -1769,7 +1772,7 @@ class S3SupplyDistributionModel(S3Model):
         elif not date:
             return [end_date.year]
         else:
-            return list(xrange(date.year, end_date.year + 1))
+            return list(range(date.year, end_date.year + 1))
 
 # =============================================================================
 class S3SupplyDistributionDVRActivityModel(S3Model):
@@ -2332,29 +2335,47 @@ def supply_item_rheader(r):
         if item:
 
             T = current.T
+            settings = current.deployment_settings
 
             tabs = [(T("Edit Details"), None),
                     (T("Packs"), "item_pack"),
                     (T("Alternative Items"), "item_alt"),
                     (T("In Inventories"), "inv_item"),
-                    (T("Requested"), "req_item"),
-                    (T("In Catalogs"), "catalog_item"),
                     ]
+            tabs_append = tabs.append
+            if settings.get_inv_stock_cards():
+                tabs_append((T("Stock Cards"), "stock_card"))
+            tabs_append((T("Requested"), "req_item"))
+            if settings.get_req_order_item():
+                tabs_append((T("Ordered"), "order_item"))
+            tabs_append((T("In Catalogs"), "catalog_item"))
             if item.kit == True:
-                tabs.append((T("Kit Items"), "kit_item"))
+                tabs_append((T("Kit Items"), "kit_item"))
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             table = r.table
 
+            brand_field = table.brand_id
+            if brand_field.readable:
+                brand_row = TR(TH("%s: " % brand_field.label),
+                               brand_field.represent(item.brand_id),
+                               )
+            else:
+                brand_row = ""
+
+            model_field = table.model
+            if model_field.readable:
+                model_row = TR(TH("%s: " % model_field.label),
+                               item.model or current.messages["NONE"],
+                               )
+            else:
+                model_row = ""
+
             rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
                                    item.name,
                                    ),
-                                TR(TH("%s: " % table.brand_id.label),
-                                   table.brand_id.represent(item.brand_id),
-                                   ),
-                                TR(TH("%s: " % table.model.label),
-                                   item.model or current.messages["NONE"],
-                                   ),
+                                brand_row,
+                                model_row,
                                 ),
                           rheader_tabs
                          )
@@ -2792,18 +2813,32 @@ def supply_item_controller():
 
     def postp(r, output):
         if r.interactive and \
-           r.component and \
-           r.component.name == "inv_item":
-            # Open Natively
-            # Custom Action Buttons
-            s3.actions = [{"label": s3_str(s3.crud_labels.READ),
-                           "url": URL(c = "inv",
-                                      f = "inv_item",
-                                      args = ["[id]"],
-                                      ),
-                           "_class": "action-btn",
-                           },
-                          ]
+           r.component:
+            cname = r.component_name
+            if cname == "inv_item":
+                # Open Natively
+                # Custom Action Buttons
+                s3.actions = [{"label": s3_str(s3.crud_labels.READ),
+                               "url": URL(c = "inv",
+                                          f = "inv_item",
+                                          args = ["[id]"],
+                                          ),
+                               "_class": "action-btn",
+                               },
+                              ]
+            elif cname == "stock_card":
+                # Open Natively
+                # Custom Action Buttons
+                s3.actions = [{"label": s3_str(s3.crud_labels.READ),
+                               "url": URL(c = "inv",
+                                          f = "stock_card",
+                                          args = ["[id]",
+                                                  "stock_log",
+                                                  ],
+                                          ),
+                               "_class": "action-btn",
+                               },
+                              ]
 
         return output
     s3.postp = postp

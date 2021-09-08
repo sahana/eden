@@ -197,8 +197,10 @@ if has_module("doc"):
         name = document["name"]
         filename = document["filename"]
 
-        filename = "%s/%s/uploads/%s" % (os.path.abspath("applications"), \
-                                        request.application, filename)
+        filename = "%s/%s/uploads/%s" % (os.path.abspath("applications"),
+                                         request.application,
+                                         filename
+                                         )
 
         si = sunburnt.SolrInterface(settings.get_base_solr_url())
 
@@ -669,20 +671,21 @@ if has_module("sync"):
         rtable = s3db.sync_repository
         query = (rtable.deleted != True) & \
                 (rtable.id == repository_id)
-        repository = db(query).select(limitby=(0, 1)).first()
+        repository = db(query).select(limitby = (0, 1)
+                                      ).first()
         if repository:
             sync = s3base.S3Sync()
             status = sync.get_status()
             if status.running:
                 message = "Synchronization already active - skipping run"
-                sync.log.write(repository_id=repository.id,
-                               resource_name=None,
-                               transmission=None,
-                               mode=None,
-                               action="check",
-                               remote=False,
-                               result=sync.log.ERROR,
-                               message=message)
+                sync.log.write(repository_id = repository.id,
+                               resource_name = None,
+                               transmission = None,
+                               mode = None,
+                               action = "check",
+                               remote = False,
+                               result = sync.log.ERROR,
+                               message = message)
                 db.commit()
                 return sync.log.ERROR
             sync.set_status(running=True, manual=manual)

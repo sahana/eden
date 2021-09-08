@@ -96,3 +96,20 @@
 .tooltip-m {
     margin-top: -15px;
 }
+
+/* WMS Dashboard Shipments */
+.ship-card {
+    border: #ccc 1px solid;
+}
+/* WMS Dashboard Alerts */
+.alert-card {
+    border: #ccc 1px solid;
+}
+.alert-card .medium-1{
+    color: #f00;
+    padding-top: 15px;
+}
+.alert-card .medium-11{
+    color: #222;
+    padding: 5px;
+}

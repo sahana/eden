@@ -1,8 +1,8 @@
 Scenario,Item,Comments
-Aircraft Crash 1,Radio,Equipment Comments
-Building inferno,Tower ladder
-Building inferno,Command Unit
-Building inferno,Tanker Truck
+Aircraft Crash 1,Radio,
+Building inferno,Tower ladder,
+Building inferno,Command Unit,
+Building inferno,Tanker Truck,
 Water Evacuation Large Group,Motor boat
 Water Evacuation Large Group,Safety line,rope (multiple)
 Water Evacuation Large Group,Life jacket,> 12 pieces
