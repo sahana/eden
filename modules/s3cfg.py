@@ -1061,6 +1061,13 @@ class S3Config(Storage):
 
         return self.base.get("allow_testing", True)
 
+    def get_base_rest_controllers(self):
+        """
+            Re-routed RESTful CRUD controllers
+            - a dict {(controller, function): (prefix, name)}
+        """
+        return self.base.get("rest_controllers")
+
     def get_base_migrate(self):
         """ Whether to allow Web2Py to migrate the SQL database to the new structure """
         return self.base.get("migrate", True)
