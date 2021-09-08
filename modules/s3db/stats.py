@@ -580,14 +580,17 @@ class S3StatsDemographicModel(S3Model):
                 (rtable.status == "RUNNING")
         rows = db(query).select(rtable.id,
                                 rtable.task_id,
-                                rtable.worker_name)
+                                rtable.worker_name,
+                                )
         now = current.request.utcnow
         for row in rows:
-            db(wtable.worker_name == row.worker_name).update(status="KILL")
-            db(rtable.id == row.id).update(stop_time=now,
-                                           status="STOPPED")
-            db(ttable.id == row.task_id).update(stop_time=now,
-                                                status="STOPPED")
+            db(wtable.worker_name == row.worker_name).update(status = "KILL")
+            db(rtable.id == row.id).update(stop_time = now,
+                                           status = "STOPPED",
+                                           )
+            db(ttable.id == row.task_id).update(stop_time = now,
+                                                status = "STOPPED",
+                                                )
 
         # Delete the existing aggregates
         current.s3db.stats_demographic_aggregate.truncate()
@@ -753,7 +756,8 @@ class S3StatsDemographicModel(S3Model):
                     # Store the record from the db in the totals storage
                     totals[start_date] = Storage(date = row_date,
                                                  id = row.data_id,
-                                                 value = row.value)
+                                                 value = row.value,
+                                                 )
 
             # Get each record and store them in a dict keyed on the start date
             # of the aggregated period. If a record already exists for the
@@ -763,7 +767,8 @@ class S3StatsDemographicModel(S3Model):
             data = {}
             data[start_date] = Storage(date = date,
                                        id = data_id,
-                                       value = record["value"])
+                                       value = record["value"],
+                                       )
             for row in data_rows:
                 if row.data_id == data_id:
                     # This is the record we started with, so skip
@@ -781,7 +786,8 @@ class S3StatsDemographicModel(S3Model):
                 # Store the record from the db in the data storage
                 data[start_date] = Storage(date = row_date,
                                            id = row.data_id,
-                                           value = row.value)
+                                           value = row.value,
+                                           )
 
             # Get all the aggregate records for this parameter and location
             query = (atable.location_id == location_id) & \
@@ -1080,11 +1086,11 @@ class S3StatsDemographicModel(S3Model):
         rows = db(query).select(dtable.value,
                                 dtable.date,
                                 dtable.location_id,
-                                orderby=(dtable.location_id, ~dtable.date),
+                                orderby = (dtable.location_id, ~dtable.date),
                                 # groupby avoids duplicate records for the same
                                 # location, but is slightly slower than just
                                 # skipping the duplicates in the loop below
-                                #groupby=(dtable.location_id)
+                                #groupby = (dtable.location_id)
                                 )
 
         # Get the most recent aggregate for this location for the total parameter
@@ -1142,7 +1148,9 @@ class S3StatsDemographicModel(S3Model):
                 (atable.parameter_id == parameter_id) & \
                 (atable.date == start_date) & \
                 (atable.end_date == end_date)
-        exists = db(query).select(atable.id, limitby=(0, 1)).first()
+        exists = db(query).select(atable.id,
+                                  limitby = (0, 1)
+                                  ).first()
 
         attr = {"agg_type": 2, # Location
                 #"reported_count": values_len,
@@ -1197,7 +1205,7 @@ def stats_demographic_data_controller():
     s3db = current.s3db
     table = s3db[tablename]
     location_id = current.db(table.id == record_id).select(table.location_id,
-                                                           limitby=(0, 1),
+                                                           limitby = (0, 1),
                                                            ).first().location_id
 
     s3 = current.response.s3

@@ -55,9 +55,9 @@ from .s3query import FS
 from .s3report import S3Report, S3ReportForm
 from .s3utils import s3_flatlist, s3_represent_value, s3_unicode, S3MarkupStripper
 
-tp_datetime = lambda *t: datetime.datetime(tzinfo=dateutil.tz.tzutc(), *t)
+tp_datetime = lambda *t: datetime.datetime(tzinfo = dateutil.tz.tzutc(), *t)
 
-tp_tzsafe = lambda dt: dt.replace(tzinfo=dateutil.tz.tzutc()) \
+tp_tzsafe = lambda dt: dt.replace(tzinfo = dateutil.tz.tzutc()) \
                        if dt and dt.tzinfo is None else dt
 
 # Compact JSON encoding
@@ -139,17 +139,17 @@ class S3TimePlot(S3Method):
             # Create time series
             # @todo: should become resource.timeseries()
             ts = S3TimeSeries(resource,
-                              start=start,
-                              end=end,
-                              slots=slots,
-                              event_start=event_start,
-                              event_end=event_end,
-                              rows=rows,
-                              cols=cols,
-                              facts=facts,
-                              baseline=baseline,
+                              start = start,
+                              end = end,
+                              slots = slots,
+                              event_start = event_start,
+                              event_end = event_end,
+                              rows = rows,
+                              cols = cols,
+                              facts = facts,
+                              baseline = baseline,
                               # @todo: add title
-                              #title=title,
+                              #title = title,
                               )
 
             # Extract aggregated results as JSON-serializable dict
@@ -162,13 +162,15 @@ class S3TimePlot(S3Method):
 
             ajax_vars = Storage(r.get_vars)
             ajax_vars.update(get_vars)
-            filter_url = r.url(method="",
-                               representation="",
-                               vars=ajax_vars.fromkeys((k for k in ajax_vars
-                                                        if k not in report_vars)))
-            ajaxurl = attr.get("ajaxurl", r.url(method="timeplot",
-                                                representation="json",
-                                                vars=ajax_vars,
+            filter_url = r.url(method = "",
+                               representation = "",
+                               vars = ajax_vars.fromkeys((k for k in ajax_vars
+                                                          if k not in report_vars)
+                                                         )
+                               )
+            ajaxurl = attr.get("ajaxurl", r.url(method = "timeplot",
+                                                representation = "json",
+                                                vars = ajax_vars,
                                                 ))
             output = S3TimePlotForm(resource).html(data,
                                                    get_vars = get_vars,
@@ -218,41 +220,43 @@ class S3TimePlot(S3Method):
         # Read the relevant GET vars
         report_vars, get_vars = self.get_options(r, resource)
 
+        get_vars_get = get_vars.get
+
         # Parse event timestamp option
-        timestamp = get_vars.get("timestamp")
+        timestamp = get_vars_get("timestamp")
         event_start, event_end = self.parse_timestamp(timestamp)
 
         # Parse fact option
-        fact = get_vars.get("fact")
+        fact = get_vars_get("fact")
         try:
             facts = S3TimeSeriesFact.parse(fact)
         except SyntaxError:
             r.error(400, sys.exc_info()[1])
-        baseline = get_vars.get("baseline")
+        baseline = get_vars_get("baseline")
 
         # Parse grouping axes
-        rows = get_vars.get("rows")
-        cols = get_vars.get("cols")
+        rows = get_vars_get("rows")
+        cols = get_vars_get("cols")
 
         # Parse event frame parameters
-        start = get_vars.get("start")
-        end = get_vars.get("end")
-        slots = get_vars.get("slots")
+        start = get_vars_get("start")
+        end = get_vars_get("end")
+        slots = get_vars_get("slots")
 
         # Create time series
         # @todo: should become resource.timeseries()
         ts = S3TimeSeries(resource,
-                          start=start,
-                          end=end,
-                          slots=slots,
-                          event_start=event_start,
-                          event_end=event_end,
-                          rows=rows,
-                          cols=cols,
-                          facts=facts,
-                          baseline=baseline,
+                          start = start,
+                          end = end,
+                          slots = slots,
+                          event_start = event_start,
+                          event_end = event_end,
+                          rows = rows,
+                          cols = cols,
+                          facts = facts,
+                          baseline = baseline,
                           # @todo: add title
-                          #title=title,
+                          #title = title,
                           )
 
         # Extract aggregated results as JSON-serializable dict
@@ -276,17 +280,17 @@ class S3TimePlot(S3Method):
                         break
                 filter_formstyle = get_config("filter_formstyle", None)
                 filter_form = S3FilterForm(filter_widgets,
-                                           formstyle=filter_formstyle,
-                                           advanced=advanced,
-                                           submit=False,
-                                           _class="filter-form",
-                                           _id="%s-filter-form" % widget_id,
+                                           formstyle = filter_formstyle,
+                                           advanced = advanced,
+                                           submit = False,
+                                           _class = "filter-form",
+                                           _id = "%s-filter-form" % widget_id,
                                            )
                 fresource = current.s3db.resource(tablename)
                 alias = resource.alias if resource.parent else None
                 filter_widgets = filter_form.fields(fresource,
                                                     r.get_vars,
-                                                    alias=alias,
+                                                    alias = alias,
                                                     )
             else:
                 # Render as empty string to avoid the exception in the view
@@ -294,13 +298,15 @@ class S3TimePlot(S3Method):
 
             ajax_vars = Storage(r.get_vars)
             ajax_vars.update(get_vars)
-            filter_url = r.url(method="",
-                               representation="",
-                               vars=ajax_vars.fromkeys((k for k in ajax_vars
-                                                        if k not in report_vars)))
-            ajaxurl = attr.get("ajaxurl", r.url(method="timeplot",
-                                                representation="json",
-                                                vars=ajax_vars,
+            filter_url = r.url(method = "",
+                               representation = "",
+                               vars = ajax_vars.fromkeys((k for k in ajax_vars
+                                                          if k not in report_vars)
+                                                         )
+                               )
+            ajaxurl = attr.get("ajaxurl", r.url(method = "timeplot",
+                                                representation = "json",
+                                                vars = ajax_vars,
                                                 ))
 
             output = S3TimePlotForm(resource).html(data,
@@ -427,13 +433,14 @@ class S3TimePlotForm(S3ReportForm):
     # -------------------------------------------------------------------------
     def html(self,
              data,
-             filter_widgets=None,
-             get_vars=None,
-             ajaxurl=None,
-             filter_url=None,
-             filter_form=None,
-             filter_tab=None,
-             widget_id=None):
+             filter_widgets = None,
+             get_vars = None,
+             ajaxurl = None,
+             filter_url = None,
+             filter_form = None,
+             filter_tab = None,
+             widget_id = None,
+             ):
         """
             Render the form for the report
 
@@ -447,8 +454,9 @@ class S3TimePlotForm(S3ReportForm):
         if filter_widgets is not None:
             filter_options = self._fieldset(T("Filter Options"),
                                             filter_widgets,
-                                            _id="%s-filters" % widget_id,
-                                            _class="filter-form")
+                                            _id = "%s-filters" % widget_id,
+                                            _class = "filter-form",
+                                            )
         else:
             filter_options = ""
 
@@ -478,9 +486,10 @@ class S3TimePlotForm(S3ReportForm):
             else:
                 label = submit
             submit = TAG[""](
-                        INPUT(_type="button",
-                              _value=label,
-                              _class=_class))
+                        INPUT(_type = "button",
+                              _value = label,
+                              _class = _class,
+                              ))
         else:
             submit = ""
 
@@ -578,7 +587,8 @@ class S3TimePlotForm(S3ReportForm):
         # Render field set
         fieldset = self._fieldset(T("Report Options"),
                                   selectors,
-                                  _id="%s-options" % widget_id)
+                                  _id = "%s-options" % widget_id,
+                                  )
 
         return fieldset
 
@@ -603,6 +613,8 @@ class S3TimePlotForm(S3ReportForm):
                     ("Last Quarter", "-3months", "", "weeks"),
                     ("Last Month", "-1month", "", "days"),
                     ("Last Week", "-1week", "", "days"),
+                    ("Next Year", "", "+1year", "months"),
+                    ("Next 5 Years", "", "+5years", "years"),
                     ("All/+1 Month", "", "+1month", ""),
                     ("All/+2 Month", "", "+2month", ""),
                     ("-6/+3 Months", "-6months", "+9months", "months"),
@@ -632,9 +644,9 @@ class S3TimePlotForm(S3ReportForm):
         # Construct widget
         return OptionsWidget.widget(dummy_field,
                                     value,
-                                    _id=widget_id,
-                                    _name="time",
-                                    _class="tp-time",
+                                    _id = widget_id,
+                                    _name = "time",
+                                    _class = "tp-time",
                                     )
 
 # =============================================================================
@@ -643,16 +655,17 @@ class S3TimeSeries(object):
 
     def __init__(self,
                  resource,
-                 start=None,
-                 end=None,
-                 slots=None,
-                 event_start=None,
-                 event_end=None,
-                 rows=None,
-                 cols=None,
-                 facts=None,
-                 baseline=None,
-                 title=None):
+                 start = None,
+                 end = None,
+                 slots = None,
+                 event_start = None,
+                 event_end = None,
+                 rows = None,
+                 cols = None,
+                 facts = None,
+                 baseline = None,
+                 title = None,
+                 ):
         """
             Constructor
 
@@ -877,9 +890,10 @@ class S3TimeSeries(object):
 
     # -------------------------------------------------------------------------
     def _event_frame(self,
-                     start=None,
-                     end=None,
-                     slots=None):
+                     start = None,
+                     end = None,
+                     slots = None,
+                     ):
         """
             Create an event frame for this report
 
@@ -1324,11 +1338,12 @@ class S3TimeSeriesEvent(object):
 
     def __init__(self,
                  event_id,
-                 start=None,
-                 end=None,
-                 values=None,
-                 row=DEFAULT,
-                 col=DEFAULT):
+                 start = None,
+                 end = None,
+                 values = None,
+                 row = DEFAULT,
+                 col = DEFAULT,
+                 ):
         """
             Constructor
 
@@ -2096,9 +2111,9 @@ class S3TimeSeriesPeriod(object):
             else:
                 num = int(num) if num else 1
                 return rrule(deltas[delta],
-                             dtstart=start,
-                             until=end,
-                             interval=num)
+                             dtstart = start,
+                             until = end,
+                             interval = num)
         else:
             return None
 
