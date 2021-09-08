@@ -1921,14 +1921,18 @@ class S3CRUD(S3Method):
             else:
                 dt_dom = s3.get("dataTable_dom",
                                 current.deployment_settings.get_ui_datatables_dom())
-                datatable = dt.html(totalrows, displayrows, list_id,
-                                    dt_pagination=dt_pagination,
-                                    dt_pageLength=display_length,
+                datatable = dt.html(totalrows,
+                                    displayrows,
+                                    list_id,
+                                    dt_pagination = dt_pagination,
+                                    dt_pageLength = display_length,
                                     dt_dom = dt_dom,
                                     )
                 s3.actions = [{"label": s3_str(current.T("Review")),
                                "url": r.url(id="[id]", method="review"),
-                               "_class": "action-btn"}]
+                               "_class": "action-btn",
+                               },
+                              ]
 
             # Add items to output
             output["items"] = datatable
@@ -2068,8 +2072,8 @@ class S3CRUD(S3Method):
 
                 elif reject.accepts(r.post_vars, session, formname="reject"):
                     resource = current.s3db.resource(r.tablename, r.id,
-                                                     approved=False,
-                                                     unapproved=True)
+                                                     approved = False,
+                                                     unapproved = True)
                     try:
                         success = resource.reject()
                     except:
@@ -2332,7 +2336,9 @@ class S3CRUD(S3Method):
                     onvalidation = update_onvalidation
                 else:
                     onvalidation = create_onvalidation
-                form = Storage(vars=Storage(record), errors=Storage())
+                form = Storage(vars = Storage(record),
+                               errors = Storage(),
+                               )
                 if onvalidation is not None:
                     callback(onvalidation, form, tablename=tablename)
                 for fn in form.errors:
@@ -2457,8 +2463,9 @@ class S3CRUD(S3Method):
 
             if fields:
                 query = (table._id == record_id)
-                record = current.db(query).select(limitby=(0, 1),
-                                                  *fields).first()
+                record = current.db(query).select(*fields,
+                                                  limitby = (0, 1)
+                                                  ).first()
             if record:
                 T = current.T
                 if "modified_by" in record:
@@ -2472,7 +2479,7 @@ class S3CRUD(S3Method):
                 if "modified_on" in record:
                     modified_on = \
                         S3DateTime.datetime_represent(record.modified_on,
-                                                      utc=True,
+                                                      utc = True,
                                                       )
                     output["modified_on"] = T("on %(date)s") % \
                                              {"date": modified_on}
@@ -2643,7 +2650,8 @@ class S3CRUD(S3Method):
                        read_url = None,
                        delete_url = None,
                        update_url = None,
-                       copy_url = None):
+                       copy_url = None,
+                       ):
         """
             Provide the usual action buttons in list views.
             Allow customizing the urls, since this overwrites anything
@@ -2979,12 +2987,13 @@ class S3CRUD(S3Method):
                 attr["autocomplete"] = autocomplete
 
             if record is not None:
-                attr["link_filter"] = "%s.%s.%s.%s.%s" % (
-                                      resource.tablename,
-                                      component.lkey,
-                                      record,
-                                      component.rkey,
-                                      component.fkey)
+                attr["link_filter"] = "%s.%s.%s.%s.%s" % \
+                                        (resource.tablename,
+                                         component.lkey,
+                                         record,
+                                         component.rkey,
+                                         component.fkey,
+                                         )
 
             rkey = component.rkey
             if rkey in resource.table:
@@ -2995,7 +3004,7 @@ class S3CRUD(S3Method):
             callback = self._postprocess_embedded
             postprocess = lambda form, key=rkey, component=ctablename: \
                                  callback(form, key=key, component=component)
-            link = Storage(postprocess=postprocess)
+            link = Storage(postprocess = postprocess)
 
         return link
 
@@ -3178,7 +3187,10 @@ class S3CRUD(S3Method):
                     else:
                         args = args + ["read"]
 
-                url = str(URL(r=r, c=c, f=f, args=args, vars=get_vars))
+                url = str(URL(r=r, c=c, f=f,
+                              args = args,
+                              vars = get_vars,
+                              ))
 
             if iframe_safe:
                 url = iframe_safe(url)
@@ -3259,7 +3271,7 @@ class S3CRUD(S3Method):
             # Permitted to delete this record?
             authorised = current.auth.s3_has_permission("delete",
                                                         dresource.table,
-                                                        record_id=delete)
+                                                        record_id = delete)
             if not authorised:
                 r.unauthorised()
 
@@ -3267,12 +3279,12 @@ class S3CRUD(S3Method):
             uid = None
             if UID in dresource.table:
                 rows = dresource.select([UID],
-                                        start=0,
-                                        limit=1,
-                                        as_rows=True)
+                                        start = 0,
+                                        limit = 1,
+                                        as_rows = True)
                 if rows:
                     uid = rows[0][UID]
-            numrows = dresource.delete(format=r.representation)
+            numrows = dresource.delete(format = r.representation)
             if numrows > 1:
                 message = "%s %s" % (numrows,
                                      current.T("records deleted"))

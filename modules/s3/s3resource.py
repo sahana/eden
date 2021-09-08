@@ -3020,9 +3020,9 @@ class S3Resource(object):
                     if not isinstance(field.sortby, (list, tuple)):
                         orderby.append("%s.%s%s" % (tn, field.sortby, direction(i)))
                     else:
-                        orderby.append(", ".join(["%s.%s%s" %
-                                                  (tn, fn, direction(i))
-                                                  for fn in field.sortby]))
+                        orderby.append(", ".join(["%s.%s%s" % (tn, fn, direction(i))
+                                                   for fn in field.sortby
+                                                  ]))
 
                 else:
                     # Otherwise, we sort by the field itself
@@ -3052,7 +3052,7 @@ class S3Resource(object):
 
         axisfilter = {}
 
-        qdict = self.get_query().as_dict(flat=True)
+        qdict = self.get_query().as_dict(flat = True)
 
         for rfield in axes:
             field = rfield.field

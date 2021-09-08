@@ -597,15 +597,23 @@ class S3DataTable(object):
         editable = get_config(tablename, "editable", True)
         if editable and has_permission("update", table) and \
            not ownership_required("update", table):
-            update_url = URL(c=c, f=f, args=args + ["update"])
-            S3CRUD.action_button(labels.UPDATE, update_url,
+            update_url = URL(c=c, f=f,
+                             args = args + ["update"],
+                             )
+            S3CRUD.action_button(labels.UPDATE,
+                                 update_url,
                                  icon = "edit",
-                                 _class="action-btn edit")
+                                 _class = "action-btn edit",
+                                 )
         else:
-            read_url = URL(c=c, f=f, args=args)
-            S3CRUD.action_button(labels.READ, read_url,
+            read_url = URL(c=c, f=f,
+                           args = args,
+                           )
+            S3CRUD.action_button(labels.READ,
+                                 read_url,
                                  icon = "file",
-                                 _class="action-btn read")
+                                 _class = "action-btn read",
+                                 )
 
         # Delete button
         # @todo: does not apply selective action (renders DELETE for
@@ -616,10 +624,14 @@ class S3DataTable(object):
         if deletable and \
            has_permission("delete", table) and \
            not ownership_required("delete", table):
-            delete_url = URL(c=c, f=f, args=args + ["delete"])
-            S3CRUD.action_button(labels.DELETE, delete_url,
+            delete_url = URL(c=c, f=f,
+                             args = args + ["delete"],
+                             )
+            S3CRUD.action_button(labels.DELETE,
+                                 delete_url,
                                  icon = "delete",
-                                 _class="delete-btn")
+                                 _class = "delete-btn",
+                                 )
 
         # Append custom actions
         if custom_actions:
@@ -803,7 +815,7 @@ class S3DataTable(object):
                 html.add_class("doublescroll")
 
         # Wrap the table in a form and add some data in hidden fields
-        form = FORM(_class="dt-wrapper")
+        form = FORM(_class = "dt-wrapper")
         if not s3.no_formats:
             # @todo: move export-format update into drawCallback()
             # @todo: poor UX with onclick-JS, better to render real
@@ -814,7 +826,7 @@ class S3DataTable(object):
             export_formats = S3DataTable.export_formats(rfields,
                                                         permalink = permalink,
                                                         base_url = base_url)
-            # Nb These can be moved around in initComplete()
+            # NB These can be moved around in initComplete()
             form.append(export_formats)
 
         form.append(html)

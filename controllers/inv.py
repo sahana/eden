@@ -458,6 +458,38 @@ def stock_card():
         RESTful CRUD controller
     """
 
+    viewing = get_vars.get("viewing")
+    if viewing:
+        get_vars.pop("viewing")
+        inv_item_id = viewing.split("inv_inv_item.")[1]
+        table = s3db.inv_inv_item
+        inv_item = db(table.id == inv_item_id).select(table.site_id,
+                                                      table.item_id,
+                                                      table.item_source_no,
+                                                      table.expiry_date,
+                                                      limitby = (0, 1)
+                                                      ).first()
+        if inv_item:
+            item_source_no = inv_item.item_source_no
+            table = s3db.inv_stock_card
+            query = (table.site_id == inv_item.site_id) & \
+                    (table.item_id == inv_item.item_id) & \
+                    (table.item_source_no == item_source_no) & \
+                    (table.expiry_date == inv_item.expiry_date)
+            exists = db(query).select(table.id,
+                                      limitby = (0, 1)
+                                      ).first()
+            if exists:
+                request.args = [str(exists.id), "stock_log"]
+
+    def postp(r, output):
+        # Don't render any Action Buttons
+        # @ToDo: Also remove ID column...can't see how currently
+        s3.actions = []
+        return output
+    s3.postp = postp
+
+
     from s3db.inv import inv_rheader
     return s3_rest_controller(rheader = inv_rheader,
                               )
@@ -1218,7 +1250,8 @@ def adj():
                                      args = [adj_id,
                                              "adj_item",
                                              adj_item_id,
-                                             "update"]
+                                             "update",
+                                             ]
                                      ))
                     else:
                         table.comments.default = "Complete Stock Adjustment"

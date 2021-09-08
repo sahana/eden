@@ -3666,107 +3666,108 @@ Thank you"""
                    r.component_name == "track_item":
                     db = current.db
                     s3db = current.s3db
-                    # Allow populating req_item_id
-                    f = s3db.inv_track_item.req_item_id
-                    f.writable = True
-                    f.comment = None
-                    f.label = T("Request")
-                    # Limit send_inv_item_id to
-                    # - Items in the Request
-                    # - Items Requested from this site
-                    # - Items not yet Shipped
-                    site_id = record.site_id
                     srtable = s3db.inv_send_req
                     reqs = db(srtable.send_id == r.id).select(srtable.req_id)
-                    req_ids = [row.req_id for row in reqs]
-                    iitable = s3db.inv_inv_item
-                    iptable = s3db.supply_item_pack
-                    rtable = s3db.req_req
-                    ritable = s3db.req_req_item
-                    riptable = s3db.get_aliased(iptable, "req_item_pack")
-                    if len(req_ids) == 1:
-                        query = (rtable.id == req_ids[0])
-                    else:
-                        query = (rtable.id.belongs(req_ids))
-                    query &= (ritable.req_id == rtable.id) & \
-                             (ritable.site_id == site_id) & \
-                             (ritable.quantity_transit < ritable.quantity) & \
-                             (ritable.item_pack_id == riptable.id) & \
-                             (ritable.item_id == iitable.item_id) & \
-                             (iitable.site_id == site_id) & \
-                             (iitable.item_pack_id == iptable.id)
-                    items = db(query).select(iitable.id,
-                                             iitable.quantity,
-                                             iptable.quantity,
-                                             rtable.req_ref,
-                                             ritable.id,
-                                             ritable.quantity,
-                                             riptable.quantity,
-                                             )
-                    inv_data = {}
-                    inv_item_ids = []
-                    iiappend = inv_item_ids.append
-                    for row in items:
-                        inv_pack_quantity = row["supply_item_pack.quantity"]
-                        req_pack_quantity = row["req_item_pack.quantity"]
-                        req_ref = row["req_req.req_ref"]
-                        inv_row = row["inv_inv_item"]
-                        req_row = row["req_req_item"]
-                        inv_item_id = inv_row.id
-                        iiappend(inv_item_id)
-                        if inv_item_id in inv_data:
-                            inv_data[inv_item_id]["req_items"].append({"inv_quantity": inv_row.quantity * inv_pack_quantity,
-                                                                       "req_item_id": req_row.id,
-                                                                       "req_quantity": req_row.quantity * req_pack_quantity,
-                                                                       "req_ref": req_ref,
-                                                                       })
+                    if reqs:
+                        # Allow populating req_item_id
+                        f = s3db.inv_track_item.req_item_id
+                        f.writable = True
+                        f.comment = None
+                        f.label = T("Request")
+                        # Limit send_inv_item_id to
+                        # - Items in the Request
+                        # - Items Requested from this site
+                        # - Items not yet Shipped
+                        site_id = record.site_id
+                        req_ids = [row.req_id for row in reqs]
+                        iitable = s3db.inv_inv_item
+                        iptable = s3db.supply_item_pack
+                        rtable = s3db.req_req
+                        ritable = s3db.req_req_item
+                        riptable = s3db.get_aliased(iptable, "req_item_pack")
+                        if len(req_ids) == 1:
+                            query = (rtable.id == req_ids[0])
                         else:
-                            inv_data[inv_item_id] = {"req_items": [{"inv_quantity": inv_row.quantity * inv_pack_quantity,
-                                                                    "req_item_id": req_row.id,
-                                                                    "req_quantity": req_row.quantity * req_pack_quantity,
-                                                                    "req_ref": req_ref,
-                                                                    }],
-                                                     }
-                    # Remove req_ref when there are no duplicates to distinguish
-                    for inv_item_id in inv_data:
-                        req_items = inv_data[inv_item_id]["req_items"]
-                        if len(req_items) == 1:
-                            req_items[0].pop("req_ref")
+                            query = (rtable.id.belongs(req_ids))
+                        query &= (ritable.req_id == rtable.id) & \
+                                 (ritable.site_id == site_id) & \
+                                 (ritable.quantity_transit < ritable.quantity) & \
+                                 (ritable.item_pack_id == riptable.id) & \
+                                 (ritable.item_id == iitable.item_id) & \
+                                 (iitable.site_id == site_id) & \
+                                 (iitable.item_pack_id == iptable.id)
+                        items = db(query).select(iitable.id,
+                                                 iitable.quantity,
+                                                 iptable.quantity,
+                                                 rtable.req_ref,
+                                                 ritable.id,
+                                                 ritable.quantity,
+                                                 riptable.quantity,
+                                                 )
+                        inv_data = {}
+                        inv_item_ids = []
+                        iiappend = inv_item_ids.append
+                        for row in items:
+                            inv_pack_quantity = row["supply_item_pack.quantity"]
+                            req_pack_quantity = row["req_item_pack.quantity"]
+                            req_ref = row["req_req.req_ref"]
+                            inv_row = row["inv_inv_item"]
+                            req_row = row["req_req_item"]
+                            inv_item_id = inv_row.id
+                            iiappend(inv_item_id)
+                            if inv_item_id in inv_data:
+                                inv_data[inv_item_id]["req_items"].append({"inv_quantity": inv_row.quantity * inv_pack_quantity,
+                                                                           "req_item_id": req_row.id,
+                                                                           "req_quantity": req_row.quantity * req_pack_quantity,
+                                                                           "req_ref": req_ref,
+                                                                           })
+                            else:
+                                inv_data[inv_item_id] = {"req_items": [{"inv_quantity": inv_row.quantity * inv_pack_quantity,
+                                                                        "req_item_id": req_row.id,
+                                                                        "req_quantity": req_row.quantity * req_pack_quantity,
+                                                                        "req_ref": req_ref,
+                                                                        }],
+                                                         }
+                        # Remove req_ref when there are no duplicates to distinguish
+                        for inv_item_id in inv_data:
+                            req_items = inv_data[inv_item_id]["req_items"]
+                            if len(req_items) == 1:
+                                req_items[0].pop("req_ref")
 
-                    query = (iitable.id.belongs(inv_item_ids))
-                    f = s3db.inv_track_item.send_inv_item_id
-                    dbset = f.requires.dbset(query)
-                    f.requires.dbset = dbset
+                        query = (iitable.id.belongs(inv_item_ids))
+                        f = s3db.inv_track_item.send_inv_item_id
+                        dbset = f.requires.dbset(query)
+                        f.requires.dbset = dbset
 
-                    # Add Packs to replace the filterOptionsS3 lookup
-                    query &= (iitable.item_id == iptable.item_id)
-                    rows = db(query).select(iitable.id,
-                                            iptable.id,
-                                            iptable.name,
-                                            iptable.quantity,
-                                            )
-                    for row in rows:
-                        inv_item_id = row["inv_inv_item.id"]
-                        pack = row.supply_item_pack
-                        this_data = inv_data[inv_item_id]
-                        packs = this_data.get("packs")
-                        if not packs:
-                            this_data["packs"] = [{"id": pack.id,
-                                                   "name": pack.name,
-                                                   "quantity": pack.quantity,
-                                                   },
-                                                  ]
-                        else:
-                            this_data["packs"].append({"id": pack.id,
+                        # Add Packs to replace the filterOptionsS3 lookup
+                        query &= (iitable.item_id == iptable.item_id)
+                        rows = db(query).select(iitable.id,
+                                                iptable.id,
+                                                iptable.name,
+                                                iptable.quantity,
+                                                )
+                        for row in rows:
+                            inv_item_id = row["inv_inv_item.id"]
+                            pack = row.supply_item_pack
+                            this_data = inv_data[inv_item_id]
+                            packs = this_data.get("packs")
+                            if not packs:
+                                this_data["packs"] = [{"id": pack.id,
                                                        "name": pack.name,
                                                        "quantity": pack.quantity,
-                                                       })
+                                                       },
+                                                      ]
+                            else:
+                                this_data["packs"].append({"id": pack.id,
+                                                           "name": pack.name,
+                                                           "quantity": pack.quantity,
+                                                           })
 
-                    # Pass data to s3.supply.js
-                    # to Apply req_item_id & quantity when item_id selected
-                    import json
-                    SEPARATORS = (",", ":")
-                    s3.js_global.append('''S3.supply.inv_items=%s''' % json.dumps(inv_data, separators=SEPARATORS))
+                        # Pass data to s3.supply.js
+                        # to Apply req_item_id & quantity when item_id selected
+                        import json
+                        SEPARATORS = (",", ":")
+                        s3.js_global.append('''S3.supply.inv_items=%s''' % json.dumps(inv_data, separators=SEPARATORS))
 
                 elif r.component_name == "document":
                     s3.crud_strings["doc_document"].label_create = T("File Signed Document")
@@ -5983,7 +5984,7 @@ Thank you"""
             limitby = (0, 1)
         else:
             query = (rtable.id.belongs(req_id))
-            limitby = None
+            limitby = (0, len(req_id))
         requests = current.db(query).select(rtable.site_id,
                                             limitby = limitby,
                                             )
@@ -6039,7 +6040,7 @@ Thank you"""
             limitby = (0, 1)
         else:
             query = (rtable.id.belongs(req_id))
-            limitby = None
+            limitby = (0, len(req_id))
         requests = current.db(query).select(rtable.site_id,
                                             limitby = limitby,
                                             )

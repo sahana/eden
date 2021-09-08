@@ -5439,7 +5439,8 @@ Please go to %(url)s to approve this user."""
                             table,
                             record,
                             force_update = False,
-                            **fields):
+                            **fields
+                            ):
         """
             Set the record owned_by_user, owned_by_group and realm_entity
             for a record (auto-detect values).
@@ -5680,7 +5681,9 @@ Please go to %(url)s to approve this user."""
             # Do we need to reload the record?
             fields_missing = [f for f in fields_in_table if f not in row]
             if fields_missing:
-                row = db(q).select(*fields_to_load, limitby = (0, 1)).first()
+                row = db(q).select(*fields_to_load,
+                                   limitby = (0, 1)
+                                   ).first()
                 if not row:
                     continue
 
@@ -5689,10 +5692,13 @@ Please go to %(url)s to approve this user."""
                 continue
 
             _realm_entity = get_realm_entity(table, row,
-                                             entity=realm_entity)
+                                             entity = realm_entity)
             data = {REALM:_realm_entity}
-            s3_update_record_owner(table, row,
-                                   update=force_update, **data)
+            s3_update_record_owner(table,
+                                   row,
+                                   update = force_update,
+                                   **data
+                                   )
 
         return
 

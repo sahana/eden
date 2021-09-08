@@ -43,6 +43,7 @@ __all__ = ("IS_ACL",
            "IS_LON",
            "IS_LAT_LON",
            "IS_LOCATION",
+           "IS_NOT_EMPTY_STR",
            "IS_ONE_OF",
            "IS_ONE_OF_EMPTY",
            "IS_ONE_OF_EMPTY_SELECT",
@@ -519,10 +520,10 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
             dot = current.deployment_settings.get_L10n_decimal_separator()
 
         IS_FLOAT_IN_RANGE.__init__(self,
-                                   minimum=minimum,
-                                   maximum=maximum,
-                                   error_message=error_message,
-                                   dot=dot,
+                                   minimum = minimum,
+                                   maximum = maximum,
+                                   error_message = error_message,
+                                   dot = dot,
                                    )
 
     # -------------------------------------------------------------------------
@@ -634,6 +635,33 @@ class IS_HTML_COLOUR(IS_MATCH):
         IS_MATCH.__init__(self, "^[0-9a-fA-F]{6}$",
                           error_message = error_message,
                           )
+
+# =============================================================================
+class IS_NOT_EMPTY_STR(Validator):
+    """
+        Prevent storing empty string "" in fields (use None instead)
+            - this allows more accurate matching without complex ity
+
+        Used by inv: item_source_no
+    """
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def validate(value, record_id=None):
+        """
+            Validator
+
+            @param value: the input value
+            @param record_id: the current record_id
+                              (unused, for API-compatibility)
+
+            @returns: the value (as str or None)
+        """
+
+        if value == "":
+            value = None
+
+        return value
 
 # =============================================================================
 REGEX1 = re.compile(r"[\w_]+\.[\w_]+")

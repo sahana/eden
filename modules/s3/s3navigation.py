@@ -1388,7 +1388,7 @@ class S3ComponentTabs(object):
 
             @param tabs: the tabs configuration as list of names or tuples
                          (label, component or method or function/)
-                         (label, component or method, vars)
+                         (label, component or method or function/, vars)
                          (label, component, vars, method)
         """
 
