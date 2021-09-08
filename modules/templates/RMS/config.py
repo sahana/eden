@@ -806,6 +806,8 @@ def config(settings):
     settings.inv.warehouse_free_capacity_calculated = True
     # Use structured Bins
     settings.inv.bin_site_layout = True
+    # Use Stock Cards
+    settings.inv.stock_cards = True
 
     # Disable Alternate Items
     settings.supply.use_alt_name = False
@@ -3043,6 +3045,23 @@ Thank you"""
         return attr
 
     settings.customise_member_membership_type_controller = customise_member_membership_type_controller
+
+    # -------------------------------------------------------------------------
+    #def on_inv_adj_close():
+    #    """
+    #        Nothing needed here currently
+    #    """
+
+    #    return
+
+    # -------------------------------------------------------------------------
+    #def customise_inv_adj_resource(r, tablename):
+
+    #    current.s3db.configure(tablename,
+    #                           on_inv_adj_close = on_inv_adj_close,
+    #                           )
+
+    #settings.customise_inv_adj_resource = customise_inv_adj_resource
 
     # -------------------------------------------------------------------------
     def inv_pdf_header(r, title=None):

@@ -1481,13 +1481,16 @@ class S3ComponentTabs(object):
                     args.append(tab.method)
                 if "viewing" in _vars:
                     del _vars["viewing"]
-                _href = URL(function, args=args, vars=_vars)
+                _href = URL(function,
+                            args = args,
+                            vars = _vars,
+                            )
                 _id = "rheader_tab_%s" % component
             else:
                 args = []
                 if function != r.name and not tab.native:
                     if "viewing" not in _vars and r.id:
-                        _vars.update(viewing="%s.%s" % (r.tablename, r.id))
+                        _vars.update(viewing = "%s.%s" % (r.tablename, r.id))
                     elif not tab.component and not tab.function:
                         if "viewing" in _vars:
                             del _vars["viewing"]
@@ -1495,7 +1498,10 @@ class S3ComponentTabs(object):
                 else:
                     if "viewing" not in _vars and record_id:
                         args = [record_id]
-                _href = URL(function, args=args, vars=_vars)
+                _href = URL(function,
+                            args = args,
+                            vars = _vars,
+                            )
                 _id = "rheader_tab_%s" % function
 
             # Render tab
@@ -1665,11 +1671,11 @@ class S3ComponentTab(object):
                 return self.authorised(clist[component])
             handler = get_method(resource.prefix,
                                  resource.name,
-                                 method=component)
+                                 method = component)
             if handler is None and tablename:
                 prefix, name = tablename.split("_", 1)
                 handler = get_method(prefix, name,
-                                     method=component)
+                                     method = component)
             if handler is None:
                 handler = r.get_handler(component)
             if handler is None:
@@ -1731,8 +1737,9 @@ class S3ScriptItem(S3NavigationItem):
 
     # -------------------------------------------------------------------------
     def __init__(self,
-                 script=None,
-                 **attributes):
+                 script = None,
+                 **attributes
+                 ):
         """
             @param script: script to inject into jquery_ready when rendered
         """
@@ -1816,7 +1823,14 @@ class S3ResourceHeader(object):
         self.title = title
 
     # -------------------------------------------------------------------------
-    def __call__(self, r, tabs=None, table=None, record=None, actions=None, as_div=True):
+    def __call__(self,
+                 r,
+                 tabs = None,
+                 table = None,
+                 record = None,
+                 actions = None,
+                 as_div = True,
+                 ):
         """
             Return the HTML representation of this rheader
 
@@ -1871,15 +1885,21 @@ class S3ResourceHeader(object):
                 title = self.render_field(table, record, title)[1]
 
             if title:
-                content = DIV(H6(title, _class="rheader-title"),
+                content = DIV(H6(title, 
+                                 _class = "rheader-title",
+                                 ),
                               TABLE(trs),
-                              _class="rheader-content",
+                              _class = "rheader-content",
                               )
             else:
-                content = TABLE(trs, _class="rheader-content")
+                content = TABLE(trs,
+                                _class = "rheader-content",
+                                )
 
             if actions:
-                action_items = DIV(_class="rheader-actions", *actions)
+                action_items = DIV(_class = "rheader-actions",
+                                   *actions
+                                   )
                 rheader = (content, action_items, rheader_tabs)
             else:
                 rheader = (content, rheader_tabs)

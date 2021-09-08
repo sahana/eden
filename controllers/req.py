@@ -463,7 +463,7 @@ def req_controller(template = False):
                            )
 
         if r.component:
-            if r.component.name == "req_item":
+            if r.component_name == "req_item":
                 record = r.record
                 if record: # Check as options.s3json checks the component without a record
                     # Prevent Adding/Deleting Items from Requests which are complete, closed or cancelled
@@ -481,7 +481,7 @@ def req_controller(template = False):
                                        insertable = False,
                                        )
 
-            elif r.component.name == "commit":
+            elif r.component_name == "commit":
 
                 table = r.component.table
                 record = r.record
@@ -703,8 +703,8 @@ $.filterOptionsS3({
             if r.method is None:
                 # Customise Action Buttons
                 if r.component:
-                    s3_action_buttons(r, deletable=s3db.get_config(r.component.tablename, "deletable"))
-                    if r.component.name == "req_item" and \
+                    s3_action_buttons(r, deletable = s3db.get_config(r.component.tablename, "deletable"))
+                    if r.component_name == "req_item" and \
                        settings.get_req_prompt_match():
                         s3.actions.append(
                             {"label": s3_str(T("Request from Facility")),
@@ -715,7 +715,7 @@ $.filterOptionsS3({
                              "_class": "action-btn",
                              })
 
-                    elif r.component.name == "commit":
+                    elif r.component_name == "commit":
                         if "form" in output:
                             # User has Write access
                             req_id = r.record.id

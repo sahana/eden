@@ -132,7 +132,7 @@ def deployment():
                 #                   insertable = False
                 #                   )
 
-                cname = r.component.name
+                cname = r.component_name
                 if cname == "server":
 
                     from s3 import S3SQLCustomForm

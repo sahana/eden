@@ -4759,6 +4759,12 @@ class S3Config(Storage):
         """
         return self.inv.get("minimums", False)
 
+    def get_inv_stock_cards(self):
+        """
+            Use Stock Cards
+        """
+        return self.inv.get("stock_cards", False)
+
     def get_inv_recv_tab_label(self):
         label = self.inv.get("recv_tab_label")
         if not label:

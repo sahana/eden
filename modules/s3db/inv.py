@@ -33,6 +33,7 @@ __all__ = ("InvWarehouseModel",
            "InventoryAdjustModel",
            "InventoryMinimumModel",
            "InventoryRequestModel",
+           "InventoryStockCardModel",
            "inv_adj_rheader",
            "inv_item_total_weight",
            "inv_item_total_volume",
@@ -720,11 +721,6 @@ $.filterOptionsS3({
                            ]
 
         # Configuration
-        if settings.get_inv_warehouse_free_capacity_calculated():
-            onaccept = self.inv_inv_item_onaccept
-        else:
-            onaccept = None
-
         self.configure(tablename,
                        # Lock the record so that it can't be meddled with
                        # - unless explicitly told to allow this
@@ -740,7 +736,7 @@ $.filterOptionsS3({
                                        ],
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
-                       onaccept = onaccept,
+                       onaccept = self.inv_inv_item_onaccept,
                        onvalidation = self.inv_inv_item_onvalidation,
                        report_options = report_options,
                        super_entity = "supply_item_entity",
@@ -798,20 +794,138 @@ $.filterOptionsS3({
     @staticmethod
     def inv_inv_item_onaccept(form):
         """
-            Update the Free Capacity of the Warehouse
+            Called when Stock is created/updated by:
+            - direct_stock_edits
+            - imports
 
-            - only called when settings.get_inv_warehouse_free_capacity_calculated()
+            Create/Update a Stock Card
+            Update the Free Capacity of the Warehouse
         """
 
-        site_id = form.vars.get("site_id")
-        if not site_id:
-            table = s3db.inv_inv_item
-            record = current.db(table.id == form.vars.id).select(table.site_id,
-                                                                 limitby = (0, 1)
-                                                                 ).first()
-            site_id = record.site_id
+        settings = current.deployment_settings
+        free_capacity_calculated = settings.get_inv_warehouse_free_capacity_calculated()
+        stock_cards = settings.get_inv_stock_cards()
 
-        inv_warehouse_free_capacity(site_id)
+        if not free_capacity_calculated and \
+           not stock_cards:
+            # Nothing to do
+            return
+
+        inv_item_id = form.vars.id
+
+        if stock_cards:
+            db = current.db
+            s3db = current.s3db
+            table = s3db.inv_inv_item
+            record = db(table.id == inv_item_id).select(table.site_id,
+                                                        table.item_id,
+                                                        table.item_source_no,
+                                                        table.expiry_date,
+                                                        table.item_pack_id,
+                                                        table.quantity,
+                                                        table.bin,
+                                                        table.layout_id,
+                                                        limitby = (0, 1)
+                                                        ).first()
+            site_id = record.site_id
+            item_id = record.item_id
+            item_source_no = record.item_source_no
+            expiry_date = record.expiry_date
+            inv_pack_id = record.item_pack_id
+            quantity = record.quantity
+
+            if free_capacity_calculated:
+                # Update the Free Capacity
+                inv_warehouse_free_capacity(site_id)
+
+            # Lookup Item Packs
+            card_pack_id = None
+            table = s3db.supply_item_pack
+            packs = db(table.item_id == item_id).select(table.id,
+                                                        table.quantity,
+                                                        )
+            for row in packs:
+                item_pack_id = row.id
+                pack_quantity = row.quantity
+                if pack_quantity == 1:
+                    card_pack_id = item_pack_id
+                if item_pack_id == inv_pack_id:
+                    quantity = quantity * pack_quantity
+
+            # Search for existing Stock Card
+            table = s3db.inv_stock_card
+            ltable = s3db.inv_stock_log
+            query = (table.site_id == site_id) & \
+                    (table.item_id == item_id) & \
+                    (table.item_source_no == item_source_no) & \
+                    (table.expiry_date == expiry_date)
+
+            exists = db(query).select(table.id,
+                                      limitby = (0, 1)
+                                      ).first()
+            if exists:
+                card_id = exists.id
+                # Lookup Latest Log Entry
+                log = db(ltable.card_id == card_id).select(ltable.date,
+                                                           ltable.balance,
+                                                           orderby = ~ltable.date,
+                                                           limitby = (0, 1)
+                                                           ).first()
+                if not log:
+                    quantity_in = quantity
+                    quantity_out = 0
+                else:
+                    old_balance = log.balance
+                    if quantity > old_balance:
+                        quantity_in = quantity - old_balance
+                        quantity_out = 0
+                    elif quantity < old_balance:
+                        quantity_in = 0
+                        quantity_out = old_balance - quantity
+                    else:
+                        # quantity == balance some other change
+                        quantity_in = 0
+                        quantity_out = 0
+            else:
+                card_id = table.insert(site_id = site_id,
+                                       item_id = item_id,
+                                       item_pack_id = card_pack_id,
+                                       item_source_no = item_source_no,
+                                       expiry_date = expiry_date,
+                                       )
+                onaccept = s3db.get_config("inv_stock_card", "create_onaccept")
+                if onaccept:
+                    onaccept(Storage(vars = Storage(id = card_id,
+                                                    site_id = site_id,
+                                                    )
+                                     ))
+                quantity_in = quantity
+                quantity_out = 0
+
+            balance = quantity
+
+            # Add Log Entry
+            ltable.insert(card_id = card_id,
+                          date = current.request.utcnow,
+                          bin = record.bin,
+                          layout_id = record.layout_id,
+                          quantity_in = quantity_in,
+                          quantity_out = quantity_out,
+                          balance = balance,
+                          comments = "import" if current.response.s3.bulk else "direct stock edit",
+                          )
+
+        else:
+            # Just Update the Free Capacity
+            site_id = form.vars.get("site_id")
+            if not site_id:
+                table = current.s3db.inv_inv_item
+                record = current.db(table.id == inv_item_id).select(table.site_id,
+                                                                    limitby = (0, 1)
+                                                                    ).first()
+                site_id = record.site_id
+
+            inv_warehouse_free_capacity(site_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3083,19 +3197,19 @@ def inv_rheader(r):
         rheader_tabs = DIV(s3_rheader_tabs(r, tabs))
 
         # Header
-        rheader = DIV(
-                    TABLE(
-                        TR(TH("%s: " % table.item_id.label),
-                           table.item_id.represent(record.item_id),
-                           TH("%s: " % table.item_pack_id.label),
-                           table.item_pack_id.represent(record.item_pack_id),
-                           ),
-                        TR(TH("%s: " % table.site_id.label),
-                           TD(table.site_id.represent(record.site_id),
-                              _colspan = 3,
-                              ),
-                           ),
-                        ), rheader_tabs)
+        rheader = DIV(TABLE(TR(TH("%s: " % table.item_id.label),
+                               table.item_id.represent(record.item_id),
+                               TH("%s: " % table.item_pack_id.label),
+                               table.item_pack_id.represent(record.item_pack_id),
+                               ),
+                            TR(TH("%s: " % table.site_id.label),
+                               TD(table.site_id.represent(record.site_id),
+                                  _colspan = 3,
+                                  ),
+                               ),
+                            ),
+                      rheader_tabs,
+                      )
 
     elif tablename == "inv_kitting":
         # Tabs
@@ -3105,36 +3219,36 @@ def inv_rheader(r):
         rheader_tabs = DIV(s3_rheader_tabs(r, tabs))
 
         # Header
-        rheader = DIV(
-                    TABLE(
-                        TR(TH("%s: " % table.req_ref.label),
-                           TD(table.req_ref.represent(record.req_ref),
-                              _colspan = 3,
-                              ),
-                           ),
-                        TR(TH("%s: " % table.item_id.label),
-                           table.item_id.represent(record.item_id),
-                           TH("%s: " % table.item_pack_id.label),
-                           table.item_pack_id.represent(record.item_pack_id),
-                           TH("%s: " % table.quantity.label),
-                           table.quantity.represent(record.quantity),
-                           ),
-                        TR(TH("%s: " % table.site_id.label),
-                           TD(table.site_id.represent(record.site_id),
-                              _colspan = 3,
-                              ),
-                           ),
-                        TR(TH("%s: " % table.repacked_id.label),
-                           TD(table.repacked_id.represent(record.repacked_id),
-                              _colspan = 3,
-                              ),
-                           ),
-                        TR(TH("%s: " % table.date.label),
-                           TD(table.date.represent(record.date),
-                              _colspan = 3,
-                              ),
-                           ),
-                        ), rheader_tabs)
+        rheader = DIV(TABLE(TR(TH("%s: " % table.req_ref.label),
+                               TD(table.req_ref.represent(record.req_ref),
+                                  _colspan = 3,
+                                  ),
+                               ),
+                            TR(TH("%s: " % table.item_id.label),
+                               table.item_id.represent(record.item_id),
+                               TH("%s: " % table.item_pack_id.label),
+                               table.item_pack_id.represent(record.item_pack_id),
+                               TH("%s: " % table.quantity.label),
+                               table.quantity.represent(record.quantity),
+                               ),
+                            TR(TH("%s: " % table.site_id.label),
+                               TD(table.site_id.represent(record.site_id),
+                                  _colspan = 3,
+                                  ),
+                               ),
+                            TR(TH("%s: " % table.repacked_id.label),
+                               TD(table.repacked_id.represent(record.repacked_id),
+                                  _colspan = 3,
+                                  ),
+                               ),
+                            TR(TH("%s: " % table.date.label),
+                               TD(table.date.represent(record.date),
+                                  _colspan = 3,
+                                  ),
+                               ),
+                            ),
+                      rheader_tabs,
+                      )
 
     elif tablename == "inv_track_item":
         # Tabs
@@ -3150,28 +3264,85 @@ def inv_rheader(r):
                                                                          ).first()
         # Header
         if irecord:
-            rheader = DIV(
-                        TABLE(
-                            TR(TH("%s: " % table.item_id.label),
-                               table.item_id.represent(record.item_id),
-                               TH("%s: " % table.item_pack_id.label),
-                               table.item_pack_id.represent(record.item_pack_id),
-                               ),
-                            TR(TH( "%s: " % table.site_id.label),
-                               TD(table.site_id.represent(irecord.site_id),
-                                  _colspan = 3,
-                                  ),
-                               ),
-                            ), rheader_tabs)
+            rheader = DIV(TABLE(TR(TH("%s: " % table.item_id.label),
+                                   table.item_id.represent(record.item_id),
+                                   TH("%s: " % table.item_pack_id.label),
+                                   table.item_pack_id.represent(record.item_pack_id),
+                                   ),
+                                TR(TH( "%s: " % table.site_id.label),
+                                   TD(table.site_id.represent(irecord.site_id),
+                                      _colspan = 3,
+                                      ),
+                                   ),
+                                ),
+                          rheader_tabs,
+                          )
         else:
-            rheader = DIV(
-                        TABLE(
-                            TR(TH("%s: " % table.item_id.label),
-                               table.item_id.represent(record.item_id),
+            rheader = DIV(TABLE(TR(TH("%s: " % table.item_id.label),
+                                   table.item_id.represent(record.item_id),
+                                   TH("%s: " % table.item_pack_id.label),
+                                   table.item_pack_id.represent(record.item_pack_id),
+                                   ),
+                                ),
+                          rheader_tabs,
+                          )
+
+    elif tablename == "inv_stock_card":
+        # Tabs not used...we only ever see Log tab
+        #tabs = [(T("Details"), None),
+        #        (T("Log"), "stock_log"),
+        #        ]
+        #rheader_tabs = DIV(s3_rheader_tabs(r, tabs))
+
+        db = current.db
+        item_id = record.item_id
+        site_id = record.site_id
+        NONE = current.messages["NONE"]
+
+        # Lookup Item Details
+        itable = s3db.supply_item
+        item = db(itable.id == item_id).select(itable.name,
+                                               itable.code,
+                                               limitby = (0, 1)
+                                               ).first()
+
+        # Lookup Stock Minimum
+        mtable = s3db.inv_minimum
+        query = (mtable.item_id == item_id) & \
+                (mtable.site_id == site_id)
+        minimum = db(query).select(mtable.quantity,
+                                   limitby = (0, 1)
+                                   ).first()
+        if minimum:
+            stock_minimum = minimum.quantity
+        else:
+            stock_minimum = NONE
+
+        # Header
+        rheader = DIV(TABLE(TR(TH("%s: " % table.site_id.label),
+                               TD(table.site_id.represent(site_id)),
+                               TD(),
+                               TD(),
+                               TH("%s: " % table.stock_card_ref.label),
+                               record.stock_card_ref,
+                               ),
+                            TR(TH("%s: " % T("Item Description")),
+                               item.name,
+                               TH("%s: " % T("Item Code")),
+                               item.code,
                                TH("%s: " % table.item_pack_id.label),
                                table.item_pack_id.represent(record.item_pack_id),
                                ),
-                            ), rheader_tabs)
+                            TR(TH("%s: " % table.item_source_no.label),
+                               record.item_source_no or NONE,
+                               TH("%s: " % table.expiry_date.label),
+                               record.expiry_date or NONE,
+                               TH("%s: " % T("Stock Minimum")),
+                               stock_minimum,
+                               ),
+                            ),
+                      #rheader_tabs,
+                      )
 
     # Build footer
     inv_rfooter(r, record)
@@ -3185,7 +3356,7 @@ def inv_rfooter(r, record):
     if "site_id" not in record:
         return
 
-    if (r.component and r.component.name == "inv_item"):
+    if (r.component and r.component_name == "inv_item"):
         T = current.T
         rfooter = TAG[""]()
         component_id = r.component_id
@@ -3751,13 +3922,13 @@ def inv_recv_pdf_footer(r):
 # =============================================================================
 class InventoryAdjustModel(S3Model):
     """
-        A module to manage the shipment of inventory items
-        - Sent Items
-        - Received Items
-        - And audit trail of the shipment process
+        A module to manage Stock Adjustments
+        - Inventory Counts
+        - Adjustments to Shipments
     """
 
     names = ("inv_adj",
+             "inv_adj_id",
              "inv_adj_item",
              "inv_adj_item_id",
              )
@@ -4024,7 +4195,20 @@ class InventoryAdjustModel(S3Model):
             #msg_record_deleted = T("Item removed from Stock"), # This should be forbidden - set qty to zero instead
             msg_list_empty = T("No items currently in stock"))
 
-        return {"inv_adj_item_id": adj_item_id,
+        return {"inv_adj_id": adj_id,
+                "inv_adj_item_id": adj_item_id,
+                }
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """
+            Safe defaults for model-global names in case module is disabled
+        """
+
+        dummy = S3ReusableField.dummy
+
+        return {"inv_adj_id": dummy("adj_id"),
+                "inv_adj_item_id": dummy("adj_item_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -4063,17 +4247,17 @@ class InventoryAdjustModel(S3Model):
 
         # Check current Status
         atable = s3db.inv_adj
-        adj_rec = db(atable.id == adj_id).select(atable.status,
-                                                 atable.site_id,
-                                                 limitby = (0, 1)
-                                                 ).first()
-        if adj_rec.status != 0:
+        adj_record = db(atable.id == adj_id).select(atable.status,
+                                                    atable.site_id,
+                                                    limitby = (0, 1)
+                                                    ).first()
+        if adj_record.status != 0:
             r.error(409, current.T("This adjustment has already been closed."))
 
         aitable = s3db.inv_adj_item
         inv_item_table = s3db.inv_inv_item
         get_realm_entity = auth.get_realm_entity
-        site_id = adj_rec.site_id
+        site_id = adj_record.site_id
 
         # Go through all the adj_items
         query = (aitable.adj_id == adj_id) & \
@@ -4137,6 +4321,13 @@ class InventoryAdjustModel(S3Model):
            current.deployment_settings.get_inv_warehouse_free_capacity_calculated():
             # Update the Free Capacity for this Warehouse
             inv_warehouse_free_capacity(site_id)
+
+        # Call on_inv_adj_close hook if-configured
+        #tablename = "inv_adj"
+        #on_inv_adj_close = s3db.get_config(tablename, "on_inv_adj_close")
+        #if on_inv_adj_close:
+        #    adj_record.id = adj_id
+        #    on_inv_adj_close(adj_record)
 
         redirect(URL(c = prefix,
                      f = resourcename,
@@ -4320,6 +4511,178 @@ class InventoryRequestModel(S3Model):
                      )
 
         return {}
+
+# =============================================================================
+class InventoryStockCardModel(S3Model):
+    """
+        Stock Cards
+
+        Used by: RMS
+    """
+
+    names = ("inv_stock_card",
+             "inv_stock_log",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        configure = self.configure
+        define_table = self.define_table
+        settings = current.deployment_settings
+
+        bin_site_layout = settings.get_inv_bin_site_layout()
+
+        NONE = current.messages["NONE"]
+        WAREHOUSE = T(settings.get_inv_facility_label())
+
+        # ---------------------------------------------------------------------
+        # Outgoing Shipments <> Requests
+        #
+        tablename = "inv_stock_card"
+        define_table(tablename,
+                     # This is a component, so needs to be a super_link
+                     # - can't override field name, ondelete or requires
+                     self.super_link("site_id", "org_site",
+                                     #default = auth.user.site_id if auth.is_logged_in() else None,
+                                     empty = False,
+                                     label = WAREHOUSE,
+                                     ondelete = "RESTRICT",
+                                     represent = self.org_site_represent,
+                                     readable = True,
+                                     #writable = True,
+                                     # Comment these to use a Dropdown & not an Autocomplete
+                                     #widget = S3SiteAutocompleteWidget(),
+                                     #comment = DIV(_class="tooltip",
+                                     #              _title="%s|%s" % (WAREHOUSE,
+                                     #                                messages.AUTOCOMPLETE_HELP)),
+                                     ),
+                     Field("stock_card_ref",
+                           label = T("Stock Card No."),
+                           ),
+                     self.supply_item_id(ondelete = "RESTRICT",
+                                         required = True,
+                                         ),
+                     self.supply_item_pack_id(ondelete = "RESTRICT",
+                                              required = True,
+                                              ),
+                     Field("item_source_no", length=16,
+                           label = inv_itn_label(),
+                           represent = lambda v: v or NONE,
+                           requires = IS_LENGTH(16),
+                           ),
+                     s3_date("expiry_date",
+                             label = T("Expiry Date"),
+                             represent = inv_expiry_date_represent,
+                             ),
+                     *s3_meta_fields()
+                     )
+
+        configure(tablename,
+                  create_onaccept = self.inv_stock_card_onaccept,
+                  # Never created/edited manually
+                  deletable = False,
+                  editable = False,
+                  insertable = False,
+                  )
+
+        self.add_components(tablename,
+                            inv_stock_log = "card_id",
+                            )
+
+        current.response.s3.crud_strings[tablename] = Storage(title_display = T("Stock Card"),
+                                                              )
+
+        # ---------------------------------------------------------------------
+        # Log of Updates to Stock Cards
+        #
+        tablename = "inv_stock_log"
+        define_table(tablename,
+                     Field("card_id", "reference inv_stock_card",
+                           ),
+                     s3_date(),
+                     self.inv_send_id(),
+                     self.inv_recv_id(),
+                     self.inv_adj_id(),
+                     Field("bin", length=16,
+                           label = T("Bin"),
+                           represent = lambda v: v or NONE,
+                           requires = IS_LENGTH(16),
+                           readable = not bin_site_layout,
+                           writable = not bin_site_layout,
+                           ),
+                     self.org_site_layout_id(label = T("Bin"),
+                                             readable = bin_site_layout,
+                                             writable = bin_site_layout
+                                             ),
+                     Field("quantity_in", "double", notnull=True,
+                           default = 0.0,
+                           label = T("Quantity In"),
+                           represent = lambda v: \
+                                IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           requires = IS_FLOAT_AMOUNT(minimum=0.0),
+                           ),
+                     Field("quantity_out", "double", notnull=True,
+                           default = 0.0,
+                           label = T("Quantity In"),
+                           represent = lambda v: \
+                                IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           requires = IS_FLOAT_AMOUNT(minimum=0.0),
+                           ),
+                     Field("balance", "double", notnull=True,
+                           default = 0.0,
+                           label = T("Balance"),
+                           represent = lambda v: \
+                                IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           requires = IS_FLOAT_AMOUNT(minimum=0.0),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields()
+                     )
+
+        if bin_site_layout:
+            bin_field = "layout_id"
+        else:
+            bin_field = "bin"
+
+        configure(tablename,
+                  # Never created/edited manually
+                  deletable = False,
+                  editable = False,
+                  insertable = False,
+                  list_fields = ["date",
+                                 "send_id",
+                                 "send_id$to_site",
+                                 "recv_id",
+                                 "recv_id$from_site",
+                                 "adj_id",
+                                 bin_field,
+                                 "quantity_in",
+                                 "quantity_out",
+                                 "balance",
+                                 "comments",
+                                 ],
+                  )
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_stock_card_onaccept(form):
+        """
+            Generate the Stock Card No.
+        """
+
+        db = current.db
+        form_vars = form.vars
+        ctable = db.inv_stock_card
+
+        code = current.s3db.supply_get_shipping_code("STC",
+                                                     form_vars.get("site_id"),
+                                                     ctable.stock_card_ref,
+                                                     )
+        db(ctable.id == form_vars.id).update(stock_card_ref = code)
 
 # =============================================================================
 def inv_item_total_weight(row):
@@ -5155,7 +5518,7 @@ def inv_send_onaccept(form):
                 current.deployment_settings.get_inv_send_shortname(),
                 record.site_id,
                 stable.send_ref,
-              )
+                )
         record.update_record(send_ref = code)
 
 # =============================================================================

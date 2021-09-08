@@ -453,6 +453,16 @@ def warehouse_type():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def stock_card():
+    """
+        RESTful CRUD controller
+    """
+
+    from s3db.inv import inv_rheader
+    return s3_rest_controller(rheader = inv_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
 def supplier():
     """
         Filtered version of the organisation() REST controller
