@@ -35,8 +35,6 @@ def config(settings):
                                 Field("test"),
                                 )
 
-        prefix, name = tablename.split("_", 1)
-
         return table
 
     settings.models = {"custom_test": define_custom_test,
