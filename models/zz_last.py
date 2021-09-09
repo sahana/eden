@@ -48,9 +48,9 @@ if auth.permission.format in ("html",):
 
 # Re-routed REST controllers
 c, f = request.controller, request.function
-if c == "custom":
+if f == "rest":
     # Must not be accessed directly
-    raise HTTP(404, 'invalid controller (%s/%s)' % (c, f))
+    raise HTTP(404, "invalid controller (%s/%s)" % (c, f))
 
 rest_controllers = settings.get_base_rest_controllers()
 if rest_controllers and (c, f) in rest_controllers:

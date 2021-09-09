@@ -4,8 +4,6 @@
     Mobile Forms - Controllers
 """
 
-module = request.controller
-
 # -----------------------------------------------------------------------------
 def forms():
     """

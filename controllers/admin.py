@@ -9,7 +9,7 @@
 def index():
     """ Module's Home Page """
 
-    module_name = settings.modules["admin"].get("name_nice")
+    module_name = settings.modules[c].get("name_nice")
     response.title = module_name
 
     return {"module_name": module_name,

@@ -4,17 +4,14 @@
     CAP Module - Controllers
 """
 
-module = request.controller
-resourcename = request.function
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """
 
-    s3_redirect_default(URL(f="alert"))
+    s3_redirect_default(URL(f = "alert"))
 
 # -----------------------------------------------------------------------------
 def alerting_authority():
@@ -30,7 +27,7 @@ def alert_history():
         Alert History: RESTful CRUD controller
     """
 
-    return s3_rest_controller(rheader=s3db.cap_history_rheader)
+    return s3_rest_controller(rheader = s3db.cap_history_rheader)
 
 # -----------------------------------------------------------------------------
 def alert_ack():

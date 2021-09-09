@@ -4,17 +4,14 @@
     Membership Management
 """
 
-module = request.controller
-resourcename = request.function
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # =============================================================================
 def index():
     """ Dashboard """
 
-    return s3db.cms_index(module, alt_function="index_alt")
+    return s3db.cms_index(c, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -104,7 +101,7 @@ def person():
 
     # Custom Method for Contacts
     set_method = s3db.set_method
-    set_method("pr", resourcename,
+    set_method("pr", "person",
                method = "contacts",
                action = s3db.pr_Contacts)
 
@@ -198,14 +195,15 @@ def person():
                 if "list_btn" in buttons:
                     crud_button = r.resource.crud.crud_button
                     buttons["list_btn"] = crud_button(None,
-                                                tablename="member_membership",
-                                                name="label_list_button",
-                                                _href=URL(c="member", f="membership"),
-                                                _id="list-btn")
+                                                      tablename="member_membership",
+                                                      name = "label_list_button",
+                                                      _href = URL(c="member", f="membership"),
+                                                      _id = "list-btn",
+                                                      )
         return output
     s3.postp = postp
 
-    output = s3_rest_controller("pr", resourcename,
+    output = s3_rest_controller("pr", "person",
                                 replace_option = T("Remove existing data before import"),
                                 rheader = s3db.member_rheader,
                                 )

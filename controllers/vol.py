@@ -4,17 +4,14 @@
     Volunteer Management
 """
 
-module = request.controller
-resourcename = request.function
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # =============================================================================
 def index():
     """ Customisable module homepage """
 
-    return settings.customise_home(module, alt_function="index_alt")
+    return settings.customise_home(c, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -25,7 +22,9 @@ def index_alt():
     """
 
     # Bypass home page & go direct to searchable list of Staff
-    s3_redirect_default(URL(f="volunteer", args="summary"))
+    s3_redirect_default(URL(f = "volunteer",
+                            args = "summary",
+                            ))
 
 # =============================================================================
 # People
@@ -113,15 +112,15 @@ def group_membership():
 
     # Amend list_fields
     s3db.configure("pr_group_membership",
-                   list_fields=["group_id",
-                                "group_id$description",
-                                "group_head",
-                                "person_id$first_name",
-                                "person_id$middle_name",
-                                "person_id$last_name",
-                                (T("Email"), "person_id$email.value"),
-                                (settings.get_ui_label_mobile_phone(), "person_id$phone.value"),
-                                ])
+                   list_fields = ["group_id",
+                                  "group_id$description",
+                                  "group_head",
+                                  "person_id$first_name",
+                                  "person_id$middle_name",
+                                  "person_id$last_name",
+                                  (T("Email"), "person_id$email.value"),
+                                  (settings.get_ui_label_mobile_phone(), "person_id$phone.value"),
+                                  ])
 
     # Only show Relief Teams
     # Do not show system groups
@@ -144,7 +143,7 @@ def group_membership():
         return True
     s3.prep = prep
 
-    return s3_rest_controller("pr", "group_membership",
+    return s3_rest_controller("pr",
                               csv_stylesheet = ("hrm", "group_membership.xsl"),
                               csv_template = ("hrm", "group_membership"),
                               )
@@ -158,7 +157,7 @@ def department():
     if not auth.s3_has_role("ADMIN"):
         s3.filter = auth.filter_by_root_org(s3db.hrm_department)
 
-    return s3_rest_controller("hrm", resourcename)
+    return s3_rest_controller("hrm")
 
 # -----------------------------------------------------------------------------
 def job_title():
@@ -186,7 +185,7 @@ def job_title():
     if not auth.s3_has_role("ADMIN"):
         s3.filter &= auth.filter_by_root_org(s3db.hrm_job_title)
 
-    return s3_rest_controller("hrm", resourcename,
+    return s3_rest_controller("hrm",
                               csv_stylesheet = ("hrm", "job_title.xsl"),
                               csv_template = ("hrm", "job_title"),
                               )
@@ -197,7 +196,7 @@ def job_title():
 def skill():
     """ Skills Controller """
 
-    return s3_rest_controller("hrm", resourcename,
+    return s3_rest_controller("hrm",
                               csv_stylesheet = ("hrm", "skill.xsl"),
                               csv_template = ("hrm", "skill"),
                               )
@@ -206,13 +205,13 @@ def skill():
 def skill_type():
     """ Skill Types Controller """
 
-    return s3_rest_controller("hrm", resourcename)
+    return s3_rest_controller("hrm")
 
 # -----------------------------------------------------------------------------
 def competency_rating():
     """ Competency Rating for Skill Types Controller """
 
-    return s3_rest_controller("hrm", resourcename,
+    return s3_rest_controller("hrm",
                               csv_stylesheet = ("hrm", "competency_rating.xsl"),
                               csv_template = ("hrm", "competency_rating"),
                               )
@@ -221,7 +220,7 @@ def competency_rating():
 def skill_provision():
     """ Skill Provisions Controller """
 
-    return s3_rest_controller("hrm", resourcename)
+    return s3_rest_controller("hrm")
 
 # -----------------------------------------------------------------------------
 def course():
@@ -230,7 +229,7 @@ def course():
     if not auth.s3_has_role("ADMIN"):
         s3.filter = auth.filter_by_root_org(s3db.hrm_course)
 
-    return s3_rest_controller("hrm", resourcename,
+    return s3_rest_controller("hrm",
                               csv_stylesheet = ("hrm", "course.xsl"),
                               csv_template = ("hrm", "course"),
                               rheader = s3db.hrm_rheader,
@@ -240,7 +239,7 @@ def course():
 def course_certificate():
     """ Courses to Certificates Controller """
 
-    return s3_rest_controller("hrm", resourcename)
+    return s3_rest_controller("hrm")
 
 # -----------------------------------------------------------------------------
 def certificate():
@@ -250,7 +249,7 @@ def certificate():
        not auth.s3_has_role("ADMIN"):
         s3.filter = auth.filter_by_root_org(s3db.hrm_certificate)
 
-    return s3_rest_controller("hrm", resourcename,
+    return s3_rest_controller("hrm",
                               csv_stylesheet = ("hrm", "certificate.xsl"),
                               csv_template = ("hrm", "certificate"),
                               rheader = s3db.hrm_rheader,
@@ -260,7 +259,7 @@ def certificate():
 def certificate_skill():
     """ Certificates to Skills Controller """
 
-    return s3_rest_controller("hrm", resourcename)
+    return s3_rest_controller("hrm")
 
 # -----------------------------------------------------------------------------
 def training():
@@ -441,7 +440,7 @@ def programme():
         return True
     s3.prep = prep
 
-    return s3_rest_controller("hrm", resourcename,
+    return s3_rest_controller("hrm",
                               csv_stylesheet = ("hrm", "programme.xsl"),
                               csv_template = ("hrm", "programme"),
                               rheader = s3db.hrm_rheader,
@@ -454,7 +453,7 @@ def programme_hours():
         - used for Imports & Reports
     """
 
-    return s3_rest_controller("hrm", resourcename,
+    return s3_rest_controller("hrm",
                               csv_stylesheet = ("hrm", "programme_hours.xsl"),
                               csv_template = ("hrm", "programme_hours")
                               )
@@ -542,7 +541,7 @@ def delegation():
         return True
     s3.prep = prep
 
-    return s3_rest_controller("hrm", "delegation")
+    return s3_rest_controller("hrm")
 
 # =============================================================================
 # Messaging

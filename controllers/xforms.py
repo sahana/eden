@@ -4,8 +4,6 @@
     XForms - Controllers
 """
 
-module = request.controller
-
 # -----------------------------------------------------------------------------
 def forms():
     """ Controller to download form list and individual forms """

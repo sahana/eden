@@ -6,10 +6,8 @@
     http://eden.sahanafoundation.org/wiki/BluePrint/Vehicle
 """
 
-module = request.controller
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # Vehicle Module depends on Assets
 if not settings.has_module("asset"):
@@ -19,7 +17,7 @@ if not settings.has_module("asset"):
 def index():
     """ Module Home Page """
 
-    module_name = settings.modules[module].get("name_nice")
+    module_name = settings.modules[c].get("name_nice")
     response.title = module_name
 
     return {"module_name": module_name,
@@ -28,7 +26,9 @@ def index():
 # -----------------------------------------------------------------------------
 def create():
     """ Redirect to vehicle/create """
-    redirect(URL(f="vehicle", args="create"))
+    redirect(URL(f = "vehicle",
+                 args = "create",
+                 ))
 
 # -----------------------------------------------------------------------------
 def vehicle():

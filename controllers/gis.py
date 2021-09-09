@@ -4,9 +4,6 @@
     GIS Controllers
 """
 
-module = request.controller
-resourcename = request.function
-
 # Compact JSON encoding
 SEPARATORS = (",", ":")
 
@@ -16,7 +13,7 @@ def index():
        Module's Home Page: Show the Main map
     """
 
-    module_name = settings.modules[module].get("name_nice")
+    module_name = settings.modules[c].get("name_nice")
     response.title = module_name
 
     # Read user request
@@ -1097,16 +1094,16 @@ def config():
 
     # Custom Methods to set as default
     set_method = s3db.set_method
-    set_method(module, resourcename,
+    set_method(c, f,
                method = "default",
                action = config_default)
 
     # Custom Methods to enable/disable layers
-    set_method(module, resourcename,
+    set_method(c, f,
                component_name = "layer_entity",
                method = "enable",
                action = enable_layer)
-    set_method(module, resourcename,
+    set_method(c, f,
                component_name = "layer_entity",
                method = "disable",
                action = disable_layer)
@@ -1562,7 +1559,7 @@ def layer_entity():
         auth.permission.fail()
 
     # Custom Method
-    s3db.set_method(module, resourcename,
+    s3db.set_method(c, f,
                     method = "disable",
                     action = disable_layer)
 
@@ -1623,7 +1620,7 @@ def layer_feature():
     """ RESTful CRUD controller """
 
     # Custom Method
-    s3db.set_method(module, resourcename,
+    s3db.set_method(c, f,
                     method = "disable",
                     action = disable_layer)
 
@@ -1666,7 +1663,7 @@ def layer_feature():
 def layer_openstreetmap():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     s3db.table(tablename)
 
     # CRUD Strings
@@ -1725,7 +1722,7 @@ def layer_openstreetmap():
 def layer_bing():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     s3db.table(tablename)
 
     # CRUD Strings
@@ -1782,7 +1779,7 @@ def layer_bing():
 def layer_empty():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     s3db.table(tablename)
 
     # CRUD Strings
@@ -1830,7 +1827,7 @@ def layer_empty():
 def layer_google():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     s3db.table(tablename)
 
     # CRUD Strings
@@ -1886,7 +1883,7 @@ def layer_google():
 def layer_mgrs():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     s3db.table(tablename)
 
     # CRUD Strings
@@ -1941,7 +1938,7 @@ def layer_mgrs():
 def layer_arcrest():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     s3db.table(tablename)
 
     # CRUD Strings
@@ -1964,7 +1961,7 @@ def layer_arcrest():
         msg_list_empty = NO_LAYERS)
 
     # Custom Method
-    s3db.set_method(module, resourcename,
+    s3db.set_method(c, f,
                     method = "enable",
                     action = enable_layer)
 
@@ -2008,7 +2005,7 @@ def layer_arcrest():
 def layer_geojson():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     s3db.table(tablename)
 
     # CRUD Strings
@@ -2074,7 +2071,7 @@ def layer_geojson():
 def layer_georss():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     s3db.table(tablename)
 
     # CRUD Strings
@@ -2097,7 +2094,7 @@ def layer_georss():
         msg_list_empty = NO_LAYERS)
 
     # Custom Method
-    s3db.set_method(module, resourcename,
+    s3db.set_method(c, f,
                     method = "enable",
                     action = enable_layer)
 
@@ -2145,7 +2142,7 @@ def layer_georss():
 def layer_gpx():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     s3db.table(tablename)
 
     # Model options
@@ -2209,7 +2206,7 @@ def layer_gpx():
 def layer_kml():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     s3db.table(tablename)
 
     # CRUD Strings
@@ -2232,7 +2229,7 @@ def layer_kml():
         msg_list_empty = NO_LAYERS)
 
     # Custom Method
-    #s3db.set_method(module, resourcename,
+    #s3db.set_method(c, f,
     #                method = "enable",
     #                action = enable_layer)
 
@@ -2276,7 +2273,7 @@ def layer_kml():
 def layer_openweathermap():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     s3db.table(tablename)
 
     # CRUD Strings
@@ -2299,7 +2296,7 @@ def layer_openweathermap():
         msg_list_empty = NO_LAYERS)
 
     # Custom Method
-    s3db.set_method(module, resourcename,
+    s3db.set_method(c, f,
                     method = "enable",
                     action = enable_layer)
 
@@ -2346,7 +2343,7 @@ def layer_openweathermap():
 def layer_shapefile():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     table = s3db[tablename]
 
     # CRUD Strings
@@ -2369,7 +2366,7 @@ def layer_shapefile():
         msg_list_empty = NO_LAYERS)
 
     # Custom Method
-    s3db.set_method(module, resourcename,
+    s3db.set_method(c, f,
                     method = "enable",
                     action = enable_layer)
 
@@ -2542,7 +2539,7 @@ def theme_data():
 def layer_tms():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     s3db.table(tablename)
 
     # CRUD Strings
@@ -2565,7 +2562,7 @@ def layer_tms():
         msg_list_empty = NO_LAYERS)
 
     # Custom Method
-    s3db.set_method(module, resourcename,
+    s3db.set_method(c, f,
                     method = "enable",
                     action = enable_layer)
 
@@ -2609,7 +2606,7 @@ def layer_tms():
 def layer_wfs():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     s3db.table(tablename)
 
     # CRUD Strings
@@ -2671,7 +2668,7 @@ def layer_wfs():
 def layer_wms():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     s3db.table(tablename)
 
     # CRUD Strings
@@ -2694,7 +2691,7 @@ def layer_wms():
         msg_list_empty = NO_LAYERS)
 
     # Custom Method
-    s3db.set_method(module, resourcename,
+    s3db.set_method(c, f,
                     method = "enable",
                     action = enable_layer)
 
@@ -2737,7 +2734,7 @@ def layer_wms():
 def layer_xyz():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     s3db.table(tablename)
 
     # CRUD Strings
@@ -2760,7 +2757,7 @@ def layer_xyz():
         msg_list_empty = NO_LAYERS)
 
     # Custom Method
-    s3db.set_method(module, resourcename,
+    s3db.set_method(c, f,
                     method = "enable",
                     action = enable_layer)
 
@@ -2807,7 +2804,7 @@ def layer_js():
     if settings.get_security_map() and not auth.s3_has_role("MAP_ADMIN"):
         auth.permission.fail()
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     s3db.table(tablename)
 
     # CRUD Strings

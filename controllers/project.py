@@ -4,11 +4,8 @@
     Project Tracking & Management
 """
 
-module = request.controller
-resourcename = request.function
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 mode_task = settings.get_project_mode_task()
 
@@ -16,7 +13,7 @@ mode_task = settings.get_project_mode_task()
 def index():
     """ Module's Custom Home Page """
 
-    return settings.customise_home(module, alt_function="index_alt")
+    return settings.customise_home(c, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -27,18 +24,22 @@ def index_alt():
     if mode_task:
         if settings.get_project_projects():
             # Bypass home page & go directly to task list for a project
-            s3_redirect_default(URL(f="project", vars={"tasks":1}))
+            s3_redirect_default(URL(f = "project",
+                                    vars = {"tasks":1},
+                                    ))
         else:
             # Bypass home page & go directly to task list
-            s3_redirect_default(URL(f="task"))
+            s3_redirect_default(URL(f = "task"))
     else:
         # Bypass home page & go directly to projects list
-        s3_redirect_default(URL(f="project"))
+        s3_redirect_default(URL(f = "project"))
 
 # =============================================================================
 def create():
     """ Redirect to project/create """
-    redirect(URL(f="project", args="create"))
+    redirect(URL(f = "project",
+                 args = "create",
+                 ))
 
 # -----------------------------------------------------------------------------
 def project():
@@ -491,7 +492,7 @@ def project():
         return output
     s3.postp = postp
 
-    return s3_rest_controller(module, "project",
+    return s3_rest_controller("project", "project",
                               csv_template = "project",
                               hide_filter = {None: False,
                                              #"indicator_data": False,
@@ -529,7 +530,7 @@ def open_tasks_for_project():
         return output
     s3.postp = postp
 
-    return s3_rest_controller(module, "project",
+    return s3_rest_controller("project", "project",
                               hide_filter = False,
                               )
 
@@ -673,7 +674,7 @@ def organisation():
                 (T("Contacts"), "human_resource"),
                 ]
         rheader = lambda r: s3db.org_rheader(r, tabs)
-        return s3_rest_controller("org", resourcename,
+        return s3_rest_controller("org", "organisation",
                                   rheader = rheader,
                                   )
 
@@ -754,7 +755,7 @@ def activity_organisation():
         return True
     s3.prep = prep
 
-    return s3_rest_controller(module, "activity_organisation")
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def activity():
@@ -955,7 +956,7 @@ def report():
         @ToDo: Why is this needed? To have no rheader?
     """
 
-    return s3_rest_controller(module, "activity")
+    return s3_rest_controller("project", "activity")
 
 # -----------------------------------------------------------------------------
 def partners():

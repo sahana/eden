@@ -6,10 +6,8 @@
     Simple Content Management System
 """
 
-module = request.controller
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 from datetime import timedelta
 
@@ -17,7 +15,7 @@ from datetime import timedelta
 def index():
     """ Module homepage """
 
-    return s3db.cms_index(module, alt_function="index_alt")
+    return s3db.cms_index(c, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -26,7 +24,7 @@ def index_alt():
     """
 
     # Just redirect to the list of Posts
-    s3_redirect_default(URL(f="post"))
+    s3_redirect_default(URL(f = "post"))
 
 # -----------------------------------------------------------------------------
 def series():

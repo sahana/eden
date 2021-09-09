@@ -6,17 +6,14 @@
     http://eden.sahanafoundation.org/wiki/BluePrintScenario
 """
 
-module = request.controller
-resourcename = request.function
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """
 
-    return s3db.cms_index(module, alt_function="index_alt")
+    return s3db.cms_index(c, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -559,7 +556,7 @@ def compose():
         redirect(URL(f="index"))
 
     # URL to redirect to after message sent
-    url = URL(c = module,
+    url = URL(c = "event",
               f = "compose",
               vars = {fieldname: hrm_id},
               )
