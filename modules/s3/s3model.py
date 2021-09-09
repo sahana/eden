@@ -427,9 +427,9 @@ class S3Model(object):
                                     )
 
         # Load Custom Models
-        if hasattr(settings, "models"):
+        custom_models = settings.models
+        if custom_models:
             # A dict (or OrderedDict if want to manage dependency order) of {tablename: function}
-            custom_models = settings.models
             db = current.db
             for tablename in custom_models:
                 custom_models[tablename](db, tablename)
