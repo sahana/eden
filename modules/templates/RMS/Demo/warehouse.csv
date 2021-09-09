@@ -1,10 +1,11 @@
 Name,Organisation,Branch,Country,L1,L2,Capacity,Comments
 Basse-Terre,French Red Cross,Guadeloupe,GP,,,,
-Guadeloupe,French Red Cross,PIRAC,GP,,,30000,
-Martinique,French Red Cross,PIRAC,MQ,,,5000,
+Guadeloupe,French Red Cross,PIRAC,GP,,,100,
+Martinique,French Red Cross,PIRAC,MQ,,,150,
 Roseau,Dominica Red Cross Society,,DM,,,,
 Marigot,Dominica Red Cross Society,Marigot,DM,,,,
 La Pleine,Dominica Red Cross Society,La Pleine,DM,,,,
+Grenada,Grenada Red Cross Society,,GD,,,,
 Saint Kitts,Saint Kitts and Nevis Red Cross Society,,KN,,,,
 Comayagua,Honduran Red Cross,Comayagua,HN,Comayagua,Comayagua,,
 Tegucigalpa,Honduran Red Cross,Tegucigalpa,HN,Francisco Morazán,Distrito Central,,

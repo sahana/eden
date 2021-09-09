@@ -806,6 +806,8 @@ def config(settings):
     settings.inv.warehouse_free_capacity_calculated = True
     # Use structured Bins
     settings.inv.bin_site_layout = True
+    settings.inv.recv_ref_writable = True
+    settings.inv.send_ref_writable = True
     # Use Stock Cards
     settings.inv.stock_cards = True
 
@@ -3395,6 +3397,7 @@ Thank you"""
                                                     # @ToDo: Filter appropriately
                                                     #requires = IS_ONE_OF()
                                                     ),
+                                    "recv_ref",
                                     "site_id",
                                     "type",
                                     "organisation_id",
@@ -3402,7 +3405,6 @@ Thank you"""
                                     "eta",
                                     "date",
                                     "send_ref",
-                                    #"recv_ref", # Always calculate automatically?
                                     "purchase_ref",
                                     "sender_id",
                                     "recipient_id",
@@ -3593,7 +3595,7 @@ Thank you"""
                                                     field = "req_id",
                                                     label = T("Request Number"),
                                                     ),
-                                    #"send_ref", # Always calculate automatically?
+                                    "send_ref",
                                     "site_id",
                                     "type",
                                     "to_site_id",
@@ -3606,8 +3608,6 @@ Thank you"""
                                     "driver_name",
                                     "driver_phone",
                                     "vehicle_plate_no",
-                                    #"time_in",
-                                    #"time_out",
                                     # Will only appear in Update forms:
                                     "date",
                                     "delivery_date",

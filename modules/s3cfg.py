@@ -4791,6 +4791,20 @@ class S3Config(Storage):
         """
         return self.inv.get("direct_stock_edits", False)
 
+    def get_inv_recv_ref_writable(self):
+        """
+            Whether Received Shipment Reference should be manually editable
+            - only possible before shipment processed
+        """
+        return self.inv.get("recv_ref_writable", False)
+
+    def get_inv_send_ref_writable(self):
+        """
+            Whether Sent Shipment Reference should be manually editable
+            - only possible before shipment processed
+        """
+        return self.inv.get("send_ref_writable", False)
+
     def get_inv_org_dependent_warehouse_types(self):
         """
             Whether Warehouse Types vary by Organisation

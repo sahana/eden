@@ -10,6 +10,7 @@
          Facility Type........................org_site.instance_type
          Name.................................org_site_layout.name
          Parent...............................org_site_layout.parent$name
+         Grandparent..........................org_site_layout.parent$parent$name
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -54,11 +55,12 @@
         </xsl:variable>
         <xsl:variable name="Name" select="col[@field='Name']/text()"/>
         <xsl:variable name="Parent" select="col[@field='Parent']/text()"/>
+        <xsl:variable name="Grandparent" select="col[@field='Grandparent']/text()"/>
 
         <!-- Site Layout -->
         <resource name="org_site_layout">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="concat($SiteName, '/', $Name)"/>
+                <xsl:value-of select="concat($SiteName, '/', $Name, '/', $Parent, '/', $Grandparent)"/>
             </xsl:attribute>
 
             <data field="name"><xsl:value-of select="$Name"/></data>
@@ -77,7 +79,7 @@
             <xsl:if test="$Parent!=''">
                 <reference field="parent" resource="org_site_layout">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat($SiteName, '/', $Parent)"/>
+                        <xsl:value-of select="concat($SiteName, '/', $Parent, '/', $Grandparent, '/')"/>
                     </xsl:attribute>
                 </reference>
             </xsl:if>
