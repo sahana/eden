@@ -44,6 +44,7 @@ from .s3resource import S3Resource
 from .s3validators import IS_ONE_OF, IS_JSONS3
 from .s3widgets import s3_comments_widget, s3_richtext_widget
 
+CUSTOM_PREFIX = "custom"
 DYNAMIC_PREFIX = "s3dt"
 DEFAULT = lambda: None
 
@@ -243,10 +244,25 @@ class S3Model(object):
 
         prefix, name = tablename.split("_", 1)
         if prefix == DYNAMIC_PREFIX:
+            # Load Dynamic Table
             try:
                 found = S3DynamicModel(tablename).table
             except AttributeError:
                 pass
+
+        elif prefix == CUSTOM_PREFIX:
+            # Load Custom Table from deployment_settings
+            # should be a dict (or OrderedDict if want to manage dependency order):
+            # settings.models = {tablename: function}
+            # If wanting to have a REST controller for them, then also add an entry to the rest_controllers:
+            # settings.base.rest_controllers = {("custom", resourcename): ("custom", resourcename)}
+            # & add "custom" to settings.modules
+
+            # Better to raise, ideally explicit error
+            #try:
+            found = current.deployment_settings.models[tablename](db, tablename)
+            #except KeyError:
+            #pass
 
         elif hasattr(models, prefix):
             module = models.__dict__[prefix]
@@ -386,25 +402,37 @@ class S3Model(object):
         S3ImportJob.define_job_table()
         S3ImportJob.define_item_table()
 
+        settings = current.deployment_settings
+
         # Define Scheduler tables
         # - already done during Scheduler().init() run during S3Task().init() in models/tasks.py
-        #settings = current.deployment_settings
         #current.s3task.scheduler.define_tables(current.db,
         #                                       migrate = settings.get_base_migrate())
 
         # Define sessions table
-        if current.deployment_settings.get_base_session_db():
+        if settings.get_base_session_db():
             # Copied from https://github.com/web2py/web2py/blob/master/gluon/globals.py#L895
             # Not DRY, but no easy way to make it so
             current.db.define_table("web2py_session",
-                                    Field("locked", "boolean", default=False),
+                                    Field("locked", "boolean",
+                                          default = False,
+                                          ),
                                     Field("client_ip", length=64),
                                     Field("created_datetime", "datetime",
-                                          default=current.request.now),
+                                          default = current.request.now,
+                                          ),
                                     Field("modified_datetime", "datetime"),
                                     Field("unique_key", length=64),
                                     Field("session_data", "blob"),
                                     )
+
+        # Load Custom Models
+        if hasattr(settings, "models"):
+            # A dict (or OrderedDict if want to manage dependency order) of {tablename: function}
+            custom_models = settings.models
+            db = current.db
+            for tablename in custom_models:
+                custom_models[tablename](db, tablename)
 
         # Don't do this again within the current request cycle
         s3.load_all_models = False
