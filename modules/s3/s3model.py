@@ -256,6 +256,7 @@ class S3Model(object):
             # settings.models = {tablename: function}
             # If wanting to have a REST controller for them, then also add an entry to the rest_controllers:
             # settings.base.rest_controllers = {("custom", resourcename): ("custom", resourcename)}
+            # & add "custom" to settings.modules
 
             # Better to raise, ideally explicit error
             #try:

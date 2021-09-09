@@ -867,12 +867,6 @@ def config(settings):
                 restricted = True,
                 #module_type = None  # No Menu
             )),
-        ("custom", Storage(
-                name_nice = T("Custom Controllers"),
-                #description = "Needed for Breadcrumbs",
-                restricted = False,
-                #module_type = None  # No Menu
-            )),
         ("errors", Storage(
                 name_nice = T("Ticket Viewer"),
                 #description = "Needed for Breadcrumbs",
