@@ -44,6 +44,7 @@ from .s3resource import S3Resource
 from .s3validators import IS_ONE_OF, IS_JSONS3
 from .s3widgets import s3_comments_widget, s3_richtext_widget
 
+CUSTOM_PREFIX = "custom"
 DYNAMIC_PREFIX = "s3dt"
 DEFAULT = lambda: None
 
@@ -247,6 +248,13 @@ class S3Model(object):
                 found = S3DynamicModel(tablename).table
             except AttributeError:
                 pass
+
+        elif prefix == CUSTOM_PREFIX:
+            # Better to raise, ideally explicit error
+            #try:
+            found = current.deployment_settings.models[tablename](db, tablename)
+            #except KeyError:
+            #pass
 
         elif hasattr(models, prefix):
             module = models.__dict__[prefix]

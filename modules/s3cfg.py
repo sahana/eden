@@ -161,6 +161,7 @@ class S3Config(Storage):
         # Allow templates to append rather than replace
         self.base.prepopulate = ["default/base"]
         self.base.prepopulate_demo = ["default/users"]
+        #self.base.rest_controllers = {}
         self.br = Storage()
         self.cap = Storage()
         self.cms = Storage()

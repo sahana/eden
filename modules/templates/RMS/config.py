@@ -25,6 +25,26 @@ def config(settings):
     T = current.T
 
     # -------------------------------------------------------------------------
+    # Custom Models
+    #
+    def define_custom_test(db, tablename):
+
+        from gluon import Field
+
+        table = db.define_table(tablename,
+                                Field("test"),
+                                )
+
+        prefix, name = tablename.split("_", 1)
+
+        return table
+
+    settings.models = {"custom_test": define_custom_test,
+                       }
+    settings.base.rest_controllers = {("custom", "test"): ("custom", "test"),
+                                      }
+
+    # -------------------------------------------------------------------------
     # System Name
     #
     settings.base.system_name = T("Resource Management System")
@@ -865,6 +885,12 @@ def config(settings):
                 name_nice = T("Administration"),
                 #description = "Site Administration",
                 restricted = True,
+                #module_type = None  # No Menu
+            )),
+        ("custom", Storage(
+                name_nice = T("Custom Controllers"),
+                #description = "Needed for Breadcrumbs",
+                restricted = False,
                 #module_type = None  # No Menu
             )),
         ("errors", Storage(
