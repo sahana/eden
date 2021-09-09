@@ -6,17 +6,14 @@
     http://eden.sahanafoundation.org/wiki/BluePrint/Assets
 """
 
-module = request.controller
-resourcename = request.function
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """
 
-    return s3db.cms_index(module, alt_function="index_alt")
+    return s3db.cms_index(c, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -25,23 +22,27 @@ def index_alt():
     """
 
     # Just redirect to the list of Assets
-    s3_redirect_default(URL(f="asset"))
+    s3_redirect_default(URL(f = "asset"))
 
 # -----------------------------------------------------------------------------
 def create():
     """ Redirect to asset/create """
 
-    redirect(URL(f="asset", args="create"))
+    redirect(URL(f = "asset",
+                 args = "create",
+                 ))
 
 # -----------------------------------------------------------------------------
 def asset():
     """ RESTful CRUD controller """
 
     # Use the item() controller in this module to set options correctly
-    s3db.asset_asset.item_id.comment = S3PopupLink(f="item",
-        label=T("Create Item"),
-        title=T("Item"),
-        tooltip=T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog."))
+    s3db.asset_asset.item_id.comment = \
+        S3PopupLink(f = "item",
+                    label = T("Create Item"),
+                    title = T("Item"),
+                    tooltip = T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog."),
+                    )
 
     # Defined in Model for use from Multiple Controllers for unified menus
     return s3db.asset_controller()

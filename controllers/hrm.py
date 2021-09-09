@@ -4,17 +4,14 @@
     Human Resource Management
 """
 
-module = request.controller
-#resourcename = request.function
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # =============================================================================
 def index():
     """ Customisable module homepage """
 
-    return settings.customise_home(module, alt_function="index_alt")
+    return settings.customise_home(c, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -25,7 +22,9 @@ def index_alt():
     """
 
     # Bypass home page & go direct to searchable list of Staff
-    s3_redirect_default(URL(f="staff", args="summary"))
+    s3_redirect_default(URL(f = "staff",
+                            args = "summary",
+                            ))
 
 # =============================================================================
 # People

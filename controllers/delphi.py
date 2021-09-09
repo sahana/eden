@@ -4,11 +4,8 @@
     Delphi Decision Maker - Controllers
 """
 
-module = request.controller
-resourcename = request.function
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # =============================================================================
 def index():
@@ -21,7 +18,7 @@ def index():
     redirect(URL(f="problem"))
 
     # Alternative dashboard
-    module_name = settings.modules[module].get("name_nice")
+    module_name = settings.modules[c].get("name_nice")
 
     table = s3db.delphi_group
     groups = db(table.active == True).select()
@@ -195,32 +192,32 @@ def problem_rheader(r, tabs = []):
 def problem():
     """ Problem REST Controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     table = s3db[tablename]
 
     # Custom Methods
     set_method = s3db.set_method
-    set_method(module, resourcename,
-               method="problems",
-               action=problems)
+    set_method(c, f,
+               method = "problems",
+               action = problems)
 
-    set_method(module, resourcename,
-               method="discuss",
-               action=discuss)
+    set_method(c, f,
+               method = "discuss",
+               action = discuss)
 
     # Discussion can also be done at the Solution component level
-    set_method(module, resourcename,
-               component_name="solution",
-               method="discuss",
-               action=discuss)
+    set_method(c, f,
+               component_name = "solution",
+               method = "discuss",
+               action = discuss)
 
-    set_method(module, resourcename,
-               method="vote",
-               action=vote)
+    set_method(c, f,
+               method = "vote",
+               action = vote)
 
-    set_method(module, resourcename,
-               method="results",
-               action=results)
+    set_method(c, f,
+               method = "results",
+               action = results)
 
     # Filter to just Active Problems
     s3.filter = (table.active == True)

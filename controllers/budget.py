@@ -12,17 +12,15 @@
            - Kits harder
 """
 
-module = request.controller
-
 # NB Requires 'project' module too
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # =============================================================================
 def index():
     """ Module's Home Page """
 
-    module_name = settings.modules[module].get("name_nice")
+    module_name = settings.modules[c].get("name_nice")
     response.title = module_name
     return {"module_name": module_name, 
             }
@@ -411,7 +409,7 @@ def kit_export_csv():
     output = ""
 
     for resourcename in ["kit", "item", "kit_item"]:
-        _table = module + "_" + resourcename
+        _table = "budget_" + resourcename
         table = db[_table]
         # Filter Search list to just those records which user can read
         query = auth.s3_accessible_query("read", table)

@@ -7,16 +7,14 @@
     including Warehouses, Offices, Shelters & Hospitals
 """
 
-module = request.controller
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """
 
-    return settings.customise_home(module, alt_function="index_alt")
+    return settings.customise_home(c, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -37,7 +35,7 @@ def index2():
     # Need CRUD String
     table = s3db.table("cr_shelter", None)
 
-    module_name = settings.modules[module].get("name_nice")
+    module_name = settings.modules[c].get("name_nice")
     response.title = module_name
     response.view = "inv/index.html"
     if s3.debug:
@@ -428,8 +426,7 @@ def warehouse():
         native = False
 
     from s3db.inv import inv_rheader
-    output = s3_rest_controller(module, resourcename,
-                                #hide_filter = {"inv_item": False,
+    output = s3_rest_controller(#hide_filter = {"inv_item": False,
                                 #               "_default": True,
                                 #               },
                                 # Extra fields for CSV uploads:

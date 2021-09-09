@@ -4,19 +4,16 @@
     Incident Reporting System - Controllers
 """
 
-module = request.controller
-resourcename = request.function
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # -----------------------------------------------------------------------------
 def index():
     """ Custom View """
 
-    module_name = settings.modules[module].get("name_nice")
+    module_name = settings.modules[c].get("name_nice")
     response.title = module_name
-    return dict(module_name=module_name)
+    return {"module_name": module_name}
 
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
@@ -34,7 +31,7 @@ def icategory():
 def ireport():
     """ Incident Reports, RESTful controller """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     table = s3db[tablename]
 
     if "open" in get_vars:

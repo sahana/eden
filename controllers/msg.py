@@ -4,17 +4,14 @@
     Messaging Module - Controllers
 """
 
-module = request.controller
-resourcename = request.function
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """
 
-    module_name = settings.modules[module].get("name_nice")
+    module_name = settings.modules[c].get("name_nice")
     response.title = module_name
     return {"module_name": module_name,
             }
@@ -222,7 +219,7 @@ def email_outbox():
                                   ],
                    )
 
-    return s3_rest_controller(module, "email")
+    return s3_rest_controller(c, "email")
 
 # -----------------------------------------------------------------------------
 def facebook_outbox():
@@ -273,7 +270,7 @@ def facebook_outbox():
                                   ],
                    )
 
-    return s3_rest_controller(module, "facebook")
+    return s3_rest_controller(c, "facebook")
 
 # -----------------------------------------------------------------------------
 def sms_outbox():
@@ -325,7 +322,7 @@ def sms_outbox():
                                   ],
                    )
 
-    return s3_rest_controller(module, "sms")
+    return s3_rest_controller(c, "sms")
 
 # -----------------------------------------------------------------------------
 def twitter_outbox():
@@ -377,7 +374,7 @@ def twitter_outbox():
                                   ],
                    )
 
-    return s3_rest_controller(module, "twitter")
+    return s3_rest_controller(c, "twitter")
 
 # =============================================================================
 def inbox():
@@ -418,7 +415,7 @@ def inbox():
                                   ],
                    )
 
-    return s3_rest_controller(module, "message")
+    return s3_rest_controller(c, "message")
 
 # -----------------------------------------------------------------------------
 def email_inbox():
@@ -480,7 +477,7 @@ def email_inbox():
         return True
     s3.prep = prep
 
-    return s3_rest_controller(module, "email")
+    return s3_rest_controller(c, "email")
 
 # =============================================================================
 def rss():
@@ -559,7 +556,7 @@ def sms_inbox():
                                   ],
                    )
 
-    return s3_rest_controller(module, "sms")
+    return s3_rest_controller(c, "sms")
 
 # -----------------------------------------------------------------------------
 def twitter():
@@ -618,7 +615,7 @@ def twitter_inbox():
                                   ],
                    )
 
-    return s3_rest_controller(module, "twitter")
+    return s3_rest_controller(c, "twitter")
 
 # =============================================================================
 def tropo():
@@ -1174,7 +1171,7 @@ def sms_modem_channel():
         session.error = T("Python Serial module not available within the running Python - this needs installing to activate the Modem")
         redirect(URL(c="admin", f="index"))
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     table = s3db[tablename]
 
     table.modem_port.label = T("Port")
@@ -1212,7 +1209,7 @@ def sms_smtp_channel():
         - appears in the administration menu
     """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     table = s3db[tablename]
 
     table.address.label = T("Address")
@@ -1254,7 +1251,7 @@ def sms_webapi_channel():
         - appears in the administration menu
     """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     table = s3db[tablename]
 
     table.url.label = T("URL")
@@ -1348,7 +1345,7 @@ def twitter_channel():
     #    session.error = T("tweepy module not available within the running Python - this needs installing for non-Tropo Twitter support!")
     #    redirect(URL(c="admin", f="index"))
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     table = s3db[tablename]
 
     # CRUD Strings
@@ -1862,12 +1859,12 @@ def group():
     if auth.is_logged_in() or auth.basic():
         pass
     else:
-        redirect(URL(c="default", f="user", args="login",
-        vars={"_next":URL(c="msg", f="group")}))
+        redirect(URL(c="default", f="user",
+                     args = "login",
+                     vars = {"_next":URL(c="msg", f="group")},
+                     ))
 
-    module = "pr"
-    tablename = "%s_%s" % (module, resourcename)
-    table = s3db[tablename]
+    table = s3db.pr_group
 
     # Hide unnecessary fields
     table.description.readable = table.description.writable = False
@@ -1875,7 +1872,7 @@ def group():
     # Do not show system groups
     s3.filter = (table.system == False)
 
-    return s3_rest_controller(module, resourcename,
+    return s3_rest_controller("pr", "group",
                               rheader = s3db.pr_rheader,
                               )
 
@@ -1895,7 +1892,7 @@ def group_membership():
     table.comments.readable = table.comments.writable = False
     table.group_head.readable = table.group_head.writable = False
 
-    return s3_rest_controller("pr", resourcename)
+    return s3_rest_controller("pr", f)
 
 # -----------------------------------------------------------------------------
 def contacts():

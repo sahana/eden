@@ -10,17 +10,15 @@
     @todo: in the pages that add a link to a template make the combobox display the label not the numbers
 """
 
-module = request.controller
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 
 # -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """
 
-    module_name = settings.modules[module].get("name_nice")
+    module_name = settings.modules[c].get("name_nice")
     response.title = module_name
     return {"module_name": module_name,
             }
@@ -102,11 +100,12 @@ def template():
                                        ),
                                    dict(label=str(T("Upload")),
                                         _class="action-btn",
-                                        url=URL(c=module,
-                                                f="template",
-                                                args=[template_id,
-                                                      "translate",
-                                                      "[id]"]),
+                                        url=URL(c = "survey",
+                                                f = "template",
+                                                args = [template_id,
+                                                        "translate",
+                                                        "[id]",
+                                                        ]),
                                         ),
                                    ])
             #elif r.component_name == "section":
@@ -120,7 +119,7 @@ def template():
         #s3.actions = s3.actions + [
         #                       dict(label=str(T("Display")),
         #                            _class="action-btn",
-        #                            url=URL(c=module,
+        #                            url=URL(c="survey",
         #                                    f="template_read",
         #                                    args=["[id]"])
         #                           ),
@@ -307,7 +306,7 @@ def series_export_formatted():
     try:
         series_id = request.args[0]
     except:
-        output = s3_rest_controller(module, "series",
+        output = s3_rest_controller("survey", "series",
                                     rheader = s3db.survey_series_rheader)
         return output
 
@@ -376,7 +375,7 @@ def series_export_formatted():
         content_type = ".rtf"
 
     else:
-        output = s3_rest_controller(module, "series",
+        output = s3_rest_controller("survey", "series",
                                     rheader = s3db.survey_series_rheader)
         return output
 
@@ -512,8 +511,8 @@ def series_export_spreadsheet(matrix, matrix_answers, logo):
         import xlwt
     except ImportError:
         response.error = T("xlwt not installed, so cannot export as a Spreadsheet")
-        output = s3_rest_controller(module, "survey_series",
-                                    rheader=s3db.survey_series_rheader)
+        output = s3_rest_controller("survey", "survey_series",
+                                    rheader = s3db.survey_series_rheader)
         return output
 
     import math
@@ -967,7 +966,7 @@ def new_assessment():
                 response.error = None
             s3db.survey_answerlist_dataTable_post(r)
             form = s3db.survey_buildQuestionnaireFromSeries(series_id, None)
-            urlimport = URL(c=module, f="complete", args=["import"],
+            urlimport = URL(c="survey", f="complete", args=["import"],
                             vars={"viewing":"%s.%s" % ("survey_series", series_id),
                                   "single_pass":True}
                             )
@@ -982,7 +981,7 @@ def new_assessment():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(module, "complete",
+    output = s3_rest_controller("survey", "complete",
                                 method = "create",
                                 rheader = s3db.survey_series_rheader
                                 )
@@ -1146,7 +1145,7 @@ def analysis():
                    listadd = False,
                    )
 
-    output = s3_rest_controller(module, "complete")
+    output = s3_rest_controller("survey", "complete")
     return output
 
 # -----------------------------------------------------------------------------

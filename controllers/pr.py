@@ -4,8 +4,6 @@
     Person Registry, Controllers
 """
 
-module = request.controller
-
 # -----------------------------------------------------------------------------
 # Options Menu (available in all Functions' Views)
 def s3_menu_postp():
@@ -40,7 +38,7 @@ def s3_menu_postp():
 def index():
     """ Module's Home Page """
 
-    module_name = settings.modules[module].get("name_nice", T("Person Registry"))
+    module_name = settings.modules[c].get("name_nice", T("Person Registry"))
 
     # Load Model
     s3db.table("pr_address")
@@ -75,10 +73,11 @@ def index():
                 age.append([str(pr_age_group_opts[a_opt]), int(count)])
 
             total = int(db(table.deleted == False).count())
-            output.update(module_name=module_name,
-                          gender=json.dumps(gender),
-                          age=json.dumps(age),
-                          total=total)
+            output.update(module_name = module_name,
+                          gender = json.dumps(gender),
+                          age = json.dumps(age),
+                          total = total,
+                          )
         if r.interactive:
             if not r.component:
                 label = READ
@@ -172,21 +171,21 @@ def person():
     set_method = s3db.set_method
     setting = settings.get_pr_contacts_tabs()
     if "all" in setting:
-        s3db.set_method(module, resourcename,
+        s3db.set_method(c, f,
                         method = "contacts",
                         action = s3db.pr_Contacts)
         contacts_tabs.append((settings.get_pr_contacts_tab_label("all"),
                               "contacts",
                               ))
     if "public" in setting:
-        s3db.set_method(module, resourcename,
+        s3db.set_method(c, f,
                         method = "public_contacts",
                         action = s3db.pr_Contacts)
         contacts_tabs.append((settings.get_pr_contacts_tab_label("public_contacts"),
                               "public_contacts",
                               ))
     if "private" in setting and auth.is_logged_in():
-        s3db.set_method(module, resourcename,
+        s3db.set_method(c, f,
                         method = "private_contacts",
                         action = s3db.pr_Contacts)
         contacts_tabs.append((settings.get_pr_contacts_tab_label("private_contacts"),
@@ -407,7 +406,7 @@ def person_search():
     """
 
     s3.prep = lambda r: r.method == "search_ac"
-    return s3_rest_controller(module, "person")
+    return s3_rest_controller("pr", "person")
 
 # -----------------------------------------------------------------------------
 def forum():

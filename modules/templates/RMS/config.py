@@ -25,24 +25,6 @@ def config(settings):
     T = current.T
 
     # -------------------------------------------------------------------------
-    # Custom Models
-    #
-    def define_custom_test(db, tablename):
-
-        from gluon import Field
-
-        table = db.define_table(tablename,
-                                Field("test"),
-                                )
-
-        return table
-
-    settings.models = {"custom_test": define_custom_test,
-                       }
-    settings.base.rest_controllers = {("custom", "test"): ("custom", "test"),
-                                      }
-
-    # -------------------------------------------------------------------------
     # System Name
     #
     settings.base.system_name = T("Resource Management System")

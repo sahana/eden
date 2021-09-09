@@ -2,10 +2,8 @@
 
 """ Disaster Victim Identification, Controllers """
 
-module = request.controller
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # -----------------------------------------------------------------------------
 def s3_menu_postp():
@@ -47,7 +45,7 @@ def s3_menu_postp():
 def index():
     """ Module's Home Page """
 
-    module_name = settings.modules[module].get("name_nice", T("Disaster Victim Identification"))
+    module_name = settings.modules[c].get("name_nice", T("Disaster Victim Identification"))
 
     btable = s3db.dvi_body
     itable = s3db.dvi_identification
