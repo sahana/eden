@@ -1488,6 +1488,8 @@ class RequestApproverModel(S3Model):
         tablename = "req_approver"
         define_table(tablename,
                      # Could be a Site or Organisation
+                     # - may have to add rules in the template's customise_req_approver_resource to filter the options appropriately
+                     # - permission sets (inc realms) should only be applied to the instances, not the super-entity
                      self.super_link("pe_id", "pr_pentity",
                                      label = T("Organization/Site"),
                                      empty = False,

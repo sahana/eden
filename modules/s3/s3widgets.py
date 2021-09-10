@@ -8244,6 +8244,9 @@ class S3PentityAutocompleteWidget(FormWidget):
         Renders a pr_pentity SELECT as an INPUT field with AJAX Autocomplete.
         Differs from the S3AutocompleteWidget in that it can filter by type &
         also represents results with the type
+
+        May have to add rules in the template's customise_pr_pentity_controller to filter the options appropriately
+        - permission sets (inc realms) should only be applied to the instances, not the super-entity
     """
 
     def __init__(self,

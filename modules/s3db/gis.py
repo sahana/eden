@@ -2090,9 +2090,11 @@ class S3GISConfigModel(S3Model):
         field = table.pe_id
         field.label = T("Person or OU")
         field.readable = field.writable = True
-        field.represent = current.s3db.pr_PersonEntityRepresent(show_label=False)
-        field.widget = S3PentityAutocompleteWidget(
-            types=("pr_person", "pr_group", "org_organisation"))
+        field.represent = current.s3db.pr_PersonEntityRepresent(show_label = False)
+        # Maps can be assigned to a Person, Group or Organisation(/Branch)
+        # - may have to add rules in the template's customise_pr_pentity_controller to filter the options appropriately
+        # - permission sets (inc realms) should only be applied to the instances, not the super-entity
+        field.widget = S3PentityAutocompleteWidget(types = ("pr_person", "pr_group", "org_organisation"))
         label = T("Default?")
         table.pe_default.label = label
         table.pe_default.comment = DIV(

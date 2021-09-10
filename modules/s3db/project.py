@@ -11013,6 +11013,8 @@ class ProjectTaskModel(S3Model):
                                                 zero = None),
                            ),
                      # Could be a Person, Team or Organisation
+                     # - may have to add rules in the template's customise_project_task_resource to filter the options appropriately
+                     # - permission sets (inc realms) should only be applied to the instances, not the super-entity
                      super_link("pe_id", "pr_pentity",
                                 readable = staff,
                                 writable = staff,

@@ -481,6 +481,8 @@ class PRPersonEntityModel(S3Model):
         """
             JSON search method for S3AutocompleteWidget
 
+            NB If you need differential permissions for different entity types
+
             @param r: the S3Request
             @param attr: request attributes
         """

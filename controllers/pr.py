@@ -595,7 +595,11 @@ def presence():
 def pentity():
     """
         RESTful CRUD controller
-        - limited to just search_ac for use in Autocompletes
+        - limited to just search_ac for use by S3PentityAutocompleteWidget
+
+        May have to add rules in the template's customise_pr_pentity_controller to filter the options appropriately
+        - permission sets (inc realms) should only be applied to the instances, not the super-entity
+        If this needs to be different for different usecases then can provide a re-routed instance so that r.function can be differentiated on
     """
 
     s3.prep = lambda r: r.method == "search_ac"
