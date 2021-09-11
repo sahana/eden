@@ -439,7 +439,7 @@
                         <xsl:value-of select="substring-after($Assignee, ' ')"/>
                     </xsl:when>
                     <xsl:otherwise>
-                        <xsl:value-of select=""/>
+                        <xsl:text></xsl:text>
                     </xsl:otherwise>
                 </xsl:choose>
             </xsl:variable>
@@ -449,7 +449,7 @@
                         <xsl:value-of select="substring-before($last_part, ' ')"/>
                     </xsl:when>
                     <xsl:otherwise>
-                        <xsl:value-of select=""/>
+                        <xsl:text></xsl:text>
                     </xsl:otherwise>
                 </xsl:choose>
             </xsl:variable>
