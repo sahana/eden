@@ -4325,12 +4325,14 @@ Thank you"""
                                     msg_list_empty = T("No Red Cross & Red Crescent National Societies currently registered")
                                     )
                                 # Add Region to list_fields
-                                list_fields.insert(-1, "region_id")
+                                list_fields.insert(-1, "organisation_region.region_id")
                                 # Region is required
-                                table.region_id.requires = table.region_id.requires.other
+                                f = current.s3db.org_organisation_region.region_id
+                                f.requires = f.requires.other
 
                             else:
-                                table.region_id.readable = table.region_id.writable = False
+                                f = current.s3db.org_organisation_region.region_id
+                                f.readable = f.writable = False
 
                             if type_filter == "Supplier":
                                 # Show simple free-text contact field
@@ -4360,7 +4362,7 @@ Thank you"""
                                                             label = type_label,
                                                             multiple = False,
                                                             ),
-                                            "region_id",
+                                            "organisation_region.region_id",
                                             "country",
                                             "contact",
                                             "phone",

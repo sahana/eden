@@ -24,6 +24,7 @@
          Postcode................optional.....gis_location.addr_postcode
          Lat..................................gis_location.lat
          Lon..................................gis_location.lon
+         WKT.....................optional.....gis_location.wkt
          Description..........................event_incident_report.description
          Needs................................event_incident_report.needs
          Closed...............................event_incident_report.closed
@@ -217,8 +218,9 @@
                 <xsl:with-param name="colhdrs" select="$Lat"/>
             </xsl:call-template>
         </xsl:variable>
+        <xsl:variable name="wkt" select="col[@field='WKT']/text()"/>
 
-        <xsl:if test="$Building!='' or $addr_street!='' or $lat!=''">
+        <xsl:if test="$Building!='' or $addr_street!='' or $lat!=''or $wkt!=''">
             <!-- Specific Location -->
             <xsl:call-template name="Location"/>
         </xsl:if>
@@ -298,7 +300,7 @@
             </xsl:if> -->
 
             <!-- Link to Location -->
-            <xsl:if test="$country!='' or $Building!='' or $addr_street!='' or $lat!=''">
+            <xsl:if test="$country!='' or $Building!='' or $addr_street!='' or $lat!=''or $wkt!=''">
                 <xsl:call-template name="LocationReference"/>
             </xsl:if>
 
@@ -793,9 +795,10 @@
                 <xsl:with-param name="colhdrs" select="$Lat"/>
             </xsl:call-template>
         </xsl:variable>
+        <xsl:variable name="wkt" select="col[@field='WKT']/text()"/>
 
         <xsl:choose>
-            <xsl:when test="$Building!='' or $addr_street!='' or $lat!=''">
+            <xsl:when test="$Building!='' or $addr_street!='' or $lat!='' or $wkt!=''">
                 <!-- Specific Location -->
                 <xsl:variable name="lon">
                     <xsl:call-template name="GetColumnValue">
@@ -804,7 +807,7 @@
                 </xsl:variable>
                 <reference field="location_id" resource="gis_location">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('Location:', $Building, '/', $addr_street, '/', $lat, '/', $lon, '/')"/>
+                        <xsl:value-of select="concat('Location:', $Building, '/', $addr_street, '/', $lat, '/', $lon, '/', $wkt)"/>
                     </xsl:attribute>
                 </reference>
             </xsl:when>
@@ -928,6 +931,7 @@
                 <xsl:with-param name="colhdrs" select="$Lon"/>
             </xsl:call-template>
         </xsl:variable>
+        <xsl:variable name="wkt" select="col[@field='WKT']/text()"/>
 
         <!-- Country Code = UUID of the L0 Location -->
         <xsl:variable name="countrycode">
@@ -960,7 +964,7 @@
         <!-- Specific Location -->
         <resource name="gis_location">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="concat('Location:', $Name, '/', $addr_street, '/', $lat, '/', $lon)"/>
+                <xsl:value-of select="concat('Location:', $Name, '/', $addr_street, '/', $lat, '/', $lon, '/', $wkt)"/>
             </xsl:attribute>
             <xsl:choose>
                 <xsl:when test="$l5!=''">
@@ -1020,6 +1024,9 @@
             </xsl:if>
             <xsl:if test="$lon!=''">
                 <data field="lon"><xsl:value-of select="$lon"/></data>
+            </xsl:if>
+            <xsl:if test="$wkt!=''">
+                <data field="wkt"><xsl:value-of select="$wkt"/></data>
             </xsl:if>
         </resource>
 

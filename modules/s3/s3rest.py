@@ -2153,16 +2153,16 @@ def s3_request(*args, **kwargs):
             message = message.message
         if current.auth.permission.format == "html":
             current.session.error = message
-            redirect(URL(f="index"))
+            redirect(URL(f = "index"))
         else:
             headers = {"Content-Type":"application/json"}
             current.log.error(message)
             raise HTTP(error,
-                       body=current.xml.json_message(success=False,
-                                                     statuscode=error,
-                                                     message=message,
-                                                     ),
-                       web2py_error=message,
+                       body = current.xml.json_message(success = False,
+                                                       statuscode = error,
+                                                       message = message,
+                                                       ),
+                       web2py_error = message,
                        **headers)
     return r
 

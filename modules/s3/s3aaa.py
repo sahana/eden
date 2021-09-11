@@ -3359,8 +3359,9 @@ Please go to %(url)s to approve this user."""
                 # Create new organisation
                 acronym = user.get("organisation_acronym", None)
                 otable = s3db.org_organisation
-                record = Storage(name=name,
-                                 acronym=acronym)
+                record = Storage(name = name,
+                                 acronym = acronym,
+                                 )
                 organisation_id = otable.insert(**record)
 
                 # Callbacks
@@ -3384,18 +3385,21 @@ Please go to %(url)s to approve this user."""
         # Update if the User's Organisation has changed
         query = (ltable.user_id == user_id)
         rows = db(query).select(ltable.organisation_id,
-                                limitby = (0, 2))
+                                limitby = (0, 2)
+                                )
         if len(rows) == 1:
             # We know which record to update - this should always be 1
             if rows.first().organisation_id != organisation_id:
-                db(query).update(organisation_id=organisation_id)
+                db(query).update(organisation_id = organisation_id)
             # No more action required
             return organisation_id
         else:
             # Create link (if it doesn't exist)
             query = (ltable.user_id == user_id) & \
                     (ltable.organisation_id == organisation_id)
-            row = db(query).select(ltable.id, limitby=(0, 1)).first()
+            row = db(query).select(ltable.id,
+                                   limitby = (0, 1)
+                                   ).first()
             if not row:
                 ltable.insert(user_id = user_id,
                               organisation_id = organisation_id)

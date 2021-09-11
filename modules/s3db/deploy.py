@@ -1582,7 +1582,7 @@ def deploy_mission_response_count(row):
         return 0
 
 # =============================================================================
-def deploy_member_filters(status=False):
+def deploy_member_filters(status = False):
     """
         Filter widgets for members (hrm_human_resource), used in
         custom methods for member selection, e.g. deploy_apply
@@ -1616,13 +1616,13 @@ def deploy_member_filters(status=False):
 
     if settings.get_org_regions():
         if settings.get_org_regions_hierarchical():
-            widgets.insert(1, S3HierarchyFilter("organisation_id$region_id",
+            widgets.insert(1, S3HierarchyFilter("organisation_id$organisation_region.region_id",
                                                 lookup = "org_region",
                                                 hidden = True,
                                                 none = T("No Region"),
                                                 ))
         else:
-            widgets.insert(1, S3OptionsFilter("organisation_id$region_id",
+            widgets.insert(1, S3OptionsFilter("organisation_id$organisation_region.region_id",
                                               widget = "multiselect",
                                               search = True,
                                               ))
@@ -2696,11 +2696,11 @@ class deploy_MissionProfileLayout(S3DataListLayout):
 
             use_regions = self.use_regions
             if use_regions:
-                otable = s3db.org_organisation
-                region_id = otable.region_id
+                ortable = s3db.org_organisation_region
+                region_id = ortable.region_id
                 fields = [alert_id, region_id, number_of_recipients]
                 left = [htable.on(htable.id == rtable.human_resource_id),
-                        otable.on(otable.id == htable.organisation_id),
+                        ortable.on(ortable.organisation_id == htable.organisation_id),
                         ]
                 groupby = [alert_id, region_id]
             else:
@@ -2726,12 +2726,12 @@ class deploy_MissionProfileLayout(S3DataListLayout):
 
             # Representations of the region_ids
             if use_regions:
-                # not needed with regions = False
-                represent = otable.region_id.represent
+                represent = region_id.represent
                 represent.none = current.T("No Region")
                 region_ids = [row[region_id] for row in rows]
                 self.region_names = represent.bulk(region_ids)
             else:
+                # not needed with regions = False
                 self.region_names = {}
 
         elif tablename == "deploy_response":
@@ -2891,7 +2891,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                                         ),
                                       )
                 else:
-                    region = s3db.org_organisation.region_id
+                    region = s3db.org_organisation_region.region_id
                     region_names = self.region_names
                     UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
@@ -2903,7 +2903,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                         region_name = region_names.get(region_id, UNKNOWN_OPT)
                         region_filter = {
                             "recipient.human_resource_id$" \
-                            "organisation_id$region_id__belongs": region_id
+                            "organisation_id$organisation_region.region_id__belongs": region_id
                         }
 
                         # Number of recipients
@@ -2920,7 +2920,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                         # Recipient list item
                         recipient = SPAN("%s (" % region_name,
                                          A("%s %s" % (num, label),
-                                           _href=link,
+                                           _href = link,
                                            ),
                                          ")",
                                          )
@@ -2944,12 +2944,12 @@ class deploy_MissionProfileLayout(S3DataListLayout):
             if sent:
                 status = SPAN(ICON("sent"),
                               T("sent"),
-                              _class="alert-status",
+                              _class = "alert-status",
                               )
             else:
                 status = SPAN(ICON("unsent"),
                               T("not sent"),
-                              _class="red alert-status",
+                              _class = "red alert-status",
                               )
 
             # Message
@@ -3025,12 +3025,12 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                     documents = [documents]
                 bootstrap = current.response.s3.formstyle == "bootstrap"
                 if bootstrap:
-                    docs = UL(_class="dropdown-menu",
-                              _role="menu",
+                    docs = UL(_class = "dropdown-menu",
+                              _role = "menu",
                               )
                 else:
-                    docs = SPAN(_id="attachments",
-                                _class="profile-data-value",
+                    docs = SPAN(_id = "attachments",
+                                _class = "profile-data-value",
                                 )
                 retrieve = db.doc_document.file.retrieve
                 for doc in documents:
@@ -3040,7 +3040,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                         doc_name = current.messages["NONE"]
                     doc_url = URL(c = "default",
                                   f = "download",
-                                  args=[doc],
+                                  args = [doc],
                                   )
                     if bootstrap:
                         doc_item = LI(A(ICON("file"),
@@ -3048,7 +3048,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                                         doc_name,
                                         _href = doc_url,
                                         ),
-                                      _role="menuitem",
+                                      _role = "menuitem",
                                       )
                     else:
                         doc_item = A(ICON("file"),

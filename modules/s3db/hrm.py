@@ -8454,7 +8454,7 @@ def hrm_human_resource_controller(extra_filter = None):
                     teams = "Group"
                 rappend((teams, "group_membership.group_id"))
             if settings.get_org_regions():
-                rappend("organisation_id$region_id")
+                rappend("organisation_id$organisation_region.region_id")
 
             report_options = Storage(rows = report_fields,
                                      cols = report_fields,
@@ -10795,12 +10795,12 @@ def hrm_human_resource_filters(resource_type = None,
                 hidden = False
             else:
                 hidden = True
-            append_filter(S3HierarchyFilter("organisation_id$region_id",
+            append_filter(S3HierarchyFilter("organisation_id$organisation_region.region_id",
                                             label = T("Region"),
                                             hidden = hidden,
                                             ))
         else:
-            append_filter(S3OptionsFilter("organisation_id$region_id",
+            append_filter(S3OptionsFilter("organisation_id$organisation_region.region_id",
                                           label = T("Region"),
                                           hidden = True,
                                           ))

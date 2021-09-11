@@ -546,7 +546,7 @@ def alert():
                 if settings.get_org_regions():
                     recipient_filters.insert(1,
                         s3base.S3HierarchyFilter(
-                            "human_resource_id$organisation_id$region_id",
+                            "human_resource_id$organisation_id$organisation_region.region_id",
                             lookup="org_region",
                             hidden=True,
                         )

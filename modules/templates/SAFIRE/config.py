@@ -497,6 +497,13 @@ def config(settings):
             msg_list_empty = T("No Calls currently logged"),
             )
 
+        from s3 import S3LocationSelector
+
+        current.s3db.event_incident_report.location_id.widget = \
+            S3LocationSelector(polygons = True,
+                               show_address = True,
+                               )
+
     settings.customise_event_incident_report_resource = customise_event_incident_report_resource
 
     # -------------------------------------------------------------------------

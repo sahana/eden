@@ -1134,13 +1134,13 @@ def config(settings):
         if user_org_id:
             db = current.db
             s3db = current.s3db
-            otable = s3db.org_organisation
-            org = db(otable.id == user_org_id).select(otable.region_id,
-                                                      limitby=(0, 1),
-                                                      cache = s3db.cache,
-                                                      ).first()
-            if org:
-                region_id = org.region_id
+            ortable = s3db.org_organisation_region
+            link = db(ortable.organisation_id == user_org_id).select(ortable.region_id,
+                                                                     cache = s3db.cache,
+                                                                     limitby = (0, 1)
+                                                                     ).first()
+            if link:
+                region_id = link.region_id
                 # Find Sub regions (just 1 level needed)
                 rtable = s3db.org_region
                 query = (rtable.parent == region_id) & \
@@ -2969,7 +2969,7 @@ def config(settings):
     settings.customise_dc_target_resource = customise_dc_target_resource
 
     # -------------------------------------------------------------------------
-    def _is_asia_pacific(region_id=False):
+    def _is_asia_pacific(region_id = False):
         """
             Helper to determine if the user is in the Asia Pacific region
             - used for RDRT
@@ -2982,14 +2982,14 @@ def config(settings):
             db = current.db
             s3db = current.s3db
 
-            otable = s3db.org_organisation
+            ortable = s3db.org_organisation_region
             rtable = s3db.org_region
-            query = (otable.id == organisation_id) & \
-                    (otable.region_id == rtable.id)
+            query = (ortable.organisation_id == organisation_id) & \
+                    (ortable.region_id == rtable.id)
             region = db(query).select(rtable.id,
                                       rtable.name,
                                       cache = s3db.cache,
-                                      limitby=(0, 1)
+                                      limitby = (0, 1)
                                       ).first()
             if region:
                 if region_id:
@@ -2998,7 +2998,7 @@ def config(settings):
                             region_id = region.id
                         else:
                             region_id = db(rtable.name == "Asia Pacific").select(rtable.id,
-                                                                                 limitby=(0, 1)
+                                                                                 limitby = (0, 1)
                                                                                  ).first().id
                         #return (True, region_id)
                         return region_id
@@ -3007,7 +3007,7 @@ def config(settings):
                             region_id = region.id
                         else:
                             region_id = db(rtable.name == "Africa").select(rtable.id,
-                                                                           limitby=(0, 1)
+                                                                           limitby = (0, 1)
                                                                            ).first().id
                         #return (False, region_id)
                         return region_id
@@ -3029,14 +3029,14 @@ def config(settings):
             db = current.db
             s3db = current.s3db
 
-            otable = s3db.org_organisation
+            ortable = s3db.org_organisation_region
             rtable = s3db.org_region
-            query = (otable.id == organisation_id) & \
-                    (rtable.id == otable.region_id)
+            query = (ortable.organisation_id == organisation_id) & \
+                    (rtable.id == ortable.region_id)
             region = db(query).select(rtable.id,
                                       rtable.parent,
                                       cache = s3db.cache,
-                                      limitby=(0, 1)
+                                      limitby = (0, 1)
                                       ).first()
             if region:
                 ctable = s3db.org_region_country
@@ -3075,7 +3075,7 @@ def config(settings):
         table = s3db.hrm_job_title
         query = (table.type == 4)
 
-        region_id = _is_asia_pacific(region_id=True)
+        region_id = _is_asia_pacific(region_id = True)
         if region_id:
             query &= (table.region_id == region_id)
 
@@ -4307,7 +4307,7 @@ def config(settings):
             if controller == "deploy":
                 # Default Filter
                 from s3 import s3_set_default_filter
-                s3_set_default_filter("~.organisation_id$region_id",
+                s3_set_default_filter("~.organisation_id$organisation_region.region_id",
                                       user_region_and_children_default_filter,
                                       tablename = tablename)
 
@@ -5643,7 +5643,7 @@ def config(settings):
                                  "course_id",
                                  "grade",
                                  (T("National Society"), "person_id$human_resource.organisation_id"),
-                                 (T("Region"), "person_id$human_resource.organisation_id$region_id"),
+                                 (T("Region"), "person_id$human_resource.organisation_id$organisation_region.region_id"),
                                  (T("Training Location"), "training_event_id$site_id"),
                                  #(T("Month"), "month"),
                                  (T("Year"), "year"),
@@ -5654,7 +5654,7 @@ def config(settings):
                                          fact = report_fields,
                                          methods = ["count", "list"],
                                          defaults = Storage(
-                                            rows = "person_id$human_resource.organisation_id$region_id",
+                                            rows = "person_id$human_resource.organisation_id$organisation_region.region_id",
                                             cols = "training.course_id",
                                             fact = "count(training.person_id)",
                                             totals = True,
@@ -6876,7 +6876,7 @@ def config(settings):
                                                     "phone",
                                                     "comments",
                                                     )
-                        resource.configure(crud_form=crud_form,
+                        resource.configure(crud_form = crud_form,
                                            )
                     elif r.controller == "po":
                         # Referral Agencies in PO module
@@ -6962,11 +6962,13 @@ def config(settings):
                                     msg_list_empty = T("No Red Cross & Red Crescent National Societies currently registered")
                                     )
                                 # Add Region to list_fields
-                                list_fields.insert(-1, "region_id")
+                                list_fields.insert(-1, "organisation_region.region_id")
                                 # Region is required
-                                r.table.region_id.requires = r.table.region_id.requires.other
+                                f = current.s3db.org_organisation_region.region_id
+                                f.requires = f.requires.other
                             else:
-                                r.table.region_id.readable = r.table.region_id.writable = False
+                                f = current.s3db.org_organisation_region.region_id
+                                f.readable = f.writable = False
                         resource.configure(list_fields = list_fields)
 
                         if r.interactive:
@@ -6981,14 +6983,14 @@ def config(settings):
                                                             multiple = False,
                                                             #widget = "hierarchy",
                                                             ),
-                                            "region_id",
+                                            "organisation_region.region_id",
                                             "country",
                                             "phone",
                                             "website",
                                             "logo",
                                             "comments",
                                             )
-                            resource.configure(crud_form=crud_form)
+                            resource.configure(crud_form = crud_form)
 
             return result
         s3.prep = custom_prep

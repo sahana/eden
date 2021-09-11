@@ -33,7 +33,7 @@
         Group...................org_group_membership$group_id (more efficient if only 1)
         Groups..................org_group_membership$group_id
         Parent..................org_organisation_organisation$parent_id
-        Region..................org_organisation.region_id
+        Region..................org_organisation_region$region_id
         Country.................org_organisation.country (ISO Code)
         L1......................gis_location.L1 (org_organisation_location)
         L2......................gis_location.L2 (org_organisation_location)
@@ -543,11 +543,13 @@
                 <!-- Link to Region -->
                 <xsl:variable name="Region" select="col[@field='Region']/text()"/>
                 <xsl:if test="$Region!=''">
-                    <reference field="region_id" resource="org_region">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat('Region:', $Region)"/>
-                        </xsl:attribute>
-                    </reference>
+                    <resource name="org_organisation_region">
+                        <reference field="region_id" resource="org_region">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat('Region:', $Region)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </resource>
                 </xsl:if>
 
                 <!-- Website -->
