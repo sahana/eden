@@ -300,7 +300,7 @@ def warehouse():
                 # Filter out items which are already in this inventory
                 from s3db.inv import inv_prep
                 inv_prep(r)
-                # Remove the Warehouse Name from the list_fields
+                # Remove the Site Name from the list_fields
                 list_fields = s3db.get_config("inv_inv_item", "list_fields")
                 try:
                     list_fields.remove("site_id")
@@ -357,7 +357,7 @@ def warehouse():
                 field = atable.site_id
                 field.default = record.site_id
                 field.readable = field.writable = False
-                # Stay within Warehouse tab
+                # Stay within Site tab
                 s3db.configure("asset_asset",
                                create_next = None,
                                )
@@ -399,11 +399,17 @@ def warehouse():
             cname = r.component_name
             if cname == "human_resource":
                 # Modify action button to open staff instead of human_resource
-                read_url = URL(c="hrm", f="staff", args=["[id]"])
-                update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
-                s3_action_buttons(r, read_url = read_url,
+                read_url = URL(c="hrm", f="staff",
+                               args = ["[id]"],
+                               )
+                update_url = URL(c="hrm", f="staff",
+                                 args = ["[id]", "update"],
+                                 )
+                s3_action_buttons(r,
+                                  read_url = read_url,
                                   #delete_url = delete_url,
-                                  update_url = update_url)
+                                  update_url = update_url,
+                                  )
 
         # Handled via insertable
         #if isinstance(output, dict) and \

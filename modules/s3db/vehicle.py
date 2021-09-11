@@ -44,7 +44,7 @@ class S3VehicleModel(S3Model):
 
     names = ("vehicle_vehicle_type",
              "vehicle_vehicle",
-             "vehicle_vehicle_id",
+             #"vehicle_vehicle_id",
              )
 
     def model(self):
@@ -123,9 +123,10 @@ class S3VehicleModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        type_represent = S3Represent(lookup=tablename,
-                                     fields=["code", "name"],
-                                     translate=True)
+        type_represent = S3Represent(lookup = tablename,
+                                     fields = ["code", "name"],
+                                     translate = True,
+                                     )
 
         crud_strings[tablename] = Storage(
             label_create = T("Create Vehicle Type"),
@@ -152,8 +153,9 @@ class S3VehicleModel(S3Model):
                                           requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "vehicle_vehicle_type.id",
                                                                   type_represent,
-                                                                  orderby="vehicle_vehicle_type.code",
-                                                                  sort=True)),
+                                                                  orderby = "vehicle_vehicle_type.code",
+                                                                  sort = True,
+                                                                  )),
                                           sortby = "code",
                                           # Allow changing by whether hierarchical or not
                                           #widget = vehicle_type_widget,
@@ -233,7 +235,7 @@ class S3VehicleModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {"vehicle_vehicle_id": vehicle_id,
+        return {#"vehicle_vehicle_id": vehicle_id,
                 }
 
     # -------------------------------------------------------------------------
@@ -241,7 +243,7 @@ class S3VehicleModel(S3Model):
     def defaults():
         """ Return safe defaults for names in case the model is disabled """
 
-        return {"vehicle_vehicle_id": S3ReusableField.dummy("vehicle_id"),
+        return {#"vehicle_vehicle_id": S3ReusableField.dummy("vehicle_id"),
                 }
 
 # END =========================================================================

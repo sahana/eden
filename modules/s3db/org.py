@@ -4304,6 +4304,8 @@ class SiteNameModel(S3Model):
 class SiteShiftModel(S3Model):
     """
         Site Shifts model
+
+        @ToDo: Move to HRM (link tables should be in the optional models)
     """
 
     names = ("org_site_shift",

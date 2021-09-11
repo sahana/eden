@@ -1086,12 +1086,12 @@ class S3OptionsMenu(object):
                         #M("Map", m="map"),
                         #M("Import", m="import"),
                     ),
-                    M("Water Sources", f="water_source")(
+                    M("Water Sources", c="water", f="reservoir")(
                         M("Create", m="create"),
                         M("Map", m="map"),
                         M("Import", m="import"),
                     ),
-                    M("Hazard Points", f="hazard_point")(
+                    M("Hazard Points", c="vulnerability", f="risk")(
                         M("Create", m="create"),
                         M("Import", m="import"),
                     )

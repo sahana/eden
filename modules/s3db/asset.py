@@ -98,6 +98,7 @@ class S3AssetModel(S3Model):
         auth = current.auth
         user = auth.user
         LOGGED_IN = auth.is_logged_in()
+        site_types = auth.org_site_types
         s3 = current.response.s3
 
         item_id = self.supply_item_id
@@ -204,6 +205,7 @@ class S3AssetModel(S3Model):
                      super_link("site_id", "org_site",
                                 default = user.site_id if LOGGED_IN else None,
                                 empty = False,
+                                instance_types = site_types,
                                 label = org_site_label,
                                 ondelete = "RESTRICT",
                                 readable = True,
@@ -552,7 +554,7 @@ $.filterOptionsS3({
                                 label = org_site_label,
                                 #filterby = "site_id",
                                 #filter_opts = auth.permitted_facilities(redirect_on_error=False),
-                                instance_types = auth.org_site_types,
+                                instance_types = site_types,
                                 not_filterby = "obsolete",
                                 not_filter_opts = (True,),
                                 represent = self.org_site_represent,

@@ -473,6 +473,7 @@ class InventoryModel(S3Model):
                           self.super_link("site_id", "org_site",
                                           default = auth.user.site_id if auth.is_logged_in() else None,
                                           empty = False,
+                                          instance_types = auth.org_site_types,
                                           label = WAREHOUSE,
                                           ondelete = "RESTRICT",
                                           represent = self.org_site_represent,
@@ -917,6 +918,8 @@ class InventoryTrackingModel(S3Model):
         req_item_id = self.req_item_id
         req_ref = self.req_req_ref
 
+        site_types = auth.org_site_types
+
         shipment_status = inv_shipment_status_labels()
         tracking_status = {TRACK_STATUS_UNKNOWN: T("Unknown"),
                            TRACK_STATUS_PREPARING: T("In Process"),
@@ -973,7 +976,6 @@ class InventoryTrackingModel(S3Model):
         #send_type_opts.update(self.inv_item_status_opts)
         send_type_opts.update(settings.get_inv_send_types())
 
-        site_types = auth.org_site_types
         tablename = "inv_send"
         define_table(tablename,
                      # Instance
