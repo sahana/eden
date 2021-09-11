@@ -26,6 +26,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    This file should be moved to s3db/climate.py to use, or else rewritten as custom_ models
 """
 
 __all__ = ("S3SocialTenureDomainModel",

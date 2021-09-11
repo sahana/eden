@@ -2,6 +2,8 @@
 
 """
     Social Tenure Domain Model
+
+    This file should be moved to controllers/ to use, or else rewritten as custom_ controllers
 """
 
 if not settings.has_module(c):

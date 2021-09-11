@@ -215,6 +215,7 @@ Thank you"""
         else:
             shelter = T("Shelter")
         self.org_site_types = Storage(transport_airport = T("Airport"),
+                                      transport_bridge = T("Bridge"),
                                       msg_basestation = T("Cell Tower"),
                                       cr_shelter = shelter,
                                       org_facility = T("Facility"), # @ToDo: Use deployment setting for label

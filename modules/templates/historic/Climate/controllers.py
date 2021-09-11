@@ -1,5 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 
+# This file should be moved to controllers/climate.py to use, or else rewritten as custom_ models
+
 if not settings.has_module(c):
     raise HTTP(404, body="Module disabled: %s" % c)
 

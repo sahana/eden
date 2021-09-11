@@ -211,7 +211,7 @@ class PersonEntityModel(S3Model):
                            police_station = T("Police Station"),
                            pr_person = T("Person"),
                            pr_forum = T("Forum"),
-                           pr_group = T("Group"),
+                           pr_group = T("Person Group"),
                            pr_realm = T("Realm"),
                            )
 

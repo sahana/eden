@@ -4,6 +4,8 @@
     Climate Data Module
 
     @author: Mike Amy
+
+    This folder should be moved to modules/ to use, or else access to it rewritten
 """
 
 from calendar import isleap
