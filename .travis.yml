@@ -12,9 +12,6 @@ addons:
     packages:
       - python3-pip
       - python3-setuptools
-      - postgresql-client-10
-      - postgresql-10-postgis-2.5
-      - postgresql-10-postgis-2.5-scripts
       - postgresql-client-11
       - postgresql-11-postgis-2.5
       - postgresql-11-postgis-2.5-scripts
@@ -23,8 +20,6 @@ addons:
 env:
   - DB=mysql
   - DB=sqlite3
-  - DB=postgres-10
-  - DB=postgres-10+postgis
   - DB=postgres-11
   - DB=postgres-11+postgis
 
