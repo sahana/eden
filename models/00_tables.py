@@ -37,7 +37,6 @@ import s3db.gis
 import s3db.hms
 import s3db.hrm
 import s3db.inv
-#import s3db.irs
 import s3db.member
 import s3db.msg
 import s3db.ocr

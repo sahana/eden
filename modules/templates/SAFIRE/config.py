@@ -694,13 +694,6 @@ def config(settings):
         table = current.s3db.event_asset
         table.item_id.label = T("Item Type")
         table.asset_id.label = T("Specific Item")
-        # DateTime
-        from gluon import IS_EMPTY_OR
-        from s3 import IS_UTC_DATETIME, S3CalendarWidget, S3DateTime
-        for f in (table.start_date, table.end_date):
-            f.requires = IS_EMPTY_OR(IS_UTC_DATETIME())
-            f.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
-            f.widget = S3CalendarWidget(timepicker = True)
 
         if settings.get_incident_label(): # == "Ticket"
             current.response.s3.crud_strings[tablename] = Storage(

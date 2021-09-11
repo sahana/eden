@@ -1691,8 +1691,8 @@ def s3_datetime(name="date", **attr):
         represent_method = S3DateTime.datetime_represent
     if represent_method:
         represent = lambda dt: represent_method(dt,
-                                                utc=True,
-                                                calendar=calendar,
+                                                utc = True,
+                                                calendar = calendar,
                                                 )
     attributes["represent"] = represent
 
@@ -1702,9 +1702,9 @@ def s3_datetime(name="date", **attr):
             validator = IS_UTC_DATE
         else:
             validator = IS_UTC_DATETIME
-        requires = validator(calendar=calendar,
-                             minimum=earliest,
-                             maximum=latest,
+        requires = validator(calendar = calendar,
+                             minimum = earliest,
+                             maximum = latest,
                              )
         empty = attributes.pop("empty", None)
         if empty is False:

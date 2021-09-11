@@ -1788,7 +1788,8 @@ class EventAssetModel(S3Model):
                           self.super_link("cost_item_id", "budget_cost_item"),
                           self.event_event_id(ondelete = ondelete),
                           self.event_incident_id(empty = False,
-                                                 ondelete = "CASCADE"),
+                                                 ondelete = "CASCADE",
+                                                 ),
                           # Mandatory: Define the Item Type
                           self.supply_item_id(represent = supply_item_represent,
                                               requires = IS_ONE_OF(asset_items_set,
@@ -1815,22 +1816,19 @@ class EventAssetModel(S3Model):
                                               ),
                           Field("status", "integer",
                                 label = T("Status"),
-                                represent = lambda opt: \
-                                    status_opts.get(opt) or current.messages.UNKNOWN_OPT,
+                                represent = S3Represent(options = status_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(status_opts),
                                             ),
                                 ),
                           s3_datetime("start_date",
                                       label = T("Start Date"),
-                                      widget = "date",
                                       ),
                           s3_datetime("end_date",
                                       label = T("End Date"),
                                       # Not supported by s3_datetime
                                       #start_field = "event_asset_start_date",
                                       #default_interval = 12,
-                                      widget = "date",
                                       ),
                           s3_comments(),
 
@@ -1854,12 +1852,15 @@ class EventAssetModel(S3Model):
                                         "asset_id",
                                         S3SQLInlineComponent("allocation",
                                                              label = T("Budget"),
-                                                             fields = ["budget_entity_id",
-                                                                       "start_date",
-                                                                       "end_date",
+                                                             fields = ["currency",
+                                                                       "unit_cost",
                                                                        "daily_cost",
                                                                        ],
+                                                             multiple = False,
                                                              ),
+                                        "start_date",
+                                        "end_date",
+                                        postprocess = self.event_asset_postprocess,
                                         )
         else:
             crud_form = None
@@ -1965,6 +1966,23 @@ class EventAssetModel(S3Model):
                              name = "Item Request Updated",
                              comments = text,
                              )
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def event_asset_postprocess(form):
+        """
+            Update the Budget start_date and end_date
+        """
+
+        form_vars_get = form.vars.get
+        
+        start_date = form_vars_get("start_date")
+        end_date = form_vars_get("end_date")
+        cost_item_id = form_vars_get("cost_item_id")
+
+        current.db(current.s3db.budget_allocation.cost_item_id == cost_item_id).update(start_date = start_date,
+                                                                                       end_date = end_date,
+                                                                                       )
 
 # =============================================================================
 class EventBookmarkModel(S3Model):
@@ -3638,6 +3656,7 @@ class IncidentModel(S3Model):
         db = current.db
         settings = current.deployment_settings
         set_method = self.set_method
+        super_link = self.super_link
 
         if settings.get_event_cascade_delete_incidents():
             ondelete = "CASCADE"
@@ -3670,7 +3689,8 @@ class IncidentModel(S3Model):
 
         tablename = "event_incident"
         self.define_table(tablename,
-                          self.super_link("doc_id", "doc_entity"),
+                          super_link("budget_entity_id", "budget_entity"),
+                          super_link("doc_id", "doc_entity"),
                           # Enable in template if-required
                           self.event_event_id(ondelete = ondelete,
                                               readable = False,
@@ -3866,16 +3886,20 @@ class IncidentModel(S3Model):
         # - or useful to have good defaults
         if settings.has_module("project"):
             create_next_url = URL(c="event", f="incident",
-                                  args=["[id]", "task"])
+                                  args = ["[id]", "task"],
+                                  )
         elif settings.has_module("hrm"):
             create_next_url = URL(c="event", f="incident",
-                                  args=["[id]", "human_resource"])
+                                  args = ["[id]", "human_resource"],
+                                  )
         elif settings.has_module("asset"):
             create_next_url = URL(c="event", f="incident",
-                                  args=["[id]", "asset"])
+                                  args = ["[id]", "asset"],
+                                  )
         else:
             create_next_url = URL(c="event", f="incident",
-                                  args=["[id]", "site"])
+                                  args = ["[id]", "site"],
+                                  )
 
         self.configure(tablename,
                        create_next = create_next_url,
@@ -3896,7 +3920,7 @@ class IncidentModel(S3Model):
                                                     totals = True,
                                                     ),
                                                 ),
-                       super_entity = "doc_entity",
+                       super_entity = ("budget_entity", "doc_entity"),
                        update_onaccept = self.incident_update_onaccept,
                        )
 

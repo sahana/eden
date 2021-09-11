@@ -671,28 +671,25 @@ class S3OptionsMenu(object):
         """ BUDGET Controller """
 
         return M(c="budget")(
+                    M("Parameters", f="parameter"),
                     M("Budgets", f="budget")(
                         M("Create", m="create"),
                     ),
                     M("Staff Types", f="staff")(
                         M("Create", m="create"),
                     ),
-                    M("Projects", f="project")(
-                        M("Create", m="create"),
-                    ),
                     M("Locations", f="location")(
-                        M("Create", m="create"),
-                    ),
-                    M("Bundles", f="bundle")(
-                        M("Create", m="create"),
-                    ),
-                    M("Kits", f="kit")(
                         M("Create", m="create"),
                     ),
                     M("Items", f="item")(
                         M("Create", m="create"),
                     ),
-                    M("Parameters", f="parameter"),
+                    M("Kits", f="kit")(
+                        M("Create", m="create"),
+                    ),
+                    M("Bundles", f="bundle")(
+                        M("Create", m="create"),
+                    ),
                 )
 
     # -------------------------------------------------------------------------
