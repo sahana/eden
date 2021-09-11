@@ -46,7 +46,7 @@ def person():
                  "last_name",
                  "gender",
                  "age_group",
-                 (T("Status"), "missing"),
+                 (T("Status"), "person_details.missing"),
                  ]
 
     # Filter widgets
@@ -55,10 +55,10 @@ def person():
                                     "middle_name",
                                     "last_name",
                                     ],
-                                    label=T("Search"),
-                                    comment=T("You can search by first, middle or last name, and use * as wildcard."),
+                                    label = T("Search"),
+                                    comment = T("You can search by first, middle or last name, and use * as wildcard."),
                                     ),
-                      S3OptionsFilter("missing",
+                      S3OptionsFilter("person_details.missing",
                                       label = T("Status"),
                                       options = {True: T("Missing"),
                                                  False: T("Found"),
@@ -74,8 +74,8 @@ def person():
                    list_fields = list_fields,
                    # Redirect to missing report entry
                    create_next = URL(c="mpr", f="person",
-                                     args=["[id]", "note", "create"],
-                                     vars={"status": "missing"},
+                                     args = ["[id]", "note", "create"],
+                                     vars = {"status": "missing"},
                                      ),
                    )
 

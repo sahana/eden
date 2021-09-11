@@ -183,8 +183,9 @@ def person():
     def prep(r):
         if not r.id and not r.method and not r.component:
             body_id = r.get_vars.get("match", None)
-            body = db(db.dvi_body.id == body_id).select(
-                      db.dvi_body.pe_label, limitby=(0, 1)).first()
+            body = db(db.dvi_body.id == body_id).select(db.dvi_body.pe_label,
+                                                        limitby = (0, 1)
+                                                        ).first()
             label = body and body.pe_label or "#%s" % body_id
             if body_id:
                 query = dvi_match_query(body_id)
@@ -195,17 +196,16 @@ def person():
         return True
     s3.prep = prep
 
-    field = table.missing
-    field.readable = False
-    field.writable = False
-    field.default = True
+    # @ToDo: Add to crud_fields
+    field = s3db.pr_person_details.missing.default = True
 
     table.age_group.readable = True
     table.age_group.writable = True
 
     # Show only missing persons in list views
     if len(request.args) == 0:
-        s3.filter = (db.pr_person.missing == True)
+        from s3 import FS
+        s3.filter = (FS("person_details.missing") == True)
 
     mpr_tabs = [(T("Missing Report"), "missing_report"),
                 (T("Person Details"), None),
@@ -236,36 +236,43 @@ def dvi_match_query(body_id):
     """
 
     ptable = s3db.pr_person
+    pdtable = s3db.pr_person_details
     ntable = s3db.pr_note
     btable = s3db.dvi_body
 
-    query = ((ptable.deleted == False) &
-            (ptable.missing == True) &
-            (ntable.pe_id == ptable.pe_id) &
-            (ntable.status == 1))
+    query = ((ptable.deleted == False) & \
+             (pdtable.person_id == ptable.id) & \
+             (pdtable.missing == True) & \
+             (ntable.pe_id == ptable.pe_id) & \
+             (ntable.status == 1))
 
-    body = btable[body_id]
+    body = db(btable.body_id == body_id).select(btable.date_of_recovery,
+                                                btable.age_group,
+                                                btable.gender,
+                                                limitby = (0, 1)
+                                                ).first()
     if not body:
         return query
 
     # last seen should be before date of recovery
     if body.date_of_recovery:
-        q = ((ntable.timestmp <= body.date_of_recovery) |
-            (ntable.timestmp == None))
-        query = query & q
+        q = ((ntable.timestmp <= body.date_of_recovery) | \
+             (ntable.timestmp == None))
+        query &= q
 
     # age group should match
     if body.age_group and body.age_group != 1:
-        q = ((ptable.age_group == None) |
-            (ptable.age_group == 1) |
+        q = ((ptable.age_group == None) | \
+            (ptable.age_group == 1) | \
             (ptable.age_group == body.age_group))
-        query = query & q
+        query &= q
 
     # gender should match
     if body.gender and body.gender != 1:
-        q = ((ptable.gender == None) |
-            (ptable.gender == 1) |
+        q = ((ptable.gender == None) | \
+            (ptable.gender == 1) | \
             (ptable.gender == body.gender))
+        query &= q
 
     return query
 

@@ -1420,29 +1420,6 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
                           position = i + 1,
                           )
 
-        # Add an opt in clause to receive emails depending on the deployment settings
-        # @ToDo: Replace with Consent Tracking
-        if deployment_settings.get_auth_opt_in_to_email():
-            field_id = "%s_opt_in" % utablename
-            comment = DIV(DIV(_class = "tooltip",
-                              _title = "%s|%s" % (T("Mailing list"),
-                                                  T("By selecting this you agree that we may contact you."))))
-            checked = deployment_settings.get_auth_opt_in_default() and "selected"
-            s3_addrow(form,
-                      LABEL("%s:" % T("Receive updates"),
-                            _for = "opt_in",
-                            _id = field_id + SQLFORM.ID_LABEL_SUFFIX,
-                            ),
-                      INPUT(_name = "opt_in",
-                            _id = field_id,
-                            _type = "checkbox",
-                            _checked = checked,
-                            ),
-                      comment,
-                      formstyle,
-                      field_id + SQLFORM.ID_ROW_SUFFIX,
-                      )
-
         # S3: Insert Home phone field into form
         if deployment_settings.get_auth_registration_requests_home_phone():
             for i, row in enumerate(form[0].components):
@@ -1730,7 +1707,7 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
             .. method:: Auth.profile([next=DEFAULT [, onvalidation=DEFAULT
                 [, onaccept=DEFAULT [, log=DEFAULT]]]])
 
-            Patched for S3 to use s3_mark_required and handle opt_in mailing lists
+            Patched for S3 to use s3_mark_required
         """
 
         if not self.is_logged_in():
@@ -1769,56 +1746,6 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
             log = messages.profile_log
         labels = s3_mark_required(utable)[0]
 
-        # If we have an opt_in and some post_vars then update the opt_in value
-        # @ToDo: Replace with an AuthConsent-integrated solution
-        opt_in_to_email = deployment_settings.get_auth_opt_in_to_email()
-        if opt_in_to_email:
-            team_list = deployment_settings.get_auth_opt_in_team_list()
-            if request.post_vars:
-                removed = []
-                selected = []
-                for opt_in in team_list:
-                    if opt_in in request.post_vars:
-                        selected.append(opt_in)
-                    else:
-                        removed.append(opt_in)
-                db = current.db
-                s3db = current.s3db
-                ptable = s3db.pr_person
-                putable = s3db.pr_person_user
-                query = (putable.user_id == request.post_vars.id) & \
-                        (putable.pe_id == ptable.pe_id)
-                person_id = db(query).select(ptable.id, limitby=(0, 1)).first().id
-                db(ptable.id == person_id).update(opt_in = selected)
-
-                g_table = s3db["pr_group"]
-                gm_table = s3db["pr_group_membership"]
-                # Remove them from any team they are a member of in the removed list
-                for team in removed:
-                    query = (g_table.name == team) & \
-                            (gm_table.group_id == g_table.id) & \
-                            (gm_table.person_id == person_id)
-                    gm_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
-                    if gm_rec:
-                        db(gm_table.id == gm_rec.id).delete()
-                # Add them to the team (if they are not already a team member)
-                for team in selected:
-                    query = (g_table.name == team) & \
-                            (gm_table.group_id == g_table.id) & \
-                            (gm_table.person_id == person_id)
-                    gm_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
-                    if not gm_rec:
-                        query = (g_table.name == team)
-                        team_rec = db(query).select(g_table.id,
-                                                    limitby=(0, 1)).first()
-                        # if the team doesn't exist then add it
-                        if team_rec == None:
-                            team_id = g_table.insert(name=team, group_type=5)
-                        else:
-                            team_id = team_rec.id
-                        gm_table.insert(group_id = team_id,
-                                        person_id = person_id)
-
         formstyle = deployment_settings.get_ui_formstyle()
         current.response.form_label_separator = ""
         form = SQLFORM(utable,
@@ -1841,9 +1768,9 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
             openid_login_form = OpenIDAuth(self)
             form = DIV(form, openid_login_form.list_user_openids())
         if form.accepts(request, session,
-                        formname="profile",
-                        onvalidation=onvalidation,
-                        hideerror=settings.hideerror):
+                        formname = "profile",
+                        onvalidation = onvalidation,
+                        hideerror = settings.hideerror):
             #self.s3_auth_user_register_onaccept(form.vars.email, self.user.id)
             self.user.update(utable._filter_fields(form.vars))
             session.flash = messages.profile_updated
@@ -1858,36 +1785,6 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
                 next = self.url(next.replace("[id]", str(form.vars.id)))
             redirect(next)
 
-        if opt_in_to_email:
-            T = current.T
-            ptable = s3db.pr_person
-            ltable = s3db.pr_person_user
-            team_list = deployment_settings.get_auth_opt_in_team_list()
-            query = (ltable.user_id == form.record.id) & \
-                    (ltable.pe_id == ptable.pe_id)
-            db_opt_in_list = db(query).select(ptable.opt_in,
-                                              limitby=(0, 1)).first().opt_in
-            for opt_in in team_list:
-                field_id = "%s_opt_in_%s" % (utable, team_list)
-                if opt_in in db_opt_in_list:
-                    checked = "selected"
-                else:
-                    checked = None
-                s3_addrow(form,
-                          LABEL(T("Receive %(opt_in)s updates:") % \
-                                                        {"opt_in": opt_in},
-                                _for = "opt_in",
-                                _id = field_id + SQLFORM.ID_LABEL_SUFFIX,
-                                ),
-                          INPUT(_name = opt_in,
-                                _id = field_id,
-                                _type = "checkbox",
-                                _checked = checked,
-                                ),
-                          "",
-                          formstyle,
-                          field_id + SQLFORM.ID_ROW_SUFFIX,
-                          )
         return form
 
     # -------------------------------------------------------------------------
@@ -3072,11 +2969,6 @@ Please go to %(url)s to approve this user."""
 
         person_ids = [] # Collect the person IDs
 
-        if current.request.vars.get("opt_in", None):
-            opt_in = current.deployment_settings.get_auth_opt_in_team_list()
-        else:
-            opt_in = []
-
         for row in rows:
 
             # The user record
@@ -3223,13 +3115,11 @@ Please go to %(url)s to approve this user."""
                     if middle_name:
                         person_id = ptable.insert(first_name = first_name,
                                                   middle_name = last_name,
-                                                  opt_in = opt_in,
                                                   modified_by = user.id,
                                                   **owner)
                     else:
                         person_id = ptable.insert(first_name = first_name,
                                                   last_name = last_name,
-                                                  opt_in = opt_in,
                                                   modified_by = user.id,
                                                   **owner)
                     if person_id:
@@ -3258,24 +3148,6 @@ Please go to %(url)s to approve this user."""
                                       priority = 1,
                                       value = email,
                                       **owner)
-
-                        # Add the user to each team if they have chosen to opt-in
-                        gtable = s3db.pr_group
-                        mtable = s3db.pr_group_membership
-
-                        for team in opt_in:
-                            team_rec = db(gtable.name == team).select(gtable.id,
-                                                                      limitby=(0, 1)
-                                                                      ).first()
-                            # if the team doesn't exist then add it
-                            if team_rec == None:
-                                team_id = gtable.insert(name = team,
-                                                        group_type = 5)
-                            else:
-                                team_id = team_rec.id
-                            mtable.insert(group_id = team_id,
-                                          person_id = person_id,
-                                          )
 
                         person_ids.append(person_id)
 

@@ -776,15 +776,6 @@ class S3Config(Storage):
         """
         return self.auth.get("registration_link_user_to_default")
 
-    def get_auth_opt_in_team_list(self):
-        return self.auth.get("opt_in_team_list", [])
-
-    def get_auth_opt_in_to_email(self):
-        return self.get_auth_opt_in_team_list() != []
-
-    def get_auth_opt_in_default(self):
-        return self.auth.get("opt_in_default", False)
-
     def get_auth_registration_requests_home_phone(self):
         return self.auth.get("registration_requests_home_phone", False)
 

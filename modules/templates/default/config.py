@@ -62,10 +62,6 @@ def config(settings):
     # Always notify the approver of a new (verified) user, even if the user is automatically approved
     #settings.auth.always_notify_approver = False
 
-    # The name of the teams that users are added to when they opt-in to receive alerts
-    #settings.auth.opt_in_team_list = ["Updates"]
-    # Uncomment this to set the opt in default to True
-    #settings.auth.opt_in_default = True
     # Uncomment this to request the Home Phone when a user registers
     #settings.auth.registration_requests_home_phone = True
     # Uncomment this to request the Mobile Phone when a user registers

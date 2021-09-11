@@ -7430,9 +7430,6 @@ def config(settings):
         elif root_org == CRMADA:
             crmada = True
             table = s3db.pr_person
-            table.initials.readable = table.initials.writable = False
-            table.local_name.readable = table.local_name.writable = False
-            table.preferred_name.readable = table.preferred_name.writable = False
             dtable = s3db.pr_person_details
             dtable.religion.readable = dtable.religion.writable = False
             dtable.nationality.default = "MG"
@@ -7447,8 +7444,6 @@ def config(settings):
             settings.hrm.activity_types = None
             settings.hrm.use_id = False
             table = s3db.pr_person
-            table.initials.readable = table.initials.writable = False
-            table.preferred_name.readable = table.preferred_name.writable = False
         elif root_org == PMI:
             settings.hrm.staff_experience = "experience"
             settings.hrm.vol_active_tooltip = "A volunteer is defined as active if they've participated in an average of 8 or more hours of Program work or Trainings per month in the last year"
