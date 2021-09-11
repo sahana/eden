@@ -2025,72 +2025,6 @@ class S3OptionsMenu(object):
                 )
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def stdm():
-        """ Social Tenure Domain Model """
-        ADMIN = current.session.s3.system_roles.ADMIN
-        has_role = current.auth.s3_has_role
-
-        informal = lambda i: has_role("INFORMAL_SETTLEMENT")
-        gov = lambda i: has_role("LOCAL_GOVERNMENT")
-        rural = lambda i: has_role("RURAL_AGRICULTURE")
-
-        return M(c="stdm")(
-                    M("Administrative Units", c="gis", f="location",
-                                              vars={"~.level__ne": None},
-                      restrict=ADMIN)(
-                        M("Create", m="create",
-                                    vars={"~.level__ne": None}),
-                    ),
-                    #M("Spatial Units", c="gis", f="location",
-                    #                   vars={"~.level": None})(
-                    #    M("Create", m="create", vars={"~.level": None}),
-                    #),
-                    M("Gardens", f="garden",
-                      check=rural)(
-                        M("Create", m="create"),
-                        M("Import", m="import"),
-                    ),
-                    M("Parcels", f="parcel",
-                      check=gov)(
-                        M("Create", m="create"),
-                        M("Import", m="import"),
-                    ),
-                    M("Structures", f="structure",
-                      check=informal)(
-                        M("Create", m="create"),
-                        M("Import", m="import"),
-                    ),
-                    M("Parties")(
-                        M("People", f="person"),
-                        M("Groups", f="group"),
-                        M("Farmers", f="farmer", check=rural),
-                        M("Planners", f="planner", check=gov),
-                        M("Surveyors", f="surveyor", check=gov),
-                    ),
-                    M("Surveys", f="gov_survey", check=gov)(
-                        M("Create", m="create"),
-                    ),
-                    M("Surveys", f="rural_survey", check=rural)(
-                        M("Create", m="create"),
-                    ),
-                    M("Tenures", f="tenure")(
-                        M("Create", m="create"),
-                    ),
-                    M("Lookup Lists", restrict=ADMIN)(
-                        M("Disputes", f="dispute"),
-                        M("Household Relations", f="group_member_role"),
-                        M("Input Services", f="input_service"),
-                        M("Land Uses", f="landuse"),
-                        M("Officer Ranks", f="job_title"),
-                        M("Ownership Types", f="ownership_type"),
-                        M("Parcel Types", f="parcel_type"),
-                        M("Socio-economic Impacts", f="socioeconomic_impact"),
-                        M("Tenure Types", f="tenure_type"),
-                    ),
-                )
-
-    # -------------------------------------------------------------------------
     def sync(self):
         """ SYNC menu """
 
@@ -2199,29 +2133,6 @@ class S3OptionsMenu(object):
                         M("Create", m="create"),
                         M("Map", m="map"),
                         #M("Import", m="import"),
-                    ),
-                )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def work():
-        """ WORK: Simple Volunteer Jobs Management """
-
-        return M(c="work")(
-                    # @todo: my jobs
-                    M("Joblist", f="job", m="datalist"),
-                    M("Jobs", f="job")(
-                        M("Create", m="create"),
-                    ),
-                    M("Assignments", f="assignment")(
-                        M("Create", m="create"),
-                    ),
-                    # Hide until implemented:
-                    #M("Contexts", f="context")(
-                    #    M("Create", m="create"),
-                    #),
-                    M("Job Types", f="job_type")(
-                        M("Create", m="create"),
                     ),
                 )
 
