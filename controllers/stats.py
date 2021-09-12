@@ -62,41 +62,18 @@ def demographic_aggregate():
         if not auth.s3_has_role("ADMIN"):
             auth.permission.fail()
         s3db.stats_demographic_rebuild_all_aggregates()
-        redirect(URL(c="stats",
-                     f="demographic_aggregate",
-                     args="",
+        redirect(URL(c = "stats",
+                     f = "demographic_aggregate",
+                     args = "",
                      ))
 
     s3db.set_method("stats", "demographic_aggregate",
-                    method="clear",
-                    action=clear_aggregates)
+                    method = "clear",
+                    action = clear_aggregates,
+                    )
 
     output = s3_rest_controller()
     return output
-
-# -----------------------------------------------------------------------------
-def people_type():
-    """ REST Controller """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def people():
-    """ REST Controller """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def trained_type():
-    """ REST Controller """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def trained():
-    """ REST Controller """
-
-    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def impact_type():
