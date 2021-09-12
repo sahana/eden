@@ -180,6 +180,8 @@ class PersonEntityModel(S3Model):
         #NO = T("no") #messages.NO
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
+        pe_id = "pe_id"
+
         # ---------------------------------------------------------------------
         # Person Super-Entity
         #
@@ -218,7 +220,7 @@ class PersonEntityModel(S3Model):
         pr_pentity_represent = pr_PersonEntityRepresent()
 
         tablename = "pr_pentity"
-        super_entity(tablename, "pe_id", pe_types,
+        super_entity(tablename, pe_id, pe_types,
                      #super_link("source_id", "doc_source_entity"),
                      Field("type"),
                      Field("pe_label", length=128),
@@ -228,17 +230,16 @@ class PersonEntityModel(S3Model):
         configure(tablename,
                   deletable = False,
                   editable = False,
-                  listadd = False,
+                  insertable = False,
                   list_fields = ["instance_type",
                                  "type",
                                  "pe_label",
                                  ],
                   onaccept = self.pr_pentity_onaccept,
-                  referenced_by = [(auth_settings.table_membership_name, "pe_id")],
+                  referenced_by = [(auth_settings.table_membership_name, pe_id)],
                   )
 
         # Components
-        pe_id = "pe_id"
         add_components(tablename,
                        # PR components
                        pr_address = pe_id,
@@ -343,7 +344,7 @@ class PersonEntityModel(S3Model):
         #
         tablename = "pr_person_user"
         define_table(tablename,
-                     super_link("pe_id", "pr_pentity"),
+                     super_link(pe_id, "pr_pentity"),
                      Field("user_id", auth_settings.table_user),
                      *s3_meta_fields())
 
@@ -359,7 +360,7 @@ class PersonEntityModel(S3Model):
         tablename = "pr_role"
         define_table(tablename,
                      # The "parent" entity
-                     super_link("pe_id", "pr_pentity",
+                     super_link(pe_id, "pr_pentity",
                                 label = T("Corporate Entity"),
                                 readable = True,
                                 writable = True,
@@ -370,9 +371,8 @@ class PersonEntityModel(S3Model):
                       # Role type
                       Field("role_type", "integer",
                             default = 1,
+                            represent = S3Represent(options = role_types),
                             requires = IS_IN_SET(role_types, zero=None),
-                            represent = lambda opt: \
-                                role_types.get(opt, UNKNOWN_OPT),
                             ),
                       # Role name
                       Field("role", notnull=True,
@@ -385,10 +385,9 @@ class PersonEntityModel(S3Model):
                             ),
                       # Type filter, type of entities which can have this role
                       Field("entity_type", "string",
+                            represent = S3Represent(options = pe_types),
                             requires = IS_EMPTY_OR(IS_IN_SET(pe_types,
-                                                             zero=T("ANY"))),
-                            represent = lambda opt: \
-                                pe_types.get(opt, UNKNOWN_OPT),
+                                                             zero = T("ANY"))),
                             ),
                       # Subtype filter, if the entity type defines its own type
                       Field("sub_type", "integer",
@@ -427,7 +426,8 @@ class PersonEntityModel(S3Model):
                                   ondelete = "CASCADE",
                                   represent = pr_role_represent,
                                   requires = IS_ONE_OF(db, "pr_role.id",
-                                                       pr_role_represent),
+                                                       pr_role_represent,
+                                                       ),
                                   )
 
         # ---------------------------------------------------------------------
@@ -436,7 +436,7 @@ class PersonEntityModel(S3Model):
         tablename = "pr_affiliation"
         define_table(tablename,
                      role_id(),
-                     super_link("pe_id", "pr_pentity",
+                     super_link(pe_id, "pr_pentity",
                                 label = T("Entity"),
                                 readable = True,
                                 writable = True,

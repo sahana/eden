@@ -17,11 +17,11 @@ def config(settings):
 
         http://eden.sahanafoundation.org/wiki/Deployments/IFRC
 
-        This version was developed for the Asia-Pacific Zone
-        Also used in:
-            * Iraq
+        This version was developed for the Asia-Pacific Zone and also used in:
             * Madagascar
             * Nairobi (RDRT)
+        Currently used in:
+            * Iraq
             * Yemen
     """
 

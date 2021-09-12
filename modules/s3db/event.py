@@ -1759,6 +1759,7 @@ class EventAssetModel(S3Model):
             return {}
 
         T = current.T
+        db = current.db
 
         # SAFIRE\SC
         status_opts = {1: T("Requested"),
@@ -1777,10 +1778,9 @@ class EventAssetModel(S3Model):
 
         # @ToDo: make this lookup Lazy (also in asset.py)
         ctable = self.supply_item_category
-        itable = self.supply_item
+        asset_categories = db(ctable.can_be_asset == True).select(ctable.id)
+
         supply_item_represent = self.supply_item_represent
-        asset_items_set = current.db((ctable.can_be_asset == True) & \
-                                     (itable.item_category_id == ctable.id))
 
         tablename = "event_asset"
         self.define_table(tablename,
@@ -1792,9 +1792,10 @@ class EventAssetModel(S3Model):
                                                  ),
                           # Mandatory: Define the Item Type
                           self.supply_item_id(represent = supply_item_represent,
-                                              requires = IS_ONE_OF(asset_items_set,
-                                                                   "supply_item.id",
+                                              requires = IS_ONE_OF(db, "supply_item.id",
                                                                    supply_item_represent,
+                                                                   filterby = "item_category_id",
+                                                                   filter_opts = [row.id for row in asset_categories],
                                                                    sort = True,
                                                                    ),
                                               script = None, # No Item Pack Filter
@@ -2344,7 +2345,7 @@ class EventHRModel(S3Model):
 
         if settings.has_module("hrm"):
             # Proper field
-            job_title_represent = S3Represent(lookup="hrm_job_title")
+            job_title_represent = S3Represent(lookup = "hrm_job_title")
         else:
             # Dummy field - probably this model not being used but others from Event are
             job_title_represent = None
@@ -2412,8 +2413,7 @@ class EventHRModel(S3Model):
                           # reportsToAgency in EDXL-SitRep: person_id$human_resource.organisation_id
                           Field("status", "integer",
                                 label = T("Status"),
-                                represent = lambda opt: \
-                                    status_opts.get(opt) or current.messages.UNKNOWN_OPT,
+                                represent = S3Represent(options = status_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(status_opts),
                                             ),
@@ -2452,27 +2452,23 @@ class EventHRModel(S3Model):
                        "end_date",
                        ]
 
-        if current.deployment_settings.has_module("budget"):
+        if settings.has_module("budget"):
             crud_form = S3SQLCustomForm("incident_id",
                                         "job_title_id",
                                         "person_id",
-                                        "start_date",
-                                        "end_date",
                                         S3SQLInlineComponent("allocation",
                                                              label = T("Budget"),
-                                                             fields = ["budget_id",
-                                                                       # @ToDo: Populate these automatically from the master record
-                                                                       #"start_date",
-                                                                       #"end_date",
+                                                             fields = ["currency",
+                                                                       "unit_cost",
                                                                        "daily_cost",
                                                                        ],
+                                                             multiple = False,
                                                              ),
+                                        "start_date",
+                                        "end_date",
+                                        postprocess = self.event_human_resource_postprocess,
                                         )
-            list_fields.extend(("allocation.budget_id",
-                                #"allocation.start_date",
-                                #"allocation.end_date",
-                                "allocation.daily_cost",
-                                ))
+            list_fields.append("allocation.daily_cost")
         else:
             crud_form = None
 
@@ -2572,6 +2568,23 @@ class EventHRModel(S3Model):
                              name = "Person Request Updated",
                              comments = text,
                              )
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def event_human_resource_postprocess(form):
+        """
+            Update the Budget start_date and end_date
+        """
+
+        form_vars_get = form.vars.get
+        
+        start_date = form_vars_get("start_date")
+        end_date = form_vars_get("end_date")
+        cost_item_id = form_vars_get("cost_item_id")
+
+        current.db(current.s3db.budget_allocation.cost_item_id == cost_item_id).update(start_date = start_date,
+                                                                                       end_date = end_date,
+                                                                                       )
 
 # =============================================================================
 class EventTeamModel(S3Model):

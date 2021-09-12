@@ -46,17 +46,24 @@ def vehicle():
 
     set_method = s3db.set_method
 
-    set_method("asset", "asset", method="assign",
-               action = s3db.hrm_AssignMethod(component="human_resource"))
+    set_method("asset", "asset",
+               method = "assign",
+               action = s3db.hrm_AssignMethod(component = "human_resource"),
+               )
 
-    set_method("asset", "asset", method="check-in",
-               action = s3base.S3CheckInMethod())
+    set_method("asset", "asset",
+               method = "check-in",
+               action = s3base.S3CheckInMethod(),
+               )
 
-    set_method("asset", "asset", method="check-out",
-               action = s3base.S3CheckOutMethod())
+    set_method("asset", "asset",
+               method = "check-out",
+               action = s3base.S3CheckOutMethod(),
+               )
 
     # Type is Vehicle
-    VEHICLE = s3db.asset_types["VEHICLE"]
+    from s3db.asset import asset_types
+    VEHICLE = asset_types["VEHICLE"]
     field = table.type
     field.default = VEHICLE
     field.readable = False
@@ -72,27 +79,25 @@ def vehicle():
 
     field = table.item_id
     field.label = T("Vehicle Type")
-    field.comment = S3PopupLink(f="item",
+    #field.widget = None # We want a simple dropdown, which is the default anyway
+    field.comment = S3PopupLink(f = "item",
                                 # Use this controller for options.json rather than looking for one called 'asset'
-                                vars=dict(parent="vehicle"),
-                                label=T("Add Vehicle Type"),
-                                info=T("Add a new vehicle type"),
-                                title=T("Vehicle Type"),
-                                tooltip=T("Only Items whose Category are of type 'Vehicle' will be seen in the dropdown."))
+                                vars = {"parent": "vehicle"},
+                                label = T("Add Vehicle Type"),
+                                info = T("Add a new vehicle type"),
+                                title = T("Vehicle Type"),
+                                tooltip = T("Only Items whose Category are of type 'Vehicle' will be seen in the dropdown."),
+                                )
 
     # Use this controller for options.json rather than looking for one called 'asset'
-    table.organisation_id.comment[0].vars = dict(parent="vehicle")
+    table.organisation_id.comment[0].vars = {"parent": "vehicle"}
 
     # Only select from vehicles
-    field.widget = None # We want a simple dropdown
     ctable = s3db.supply_item_category
-    itable = s3db.supply_item
-    query = (ctable.is_vehicle == True) & \
-            (itable.item_category_id == ctable.id)
-    field.requires = IS_ONE_OF(db(query),
-                               "supply_item.id",
-                               "%(name)s",
-                               sort=True)
+    vehicle_categories = db(ctable.is_vehicle == True).select(ctable.id)
+    field.requires.set_filter(filterby = "item_category_id",
+                              filter_opts = [row.id for row in vehicle_categories],
+                              )
     # Label changes
     table.sn.label = T("License Plate")
     s3db.asset_log.room_id.label = T("Parking Area")
@@ -135,20 +140,20 @@ def item():
     # Limit the Categories to just those with vehicles in
     # - make category mandatory so that filter works
     field = s3db.supply_item.item_category_id
-    field.requires = IS_ONE_OF(db,
-                               "supply_item_category.id",
+    field.requires = IS_ONE_OF(db, "supply_item_category.id",
                                s3db.supply_item_category_represent,
-                               sort=True,
+                               sort = True,
                                filterby = "is_vehicle",
                                filter_opts = [True]
                                )
 
     field.label = T("Vehicle Categories")
-    field.comment = S3PopupLink(f="item_category",
-                                label=T("Add Vehicle Category"),
-                                info=T("Add a new vehicle category"),
-                                title=T("Vehicle Category"),
-                                tooltip=T("Only Categories of type 'Vehicle' will be seen in the dropdown."))
+    field.comment = S3PopupLink(f = "item_category",
+                                label = T("Add Vehicle Category"),
+                                info = T("Add a new vehicle category"),
+                                title = T("Vehicle Category"),
+                                tooltip = T("Only Categories of type 'Vehicle' will be seen in the dropdown."),
+                                )
 
     # CRUD strings
     s3.crud_strings["supply_item"] = Storage(

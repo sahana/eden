@@ -3345,6 +3345,8 @@ class SiteModel(S3Model):
 
         set_method = self.set_method
 
+        site_id = "site_id"
+
         # =====================================================================
         # Site / Facility (ICS terminology)
         #
@@ -3358,7 +3360,7 @@ class SiteModel(S3Model):
         org_site_types = auth.org_site_types
 
         tablename = "org_site"
-        self.super_entity(tablename, "site_id", org_site_types,
+        self.super_entity(tablename, site_id, org_site_types,
                           # @ToDo: Make Sites Trackable (Mobile Hospitals & Warehouses)
                           #super_link("track_id", "sit_trackable"),
                           Field("code",
@@ -3394,23 +3396,25 @@ class SiteModel(S3Model):
             widget = S3SiteAutocompleteWidget()
             comment = DIV(_class = "tooltip",
                           _title = "%s|%s" % (org_site_label,
-                                              messages.AUTOCOMPLETE_HELP))
+                                              messages.AUTOCOMPLETE_HELP,
+                                              ),
+                          )
         else:
             widget = None
             comment = None
 
         org_site_represent = org_SiteRepresent(show_link = True)
 
-        site_id = lambda: self.super_link("site_id", "org_site",
-                                          comment = comment,
-                                          #default = auth.user.site_id if auth.is_logged_in() else None,
-                                          label = org_site_label,
-                                          orderby = "org_site.name",
-                                          #readable = True,
-                                          represent = org_site_represent,
-                                          widget = widget,
-                                          #writable = True,
-                                          )
+        org_site_id = lambda: self.super_link(site_id, "org_site",
+                                              comment = comment,
+                                              #default = auth.user.site_id if auth.is_logged_in() else None,
+                                              label = org_site_label,
+                                              orderby = "org_site.name",
+                                              #readable = True,
+                                              represent = org_site_represent,
+                                              widget = widget,
+                                              #writable = True,
+                                              )
 
         # Custom Method for S3SiteAutocompleteWidget
         set_method("org", "site",
@@ -3429,8 +3433,7 @@ class SiteModel(S3Model):
         #           method = "assign",
         #           action = self.hrm_AssignMethod(component="human_resource_site"))
 
-        list_fields = ["id",
-                       "code",
+        list_fields = ["code",
                        "instance_type",
                        "name",
                        "organisation_id",
@@ -3444,12 +3447,12 @@ class SiteModel(S3Model):
                                   },
                        list_fields = list_fields,
                        # Include site_id in JSON (for filterOptionsS3):
-                       json_fields = list_fields + ["site_id"],
+                       json_fields = list_fields + [site_id],
                        # Do not override the code with any codes from instance tables:
                        no_shared_fields = ("code",),
                        onaccept = self.org_site_onaccept,
                        ondelete_cascade = self.org_site_ondelete_cascade,
-                       referenced_by = [(auth.settings.table_user_name, "site_id"),
+                       referenced_by = [(auth.settings.table_user_name, site_id),
                                         ],
                        )
 
@@ -3457,105 +3460,113 @@ class SiteModel(S3Model):
         self.add_components(tablename,
                             # Facility Types
                             org_facility_type = {"link": "org_site_facility_type",
-                                                 "joinby": "site_id",
+                                                 "joinby": site_id,
                                                  "key": "facility_type_id",
                                                  "actuate": "hide",
                                                  },
 
                             # Layout
                             org_site_layout = ({"name": "layout",
-                                                "joinby": "site_id",
+                                                "joinby": site_id,
                                                 },
                                                ),
 
                             # Locations
                             org_site_location = ({"name": "location",
-                                                  "joinby": "site_id",
+                                                  "joinby": site_id,
                                                  },
                                                  ),
 
                             # Local Names
                             org_site_name = {"name": "name",
-                                             "joinby": "site_id",
+                                             "joinby": site_id,
                                              },
 
                             # Details and Status
-                            org_site_details = {"joinby": "site_id",
+                            org_site_details = {"joinby": site_id,
                                                 "multiple": False,
                                                 },
                             org_site_status = {"name": "status",
-                                               "joinby": "site_id",
+                                               "joinby": site_id,
                                                "multiple": False,
                                                },
                             # Services
                             org_service = {"link": "org_service_site",
-                                           "joinby": "site_id",
+                                           "joinby": site_id,
                                            "key": "service_id",
                                            "actuate": "hide",
                                            },
 
                             # Events (Check-In/Check-Out)
                             org_site_event = {"name": "event",
-                                              "joinby": "site_id",
+                                              "joinby": site_id,
                                               },
                             # Tags
                             org_site_tag = {"name": "tag",
-                                            "joinby": "site_id",
+                                            "joinby": site_id,
                                             },
                             # Assets
-                            asset_asset = "site_id",
+                            asset_asset = (# All Assets:
+                                           site_id,
+                                           # Vehicles:
+                                           {"name": "vehicle",
+                                            "joinby": site_id,
+                                            "filterby": {"type": 1,
+                                                         },
+                                            },
+                                           ),
 
                             # Documents
-                            doc_document = "site_id",
-                            doc_image = "site_id",
+                            doc_document = site_id,
+                            doc_image = site_id,
 
                             # Human Resources
                             # - direct component (suitable for Create/List)
-                            hrm_human_resource = "site_id",
+                            hrm_human_resource = site_id,
                             # - via link table (suitable for Assign)
-                            hrm_human_resource_site = "site_id",
+                            hrm_human_resource_site = site_id,
 
                             # Inventory
-                            inv_inv_item = "site_id",
-                            inv_minimum = "site_id",
-                            inv_recv = "site_id",
-                            inv_send = "site_id",
+                            inv_inv_item = site_id,
+                            inv_minimum = site_id,
+                            inv_recv = site_id,
+                            inv_send = site_id,
 
                             # Groups: Coalitions/Networks
                             org_group = {"link": "org_site_org_group",
-                                         "joinby": "site_id",
+                                         "joinby": site_id,
                                          "key": "group_id",
                                          "actuate": "hide",
                                          },
                             # Format for InlineComponent/filter_widget
-                            org_site_org_group = "site_id",
+                            org_site_org_group = site_id,
 
                             # Needs
                             req_need = {"name": "needs",
                                         "link": "req_need_site",
-                                        "joinby": "site_id",
+                                        "joinby": site_id,
                                         "key": "need_id",
                                         "multiple": False,
                                         },
 
                             # Requests
-                            req_req = "site_id",
-                            req_commit = "site_id",
+                            req_req = site_id,
+                            req_commit = site_id,
 
                             # Shifts
-                            #org_site_shift = "site_id",
+                            #org_site_shift = site_id,
                             hrm_shift = {"link": "org_site_shift",
-                                         "joinby": "site_id",
+                                         "joinby": site_id,
                                          "key": "shift_id",
                                          "actuate": "replace",
                                          },
 
                             # Procurement Plans
-                            proc_plan = "site_id",
+                            proc_plan = site_id,
                             )
 
         # Pass names back to global scope (s3.*)
-        return {"org_site_id": site_id,
+        return {"org_site_id": org_site_id,
                 "org_site_represent": org_site_represent,
                 }
 

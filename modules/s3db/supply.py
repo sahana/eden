@@ -108,7 +108,9 @@ class S3SupplyModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
-        float_represent = IS_FLOAT_AMOUNT.represent
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=2)
+
         translate = settings.get_L10n_translate_supply_item()
         if translate:
             translate_represent = T
@@ -256,9 +258,11 @@ class S3SupplyModel(S3Model):
         telephone = settings.get_asset_telephones()
         vehicle = settings.has_module("vehicle")
 
-        item_category_represent = supply_ItemCategoryRepresent(translate=translate)
+        item_category_represent = supply_ItemCategoryRepresent(translate = translate)
         item_category_represent_nocodes = \
-            supply_ItemCategoryRepresent(translate=translate, use_code=False)
+            supply_ItemCategoryRepresent(translate = translate,
+                                         use_code = False,
+                                         )
 
         if format == "xls":
             parent_represent = item_category_represent_nocodes
@@ -268,7 +272,8 @@ class S3SupplyModel(S3Model):
         item_category_requires = IS_EMPTY_OR(
                                     IS_ONE_OF(db, "supply_item_category.id",
                                               item_category_represent_nocodes,
-                                              sort=True)
+                                              sort = True,
+                                              )
                                     )
 
         tablename = "supply_item_category"
@@ -407,8 +412,7 @@ $.filterOptionsS3({
                            ),
                      Field("unit_value", "double",
                            label = T("Value per Unit"),
-                           represent = lambda v: \
-                                IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           represent = float_represent,
                            readable = track_pack_values,
                            writable = track_pack_values,
                            ),
@@ -436,33 +440,28 @@ $.filterOptionsS3({
                            ),
                      Field("weight", "double",
                            label = T("Weight (kg)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
-                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
+                           represent = float_represent,
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum = 0.0)),
                            ),
                      Field("length", "double",
                            label = T("Length (m)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
-                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
+                           represent = float_represent,
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum = 0.0)),
                            ),
                      Field("width", "double",
                            label = T("Width (m)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
-                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
+                           represent = float_represent,
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum = 0.0)),
                            ),
                      Field("height", "double",
                            label = T("Height (m)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
-                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
+                           represent = float_represent,
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum = 0.0)),
                            ),
                      Field("volume", "double",
                            label = T("Volume (m3)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=3),
-                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
+                           represent = float_represent,
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum = 0.0)),
                            ),
                      Field("url",
                            label = T("URL"),
@@ -516,24 +515,23 @@ $.filterOptionsS3({
 
         # Reusable Field
         supply_item_tooltip = T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog.")
-        supply_item_id = S3ReusableField("item_id",
-            "reference %s" % tablename, # 'item_id' for backwards-compatibility
-            label = T("Item"),
-            ondelete = "RESTRICT",
-            represent = supply_item_represent,
-            requires = IS_ONE_OF(db, "supply_item.id",
-                                 supply_item_represent,
-                                 sort = True,
-                                 ),
-            sortby = "name",
-            widget = S3AutocompleteWidget("supply", "item"),
-            comment = S3PopupLink(c = "supply",
-                                  f = "item",
-                                  label = ADD_ITEM,
-                                  title = T("Item"),
-                                  tooltip = supply_item_tooltip,
-                                  ),
-            )
+        supply_item_id = S3ReusableField("item_id", "reference %s" % tablename, # 'item_id' for backwards-compatibility
+                                         label = T("Item"),
+                                         ondelete = "RESTRICT",
+                                         represent = supply_item_represent,
+                                         requires = IS_ONE_OF(db, "supply_item.id",
+                                                              supply_item_represent,
+                                                              sort = True,
+                                                              ),
+                                         sortby = "name",
+                                         widget = S3AutocompleteWidget("supply", "item"),
+                                         comment = S3PopupLink(c = "supply",
+                                                               f = "item",
+                                                               label = ADD_ITEM,
+                                                               title = T("Item"),
+                                                               tooltip = supply_item_tooltip,
+                                                               ),
+                                         )
 
         # ---------------------------------------------------------------------
         filter_widgets = [
@@ -730,13 +728,11 @@ $.filterOptionsS3({
                      Field("quantity", "double", notnull=True,
                            default = 1,
                            label = T("Quantity"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
+                           represent = float_represent,
                            ),
                      Field("pack_value", "double",
                            label = T("Value per Pack"),
-                           represent = lambda v: \
-                                IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           represent = float_represent,
                            readable = track_pack_values,
                            writable = track_pack_values,
                            ),
@@ -771,15 +767,14 @@ $.filterOptionsS3({
                     represent = item_pack_represent,
                     # Do not display any packs initially
                     # will be populated by filterOptionsS3
-                    requires = IS_ONE_OF_EMPTY_SELECT(db,
-                                         "supply_item_pack.id",
-                                         item_pack_represent,
-                                         sort=True,
-                                         # @ToDo: Enforce "Required" for imports
-                                         # @ToDo: Populate based on item_id in controller instead of IS_ONE_OF_EMPTY_SELECT
-                                         # filterby = "item_id",
-                                         # filter_opts = (....),
-                                         ),
+                    requires = IS_ONE_OF_EMPTY_SELECT(db, "supply_item_pack.id",
+                                                      item_pack_represent,
+                                                      sort = True,
+                                                      # @ToDo: Enforce "Required" for imports
+                                                      # @ToDo: Populate based on item_id in controller instead of IS_ONE_OF_EMPTY_SELECT
+                                                      # filterby = "item_id",
+                                                      # filter_opts = (....),
+                                                      ),
                     script = '''
 $.filterOptionsS3({
  'trigger':'item_id',
@@ -825,8 +820,7 @@ $.filterOptionsS3({
                                     ),
                      Field("quantity", "double",
                            label = T("Quantity"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
+                           represent = float_represent,
                            ),
                      item_pack_id(),
                      s3_comments(),
@@ -857,8 +851,7 @@ $.filterOptionsS3({
                      Field("quantity", "double", notnull=True,
                            default = 1,
                            label = T("Quantity"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
+                           represent = float_represent,
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" %
                                                   (T("Quantity"),

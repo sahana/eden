@@ -3897,6 +3897,9 @@ S3.gis.yx = [
     var loadDetails = function(url, id, popup) {
 
         // Load the Popup Details via AJAX
+        if (!url) {
+            return;
+        }
         if (url.indexOf('http://') === 0) {
             // Use Proxy for remote popups
             url = OpenLayers.ProxyHost + encodeURIComponent(url);

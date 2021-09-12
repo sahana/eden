@@ -327,6 +327,7 @@ class FireStationModel(S3Model):
         station_id = r.id
         if station_id:
 
+            T = current.T
             s3db = current.s3db
             ftable = s3db.fire_station
             atable = s3db.asset_asset
@@ -341,23 +342,27 @@ class FireStationModel(S3Model):
                     (eatable.end_date == None)
 
             current.response.s3.crud_strings["event_asset"] = Storage(
-                title_report = "Vehicle Deployment Times"
+                title_report = T("Vehicle Deployment Times"),
             )
 
+            eatable.asset_id.label = T("Vehicle")
+
             # Add field method for minutes
-            def minutes():
+            def minutes(row):
                 if hasattr(row, "event_asset"):
-                    row = "event_asset"
+                    row = row.event_asset
                 if hasattr(row, "start_date") and row.start_date:
-                    return int((r.utcnow - row.start_date) / 60)
+                    return int((r.utcnow - row.start_date).total_seconds() / 60)
                 else:
                     return 0
             from gluon import Field
             eatable.minutes = Field.Method("minutes",
                                            minutes,
                                            )
+            s3db.configure("event_asset",
+                           extra_fields = ["start_date"],
+                           )
 
-            
             from s3 import S3Report
             req = r.factory(prefix = "event",
                             name = "asset",

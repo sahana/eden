@@ -20,7 +20,7 @@ def index():
 
     row = db(query).select(stable.id,
                            stable.name,
-                           limitby = (0, 1),
+                           limitby = (0, 1)
                            ).first()
     if row:
         station_id = row.id
@@ -139,20 +139,70 @@ def station():
                         from s3db.req import req_create_form_mods
                         req_create_form_mods()
 
-                elif component_name == "asset":
-                    # Default/Hide the Organisation & Site fields
-                    record = r.record
+                elif component_name in ("asset", "vehicle"):
                     atable = s3db.asset_asset
-                    field = atable.organisation_id
-                    field.default = record.organisation_id
-                    field.readable = field.writable = False
-                    field = atable.site_id
-                    field.default = record.site_id
-                    field.readable = field.writable = False
                     # Stay within Site tab
                     s3db.configure("asset_asset",
                                    create_next = None,
                                    )
+                    if component_name == "asset":
+                        # Default/Hide the Organisation field
+                        org_field = atable.organisation_id
+                        org_field.default = r.record.organisation_id
+                        org_field.readable = org_field.writable = False
+                        # Filter out Vehicles
+                        r.resource.add_component_filter(component_name, (FS("type") != 1))
+                    else:
+                        atable.organisation_id.required = False # Otherwise needs to be in crud_form & isn't defaulted
+                        # Default new to Vehicle
+                        atable.type.default = 1
+                        # Only select from vehicles
+                        ctable = s3db.supply_item_category
+                        vehicle_categories = db(ctable.is_vehicle == True).select(ctable.id)
+                        atable.item_id.requires.set_filter(filterby = "item_category_id",
+                                                           filter_opts = [row.id for row in vehicle_categories],
+                                                           )
+                        # Include Vehicle Details in the form
+                        from s3 import S3SQLCustomForm, S3SQLInlineComponent
+                        
+                        def vehicle_postprocess(form):
+                            # Set the organisation_id
+                            db(atable.id == form.vars.id).update(organisation_id = r.record.organisation_id)
+
+                        crud_form = S3SQLCustomForm("number",
+                                                    (T("Vehicle Type"), "item_id"),
+                                                    (T("License Plate"), "sn"),
+                                                    "purchase_date",
+                                                    "purchase_price",
+                                                    "purchase_currency",
+                                                    "cond",
+                                                    S3SQLInlineComponent("vehicle",
+                                                                         label = "",
+                                                                         multiple = False,
+                                                                         fields = [#"vehicle_type_id",
+                                                                                   "mileage",
+                                                                                   "service_mileage",
+                                                                                   "service_date",
+                                                                                   "insurance_date",
+                                                                                   ],
+                                                                         ),
+                                                    postprocess = vehicle_postprocess,
+                                                    )
+                        s3db.configure("asset_asset",
+                                       crud_form = crud_form,
+                                       )
+                        s3.crud_strings["asset_asset"] = Storage(label_create = T("Add Vehicle Details"),
+                                                                 title_display = T("Vehicle Details"),
+                                                                 title_list = T("Vehicles"),
+                                                                 title_update = T("Edit Vehicle Details"),
+                                                                 label_list_button = T("List Vehicle Details"),
+                                                                 label_delete_button = T("Delete Vehicle Details"),
+                                                                 msg_record_created = T("Vehicle Details added"),
+                                                                 msg_record_modified = T("Vehicle Details updated"),
+                                                                 msg_record_deleted = T("Vehicle Details deleted"),
+                                                                 msg_list_empty = T("No Vehicle Details currently defined"),
+                                                                 )
+
             elif r.method == "update":
                 field = r.table.obsolete
                 field.readable = field.writable = True
@@ -188,14 +238,13 @@ def fire_rheader(r, tabs=[]):
             if station:
 
                 tabs = [(T("Station Details"), None),
-                        (T("Vehicles"), "asset"),
-                        # @ToDo:
-                        #(T("Vehicles"), "vehicle"),
                         (T("Staff"), "human_resource"),
                         (T("Shifts"), "shift"),
                         # @ToDo:
                         #(T("Roster"), "shift_staff"),
+                        (T("Vehicles"), "vehicle"),
                         (T("Vehicle Deployments"), "vehicle_report"),
+                        (T("Assets"), "asset"),
                         ]
                 rheader_tabs = s3_rheader_tabs(r, tabs)
 

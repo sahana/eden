@@ -56,8 +56,9 @@ class BudgetModel(S3Model):
         T = current.T
         db = current.db
 
-        amount_represent = lambda v: \
-                           IS_FLOAT_AMOUNT.represent(v, precision=2)
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=2)
+        
 
         # ---------------------------------------------------------------------
         # Budget Entity (super-entity for resources that can have a budget)
@@ -128,19 +129,19 @@ class BudgetModel(S3Model):
                           Field("total_onetime_costs", "double",
                                 default = 0.0,
                                 label = T("Total One-time Costs"),
-                                represent = amount_represent,
+                                represent = float_represent,
                                 writable = False,
                                 ),
                           Field("total_recurring_costs", "double",
                                 default = 0.0,
                                 label = T("Total Recurring Costs"),
-                                represent = amount_represent,
+                                represent = float_represent,
                                 writable = False,
                                ),
                           Field("total_budget", "double",
                                 default = 0.0,
                                 label = T("Total Budget"),
-                                represent = amount_represent,
+                                represent = float_represent,
                                 requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
                                 ),
                           s3_currency(required = True),
@@ -380,6 +381,9 @@ class BudgetMonitoringModel(S3Model):
 
         T = current.T
 
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=2)
+
         # ---------------------------------------------------------------------
         # Monitoring of a Budget
         #
@@ -401,16 +405,14 @@ class BudgetMonitoringModel(S3Model):
                           Field("planned", "double", notnull=True,
                                 default = 0.00,
                                 label = T("Planned Spend"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_FLOAT_AMOUNT(),
                                 ),
                           Field("value", "double", notnull=True,
                                 default = 0.00,
                                 #label = T("Amount Spent"),
                                 label = T("Actual Spend"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_FLOAT_AMOUNT(),
                                 ),
                           s3_currency(required = True,
@@ -620,8 +622,8 @@ class BudgetItemModel(S3Model):
         define_table = self.define_table
         crud_strings = current.response.s3.crud_strings
 
-        amount_represent = lambda v: \
-                           IS_FLOAT_AMOUNT.represent(v, precision=2)
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=2)
 
         # ---------------------------------------------------------------------
         # Parameters (currently unused)
@@ -633,25 +635,25 @@ class BudgetItemModel(S3Model):
                      Field("shipping", "double", notnull=True,
                            default = 15.0,
                            label = T("Shipping cost"),
-                           represent = amount_represent,
+                           represent = float_represent,
                            requires = IS_FLOAT_AMOUNT(0, 100),
                            ),
                      Field("logistics", "double", notnull=True,
                            default = 0.0,
                            label = T("Procurement & Logistics cost"),
-                           represent = amount_represent,
+                           represent = float_represent,
                            requires = IS_FLOAT_AMOUNT(0, 100),
                            ),
                      Field("admin", "double", notnull=True,
                            default = 0.0,
                            label = T("Administrative support cost"),
-                           represent = amount_represent,
+                           represent = float_represent,
                            requires = IS_FLOAT_AMOUNT(0, 100),
                            ),
                      Field("indirect", "double", notnull=True,
                            default = 7.0,
                            label = T("Indirect support cost HQ"),
-                           represent = amount_represent,
+                           represent = float_represent,
                            requires = IS_FLOAT_AMOUNT(0, 100),
                            ),
                      *s3_meta_fields())

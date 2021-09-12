@@ -123,6 +123,9 @@ class S3AssetModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=2)
+
         #--------------------------------------------------------------------------
         # Assets
         #
@@ -144,10 +147,10 @@ class S3AssetModel(S3Model):
 
         # @ToDo: make this lookup Lazy (also in event.py)
         ctable = self.supply_item_category
-        itable = self.supply_item
+        asset_categories = db(ctable.can_be_asset == True).select(ctable.id)
+        asset_category_ids = [row.id for row in asset_categories]
+
         supply_item_represent = self.supply_item_represent
-        asset_items_set = db((ctable.can_be_asset == True) & \
-                             (itable.item_category_id == ctable.id))
 
         tablename = "asset_asset"
         define_table(tablename,
@@ -168,9 +171,10 @@ class S3AssetModel(S3Model):
                            writable = types,
                            ),
                      item_id(represent = supply_item_represent,
-                             requires = IS_ONE_OF(asset_items_set,
-                                                  "supply_item.id",
+                             requires = IS_ONE_OF(db, "supply_item.id",
                                                   supply_item_represent,
+                                                  filterby = "item_category_id",
+                                                  filter_opts = asset_category_ids,
                                                   sort = True,
                                                   ),
                              script = None, # No Item Pack Filter
@@ -185,10 +189,9 @@ class S3AssetModel(S3Model):
                            writable = False,
                            ),
                      organisation_id(default = user.organisation_id if LOGGED_IN else None,
-                                     requires = self.org_organisation_requires(
-                                                updateable=True,
-                                                #required=True
-                                                ),
+                                     requires = self.org_organisation_requires(updateable = True,
+                                                                               #required = True,
+                                                                               ),
                                      required = True,
                                      script = \
 '''$.filterOptionsS3({
@@ -213,9 +216,11 @@ class S3AssetModel(S3Model):
                                 represent = self.org_site_represent,
                                 # Comment these to use a Dropdown & not an Autocomplete
                                 #widget = S3SiteAutocompleteWidget(),
-                                #comment = DIV(_class="tooltip",
-                                #              _title="%s|%s" % (T("Warehouse"),
-                                #                                messages.AUTOCOMPLETE_HELP)),
+                                #comment = DIV(_class = "tooltip",
+                                #              _title = "%s|%s" % (T("Warehouse"),
+                                #                                  messages.AUTOCOMPLETE_HELP,
+                                #                                  ),
+                                #              ),
                                 ),
                      Field("sn",
                            label = T("Serial Number"),
@@ -230,8 +235,7 @@ class S3AssetModel(S3Model):
                      Field("purchase_price", "double",
                            #default = 0.00,
                            label = T("Purchase Price"),
-                           represent = lambda v, row=None: \
-                            IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           represent = float_represent,
                            ),
                      s3_currency("purchase_currency"),
                      # Base Location, which should always be a Site & set via Log
@@ -242,7 +246,7 @@ class S3AssetModel(S3Model):
                      person_id("assigned_to_id",
                                readable = False,
                                writable = False,
-                               comment = self.pr_person_comment(child="assigned_to_id"),
+                               comment = self.pr_person_comment(child = "assigned_to_id"),
                                ),
                      # Populated onaccept of the log for reporting/filtering
                      Field("cond", "integer",
@@ -268,7 +272,7 @@ class S3AssetModel(S3Model):
             msg_record_deleted = T("Asset deleted"),
             msg_list_empty = T("No Assets currently registered"))
 
-        asset_represent = asset_AssetRepresent(show_link=True)
+        asset_represent = asset_AssetRepresent(show_link = True)
 
         # Reusable Field
         asset_id = S3ReusableField("asset_id", "reference %s" % tablename,
@@ -278,15 +282,15 @@ class S3AssetModel(S3Model):
                                    requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "asset_asset.id",
                                                           asset_represent,
-                                                          sort=True)),
+                                                          sort = True,
+                                                          )),
                                    sortby = "number",
                                    )
 
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
 
-        list_fields = ["id",
-                       "item_id$item_category_id",
+        list_fields = ["item_id$item_category_id",
                        "item_id",
                        "number",
                        #"type",
@@ -317,7 +321,8 @@ class S3AssetModel(S3Model):
             list_fields.append(lfield)
 
         list_fields.extend(("cond",
-                            "comments"))
+                            "comments",
+                            ))
 
         if settings.get_org_branches():
             org_filter = S3HierarchyFilter("organisation_id",
@@ -391,7 +396,8 @@ class S3AssetModel(S3Model):
                              },
                   # Open Tabs after creation
                   create_next = URL(c="asset", f="asset",
-                                    args=["[id]"]),
+                                    args = ["[id]"],
+                                    ),
                   deduplicate = S3Duplicate(primary = ("number",
                                                        ),
                                             secondary = ("site_id",
@@ -443,11 +449,12 @@ class S3AssetModel(S3Model):
                      item_entity_id(),
                      asset_id(ondelete = "CASCADE"),
                      item_id(represent = supply_item_represent,
-                             requires = IS_ONE_OF(asset_items_set,
-                                                  "supply_item.id",
-                                                   supply_item_represent,
-                                                   sort = True,
-                                                   ),
+                             requires = IS_ONE_OF(db, "supply_item.id",
+                                                  supply_item_represent,
+                                                  filterby = "item_category_id",
+                                                  filter_opts = asset_category_ids,
+                                                  sort = True,
+                                                  ),
                              script = None, # No Item Pack Filter
                              widget = None,
                              ),
@@ -467,14 +474,14 @@ class S3AssetModel(S3Model):
                              label = T("Purchase Date"),
                              ),
                      Field("purchase_price", "double",
-                           #default=0.00,
-                           represent=lambda v, row=None: \
-                                     IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           #default = 0.00,
+                           represent = float_represent,
                            ),
                      s3_currency("purchase_currency"),
                      # Base Location, which should always be a Site & set via Log
                      location_id(readable = False,
-                                 writable = False),
+                                 writable = False,
+                                 ),
                      s3_comments(comment = None),
                      *s3_meta_fields())
 
@@ -531,13 +538,13 @@ $.filterOptionsS3({
                                  ),
                      person_id(label = T("Assigned To")),
                      Field("check_in_to_person", "boolean",
-                           #label = T("Mobile"),      # Relabel?
                            label = T("Track with this Person?"),
 
-                           comment = DIV(_class="tooltip",
-                                         #_title="%s|%s" % (T("Mobile"),
-                                         _title="%s|%s" % (T("Track with this Person?"),
-                                                           T("If selected, then this Asset's Location will be updated whenever the Person's Location is updated."))),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Track with this Person?"),
+                                                             T("If selected, then this Asset's Location will be updated whenever the Person's Location is updated."),
+                                                             ),
+                                         ),
                            readable = False,
                            writable = False,
                            ),
@@ -570,9 +577,11 @@ $.filterOptionsS3({
                            default = False,
                            label = T("Cancel Log Entry"),
                            represent = s3_yes_no_represent,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Cancel Log Entry"),
-                                                           T("'Cancel' will indicate an asset log entry did not occur")))
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Cancel Log Entry"),
+                                                             T("'Cancel' will indicate an asset log entry did not occur"),
+                                                             ),
+                                         ),
                            ),
                      Field("cond", "integer",  # condition is a MySQL reserved word
                            label = T("Condition"),
@@ -604,8 +613,7 @@ $.filterOptionsS3({
         # Resource configuration
         configure(tablename,
                   listadd = False,
-                  list_fields = ["id",
-                                 "datetime",
+                  list_fields = ["datetime",
                                  "status",
                                  "datetime_until",
                                  "organisation_id",

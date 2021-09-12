@@ -124,6 +124,7 @@ def incident():
                         r.method = "assign"
                     if r.method == "assign":
                         r.custom_action = s3db.hrm_AssignMethod(component="assign")
+
                 cname = r.component_name
                 if cname == "config":
                     s3db.configure("gis_config",
@@ -145,8 +146,7 @@ def incident():
                 elif cname in ("asset", "human_resource", "event_organisation", "organisation", "site"):
                     atable = s3db.table("budget_allocation")
                     if atable:
-                        field = atable.budget_entity_id
-                        field.readable = field.writable = True
+                        atable.budget_entity_id.default = r.record.budget_entity_id
 
                     #s3.crud.submit_button = T("Assign")
                     #s3.crud.submit_button = T("Add")
@@ -176,19 +176,11 @@ $.filterOptionsS3({
                         f = ltable.event_id
                         f.default = r.record.event_id
                         f.readable = f.writable = False
-                        if cname in ("asset", "human_resource"):
-                            # DateTime
-                            datetime_represent = s3base.S3DateTime.datetime_represent
-                            for f in (ltable.start_date, ltable.end_date):
-                                f.requires = IS_EMPTY_OR(IS_UTC_DATETIME())
-                                f.represent = lambda dt: datetime_represent(dt, utc=True)
-                                f.widget = S3CalendarWidget(timepicker = True)
 
                 elif cname == "incident_asset":
                     atable = s3db.table("budget_allocation")
                     if atable:
-                        field = atable.budget_entity_id
-                        field.readable = field.writable = True
+                        atable.budget_entity_id.default = r.record.budget_entity_id
 
                     #s3.crud.submit_button = T("Assign")
                     #s3.crud.submit_button = T("Add")
@@ -233,9 +225,11 @@ $.filterOptionsS3({
                     s3_action_buttons(r)
                     if "msg" in settings.modules:
                         s3base.S3CRUD.action_button(url = URL(f="compose",
-                                                              vars = {"hrm_id": "[id]"}),
+                                                              vars = {"hrm_id": "[id]"}
+                                                              ),
                                                     _class = "action-btn send",
-                                                    label = str(T("Send Notification")))
+                                                    label = s3_str(T("Send Notification")),
+                                                    )
         return output
     s3.postp = postp
 
