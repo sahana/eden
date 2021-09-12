@@ -4559,18 +4559,20 @@ class S3LatLonWidget(DoubleWidget):
                          INPUT(_class="seconds", **attr_dms), "\" ",
                          ["",
                           DIV(A(T("Use decimal"),
-                                _class="action-btn gis_coord_switch_decimal"))
+                                _class = "action-btn gis_coord_switch_decimal",
+                                ))
                           ][switch],
-                         _style="display:none",
-                         _class="gis_coord_dms",
+                         _style = "display:none",
+                         _class = "gis_coord_dms",
                          )
 
         decimal = SPAN(INPUT(**attr),
                        ["",
                         DIV(A(T("Use deg, min, sec"),
-                              _class="action-btn gis_coord_switch_dms"))
+                              _class = "action-btn gis_coord_switch_dms",
+                              ))
                         ][switch],
-                       _class="gis_coord_decimal",
+                       _class = "gis_coord_decimal",
                        )
 
         if not s3.lat_lon_i18n_appended:
@@ -4599,7 +4601,7 @@ i18n.gis_range_error={degrees:{lat:'%s',lon:'%s'},minutes:'%s',seconds:'%s',deci
 
         return SPAN(decimal,
                     dms_boxes,
-                    _class="gis_coord_wrap",
+                    _class = "gis_coord_wrap",
                     )
 
 # =============================================================================
@@ -4740,7 +4742,8 @@ class S3LocationDropdownWidget(FormWidget):
             query = (table.id == value)
         locations = current.db(query).select(table.name,
                                              table.id,
-                                             cache=s3db.cache)
+                                             cache = s3db.cache,
+                                             )
 
         # Build OPTIONs
         for location in locations:
@@ -4806,7 +4809,7 @@ class S3LocationLatLonWidget(FormWidget):
             table = db.gis_location
             record = db(table.id == value).select(table.lat,
                                                   table.lon,
-                                                  limitby=(0, 1)
+                                                  limitby = (0, 1)
                                                   ).first()
             try:
                 lat = record.lat
@@ -4830,7 +4833,10 @@ class S3LocationLatLonWidget(FormWidget):
         label = "%s:" % label
         if not empty:
             label = DIV(label,
-                        SPAN(" *", _class="req"))
+                        SPAN(" *",
+                             _class = "req",
+                             ),
+                        )
 
         row = formstyle(row_id, label, widget, comment)
         if isinstance(row, tuple):

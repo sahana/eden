@@ -8787,7 +8787,9 @@ def hrm_person_controller(**attr):
                         resource = s3db.resource("hrm_human_resource", filter=query)
                         # Use cascade=True so that the deletion gets
                         # rolled back if the import fails:
-                        resource.delete(format="xml", cascade=True)
+                        resource.delete(format = "xml",
+                                        cascade = True,
+                                        )
 
     s3.import_prep = import_prep
 
@@ -8814,7 +8816,6 @@ def hrm_person_controller(**attr):
             if not r.component:
                 table = r.table
                 table.pe_label.readable = table.pe_label.writable = False
-                table.missing.readable = table.missing.writable = False
                 table.age_group.readable = table.age_group.writable = False
                 # Assume volunteers only between 5-120
                 dob = table.date_of_birth

@@ -33,6 +33,8 @@ def config(settings):
     modules["transport"] = {"name_nice": T("Transport"), "module_type": 10}
     modules["water"] = {"name_nice": T("Water"), "module_type": 10}
 
+    settings.cr.people_registration = True
+
     settings.gis.latlon_selector = True
 
     settings.hrm.id_cards = True
