@@ -65,8 +65,13 @@ def event():
                     s3.crud_strings["dc_response"].label_create = T("Add Assessment")
 
                 elif cname == "target":
-                    # @ToDo: Filter Locations available based on Event Locations
-                    #s3db.dc_target.location_id.default = r.record.location_id
+                    # Filter Locations available based on Event Locations
+                    ltable = s3db.event_event_location
+                    locations = db(ltable.event_id == r.id).select(ltable.location_id)
+                    if len(locations) == 1:
+                        s3db.dc_target.location_id.default = locations.first().location_id
+                    #else:
+                    #    # @ToDo: Filter to Event Locations
                     s3.crud_strings["dc_target"].label_create = T("Add Target")
 
             elif method in ("create", "list", "summary"):

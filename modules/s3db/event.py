@@ -30,7 +30,6 @@
 __all__ = ("EventModel",
            "EventLocationModel",
            "EventNameModel",
-           "EventTagModel",
            "EventActivityModel",
            #"EventAlertModel",
            "EventAssetModel",
@@ -241,6 +240,7 @@ class EventModel(S3Model):
                                        ],
                            ),
                      event_type_id(),
+                     # Use KV in event_event_tag
                      #Field("intensity",
                      #      label = T("Intensity"),
                      #      comment = DIV(_class="tooltip",
@@ -318,7 +318,7 @@ class EventModel(S3Model):
                 msg_record_deleted = T("Event deleted"),
                 msg_list_empty = T("No Events currently registered"))
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         event_id = S3ReusableField("event_id", "reference %s" % tablename,
                                    sortby="name",
                                    requires = IS_EMPTY_OR(
@@ -334,9 +334,11 @@ class EventModel(S3Model):
                                    ondelete = "CASCADE",
                                    # Uncomment these to use an Autocomplete & not a Dropdown
                                    #widget = S3AutocompleteWidget()
-                                   #comment = DIV(_class="tooltip",
-                                   #              _title="%s|%s" % (T("Event"),
-                                   #                                AUTOCOMPLETE_HELP))
+                                   #comment = DIV(_class = "tooltip",
+                                   #              _title = "%s|%s" % (T("Event"),
+                                   #                                  AUTOCOMPLETE_HELP,
+                                   #                                  ),
+                                   #              )
                                    )
 
         # Which levels of Hierarchy are we using?

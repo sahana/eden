@@ -1222,8 +1222,8 @@ class DataCollectionModel(S3Model):
 
         # @todo: representation including template name, location and date
         #        (not currently required since always hidden)
-        represent = S3Represent(lookup=tablename,
-                                fields=["date"],
+        represent = S3Represent(lookup = tablename,
+                                fields = ["date"],
                                 )
 
         # Reusable field
@@ -1233,7 +1233,7 @@ class DataCollectionModel(S3Model):
                                       requires = IS_ONE_OF(db, "dc_response.id",
                                                            represent,
                                                            ),
-                                      comment = S3PopupLink(f="respnse",
+                                      comment = S3PopupLink(f = "respnse",
                                                             ),
                                       )
 
@@ -1291,14 +1291,14 @@ def dc_answer_form(r, tablename):
                 (ttable.table_id == dtable.id)
         template = db(query).select(ttable.id,
                                     ttable.layout,
-                                    limitby = (0, 1),
+                                    limitby = (0, 1)
                                     ).first()
         template_id = template.id
     else:
         # Going via Component
         template_id = r.record.template_id
         template = db(ttable.id == template_id).select(ttable.layout,
-                                                       limitby = (0, 1),
+                                                       limitby = (0, 1)
                                                        ).first()
     layout = template.layout
 

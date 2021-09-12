@@ -77,14 +77,17 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_dc_target_resource(r, tablename):
 
+        if r.controller == "event":
+            return
+
         s3db = current.s3db
 
         template_name = r.get_vars.get("~.template_id$name")
         if template_name:
             ttable = s3db.dc_template
             template = current.db(ttable.name == template_name).select(ttable.id,
-                                                                  limitby = (0, 1)
-                                                                  ).first()
+                                                                       limitby = (0, 1)
+                                                                       ).first()
             if template:
                 f = s3db.dc_target.template_id
                 f.default = template.id
