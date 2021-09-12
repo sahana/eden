@@ -113,7 +113,6 @@ class HRModel(S3Model):
         is_admin = auth.s3_has_role(ADMIN)
 
         messages = current.messages
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
         AUTOCOMPLETE_HELP = messages.AUTOCOMPLETE_HELP
         #ORGANISATION = messages.ORGANISATION
 
@@ -314,7 +313,9 @@ class HRModel(S3Model):
                 msg_record_deleted = T("Job Title deleted"),
                 msg_list_empty = T("Currently no entries in the catalog"))
 
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
 
         if org_dependent_job_titles:
             requires = IS_EMPTY_OR(
@@ -414,8 +415,9 @@ class HRModel(S3Model):
                      organisation_id(
                         empty = not settings.get_hrm_org_required(),
                         label = organisation_label,
-                        requires = self.org_organisation_requires(required=True,
-                                                                  realms=realms),
+                        requires = self.org_organisation_requires(required = True,
+                                                                  realms = realms,
+                                                                  ),
                         widget = org_widget,
                      ),
                      super_link("site_id", "org_site",
@@ -438,15 +440,14 @@ class HRModel(S3Model):
                         comment = None,
                         empty = False,
                         ondelete = "CASCADE",
-                        widget = S3AddPersonWidget(controller="hrm"),
+                        widget = S3AddPersonWidget(controller = "hrm"),
                         ),
                      Field("type", "integer",
                            default = 1,
                            label = T("Type"),
-                           represent = lambda opt: \
-                                       hrm_type_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = hrm_type_opts),
                            requires = IS_IN_SET(hrm_type_opts,
-                                                zero=None),
+                                                zero = None),
                            widget = RadioWidget.widget,
                            # Normally set via the Controller we create from
                            readable = mix_staff,
@@ -467,9 +468,11 @@ class HRModel(S3Model):
                      Field("essential", "boolean",
                            label = T("Essential Staff?"),
                            represent = s3_yes_no_represent,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Essential Staff?"),
-                                                           T("If the person counts as essential staff when evacuating all non-essential staff."))),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Essential Staff?"),
+                                                             T("If the person counts as essential staff when evacuating all non-essential staff."),
+                                                             ),
+                                         ),
                            ),
                      # Contract
                      s3_date("start_date",
@@ -486,10 +489,9 @@ class HRModel(S3Model):
                      Field("status", "integer",
                            default = 1,
                            label = T("Status"),
-                           represent = lambda opt: \
-                            hrm_status_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = hrm_status_opts),
                            requires = IS_IN_SET(hrm_status_opts,
-                                                zero=None),
+                                                zero = None),
                            ),
                      # Base location + Site
                      self.gis_location_id(label = T("Base Location"),
@@ -552,7 +554,7 @@ class HRModel(S3Model):
             msg_record_deleted = T("Volunteer deleted"),
             msg_list_empty = T("No Volunteers currently registered"))
 
-        hrm_human_resource_represent = hrm_HumanResourceRepresent(show_link=True)
+        hrm_human_resource_represent = hrm_HumanResourceRepresent(show_link = True)
 
         if group == "staff":
             label = STAFF
@@ -560,9 +562,9 @@ class HRModel(S3Model):
             requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "hrm_human_resource.id",
                                   hrm_human_resource_represent,
-                                  sort=True,
-                                  filterby="type",
-                                  filter_opts=(1,)
+                                  filterby = "type",
+                                  filter_opts = (1,),
+                                  sort = True,
                                   ))
             widget = S3HumanResourceAutocompleteWidget(group="staff")
         elif group == "volunteer":
@@ -571,9 +573,9 @@ class HRModel(S3Model):
             requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "hrm_human_resource.id",
                                   hrm_human_resource_represent,
-                                  sort = True,
                                   filterby = "type",
-                                  filter_opts = (2,)
+                                  filter_opts = (2,),
+                                  sort = True,
                                   ))
             widget = S3HumanResourceAutocompleteWidget(group="volunteer")
         else:
@@ -920,7 +922,8 @@ class HRModel(S3Model):
         # Redirect to the Details tabs after creation
         if controller in ("hrm", "vol"):
             hrm_url = URL(c=controller, f="person",
-                          vars={"human_resource.id":"[id]"})
+                          vars = {"human_resource.id": "[id]"},
+                          )
         else:
             # Being added as a component to Org, Site or Project
             hrm_url = None
@@ -1056,13 +1059,13 @@ class HRModel(S3Model):
             @param item: the S3ImportItem
         """
 
-        data = item.data
-        name = data.get("name", None)
+        data_get = item.data.get
+        name = data_get("name", None)
         if current.deployment_settings.get_hrm_org_dependent_job_titles():
-            org = data.get("organisation_id", None)
+            org = data_get("organisation_id", None)
         else:
             org = None
-        role_type = data.get("type", None)
+        role_type = data_get("type", None)
 
         table = item.table
         query = (table.name.lower() == s3_unicode(name).lower())
@@ -1071,7 +1074,8 @@ class HRModel(S3Model):
         if role_type:
             query  = query & (table.type == role_type)
         duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
+                                             limitby = (0, 1)
+                                             ).first()
         if duplicate:
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
@@ -1103,17 +1107,15 @@ class HRModel(S3Model):
             # (safer than relying on vars which might be missing on component tabs)
             db = current.db
             ltable = db.hrm_job_title_human_resource
-            record = db(ltable.id == formvars.id).select(
-                                                    ltable.human_resource_id,
-                                                    ltable.job_title_id,
-                                                    limitby = (0, 1),
-                                                    ).first()
+            record = db(ltable.id == formvars.id).select(ltable.human_resource_id,
+                                                         ltable.job_title_id,
+                                                         limitby = (0, 1)
+                                                         ).first()
 
             # Set the HR's job_title_id to the new job title
             htable = db.hrm_human_resource
-            db(htable.id == record.human_resource_id).update(
-                                            job_title_id = record.job_title_id,
-                                            )
+            db(htable.id == record.human_resource_id).update(job_title_id = record.job_title_id,
+                                                             )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1620,7 +1622,7 @@ class HRSalaryModel(S3Model):
                                                                  precision = 2,
                                                                  ),
                            requires = IS_EMPTY_OR(
-                                        IS_FLOAT_AMOUNT(minimum=0.0)
+                                        IS_FLOAT_AMOUNT(minimum = 0.0)
                                         ),
                            default = 0.0,
                            ),
