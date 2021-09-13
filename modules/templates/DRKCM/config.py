@@ -24,6 +24,10 @@ def config(settings):
     settings.base.system_name = "RefuScope"
     settings.base.system_name_short = "RefuScope"
 
+    # Custom Models
+    settings.base.custom_models = {"dvr": "DRKCM",
+                                   }
+
     # PrePopulate data
     settings.base.prepopulate.append("DRKCM")
     settings.base.prepopulate_demo.append("DRKCM/Demo")
@@ -747,6 +751,47 @@ def config(settings):
                                            ),
                        )
 
+        s3db.add_components(tablename,
+                            dvr_allowance = "person_id",
+                            dvr_case = {"name": "dvr_case",
+                                        "joinby": "person_id",
+                                        "multiple": False,
+                                        },
+                            dvr_case_activity = "person_id",
+                            dvr_response_action = "person_id",
+                            dvr_case_appointment = "person_id",
+                            dvr_case_details = {"joinby": "person_id",
+                                                "multiple": False,
+                                                },
+                            dvr_case_effort = "person_id",
+                            dvr_case_event = "person_id",
+                            dvr_case_flag_case = {"name": "dvr_flag",
+                                                  "joinby": "person_id",
+                                                  },
+                            dvr_case_flag = {"link": "dvr_case_flag_case",
+                                             "joinby": "person_id",
+                                             "key": "flag_id",
+                                             "actuate": "link",
+                                             "autodelete": False,
+                                             },
+                            dvr_case_language = "person_id",
+                            dvr_economy = {"joinby": "person_id",
+                                           "multiple": False,
+                                           },
+                            dvr_evaluation = {"joinby": "person_id",
+                                              "multiple": False,
+                                              },
+                            dvr_household = {"joinby": "person_id",
+                                             "multiple": False,
+                                             },
+                            dvr_household_member = "person_id",
+                            dvr_note = {"name": "case_note",
+                                        "joinby": "person_id",
+                                        },
+                            dvr_residence_status = "person_id",
+                            dvr_service_contact = "person_id",
+                            )
+
         s3db.add_custom_callback("dvr_case", "onaccept", dvr_case_onaccept)
 
     settings.customise_pr_person_resource = customise_pr_person_resource
@@ -1414,6 +1459,190 @@ def config(settings):
         return attr
 
     settings.customise_pr_group_controller = customise_pr_group_controller
+
+    # -------------------------------------------------------------------------
+    def pr_group_membership_onaccept(form):
+        """
+            Remove any duplicate memberships and update affiliations
+
+            @param form: the FORM
+        """
+
+        if hasattr(form, "vars"):
+            record_id = form.vars.get("id")
+        elif isinstance(form, Row) and "id" in form:
+            record_id = form.id
+        else:
+            return
+
+        if not record_id:
+            return
+
+        db = current.db
+        settings = current.deployment_settings
+
+        table = db.pr_group_membership
+        gtable = db.pr_group
+
+        # Use left join for group data
+        left = gtable.on(gtable.id == table.group_id)
+
+        row = db(table.id == record_id).select(table.id,
+                                               table.person_id,
+                                               table.group_id,
+                                               table.group_head,
+                                               table.deleted,
+                                               table.deleted_fk,
+                                               gtable.id,
+                                               gtable.group_type,
+                                               left = left,
+                                               limitby = (0, 1)
+                                               ).first()
+        record = row.pr_group_membership
+
+        if not record:
+            return
+
+        # Get person_id and group_id
+        group_id = record.group_id
+        person_id = record.person_id
+        if record.deleted and record.deleted_fk:
+            try:
+                deleted_fk = json.loads(record.deleted_fk)
+            except ValueError:
+                pass
+            else:
+                person_id = deleted_fk.get("person_id", person_id)
+                group_id = deleted_fk.get("group_id", group_id)
+
+        # Make sure a person always only belongs once
+        # to the same group (delete all other memberships)
+        if person_id and group_id and not record.deleted:
+            query = (table.person_id == person_id) & \
+                    (table.group_id == group_id) & \
+                    (table.id != record.id) & \
+                    (table.deleted != True)
+            deleted_fk = {"person_id": person_id,
+                          "group_id": group_id,
+                          }
+            db(query).update(deleted = True,
+                             person_id = None,
+                             group_id = None,
+                             deleted_fk = json.dumps(deleted_fk),
+                             )
+
+        # Update PE hierarchy affiliations
+        s3db.pr_update_affiliations(table, record)
+
+        # DVR extensions
+        s3db = current.s3db
+        ctable = s3db.table("dvr_case")
+        response = current.response
+        s3 = response.s3
+        if not s3.purge_case_groups:
+            # Get the group
+            group = row.pr_group
+            if group.id is None and group_id:
+                query = (gtable.id == group_id) & \
+                        (gtable.deleted != True)
+                row = db(query).select(gtable.id,
+                                       gtable.group_type,
+                                       limitby = (0, 1)
+                                       ).first()
+                if row:
+                    group = row
+
+            if group.group_type == 7:
+                # DVR Case Group
+
+                # Case groups should only have one group head
+                if not record.deleted and record.group_head:
+                    query = (table.group_id == group_id) & \
+                            (table.id != record.id) & \
+                            (table.group_head == True)
+                    db(query).update(group_head = False)
+
+                update_household_size = settings.get_dvr_household_size() == "auto"
+                recount = s3db.dvr_case_household_size
+
+                if update_household_size and record.deleted and person_id:
+                    # Update the household size for removed group member
+                    query = (table.person_id == person_id) & \
+                            (table.group_id != group_id) & \
+                            (table.deleted != True) & \
+                            (gtable.id == table.group_id) & \
+                            (gtable.group_type == 7)
+                    row = db(query).select(table.group_id,
+                                           limitby = (0, 1)
+                                           ).first()
+                    if row:
+                        # Person still belongs to other case groups,
+                        # count properly:
+                        recount(row.group_id)
+                    else:
+                        # No further case groups, so household size is 1
+                        ctable = s3db.dvr_case
+                        cquery = (ctable.person_id == person_id)
+                        db(cquery).update(household_size = 1)
+
+                if not s3.bulk:
+                    # Get number of (remaining) members in this group
+                    query = (table.group_id == group_id) & \
+                            (table.deleted != True)
+                    rows = db(query).select(table.id, limitby = (0, 2))
+
+                    if len(rows) < 2:
+                        # Update the household size for current group members
+                        if update_household_size:
+                            recount(group_id)
+                            update_household_size = False
+                        # Remove the case group if it only has one member
+                        s3.purge_case_groups = True
+                        resource = s3db.resource("pr_group", id=group_id)
+                        resource.delete()
+                        s3.purge_case_groups = False
+
+                    elif not record.deleted:
+                        # Generate a case for new case group member
+                        # ...unless we already have one
+                        query = (ctable.person_id == person_id) & \
+                                (ctable.deleted != True)
+                        row = db(query).select(ctable.id, limitby=(0, 1)).first()
+                        if not row:
+                            # Customise case resource
+                            r = S3Request("dvr", "case", current.request)
+                            r.customise_resource("dvr_case")
+
+                            # Get the default case status from database
+                            s3db.dvr_case_default_status()
+
+                            # Create a case
+                            cresource = s3db.resource("dvr_case")
+                            from s3 import S3PermissionError
+                            try:
+                                # Using resource.insert for proper authorization
+                                # and post-processing (=audit, ownership, realm,
+                                # onaccept)
+                                cresource.insert(person_id = person_id)
+                            except S3PermissionError:
+                                # Unlikely (but possible) that this situation
+                                # is deliberate => issue a warning
+                                response.warning = current.T("No permission to create a case record for new group member")
+
+                # Update the household size for current group members
+                if update_household_size:
+                    recount(group_id)
+        
+    # -------------------------------------------------------------------------
+    def customise_pr_group_membership_resource(r, tablename):
+
+        # Custom onaccept
+        current.s3db.configure("pr_group_membership",
+                               onaccept = pr_group_membership_onaccept,
+                               ondelete = pr_group_membership_onaccept,
+                               )
+
+    settings.customise_pr_group_membership_resource = customise_pr_group_membership_resource
 
     # -------------------------------------------------------------------------
     def customise_pr_group_membership_controller(**attr):

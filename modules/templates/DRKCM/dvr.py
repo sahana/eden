@@ -78,7 +78,7 @@ from collections import OrderedDict
 from gluon import *
 from gluon.storage import Storage
 
-from ..s3 import *
+from s3 import *
 from s3layouts import S3PopupLink
 
 # =============================================================================
@@ -2717,10 +2717,10 @@ class DVRCaseActivityModel(S3Model):
         # Components
         self.add_components(tablename,
                             dvr_case_activity = "activity_id",
-                            supply_distribution = {"link": "supply_distribution_case_activity",
-                                                   "joinby": "activity_id",
-                                                   "key": "distribution_id",
-                                                   },
+                            #supply_distribution = {"link": "supply_distribution_case_activity",
+                            #                       "joinby": "activity_id",
+                            #                       "key": "distribution_id",
+                            #                       },
                             )
 
         # CRUD Strings
@@ -3096,11 +3096,11 @@ class DVRCaseActivityModel(S3Model):
                                      "key": "vulnerability_type_id",
                                      },
                                     ),
-                            supply_distribution = {
-                                "link": "supply_distribution_case_activity",
-                                "joinby": "case_activity_id",
-                                "key": "distribution_id",
-                                },
+                            #supply_distribution = {
+                            #    "link": "supply_distribution_case_activity",
+                            #    "joinby": "case_activity_id",
+                            #    "key": "distribution_id",
+                            #    },
                             )
 
         # List fields

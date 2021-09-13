@@ -407,6 +407,7 @@ class S3Model(object):
         s3.load_all_models = True
 
         models = current.models
+        settings = current.deployment_settings
 
         # Load models
         if models is not None:
@@ -426,8 +427,6 @@ class S3Model(object):
         S3Importer.define_upload_table()
         S3ImportJob.define_job_table()
         S3ImportJob.define_item_table()
-
-        settings = current.deployment_settings
 
         # Define Scheduler tables
         # - already done during Scheduler().init() run during S3Task().init() in models/tasks.py

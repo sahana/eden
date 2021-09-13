@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
 
+"""
+    Disaster Victim Registry
+
+    Deprecated by BR (Beneficiary Registry)
+
+    The model for this is in templates.DRKCM.dvr.py
+"""
+
 if not settings.has_module(c):
     raise HTTP(404, body="Module disabled: %s" % c)
 

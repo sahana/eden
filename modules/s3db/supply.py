@@ -29,8 +29,7 @@
 
 __all__ = ("SupplyModel",
            "SupplyDistributionModel",
-           "SupplyDistributionDVRActivityModel",
-           "S3SupplyPersonModel",
+           "SupplyPersonModel",
            "supply_item_add",
            "supply_item_rheader",
            "supply_item_controller",
@@ -1768,39 +1767,7 @@ class SupplyDistributionModel(S3Model):
             return list(range(date.year, end_date.year + 1))
 
 # =============================================================================
-class SupplyDistributionDVRActivityModel(S3Model):
-    """
-        Model to link distributions to DVR activities / case activities
-
-        @ToDo: Deprecate (was used by STL)
-    """
-
-    names = ("supply_distribution_case_activity",
-             )
-
-    def model(self):
-
-        # ---------------------------------------------------------------------
-        # Supply Distributions <=> Case Activity Link Table
-        #
-        tablename = "supply_distribution_case_activity"
-        self.define_table(tablename,
-                          self.dvr_activity_id(ondelete = "CASCADE",
-                                               ),
-                          self.dvr_case_activity_id(ondelete = "CASCADE",
-                                                    ),
-                          self.supply_distribution_id(empty = False,
-                                                      ondelete = "CASCADE",
-                                                      ),
-                          *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
-
-# =============================================================================
-class S3SupplyPersonModel(S3Model):
+class SupplyPersonModel(S3Model):
     """
         Link table between People & Items
         - e.g. Donations

@@ -899,45 +899,6 @@ class S3OptionsMenu(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def dvr():
-        """ DVR Menu """
-
-        if current.deployment_settings.get_dvr_label(): # == "Beneficiary"
-            return M(c="dvr")(
-                        M("Beneficiaries", f="person")(
-                            M("Create", m="create"),
-                        ),
-                    )
-
-        return M(c="dvr")(
-                    M("Cases", f="person")(
-                        M("Create", m="create"),
-                        M("Archived Cases", vars={"archived": "1"}),
-                    ),
-                    #M("Activities", f="case_activity")(
-                    #    M("Emergencies", vars = {"~.emergency": "True"}),
-                    #    M("All Activities"),
-                    #    M("Report", m="report"),
-                    #),
-                    M("Case Types", f="case_type")(
-                       M("Create", m="create"),
-                    ),
-                    M("Need Types", f="need")(
-                      M("Create", m="create"),
-                    ),
-                    M("Housing Types", f="housing_type")(
-                      M("Create", m="create"),
-                    ),
-                    M("Income Sources", f="income_source")(
-                      M("Create", m="create"),
-                    ),
-                    M("Beneficiary Types", f="beneficiary_type")(
-                      M("Create", m="create"),
-                    ),
-                )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def edu():
         """ Education Module """
 

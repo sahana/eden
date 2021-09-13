@@ -3,7 +3,7 @@
 """
     Deployments
 
-   The model for this is in templates.RMS.deploy.py
+    The model for this is in templates.RMS.deploy.py
 """
 
 if not settings.has_module(c):
