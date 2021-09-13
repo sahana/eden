@@ -2,6 +2,8 @@
 
 """
     Population Outreach Module - Controllers
+
+   The model for this is in templates.IFRC.po.py
 """
 
 if not settings.has_module(c):

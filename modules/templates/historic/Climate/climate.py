@@ -29,16 +29,16 @@
     This file should be moved to s3db/climate.py to use, or else rewritten as custom_ models
 """
 
-__all__ = ("S3ClimateModel",
+__all__ = ("ClimateModel",
            "climate_first_run",
            )
 
 from gluon import *
 from gluon.storage import Storage
-from ..s3 import *
+from s3 import *
 
 # =============================================================================
-class S3ClimateModel(S3Model):
+class ClimateModel(S3Model):
     """
         Climate data is stored in dynamically created tables.
         These tables can be added from the command line script add_table.py
@@ -470,7 +470,7 @@ class S3ClimateModel(S3Model):
             Calculate Price
         """
 
-        import ClimateDataPortal
+        from templates.Climate import ClimateDataPortal
 
         vars = form.vars
         id = vars.id
@@ -561,7 +561,7 @@ def sample_table_spec_represent(id, row=None):
     if row:
         id = row.id
 
-    import ClimateDataPortal
+    from templates.Climate import ClimateDataPortal
 
     table = current.s3db.climate_sample_table_spec
     row = current.db(table.id == id).select(table.name,
@@ -596,7 +596,7 @@ def climate_station_parameter_range_from(row):
     row = db(table.place_id == station_id).select(date).first()
     if row:
         date = row[date]
-        import ClimateDataPortal
+        from templates.Climate import ClimateDataPortal
         year, month = ClimateDataPortal.month_number_to_year_month(date)
         return "%s-%s" % (month, year)
     else:
@@ -623,7 +623,7 @@ def climate_station_parameter_range_to(row):
     row = db(table.place_id == station_id).select(date).first()
     if row:
         date = row[date]
-        import ClimateDataPortal
+        from templates.Climate import ClimateDataPortal
         year, month = ClimateDataPortal.month_number_to_year_month(date)
         return "%s-%s" % (month, year)
     else:

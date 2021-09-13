@@ -281,7 +281,7 @@ class S3Model(object):
             custom_models = current.deployment_settings.get_base_custom_models()
             if prefix in custom_models:
                 # Use Web2Py's Custom Importer rather than importlib.import_module
-                parent = __import__(custom_models[prefix], fromlist=[prefix])
+                parent = __import__("templates.%s" % custom_models[prefix], fromlist=[prefix])
                 module = parent.__dict__[prefix]
                 models.__dict__[prefix] = module
 
@@ -410,6 +410,13 @@ class S3Model(object):
 
         # Load models
         if models is not None:
+            # Add Custom Models
+            custom_models = settings.get_base_custom_models()
+            for prefix in custom_models:
+                parent = __import__("templates.%s" % custom_models[prefix], fromlist=[prefix])
+                module = parent.__dict__[prefix]
+                models.__dict__[prefix] = module
+
             for name in models.__dict__:
                 if type(models.__dict__[name]).__name__ == "module":
                     cls.load(name)
@@ -443,14 +450,6 @@ class S3Model(object):
                                     Field("unique_key", length=64),
                                     Field("session_data", "blob"),
                                     )
-
-        # Load Custom Models
-        custom_models = settings.models
-        if custom_models:
-            # A dict (or OrderedDict if want to manage dependency order) of {tablename: function}
-            db = current.db
-            for tablename in custom_models:
-                custom_models[tablename](db, tablename)
 
         # Don't do this again within the current request cycle
         s3.load_all_models = False

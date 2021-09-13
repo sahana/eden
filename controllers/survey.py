@@ -8,6 +8,8 @@
 
     @todo: open template from the dataTables into the section tab not update
     @todo: in the pages that add a link to a template make the combobox display the label not the numbers
+
+   The model for this is in templates.IFRC.survey.py
 """
 
 if not settings.has_module(c):

@@ -36,9 +36,9 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Custom Models
     #
-    settings.base.custom_models = {"deploy": "templates.RMS",
-                                   "po": "templates.IFRC",
-                                   "survey": "templates.IFRC",
+    settings.base.custom_models = {"deploy": "RMS",
+                                   "po": "IFRC",
+                                   "survey": "IFRC",
                                    }
 
     # -------------------------------------------------------------------------

@@ -820,48 +820,6 @@ class S3OptionsMenu(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def deploy():
-        """ Deployments """
-
-        deploy_team = current.deployment_settings.get_deploy_team_label()
-        team_menu = "%(team)s Members" % {"team": deploy_team}
-
-        return M()(M("Missions",
-                     c="deploy", f="mission", m="summary")(
-                        M("Create", m="create"),
-                        M("Active Missions", m="summary",
-                          vars={"~.status__belongs": "2"}),
-                   ),
-                   M("Alerts",
-                     c="deploy", f="alert")(
-                        M("Create", m="create"),
-                        M("InBox",
-                          c="deploy", f="email_inbox",
-                        ),
-                        M("Settings",
-                          c="deploy", f="email_channel",
-                          p="update", t="msg_email_channel",
-                          ),
-                   ),
-                   M("Assignments",
-                     c="deploy", f="assignment", m="summary"
-                   ),
-                   M("Job Titles",
-                     c="deploy", f="job_title"
-                   ),
-                   M(team_menu,
-                     c="deploy", f="human_resource", m="summary")(
-                        M("Add Member",
-                          c="deploy", f="application", m="select",
-                          p="create", t="deploy_application",
-                          ),
-                        M("Import Members",
-                          c="deploy", f="person", m="import"),
-                   ),
-                  )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def disease():
         """ Disease Case Tracking and Contact Tracing """
 
@@ -1516,46 +1474,6 @@ class S3OptionsMenu(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def survey():
-        """ SURVEY / Survey """
-
-        ADMIN = current.session.s3.system_roles.ADMIN
-
-        # Do we have a series_id?
-        series_id = False
-        get_vars = Storage()
-        try:
-            series_id = int(current.request.args[0])
-        except (IndexError, ValueError):
-            try:
-                series_id = int(current.request.get_vars["viewing"].split(".")[1])
-            except (AttributeError, IndexError, ValueError):
-                pass
-        if series_id:
-            get_vars.viewing = "survey_complete.%s" % series_id
-
-        return M(c="survey")(
-                    M("Assessment Templates", f="template")(
-                        M("Create", m="create"),
-                    ),
-                    #M("Section", f="section")(
-                    #    M("Create", args="create"),
-                    #),
-                    M("Disaster Assessments", f="series")(
-                        M("Create", m="create"),
-                    ),
-                    M("Administration", f="admin", restrict=[ADMIN])(
-                        M("Import Templates", f="question_list",
-                          m="import", p="create"),
-                        M("Import Template Layout", f="formatter",
-                          m="import", p="create"),
-                        M("Import Completed Assessment Forms", f="complete",
-                          m="import", p="create", vars=get_vars, check=series_id),
-                    ),
-                )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def member():
         """ Membership Management """
 
@@ -1597,7 +1515,8 @@ class S3OptionsMenu(object):
                                         "sms_smtp_channel",
                                         "sms_webapi_channel",
                                         "tropo_channel",
-                                        "twitter_channel"):
+                                        "twitter_channel",
+                                        ):
             return self.admin()
 
         settings_messaging = self.settings_messaging()
@@ -1690,41 +1609,6 @@ class S3OptionsMenu(object):
 
         return M(c="patient")(
                     M("Patients", f="patient")(
-                        M("Create", m="create"),
-                    ),
-                )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def po():
-        """ PO / Population Outreach """
-
-        due_followups = current.s3db.po_due_followups()
-        DUE_FOLLOWUPS = current.T("Due Follow-ups")
-        if due_followups:
-            follow_up_label = "%s (%s)" % (DUE_FOLLOWUPS, due_followups)
-        else:
-            follow_up_label = DUE_FOLLOWUPS
-
-        return M(c="po")(
-                    M("Overview", f="index"),
-                    M("Households", f="household", m="summary")(
-                        M("Create", m="create"),
-                        M("Import", m="import"),
-                    ),
-                    M(follow_up_label, f="due_followups",
-                      translate=False,
-                      ),
-                    M("Areas", f="area")(
-                        M("Create", m="create"),
-                    ),
-                    M("Referral Agencies", f="organisation")(
-                        M("Create", m="create"),
-                    ),
-                    M("Emotional Needs", f="emotional_need")(
-                        M("Create", m="create"),
-                    ),
-                    M("Practical Needs", f="practical_need")(
                         M("Create", m="create"),
                     ),
                 )

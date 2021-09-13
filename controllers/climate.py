@@ -1,11 +1,14 @@
 ﻿# -*- coding: utf-8 -*-
+"""
+    climate - Climate Data Portal
 
-# This file should be moved to controllers/climate.py to use, or else rewritten as custom_ models
+   The model for this is in templates.Climate.climate.py
+"""
 
 if not settings.has_module(c):
     raise HTTP(404, body="Module disabled: %s" % c)
 
-ClimateDataPortal = local_import("ClimateDataPortal")
+from templates.Climate import ClimateDataPortal
 SampleTable = ClimateDataPortal.SampleTable
 DSL = local_import("ClimateDataPortal.DSL")
 

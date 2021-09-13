@@ -33,7 +33,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Custom Models
     #
-    settings.base.custom_models = {"deploy": "templates.RMS",
+    settings.base.custom_models = {"deploy": "RMS",
                                    }
 
     # -------------------------------------------------------------------------
