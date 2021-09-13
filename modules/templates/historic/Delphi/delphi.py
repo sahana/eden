@@ -33,7 +33,7 @@ __all__ = ("DelphiModel",
 
 from gluon import *
 from gluon.storage import Storage
-from ..s3 import *
+from s3 import *
 
 # =============================================================================
 class DelphiModel(S3Model):

@@ -2,6 +2,8 @@
 
 """
     Delphi Decision Maker - Controllers
+
+    The model for this is in templates.Delphi.delphi.py
 """
 
 if not settings.has_module(c):

@@ -798,28 +798,6 @@ class S3OptionsMenu(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def delphi():
-        """ DELPHI / Delphi Decision Maker """
-
-        #ADMIN = current.session.s3.system_roles.ADMIN
-
-        return M(c="delphi")(
-                    M("Active Problems", f="problem")(
-                        M("Create", m="create"),
-                    ),
-                    M("Groups", f="group")(
-                        M("Create", m="create"),
-                    ),
-                    #M("Solutions", f="solution"),
-                    #M("Administration", restrict=[ADMIN])(
-                        #M("Groups", f="group"),
-                        #M("Group Memberships", f="membership"),
-                        #M("Problems", f="problem"),
-                    #)
-                )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def disease():
         """ Disease Case Tracking and Contact Tracing """
 
