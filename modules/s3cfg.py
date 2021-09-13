@@ -1058,7 +1058,7 @@ class S3Config(Storage):
             - a dict {prefix: template}
             Also need to enable prefix in modules and add to template's __init__.py __all__
         """
-        return self.base.get("custom_models")
+        return self.base.get("custom_models", {})
 
     def get_base_rest_controllers(self):
         """
