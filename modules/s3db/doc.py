@@ -27,10 +27,10 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3DocumentLibrary",
-           "S3DocumentTagModel",
-           "S3CKEditorModel",
-           "S3DataCardModel",
+__all__ = ("DocumentLibrary",
+           "DocumentTagModel",
+           "CKEditorModel",
+           "DataCardModel",
            "doc_image_represent",
            "doc_document_list_layout",
            )
@@ -46,7 +46,7 @@ from gluon.storage import Storage
 from ..s3 import *
 
 # =============================================================================
-class S3DocumentLibrary(S3Model):
+class DocumentLibrary(S3Model):
 
     names = ("doc_entity",
              "doc_document",
@@ -539,7 +539,7 @@ class S3DocumentLibrary(S3Model):
                                  )
 
 # =============================================================================
-class S3DocumentTagModel(S3Model):
+class DocumentTagModel(S3Model):
     """
         Document Tags
     """
@@ -750,7 +750,7 @@ class doc_DocumentRepresent(S3Represent):
         return v
 
 # =============================================================================
-class S3CKEditorModel(S3Model):
+class CKEditorModel(S3Model):
     """
         Storage for Images used by CKEditor
         - and hence the s3_richtext_widget
@@ -824,7 +824,7 @@ class S3CKEditorModel(S3Model):
         return ftype
 
 # =============================================================================
-class S3DataCardModel(S3Model):
+class DataCardModel(S3Model):
     """
         Model to manage context-specific features of printable
         data cards (S3PDFCard)

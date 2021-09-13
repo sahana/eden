@@ -27,9 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3SupplyModel",
-           "S3SupplyDistributionModel",
-           "S3SupplyDistributionDVRActivityModel",
+__all__ = ("SupplyModel",
+           "SupplyDistributionModel",
+           "SupplyDistributionDVRActivityModel",
            "S3SupplyPersonModel",
            "supply_item_add",
            "supply_item_rheader",
@@ -67,7 +67,7 @@ um_patterns = (r"\sper\s?(.*)$",                         # CHOCOLATE, per 100g
                )
 
 # =============================================================================
-class S3SupplyModel(S3Model):
+class SupplyModel(S3Model):
     """
         Generic Supply functionality such as catalogs and items that is used
         across multiple modules.
@@ -1278,7 +1278,7 @@ $.filterOptionsS3({
             form_vars.file = f
 
 # =============================================================================
-class S3SupplyDistributionModel(S3Model):
+class SupplyDistributionModel(S3Model):
     """
         Supply Distribution Model
         - depends on Stats module
@@ -1768,9 +1768,11 @@ class S3SupplyDistributionModel(S3Model):
             return list(range(date.year, end_date.year + 1))
 
 # =============================================================================
-class S3SupplyDistributionDVRActivityModel(S3Model):
+class SupplyDistributionDVRActivityModel(S3Model):
     """
         Model to link distributions to DVR activities / case activities
+
+        @ToDo: Deprecate
     """
 
     names = ("supply_distribution_case_activity",

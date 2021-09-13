@@ -27,10 +27,10 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3AssetModel",
-           "S3AssetHRModel",
-           "S3AssetTeamModel",
-           "S3AssetTelephoneModel",
+__all__ = ("AssetModel",
+           "AssetHRModel",
+           "AssetTeamModel",
+           "AssetTelephoneModel",
            #"asset_rheader",
            "asset_types",
            "asset_log_status",
@@ -44,6 +44,9 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
+
+# Dependency list for translate-module
+depends = ["supply"]
 
 ASSET_TYPE_VEHICLE   = 1   # => Extra Tab(s) for Registration Documents, Fuel Efficiency
 #ASSET_TYPE_RADIO     = 2   # => Extra Tab(s) for Radio Channels/Frequencies
@@ -80,7 +83,7 @@ asset_log_status = {"SET_BASE" : ASSET_LOG_SET_BASE,
                     }
 
 # =============================================================================
-class S3AssetModel(S3Model):
+class AssetModel(S3Model):
     """
         Asset Management
     """
@@ -757,7 +760,7 @@ $.filterOptionsS3({
             current_log = asset_get_current_log(asset_id)
 
             log_time = current_log.datetime
-            current_time = form_vars.get("datetime").replace(tzinfo=None)
+            current_time = form_vars.get("datetime").replace(tzinfo = None)
             new = log_time <= current_time
 
         if new:
@@ -784,7 +787,7 @@ $.filterOptionsS3({
                     asset_tracker.check_in(db.org_site, form_vars.site_id,
                                            timestmp = request.utcnow)
                     # Also do component items
-                    locations = asset_tracker.get_location(_fields=[db.gis_location.id])
+                    locations = asset_tracker.get_location(_fields = [db.gis_location.id])
                     try:
                         db(aitable.asset_id == asset_id).update(location_id = locations[0].id)
                     except:
@@ -796,7 +799,7 @@ $.filterOptionsS3({
                         asset_tracker.check_in(db.org_site, site_id,
                                                timestmp = request.utcnow)
                         # Also do component items
-                        locations = asset_tracker.get_location(_fields=[db.gis_location.id])
+                        locations = asset_tracker.get_location(_fields = [db.gis_location.id])
                         try:
                             db(aitable.asset_id == asset_id).update(location_id = locations[0].id)
                         except:
@@ -811,7 +814,7 @@ $.filterOptionsS3({
                                                timestmp = request.utcnow)
                         # Also do component items
                         # @ToDo: Have these move when the person moves
-                        locations = asset_tracker.get_location(_fields=[db.gis_location.id])
+                        locations = asset_tracker.get_location(_fields = [db.gis_location.id])
                         try:
                             db(aitable.asset_id == asset_id).update(location_id = locations[0].id)
                         except:
@@ -835,7 +838,7 @@ $.filterOptionsS3({
             db(atable.id == asset_id).update(cond = form_vars.cond)
 
 # =============================================================================
-class S3AssetHRModel(S3Model):
+class AssetHRModel(S3Model):
     """
         Optionally link Assets to Human Resources
         - useful for staffing a vehicle
@@ -865,7 +868,7 @@ class S3AssetHRModel(S3Model):
         return {}
 
 # =============================================================================
-class S3AssetTeamModel(S3Model):
+class AssetTeamModel(S3Model):
     """
         Optionally link Assets to Teams
     """
@@ -894,7 +897,7 @@ class S3AssetTeamModel(S3Model):
         return {}
 
 # =============================================================================
-class S3AssetTelephoneModel(S3Model):
+class AssetTelephoneModel(S3Model):
     """
         Extend the Assset Module for Telephones:
             Usage Costs
@@ -978,7 +981,8 @@ def asset_get_current_log(asset_id):
                                          table.site_id,
                                          #table.location_id,
                                          orderby = ~table.datetime,
-                                         limitby=(0, 1)).first()
+                                         limitby = (0, 1)
+                                         ).first()
     if asset_log:
         return Storage(datetime = asset_log.datetime,
                        person_id = asset_log.person_id,
@@ -1045,7 +1049,8 @@ def asset_log_prep(r):
         table.site_id.requires = IS_ONE_OF(db, "org_site.site_id",
                                            table.site_id.represent,
                                            filterby = "organisation_id",
-                                           filter_opts = (current_log.organisation_id,))
+                                           filter_opts = (current_log.organisation_id,),
+                                           )
 
     crud_strings = current.response.s3.crud_strings.asset_log
     if status == ASSET_LOG_SET_BASE:
@@ -1059,7 +1064,8 @@ def asset_log_prep(r):
         table.organisation_id.readable = True
         table.organisation_id.writable = True
         table.site_id.requires = IS_ONE_OF(db, "org_site.site_id",
-                                           table.site_id.represent)
+                                           table.site_id.represent,
+                                           )
 
     elif status == ASSET_LOG_RETURN:
         crud_strings.msg_record_created = T("Returned")
@@ -1073,14 +1079,17 @@ def asset_log_prep(r):
             crud_strings.msg_record_created = T("Assigned to Person")
             table["person_id"].requires = IS_ONE_OF(db, "pr_person.id",
                                                     table.person_id.represent,
-                                                    orderby="pr_person.first_name",
-                                                    sort=True,
-                                                    error_message="Person must be specified!")
+                                                    # @ToDo: Use settings for name sort
+                                                    orderby = "pr_person.first_name",
+                                                    sort = True,
+                                                    error_message = "Person must be specified!",
+                                                    )
             table.check_in_to_person.readable = True
             table.check_in_to_person.writable = True
             table.site_id.requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_site.site_id",
-                                                  table.site_id.represent))
+                                                  table.site_id.represent,
+                                                  ))
         elif method == "assignsite":
             crud_strings.msg_record_created = T("Assigned to Facility/Site")
         elif method == "assignorg":
@@ -1089,11 +1098,13 @@ def asset_log_prep(r):
             table.organisation_id.writable = True
             table.organisation_id.requires = IS_ONE_OF(db, "org_organisation.id",
                                                        table.organisation_id.represent,
-                                                       orderby="org_organisation.name",
-                                                       sort=True)
+                                                       orderby = "org_organisation.name",
+                                                       sort = True,
+                                                       )
             table.site_id.requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_site.site_id",
-                                                  table.site_id.represent))
+                                                  table.site_id.represent,
+                                                  ))
     else:
         crud_strings.msg_record_created = T("Status Updated")
         table.person_id.label = T("Updated By")
@@ -1278,7 +1289,7 @@ def asset_controller():
             query = (ctable.value == email) & \
                     (ctable.pe_id == ptable.pe_id)
             person = db(query).select(ptable.uuid,
-                                      limitby=(0, 1)
+                                      limitby = (0, 1)
                                       ).first()
             if person:
                 # Replace email with uuid
@@ -1325,11 +1336,11 @@ class asset_AssetRepresent(S3Represent):
                  ):
 
         super(asset_AssetRepresent,
-              self).__init__(lookup="asset_asset",
-                             fields=fields,
-                             show_link=show_link,
-                             translate=translate,
-                             multiple=multiple)
+              self).__init__(lookup = "asset_asset",
+                             fields = fields,
+                             show_link = show_link,
+                             translate = translate,
+                             multiple = multiple)
 
     # -------------------------------------------------------------------------
     def lookup_rows(self, key, values, fields=None):
@@ -1363,8 +1374,9 @@ class asset_AssetRepresent(S3Represent):
                                 table.type,
                                 itable.name,
                                 btable.name,
-                                left=btable.on(itable.brand_id == btable.id),
-                                limitby=limitby)
+                                left = btable.on(itable.brand_id == btable.id),
+                                limitby = limitby,
+                                )
         self.queries += 1
         return rows
 
@@ -1403,9 +1415,10 @@ class asset_AssetRepresent(S3Represent):
         if row:
             atype = row.get("asset_asset.type", None)
             if atype == 1:
-                return A(v, _href=URL(c="vehicle", f="vehicle", args=[k],
+                return A(v, _href=URL(c="vehicle", f="vehicle",
+                                      args = [k],
                                       # remove the .aaData extension in paginated views
-                                      extension=""
+                                      extension = ""
                                       ))
         k = s3_unicode(k)
         return A(v, _href=self.linkto.replace("[id]", k) \

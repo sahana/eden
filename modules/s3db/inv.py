@@ -58,7 +58,6 @@ __all__ = ("InvWarehouseModel",
            "inv_tracking_status",
            "inv_warehouse_free_capacity",
            "inv_InvItemRepresent",
-           "depends",
            )
 
 import datetime

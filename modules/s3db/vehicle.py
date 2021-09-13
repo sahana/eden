@@ -27,15 +27,18 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3VehicleModel",)
+__all__ = ("VehicleModel",)
 
 from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
 
+# Dependency list for translate-module
+depends = ["asset"]
+
 # =============================================================================
-class S3VehicleModel(S3Model):
+class VehicleModel(S3Model):
     """
         Vehicle Management Functionality
         - extends Assets

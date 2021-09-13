@@ -38,8 +38,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3ProcurementPlansModel",
-           "S3PurchaseOrdersModel",
+__all__ = ("ProcurementPlansModel",
+           "PurchaseOrdersModel",
            "proc_rheader"
            )
 
@@ -49,7 +49,7 @@ from ..s3 import *
 #from .supply import SupplyItemPackQuantity
 
 # =============================================================================
-class S3ProcurementPlansModel(S3Model):
+class ProcurementPlansModel(S3Model):
     """
         Procurement Plans
 
@@ -273,7 +273,7 @@ class S3ProcurementPlansModel(S3Model):
             return current.messages.UNKNOWN_OPT
 
 # =============================================================================
-class S3PurchaseOrdersModel(S3Model):
+class PurchaseOrdersModel(S3Model):
     """
         Purchase Orders (PO)
 

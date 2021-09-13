@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3WaterModel",)
+__all__ = ("WaterModel",)
 
 from gluon import *
 from gluon.storage import Storage
@@ -35,7 +35,7 @@ from ..s3 import *
 from s3layouts import S3PopupLink
 
 # =============================================================================
-class S3WaterModel(S3Model):
+class WaterModel(S3Model):
     """
         Water Sources
     """

@@ -272,9 +272,11 @@ class RequestModel(S3Model):
                          }
         if use_workflow:
             workflow_default = 1 # Draft
+            workflow_status_requires = IS_IN_SET(workflow_opts)
         else:
             # Don't make assumptions
             workflow_default = None
+            workflow_status_requires = IS_EMPTY_OR(IS_IN_SET(workflow_opts))
 
         # ---------------------------------------------------------------------
         # Request Reference
@@ -428,7 +430,7 @@ class RequestModel(S3Model):
                           Field("workflow_status", "integer",
                                 label = T("Status"),
                                 default = workflow_default,
-                                requires = IS_IN_SET(workflow_opts),
+                                requires = workflow_status_requires,
                                 represent = S3Represent(options = workflow_opts),
                                 readable = use_workflow,
                                 writable = False,

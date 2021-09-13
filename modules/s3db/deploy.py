@@ -27,9 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3DeploymentOrganisationModel",
-           "S3DeploymentModel",
-           "S3DeploymentAlertModel",
+__all__ = ("DeploymentOrganisationModel",
+           "DeploymentModel",
+           "DeploymentAlertModel",
            "deploy_rheader",
            "deploy_apply",
            "deploy_alert_select_recipients",
@@ -46,7 +46,7 @@ from ..s3 import *
 from s3layouts import S3PopupLink
 
 # =============================================================================
-class S3DeploymentOrganisationModel(S3Model):
+class DeploymentOrganisationModel(S3Model):
     """
         Split into separate model to avoid circular deadlock in HRModel
     """
@@ -72,7 +72,7 @@ class S3DeploymentOrganisationModel(S3Model):
         return {}
 
 # =============================================================================
-class S3DeploymentModel(S3Model):
+class DeploymentModel(S3Model):
 
     names = ("deploy_mission",
              "deploy_mission_id",
@@ -842,7 +842,7 @@ class S3DeploymentModel(S3Model):
         s3db.resource("hrm_appraisal", id=link.appraisal_id).delete()
 
 # =============================================================================
-class S3DeploymentAlertModel(S3Model):
+class DeploymentAlertModel(S3Model):
 
     names = ("deploy_alert",
              "deploy_alert_recipient",

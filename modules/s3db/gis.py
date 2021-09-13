@@ -29,19 +29,19 @@
 
 from __future__ import division
 
-__all__ = ("S3LocationModel",
-           "S3LocationNameModel",
-           "S3LocationTagModel",
-           "S3LocationGroupModel",
-           "S3LocationHierarchyModel",
-           "S3GISConfigModel",
-           "S3LayerEntityModel",
-           "S3FeatureLayerModel",
-           "S3MapModel",
-           "S3GISThemeModel",
-           "S3PoIModel",
-           "S3PoIOrganisationGroupModel",
-           "S3PoIFeedModel",
+__all__ = ("LocationModel",
+           "LocationNameModel",
+           "LocationTagModel",
+           "LocationGroupModel",
+           "LocationHierarchyModel",
+           "GISConfigModel",
+           "LayerEntityModel",
+           "LayerFeatureModel",
+           "LayerMapModel",
+           "LayerThemeModel",
+           "PoIModel",
+           "PoIOrganisationGroupModel",
+           "PoIFeedModel",
            "gis_location_filter",
            "gis_LocationRepresent",
            "gis_layer_represent",
@@ -65,7 +65,7 @@ from s3layouts import S3PopupLink
 SEPARATORS = (",", ":")
 
 # =============================================================================
-class S3LocationModel(S3Model):
+class LocationModel(S3Model):
     """
         Locations model
     """
@@ -1235,7 +1235,7 @@ class S3LocationModel(S3Model):
         return output
 
 # =============================================================================
-class S3LocationNameModel(S3Model):
+class LocationNameModel(S3Model):
     """
         Location Names model
         - local/alternate names for Locations
@@ -1306,7 +1306,7 @@ class S3LocationNameModel(S3Model):
         return {}
 
 # =============================================================================
-class S3LocationTagModel(S3Model):
+class LocationTagModel(S3Model):
     """
         Location Tags model
         - flexible Key-Value component attributes to Locations
@@ -1386,7 +1386,7 @@ class S3LocationTagModel(S3Model):
         return od
 
 # =============================================================================
-class S3LocationGroupModel(S3Model):
+class LocationGroupModel(S3Model):
     """
         Location Groups model
         - currently unused
@@ -1442,7 +1442,7 @@ class S3LocationGroupModel(S3Model):
         return {}
 
 # =============================================================================
-class S3LocationHierarchyModel(S3Model):
+class LocationHierarchyModel(S3Model):
     """
         Location Hierarchy model
     """
@@ -1618,7 +1618,7 @@ class S3LocationHierarchyModel(S3Model):
                     form.errors[gap] = hierarchy_gap
 
 # =============================================================================
-class S3GISConfigModel(S3Model):
+class GISConfigModel(S3Model):
     """
         GIS Config model: Web Map Context
         - Site config
@@ -2479,7 +2479,7 @@ class gis_MarkerRepresent(S3Represent):
         return represent
 
 # ==============================================================================
-class S3LayerEntityModel(S3Model):
+class LayerEntityModel(S3Model):
     """
         Model for Layer SuperEntity
         - used to provide a common link table for:
@@ -2865,7 +2865,7 @@ class S3LayerEntityModel(S3Model):
                               )
 
 # =============================================================================
-class S3FeatureLayerModel(S3Model):
+class LayerFeatureModel(S3Model):
     """
         Model for Feature Layers
         - used to select a set of Features for either Display on a Map
@@ -3074,7 +3074,7 @@ class S3FeatureLayerModel(S3Model):
             item.method = item.METHOD.UPDATE
 
 # =============================================================================
-class S3MapModel(S3Model):
+class LayerMapModel(S3Model):
     """ Models for Maps """
 
     names = ("gis_cache",
@@ -4436,10 +4436,10 @@ class S3MapModel(S3Model):
             @ToDo: Check if the file has changed & run the normal onaccept if-so
         """
 
-        S3MapModel.gis_layer_shapefile_onaccept(form)
+        LayerMapModel.gis_layer_shapefile_onaccept(form)
 
 # =============================================================================
-class S3GISThemeModel(S3Model):
+class LayerThemeModel(S3Model):
     """
         Thematic Mapping model
 
@@ -4599,7 +4599,7 @@ class S3GISThemeModel(S3Model):
         return json.dumps(style)
 
 # =============================================================================
-class S3PoIModel(S3Model):
+class PoIModel(S3Model):
     """
         Data Model for PoIs (Points of Interest)
     """
@@ -4902,7 +4902,7 @@ class S3PoIModel(S3Model):
             current.log.warning("Unable to update GIS PoI Style as there are multiple possible")
 
 # =============================================================================
-class S3PoIOrganisationGroupModel(S3Model):
+class PoIOrganisationGroupModel(S3Model):
     """
         PoI Organisation Group Model
 
@@ -4940,8 +4940,12 @@ class S3PoIOrganisationGroupModel(S3Model):
         return {}
 
 # =============================================================================
-class S3PoIFeedModel(S3Model):
-    """ Data Model for PoI feeds """
+class PoIFeedModel(S3Model):
+    """
+        Data Model for PoI feeds
+
+        Used by S3ExportPOI
+    """
 
     names = ("gis_poi_feed",)
 
@@ -5044,7 +5048,8 @@ def gis_layer_onaccept(form):
         ctable = s3db.gis_config
         query = (ctable.uuid == "SITE_DEFAULT")
         config = db(query).select(ctable.id,
-                                  limitby=(0, 1)).first()
+                                  limitby = (0, 1)
+                                  ).first()
         if not config:
             return
         config_id = config.id
@@ -5054,7 +5059,8 @@ def gis_layer_onaccept(form):
         query = (ltable.config_id == config_id) & \
                 (ltable.layer_id == layer_id)
         record = db(query).select(ltable.id,
-                                  limitby=(0, 1)).first()
+                                  limitby = (0, 1)
+                                  ).first()
         if record:
             db(query).update(enabled=True)
         else:
@@ -5090,7 +5096,8 @@ def gis_hierarchy_editable(level, location_id):
     rows = current.db(query).select(table[fieldname],
                                     table.uuid,
                                     limitby = limitby,
-                                    cache = s3db.cache)
+                                    cache = s3db.cache,
+                                    )
     if len(rows) > 1:
         # Remove the Site Default
         excluded = lambda row: row.uuid == "SITE_DEFAULT"
@@ -5338,7 +5345,7 @@ class gis_LocationRepresent(S3Represent):
             self.l10n = db(query).select(table.location_id,
                                          table.name_l10n,
                                          limitby = (0, count),
-                                         ).as_dict(key="location_id")
+                                         ).as_dict(key = "location_id")
         return rows
 
     # -------------------------------------------------------------------------
@@ -5374,7 +5381,7 @@ class gis_LocationRepresent(S3Represent):
             self.l10n = current.db(query).select(table.location_id,
                                                  table.name_l10n,
                                                  limitby = (0, count),
-                                                 ).as_dict(key="location_id")
+                                                 ).as_dict(key = "location_id")
         return self.represent_row(row)
 
     # -------------------------------------------------------------------------
@@ -5540,10 +5547,10 @@ class gis_LocationRepresent(S3Represent):
                         script = None
                     represent = SPAN(s3_unicode(represent),
                                      ICON("map-marker",
-                                          _title=self.lat_lon_represent(row),
-                                          _onclick=script,
+                                          _title = self.lat_lon_represent(row),
+                                          _onclick = script,
                                           ),
-                                     _class="gis-display-feature",
+                                     _class = "gis-display-feature",
                                      )
                     return represent
 
@@ -5566,7 +5573,7 @@ def gis_layer_represent(layer_id, row=None, show_link=True):
         row = db(ltable.layer_id == layer_id).select(ltable.name,
                                                      ltable.layer_id,
                                                      ltable.instance_type,
-                                                     limitby = (0, 1),
+                                                     limitby = (0, 1)
                                                      ).first()
 
     try:
@@ -5583,7 +5590,7 @@ def gis_layer_represent(layer_id, row=None, show_link=True):
         query = (table.layer_id == row.layer_id)
         try:
             id = db(query).select(table.id,
-                                  limitby = (0, 1),
+                                  limitby = (0, 1)
                                   ).first().id
         except AttributeError:
             # Not found?
@@ -5591,8 +5598,8 @@ def gis_layer_represent(layer_id, row=None, show_link=True):
         c, f = instance_type.split("_", 1)
         represent = A(represent,
                       _href=URL(c=c, f=f,
-                                args=[id],
-                                extension="", # removes the .aaData extension in paginated views!
+                                args = [id],
+                                extension = "", # removes the .aaData extension in paginated views!
                                 ),
                       )
 

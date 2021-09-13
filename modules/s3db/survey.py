@@ -39,12 +39,12 @@
     @ToDo: col-cnt, row-cnt & Length metadata should be automatable
 """
 
-__all__ = ("S3SurveyTemplateModel",
-           "S3SurveyQuestionModel",
-           "S3SurveyFormatterModel",
-           "S3SurveySeriesModel",
-           "S3SurveyCompleteModel",
-           "S3SurveyTranslateModel",
+__all__ = ("SurveyTemplateModel",
+           "SurveyQuestionModel",
+           "SurveyFormatterModel",
+           "SurveySeriesModel",
+           "SurveyCompleteModel",
+           "SurveyTranslateModel",
            "survey_answer_list_represent",
            "survey_template_rheader",
            "survey_series_rheader",
@@ -102,7 +102,7 @@ else:
     _debug = lambda m: None
 
 # =============================================================================
-class S3SurveyTemplateModel(S3Model):
+class SurveyTemplateModel(S3Model):
     """
         Template model
 
@@ -391,7 +391,7 @@ class S3SurveyTemplateModel(S3Model):
         else:
             return
 
-        add_question = S3SurveyTemplateModel.add_question
+        add_question = SurveyTemplateModel.add_question
         if form_vars.competion_qstn != None:
             name = form_vars.competion_qstn
             code = "STD-WHO"
@@ -765,7 +765,7 @@ def survey_build_template_summary(template_id):
     return form
 
 # =============================================================================
-class S3SurveyQuestionModel(S3Model):
+class SurveyQuestionModel(S3Model):
     """
         Question Model
     """
@@ -1231,7 +1231,7 @@ def survey_updateMetaData(record, qtype, metadata):
         widget_obj.insertChildren(record, metadata_list)
 
 # =============================================================================
-class S3SurveyFormatterModel(S3Model):
+class SurveyFormatterModel(S3Model):
     """
         The survey_formatter table defines the order in which the questions
         will be laid out when a formatted presentation is used.
@@ -1402,7 +1402,7 @@ def survey_getQstnLayoutRules(template_id, section_id, method = 1):
     return row_list
 
 # =============================================================================
-class S3SurveySeriesModel(S3Model):
+class SurveySeriesModel(S3Model):
     """
         Series Model
 
@@ -1706,7 +1706,7 @@ class S3SurveySeriesModel(S3Model):
         response.headers["Content-Type"] = contenttype(".png")
         response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
 
-        chart_file = S3SurveySeriesModel.getChartName()
+        chart_file = SurveySeriesModel.getChartName()
         cached = S3Chart.getCachedFile(chart_file)
         if cached:
             return cached
@@ -1721,7 +1721,7 @@ class S3SurveySeriesModel(S3Model):
             if not isinstance(numeric_question_list, (list, tuple)):
                 numeric_question_list = [numeric_question_list]
         if (numeric_question_list != None) and (label_question != None):
-            S3SurveySeriesModel.drawChart(output, r.id, numeric_question_list,
+            SurveySeriesModel.drawChart(output, r.id, numeric_question_list,
                                           label_question, outputFormat="png")
         return output["chart"]
 
@@ -1753,7 +1753,7 @@ class S3SurveySeriesModel(S3Model):
             series_id = rvars.series
         else:
             series_id = r.id
-        chart_file = S3SurveySeriesModel.getChartName()
+        chart_file = SurveySeriesModel.getChartName()
         cache_path = S3Chart.getCachedPath(chart_file)
         if cache_path and r.ajax:
             return IMG(_src=cache_path)
@@ -1769,7 +1769,7 @@ class S3SurveySeriesModel(S3Model):
                     if not isinstance(numeric_question_list, (list, tuple)):
                         numeric_question_list = [numeric_question_list]
                 if (numeric_question_list != None) and (label_question != None):
-                    S3SurveySeriesModel.drawChart(output, series_id, numeric_question_list,
+                    SurveySeriesModel.drawChart(output, series_id, numeric_question_list,
                                                   label_question)
         if r.ajax == True and "chart" in output:
             return output["chart"]
@@ -1931,7 +1931,7 @@ $('#chart_btn').click(function(){
         if data_list == []:
             output["chart"] = H4(T("There is insufficient data to draw a chart from the questions selected"))
         else:
-            chart_file = S3SurveySeriesModel.getChartName()
+            chart_file = SurveySeriesModel.getChartName()
             chart = S3Chart(path=chart_file, width=7.2)
             chart.asInt = True
             chart.survey_bar(label_question,
@@ -2304,12 +2304,12 @@ def saveAnswers(questions, series_id, complete_id, rvars):
     if complete_id is None:
         # Insert into database
         record_id = table.insert(series_id = series_id, answer_list = text)
-        S3SurveyCompleteModel.completeOnAccept(record_id)
+        SurveyCompleteModel.completeOnAccept(record_id)
         return record_id
     else:
         # Update the complete_id record
         current.db(table.id == complete_id).update(answer_list = text)
-        S3SurveyCompleteModel.completeOnAccept(complete_id)
+        SurveyCompleteModel.completeOnAccept(complete_id)
         return complete_id
 
 # =============================================================================
@@ -2402,7 +2402,7 @@ def buildSeriesSummary(series_id, posn_offset):
     return form
 
 # =============================================================================
-class S3SurveyCompleteModel(S3Model):
+class SurveyCompleteModel(S3Model):
     """
         Completed Surveys Model
     """
@@ -2569,7 +2569,7 @@ class S3SurveyCompleteModel(S3Model):
 
         complete_id = form.vars.id
         if complete_id:
-            S3SurveyCompleteModel.completeOnAccept(complete_id)
+            SurveyCompleteModel.completeOnAccept(complete_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2594,7 +2594,7 @@ class S3SurveyCompleteModel(S3Model):
             return
         # Save all the answers from answer_list in the survey_answer table
         answer_list = record.answer_list
-        S3SurveyCompleteModel.importAnswers(complete_id, answer_list)
+        SurveyCompleteModel.importAnswers(complete_id, answer_list)
         # Extract the default template location question and save the
         # answer in the location field
         template_record = survey_getTemplateFromSeries(series_id)
@@ -2605,7 +2605,7 @@ class S3SurveyCompleteModel(S3Model):
         if widget_obj:
             record.update_record(location = widget_obj.repr())
         locations = get_location_details(complete_id)
-        S3SurveyCompleteModel.importLocations(locations)
+        SurveyCompleteModel.importLocations(locations)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3081,7 +3081,7 @@ def getLocationList(series_id):
     return response_locations
 
 # =============================================================================
-class S3SurveyTranslateModel(S3Model):
+class SurveyTranslateModel(S3Model):
     """
         Translations Model
     """

@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3SchoolModel",
+__all__ = ("SchoolModel",
            )
 
 from gluon import *
@@ -37,7 +37,7 @@ from ..s3 import *
 from s3layouts import S3PopupLink
 
 # =============================================================================
-class S3SchoolModel(S3Model):
+class SchoolModel(S3Model):
 
     names = ("edu_school",
              "edu_school_type",

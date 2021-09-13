@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3PatientModel",)
+__all__ = ("PatientModel",)
 
 from gluon import *
 from gluon.storage import Storage
@@ -35,7 +35,7 @@ from gluon.storage import Storage
 from ..s3 import *
 
 # =============================================================================
-class S3PatientModel(S3Model):
+class PatientModel(S3Model):
     """
     """
 

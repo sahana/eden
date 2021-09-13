@@ -27,8 +27,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3DelphiModel",
-           "S3DelphiUser",
+__all__ = ("DelphiModel",
+           "DelphiUser",
            )
 
 from gluon import *
@@ -36,7 +36,7 @@ from gluon.storage import Storage
 from ..s3 import *
 
 # =============================================================================
-class S3DelphiModel(S3Model):
+class DelphiModel(S3Model):
     """
         Delphi Decision Maker
     """
@@ -393,7 +393,7 @@ class S3DelphiModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         return {"delphi_solution_represent": solution_represent,
-                "delphi_DelphiUser": S3DelphiUser,
+                "delphi_DelphiUser": DelphiUser,
                 }
 
     # -------------------------------------------------------------------------
@@ -487,7 +487,7 @@ def delphi_solution_votes(row):
     return A(votes, _href=url)
 
 # =============================================================================
-class S3DelphiUser:
+class DelphiUser:
     """ Delphi User class """
 
     def user(self):

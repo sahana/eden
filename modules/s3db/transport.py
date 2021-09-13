@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3TransportModel",
+__all__ = ("TransportModel",
            "transport_rheader",
            )
 
@@ -38,7 +38,7 @@ from ..s3 import *
 from ..s3layouts import S3PopupLink
 
 # =============================================================================
-class S3TransportModel(S3Model):
+class TransportModel(S3Model):
     """
         http://eden.sahanafoundation.org/wiki/BluePrint/Transport
     """

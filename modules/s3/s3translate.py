@@ -1083,7 +1083,6 @@ class Strings(object):
         for mod in modlist:
             if hasattr(models, mod):
                 obj = getattr(models, mod)
-                # Currently only inv module has a depends list
                 if hasattr(obj, "depends"):
                     for element in obj.depends:
                         if element not in modlist:
