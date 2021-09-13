@@ -28,14 +28,25 @@ def config(settings):
     T = current.T
 
     # -------------------------------------------------------------------------
+    # System Name
+    #
+    settings.base.system_name = T("Resource Management System")
+    settings.base.system_name_short = T("RMS")
+
+    # -------------------------------------------------------------------------
+    # Custom Models
+    #
+    settings.base.custom_models = {"deploy": "templates.RMS",
+                                   "po": "templates.IFRC",
+                                   "survey": "templates.IFRC",
+                                   }
+
+    # -------------------------------------------------------------------------
     # Pre-Populate
     settings.base.prepopulate += ("IFRC",)
     settings.base.prepopulate_demo += ("IFRC/Train",
                                        #"IFRC/Demo", # Takes a long time to import
                                        )
-
-    settings.base.system_name = T("Resource Management System")
-    settings.base.system_name_short = T("RMS")
 
     # =========================================================================
     # System Settings

@@ -42,7 +42,7 @@ from gluon import *
 from gluon.html import *
 from gluon.tools import callback
 
-from ..s3 import *
+from s3 import *
 from s3layouts import S3PopupLink
 
 # =============================================================================
@@ -569,8 +569,8 @@ class DeploymentModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {"deploy_mission_id": mission_id,
-                # Currently only used by inactive IFRC template
-                #"deploy_mission_status_opts": mission_status_opts,
+                # Currently only used by IFRC template
+                "deploy_mission_status_opts": mission_status_opts,
                 }
 
     # -------------------------------------------------------------------------

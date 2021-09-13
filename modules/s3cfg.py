@@ -1052,6 +1052,14 @@ class S3Config(Storage):
 
         return self.base.get("allow_testing", True)
 
+    def get_base_custom_models(self):
+        """
+            Custom Models
+            - a dict {prefix: template}
+            Also need to enable prefix in modules and add to template's __init__.py __all__
+        """
+        return self.base.get("custom_models", {})
+
     def get_base_rest_controllers(self):
         """
             Re-routed RESTful CRUD controllers

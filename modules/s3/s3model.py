@@ -44,7 +44,6 @@ from .s3resource import S3Resource
 from .s3validators import IS_ONE_OF, IS_JSONS3
 from .s3widgets import s3_comments_widget, s3_richtext_widget
 
-CUSTOM_PREFIX = "custom"
 DYNAMIC_PREFIX = "s3dt"
 DEFAULT = lambda: None
 
@@ -250,20 +249,6 @@ class S3Model(object):
             except AttributeError:
                 pass
 
-        elif prefix == CUSTOM_PREFIX:
-            # Load Custom Table from deployment_settings
-            # should be a dict (or OrderedDict if want to manage dependency order):
-            # settings.models = {tablename: function}
-            # If wanting to have a REST controller for them, then also add an entry to the rest_controllers:
-            # settings.base.rest_controllers = {("custom", resourcename): ("custom", resourcename)}
-            # & add "custom" to settings.modules
-
-            # Better to raise, ideally explicit error
-            #try:
-            found = current.deployment_settings.models[tablename](db, tablename)
-            #except KeyError:
-            #pass
-
         elif hasattr(models, prefix):
             module = models.__dict__[prefix]
 
@@ -291,6 +276,39 @@ class S3Model(object):
                 if not loaded:
                     for n in generic:
                         s3models[n](prefix)
+
+        else:
+            custom_models = current.deployment_settings.get_base_custom_models()
+            if prefix in custom_models:
+                # Use Web2Py's Custom Importer rather than importlib.import_module
+                parent = __import__(custom_models[prefix], fromlist=[prefix])
+                module = parent.__dict__[prefix]
+                models.__dict__[prefix] = module
+
+                names = module.__all__
+                s3models = module.__dict__
+
+                if not db_only and tablename in names:
+                    # A name defined at module level (e.g. a class)
+                    s3db.classes[tablename] = (prefix, tablename)
+                    found = s3models[tablename]
+                else:
+                    # A name defined in an S3Model
+                    generic = []
+                    loaded = False
+                    for n in names:
+                        model = s3models[n]
+                        if hasattr(model, "_s3model"):
+                            if hasattr(model, "names"):
+                                if tablename in model.names:
+                                    model(prefix)
+                                    loaded = True
+                                    break
+                            else:
+                                generic.append(n)
+                    if not loaded:
+                        for n in generic:
+                            s3models[n](prefix)
 
         if found:
             return found

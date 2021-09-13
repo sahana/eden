@@ -24,7 +24,7 @@ import s3db.cms
 import s3db.cr
 import s3db.dc
 import s3db.delphi
-import s3db.deploy
+#import s3db.deploy
 import s3db.disease
 import s3db.doc
 import s3db.dvi
@@ -42,7 +42,7 @@ import s3db.msg
 import s3db.ocr
 import s3db.org
 import s3db.patient
-import s3db.po
+#import s3db.po
 import s3db.police
 import s3db.pr
 import s3db.proc
@@ -55,7 +55,7 @@ import s3db.sit
 import s3db.stats
 #import s3db.stdm
 import s3db.supply
-import s3db.survey
+#import s3db.survey
 import s3db.sync
 #import s3db.tour
 import s3db.translate
