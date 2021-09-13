@@ -28,8 +28,8 @@
 """
 
 __all__ = ("AssetModel",
-           "AssetHRModel",
-           "AssetTeamModel",
+           #"AssetHRModel",
+           #"AssetTeamModel",
            "AssetTelephoneModel",
            #"asset_rheader",
            "asset_types",
@@ -101,7 +101,7 @@ class AssetModel(S3Model):
         auth = current.auth
         user = auth.user
         LOGGED_IN = auth.is_logged_in()
-        site_types = auth.org_site_types
+        org_site_types = auth.org_site_types
         s3 = current.response.s3
 
         item_id = self.supply_item_id
@@ -211,7 +211,7 @@ class AssetModel(S3Model):
                      super_link("site_id", "org_site",
                                 default = user.site_id if LOGGED_IN else None,
                                 empty = False,
-                                instance_types = site_types,
+                                instance_types = org_site_types,
                                 label = org_site_label,
                                 ondelete = "RESTRICT",
                                 readable = True,
@@ -415,7 +415,7 @@ class AssetModel(S3Model):
                   realm_components = ("log", "presence"),
                   report_options = report_options,
                   summary = summary,
-                  super_entity = ("supply_item_entity", "sit_trackable"),
+                  super_entity = ("doc_entity", "sit_trackable", "supply_item_entity"),
                   update_realm = True,
                   )
 
@@ -504,9 +504,9 @@ class AssetModel(S3Model):
 
         if auth.permission.format == "html":
             # T isn't JSON serializable
-            site_types = auth.org_site_types
-            for key in list(site_types.keys()):
-                site_types[key] = str(site_types[key])
+            site_types = {}
+            for key in list(org_site_types.keys()):
+                site_types[key] = s3_str(org_site_types[key])
             site_types = json.dumps(site_types)
             script = '''
 $.filterOptionsS3({
@@ -564,7 +564,7 @@ $.filterOptionsS3({
                                 label = org_site_label,
                                 #filterby = "site_id",
                                 #filter_opts = auth.permitted_facilities(redirect_on_error=False),
-                                instance_types = site_types,
+                                instance_types = org_site_types,
                                 not_filterby = "obsolete",
                                 not_filter_opts = (True,),
                                 represent = self.org_site_represent,
@@ -574,6 +574,7 @@ $.filterOptionsS3({
                                 updateable = True,
                                 #widget = S3SiteAutocompleteWidget(),
                                 ),
+                     # @ToDo: Replace with org_site_layout:
                      self.org_room_id(),
                      #location_id(),
                      Field("cancel", "boolean",
@@ -595,7 +596,7 @@ $.filterOptionsS3({
                      person_id("by_person_id",
                                default = auth.s3_logged_in_person(),   # This can either be the Asset controller if signed-out from the store
                                label = T("Assigned By"),               # or the previous owner if passed on directly (e.g. to successor in their post)
-                               comment = self.pr_person_comment(child="by_person_id"),
+                               comment = self.pr_person_comment(child = "by_person_id"),
                                ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -660,21 +661,30 @@ $.filterOptionsS3({
 
         db = current.db
         atable = db.asset_asset
+
         form_vars_get = form.vars.get
         asset_id = form_vars_get("id")
         kit = form_vars_get("kit")
         organisation_id = form_vars_get("organisation_id")
         site_id = form_vars_get("site_id")
+
         if not organisation_id or not site_id:
             # Component Tab: load record to read
-            record = db(atable.id == asset_id).select(atable.organisation_id,
-                                                      atable.site_id,
-                                                      limitby = (0, 1)
-                                                      ).first()
-            organisation_id = record.organisation_id
-            site_id = record.site_id
+            asset = db(atable.id == asset_id).select(atable.organisation_id,
+                                                     atable.site_id,
+                                                     limitby = (0, 1)
+                                                     ).first()
+            organisation_id = asset.organisation_id
+            site_id = asset.site_id
 
-        if site_id:
+        record = form.record
+        if record:
+            old_site_id = record.site_id
+        else:
+            old_site_id = None
+
+        if site_id and \
+           site_id != old_site_id:
             # Set the Base Location
             stable = db.org_site
             site = db(stable.site_id == site_id).select(stable.location_id,
@@ -719,8 +729,6 @@ $.filterOptionsS3({
         """
             After DB I/O
         """
-
-        request = current.request
 
         # Custom methods to allow form customization for specific cases
         # Original method passed from asset_log_prep()
@@ -785,7 +793,7 @@ $.filterOptionsS3({
             elif status == ASSET_LOG_ASSIGN:
                 if method == "assignsite":
                     asset_tracker.check_in(db.org_site, form_vars.site_id,
-                                           timestmp = request.utcnow)
+                                           timestmp = current.request.utcnow)
                     # Also do component items
                     locations = asset_tracker.get_location(_fields = [db.gis_location.id])
                     try:
@@ -797,7 +805,7 @@ $.filterOptionsS3({
                     site_id = form_vars.get("site_id")
                     if site_id:
                         asset_tracker.check_in(db.org_site, site_id,
-                                               timestmp = request.utcnow)
+                                               timestmp = current.request.utcnow)
                         # Also do component items
                         locations = asset_tracker.get_location(_fields = [db.gis_location.id])
                         try:
@@ -811,7 +819,7 @@ $.filterOptionsS3({
                 else:
                     if form_vars.check_in_to_person:
                         asset_tracker.check_in(db.pr_person, form_vars.person_id,
-                                               timestmp = request.utcnow)
+                                               timestmp = current.request.utcnow)
                         # Also do component items
                         # @ToDo: Have these move when the person moves
                         locations = asset_tracker.get_location(_fields = [db.gis_location.id])
@@ -821,7 +829,7 @@ $.filterOptionsS3({
                             pass
                     else:
                         location_id = asset_tracker.set_location(form_vars.person_id,
-                                                                 timestmp = request.utcnow)
+                                                                 timestmp = current.request.utcnow)
                         # Also do component items
                         db(aitable.asset_id == asset_id).update(location_id = location_id)
                     # Update main record for component
@@ -830,7 +838,7 @@ $.filterOptionsS3({
             elif status == ASSET_LOG_RETURN:
                 # Set location to base location
                 location_id = asset_tracker.set_location(asset_tracker,
-                                                         timestmp = request.utcnow)
+                                                         timestmp = current.request.utcnow)
                 # Also do component items
                 db(aitable.asset_id == asset_id).update(location_id = location_id)
 
@@ -838,63 +846,63 @@ $.filterOptionsS3({
             db(atable.id == asset_id).update(cond = form_vars.cond)
 
 # =============================================================================
-class AssetHRModel(S3Model):
-    """
-        Optionally link Assets to Human Resources
-        - useful for staffing a vehicle
-    """
+#class AssetHRModel(S3Model):
+#    """
+#        Optionally link Assets to Human Resources
+#        - useful for staffing a vehicle
+#    """
 
-    names = ("asset_human_resource",)
+#    names = ("asset_human_resource",)
 
-    def model(self):
+#    def model(self):
 
-        #T = current.T
+#        #T = current.T
 
-        #--------------------------------------------------------------------------
-        # Assets <> Human Resources
-        #
-        tablename = "asset_human_resource"
-        self.define_table(tablename,
-                          self.asset_asset_id(empty = False),
-                          self.hrm_human_resource_id(empty = False,
-                                                     ondelete = "CASCADE",
-                                                     ),
-                          #s3_comments(),
-                          *s3_meta_fields())
+#        # ---------------------------------------------------------------------
+#        # Assets <> Human Resources
+#        #
+#        tablename = "asset_human_resource"
+#        self.define_table(tablename,
+#                          self.asset_asset_id(empty = False),
+#                          self.hrm_human_resource_id(empty = False,
+#                                                     ondelete = "CASCADE",
+#                                                     ),
+#                          #s3_comments(),
+#                          *s3_meta_fields())
 
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
+#        # ---------------------------------------------------------------------
+#        # Pass names back to global scope (s3.*)
+#        #
+#        return {}
 
 # =============================================================================
-class AssetTeamModel(S3Model):
-    """
-        Optionally link Assets to Teams
-    """
+#class AssetTeamModel(S3Model):
+#    """
+#        Optionally link Assets to Teams
+#    """
 
-    names = ("asset_group",)
+#    names = ("asset_group",)
 
-    def model(self):
+#    def model(self):
 
-        #T = current.T
+#        #T = current.T
 
-        #--------------------------------------------------------------------------
-        # Assets <> Groups
-        #
-        tablename = "asset_group"
-        self.define_table(tablename,
-                          self.asset_asset_id(empty = False),
-                          self.pr_group_id(comment = None,
-                                           empty = False,
-                                           ),
-                          #s3_comments(),
-                          *s3_meta_fields())
+#        # ---------------------------------------------------------------------
+#        # Assets <> Groups
+#        #
+#        tablename = "asset_group"
+#        self.define_table(tablename,
+#                          self.asset_asset_id(empty = False),
+#                          self.pr_group_id(comment = None,
+#                                           empty = False,
+#                                           ),
+#                          #s3_comments(),
+#                          *s3_meta_fields())
 
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
+#        # ---------------------------------------------------------------------
+#        # Pass names back to global scope (s3.*)
+#        #
+#        return {}
 
 # =============================================================================
 class AssetTelephoneModel(S3Model):
@@ -969,8 +977,7 @@ def asset_get_current_log(asset_id):
 
     table = current.s3db.asset_log
     query = (table.asset_id == asset_id) & \
-            (table.cancel == False) & \
-            (table.deleted == False)
+            (table.cancel == False)
     # Get the log with the maximum time
     asset_log = current.db(query).select(table.id,
                                          table.status,
@@ -1003,13 +1010,12 @@ def asset_log_prep(r):
 
     T = current.T
     db = current.db
-    request = current.request
 
     table = db.asset_log
 
     # Custom methods to allow form customization for specific cases
-    # Also passed via response.s3.asset_log_method to asset_log_onaccept()
     method = r.method
+    # Pass method via response.s3.asset_log_method to asset_log_onaccept()
     current.response.s3.asset_log_method = method
 
     if method == "setbase":
@@ -1018,99 +1024,72 @@ def asset_log_prep(r):
     elif method in ("assignperson", "assignsite", "assignorg"):
         status = ASSET_LOG_ASSIGN
         r.method = "create"
+    elif method == "return":
+        status = ASSET_LOG_RETURN
+        r.method = "create"
     else:
         status = 0
 
-    if r.record:
-        asset = Storage(r.record)
-    else:
-        # This is a new record
-        asset = Storage()
-        table.cancel.readable = False
-        table.cancel.writable = False
-
     # This causes an error with the dataTables paginate
     # if used only in r.interactive & not also r.representation=="aadata"
-    if method != "read" and method != "update":
-        table.cancel.readable = False
-        table.cancel.writable = False
-    current_log = asset_get_current_log(asset.id)
+    if method not in ("read", "update"):
+        table.cancel.readable = table.cancel.writable = False
+
+    current_log = asset_get_current_log(r.id)
 
     if status:
         field = table.status
         field.default = status
-        field.readable = False
-        field.writable = False
+        field.readable = field.writable = False
     elif current_log:
         table.status.default = current_log.status
 
-    if current_log.organisation_id:
-        table.organisation_id.default = current_log.organisation_id
-        table.site_id.requires = IS_ONE_OF(db, "org_site.site_id",
-                                           table.site_id.represent,
-                                           filterby = "organisation_id",
-                                           filter_opts = (current_log.organisation_id,),
-                                           )
-
     crud_strings = current.response.s3.crud_strings.asset_log
+
     if status == ASSET_LOG_SET_BASE:
         crud_strings.msg_record_created = T("Base Facility/Site Set")
         table.by_person_id.label = T("Set By")
-        table.site_id.writable = True
-        table.datetime_until.readable = False
-        table.datetime_until.writable = False
-        table.person_id.readable = False
-        table.person_id.writable = False
-        table.organisation_id.readable = True
-        table.organisation_id.writable = True
-        table.site_id.requires = IS_ONE_OF(db, "org_site.site_id",
-                                           table.site_id.represent,
-                                           )
+        table.datetime_until.readable = table.datetime_until.writable = False
+        table.person_id.readable = table.person_id.writable = False
+        table.organisation_id.readable = table.organisation_id.writable = True
 
     elif status == ASSET_LOG_RETURN:
         crud_strings.msg_record_created = T("Returned")
-        table.person_id.label = T("Returned From")
-        table.person_id.default = current_log.person_id
-        table.site_id.readable = False
-        table.site_id.writable = False
+        table.datetime_until.readable = table.datetime_until.writable = False
+        table.person_id.readable = table.person_id.writable = False
+        table.by_person_id.default = current_log.person_id
+        table.by_person_id.label = T("Returned By")
+        #table.organisation_id.default = current_log.organisation_id
+        #table.site_id.default = current_log.site_id
+        table.site_id.readable = table.site_id.writable = False
+        table.room_id.readable = table.room_id.writable = False
 
     elif status == ASSET_LOG_ASSIGN:
         if method == "assignperson":
             crud_strings.msg_record_created = T("Assigned to Person")
-            table["person_id"].requires = IS_ONE_OF(db, "pr_person.id",
-                                                    table.person_id.represent,
-                                                    # @ToDo: Use settings for name sort
-                                                    orderby = "pr_person.first_name",
-                                                    sort = True,
-                                                    error_message = "Person must be specified!",
-                                                    )
-            table.check_in_to_person.readable = True
-            table.check_in_to_person.writable = True
-            table.site_id.requires = IS_EMPTY_OR(
-                                        IS_ONE_OF(db, "org_site.site_id",
-                                                  table.site_id.represent,
-                                                  ))
+            table.person_id.requires = table.person_id.requires.other
+            table.check_in_to_person.readable = table.check_in_to_person.writable = True
+            table.site_id.requires = IS_EMPTY_OR(table.site_id.requires)
+
         elif method == "assignsite":
             crud_strings.msg_record_created = T("Assigned to Facility/Site")
+
         elif method == "assignorg":
             crud_strings.msg_record_created = T("Assigned to Organization")
-            table.organisation_id.readable = True
-            table.organisation_id.writable = True
-            table.organisation_id.requires = IS_ONE_OF(db, "org_organisation.id",
-                                                       table.organisation_id.represent,
-                                                       orderby = "org_organisation.name",
-                                                       sort = True,
-                                                       )
-            table.site_id.requires = IS_EMPTY_OR(
-                                        IS_ONE_OF(db, "org_site.site_id",
-                                                  table.site_id.represent,
-                                                  ))
+            field = table.organisation_id
+            field.readable = field.writable = True
+            field.requires = field.requires.other
+            table.site_id.requires = IS_EMPTY_OR(table.site_id.requires)
     else:
+        # Can Update Status &/or Condition
         crud_strings.msg_record_created = T("Status Updated")
-        table.person_id.label = T("Updated By")
+        table.by_person_id.label = T("Updated By")
+        table.datetime_until.readable = table.datetime_until.writable = False
+        table.person_id.readable = table.person_id.writable = False
+        table.site_id.readable = table.site_id.writable = False
+        table.room_id.readable = table.room_id.writable = False
         field = table.status
-        field.readable = True
-        field.writable = True
+        field.readable = field.writable = True
         field.requires = IS_IN_SET({ASSET_LOG_CHECK    : T("Check"),
                                     ASSET_LOG_REPAIR   : T("Repair"),
                                     ASSET_LOG_DONATED  : T("Donated"),
@@ -1138,8 +1117,10 @@ def asset_rheader(r):
                         (T("Telephone Details"), "telephone"),
                         (T("Usage"), "telephone_usage"),
                         ]
+
             #elif record.type == s3.asset.ASSET_TYPE_RADIO:
             #    tabs.append((T("Radio Details"), "radio"))
+
             elif record.type == ASSET_TYPE_VEHICLE:
                 STAFF = current.deployment_settings.get_hrm_staff_label()
                 tabs = [(T("Asset Details"), None, {"native": True}),
@@ -1151,75 +1132,18 @@ def asset_rheader(r):
                         (T("GPS Data"), "presence"),
                         ]
             else:
+                # Generic Asset
                 tabs = [(T("Edit Details"), None)]
-            tabs.append((T("Log"), "log"))
-            tabs.append((T("Documents"), "document"))
+
+            tabs += [(T("Log"), "log"),
+                     (T("Documents"), "document"),
+                     ]
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
-
-            if current.request.controller == "vehicle":
-                func = "vehicle"
-            else:
-                func = "asset"
-
-            # @ToDo: Check permissions before displaying buttons
-
-            asset_action_btns = [
-                A(T("Set Base Facility/Site"),
-                  _href = URL(f=func,
-                              args = [record.id, "log", "setbase"],
-                              ),
-                  _class = "action-btn",
-                  )
-                ]
-
-            current_log = asset_get_current_log(record.id)
+            asset_id = record.id
+            current_log = asset_get_current_log(asset_id)
             status = current_log.status
-
-            #if record.location_id:
-            # A Base Site has been set
-            # Return functionality removed  - as it doesn't set site_id & organisation_id in the logs
-            #if status == ASSET_LOG_ASSIGN:
-            #    asset_action_btns += [ A( T("Return"),
-            #                              _href = URL(f=func,
-            #                                          args = [record.id, "log", "create"],
-            #                                          vars = {"status": ASSET_LOG_RETURN}
-            #                                        ),
-            #                              _class = "action-btn"
-            #                            )
-            #                           ]
-            if status < ASSET_LOG_DONATED:
-                # @ToDo: deployment setting to prevent assigning assets before returning them
-                # The Asset is available for assignment (not disposed)
-                asset_action_btns += [
-                    A(T("Assign to Person"),
-                      _href = URL(f=func,
-                                  args = [record.id, "log", "assignperson"],
-                                  ),
-                      _class = "action-btn",
-                      ),
-                    A(T("Assign to Facility/Site"),
-                      _href = URL(f=func,
-                                  args = [record.id, "log", "assignsite"],
-                                  ),
-                      _class = "action-btn",
-                    ),
-                    A(T("Assign to Organization"),
-                      _href = URL(f=func,
-                                  args = [record.id, "log", "assignorg"],
-                                  ),
-                      _class = "action-btn",
-                      ),
-                    ]
-            asset_action_btns += [
-                A(T("Update Status"),
-                  _href = URL(f=func,
-                              args = [record.id, "log", "create"],
-                              ),
-                  _class = "action-btn",
-                  ),
-                ]
 
             table = r.table
             ltable = s3db.asset_log
@@ -1239,8 +1163,68 @@ def asset_rheader(r):
                                    ltable.site_id.represent(current_log.site_id),
                                    ),
                                 ),
-                          rheader_tabs)
+                          rheader_tabs,
+                          )
+
+            # RFooter Buttons
+            # @ToDo: Check permissions before displaying buttons
+
+            if r.controller == "vehicle":
+                func = "vehicle"
+            else:
+                func = "asset"
+
+            asset_action_btns = [A(T("Set Base Facility/Site"),
+                                   _href = URL(f=func,
+                                               args = [asset_id, "log", "setbase"],
+                                               ),
+                                   _class = "action-btn",
+                                   ),
+                                 ]
+
+            #if record.location_id:
+            # A Base Site has been set
+            # Return functionality removed  - as it doesn't set site_id & organisation_id in the logs
+            if status == ASSET_LOG_ASSIGN:
+                asset_action_btns.append(A(T("Return"),
+                                           _href = URL(f=func,
+                                                       args = [asset_id, "log", "return"],
+                                                       ),
+                                           _class = "action-btn",
+                                           ))
+
+            if status < ASSET_LOG_DONATED:
+                # The Asset is available for assignment (not disposed)
+                # @ToDo: deployment setting to prevent assigning assets before returning them
+                asset_action_btns += [A(T("Assign to Person"),
+                                        _href = URL(f=func,
+                                                    args = [asset_id, "log", "assignperson"],
+                                                    ),
+                                        _class = "action-btn",
+                                        ),
+                                      A(T("Assign to Facility/Site"),
+                                        _href = URL(f=func,
+                                                    args = [asset_id, "log", "assignsite"],
+                                                    ),
+                                        _class = "action-btn",
+                                        ),
+                                      A(T("Assign to Organization"),
+                                        _href = URL(f=func,
+                                                    args = [asset_id, "log", "assignorg"],
+                                                    ),
+                                        _class = "action-btn",
+                                        ),
+                                      ]
+
+            asset_action_btns.append(A(T("Update Status"),
+                                       _href = URL(f=func,
+                                                   args = [asset_id, "log", "create"],
+                                                   ),
+                                       _class = "action-btn",
+                                       ))
+
             s3.rfooter = TAG[""](*asset_action_btns)
+
             return rheader
     return None
 
@@ -1248,7 +1232,6 @@ def asset_rheader(r):
 def asset_controller():
     """ RESTful CRUD controller """
 
-    s3db = current.s3db
     s3 = current.response.s3
 
     # Pre-process
@@ -1264,43 +1247,8 @@ def asset_controller():
 
     # Import pre-process
     def import_prep(data):
-        """
-            Flag that this is an Import (to distinguish from Sync)
-            @ToDo: Find Person records from their email addresses
-        """
-
+        # Flag that this is an Import (to distinguish from Sync)
         current.response.s3.asset_import = True
-        return
-        # @ToDo: get this working
-        ctable = s3db.pr_contact
-        ptable = s3db.pr_person
-
-        resource, tree = data
-        elements = tree.getroot().xpath("/s3xml//resource[@name='pr_person']/data[@field='first_name']")
-        persons = {}
-        for element in elements:
-            email = element.text
-            if email in persons:
-                # Replace email with uuid
-                element.text = persons[email]["uuid"]
-                # Don't check again
-                continue
-
-            query = (ctable.value == email) & \
-                    (ctable.pe_id == ptable.pe_id)
-            person = db(query).select(ptable.uuid,
-                                      limitby = (0, 1)
-                                      ).first()
-            if person:
-                # Replace email with uuid
-                uuid = person.uuid
-            else:
-                # Blank it
-                uuid = ""
-            element.text = uuid
-            # Store in case we get called again with same value
-            persons[email] = {"uuid": uuid}
-
     s3.import_prep = import_prep
 
     # Post-processor
@@ -1309,13 +1257,6 @@ def asset_controller():
             script = "/%s/static/scripts/S3/s3.asset.js" % r.application
             s3.scripts.append(script)
             S3CRUD.action_buttons(r, deletable=False)
-            #if not r.component:
-                #s3.actions.append({"url" : URL(c="asset", f="asset",
-                #                               args = ["[id]", "log", "create"],
-                #                               vars = {"status" : eden.asset.asset_log_status["ASSIGN"],
-                #                                       "type" : "person"}),
-                #                   "_class" : "action-btn",
-                #                   "label" : str(T("Assign"))})
         return output
     s3.postp = postp
 

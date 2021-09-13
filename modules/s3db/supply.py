@@ -1772,7 +1772,7 @@ class SupplyDistributionDVRActivityModel(S3Model):
     """
         Model to link distributions to DVR activities / case activities
 
-        @ToDo: Deprecate
+        @ToDo: Deprecate (was used by STL)
     """
 
     names = ("supply_distribution_case_activity",
