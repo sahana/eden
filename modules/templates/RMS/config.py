@@ -31,6 +31,12 @@ def config(settings):
     settings.base.system_name_short = T("RMS")
 
     # -------------------------------------------------------------------------
+    # Custom Models
+    #
+    settings.base.custom_models = {"deploy": "templates.RMS",
+                                   }
+
+    # -------------------------------------------------------------------------
     # Pre-Populate
     #
     settings.base.prepopulate.append("RMS")

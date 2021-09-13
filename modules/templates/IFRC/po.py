@@ -35,7 +35,7 @@ __all__ = ("OutreachAreaModel",
            "po_due_followups",
            )
 
-from ..s3 import *
+from s3 import *
 from s3layouts import S3PopupLink
 
 from gluon import IS_NOT_EMPTY, IS_INT_IN_RANGE

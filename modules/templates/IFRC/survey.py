@@ -89,7 +89,7 @@ from gluon import *
 from gluon.storage import Storage
 from gluon.sqlhtml import *
 
-from ..s3 import *
+from s3 import *
 from s3chart import S3Chart
 
 DEBUG = False
