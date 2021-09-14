@@ -1,8 +1,0 @@
-"First Name","Last Name","Email","Password","Role","Organisation"
-"Admin","User","admin@example.com","testing","ADMIN",
-"Normal","User","normaluser@example.com","testing","",
-"ARC","User","arc_user@example.com","testing","org_editor/org_organisation.name=American Red Cross",
-"DWB","User","dwb_user@example.com","testing","org_editor/org_organisation.name=Doctors Without Borders",
-"ARC","Admin","arc_admin@example.com","testing","ORG_ADMIN/org_organisation.name=American Red Cross",
-"DWB","Admin","dwb_admin@example.com","testing","ORG_ADMIN/org_organisation.name=Doctors Without Borders",
-"City","NetworkAdmin","city_admin@example.com","testing","ORG_GROUP_ADMIN/org_group.name=Government:City",

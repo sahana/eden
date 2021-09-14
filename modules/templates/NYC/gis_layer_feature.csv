@@ -1,3 +1,0 @@
-Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Points,Style,Cluster Threshold,Visible
-Facilities,All Active Facilities,org,facility,asset,Building,{name} (T('Office'))<br />{comments},"name,comments",~.obsolete=False,True,,,False
-Zipcodes,All NYC Zipcodes,gis,location,,,{name},name,~.level=L4,,"{'fill':'00BFFF','fillOpacity':0.5}",0,False
