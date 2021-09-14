@@ -1512,9 +1512,9 @@ class IS_PROCESSED_IMAGE(Validator):
         if cropped_image:
             import base64
 
-            metadata, cropped_image = cropped_image.split(",")
+            metadata, cropped_image = cropped_image.rsplit(",", 1)
             #filename, datatype, enctype = metadata.split(";")
-            filename = metadata.split(";", 1)[0]
+            filename = metadata.rsplit(";", 2)[0]
 
             f = Storage()
             f.filename = uuid4().hex + filename
