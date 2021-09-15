@@ -514,6 +514,8 @@ project_reader,Project Reader,Can Read the Projects for an NS,,,pr_physical_desc
 project_reader,Project Reader,Can Read the Projects for an NS,,,vol_details,,READ,,,,,
 inv_reader,Inventory Reader,,inv,inv_item,,,READ,,,,,
 inv_reader,Inventory Reader,,,,inv_inv_item,,READ,,,,,
+req_approver,Request Approver,Memebership of this role is managed via req_approver shouldn't normally need modifying manually,req,,,,READ|UPDATE,,,,,
+req_approver,Request Approver,Memebership of this role is managed via req_approver shouldn't normally need modifying manually,,,req_req,,READ|UPDATE,,,,,
 wh_operator,Warehouse Operator,StockKeeper,inv,,,,READ|CREATE|UPDATE|DELETE,,,,,
 wh_operator,Warehouse Operator,StockKeeper,inv,facility,,,READ|CREATE|UPDATE,,,,,
 wh_operator,Warehouse Operator,StockKeeper,inv,inv_item,,,READ|CREATE|UPDATE|DELETE,,,,,

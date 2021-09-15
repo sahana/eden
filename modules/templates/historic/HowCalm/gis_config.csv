@@ -1,0 +1,2 @@
+UUID,Name,Region Country,Default Country,Default L1,Default L2,Zoom,Lat,Lon,Projection,LatMin,LatMax,LonMin,LonMax,Geocoder,Marker
+SITE_DEFAULT,Default,,US,New York,New York City,10,40.7755936928,-73.7951771509,900913,40,41,-75,-74,True,marker_red

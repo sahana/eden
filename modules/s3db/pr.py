@@ -372,7 +372,8 @@ class PersonEntityModel(S3Model):
                       Field("role_type", "integer",
                             default = 1,
                             represent = S3Represent(options = role_types),
-                            requires = IS_IN_SET(role_types, zero=None),
+                            requires = IS_IN_SET(role_types,
+                                                 zero = None),
                             ),
                       # Role name
                       Field("role", notnull=True,

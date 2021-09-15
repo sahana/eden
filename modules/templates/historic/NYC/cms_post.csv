@@ -1,0 +1,27 @@
+Name,Module,Resource,Body
+Contact,default,contact,"<h1>Contact Us</h1><p>You can leave a message using the contact form below.</p>"
+Register,default,register,"<h2>Criteria for Admittance</h2>
+ <div>
+  <p>To access NYC:Prepared tools, your group or organization must meet the following criteria:</p>
+   <ul>
+    <li><b>Present</b>. Have a physical and active presence in the New York City area.</li>
+    <li><b>Relevant</b>. Currently engaged in disaster relief, disaster recovery or community resilience work.</li>
+    <li><b>Reputable</b>. Actively coordinating through an established network:
+     <ul>
+      <li><a href='http://sisandyhelp.org' target='_blank'>Staten Island Long Term Recovery Organization</a></li>
+      <li><a href='http://lesready.org' target='_blank'>Lower East Side Long Term Recovery Group</a></li>
+      <li><a href='http://brooklynrecovers.org' target='_blank'>Brooklyn Long Term Recovery Group</a></li>
+      <li><a href='http://nycvoad.org' target='_blank'>New York City VOAD</a></li>
+      <li><a href='http://occupysandy.net/projects/' target='_blank'>Occupy Sandy Project Spokes Council</a></li>
+     </ul>
+    </li>
+   </ul>
+   <p><i>Learn more about NYC:Prepared on our <a href='http://nycprepared.org' target='_blank' class='btn'>website</a> and feel free to <a href='http://nycprepared.org/contact' target='_blank' class='btn'>contact us</a></p>
+ </div>
+</div>
+<h2>Registration</h2>
+<div>
+<p>Please note that by registering, your name and organizational affiliation will be publicly available and that you will receive emails from our computer system.</p>
+</div>"
+Services,default,services,"<iframe height="1000px" src="http://app.mygov.nyc/services" width="1000"></iframe>"
+Data,default,data,"<iframe height="1000px" src="http://data.beta.nyc" width="1000"></iframe>"

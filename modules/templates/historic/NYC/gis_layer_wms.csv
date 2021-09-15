@@ -1,0 +1,2 @@
+"Name","Description","URL","Layers","Folder","Enabled","Visible","Base","Transparent","Opacity","Format","Queryable","LegendURL","Tiled","Map"
+"Inundation","1m Boundary","http://eden.nycprepared.org:8080/geoserver/gwc/service/wms","nyc:inundation",Hazards,"True","False","False","True",0.8,"image/png","False",,,

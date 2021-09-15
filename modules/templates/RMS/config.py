@@ -5634,6 +5634,76 @@ Thank you"""
     settings.customise_project_location_controller = customise_project_location_controller
 
     # -------------------------------------------------------------------------
+    def req_approver_update_roles(person_id):
+        """
+            Update the req_approver role to have the right realms
+            # see hrm_certification_onaccept
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Lookup User Account
+        ltable = s3db.pr_person_user
+        ptable = s3db.pr_person
+        query = (ptable.id == person_id) & \
+                (ptable.pe_id == ltable.pe_id)
+        user = db(query).select(ltable.user_id,
+                                limitby = (0, 1)
+                                )
+        if not user:
+            return
+
+        user_id = user.first().user_id
+
+        # What realms should this user have the req_approver role for?
+        table = s3db.req_approver
+        rows = db(table.person_id == person_id).select(table.pe_id)
+        realms = [row.pe_id for row in rows]
+
+        # Lookup the req_approver group_id
+        gtable = db.auth_group
+        role = db(gtable.uuid == "req_approver").select(gtable.id,
+                                                        limitby = (0, 1)
+                                                        ).first()
+        group_id = role.id
+
+        # Delete all req_approver roles for this user
+        mtable = db.auth_membership
+        query = (mtable.user_id == user_id) & \
+                (mtable.group_id == group_id)
+        db(query).delete()
+
+        # Create required req_approver roles for this user
+        for pe_id in realms:
+            mtable.insert(user_id = user_id,
+                          group_id = group_id,
+                          pe_id = pe_id,
+                          )
+
+    # -------------------------------------------------------------------------
+    def req_approver_onaccept(form):
+        """
+            Ensure that the Approver has the req_approver role for the correct realms
+        """
+
+        person_id = form.vars.get("person_id")
+        req_approver_update_roles(person_id)
+
+        if form.record:
+            # Update form
+            # - has the person changed?
+            if form.record.person_id != person_id:
+                # Also update the old person
+                req_approver_update_roles(form.record.person_id)
+
+    # -------------------------------------------------------------------------
+    def req_approver_ondelete(form):
+
+        # Update the req_approver roles for this person
+        req_approver_update_roles(form.person_id)
+
+    # -------------------------------------------------------------------------
     def customise_req_approver_resource(r, tablename):
 
         db = current.db
@@ -5723,6 +5793,11 @@ Thank you"""
                                filter_opts = entities,
                                sort = True
                                )
+
+        s3db.configure(tablename,
+                       onaccept = req_approver_onaccept,
+                       ondelete = req_approver_ondelete,
+                       )
 
     settings.customise_req_approver_resource = customise_req_approver_resource
 
