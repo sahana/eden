@@ -15,6 +15,8 @@ def config(settings):
 
     # Uncomment to restrict to specific country/countries
     settings.gis.countries.append("BT")
+    # Disable the Postcode selector in the LocationSelector
+    settings.gis.postcode_selector = False
 
     # -------------------------------------------------------------------------
     # L10n (Localization) settings
