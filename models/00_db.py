@@ -13,7 +13,7 @@ if settings.get_L10n_languages_readonly():
 get_vars = request.get_vars
 
 # Are we running in debug mode?
-settings.check_debug()
+debug = settings.check_debug()
 
 import datetime
 import json

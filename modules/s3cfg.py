@@ -300,6 +300,8 @@ class S3Config(Storage):
                 s3.debug = False
                 track_changes(False)
 
+        return debug
+
     # -------------------------------------------------------------------------
     # Template
     def get_template(self):
