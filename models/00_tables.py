@@ -64,6 +64,11 @@ import s3db.vehicle
 import s3db.vol
 import s3db.vulnerability
 import s3db.water
+if debug:
+    # Also reload Custom Models
+    custom_models = settings.get_base_custom_models()
+    for prefix in custom_models:
+        parent = __import__("templates.%s" % custom_models[prefix], fromlist=[prefix])
 
 current.s3db = s3db = S3Model()
 
