@@ -957,6 +957,7 @@ class GIS(object):
         wkt = feature.wkt
 
         query = (table.level == level) & \
+                (table.deleted == False) & \
                 (table.id != location_id)
         if SPATIAL:
             query &= (table.the_geom.st_intersects(wkt))
@@ -999,7 +1000,7 @@ class GIS(object):
                         nappend(row.id)
                 except ReadingError:
                     current.log.error("Error reading wkt of location with id",
-                                      value=row.id)
+                                      value = row.id)
 
         return neighbours
 
@@ -1038,7 +1039,8 @@ class GIS(object):
                                                table.lon_min,
                                                table.lat_min,
                                                table.lon_max,
-                                               table.lat_max).first()
+                                               table.lat_max,
+                                               ).first()
         if parent.lon_min is None or \
            parent.lon_max is None or \
            parent.lat_min is None or \
@@ -1053,7 +1055,8 @@ class GIS(object):
                                                               table.lon_min,
                                                               table.lat_min,
                                                               table.lon_max,
-                                                              table.lat_max).first()
+                                                              table.lat_max,
+                                                              ).first()
                     return L0.lat_min, L0.lon_min, L0.lat_max, L0.lon_max, L0.name
             if parent.path:
                 path = parent.path
@@ -1072,7 +1075,8 @@ class GIS(object):
                                                               table.lat_min,
                                                               table.lon_max,
                                                               table.lat_max,
-                                                              orderby=table.level)
+                                                              orderby = table.level,
+                                                              )
                 row_list = rows.as_list()
                 row_list.reverse()
                 ok = False
@@ -1151,7 +1155,8 @@ class GIS(object):
         query &= ((path.like(term + "/%")) | \
                   (path.like("%/" + term + "/%")))
         children = db(query).select(table.id,
-                                    table.name)
+                                    table.name,
+                                    )
         return children
 
     # -------------------------------------------------------------------------
@@ -1214,7 +1219,7 @@ class GIS(object):
             table = s3db.gis_location
             query = (table.id.belongs(path_list))
             fields = [table.id, table.name, table.level, table.lat, table.lon]
-            unordered_parents = current.db(query).select(cache=s3db.cache,
+            unordered_parents = current.db(query).select(cache = s3db.cache,
                                                          *fields)
 
             # Reorder parents in order of reversed path.
@@ -1229,9 +1234,10 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     def get_parent_per_level(self, results, feature_id,
-                             feature=None,
-                             ids=True,
-                             names=True):
+                             feature = None,
+                             ids = True,
+                             names = True,
+                             ):
         """
             Adds ancestor of requested feature for each level to supplied dict.
 
@@ -2299,7 +2305,8 @@ class GIS(object):
                                            locations.lat_min,
                                            locations.lon_min,
                                            locations.lat_max,
-                                           locations.lon_max)
+                                           locations.lon_max,
+                                           )
             else:
                 # Lookup the raw Locations
                 records = db(query).select(locations.id,
@@ -2310,7 +2317,8 @@ class GIS(object):
                                            locations.lat_min,
                                            locations.lon_min,
                                            locations.lat_max,
-                                           locations.lon_max)
+                                           locations.lon_max,
+                                           )
             features = Rows()
             for row in records:
                 # Calculate the Great Circle distance
@@ -2318,12 +2326,14 @@ class GIS(object):
                     distance = self.greatCircleDistance(lat,
                                                         lon,
                                                         row["gis_location.lat"],
-                                                        row["gis_location.lon"])
+                                                        row["gis_location.lon"],
+                                                        )
                 else:
                     distance = self.greatCircleDistance(lat,
                                                         lon,
                                                         row.lat,
-                                                        row.lon)
+                                                        row.lon,
+                                                        )
                 if distance < radius:
                     features.records.append(row)
                 else:
@@ -2350,7 +2360,8 @@ class GIS(object):
                                                     table.lon,
                                                     table.parent,
                                                     table.path,
-                                                    limitby = (0, 1)).first()
+                                                    limitby = (0, 1)
+                                                    ).first()
 
         # Zero is an allowed value, hence explicit test for None.
         if "lon" in feature and "lat" in feature and \
@@ -2438,15 +2449,16 @@ class GIS(object):
                         output[key] = [row.wkt]
         else:
             rows = db(query).select(table.id,
-                                    gtable.wkt)
+                                    gtable.wkt,
+                                    )
             simplify = GIS.simplify
             if geojson:
                 # Simplify the polygon to reduce download size
                 if join:
                     for row in rows:
                         g = simplify(row["gis_location"].wkt,
-                                     tolerance=tolerance,
-                                     output="geojson")
+                                     tolerance = tolerance,
+                                     output = "geojson")
                         if g:
                             key = row[tablename].id
                             if key in output:
@@ -2457,8 +2469,8 @@ class GIS(object):
                     # gis_location: always single
                     for row in rows:
                         g = simplify(row.wkt,
-                                     tolerance=tolerance,
-                                     output="geojson")
+                                     tolerance = tolerance,
+                                     output = "geojson")
                         if g:
                             output[row.id] = g
 
@@ -2530,10 +2542,10 @@ class GIS(object):
                 message = "Too Many Records"
                 status = 509
                 raise HTTP(status,
-                           body=current.xml.json_message(success=False,
-                                                         statuscode=status,
-                                                         message=message),
-                           web2py_error=message,
+                           body = current.xml.json_message(success = False,
+                                                           statuscode = status,
+                                                           message = message),
+                           web2py_error = message,
                            **headers)
             # Lookups per layer not per record
             if len(tablename) > 19 and \
@@ -2754,7 +2766,8 @@ class GIS(object):
                         #((stable.config_id == config.id) |
                         # (stable.config_id == None))
                 rows = db(query).select(stable.record_id,
-                                        stable.style)
+                                        stable.style,
+                                        )
                 for row in rows:
                     styles[row.record_id] = json.dumps(row.style, separators=SEPARATORS)
 
@@ -2793,8 +2806,9 @@ class GIS(object):
                 # This table isn't trackable
                 pass
             else:
-                _latlons = tracker.get_location(_fields=[gtable.lat,
-                                                         gtable.lon],
+                _latlons = tracker.get_location(_fields = [gtable.lat,
+                                                           gtable.lon,
+                                                           ],
                                                 empty = False,
                                                 )
                 index = 0
@@ -2860,7 +2874,8 @@ class GIS(object):
                 # Points
                 rows = db(query).select(table.id,
                                         gtable.lat,
-                                        gtable.lon)
+                                        gtable.lon,
+                                        )
                 #if custom:
                 #    # Add geoJSONs
                 #elif join:
@@ -2940,8 +2955,9 @@ class GIS(object):
                                       mtable.width,
                                       ftable.style_default,
                                       stable.gps_marker,
-                                      left=left,
-                                      orderby=orderby)
+                                      left = left,
+                                      orderby = orderby,
+                                      )
             if len(layers) > 1:
                 layers.exclude(lambda row: row["gis_layer_feature.style_default"] == False)
             if len(layers) == 1:
@@ -2977,8 +2993,8 @@ class GIS(object):
 
         style = None
         if layer_id:
-            style = Style(layer_id=layer_id,
-                          aggregate=aggregate).as_dict()
+            style = Style(layer_id = layer_id,
+                          aggregate = aggregate).as_dict()
 
         if not style:
             # Default
@@ -3242,7 +3258,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
         #else:
         rows = current.db(query).select(table.id,
                                         gtable.level,
-                                        gtable.wkt)
+                                        gtable.wkt,
+                                        )
         simplify = GIS.simplify
         tolerance = {"L0": 0.01,
                      "L1": 0.005,
@@ -3255,8 +3272,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             grow = row.gis_location
             # Simplify the polygon to reduce download size
             geojson = simplify(grow.wkt,
-                               tolerance=tolerance[grow.level],
-                               output="geojson")
+                               tolerance = tolerance[grow.level],
+                               output = "geojson")
             if geojson:
                 geojsons[row["gis_theme_data.id"]] = geojson
 
@@ -3375,11 +3392,11 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def export_admin_areas(countries=[],
-                           levels=("L0", "L1", "L2", "L3"),
-                           format="geojson",
-                           simplify=0.01,
-                           precision=4,
+    def export_admin_areas(countries = [],
+                           levels = ("L0", "L1", "L2", "L3"),
+                           format = "geojson",
+                           simplify = 0.01,
+                           precision = 4,
                            ):
         """
             Export admin areas to /static/cache for use by interactive web-mapping services
@@ -3449,7 +3466,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     field = _field.st_asgeojson(precision=_decimals).with_alias("geojson")
 
             countries = db(cquery).select(ifield,
-                                          field)
+                                          field,
+                                          )
             for row in countries:
                 if spatial:
                     id = row["gis_location"].id
@@ -3458,12 +3476,14 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     id = row.id
                     wkt = row.wkt
                     if wkt:
-                        geojson = _simplify(wkt, tolerance=simplify,
-                                            precision=_decimals,
-                                            output="geojson")
+                        geojson = _simplify(wkt,
+                                            tolerance = simplify,
+                                            precision = _decimals,
+                                            output = "geojson")
                     else:
                         name = db(table.id == id).select(table.name,
-                                                         limitby = (0, 1)).first().name
+                                                         limitby = (0, 1)
+                                                         ).first().name
                         sys.stderr.write("No WKT: L0 %s %s\n" % (name, id))
                         continue
                 else:
@@ -3527,12 +3547,14 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                         id = row.id
                         wkt = row.wkt
                         if wkt:
-                            geojson = _simplify(wkt, tolerance=simplify,
-                                                precision=precision,
-                                                output="geojson")
+                            geojson = _simplify(wkt,
+                                                tolerance = simplify,
+                                                precision = precision,
+                                                output = "geojson")
                         else:
                             name = db(table.id == id).select(table.name,
-                                                             limitby = (0, 1)).first().name
+                                                             limitby = (0, 1)
+                                                             ).first().name
                             sys.stderr.write("No WKT: L1 %s %s\n" % (name, id))
                             continue
                     else:
@@ -3588,12 +3610,14 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                             id = row.id
                             wkt = row.wkt
                             if wkt:
-                                geojson = _simplify(wkt, tolerance=simplify,
-                                                    precision=precision,
-                                                    output="geojson")
+                                geojson = _simplify(wkt,
+                                                    tolerance = simplify,
+                                                    precision = precision,
+                                                    output = "geojson")
                             else:
                                 name = db(table.id == id).select(table.name,
-                                                                 limitby = (0, 1)).first().name
+                                                                 limitby = (0, 1)
+                                                                 ).first().name
                                 sys.stderr.write("No WKT: L2 %s %s\n" % (name, id))
                                 continue
                         else:
@@ -3652,12 +3676,14 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                 id = row.id
                                 wkt = row.wkt
                                 if wkt:
-                                    geojson = _simplify(wkt, tolerance=simplify,
-                                                        precision=precision,
-                                                        output="geojson")
+                                    geojson = _simplify(wkt,
+                                                        tolerance = simplify,
+                                                        precision = precision,
+                                                        output = "geojson")
                                 else:
                                     name = db(table.id == id).select(table.name,
-                                                                     limitby = (0, 1)).first().name
+                                                                     limitby = (0, 1)
+                                                                     ).first().name
                                     sys.stderr.write("No WKT: L3 %s %s\n" % (name, id))
                                     continue
                             else:
@@ -3719,12 +3745,14 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                     id = row.id
                                     wkt = row.wkt
                                     if wkt:
-                                        geojson = _simplify(wkt, tolerance=simplify,
-                                                            precision=precision,
-                                                            output="geojson")
+                                        geojson = _simplify(wkt,
+                                                            tolerance = simplify,
+                                                            precision = precision,
+                                                            output = "geojson")
                                     else:
                                         name = db(table.id == id).select(table.name,
-                                                                         limitby = (0, 1)).first().name
+                                                                         limitby = (0, 1)
+                                                                         ).first().name
                                         sys.stderr.write("No WKT: L4 %s %s\n" % (name, id))
                                         continue
                                 else:
@@ -3753,9 +3781,9 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
 
     # -------------------------------------------------------------------------
     def import_admin_areas(self,
-                           source="gadmv1",
-                           countries=[],
-                           levels=["L0", "L1", "L2"]
+                           source = "gadmv1",
+                           countries = [],
+                           levels = ["L0", "L1", "L2"]
                           ):
         """
            Import Admin Boundaries into the Locations table
@@ -4228,7 +4256,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             parent = db(query).select(table.id,
                                       ttable.value,
                                       limitby = (0, 1),
-                                      cache=cache).first()
+                                      cache = cache,
+                                      ).first()
             if not parent:
                 # Skip locations for which we don't have a valid parent
                 current.log.warning("Skipping - cannot find parent with key: %s, value: %s" % \
@@ -4246,7 +4275,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 else:
                     # Check grandparent
                     country = self.get_parent_country(parent.id,
-                                                      key_type="code")
+                                                      key_type = "code")
                     if country not in countries:
                         count += 1
                         continue
@@ -4263,18 +4292,21 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 if geom.GetGeometryType() == ogr.wkbPoint:
                     lat = geom.GetX()
                     lon = geom.GetY()
-                    id = table.insert(name=name,
-                                      level=level,
-                                      gis_feature_type=1,
-                                      lat=lat,
-                                      lon=lon,
-                                      parent=parent.id)
-                    ttable.insert(location_id = id,
+                    location_id = table.insert(name = name,
+                                               level = level,
+                                               gis_feature_type = 1,
+                                               lat = lat,
+                                               lon = lon,
+                                               parent = parent.id,
+                                               )
+                    ttable.insert(location_id = location_id,
                                   tag = edenCodeField,
-                                  value = code)
-                    # ttable.insert(location_id = id,
-                                  # tag = "area",
-                                  # value = area)
+                                  value = code,
+                                  )
+                    #ttable.insert(location_id = location_id,
+                    #              tag = "area",
+                    #              value = area,
+                    #              )
                 else:
                     wkt = geom.ExportToWkt()
                     if wkt.startswith("LINESTRING"):
@@ -4289,17 +4321,20 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                         gis_feature_type = 6
                     elif wkt.startswith("GEOMETRYCOLLECTION"):
                         gis_feature_type = 7
-                    id = table.insert(name=name,
-                                      level=level,
-                                      gis_feature_type=gis_feature_type,
-                                      wkt=wkt,
-                                      parent=parent.id)
-                    ttable.insert(location_id = id,
+                    location_id = table.insert(name = name,
+                                               level = level,
+                                               gis_feature_type = gis_feature_type,
+                                               wkt = wkt,
+                                               parent = parent.id,
+                                               )
+                    ttable.insert(location_id = location_id,
                                   tag = edenCodeField,
-                                  value = code)
-                    # ttable.insert(location_id = id,
-                                  # tag = "area",
-                                  # value = area)
+                                  value = code,
+                                  )
+                    #ttable.insert(location_id = location_id,
+                    #              tag = "area",
+                    #              value = area,
+                    #              )
             else:
                 current.log.debug("No geometry\n")
 
@@ -4600,23 +4635,25 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
         deleted = (table.deleted == False)
         query = deleted & (table.level == parent_level)
         # Do the DB query once (outside loop)
-        all_parents = db(query).select(table.wkt,
+        all_parents = db(query).select(table.id,
+                                       table.wkt,
                                        table.lon_min,
                                        table.lon_max,
                                        table.lat_min,
                                        table.lat_max,
-                                       table.id)
+                                       )
         if not all_parents:
             # No locations in the parent level found
             # - use the one higher instead
             parent_level = "L" + str(int(parent_level[1:]) + 1)
             query = deleted & (table.level == parent_level)
-            all_parents = db(query).select(table.wkt,
+            all_parents = db(query).select(table.id,
+                                           table.wkt,
                                            table.lon_min,
                                            table.lon_max,
                                            table.lat_min,
                                            table.lat_max,
-                                           table.id)
+                                           )
 
         # Parse File
         current_row = 0
@@ -4677,19 +4714,21 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                         current.log.error("Error reading wkt of location with id", row.id)
 
                 # Add entry to database
-                new_id = table.insert(name=name,
-                                      level=level,
-                                      parent=parent,
-                                      lat=lat,
-                                      lon=lon,
-                                      wkt=wkt,
-                                      lon_min=lon_min,
-                                      lon_max=lon_max,
-                                      lat_min=lat_min,
-                                      lat_max=lat_max)
-                ttable.insert(location_id=new_id,
-                              tag="geonames",
-                              value=geonameid)
+                location_id = table.insert(name = name,
+                                           level = level,
+                                           parent = parent,
+                                           lat = lat,
+                                           lon = lon,
+                                           wkt = wkt,
+                                           lon_min = lon_min,
+                                           lon_max = lon_max,
+                                           lat_min = lat_min,
+                                           lat_max = lat_max,
+                                           )
+                ttable.insert(location_id = location_id,
+                              tag = "geonames",
+                              value = geonameid,
+                              )
             else:
                 continue
 
@@ -4799,7 +4838,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                   table.lat,
                   table.lon,
                   table.wkt,
-                  table.inherited
+                  table.inherited,
                   )
 
         # ---------------------------------------------------------------------
