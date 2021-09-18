@@ -50,8 +50,6 @@ __all__ = ("RequestModel",
            "RequestOrderItemModel",
            "RequestProjectModel",
            "RequestTagModel",
-           "RequestTaskModel",
-           "RequestRequesterCategoryModel",
            "CommitModel",
            "CommitItemModel",
            "CommitPersonModel",
@@ -171,6 +169,8 @@ def req_timeframe():
 class RequestModel(S3Model):
     """
         Model for Requests
+
+        @ToDo: Strip out 'type' & move to inv_req
     """
 
     names = ("req_req",
@@ -1467,6 +1467,8 @@ class RequestModel(S3Model):
 class RequestApproverModel(S3Model):
     """
         Model for request approvers
+
+        @ToDo: Move to inv_req_approver
     """
 
     names = ("req_approver",
@@ -1556,6 +1558,8 @@ class RequestApproverModel(S3Model):
 class RequestItemModel(S3Model):
     """
         Model for requested items
+
+        @ToDo: Move to inv_req_item
     """
 
     names = ("req_req_item",
@@ -1958,6 +1962,8 @@ $.filterOptionsS3({
 class RequestSkillModel(S3Model):
     """
         Modell for requested skills
+
+        @ToDo: Deprecate in favour of req_need_skill
     """
 
     names = ("req_req_skill",
@@ -2242,6 +2248,8 @@ class RequestSkillModel(S3Model):
 class RequestRecurringModel(S3Model):
     """
         Adjuvant model to support request generation by scheduler
+
+        @ToDo: Replace with req_need_job
     """
 
     names = ("req_job",
@@ -2415,7 +2423,7 @@ class RequestNeedsModel(S3Model):
         # Custom Methods
         self.set_method("req", "need",
                         method = "assign",
-                        action = self.pr_AssignMethod(component="need_person"))
+                        action = self.pr_AssignMethod(component = "need_person"))
 
         # NB Only instance of this being used (SHARE) over-rides this to show the req_number
         represent = S3Represent(lookup = tablename,
@@ -2473,9 +2481,9 @@ class RequestNeedsActivityModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = S3Duplicate(primary=("need_id",
-                                                          "activity_id",
-                                                          ),
+                       deduplicate = S3Duplicate(primary = ("need_id",
+                                                            "activity_id",
+                                                            ),
                                                  ),
                        )
 
@@ -2512,9 +2520,9 @@ class RequestNeedsContactModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = S3Duplicate(primary=("need_id",
-                                                          "person_id",
-                                                          ),
+                       deduplicate = S3Duplicate(primary = ("need_id",
+                                                            "person_id",
+                                                            ),
                                                  ),
                        )
 
@@ -2538,6 +2546,9 @@ class RequestNeedsDemographicsModel(S3Model):
     def model(self):
 
         T = current.T
+
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=2)
 
         # ---------------------------------------------------------------------
         # Needs <=> Demographics
@@ -2568,16 +2579,15 @@ class RequestNeedsDemographicsModel(S3Model):
                           Field("value", "double",
                                 label = T("Number"),
                                 #label = T("Number in Need"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_NOT_EMPTY(),
                                 ),
                           Field("value_committed", "double",
                                 label = T("Number Committed"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
                                 # Enable in templates as-required
                                 readable = False,
                                 # Normally set automatically
@@ -2585,10 +2595,10 @@ class RequestNeedsDemographicsModel(S3Model):
                                 ),
                           Field("value_uncommitted", "double",
                                 label = T("Number Uncommitted"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
                                 # Enable in templates as-required
                                 readable = False,
                                 # Normally set automatically
@@ -2596,10 +2606,10 @@ class RequestNeedsDemographicsModel(S3Model):
                                 ),
                           Field("value_reached", "double",
                                 label = T("Number Reached"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
                                 # Enable in templates as-required
                                 readable = False,
                                 # Normally set automatically
@@ -2609,9 +2619,9 @@ class RequestNeedsDemographicsModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = S3Duplicate(primary=("need_id",
-                                                          "parameter_id",
-                                                          ),
+                       deduplicate = S3Duplicate(primary = ("need_id",
+                                                            "parameter_id",
+                                                            ),
                                                  ),
                        )
 
@@ -2633,6 +2643,9 @@ class RequestNeedsItemsModel(S3Model):
     def model(self):
 
         T = current.T
+
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=2)
 
         # ---------------------------------------------------------------------
         # Needs <=> Supply Items
@@ -2661,17 +2674,17 @@ $.filterOptionsS3({
                           Field("quantity", "double",
                                 label = T("Quantity"),
                                 #label = T("Quantity Requested"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
                                 ),
                           Field("quantity_committed", "double",
                                 label = T("Quantity Committed"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
                                 # Enable in templates as-required
                                 readable = False,
                                 # Normally set automatically
@@ -2679,10 +2692,10 @@ $.filterOptionsS3({
                                 ),
                           Field("quantity_uncommitted", "double",
                                 label = T("Quantity Uncommitted"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
                                 # Enable in templates as-required
                                 readable = False,
                                 # Normally set automatically
@@ -2690,10 +2703,10 @@ $.filterOptionsS3({
                                 ),
                           Field("quantity_delivered", "double",
                                 label = T("Quantity Delivered"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
                                 # Enable in templates as-required
                                 readable = False,
                                 # Normally set automatically
@@ -2707,9 +2720,9 @@ $.filterOptionsS3({
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = S3Duplicate(primary=("need_id",
-                                                          "item_id",
-                                                          ),
+                       deduplicate = S3Duplicate(primary = ("need_id",
+                                                            "item_id",
+                                                            ),
                                                  ),
                        )
 
@@ -2755,7 +2768,8 @@ class RequestNeedsSkillsModel(S3Model):
                                 represent = lambda v: \
                                     IS_FLOAT_AMOUNT.represent(v, precision=2),
                                 requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
                                 ),
                           req_priority()(),
                           s3_comments(),
@@ -2765,9 +2779,9 @@ class RequestNeedsSkillsModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = S3Duplicate(primary=("need_id",
-                                                          "skill_id",
-                                                          ),
+                       deduplicate = S3Duplicate(primary = ("need_id",
+                                                            "skill_id",
+                                                            ),
                                                  ),
                        )
 
@@ -2808,7 +2822,10 @@ class RequestNeedsLineModel(S3Model):
         T = current.T
         db = current.db
 
-        if current.s3db.table("stats_demographic"):
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=2)
+
+        if self.table("stats_demographic"):
             title = current.response.s3.crud_strings["stats_demographic"].label_create
             parameter_id_comment = S3PopupLink(c = "stats",
                                                f = "demographic",
@@ -2844,17 +2861,17 @@ class RequestNeedsLineModel(S3Model):
                           Field("value", "double",
                                 label = T("Number"),
                                 #label = T("Number in Need"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
                                 ),
                           Field("value_committed", "double",
                                 label = T("Number Committed"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
                                 # Enable in templates as-required
                                 readable = False,
                                 # Normally set automatically
@@ -2862,10 +2879,10 @@ class RequestNeedsLineModel(S3Model):
                                 ),
                           Field("value_uncommitted", "double",
                                 label = T("Number Uncommitted"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
                                 # Enable in templates as-required
                                 readable = False,
                                 # Normally set automatically
@@ -2873,10 +2890,10 @@ class RequestNeedsLineModel(S3Model):
                                 ),
                           Field("value_reached", "double",
                                 label = T("Number Reached"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
                                 # Enable in templates as-required
                                 readable = False,
                                 # Normally set automatically
@@ -2902,18 +2919,18 @@ $.filterOptionsS3({
                           Field("quantity", "double",
                                 label = T("Quantity"),
                                 #label = T("Quantity Requested"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
                                 ),
                           req_timeframe()(),
                           Field("quantity_committed", "double",
                                 label = T("Quantity Committed"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
                                 # Enable in templates as-required
                                 readable = False,
                                 # Normally set automatically
@@ -2921,10 +2938,10 @@ $.filterOptionsS3({
                                 ),
                           Field("quantity_uncommitted", "double",
                                 label = T("Quantity Uncommitted"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
                                 # Enable in templates as-required
                                 readable = False,
                                 # Normally set automatically
@@ -2932,10 +2949,10 @@ $.filterOptionsS3({
                                 ),
                           Field("quantity_delivered", "double",
                                 label = T("Quantity Delivered"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
                                 # Enable in templates as-required
                                 readable = False,
                                 # Normally set automatically
@@ -3007,9 +3024,9 @@ class RequestNeedsOrganisationModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = S3Duplicate(primary=("need_id",
-                                                          "organisation_id",
-                                                          ),
+                       deduplicate = S3Duplicate(primary = ("need_id",
+                                                            "organisation_id",
+                                                            ),
                                                  ),
                        )
 
@@ -3055,7 +3072,8 @@ class RequestNeedsPersonModel(S3Model):
                                 label = T("Status"),
                                 represent = S3Represent(options = status_opts),
                                 requires = IS_EMPTY_OR(
-                                            IS_IN_SET(status_opts)),
+                                            IS_IN_SET(status_opts)
+                                            ),
                                 ),
                           s3_comments(),
                           *s3_meta_fields())
@@ -3110,9 +3128,9 @@ class RequestNeedsSectorModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = S3Duplicate(primary=("need_id",
-                                                          "sector_id",
-                                                          ),
+                       deduplicate = S3Duplicate(primary = ("need_id",
+                                                            "sector_id",
+                                                            ),
                                                  ),
                        )
 
@@ -3153,9 +3171,9 @@ class RequestNeedsSiteModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = S3Duplicate(primary=("need_id",
-                                                          "site_id",
-                                                          ),
+                       deduplicate = S3Duplicate(primary = ("need_id",
+                                                            "site_id",
+                                                            ),
                                                  ),
                        )
 
@@ -3342,6 +3360,9 @@ class RequestNeedsResponseLineModel(S3Model):
         T = current.T
         #db = current.db
 
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=2)
+
         modality_opts = {1: T("Cash"),
                          2: T("In-kind"),
                          }
@@ -3417,17 +3438,17 @@ $.filterOptionsS3({
                                                    ),
                           Field("quantity", "double",
                                 label = T("Quantity Planned"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
                                 ),
                           Field("quantity_delivered", "double",
                                 label = T("Quantity Delivered"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                represent = float_represent,
                                 requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
                                 ),
                           self.project_status_id(),
                           s3_comments(),
@@ -3498,6 +3519,8 @@ class RequestNeedsResponseOrganisationModel(S3Model):
 class RequestTagModel(S3Model):
     """
         Request Tags
+
+        @ToDo: Move to inv_req_tag
     """
 
     names = ("req_req_tag",
@@ -3542,6 +3565,8 @@ class RequestOrderItemModel(S3Model):
     """
         Simple Item Ordering for Requests
         - for when Procurement model isn't being used
+
+        @ToDo: Move to inv_req_item_order
     """
 
     names = ("req_order_item",
@@ -3612,6 +3637,8 @@ class RequestOrderItemModel(S3Model):
 class RequestProjectModel(S3Model):
     """
         Link Requests to Projects
+
+        @ToDo: Move to inv_req_project
     """
 
     names = ("req_project_req",
@@ -3620,7 +3647,7 @@ class RequestProjectModel(S3Model):
     def model(self):
 
         # -----------------------------------------------------------------
-        # Link Skill Requests to Tasks
+        # Link Requests to Projects
         #
         tablename = "req_project_req"
         self.define_table(tablename,
@@ -3641,82 +3668,11 @@ class RequestProjectModel(S3Model):
         return {}
 
 # =============================================================================
-class RequestTaskModel(S3Model):
-    """
-        Link Requests for Skills to Tasks
-    """
-
-    names = ("req_task_req",
-             )
-
-    def model(self):
-
-        # -----------------------------------------------------------------
-        # Link Skill Requests to Tasks
-        #
-        tablename = "req_task_req"
-        self.define_table(tablename,
-                          self.project_task_id(),
-                          self.req_req_id(empty=False),
-                          #self.req_req_person_id(),
-                          #self.req_req_skill_id(),
-                          *s3_meta_fields())
-
-        self.configure(tablename,
-                       deduplicate = S3Duplicate(primary = ("task_id",
-                                                            "req_id",
-                                                            ),
-                                                 ),
-                       )
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
-
-# =============================================================================
-class RequestRequesterCategoryModel(S3Model):
-    """
-        Model to control which types of requester can request which items
-        - used by RLPPTM
-    """
-
-    names = ("req_requester_category",
-             )
-
-    def model(self):
-
-        # -----------------------------------------------------------------
-        # Link supply item categories to requester attributes (e.g. org type)
-        #
-        tablename = "req_requester_category"
-        self.define_table(tablename,
-                          self.supply_item_category_id(
-                              empty = False,
-                              ondelete = "CASCADE",
-                              ),
-                          self.org_organisation_type_id(
-                              empty = False,
-                              ondelete = "CASCADE",
-                              ),
-                          *s3_meta_fields())
-
-        self.configure(tablename,
-                       deduplicate = S3Duplicate(primary = ("item_category_id",
-                                                            "organisation_type_id",
-                                                            ),
-                                                 ),
-                       )
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
-
-# =============================================================================
 class CommitModel(S3Model):
     """
         Model for commits (pledges)
+
+        @ToDo: Move to inv_commit
     """
 
     names = ("req_commit",
@@ -4034,6 +3990,8 @@ class CommitModel(S3Model):
 class CommitItemModel(S3Model):
     """
         Model for committed (pledged) items
+
+        @ToDo: Move to inv_commit_item
     """
 
     names = ("req_commit_item",
@@ -4164,6 +4122,8 @@ class CommitPersonModel(S3Model):
         Commit a named individual to a Request
 
         Used when settings.req.commit_people = True
+
+        @ToDo: Deprecate in favour of req_need_person
     """
 
     names = ("req_commit_person",)
@@ -4258,6 +4218,8 @@ class CommitSkillModel(S3Model):
         Commit anonymous people to a Request
 
         Used when settings.req.commit_people = False (default)
+
+        @ToDo: Deprecate in favour of req_need_skill
     """
 
     names = ("req_commit_skill",)

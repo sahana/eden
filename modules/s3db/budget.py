@@ -58,7 +58,6 @@ class BudgetModel(S3Model):
 
         is_float_represent = IS_FLOAT_AMOUNT.represent
         float_represent = lambda v: is_float_represent(v, precision=2)
-        
 
         # ---------------------------------------------------------------------
         # Budget Entity (super-entity for resources that can have a budget)

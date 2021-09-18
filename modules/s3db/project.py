@@ -11400,14 +11400,6 @@ class ProjectTaskModel(S3Model):
                                              "autocomplete": "name",
                                              "autodelete": False
                                              },
-                       # Requests
-                       req_req = {"link": "project_task_req",
-                                  "joinby": "task_id",
-                                  "key": "req_id",
-                                  "actuate": "embed",
-                                  "autocomplete": "request_number",
-                                  "autodelete": False,
-                                  },
                        # Tags
                        project_task_tag = {"name": "tag",
                                            "joinby": "task_id",
