@@ -1805,7 +1805,7 @@ def config(settings):
                         return A(T("Add"))
 
                 etable = s3db.hrm_training_event
-                ltable = s3db.hrm_event_target
+                ltable = s3db.dc_target_event
                 ttable = s3db.dc_target
                 query = (ttable.id == record.target_id) & \
                         (ltable.target_id == ttable.id) & \
@@ -1870,7 +1870,7 @@ def config(settings):
                 db = current.db
 
                 etable = s3db.hrm_training_event
-                ltable = s3db.hrm_event_target
+                ltable = s3db.dc_target_event
                 query = (ltable.target_id == record.id) & \
                         (ltable.training_event_id == etable.id)
                 training_event = db(query).select(etable.id,
@@ -1977,7 +1977,7 @@ def config(settings):
 
         # Read Survey Record
         ttable = s3db.dc_target
-        ltable = s3db.hrm_event_target
+        ltable = s3db.dc_target_event
         etable = s3db.hrm_training_event
         query = (ttable.id == target_id)
         left = etable.on((ttable.id == ltable.target_id) & \
@@ -2081,7 +2081,7 @@ def config(settings):
 
         # Read Survey Record
         ttable = s3db.dc_target
-        ltable = s3db.hrm_event_target
+        ltable = s3db.dc_target_event
         etable = s3db.hrm_training_event
         query = (ttable.id == target_id)
         left = etable.on((ttable.id == ltable.target_id) & \
@@ -2370,7 +2370,7 @@ def config(settings):
         event = db(etable.id == training_event_id).select(etable.name,
                                                           etable.start_date,
                                                           etable.location_id,
-                                                          limitby=(0, 1),
+                                                          limitby = (0, 1),
                                                           ).first()
         event_name = event.name
         event_date = event.start_date
@@ -2378,7 +2378,7 @@ def config(settings):
 
         # Find the Target (for URLs & to update Date)
         dtable = s3db.dc_target
-        ltable = s3db.hrm_event_target
+        ltable = s3db.dc_target_event
         query = (ltable.training_event_id == training_event_id) & \
                 (ltable.target_id == dtable.id)
         target = db(query).select(dtable.id,
@@ -2734,7 +2734,7 @@ def config(settings):
             return
 
         stable = s3db.dc_target
-        ltable = s3db.hrm_event_target
+        ltable = s3db.dc_target_event
         target_id = stable.insert(template_id = template_id,
                                   date = None, # Gets set when notifications sent (onapprove here)
                                   owned_by_user = EO,
@@ -2891,7 +2891,7 @@ def config(settings):
 
         target_id = row.id
 
-        ltable = current.s3db.hrm_event_target
+        ltable = current.s3db.dc_target_event
         training_event = current.db(ltable.target_id == target_id).select(ltable.training_event_id,
                                                                           limitby = (0, 1),
                                                                           ).first()
@@ -6015,7 +6015,7 @@ def config(settings):
 
                         # Virtual Fields for Dashboard
                         ttable = s3db.dc_target
-                        ltable = s3db.hrm_event_target
+                        ltable = s3db.dc_target_event
                         rtable = s3db.dc_response
                         squery = (etable.id == ltable.training_event_id) & \
                                  (ttable.id == ltable.target_id)

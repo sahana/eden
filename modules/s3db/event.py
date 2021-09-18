@@ -32,11 +32,11 @@ __all__ = ("EventModel",
            "EventNameModel",
            "EventActivityModel",
            #"EventAlertModel",
+           "EventAssessmentModel",
            "EventAssetModel",
            "EventBookmarkModel",
            "EventCMSModel",
            "EventCMSTagModel",
-           "EventDCModel",
            "EventExpenseModel",
            "EventForumModel",
            "EventHRModel",
@@ -1744,6 +1744,76 @@ class EventAlertModel(S3Model):
         return {}
 
 # =============================================================================
+class EventAssessmentModel(S3Model):
+    """
+        Link Data Collections to Events &/or Incidents
+    """
+
+    names = ("event_response",
+             "event_target",
+             )
+
+    def model(self):
+
+        #T = current.T
+
+        configure = self.configure
+        define_table = self.define_table
+
+        event_id = self.event_event_id
+        incident_id = self.event_incident_id
+
+        if current.deployment_settings.get_event_cascade_delete_incidents():
+            ondelete = "CASCADE"
+        else:
+            ondelete = "SET NULL"
+
+        # ---------------------------------------------------------------------
+        # Link table between Assessments & Events/Incidents
+        tablename = "event_response"
+        define_table(tablename,
+                     event_id(ondelete = ondelete),
+                     incident_id(ondelete = "CASCADE"),
+                     self.dc_response_id(empty = False,
+                                         ondelete = "CASCADE",
+                                         ),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("event_id",
+                                                       "incident_id",
+                                                       "response_id",
+                                                       ),
+                                            ),
+                  onaccept = lambda form: \
+                    set_event_from_incident(form, "event_response"),
+                  )
+
+        # ---------------------------------------------------------------------
+        # Link table between Targets & Events/Incidents
+        tablename = "event_target"
+        define_table(tablename,
+                     event_id(ondelete = ondelete),
+                     incident_id(ondelete = "CASCADE"),
+                     self.dc_target_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("event_id",
+                                                       "incident_id",
+                                                       "target_id",
+                                                       ),
+                                            ),
+                  onaccept = lambda form: \
+                    set_event_from_incident(form, "event_target"),
+                  )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
 class EventAssetModel(S3Model):
     """
         Link Assets to Incidents
@@ -2153,76 +2223,6 @@ class EventCMSTagModel(S3Model):
                                                             ),
                                                  ),
                        )
-
-        # Pass names back to global scope (s3.*)
-        return {}
-
-# =============================================================================
-class EventDCModel(S3Model):
-    """
-        Link Data Collections to Events &/or Incidents
-    """
-
-    names = ("event_response",
-             "event_target",
-             )
-
-    def model(self):
-
-        #T = current.T
-
-        configure = self.configure
-        define_table = self.define_table
-
-        event_id = self.event_event_id
-        incident_id = self.event_incident_id
-
-        if current.deployment_settings.get_event_cascade_delete_incidents():
-            ondelete = "CASCADE"
-        else:
-            ondelete = "SET NULL"
-
-        # ---------------------------------------------------------------------
-        # Link table between Assessments & Events/Incidents
-        tablename = "event_response"
-        define_table(tablename,
-                     event_id(ondelete = ondelete),
-                     incident_id(ondelete = "CASCADE"),
-                     self.dc_response_id(empty = False,
-                                         ondelete = "CASCADE",
-                                         ),
-                     *s3_meta_fields())
-
-        configure(tablename,
-                  deduplicate = S3Duplicate(primary = ("event_id",
-                                                       "incident_id",
-                                                       "response_id",
-                                                       ),
-                                            ),
-                  onaccept = lambda form: \
-                    set_event_from_incident(form, "event_response"),
-                  )
-
-        # ---------------------------------------------------------------------
-        # Link table between Targets & Events/Incidents
-        tablename = "event_target"
-        define_table(tablename,
-                     event_id(ondelete = ondelete),
-                     incident_id(ondelete = "CASCADE"),
-                     self.dc_target_id(empty = False,
-                                       ondelete = "CASCADE",
-                                       ),
-                     *s3_meta_fields())
-
-        configure(tablename,
-                  deduplicate = S3Duplicate(primary = ("event_id",
-                                                       "incident_id",
-                                                       "target_id",
-                                                       ),
-                                            ),
-                  onaccept = lambda form: \
-                    set_event_from_incident(form, "event_target"),
-                  )
 
         # Pass names back to global scope (s3.*)
         return {}
