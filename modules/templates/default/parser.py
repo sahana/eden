@@ -72,7 +72,7 @@ class S3Parser(object):
         message_id = message.message_id
         table = s3db.msg_email
         record = db(table.message_id == message_id).select(table.raw,
-                                                           limitby=(0, 1)
+                                                           limitby = (0, 1)
                                                            ).first()
         if not record:
             return reply
@@ -95,7 +95,8 @@ class S3Parser(object):
             # Update the Run entry to show that we have received the reply OK
             rtable = s3db.monitor_run
             db(rtable.id == run_id).update(result = "Reply Received",
-                                           status = 1)
+                                           status = 1,
+                                           )
             return reply
 
         else:
@@ -156,12 +157,17 @@ class S3Parser(object):
         #     # Check when account was created
         # (Note that it is still possible to game this - plausible accounts can be purchased)
 
-        ktable = s3db.msg_keyword
-        keywords = db(ktable.deleted == False).select(ktable.id,
-                                                      ktable.keyword,
-                                                      ktable.incident_type_id,
-                                                      cache=cache)
-        incident_type_represent = S3Represent(lookup="event_incident_type")
+        # NB This just allows a single Keyword per Incident Type
+        # - if more are needed then use something like tag.like("KW%")
+        ttable = s3db.event_incident_type_tag
+        query = (ttable.tag == "keyword") & \
+                (ttable.deleted == False)
+        keywords = db(query).select(#ttable.id,
+                                    ttable.value,
+                                    ttable.incident_type_id,
+                                    cache = cache,
+                                    )
+        incident_type_represent = S3Represent(lookup = "event_incident_type")
         if NLTK:
             # Lookup synonyms
             # @ToDo: Cache
@@ -169,22 +175,23 @@ class S3Parser(object):
             for kw in keywords:
                 syns = []
                 try:
-                    synsets = wn.synsets(kw.keyword)
+                    synsets = wn.synsets(kw.value)
                     for synset in synsets:
                         syns += [lemma.name for lemma in synset.lemmas]
                 except LookupError:
                     nltk.download("wordnet")
-                    synsets = wn.synsets(kw.keyword)
+                    synsets = wn.synsets(kw.value)
                     for synset in synsets:
                         syns += [lemma.name for lemma in synset.lemmas]
-                synonyms[kw.keyword.lower()] = syns
+                synonyms[kw.value.lower()] = syns
 
         ltable = s3db.gis_location
         query = (ltable.deleted != True) & \
                 (ltable.name != None)
         locs = db(query).select(ltable.id,
                                 ltable.name,
-                                cache=cache)
+                                cache = cache,
+                                )
         lat = lon = None
         location_id = None
         loc_matches = 0
@@ -242,7 +249,7 @@ class S3Parser(object):
 
             if not skip:
                 for kw in keywords:
-                    _word = kw.keyword.lower()
+                    _word = kw.value.lower()
                     if _word == word:
                         # Check for negation
                         if index and words[index - 1].lower() == "no":
@@ -284,7 +291,8 @@ class S3Parser(object):
         if not loc_matches or loc_matches > 1:
             if lat and lon:
                 location_id = ltable.insert(lat = lat,
-                                            lon = lon)
+                                            lon = lon,
+                                            )
             elif service == "twitter":
                 # @ToDo: Use Geolocation of Tweet
                 #location_id =

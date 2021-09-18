@@ -1128,7 +1128,6 @@ class ParsingModel(S3Model):
     names = ("msg_parser",
              "msg_parsing_status",
              "msg_session",
-             "msg_keyword",
              "msg_sender",
              )
 
@@ -1214,18 +1213,6 @@ class ParsingModel(S3Model):
                      Field("is_expired", "boolean",
                            default = False,
                            ),
-                     *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Keywords for Message Parsing
-        #
-        tablename = "msg_keyword"
-        define_table(tablename,
-                     Field("keyword",
-                           label = T("Keyword"),
-                           ),
-                     # @ToDo: Move this to a link table
-                     self.event_incident_type_id(),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
