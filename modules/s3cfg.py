@@ -187,7 +187,6 @@ class S3Config(Storage):
         self.hms = Storage()
         self.hrm = Storage()
         self.inv = Storage()
-        self.irs = Storage()
         self.L10n = Storage()
         # Allow templates to append rather than replace
         self.L10n.languages = {"en": "English"}
@@ -983,7 +982,6 @@ class S3Config(Storage):
             ("asset", T("Assets")),
             ("project", T("Projects")),
             ("survey", T("Assessments")),
-            ("irs", T("Incidents"))
         ]))
 
     def get_auth_access_levels(self):
@@ -4936,14 +4934,6 @@ class S3Config(Storage):
             Validate for Unique Warehouse Codes
         """
         return self.inv.get("warehouse_code_unique", False)
-    # -------------------------------------------------------------------------
-    # IRS
-    #
-    def get_irs_vehicle(self):
-        """
-            Use Vehicles to respond to Incident Reports?
-        """
-        return self.irs.get("vehicle", False)
 
     # -------------------------------------------------------------------------
     # Members
