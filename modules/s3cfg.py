@@ -4259,12 +4259,6 @@ class S3Config(Storage):
         """
         return self.__lazy("hrm", "event_course_mandatory", default=True)
 
-    #def get_hrm_event_programme(self):
-    #    """
-    #        Whether (Training) Events should be linked to Programmes
-    #    """
-    #    return self.__lazy("hrm", "event_programme", default=False)
-
     def get_hrm_event_site(self):
         """
             How (Training) Events should be Located:

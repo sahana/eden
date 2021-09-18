@@ -35,9 +35,6 @@ __all__ = ("HRModel",
            "HRContractModel",
            "HRSkillModel",
            "HRTagModel",
-           "HREventStrategyModel",
-           "HREventProgrammeModel",
-           "HREventProjectModel",
            "HRAppraisalModel",
            "HRExperienceModel",
            "HRAwardModel",
@@ -2891,21 +2888,21 @@ class HRSkillModel(S3Model):
                                                     "multiple": False,
                                                     },
 
-                       hrm_programme = {"link": "hrm_event_programme",
-                                        "joinby": "training_event_id",
-                                        "key": "programme_id",
-                                        "actuate": "hide",
-                                        },
-                       project_project = {"link": "hrm_event_project",
-                                          "joinby": "training_event_id",
-                                          "key": "project_id",
-                                          "actuate": "hide",
-                                          },
-                       project_strategy = {"link": "hrm_event_strategy",
-                                           "joinby": "training_event_id",
-                                           "key": "strategy_id",
-                                           "actuate": "hide",
-                                           },
+                       #project_strategy = {"link": "project_strategy_event",
+                       #                    "joinby": "training_event_id",
+                       #                    "key": "strategy_id",
+                       #                    "actuate": "hide",
+                       #                    },
+                       #project_programme = {"link": "project_programme_event",
+                       #                     "joinby": "training_event_id",
+                       #                     "key": "programme_id",
+                       #                     "actuate": "hide",
+                       #                     },
+                       #project_project = {"link": "project_project_event",
+                       #                   "joinby": "training_event_id",
+                       #                   "key": "project_id",
+                       #                   "actuate": "hide",
+                       #                   },
 
                        dc_target = {"link": "dc_target_event",
                                     "joinby": "training_event_id",
@@ -4195,93 +4192,6 @@ def hrm_training_onaccept(form):
                 form.vars = Storage()
                 form.vars.id = certification_id
                 hrm_certification_onaccept(form)
-
-# =============================================================================
-class HREventStrategyModel(S3Model):
-    """
-        (Training) Events <> Strategies Link Table
-    """
-
-    names = ("hrm_event_strategy",
-             )
-
-    def model(self):
-
-        # =====================================================================
-        # (Training) Events <> Strategies Link Table
-        #
-        tablename = "hrm_event_strategy"
-        self.define_table(tablename,
-                          self.hrm_training_event_id(empty = False,
-                                                     ondelete = "CASCADE",
-                                                     ),
-                          self.project_strategy_id(empty = False,
-                                                   ondelete = "CASCADE",
-                                                   ),
-                          *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
-
-# =============================================================================
-class HREventProgrammeModel(S3Model):
-    """
-        (Training) Events <> Programmes Link Table
-    """
-
-    names = ("hrm_event_programme",
-             )
-
-    def model(self):
-
-        # =====================================================================
-        # (Training) Events <> Programmes Link Table
-        #
-        tablename = "hrm_event_programme"
-        self.define_table(tablename,
-                          self.hrm_training_event_id(empty = False,
-                                                     ondelete = "CASCADE",
-                                                     ),
-                          self.hrm_programme_id(empty = False,
-                                                ondelete = "CASCADE",
-                                                ),
-                          *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
-
-# =============================================================================
-class HREventProjectModel(S3Model):
-    """
-        (Training) Events <> Projects Link Table
-    """
-
-    names = ("hrm_event_project",
-             )
-
-    def model(self):
-
-        # =====================================================================
-        # (Training) Events <> Projects Link Table
-        #
-        tablename = "hrm_event_project"
-        self.define_table(tablename,
-                          self.hrm_training_event_id(empty = False,
-                                                     ondelete = "CASCADE",
-                                                     ),
-                          self.project_project_id(empty = False,
-                                                  ondelete = "CASCADE",
-                                                  ),
-                          *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
 
 # =============================================================================
 class HRAppraisalModel(S3Model):

@@ -6109,33 +6109,34 @@ def config(settings):
                         f.label = T("Status")
 
                         # Filter Programmes to this Org (not root)
-                        f = s3db.hrm_event_programme.programme_id
-                        f.requires = IS_EMPTY_OR(
-                                        IS_ONE_OF(db, "hrm_programme.id",
-                                                  f.represent,
-                                                  filterby="organisation_id",
-                                                  filter_opts=(organisation_id,),
-                                                  ))
+                        #f = s3db.project_programme_event.programme_id
+                        #f.requires = IS_EMPTY_OR(
+                        #                IS_ONE_OF(db, "hrm_programme.id",
+                        #                          f.represent,
+                        #                          filterby = "organisation_id",
+                        #                          filter_opts = (organisation_id,),
+                        #                          ))
 
                         # Customise
                         crud_form = S3SQLCustomForm("name",
-                                                    S3SQLInlineLink("strategy",
-                                                                    field = "strategy_id",
-                                                                    label = T("AoF/SFI"),
-                                                                    multiple = False,
-                                                                    ),
-                                                    S3SQLInlineLink("programme",
-                                                                    field = "programme_id",
-                                                                    label = T("Programme"),
-                                                                    multiple = False,
-                                                                    ),
 
-                                                    S3SQLInlineLink("project",
-                                                                    field = "project_id",
-                                                                    label = T("Project"),
-                                                                    multiple = False,
-                                                                    required = True,
-                                                                    ),
+                                                    # If these are-required in-future then create link tables for them in Project module
+                                                    #S3SQLInlineLink("strategy",
+                                                    #                field = "strategy_id",
+                                                    #                label = T("AoF/SFI"),
+                                                    #                multiple = False,
+                                                    #                ),
+                                                    #S3SQLInlineLink("programme",
+                                                    #                field = "programme_id",
+                                                    #                label = T("Programme"),
+                                                    #                multiple = False,
+                                                    #                ),
+                                                    #S3SQLInlineLink("project",
+                                                    #                field = "project_id",
+                                                    #                label = T("Project"),
+                                                    #                multiple = False,
+                                                    #                required = True,
+                                                    #                ),
 
                                                     "event_type_id",
                                                     "location_id",
@@ -6146,9 +6147,9 @@ def config(settings):
                                                     )
 
                         list_fields = ["name",
-                                       (T("AoF/SFI"), "strategy__link.strategy_id"),
-                                       "programme__link.programme_id",
-                                       "project__link.project_id",
+                                       #(T("AoF/SFI"), "strategy__link.strategy_id"),
+                                       #"programme__link.programme_id",
+                                       #"project__link.project_id",
                                        "event_type_id",
                                        "location_id$L0",
                                        "location_id$L1",
