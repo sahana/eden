@@ -50,14 +50,5 @@
   </div>
  </div>
 </div>
-{{if settings.frontpage.rss:}}
-<div id='feed-control'>
- <div class='row'>
-  <div class='small-12 columns'>
-   <span style="color:#676767;font-size:11px;margin:10px;padding:4px;">{{=T("Loading")}}...</span>
-  </div>
- </div>
-</div>
-{{pass}}
 {{#if settings.get_base_guided_tour() and request.get_vars.tour:}}{{#=joyride_div}}{{#pass}}
 {{if org_box:}}{{include "dataTables.html"}}{{pass}}

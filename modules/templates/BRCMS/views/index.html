@@ -3,36 +3,25 @@
  <div class='large-5 large-offset-1 columns'>
   <div class="row hide-for-small">
    <div id='site-title' class='small-12 columns'>
-    <img src='{{=settings.get_frontpage("logo") or URL(c="static", f="img", args=["sahanalarge_14.png"])}}' alt='SAHANA BRCMS' />
+    <img src='{{=URL(c="static", f="img", args=["sahanalarge_14.png"])}}' alt='SAHANA BRCMS' />
     <h2>{{=settings.get_system_name()}}</h3>
    </div>
   </div>
  </div>
  <div class='large-5 columns end'>
   {{AUTHENTICATED = auth.get_system_roles().AUTHENTICATED}}
-  {{if contact_form:}}
-  <div id='intro' class='callout panel'>
-   <h4>Coordinating Refugee Support with Sahana</h4>
-   {{=H4("%s:" % T("Fill in the form below for more information"))}}
-   {{=contact_form}}
-   {{if AUTHENTICATED not in session.s3.roles:}}
-   {{=login_buttons}}
-   {{pass}}
-  </div>
-  {{pass}}
   {{if AUTHENTICATED not in session.s3.roles:}}
-  <div id='login_box' class='panel' {{if contact_form:}}style='display:none'{{pass}}>
+  <div id='login_box' class='panel'>
    <div id='login_form'>
     {{=login_div}}
     {{include "auth/_login.html"}}
    </div>
    {{if self_registration:}}
-    <div id='register_form' {{if not contact_form:}}style='display:none'{{pass}}>
+    <div id='register_form' style='display:none'>
      {{=register_div}}
      {{include "auth/_register.html"}}
     </div>
    {{pass}}
-   {{if contact_form:}}<a id='show-mailform' class='tiny secondary button'>Contact Form</a>{{pass}}
   </div>
   {{pass}}
  </div>

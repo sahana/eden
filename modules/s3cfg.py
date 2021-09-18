@@ -178,9 +178,6 @@ class S3Config(Storage):
         # Allow templates to append rather than replace
         self.fin.currencies = {}
         self.fire = Storage()
-        # @ToDo: Move to self.ui
-        self.frontpage = Storage()
-        self.frontpage.rss = []
         self.gis = Storage()
         # Allow templates to append rather than replace
         self.gis.countries = []
@@ -6133,19 +6130,6 @@ class S3Config(Storage):
             @todo: move this documentation to the wiki?
         """
         return self.xforms.get("resources")
-
-    # -------------------------------------------------------------------------
-    # Frontpage Options
-    #
-    def get_frontpage(self, key=None, default=None):
-        """
-            Template-specific frontpage configuration options
-        """
-
-        if key:
-            return self.frontpage.get(key, default)
-        else:
-            return default
 
     # -------------------------------------------------------------------------
     # Custom template options
