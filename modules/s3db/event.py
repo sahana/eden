@@ -5072,11 +5072,12 @@ class ScenarioAssetModel(S3Model):
         self.configure(tablename,
                        context = {"scenario": "scenario_id",
                                   },
-                       deduplicate = S3Duplicate(primary = ("scenario_id",
-                                                            "item_id",
-                                                            "asset_id",
-                                                            ),
-                                                 ),
+                       # Scenarios need to be able to have multiples of an Item
+                       #deduplicate = S3Duplicate(primary = ("scenario_id",
+                       #                                     "item_id",
+                       #                                     "asset_id",
+                       #                                     ),
+                       #                          ),
                        )
 
         # Pass names back to global scope (s3.*)
@@ -5171,11 +5172,12 @@ class ScenarioHRModel(S3Model):
         self.configure(tablename,
                        context = {"scenario": "scenario_id",
                                   },
-                       deduplicate = S3Duplicate(primary = ("scenario_id",
-                                                            "job_title_id",
-                                                            "person_id",
-                                                            ),
-                                                 ),
+                       # Scenarios need to be able to have multiples of a Job Title
+                       #deduplicate = S3Duplicate(primary = ("scenario_id",
+                       #                                     "job_title_id",
+                       #                                     "person_id",
+                       #                                     ),
+                       #                          ),
                        )
 
         # Pass names back to global scope (s3.*)
