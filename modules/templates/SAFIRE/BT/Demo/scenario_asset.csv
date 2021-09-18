@@ -1,5 +1,15 @@
 Scenario,Item,Comments
-Aircraft Crash 1,Radio,Equipment Comments
+Aircraft Crash 1,Radio,10
+Animal disease control,Protective clothing,2
+Animal disease control,Gloves,10
+Animal disease control,Face shields,2
+Animal disease control,Goggles,2
+Animal disease control,Facemasks,3
+Animal disease control,Sampling device,3
+Animal disease control,Sample container,3
+Animal disease control,Laboratory test kits,1
+Animal disease control,Sanitizer,1
+Animal disease control,Cooler box,1
 Building inferno,Tower ladder
 Building inferno,Command Unit
 Building inferno,Tanker Truck

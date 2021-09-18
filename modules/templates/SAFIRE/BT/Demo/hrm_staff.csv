@@ -1,25 +1,41 @@
 Organisation,Job Title,Staff ID,Sex,First Name,Middle Name,Last Name,Nationality,Email,Mobile Phone,Office Phone
 Department of Disaster Management,Director,1,M,Jigme,Thinlye,Namgyal,BT,jtnamgyal@ddm.gov.bt,+97517600584,+9752327098
-Public Health,Public Health Inspector,2,F,Choeden,,Namgay,BT,Choeden@doph.gov.bt,+97517600522,+9752327022
-Public Health,Public Health Inspector,3,F,Druk,,Namgyel,BT,Druk@doph.gov.bt,+97517600533,+9752327033
-Public Health,Public Health Inspector,5,F,Kiba,,Tshering,BT,KibaTshering@doph.gov.bt,+97517600555,+9752327055
-Public Health,Public Health Inspector,8,F,Selden,,Namgay,BT,Selden@doph.gov.bt,+97517600588,+9752327088
-Forest and Park Services,Gewog Forest Protection Chief,13,M,Karma,,Chime,BT,chiefKarma@DoFPS.gov.bt,+97517601313,+9752321313
-Royal Bhutan Police,Bus Driver,21,M,Dechen,,Wangmo,BT,DechenWangmo@rbp.gov.bt,+97517602121,+9752322121
-Royal Bhutan Police,Bus Driver,34,M,Norbu,,Wangmo,BT,NorbuWangmo@rbp.gov.bt,+97517603434,+9752323434
-Royal Bhutan Police,Search and Rescue Team Leader,55,M,Ugyen,,Wangdi,BT,UgyenWangdi@rbp.gov.bt,+97517605555,+9752325555
-Royal Bhutan Police,Search and Rescue Team Leader,89,F,Yangki,,Lhaden,BT,YangkiLhaden@rbp.gov.bt,+97517608989,+9752328989
-Royal Bhutan Police,Communications Officer,6,F,Semyang,,Lhaden,BT,SemyangLhaden@rbp.gov.bt,+97517608944,+9752328944
-Royal Bhutan Police,Communications Officer,7,F,Karzi,,Wangdi,BT,KarziWangdi@rbp.gov.bt,+9751760897,+9752328977
-Royal Bhutan Police,Communications Officer,9,F,Choeden,,Namgay,BT,ChoedenNamgay@rbp.gov.bt,+97517608999,+9752328999
-Forest and Park Services,Staging Area Manager,22,M,Dechen,,Wangmo,BT,DechenWangmo@DoFPS.gov.bt,+97517602222,+9752322222
+Department of Livestock,Chief Veterinary Officer,150,F,Druk,,Namgyel,BT,Druk@dol.gov.bt,+97517600150,+9752327150
+Department of Livestock,Chief Veterinary Officer,151,M,Norbu,,Wangmo,BT,NorbuWangmo@dol.gov.bt,+97517603151,+9752323151
+Department of Livestock,Veterinary Officer,152,F,Choeden,,Namgay,BT,ChoedenNamgay@dol.gov.bt,+97517600152,+9752327152
+Department of Livestock,Veterinary Officer,153,M,Karma,,Chime,BT,KarmaChime@dol.gov.bt,+97517603153,+9752323153
+Department of Livestock,Veterinary Officer,154,M,Ngawang,,Pelden,BT,NgawangPelden@dol.gov.bt,+97517600154,+9752327154
+Department of Livestock,Veterinary Officer,155,M,Jigme,Thinlye,Namgyal,BT,ThinlyeNamgyal@dol.gov.bt,+97517603155,+9752323155
+Forest and Park Services,Forest Protection Chief,13,M,Karma,,Chime,BT,chiefkchime@dofps.gov.bt,+97517601313,+9752321313
+Forest and Park Services,Forest Protection Chief,14,F,Sonam,,Wangdi,BT,chiefswangdi@dofps.gov.bt,+9751761414,+9752321414
+Forest and Park Services,Forest Protection Chief,15,M,Sonam,,Wangchuk,BT,chiefswangchuk@dofps.gov.bt,+97517601515,+9752321515
+Forest and Park Services,Forest Protection Chief,16,F,Liliane,,Tarnutzer,BT,chiefltarnutzer@dofps.gov.bt,+97517601616,+9752321616
+Forest and Park Services,Forest Protection Chief,17,F,Kiba,,Tshering,BT,KibaTshering@dofps.gov.bt,+97517600555,+9752327055
+Forest and Park Services,Staging Area Manager,22,M,Dechen,,Wangmo,BT,DechenWangmo@dofps.gov.bt,+97517602222,+9752322222
 Forest and Park Services,Staging Area Manager,23,M,Jigme,Thinlye,Namgyal,BT,ThinlyeNamgyal@ddm.gov.bt,+97517600584,+9752327098
-Forest and Park Services,Staging Area Manager,24,M,Karma,,Chime,BT,KarmaChime@DoFPS.gov.bt,+97517601313,+9752321313
-Forest and Park Services,Staging Area Manager,25,F,Selden,,Namgay,BT,Selden@DoFPS.gov.bt,+97517600588,+9752327088
-Forest and Park Services,Staging Area Manager,26,F,Kiba,,Tshering,BT,KibaTshering@DoFPS.gov.bt,+97517600555,+9752327055
+Forest and Park Services,Staging Area Manager,24,M,Karma,,Chime,BT,KarmaChime@dofps.gov.bt,+97517601313,+9752321313
+Forest and Park Services,Staging Area Manager,25,F,Selden,,Namgay,BT,Selden@dofps.gov.bt,+97517600588,+9752327088
+Forest and Park Services,Forest Fire Figher Team,141,,Radi,Team,Alpha,BT,raditeamalpha@dofps.gov.bt,+9751761141,+9752321141
+Forest and Park Services,Forest Fire Figher Team,142,,Radi,Team,Delta,BT,raditeamdelta@dofps.gov.bt,+9751761142,+9752321142
+Forest and Park Services,Forest Fire Figher Team,143,,Pakaling,Team,Delta,BT,pakaliteamdelta@dofps.gov.bt,+9751761143,+9752321143
+Forest and Park Services,Forest Fire Figher Team,144,,Nagtsang,Team,Romeo,BT,nagtsangteamromeo@dofps.gov.bt,+9751761144,+9752321144
 Ministry of Health,Emergency Medical Technician,56,M,Ngawang,,Pelden,BT,NgawangPelden@MoH.gov.bt,+97517605656,+9752325656
 Ministry of Health,Emergency Medical Technician,57,F,Dema,,Yuden,BT,DemaYuden@MoH.gov.bt,+97517605757,+9752325757
 Ministry of Health,Emergency Medical Technician,58,F,Lhamo,,Namgay,BT,LhamoNamgay@MoH.gov.bt,+97517605858,+9752325858
 Ministry of Health,Emergency Medical Technician,59,F,Kiba,,Pelden,BT,KibaPelden@MoH.gov.bt,+97517605959,+9752325959
 Ministry of Health,Emergency Medical Technician,60,M,Selden,,Tshering,BT,SeldenTshering@MoH.gov.bt,+97517606060,+9752326060
+Public Health,Public Health Inspector,2,F,Choeden,,Namgay,BT,Choeden@doph.gov.bt,+97517600522,+9752327022
+Public Health,Public Health Inspector,3,F,Druk,,Namgyel,BT,Druk@doph.gov.bt,+97517600533,+9752327033
+Public Health,Public Health Inspector,5,F,Kiba,,Tshering,BT,KibaTshering@doph.gov.bt,+97517600555,+9752327055
+Public Health,Public Health Inspector,8,F,Selden,,Namgay,BT,Selden@doph.gov.bt,+97517600588,+9752327088
+Royal Bhutan Police,Bus Driver,21,M,Dechen,,Wangmo,BT,DechenWangmo@rbp.gov.bt,+97517602121,+9752322121
+Royal Bhutan Police,Bus Driver,34,M,Norbu,,Wangmo,BT,NorbuWangmo@rbp.gov.bt,+97517603434,+9752323434
+Royal Bhutan Police,Communications Officer,6,F,Semyang,,Lhaden,BT,SemyangLhaden@rbp.gov.bt,+97517608944,+9752328944
+Royal Bhutan Police,Communications Officer,7,F,Karzi,,Wangdi,BT,KarziWangdi@rbp.gov.bt,+9751760897,+9752328977
+Royal Bhutan Police,Communications Officer,9,F,Choeden,,Namgay,BT,ChoedenNamgay@rbp.gov.bt,+97517608999,+9752328999
+Royal Bhutan Police,Public Safety Officer,90,F,Liliane,,Tarnutzer,BT,chiefltarnutzer@rbp.gov.bt,+97517609090,+9752329090
+Royal Bhutan Police,Public Safety Officer,91,M,Druk,,Namgyel,BT,Druk@rbp.gov.bt,+97517609191,+9752329191
+Royal Bhutan Police,Public Safety Officer,91,M,Druk,,Namgyel,BT,Druk@rbp.gov.bt,+97517609191,+9752329191
+Royal Bhutan Police,Search and Rescue Team Leader,55,M,Ugyen,,Wangdi,BT,UgyenWangdi@rbp.gov.bt,+97517605555,+9752325555
+Royal Bhutan Police,Search and Rescue Team Leader,89,F,Yangki,,Lhaden,BT,YangkiLhaden@rbp.gov.bt,+97517608989,+9752328989
 Swiss Red Cross,Counselor,35,F,Yangki,,Lhaden,BT,YangkiLhaden@swiss.ifrc.org,+97517603535,+9752323535
