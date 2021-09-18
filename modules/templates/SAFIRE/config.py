@@ -469,6 +469,50 @@ def config(settings):
         return rheader
 
     # -------------------------------------------------------------------------
+    def customise_dc_target_resource(r, tablename):
+
+        if r.controller in ("event",
+                            "hrm", # Training Event Evaluations
+                            ):
+            return
+
+        s3db = current.s3db
+
+        from s3 import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3SQLCustomForm, S3SQLInlineLink
+
+        crud_form = S3SQLCustomForm(S3SQLInlineLink("event",
+                                                    field = "event_id",
+                                                    #label = type_label,
+                                                    multiple = False,
+                                                    ),
+                                    "template_id",
+                                    "date",
+                                    "location_id",
+                                    "comments",
+                                    )
+
+        filter_widgets = [S3OptionsFilter("event__link.event_id"),
+                          S3LocationFilter(),
+                          S3DateFilter("date"),
+                          ]
+
+        list_fields = ["event__link.event_id",
+                       "location_id$L1",
+                       "location_id$L2",
+                       "name",
+                       (T("Reporting Date"), "date"),
+                       (T("Reported by"), "created_by"),
+                       ]
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_dc_target_resource = customise_dc_target_resource
+
+    # -------------------------------------------------------------------------
     def customise_event_event_controller(**attr):
 
         #s3 = current.response.s3

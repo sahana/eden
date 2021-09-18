@@ -77,7 +77,9 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_dc_target_resource(r, tablename):
 
-        if r.controller == "event":
+        if r.controller in ("event",
+                            "hrm", # Training Event Evaluations
+                            ):
             return
 
         s3db = current.s3db
