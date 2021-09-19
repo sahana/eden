@@ -1,17 +1,17 @@
 Scenario,Incident Type,Comments
-Aircraft Crash 1,Aircraft Crash,senario comment
-Animal disease control,Animal Die Off,senario comment
-Avalanche Search and Rescue,Avalanche,senario comment
-Building inferno,Fire,senario comment
-Chemical contamination of Water,Chemical Hazard,enario comment
-Dengue control,Infectious Disease,senario comment
-Flood Search and Rescue,Flash Flood,sesnario comment
-Infectious disease control,Infectious Disease,senario comment
-Landslide Search and Rescue,Landslide,senario comment
-Malaria control,Infectious Disease,senario comment
-Missing Person Landslide Search and Rescue,Landslide,senario comment
-Search Missing Person,Missing Person,senario comment
-Snow storm missing person,Missing Person,senario comment
-Water evacuation transport only,Flash Flood,senario comment
-Water Evacuation Large Group,Flash Flood,senario comment
-Wildfire safety,Forest Fire,senario comment
+Aircraft Crash 1,Aircraft Crash,
+Animal disease control,Animal Die Off,
+Avalanche Search and Rescue,Avalanche,
+Building inferno,Fire,
+Chemical contamination of Water,Chemical Hazard,
+Dengue control,Infectious Disease,
+Flood Search and Rescue,Flash Flood,
+Infectious disease control,Infectious Disease,
+Landslide Search and Rescue,Landslide,
+Malaria control,Infectious Disease,
+Missing Person Landslide Search and Rescue,Landslide,
+Search Missing Person,Missing Person,
+Snow storm missing person,Missing Person,
+Water evacuation transport only,Flash Flood,
+Water Evacuation Large Group,Flash Flood,
+Wildfire safety,Forest Fire,
