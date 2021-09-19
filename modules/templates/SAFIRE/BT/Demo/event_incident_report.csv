@@ -1,2 +1,6 @@
-Event,Incident,Name,Type,Date,Reported By,Contact,Address,Country,L1,L2,L3,Lat,Lon,Comments
-,,Floods,Civil Emergency,2021-08-20 13:39,DDM,+975551212,,BT,Bumthang,Chhume,,,,
+Event,Incident,Name,Type,Date,Reported By,Contact,Address,Postcode,Country,L1,L2,L3,Lat,Lon,Comments
+,,Flash Floods in Laya Town,Flash Flood,2021-06-17 11:30,Department of Disaster Management,+975551212,,,BT,Gasa,Laya,,,,https://reliefweb.int/report/bhutan/bhutan-flash-floods-and-landslide-government-bhutan-nchm-floodlist-media-echo-daily
+,,Infectious Bursal Disease escalation in Samtse,Animal Die Off,2021-09-21 14:00,Department of Livestock,+975551212,,,BT,Samtse,,,,,https://www.ncah.gov.bt/Downloads/File_367.pdf
+,,Infectious Bursal Disease escalation in Samtse,Animal Die Off,2021-09-18 15:00,Department of Livestock,+975551212,,,BT,Chhukha,,,,,https://www.ncah.gov.bt/Downloads/File_367.pdf
+,,Missing women and child in Trashiyangtse,Missing Person,2021-06-10 11:30,Royal Bhutan Police,+97555113113,,,BT,Trashigang,,,,,https://kuenselonline.com/44-people-reportedly-missing-in-the-past-six-months/
+,,Missing man in Thimphu,Missing Person,2021-01-17 11:30,Royal Bhutan Police,+97555113113,,,BT,Thimphu,,,,,https://kuenselonline.com/44-people-reportedly-missing-in-the-past-six-months/

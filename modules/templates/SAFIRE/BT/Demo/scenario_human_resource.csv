@@ -1,29 +1,41 @@
 Scenario,Job Title,Comments
-Aircraft Crash 1,Scout,
-Building inferno,Fire Marshall,
-Building inferno,Fire fighters,
-Building inferno,Evacuation Team,
-Building inferno,Cleanup Team,
-Water Evacuation Large Group,Boat Captain,1 person
-Water Evacuation Large Group,Boat Crew,1 person
-Water Evacuation Large Group,Docking Crew,6 people
-Water Evacuation Large Group,Evacuation Coordinator
-Water Evacuation Large Group,Bus driver,1 person
-Water evacuation transport only,Boat Captain,1 person
-Water evacuation transport only,Boat Crew,1 person
-Landslide Search and Rescue,Emergency Medical Technician
-Landslide Search and Rescue,Mining Technician
-Landslide Search and Rescue,Search Dog, 2 dogs
-Flood Search and Rescue,Search and Rescue Team Leader, 1 person
-Flood Search and Rescue,Communications Officer, 1 person
+Aircraft Crash 1,Scout,>= 20 people
+Animal disease control,Chief Veterinary Officer,1 person
+Animal disease control,Veterinary Officer,>= 3 people
+Building inferno,Fire Marshall,1 person
+Building inferno,Fire fighters,>= 12 persons
+Building inferno,Evacuation Team,>= 6 persons
+Building inferno,Cleanup Team,>=12 persons
+Flood Search and Rescue,Search and Rescue Team Leader,1 person
+Flood Search and Rescue,Communications Officer,1 person
 Flood Search and Rescue,Boat Captain,1 person
 Flood Search and Rescue,Bus Driver,1 person
 Flood Search and Rescue,Emergency Medical Technician,1 person
 Flood Search and Rescue,Staging Area Manager,1 person
 Flood Search and Rescue,Team Member,5 persons
 Infectious disease control,Public Health Inspector,2 persons
+Landslide Search and Rescue,Emergency Medical Technician,>=5 persons
+Landslide Search and Rescue,Mining Technician,>= 3 persons
+Landslide Search and Rescue,Search Dog,>= 2 dogs
+Search Missing Person,Counselor,1 person
 Snow storm missing person,Search and Rescue Team Leader, 1 person
 Snow storm missing person,Communications Officer, 1 person
 Snow storm missing person,Emergency Medical Technician,1 person
 Snow storm missing person,Team Member,5 persons
 Snow storm missing person,Counselor,1 person
+Veterinary Officer,Pathologist
+Water Evacuation Large Group,Boat Captain,1 person
+Water Evacuation Large Group,Boat Crew,2 people
+Water Evacuation Large Group,Docking Crew,6 people
+Water Evacuation Large Group,Evacuation Coordinator,1 person
+Water Evacuation Large Group,Bus driver,1 person
+Water Evacuation Large Group,Public Safety Officer,2 people
+Water evacuation transport only,Boat Captain,1 person
+Water evacuation transport only,Boat Crew,6 people
+Wildfire safety,Forest Protection Chief,1 person
+Wildfire safety,Safety Officer,>=1 person
+Wildfire safety,Forest Fire Figher Team,>=12 people
+Wildfire safety,Public Safety Officer,>=5 people
+Wildfire safety,Emergency Medical Technician,>=3 people
+Wildfire safety,Staging Area Manager,>=1 person
+Wildfire safety,Communications Officer,>=1 person
