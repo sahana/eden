@@ -1,6 +1,6 @@
 Template Title,Identifier,Event Type,Note,Incidents
-Flash Flood Advisory,urn:oid:2.49.0.0.64.1.20210823.001,Flash Flood,CAP v1.2 alert authored by NCHM for potential flash flood landslides and riverine floods,"Flash Floods,Landslide"
-Disease Outbreak,urn:oid:2.49.0.0.64.4.1.20210823.003,Epidemic,CAP v1.2 alert authored by DoPH for epidemiological notifications,"Civil Emergency,Disease,School Closure"
-GLOF warning,urn:oid:2.49.0.0.64.2.20210823.005,Glacier Lake Outburst Flood,CAP v1.2 alert authored by NCHM for any GLOF,"Flash Floods,Flood,Landslide"
-Wildfire Warning,urn:oid:2.49.0.0.64.1.20210823.007,Wildfire,CAP v1.2 alert authored by DoFPS for warning the public of a wildfire,"Fire,Displaced Populations,Hazaedous Road Conditions,Heat Wave,People Trapped,Smoke"
-Thorthormi Tsho GLOF warning,urn:oid:2.49.0.0.64.2.20210823.009,Glacier Lake Outburst Flood,CAP v1.2 alert authored by NCHM specificall for the Thorthormi Tsho GLOF,"Flash Floods,Flood,Landslide"
+Flash Flood Advisory,urn:oid:2.49.0.0.64.1.20210823.001,Flash Flood,CAP v1.2 alert authored by NCHM for potential flash flood landslides and riverine floods,"flood.flashFlood,geophysical.landslide"
+Disease Outbreak,urn:oid:2.49.0.0.64.4.1.20210823.003,Epidemic,CAP v1.2 alert authored by DoPH for epidemiological notifications,"civil.emergency,health.disease,publicService.schoolClosure"
+GLOF warning,urn:oid:2.49.0.0.64.2.20210823.005,Glacier Lake Outburst Flood,CAP v1.2 alert authored by NCHM for any GLOF,"flood.flashFlood,flood,geophysical.landslide"
+Wildfire Warning,urn:oid:2.49.0.0.64.1.20210823.007,Wildfire,CAP v1.2 alert authored by DoFPS for warning the public of a wildfire,"fire,civil.displacedPopulations,roadway.hazardousRoadConditions,temperature.heatWave,other.peopleTrapped,fire.smoke"
+Thorthormi Tsho GLOF warning,urn:oid:2.49.0.0.64.2.20210823.009,Glacier Lake Outburst Flood,CAP v1.2 alert authored by NCHM specifically for the Thorthormi Tsho GLOF,"flood.flashFlood,flood,geophysical.landslide"

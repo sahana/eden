@@ -2,12 +2,8 @@
 
 """ Missing Person Registry """
 
-module = request.controller
-prefix = request.controller
-resourcename = request.function
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % prefix)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 action = lambda l, u: dict(label=str(l), url=str(u), _class="action-btn")
 
@@ -15,7 +11,7 @@ action = lambda l, u: dict(label=str(l), url=str(u), _class="action-btn")
 def index():
     """ Module's Home Page """
 
-    return s3db.cms_index(module, alt_function="index_alt")
+    return s3db.cms_index(c, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -24,7 +20,7 @@ def index_alt():
     """
 
     # Just redirect to the list of Missing Persons
-    s3_redirect_default(URL(f="person"))
+    s3_redirect_default(URL(f = "person"))
 
 # -----------------------------------------------------------------------------
 def person():
@@ -50,7 +46,7 @@ def person():
                  "last_name",
                  "gender",
                  "age_group",
-                 (T("Status"), "missing"),
+                 (T("Status"), "person_details.missing"),
                  ]
 
     # Filter widgets
@@ -59,10 +55,10 @@ def person():
                                     "middle_name",
                                     "last_name",
                                     ],
-                                    label=T("Search"),
-                                    comment=T("You can search by first, middle or last name, and use * as wildcard."),
+                                    label = T("Search"),
+                                    comment = T("You can search by first, middle or last name, and use * as wildcard."),
                                     ),
-                      S3OptionsFilter("missing",
+                      S3OptionsFilter("person_details.missing",
                                       label = T("Status"),
                                       options = {True: T("Missing"),
                                                  False: T("Found"),
@@ -78,8 +74,8 @@ def person():
                    list_fields = list_fields,
                    # Redirect to missing report entry
                    create_next = URL(c="mpr", f="person",
-                                     args=["[id]", "note", "create"],
-                                     vars={"status": "missing"},
+                                     args = ["[id]", "note", "create"],
+                                     vars = {"status": "missing"},
                                      ),
                    )
 

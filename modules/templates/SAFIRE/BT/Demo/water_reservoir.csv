@@ -1,664 +1,664 @@
-Name,Country,L1,L2,L3,L4,Lat,Lon
-"Heso-tshamchu",BT,"Wangduephodrang","Gase Tshowogm","Haetshokha","Haetshokha",,
-"Melphey RWSS",BT,"Trashigang","Bartsham","Moogtangkhar","Mugtangkhar","27.3333","91.7333"
-"Chui ka",BT,"Punakha","Bapisa","Tshokorna","Wangkha",,
-"Loggchina Chhu",BT,"Chhukha","Logchina","Mongna_Lha-sarp","Chimonatoed","27.0","89.55"
-"Tergang Chuu RWSS",BT,"Lhuentse","Jaray","Ladrong","Ladrong",,
-"Lumpa chu",BT,"Punakha","Goenshari","Seychagnang","Kapataksa",,
-"Khomshar Wama Water Source",BT,"Zhemgang","Bardo","Khomshar","Towling","27.0843","90.8503"
-"Khonmari",BT,"Pemagatshel","Shumer","Goengpong Shali","Shali",,
-"Kanglung",BT,"Trashigang","Kanglung","Mertsham-Thragom","Mertsham","27.3333","91.7333"
-"wedff",BT,"Thimphu","Soe",,,,
-"Dhamdum Water source",BT,"Samtse",,"Samtse Thromdey","Samtse","27.0333","89.0833"
-"Dari Water Irrigation",BT,"Tsirang","Sergithang","Semdenjong",,,
-"Rama Water supply",BT,"Thimphu","Chang","Ramtoktok_Tsangrina","Rama",,
-"reka",BT,"Samdrupjongkhar","Dewathang","Bangtsho","Kopor","26.9167","91.6167"
-"Nashphel water source",BT,"Bumthang","Chhoekhor","Nangsipe-Zangling-Zhabjethang","Nasphel","27.7","90.7833"
-"lingzhi",BT,"Thimphu","Lingzhi","Gangyuel","Gangyuel",,
-"Shetekhari",BT,"Sarpang","Gelephu","Pelrithang Khatoed","Pelrithang(Lodrai)",,
-"Bali",BT,"Haa","Kartshog","Bali_Mombitshokha","Bali",,
-"lingzhi",BT,"Thimphu","Soe","Jangothang","Garabten",,
-"Sangbaykha",BT,"Haa",,,,,
-"tika ram",BT,"Sarpang","Taraythang","Woongchhilu","Woongchhilu(Limbutar)",,
-"Ney RWSS",BT,"Lhuentse","Gangzur","Ney","Pemachhoeling",,
-"Zangkhar RWSS",BT,"Lhuentse","Jaray","Yabi_Zangkhar","Zangkhar",,
-"Highland Water supply",BT,"Lhuentse","Khoma","Rolmoteng _Tsang-Ngo","Rolmoteng",,
-"Tergang Chuu RWSS",BT,"Lhuentse","Kurtoe","Chagdzom_Chhusa","Chagdzom",,
-"Municipal Water supply",BT,"Lhuentse","Dzongkhag Thromde","Phaling Maed","Phaling Maed",,
-"Ney RWSS",BT,"Lhuentse","Gangzur","Ney","Ney",,
-"Doompang RWSS",BT,"Lhuentse","Jaray","Yumchhe","Droompang",,
-"Singye Dzong Water supply",BT,"Lhuentse","Khoma","Rolmoteng _Tsang-Ngo","Sengye Dzong",,
-"Sumdang yoe",BT,"Pemagatshel","Yurung","Khangma",,,
-"Nai po re",BT,"Pemagatshel","Yurung","Wanglakho Thongo","Thongo",,
-"Tag tag pai ri",BT,"Pemagatshel","Yurung","Bangdala",,,
-"BHU Water source",BT,"Pemagatshel","Yurung","Khominang Yangkhar","Khominang",,
-"School water source",BT,"Pemagatshel","Yurung","Khominang Yangkhar",,,
-"Thungo jug",BT,"Pemagatshel","Yurung","Doongsingma Thongkhar",,,
-"Shogori",BT,"Pemagatshel","Chokhorling","Dezama_Shoguri","Shogori",,
-"Tsunlung Grangnang",BT,"Pemagatshel","Chokhorling","Dezama_Shoguri",,,
-"Menchu dop",BT,"Pemagatshel","Chokhorling","Chhoekhorling _Gazawong",,,
-"Dongdongma",BT,"Pemagatshel","Chokhorling","Chhoekhorling _Gazawong",,,
-"Yargyewoong",BT,"Pemagatshel","Chokhorling","Yargyewoong",,,
-"Yongbari",BT,"Pemagatshel","Dechhenling","Doongchhilo_ Kholomri","Doongchhilo",,
-"Tsampari",BT,"Pemagatshel","Dechhenling","Dechhenling_Goenpawoong",,,
-"Sangmari",BT,"Pemagatshel","Dechhenling","Namdagling",,,
-"Garamala Khola",BT,"Dagana","Gesarling","Tashithang","Tashithang",,
-"Bjukipani",BT,"Dagana","Gesarling","Tashithang","Tashithang",,
-"Bich Khola",BT,"Dagana","Gesarling","Tashithang","Tashithang",,
-"Bich Pani",BT,"Dagana","Gesarling","Tashithang","Tashithang",,
-"Devikholtsa",BT,"Dagana","Gesarling","Phuensumgang","Phuensumgang",,
-"Karmichok",BT,"Dagana","Gesarling","Phuensumgang","Phuensumgang",,
-"Mobir Khola",BT,"Dagana","Gesarling","Phuensumgang","Phuensumgang",,
-"Samchhu",BT,"Dagana","Gesarling","Samtengang","Samtengang",,
-"PakshingChhu",BT,"Dagana","Gesarling","Gesarling","Gesarling",,
-"Amphikhola",BT,"Dagana","Tashiding","Tashiding","Middle Tashiding",,
-"Devitar",BT,"Dagana","Lhamoizingkha","Tshamzhigosa","Devitar",,
-"Papji",BT,"Dagana","Lhamoizingkha","Tshamzhigosa","Papji",,
-"Chechugoenpa lami lake",BT,"Dagana","Tseza","Tashigang","Rapteygoenpa",,
-"Kutishinggitsawa",BT,"Dagana","Tseza","Tashigang","Tashigang",,
-"Ekumelong Tsho",BT,"Dagana","Drugyelgang","Pangna-patala","Nikumelong",,
-"Thochulungma",BT,"Dagana","Drugyelgang","Pangna-patala","Patala",,
-"Wangchu lungma",BT,"Dagana","Drugyelgang","Pangna-patala","Patala",,
-"Akchulum",BT,"Dagana","Drugyelgang","Pangserpo","Krongtod",,
-"Tardalum",BT,"Dagana","Drugyelgang","Pangserpo","Krongmad",,
-"Pepchulum",BT,"Dagana","Drugyelgang","Ambithang-Pangserpo","Karithang",,
-"Drakarpo",BT,"Dagana","Drugyelgang","Ambithang-Pangserpo","Sampalinang",,
-"Chulumchhu",BT,"Dagana","Drugyelgang","Ambithang-Pangserpo","Ambithang",,
-"Sakarchen",BT,"Dagana","Drugyelgang","Thangna","Sakachen",,
-"Tsendeshinglumchu",BT,"Dagana","Drugyelgang","Thangna","Sakachen",,
-"Thriduganglumchu",BT,"Dagana","Drugyelgang","Thangna","Sakachen",,
-"Pakechu-1",BT,"Dagana","Drugyelgang","Thangna","Sherpakrong",,
-"Pakechu-2",BT,"Dagana","Drugyelgang","Thangna","Tingsibje",,
-"Emanang",BT,"Dagana","Drugyelgang","Thangna","Sherpakrong",,
-"Amchukukuli lumchu",BT,"Dagana","Drugyelgang","Thangna","Sherpakrong",,
-"Sangaymolumchu",BT,"Dagana","Drugyelgang","Thangna",,,
-"Thinleylumchu",BT,"Dagana","Drugyelgang","Thangna","Sertochen",,
-"Omanalumchu",BT,"Dagana","Drugyelgang","Thangna","Umadangsa",,
-"Tsherkachulumchu",BT,"Dagana","Drugyelgang","Thangna","Sertochen",,
-"Tingsibjechu",BT,"Dagana","Drugyelgang","Thangna","Tingsibje",,
-"Umadangsachu",BT,"Dagana","Drugyelgang","Thangna","Umadangsa",,
-"chimilumchu",BT,"Dagana","Drugyelgang","Thangna","Sherpakrong",,
-"Pangchokpalilumchu",BT,"Dagana","Drugyelgang","Budipang-pangna","Pangna",,
-"Bumchisingdilungma",BT,"Dagana","Drugyelgang","Budipang-pangna","Pangna",,
-"Pongpalungma",BT,"Dagana","Drugyelgang","Budipang-pangna","Pangna",,
-"Lamphoda",BT,"Dagana","Drugyelgang","Budipang-pangna","Budipang",,
-"Sangkiri",BT,"Haa","Uesu","Pajekha_Sangkiri","Sangkiri",,
-"Pajayka",BT,"Haa","Uesu","Pajekha_Sangkiri","Pajekha",,
-"Kana",BT,"Haa","Uesu","Geyruna_Karnag","Karnag",,
-"Tshaphel",BT,"Haa","Uesu","Tshaphel_Tsiloongkha","Tshaphel",,
-"Tselungkha",BT,"Haa","Uesu","Tshaphel_Tsiloongkha","Tsiloongkha",,
-"Baytsa",BT,"Haa","Uesu","Betso_Doomchhog","Betso",,
-"Domchu",BT,"Haa","Uesu","Betso_Doomchhog","Doomchhog",,
-"Drangoen Takchu",BT,"Haa","Uesu","Kipri_Tagchhu",,,
-"Bangyena",BT,"Haa","Uesu","Kipri_Tagchhu","Baang_Yana",,
-"Pepchhuna",BT,"Haa",,,,,
-"Jagolungna",BT,"Haa",,,,,
-"Jogolungna",BT,"Haa",,,,,
-"Sombay Ama 1",BT,"Haa",,,,,
-"Sangbay Ama 2",BT,"Haa",,,,,
-"Henchhu",BT,"Haa",,,,,
-"Gaytalum",BT,"Haa",,,,,
-"Gaytalum 2",BT,"Haa",,,,,
-"Choechengkha",BT,"Haa",,,,,
-"Choechenkha 2",BT,"Haa",,,,,
-"kabarmo chu (1.33 lps)",BT,"Wangduephodrang","Bjena","Bjenagloongpa_Thingmakha","Balakha",,
-"nyena (.66 lps )",BT,"Wangduephodrang","Bjena","Bjenagloongpa_Thingmakha","Thingmakha",,
-"woogchu zakha",BT,"Wangduephodrang","Bjena","Tashi Tokha","Tashi Tokha",,
-"Dajaygang chu",BT,"Wangduephodrang","Bjena","Tashi Tokha","Darjegang",,
-"Upper Chaskhar",BT,"Sarpang","Chhuzagang","Chaskhar","Chaskhar/Dawathang",,
-"Therwar",BT,"Sarpang","Chhuzagang","Chaskhar","Chaskhar",,
-"chaskar",BT,"Sarpang","Chhuzagang","Chaskhar","Chaskhar",,
-"Pangzur",BT,"Sarpang","Chhuzagang","Pangzor","Pangzor",,
-"Dawathang",BT,"Sarpang","Chhuzagang","Barthang","Barthang(Daragoan)",,
-"Yueling",BT,"Sarpang","Chhuzagang","Thongjabi-Yueling","Yueling",,
-"Yueling",BT,"Sarpang","Chhuzagang","Thongjabi-Yueling","Thongjabi",,
-"Thonjabe",BT,"Sarpang","Chhuzagang","Thongjabi-Yueling","Thongjabi",,
-"Karbethang",BT,"Sarpang","Chhuzagang","Pangzor","Pangzor Kalikhola",,
-"Shawapang",BT,"Sarpang","Chhuzagang","Nimaling-Shawapong","Shawapong",,
-"Barthang",BT,"Sarpang","Chhuzagang","Barthang","Barthang",,
-"Bji shing Lumpa",BT,"Haa","Bji","Yangthang","Jangtoed",,
-"Yatsho Lumpa",BT,"Haa","Bji","Yangthang","Jangtoed",,
-"Aje Phu",BT,"Haa","Bji","Choompa_Jamgoen","Jamgoen",,
-"Pha ju",BT,"Haa","Bji","Yangthang","Yangoen",,
-"Yangphu",BT,"Haa","Bji","Tsenka_Taloong","Tsenka",,
-"Tshen Zhusa",BT,"Haa","Bji","Tsenka_Taloong","Tsenka",,
-"Tshomitsha",BT,"Haa","Bji","Tsenka_Taloong","Tsenka",,
-"Tshomitsho",BT,"Haa","Bji","Tsenka_Taloong","Tsenka",,
-"Rado",BT,"Haa","Bji","Tsenka_Taloong","Chhubarna",,
-"Om chu",BT,"Haa","Bji","Tsenka_Taloong","Dangsana",,
-"Gong Tshey tsha",BT,"Haa","Bji","Gensa_Tokey","Gensa",,
-"Chana Phu",BT,"Haa","Bji","Gensa_Tokey","Tokey Gom",,
-"Peta sima phu",BT,"Haa","Bji","Choompa_Jamgoen","Choompa",,
-"Yetshe phu",BT,"Haa","Bji","Choompa_Jamgoen","Jamgoen",,
-"Coma lakha",BT,"Haa","Bji","Choompa_Jamgoen","Yetsephu",,
-"Komla",BT,"Haa","Bji","Chenpa_Geychukha","Chenpa",,
-"Menchu lumpa",BT,"Haa","Bji","Chenpa_Geychukha","Geychhukha",,
-"Menchu lumpa",BT,"Haa","Bji","Chenpa_Geychukha","Machena",,
-"Damthang",BT,"Haa","Bji","Chenpa_Geychukha","Damthang",,
-"Lishurama",BT,"Haa","Kartshog","Dragding_Karjena","Gangkha",,
-"Naktshang",BT,"Haa","Kartshog","Dragding_Karjena","Nagtshang",,
-"Tshome kha",BT,"Haa","Kartshog","Dragding_Karjena","Namchhu",,
-"Haasakha",BT,"Haa","Kartshog","Dragding_Karjena","Karjena",,
-"Benpurama",BT,"Haa","Kartshog","Ingo_Pharikha","In-go",,
-"Kamsha",BT,"Haa","Kartshog","Bali_Mombitshokha","Bali",,
-"Katsho Damtha",BT,"Haa","Kartshog","Bali_Mombitshokha","Mombitshokha",,
-"Saakha kha",BT,"Haa","Kartshog","Kargoen_Hatam","Hatam",,
-"Gumbutsa",BT,"Haa","Kartshog","Wangtsa",,,
-"Dokha",BT,"Haa","Sama","Dorikha_Langjogang","Dorikha",,
-"Saish Chang",BT,"Haa","Sama","Balamnang","Balamnang",,
-"Dotenkha",BT,"Haa","Sama","Balamnang","Balamnang",,
-"Dadotshawa",BT,"Haa","Sama","Dorikha_Langjogang",,,
-"Atshalakha",BT,"Haa","Sama","Dorikha_Langjogang",,,
-"Bachona",BT,"Haa","Sama","Dorikha_Langjogang",,,
-"Norbugang",BT,"Haa","Sama","Langpa_Norbugang",,,
-"Puduna",BT,"Haa","Sama","Pudunang","Pudunang",,
-"Thangkha",BT,"Haa","Sama","Pudunang",,,
-"Tsheshing Kha",BT,"Haa","Sama",,,,
-"Upper Jyenkhana",BT,"Haa","Sama","Pudunang","Jenkanang",,
-"Lower Jyenkhana",BT,"Haa","Sama","Pudunang","Jenkanang",,
-"Jyenkhana",BT,"Haa","Sama","Pudunang","Jenkanang",,
-"Yatha Longchu",BT,"Haa","Sama","Shar-ri",,,
-"Yatha Longchu Sham",BT,"Haa","Sama","Shar-ri",,,
-"Damphuna",BT,"Haa","Sama","Shar-ri",,,
-"Chuggumna",BT,"Haa","Sama","Shar-ri",,,
-"Dolena",BT,"Haa","Sama","Shar-ri",,,
-"Shenga Rongchu",BT,"Punakha","Shengabjimi",,,,
-"Tana Menchu",BT,"Punakha","Dzomi","Tana Eusa",,,
-"Phendey Yurwa",BT,"Punakha","Toepisa",,,,
-"Hoka Tsho",BT,"Punakha","Kabjisa","Choetenningpo-Yusakha",,,
-"Nandalal Kulo",BT,"Tsirang","Barzhong",,,,
-"Mishera Kulo",BT,"Tsirang","Barzhong","Barshong Toed",,,
-"Luitel Kulo",BT,"Tsirang","Barzhong","Barshong Toed",,,
-"Puspalal Powdel Kulo",BT,"Tsirang","Barzhong","Barshong Toed",,,
-"Shangrula Kulo",BT,"Tsirang","Barzhong","Barshong Toed",,,
-"Dhan Bdr Kharka Kulo",BT,"Tsirang","Barzhong","Barshong Toed",,,
-"Karma Drubchu Kulo",BT,"Tsirang","Barzhong",,,,
-"Lal Bdr Bhujel Kulo",BT,"Tsirang","Barzhong",,,,
-"Damchu Kulo",BT,"Tsirang","Barzhong","Barshong Toed",,,
-"Dago Dema",BT,"Tsirang","Barzhong","Barshong Toed",,,
-"Nim Dorji Tamang",BT,"Tsirang","Barzhong","Barshong Toed",,,
-"lal Bdr Tamang",BT,"Tsirang","Barzhong","Choonyikhang",,,
-"Waiba Kulo",BT,"Tsirang","Barzhong","Choonyikhang",,,
-"Goirey Kulo",BT,"Tsirang","Barzhong","Choonyikhang",,,
-"Buro Kulo",BT,"Tsirang","Barzhong","Choonyikhang",,,
-"Tamang Kulo",BT,"Tsirang","Barzhong","Choonyikhang",,,
-"Bara Durey Kulo",BT,"Tsirang","Barzhong","Choonyikhang",,,
-"Garekhola Kulo",BT,"Tsirang","Barzhong","Choonyikhang",,,
-"Balwani",BT,"Tsirang","Barzhong","Toedsang",,,
-"Peta Koti Dara",BT,"Tsirang","Barzhong","Toedsang",,,
-"Devitheny kulo",BT,"Tsirang","Barzhong","Toedsang",,,
-"Sangpang Kulo",BT,"Tsirang","Barzhong","Toedsang",,,
-"Layo Kulo",BT,"Tsirang","Barzhong","Toedsang",,,
-"Sierkiy Khola Kulo",BT,"Tsirang","Barzhong","Gangtogkha",,,
-"Gairkholsa Kulo",BT,"Tsirang","Barzhong","Barshong Maed",,,
-"Gari Kholsa",BT,"Tsirang","Barzhong","Barshong Maed",,,
-"Ganggatry Kulo",BT,"Tsirang","Barzhong","Barshong Maed",,,
-"Salarey Kulo",BT,"Tsirang","Barzhong","Barshong Maed",,,
-"Timsina Kulo",BT,"Tsirang","Barzhong","Toedsang",,,
-"Gotamey Kulo",BT,"Tsirang","Barzhong","Barshong Maed",,,
-"Chuwa Kharkhay",BT,"Tsirang","Rangthangling","Charingma_Rangth- angling",,,
-"Jaganath Kulo",BT,"Tsirang","Rangthangling","Charingma_Rangth- angling",,,
-"Dhakal Kulo",BT,"Tsirang","Rangthangling","Charingma_Rangth- angling",,,
-"Kamikulo",BT,"Tsirang","Rangthangling","Charingma_Rangth- angling",,,
-"Theba Kulo",BT,"Tsirang","Rangthangling","Charingma_Rangth- angling",,,
-"Lampatey Kulo",BT,"Tsirang","Rangthangling","Charingma_Rangth- angling",,,
-"Zulphey Khulo",BT,"Tsirang","Rangthangling","Charingma_Rangth- angling","Charingma (Zulphay- gaon)",,
-"Sumba Kulo",BT,"Tsirang","Rangthangling","Charingma_Rangth- angling",,,
-"Yedhar Kulo",BT,"Tsirang","Rangthangling","Charingma_Rangth- angling",,,
-"Ratey Khulo",BT,"Tsirang","Rangthangling","Charingma_Rangth- angling","Rangthangling",,
-"Nimazor A",BT,"Tsirang","Rangthangling","Charingma_Rangth- angling","Rangthangling",,
-"NImazor B",BT,"Tsirang","Rangthangling","Gagaling_Nyimazor","Nyimazor(Herabotay)",,
-"Chapratsi",BT,"Tsirang","Rangthangling","Charingma_Rangth- angling","Rangthangling",,
-"Devithan",BT,"Tsirang","Rangthangling","Charingma_Rangth- angling","Rangthangling",,
-"Bondukey",BT,"Tsirang","Rangthangling","Charingma_Rangth- angling","Rangthangling",,
-"Bakshing Kulo",BT,"Tsirang","Rangthangling","Charingma_Rangth- angling","Rangthangling",,
-"Alainchi Kulo",BT,"Tsirang","Rangthangling","Charingma_Rangth- angling","Rangthangling",,
-"Mongar Kulo",BT,"Tsirang","Rangthangling","Soonkosh",,,
-"Mosanay Kulo",BT,"Tsirang","Rangthangling","Soonkosh","Soonkosh",,
-"Basee Kulo",BT,"Tsirang","Rangthangling","Soonkosh","Soonkosh",,
-"Khopi",BT,"Tsirang","Rangthangling","Soonkosh","Dawthongsa(Saunay)",,
-"Lararchu kullo",BT,"Tsirang","Sergithang","Tashithang","Tashithang(Patale Tar)",,
-"Moktan Kulo",BT,"Tsirang","Tsholingkhor","Kapazhing","Kapazhing",,
-"Mewa Kulo",BT,"Tsirang","Tsholingkhor","Kapazhing","Kapazhing",,
-"Poowalay Kulo",BT,"Tsirang","Tsholingkhor","Kapazhing","Tsholingkhar (Kapazh- ing)",,
-"Thutey Kulo",BT,"Tsirang","Tsholingkhor","Kapazhing","Tsholingkhar (Kapazh- ing)",,
-"Spring Kulo",BT,"Tsirang","Tsholingkhor","Kapazhing","Tsholingkhar (Kapazh- ing)",,
-"Baskota Kulo",BT,"Tsirang","Tsholingkhor","Kapazhing","Kapazhing",,
-"Kali Kholay Kulo",BT,"Tsirang","Tsholingkhor","Kapazhing","Tsholingkhar (Kapazh- ing)",,
-"Laxman Kulo",BT,"Tsirang","Tsholingkhor","Kapazhing","Tsholingkhar (Kapazh- ing)",,
-"Mongar Kulo",BT,"Tsirang","Tsholingkhor","Kapazhing","Tsholingkhar (Kapazh- ing)",,
-"Khorpeney Kulo",BT,"Tsirang","Tsholingkhor","Tsholingkhar Toed","Tsholingkhar Toed(Upper Tshokana)",,
-"Thrutey Kulo",BT,"Tsirang","Tsholingkhor","Tsholingkhar Toed","Tsholingkhar Toed(Upper Tshokana)",,
-"Dukpa",BT,"Tsirang","Tsholingkhor","Gomsoom","Gomsoom(Tintalay)",,
-"Panday",BT,"Tsirang","Tsholingkhor","Gomsoom","Gomsoom(Tintalay)",,
-"Sama Kulo",BT,"Tsirang","Tsholingkhor","Gomsoom","Gomsoom(Tintalay)",,
-"DC Kulo",BT,"Tsirang","Tsholingkhor","Gomsoom","Gomsoom(Tintalay)",,
-"Naya Mandal",BT,"Tsirang","Tsholingkhor","Tsholingkhar Maed","Tsholingkhar Maed(Lower Tshokana)",,
-"Puranu Mandal",BT,"Tsirang","Tsholingkhor","Tsholingkhar Maed","Tsholingkhar Maed(Lower Tshokana)",,
-"Thrutey Kulo",BT,"Tsirang","Tsholingkhor","Tsholingkhar Maed","Tsholingkhar Maed(Lower Tshokana)",,
-"Duupe",BT,"Tsirang","Tsholingkhor","Tsholingkhar Maed","Tsholingkhar Maed(Lower Tshokana)",,
-"Thrutey (Budhey)",BT,"Tsirang","Tsholingkhor","Tsholingkhar Maed","Tsholingkhar Maed(Lower Tshokana)",,
-"Thrulo(Koiraka) Kulo",BT,"Tsirang","Tsholingkhor","Tsholingkhar Maed","Tsholingkhar Maed(Lower Tshokana)",,
-"Neya Kulo",BT,"Tsirang","Tsholingkhor","Tsholingkhar Maed","Tsholingkhar Maed(Lower Tshokana)",,
-"Phetay Kulo",BT,"Tsirang","Tsholingkhor","Tsholingkhar Maed","Tsholingkhar Maed(Lower Tshokana)",,
-"Thing Kulo",BT,"Tsirang","Tsholingkhor","Droobchhugang","Droobchhugang (Harpaypani)",,
-"Timshina",BT,"Tsirang","Tsholingkhor","Droobchhugang","Alenchi(Alaichey)",,
-"Neopaney Kulo",BT,"Tsirang","Tsholingkhor","Droobchhugang","Droobchhugang (Harpaypani)",,
-"Barakoti Kulo",BT,"Tsirang","Tsholingkhor","Droobchhugang","Droobchhugang (Harpaypani)",,
-"Thrutey Kulo",BT,"Tsirang","Tsholingkhor","Droobchhugang","Droobchhugang (Harpaypani)",,
-"Ghishing",BT,"Tsirang","Tsholingkhor","Droobchhugang","Alenchi(Alaichey)",,
-"Bhupal Kulo",BT,"Tsirang","Tsholingkhor","Droobchhugang","Droobchhugang (Harpaypani)",,
-"Uttaray Kulo",BT,"Tsirang","Patakla","Patshaling Toed","Bakshing",,
-"Jowbari Kulo",BT,"Tsirang","Patakla","Patshaling Maed_ Tsakaling","Patshaling Maed",,
-"Melay Kulo",BT,"Tsirang","Patakla","Patshaling Toed","Patshaling Toed",,
-"Betini Kulo",BT,"Tsirang","Patakla","Patshaling Maed_ Tsakaling","Patshaling Maed",,
-"Mondal Kulo",BT,"Tsirang","Patakla","Pangthang","Pangthang(Pakhay)",,
-"Sachey Kulo",BT,"Tsirang","Patakla","Pangthang","Pangthang(Pakhay)",,
-"Gantey Kulo",BT,"Tsirang","Patakla","Pangthang","Pangthang(Pakhay)",,
-"Dhimal Kulo",BT,"Tsirang","Patakla","Pangthang","Pangthang(Pakhay)",,
-"Rigney Kulo",BT,"Tsirang","Patakla","Pangthang","Pangthang(Pakhay)",,
-"Kuwapani Kulo",BT,"Tsirang","Patakla","Pangthang","Pangthang(Pakhay)",,
-"Jukay Pani Kulo",BT,"Tsirang","Patakla","Pangthang","Pangthang(Pakhay)",,
-"Thulo Kholcha Kulo",BT,"Tsirang","Patakla","Pangthang","Pangthang(Pakhay)",,
-"laya kulo",BT,"Tsirang","Kikorthang","Sa-Tsangma","Sa-Tsangma(Majuwa)",,
-"Jogi Kulo",BT,"Tsirang","Kikorthang","Nyizergang","Nyizergang(Upper Salami)",,
-"Pairo Kulo",BT,"Tsirang","Kikorthang","Nyizergang","Nyizergang(Upper Salami)",,
-"Rai Kulo",BT,"Tsirang","Kikorthang",,,,
-"Ramphu Kulo",BT,"Tsirang","Kikorthang","Nyizergang","Nyizergang(Upper Salami)",,
-"Thapa Kulo",BT,"Tsirang","Kikorthang","Nyizergang","Nyizergang(Upper Salami)",,
-"Balu and Suberi Kulo",BT,"Tsirang","Kikorthang","Tashiyangjong","Tashiyangjong(Lower Salami)",,
-"Mahat Kulo",BT,"Tsirang","Kikorthang","Tashiyangjong","Tashiyangjong(Lower Salami)",,
-"Naya Kulo",BT,"Tsirang","Kikorthang","Tashiyangjong","Tashiyangjong(Lower Salami)",,
-"Darlami Kulo",BT,"Tsirang","Kikorthang","Tashiyangjong",,,
-"Dhal Kulo",BT,"Tsirang","Kikorthang","Tashiyangjong","Tashiyangjong(Lower Salami)",,
-"Thutay Kulo",BT,"Tsirang","Kikorthang","Tashiyangjong","Tashiyangjong(Lower Salami)",,
-"Koirala Kulo",BT,"Tsirang","Kikorthang","Tashiyangjong","Tashiyangjong(Lower Salami)",,
-"Gurasey Kulo",BT,"Tsirang","Kikorthang","Tashiyangjong","Tashiyangjong(Lower Salami)",,
-"Mongar Kulo",BT,"Tsirang","Kikorthang","Maenchhana","Maenchhana(Mithun)",,
-"Maj Kulo",BT,"Tsirang","Kikorthang","Maenchhana","Maenchhana(Mithun)",,
-"Kheti Kulo",BT,"Tsirang","Kikorthang","Maenchhana",,,
-"Haldar kulo",BT,"Tsirang","Kikorthang","Dekiling",,,
-"Jarki Kulo",BT,"Tsirang","Kikorthang","Dekiling","Doongkarchhoeling",,
-"Thulu Kulo",BT,"Tsirang","Kikorthang","Dekiling","Dekiling(Lower Bockray)",,
-"Mondal Kulo",BT,"Tsirang","Kikorthang","Dekiling","Dekiling(Lower Bockray)",,
-"Bir Kulo",BT,"Tsirang","Kikorthang","Dekiling","Dekiling(Lower Bockray)",,
-"Tamang Kulo",BT,"Tsirang","Kikorthang","Dekiling","Doongkarchhoeling",,
-"Alley Kulo",BT,"Tsirang","Kikorthang","Dekiling","Dekiling(Lower Bockray)",,
-"Phul Bari Kulo",BT,"Tsirang","Kikorthang","Dekiling","Dekiling(Lower Bockray)",,
-"Adhikari Kulo",BT,"Tsirang","Kikorthang","Dekiling","Dekiling(Lower Bockray)",,
-"Bhich Kulo",BT,"Tsirang","Kikorthang","Dekiling","Dekiling(Lower Bockray)",,
-"Ghimeray Kulo B",BT,"Tsirang","Kikorthang","Dekiling","Doongkarchhoeling",,
-"Ghimerey Kulo A",BT,"Tsirang","Kikorthang","Dekiling","Dekiling(Lower Bockray)",,
-"Jeroo Kulo",BT,"Tsirang","Kikorthang","Dekiling","Dekiling(Lower Bockray)",,
-"Jukey Dara",BT,"Tsirang","Pungtenchu","Tashichhoeling","Tashichholing(Burichu)",,
-"Upreti",BT,"Tsirang","Pungtenchu","Tashichhoeling",,,
-"narsinggay",BT,"Tsirang","Pungtenchu","Tashichhoeling","Tashichholing(Burichu)",,
-"Dalay",BT,"Tsirang","Pungtenchu","Tashichhoeling","Tashichholing(Burichu)",,
-"Lhachuma/Mondule",BT,"Tsirang","Pungtenchu","Tashichhoeling","Tashichholing(Burichu)",,
-"Pawkhola",BT,"Tsirang","Pungtenchu","Tashichhoeling","Tashichholing(Burichu)",,
-"Thrutey",BT,"Tsirang","Pungtenchu","Tashichhoeling","Tashichholing(Burichu)",,
-"Thinley Kulu",BT,"Tsirang","Pungtenchu","Tashichhoeling","Tashichholing(Burichu)",,
-"Bararey Kulu",BT,"Tsirang","Pungtenchu","Tashichhoeling","Tashichholing(Burichu)",,
-"Dhaley Kulo",BT,"Tsirang","Pungtenchu","Tashichhoeling","Tashichholing(Burichu)",,
-"Matsaley Kulu",BT,"Tsirang","Pungtenchu","Tashichhoeling","Tashichholing(Burichu)",,
-"Rinzin kulu",BT,"Tsirang","Pungtenchu","Tashichhoeling","Tashichholing(Burichu)",,
-"Gimerey",BT,"Tsirang","Pungtenchu","Norbuthang","Drongtoed(Saureni)",,
-"mundol",BT,"Tsirang","Pungtenchu","Norbuthang","Drongtoed(Saureni)",,
-"Thutey",BT,"Tsirang","Pungtenchu","Norbuthang","Norboothang(Manitar)",,
-"Koiraley Kulo",BT,"Tsirang","Pungtenchu","Norbuthang","Norboothang(Manitar)",,
-"Devithaney/Bich Kulu",BT,"Tsirang","Pungtenchu","Norbuthang","Norboothang(Manitar)",,
-"Hatey Dungay/Kulu Upper/Kami",BT,"Tsirang","Pungtenchu","Norbuthang","Norboothang(Manitar)",,
-"Cheney",BT,"Tsirang","Pungtenchu","Norbuthang","Drongtoed(Saureni)",,
-"Kumtey Kulu",BT,"Tsirang","Pungtenchu","Norbuthang","Drongtoed(Saureni)",,
-"Hatey Dungay Kulu Lower",BT,"Tsirang","Pungtenchu","Norbuthang","Drongtoed(Saureni)",,
-"Kaijal Botey",BT,"Tsirang","Pungtenchu","Norbuthang","Norboothang(Manitar)",,
-"Lhmu Dhuwali",BT,"Tsirang","Pungtenchu","Norbuthang","Drongtoed(Saureni)",,
-"Bhoj Puray Kulu",BT,"Tsirang","Pungtenchu","Norbuthang","Drongtoed(Saureni)",,
-"Bagirath kulu",BT,"Tsirang","Pungtenchu","Norbuthang","Norboothang(Manitar)",,
-"Goilay Botay Kulu",BT,"Tsirang","Pungtenchu","Norbuthang","Norboothang(Manitar)",,
-"Damai",BT,"Tsirang","Pungtenchu","Peljorling","Peljorling(Dhansiri)",,
-"Dhar Kharey",BT,"Tsirang","Pungtenchu","Peljorling","Chhubabsa(Tshangay)",,
-"Mundol",BT,"Tsirang","Pungtenchu","Peljorling","Peljorling(Dhansiri)",,
-"Chaleyshay",BT,"Tsirang","Pungtenchu","Peljorling","Peljorling(Dhansiri)",,
-"Chubabsa",BT,"Tsirang","Pungtenchu","Peljorling","Chhubabsa(Tshangay)",,
-"Golaytar",BT,"Tsirang","Pungtenchu","Peljorling","Peljorling(Dhansiri)",,
-"Goleytar Amaley Kulu",BT,"Tsirang","Pungtenchu","Peljorling","Peljorling(Dhansiri)",,
-"Upper Chagay",BT,"Tsirang","Pungtenchu","Peljorling","Peljorling(Dhansiri)",,
-"Bangtar Kulu",BT,"Tsirang","Pungtenchu","Goentegkha_Tong- shinggang","Draagithog(S/Melay)",,
-"Aleydarey KULU",BT,"Tsirang","Pungtenchu","Peljorling","Peljorling(Dhansiri)",,
-"Saurani KULU",BT,"Tsirang","Pungtenchu","Peljorling","Peljorling(Dhansiri)",,
-"Devithan",BT,"Tsirang","Pungtenchu","Peljorling","Peljorling(Dhansiri)",,
-"Tilay Kulu",BT,"Tsirang","Pungtenchu","Peljorling","Peljorling(Dhansiri)",,
-"Gurung Kulu",BT,"Tsirang","Pungtenchu","Peljorling","Peljorling(Dhansiri)",,
-"Chedhey KULU",BT,"Tsirang","Pungtenchu","Serzhong","Serzhong(Phaleday)",,
-"Devi Thaney",BT,"Tsirang","Pungtenchu","Serzhong","Serzhong(Phaleday)",,
-"Paray Kulu",BT,"Tsirang","Pungtenchu","Serzhong","Serzhong(Phaleday)",,
-"Khorong Kulu",BT,"Tsirang","Pungtenchu","Serzhong","Chhubabsa(Tshangay)",,
-"Devi Thaney",BT,"Tsirang","Pungtenchu","Norbuthang",,,
-"Phelingtar",BT,"Tsirang","Pungtenchu","Goentegkha_Tong- shinggang","Draagithog(S/Melay)",,
-"Thrulu Kulu",BT,"Tsirang","Pungtenchu","Goentegkha_Tong- shinggang","Tongshinggang(T/ Melay)",,
-"khaling kulu",BT,"Tsirang","Pungtenchu","Goentegkha_Tong- shinggang","Draagithog(S/Melay)",,
-"Rumdaley Kulu A",BT,"Tsirang","Pungtenchu","Goentegkha_Tong- shinggang","Draagithog(S/Melay)",,
-"Rumdaley Kulu B",BT,"Tsirang","Pungtenchu","Goentegkha_Tong- shinggang","Draagithog(S/Melay)",,
-"Karani Kulu",BT,"Tsirang","Pungtenchu","Goentegkha_Tong- shinggang","Dhodomchen (Dhapk- hola)",,
-"Dorokhey KULU",BT,"Tsirang","Pungtenchu","Goentegkha_Tong- shinggang","Tongshinggang(T/ Melay)",,
-"Tashipang Kulu",BT,"Tsirang","Mendrelgang","Tashipang","Tashipang(Gurungaon)",,
-"Jurkey Kulo",BT,"Tsirang","Mendrelgang","Pemashong_Samsh- ing Gaden","Pemashong(Sarkigaon)",,
-"Danapati Kulo",BT,"Tsirang","Mendrelgang","Mendrelgang","Mendrelgang (Lami- dara)",,
-"Thaglal Kulo",BT,"Tsirang","Mendrelgang","Mendrelgang","Mendrelgang (Lami- dara)",,
-"Antaray Kulo",BT,"Tsirang","Mendrelgang","Riserbu","Riserbu(Rateykhola)",,
-"Bja-Goe Menchu",BT,"Paro","Lungnyi","Jieu_Woochhu","Jieu",,
-"Damthangkha",BT,"Paro","Lungnyi","Jieu_Woochhu","Woochhu",,
-"Bjam-Tasa",BT,"Paro","Lungnyi","Jieu_Woochhu","Jieu",,
-"Densuna",BT,"Paro","Lungnyi","Jieu_Woochhu","Jieu",,
-"Jew-Phu",BT,"Paro","Lungnyi","Jieu_Woochhu","Jieu",,
-"Khey-Karpo",BT,"Paro","Lungnyi","Naemjog","Naemjog",,
-"Tshoreykha",BT,"Paro","Lungnyi","Dzongdraag_Gadraag","Dzongdraagkha",,
-"Bjazhi Zampa",BT,"Paro","Lungnyi","Dzongdraag_Gadraag","Gadraagna",,
-"Zanglay La",BT,"Paro","Lungnyi","Dzongdraag_Gadraag","Gadraagna",,
-"Bozena",BT,"Paro","Lungnyi","Dzongdraag_Gadraag","Gadraagna",,
-"Gabja-Rongchu",BT,"Paro","Lungnyi","Baangdey","Baangdey",,
-"Remina",BT,"Paro","Lungnyi","Baangdey",,,
-"Gungbu",BT,"Paro","Lungnyi","Pangbisa",,,
-"Chab Babsa",BT,"Paro","Lungnyi","Pangbisa","Ugyenguru",,
-"Zhamjana",BT,"Paro","Lungnyi","Pangbisa",,,
-"Sel-Chhu",BT,"Paro","Doteng","Jabji_Loogchhoed",,,
-"Katekha",BT,"Paro","Doteng","Jabji_Loogchhoed",,,
-"Woogar Lungchhu",BT,"Paro","Doteng","Aa-tsho_Phunoob",,,
-"Barmai Lungchhu",BT,"Paro","Doteng","Aa-tsho_Phunoob",,,
-"Drakey Phang Tshochhu",BT,"Paro","Doteng","Aa-tsho_Phunoob",,,
-"Guruphang Tshoye Chhu",BT,"Paro","Doteng","Phooshar",,,
-"Nye Gongmai Chhu",BT,"Paro","Doteng","Phooshar",,,
-"Zhingri Lung Chhu",BT,"Paro","Doteng","Phooshar",,,
-"Chhoekhor Doesai Chhu",BT,"Paro","Doteng","Phooshar",,,
-"Sergi Lung Chhu",BT,"Paro","Doteng","Phooshar",,,
-"Dampa Rong Chhu",BT,"Paro","Doteng","Phooshar",,,
-"Kotey Zelchhu",BT,"Paro","Doteng","Chhubar",,,
-"Gong Chhu",BT,"Paro","Doteng","Joogar_Pachhu",,,
-"Gongmed Lung Chhu",BT,"Paro","Doteng","Joogar_Pachhu",,,
-"Wagombrak",BT,"Monggar","Narang","Dongshom","Dongshum",,
-"Wagombrak",BT,"Monggar","Narang","Thrinangphu","Gutshaphu",,
-"Dongri",BT,"Monggar","Narang","Khalong","Deki Pangthang",,
-"Rekha Pek",BT,"Monggar","Narang","Gomchu","Brokchilu",,
-"Benjo Lungchhu",BT,"Paro","Tsento","Chhungjey_Zamsar","Zamsar",,
-"Damphu Lungchhu",BT,"Paro","Tsento","Chhungjey_Zamsar","Zamsar",,
-"Chunjey Lungchhu",BT,"Paro","Tsento","Chhungjey_Zamsar","Chhungjey",,
-"Gomre Phurang Chhu",BT,"Paro","Tsento","Chhungjey_Zamsar","Chhungjey",,
-"Chula Lum",BT,"Paro","Tsento","Mitshig_Shana","Shana",,
-"Thariphu Chhu",BT,"Paro","Tsento","Mitshig_Shana","Shana",,
-"Phuchunang Lum Chhu",BT,"Paro","Tsento","Mitshig_Shana","Chhuyul",,
-"Zona Lum Chhu",BT,"Paro","Tsento","Mitshig_Shana","Lemdo",,
-"Chakha Chhu",BT,"Paro","Tsento","Mitshig_Shana","Mitshig",,
-"Yoegophu Lum Chhu",BT,"Paro","Tsento","Mitshig_Shana","Mitshig",,
-"Kalungka",BT,"Paro","Tsento","Nyamjey_Phangdo","Phangdo",,
-"Dhamphu Dokasham",BT,"Paro","Tsento","Nyamjey_Phangdo","Phangdo",,
-"Balaha",BT,"Paro","Tsento","Nyamjey_Phangdo","Phangdo",,
-"Nyechhu Phu",BT,"Paro","Tsento","Nyechhu_Shar-ri","Nyechhu",,
-"Jagayphu",BT,"Paro","Tsento","Nyechhu_Shar-ri","Shar-ri (Tsendo)",,
-"Tsenjophu",BT,"Paro","Tsento","Nyechhu_Shar-ri","Shar-ri (Tsendo)",,
-"Tshampahire",BT,"Monggar","Balam","Balam","Upper Balam",,
-"Mantshangre",BT,"Monggar","Balam","Balam","Upper Balam",,
-"Zorbrangsa Re",BT,"Monggar","Balam","Balam","Upper Balam",,
-"Karshingchamo Re",BT,"Monggar","Balam","Balam","Upper Balam",,
-"Narchhulu Re",BT,"Monggar","Balam","Khebshing","Bangnehoi",,
-"Zala Re",BT,"Monggar","Balam","Selkhar","Shelri Pam",,
-"Sangyangmo Re",BT,"Monggar","Balam","Selkhar","Selkhar",,
-"Dungmanma Re",BT,"Monggar","Balam","Selkhar","Dungmanba",,
-"Gumpoktor Re",BT,"Monggar","Balam","Selkhar","Gumpoktor",,
-"Radhi",BT,"Monggar","Balam","Selkhar","Radhi",,
-"Zalakhe",BT,"Monggar","Balam","Jadung","Upper jadung",,
-"Shingchong Re",BT,"Monggar","Balam","Jadung","Upper jadung",,
-"Yourangbu",BT,"Monggar","Balam","Jadung","Yangbari",,
-"Karmacholing",BT,"Monggar","Chhali","Gonpa","Karmacholing",,
-"Satshalo spring",BT,"Monggar","Chaskhar","Doongsingma_Pam","Dungsingma",,
-"Balam",BT,"Monggar","Chaskhar","Borphai_Chagsakhar","Balam",,
-"Gumdari",BT,"Monggar","Chaskhar","Yetong_Jarshingpogtor","Gumdari",,
-"Yabung",BT,"Monggar","Chaskhar","Kharnang_Kheshingra","Sangbari",,
-"Jakjoi",BT,"Monggar","Chaskhar","Yangrapoongshing","Jakhoi",,
-"Gop",BT,"Monggar","Drametse","Ba-Ging_Shadang","Baging",,
-"Waichur",BT,"Monggar","Drametse","Ba-Ging_Shadang","Baging",,
-"Shaphangma",BT,"Monggar","Drametse","Drametse_Shaphangma","Shaphangma",,
-"Yengkhartshing",BT,"Monggar","Drametse","Drametse_Shaphangma","Drametse",,
-"Daksamanang",BT,"Monggar","Drepung","Drepoong","Daksamanang",,
-"Bainang Re",BT,"Monggar","Drepung","Nyamla Bainangri","Bainangri",,
-"Daksamanang",BT,"Monggar","Drepung","Nyamla Bainangri","Nyamla",,
-"Yejib",BT,"Monggar","Drepung","Zunglen","Zunglen",,
-"Yetsalo",BT,"Monggar","Drepung","Tsangkhar","Chaksuzor",,
-"Chaksuzor",BT,"Monggar","Drepung","Tsangkhar","Tsangkhar",,
-"Daksamanang",BT,"Monggar","Drepung","Drepoong","Tadzong",,
-"Sakarmi, Woop",BT,"Monggar","Drepung","Drepoong","Woop pek",,
-"Damkhar",BT,"Monggar","Gongdue","Damkhar_Weringla","Damkhar",,
-"Pangthang",BT,"Monggar","Gongdue","Damkhar_Weringla","Pangthang",,
-"Salabi",BT,"Monggar","Gongdue","Damkhar_Weringla","Salabi",,
-"Weiringla",BT,"Monggar","Gongdue","Damkhar_Weringla","Weringla",,
-"Gorthongla",BT,"Monggar","Gongdue","Phazong","Gorthongla",,
-"Pam",BT,"Monggar","Gongdue","Phazong","Pam",,
-"Medene",BT,"Monggar","Gongdue","Phazong","Medene",,
-"Bangbangla",BT,"Monggar","Gongdue","Phazong","Bangbangla",,
-"Daksa",BT,"Monggar","Gongdue","Daagsa_Kumazong","Daksa",,
-"Kumazong",BT,"Monggar","Gongdue","Daagsa_Kumazong","Kumadzong",,
-"Bograbi",BT,"Monggar","Gongdue","Daagsa_Kumazong","Bogarbi",,
-"Bakla",BT,"Monggar","Gongdue","Baagla_Dengkaling","Bakla",,
-"Edi",BT,"Monggar","Gongdue","Baagla_Dengkaling","Edi",,
-"Yangbari",BT,"Monggar","Gongdue","Pikari_Yangbari","Yangbari",,
-"Kormaed",BT,"Monggar","Gongdue","Pikari_Yangbari","Kormaed",,
-"Laptsari",BT,"Monggar","Jurmed","Bilam_Dangkila","Bilam",,
-"Menchuri",BT,"Monggar","Jurmed","Bilam_Dangkila","Bilam",,
-"Sengri",BT,"Monggar","Jurmed","Moogtangkhar_Tsangkhazor","Muktangkhar",,
-"Yarakla",BT,"Monggar","Jurmed","Koknala_Ya-Ragla","Ya-Rakla",,
-"Wagombrak",BT,"Monggar","Narang","Dongshom","Bemeri",,
-"Dongshum",BT,"Monggar","Narang","Dongshom","Dongshum",,
-"Wagombrak",BT,"Monggar","Narang","Thrinangphu","Thrinangphu",,
-"Wagombrak",BT,"Monggar","Narang","Na-Rang","Narang",,
-"Rekha Pek",BT,"Monggar","Narang","Gomchu","Gomchu",,
-"Dongri",BT,"Monggar","Narang","Khalong","Khalong",,
-"Dochuri",BT,"Monggar","Kengkhar","Phosothong_singchongri","Shingchongri",,
-"Daiohodrang",BT,"Monggar","Kengkhar","Phosothong_singchongri","Shingchongri",,
-"Daiphodrang",BT,"Monggar","Kengkhar","Phosothong_singchongri","Trangthung",,
-"Ngoithufuri",BT,"Monggar","Kengkhar","Phosothong_singchongri","Munma",,
-"Mukeyamari",BT,"Monggar","Kengkhar","Phosothong_singchongri","Gongpa",,
-"Mukeymari",BT,"Monggar","Kengkhar","Phosothong_singchongri","Brongphu",,
-"Singsiri",BT,"Monggar","Kengkhar","Dogtang_Mooroong","Dogtang",,
-"Singsiri",BT,"Monggar","Kengkhar","Dogtang_Mooroong","Pangthang",,
-"Tsangdari",BT,"Monggar","Kengkhar","Dogtang_Mooroong","Murung",,
-"Kaisekma",BT,"Monggar","Kengkhar","Dogtang_Mooroong","Murung",,
-"Dowri",BT,"Monggar","Kengkhar","Dogtang_Mooroong","Romangla",,
-"Omshari",BT,"Monggar","Kengkhar","Dogtang_Mooroong","Dogtang",,
-"Dongdala",BT,"Monggar","Kengkhar","Olokid_Talabi","Menchabelam",,
-"Gurtsiri",BT,"Monggar","Kengkhar","Olokid_Talabi","Tsalabi",,
-"Khodangri",BT,"Monggar","Kengkhar","Olokid_Talabi","Oliki",,
-"Sepnari",BT,"Monggar","Kengkhar","Neykorlong_Warongborang","Nakolog",,
-"Sepnari",BT,"Monggar","Kengkhar","Neykorlong_Warongborang","Nanaric",,
-"Moitangri",BT,"Monggar","Kengkhar","Kyidpari_Yudari","Udari",,
-"Moitangri",BT,"Monggar","Kengkhar","Kyidpari_Yudari","Udari",,
-"Khesingri",BT,"Monggar","Kengkhar","Kyidpari_Yudari","Kidpari",,
-"Perkheri",BT,"Monggar","Kengkhar","Kyidpari_Yudari","Pogola",,
-"Perkheri",BT,"Monggar","Kengkhar","Kyidpari_Yudari","Kidpari",,
-"Tshashongri",BT,"Monggar","Kengkhar","Kyidpari_Yudari","Kidpari",,
-"Kithpari",BT,"Monggar","Kengkhar","Kyidpari_Yudari","Singsiri",,
-"Daglari",BT,"Monggar","Kengkhar","Kyidpari_Yudari","Kidpari",,
-"Moitangri",BT,"Monggar","Kengkhar","Tongla_Zi-Tsibi","Tongla",,
-"Kumshingmari",BT,"Monggar","Kengkhar","Tongla_Zi-Tsibi","Tonglagoenpa",,
-"Dupchu",BT,"Monggar","Kengkhar","Tongla_Zi-Tsibi","Shajula",,
-"Kognangri",BT,"Monggar","Kengkhar","Tongla_Zi-Tsibi","Zitsebi",,
-"Nerawunburi",BT,"Monggar","Kengkhar","Tongla_Zi-Tsibi","Tongla",,
-"Karmacholing",BT,"Monggar","Chhali","Gonpa",,,
-"Threnchu",BT,"Monggar","Chhali","Gonpa",,,
-"Yangtang",BT,"Monggar","Chhali","Gonpa",,,
-"Threnchu",BT,"Monggar","Chhali","Pangthang","pangthang",,
-"Kesangma",BT,"Monggar","Chhali","Pangthang","Thampang",,
-"Phatikhoi",BT,"Monggar","Chhali","Chulabi","Chulabi",,
-"Kesangma",BT,"Monggar","Chhali","Chulabi","Chasar",,
-"Broksar",BT,"Monggar","Chhali","Chulabi","Bakhim",,
-"Broksar",BT,"Monggar","Chhali","Chulabi",,,
-"Chungpabung",BT,"Monggar","Chhali","Chaling",,,
-"Namachu",BT,"Monggar","Chhali","Chaling","Kharigup",,
-"Namkaling",BT,"Monggar","Chhali","Chaling",,,
-"Yoetenkhetshang",BT,"Monggar","Chhali","Chaling","Bana",,
-"Patikhoi",BT,"Monggar","Chhali","Wangmakhar","Jambi",,
-"Threnchu",BT,"Monggar","Chhali","Wangmakhar",,,
-"Bushing Rongma",BT,"Monggar","Chhali","Wangmakhar",,,
-"Pelung",BT,"Monggar","Ngatshang","Yadi_Yekhar","Pelung",,
-"Yekhar",BT,"Monggar","Ngatshang","Yadi_Yekhar","Yadhi-Yekhar",,
-"Bumpazor",BT,"Monggar","Ngatshang","Yadi_Yekhar","Bumpazor",,
-"Garpaling",BT,"Monggar","Ngatshang","Yadi_Yekhar","Garpaling",,
-"Phanas",BT,"Monggar","Ngatshang","Nyingala_Phanasi","Phanas",,
-"Zorgonpa",BT,"Monggar","Ngatshang","Nyingala_Phanasi",,,
-"Ningala",BT,"Monggar","Ngatshang","Nyingala_Phanasi","Phanas",,
-"Jarshingwang",BT,"Monggar","Ngatshang","Nyingala_Phanasi","Jarshiwang",,
-"Jagoegonpa",BT,"Monggar","Ngatshang","Pelshoob","Goenpa",,
-"Domlung",BT,"Monggar","Ngatshang","Pelshoob","Domlung",,
-"Pelshoop",BT,"Monggar","Ngatshang","Pelshoob","Dekurung",,
-"Omkhar",BT,"Monggar","Ngatshang","Pelshoob","Omkhar",,
-"Goenpa",BT,"Monggar","Ngatshang","Pelshoob","Goenpa",,
-"Sangacholing",BT,"Monggar","Ngatshang","Pelshoob","Pelshoop",,
-"Yadi RWSS",BT,"Monggar","Ngatshang","Pelshoob","Pelshoop",,
-"Thumbari",BT,"Monggar","Ngatshang","Thoomdari","Thumbari",,
-"Zangdari",BT,"Monggar","Ngatshang","Thoomdari","Zangdari",,
-"Tagor",BT,"Monggar","Ngatshang","Thoomdari","Tagor",,
-"Shingthari",BT,"Monggar","Ngatshang","Ngatshang","Shingtharing",,
-"Gochakpu",BT,"Monggar","Ngatshang","Ngatshang","Gochakpu",,
-"Kochigang",BT,"Monggar","Ngatshang","Ngatshang","Kochigoenpa",,
-"Mentshang",BT,"Monggar","Ngatshang","Ngatshang","Mentsang",,
-"Kochigoenpa",BT,"Monggar","Ngatshang","Ngatshang","Kochigoenpa",,
-"Brakar Chu, Drobar, Kazomgokha",BT,"Monggar","Saleng","Saling","Saling",,
-"Namling",BT,"Monggar","Saleng","Thridangbi",,,
-"Broksar, Khajira",BT,"Monggar","Saleng","Drogsar","Drogsar",,
-"Gorsumbi",BT,"Monggar","Saleng","Drogsar","Maangling",,
-"Jajamari, Jukaphai",BT,"Monggar","Saleng","Kalapang_Risa","Kalapang",,
-"Thongjari",BT,"Monggar","Saleng","Kalapang_Risa","Resa",,
-"Chubar",BT,"Monggar","Saleng","Tsenzabi_Masangdaza","Jangdung",,
-"Bediri, Jugilam",BT,"Monggar","Saleng","Tsenzabi_Masangdaza","Masangdaza",,
-"Khomnangbi",BT,"Monggar","Saleng","Tsenzabi_Masangdaza","Pangsibi",,
-"Jachu,Tortorla,Mangthandrechu,Nepo Tungkangla",BT,"Monggar","Saleng","Tsenzabi_Masangdaza",,,
-"Shongjari",BT,"Monggar","Saleng",,,,
-"Jungang",BT,"Monggar","Saleng","Seng-Gor","Seng-Gor",,
-"Chompa",BT,"Monggar","Mongar","Themnangbi_Ketongri",,,
-"Sourangyoe",BT,"Monggar","Mongar","Themnangbi_Ketongri",,,
-"Ri-Toed",BT,"Monggar","Mongar","Themnangbi_Ketongri",,,
-"Chorten Singma",BT,"Monggar","Mongar","Themnangbi_Ketongri",,,
-"Thogpari",BT,"Monggar","Mongar","Themnangbi_Ketongri",,,
-"Larjab",BT,"Monggar","Mongar","Themnangbi_Ketongri",,,
-"Roushingyey and Mouza",BT,"Monggar","Mongar","Gyalpoizhing_Wangling",,,
-"Lower Roushing",BT,"Monggar","Mongar","Gyalpoizhing_Wangling",,,
-"Takpanakseyey Lower",BT,"Monggar","Mongar","Gyalpoizhing_Wangling",,,
-"Takpanakseyey Upper",BT,"Monggar","Mongar","Gyalpoizhing_Wangling",,,
-"Chukuri",BT,"Monggar","Mongar","Gyalpoizhing_Wangling",,,
-"Brungshingwog",BT,"Monggar","Mongar","Gyalpoizhing_Wangling",,,
-"Bozongree",BT,"Monggar","Mongar","Gyalpoizhing_Wangling",,,
-"Zangrong",BT,"Monggar","Mongar","Konbar_Tagchu",,,
-"Shingsapha",BT,"Monggar","Mongar","Konbar_Tagchu",,,
-"Rashulam",BT,"Monggar","Mongar","Konbar_Tagchu",,,
-"Shugulugsa",BT,"Monggar","Mongar","Konbar_Tagchu",,,
-"Zarangshi Khatoed",BT,"Monggar","Mongar","Konbar_Tagchu",,,
-"Zarangshi Khamey",BT,"Monggar","Mongar","Konbar_Tagchu",,,
-"Hodhonhshi",BT,"Monggar","Mongar","Konbar_Tagchu",,,
-"Mombangsa",BT,"Monggar","Mongar","Konbar_Tagchu",,,
-"Ngalongzamo",BT,"Monggar","Mongar","Konbar_Tagchu",,,
-"Shingthang Zampa",BT,"Monggar","Mongar","Kidekhar",,,
-"Thrigpuri "A,BT,"Monggar","Mongar","Kidekhar",,,
-"Khairi",BT,"Monggar","Mongar","Kidekhar",,,
-"Thripuri "B,BT,"Monggar","Mongar","Kidekhar",,,
-"Kamangyey",BT,"Monggar","Mongar","Kidekhar",,,
-"Phai Dhar yey",BT,"Monggar","Mongar","Kidekhar",,,
-"Dozam",BT,"Monggar","Mongar","Wengkhar_Yagpoogang","Wengkhar",,
-"Bachenmo",BT,"Monggar","Mongar","Wengkhar_Yagpoogang","Wengkhar",,
-"Remong (Tongseng)",BT,"Monggar","Mongar","Wengkhar_Yagpoogang","Wengkhar",,
-"Remongyakpugang",BT,"Monggar","Mongar","Wengkhar_Yagpoogang","Wengkhar",,
-"Damtshang",BT,"Monggar","Mongar","Wengkhar_Yagpoogang","Wengkhar",,
-"Changyong",BT,"Monggar","Mongar","Wengkhar_Yagpoogang","Wengkhar",,
-"Dorgayshing",BT,"Monggar","Mongar","Wengkhar_Yagpoogang","Wengkhar",,
-"Yengtshang",BT,"Monggar","Mongar","Wengkhar_Yagpoogang","Wengkhar",,
-"Changyong (Jaibab)",BT,"Monggar","Mongar","Wengkhar_Yagpoogang","Wengkhar",,
-"Mantshang",BT,"Monggar","Mongar","Wengkhar_Yagpoogang","Wengkhar",,
-"Numshing Ree & Zangzing Mo Jue",BT,"Monggar","Mongar","Phosorong","Phosorong",,
-"Baytshenang Poktor",BT,"Monggar","Mongar","Phosorong","Phosorong",,
-"Menchuri",BT,"Monggar","Mongar","Phosorong","Phosorong",,
-"Soitshong",BT,"Monggar","Mongar","Phosorong","Phosorong",,
-"Songthurpa & Lower Gupchuwang",BT,"Monggar","Mongar","Phosorong","Phosorong",,
-"Upper Gupchuwong (jamch)oing",BT,"Monggar","Mongar","Phosorong","Phosorong",,
-"Upper Gupchuwong (Lupangthang",BT,"Monggar","Mongar","Phosorong","Phosorong",,
-"Bargonpajug",BT,"Monggar","Mongar","Phosorong","Phosorong",,
-"Yakpogang",BT,"Monggar","Mongar","Phosorong","Phosorong",,
-"Dolungjug",BT,"Monggar","Mongar","Phosorong","Phosorong",,
-"Zargang",BT,"Monggar","Mongar","Phosorong","Phosorong",,
-"Chochorma Toddh",BT,"Monggar","Mongar","Phosorong","Phosorong",,
-"Re sharang",BT,"Monggar","Mongar","Phosorong","Phosorong",,
-"Joupoyongjug",BT,"Monggar","Mongar","Phosorong","Phosorong",,
-"Shameyig Khamey",BT,"Monggar","Mongar","Phosorong","Phosorong",,
-"Shiling",BT,"Monggar","Shermung","Muhung","Shiling",,
-"Muhung Gangtok",BT,"Monggar","Shermung","Muhung",,,
-"Mensakpa",BT,"Monggar","Shermung","Muhung",,,
-"Jabgang",BT,"Monggar","Shermung","Jabgang","Jabgang",,
-"Soenakhar Primary school",BT,"Monggar","Shermung","Soenakhar",,,
-"Wambur",BT,"Monggar","Shermung","Soenakhar","Wambur",,
-"Mangzhing",BT,"Monggar","Shermung","Serzhong","Mangzhing",,
-"Serzhong",BT,"Monggar","Shermung","Serzhong","Serzhong",,
-"Namchagang",BT,"Monggar","Shermung","Soenakhar","Namchagang",,
-"Soenakhar",BT,"Monggar","Shermung","Soenakhar",,,
-"Lower Gongdar",BT,"Monggar","Shermung","Serzhong",,,
-"Kheshingri",BT,"Monggar","Shermung","Muhung",,,
-"Gangmung",BT,"Monggar","Shermung","Gangmung","Gangmung",,
-"Thiling Toed",BT,"Monggar","Shermung","Jabgang","Thiling",,
-"Thramo",BT,"Monggar","Shermung","Jabgang","Thramo",,
-"Pangthang",BT,"Monggar","Shermung","Muhung",,,
-"Jangkhar",BT,"Monggar","Shermung","Soenakhar","Jangkhar",,
-"Tshaburi",BT,"Monggar","Shermung","Serzhong",,,
-"Babdhung",BT,"Monggar","Shermung","Soenakhar",,,
-"Reling Jalam",BT,"Monggar","Shermung","Soenakhar","Riling",,
-"Riling",BT,"Monggar","Shermung","Soenakhar","Riling",,
-"Goenpa",BT,"Monggar","Shermung","Muhung",,,
-"Shrimuhung Lower Secondary School",BT,"Monggar","Shermung","Serzhong",,,
-"Latibiyubgba/kasungma",BT,"Monggar","Silambi","Nagor","Pang",,
-"Lichira",BT,"Monggar","Silambi","Nagor","Laiju",,
-"Prangbrangsa",BT,"Monggar","Silambi","Nagor","Laiju",,
-"Brogsartog",BT,"Monggar","Silambi","Nagor","Laiju",,
-"Kongpolaiyungpa",BT,"Monggar","Silambi","Nagor",,,
-"Galingyungba",BT,"Monggar","Silambi","Nagor","Goenpa",,
-"Pangbra",BT,"Monggar","Silambi","Gyalgong","Gyelong Toe",,
-"Pratang",BT,"Monggar","Silambi","Gyalgong","Gyelong Toe",,
-"Gorkangla",BT,"Monggar","Silambi","Dag",,,
-"Peshingla",BT,"Monggar","Silambi","Dag","Pishimbi",,
-"Phudoma",BT,"Monggar","Silambi","Wama",,,
-"KOmthang",BT,"Monggar","Silambi","Wama",,,
-"Phogpola",BT,"Monggar","Silambi","Wama",,,
-"Namdari",BT,"Monggar","Silambi","Wama",,,
-"Thangbrang",BT,"Monggar","Silambi","Wama","Yari Jawla",,
-"Brogsar",BT,"Monggar","Silambi","Wama",,,
-"Chubar",BT,"Monggar","Silambi","Wama","Changchangma",,
-"Dungtongma",BT,"Monggar","Silambi","Silambi","Silambi",,
-"Taria",BT,"Monggar","Silambi","Silambi",,,
-"Barbibang",BT,"Monggar","Silambi","Silambi","Barbrang",,
-"Khalipong",BT,"Monggar","Silambi","Silambi","Salipong",,
-"Dungkarbi",BT,"Monggar","Silambi","Silambi","Rukangla",,
-"Threma Rongchu",BT,"Haa","Kartshog","Wangtsa","Chhurunggang",,
-"Banjar",BT,"Monggar","Tsamang","Banjar","Banjair",,
-"Banjar Pam",BT,"Monggar","Tsamang","Banjar","Banjair",,
-"Motogchan",BT,"Monggar","Tsamang","Banjar",,,
-"Jargoth",BT,"Monggar","Tsamang","Banjar","Jargot",,
-"Gomechenbelpo",BT,"Monggar","Tsamang","Banjar","Gomchenbarpo",,
-"Nangar",BT,"Monggar","Tsamang","Drangmaling_ Nang-gor","Drangmaling",,
-"Dramaling",BT,"Monggar","Tsamang","Drangmaling_ Nang-gor","Drangmaling",,
-"Khuling",BT,"Monggar","Tsamang","Ganglapong Maed","Ganglapong Maed",,
-"Khuling",BT,"Monggar","Tsamang","Ganglapong Maed","Khuling",,
-"Lhakhang",BT,"Monggar","Tsamang","Ganglapong Maed",,,
-"Ganalapoong",BT,"Monggar","Tsamang","Ganglapong Toed","Ganglapong Toed",,
-"Autshonge",BT,"Monggar","Tsamang","Ganglapong Toed","Ganglapong Toed",,
-"Sothruling",BT,"Monggar","Tsamang","Ganglapong Toed","Ganglapong Toed",,
-"Ganglapoong",BT,"Monggar","Tsamang","Ganglapong Toed","Ganglapong Toed",,
-"Tokari",BT,"Monggar","Tsamang","Thuenmong_Tokari",,,
-"Labi",BT,"Monggar","Tsamang","Thuenmong_Tokari",,,
-"Tokari/Shokang",BT,"Monggar","Tsamang","Thuenmong_Tokari",,,
-"Tabsina",BT,"Monggar","Tsamang","Thuenmong_Tokari",,,
-"Toenshing",BT,"Monggar","Tsamang","Thuenmong_Tokari",,,
-"Etakpa",BT,"Monggar","Tsamang","Thuenmong_Tokari",,,
-"Shojabi",BT,"Monggar","Tsamang","Thuenmong_Tokari",,,
-"Goenpa",BT,"Monggar","Tsamang","Thuenmong_Tokari",,,
-"Artang",BT,"Monggar","Tsamang","Thuenmong_Tokari",,,
-"Pam",BT,"Monggar","Tsamang","Thuenmong_Tokari","Pam",,
-"Brepajab",BT,"Monggar","Tsamang","Thuenmong_Tokari",,,
-"Serbum Lhakhang",BT,"Monggar","Tsamang","Thuenmong_Tokari",,,
-"School and BHU",BT,"Monggar","Tsamang","Thuenmong_Tokari",,,
-"Bochu",BT,"Haa",,,,,
-"chachu",BT,"Haa",,,,,
-"Mashithang",BT,"Haa",,,,,
+Name,Country,L1,L2,L3,L4
+Heso-tshamchu,BT,Wangduephodrang,Gasetsho Om,Haetshokha,Haetshokha
+Melphey RWSS,BT,Trashigang,Bartsham,Moogtangkhar,Mugtangkhar
+Chui ka,BT,Punakha,Bapisa,Tshokorna,Wangkha
+Loggchina Chhu,BT,Chhukha,Logchina,Mongna_Lha-sarp,Chimonatoed
+Tergang Chuu RWSS,BT,Lhuentse,Jaray,Ladrong,Ladrong
+Lumpa chu,BT,Punakha,Goenshari,Seychagnang,Kapataksa
+Khomshar Wama Water Source,BT,Zhemgang,Bardo,Khomshar,Towling
+Khonmari,BT,Pemagatshel,Shumer,Goengpong Shali,Shali
+Kanglung,BT,Trashigang,Kanglung,Mertsham-Thragom,Mertsham
+wedff,BT,Thimphu,Soe,,
+Dhamdum Water source,BT,Samtse,Samtse Thromde,Samtse,
+Dari Water Irrigation,BT,Tsirang,Sergithang,Semdenjong,
+Rama Water supply,BT,Thimphu,Chang,Ramtoktok_Tsangrina,Rama
+reka,BT,Samdrupjongkhar,Dewathang,Bangtsho,Kopor
+Nashphel water source,BT,Bumthang,Chhoekhor,Nangsipe-Zangling-Zhabjethang,Nasphel
+lingzhi,BT,Thimphu,Lingzhi,Gangyuel,Gangyuel
+Shetekhari,BT,Sarpang,Gelephu,Pelrithang Khatoed,Pelrithang(Lodrai)
+Bali,BT,Haa,Katsho,Bali_Mombitshokha,Bali
+lingzhi,BT,Thimphu,Soe,Jangothang,Garabten
+Sangbaykha,BT,Haa,,,
+tika ram,BT,Sarpang,Taraythang,Woongchhilu,Woongchhilu(Limbutar)
+Ney RWSS,BT,Lhuentse,Gangzur,Ney,Pemachhoeling
+Zangkhar RWSS,BT,Lhuentse,Jaray,Yabi_Zangkhar,Zangkhar
+Highland Water supply,BT,Lhuentse,Khoma,Rolmoteng _Tsang-Ngo,Rolmoteng
+Tergang Chuu RWSS,BT,Lhuentse,Kurtoe,Chagdzom_Chhusa,Chagdzom
+Municipal Water supply,BT,Lhuentse,Dzongkhag Thromde,Phaling Maed,Phaling Maed
+Ney RWSS,BT,Lhuentse,Gangzur,Ney,Ney
+Doompang RWSS,BT,Lhuentse,Jaray,Yumchhe,Droompang
+Singye Dzong Water supply,BT,Lhuentse,Khoma,Rolmoteng _Tsang-Ngo,Sengye Dzong
+Sumdang yoe,BT,Pemagatshel,Yurung,Khangma,
+Nai po re,BT,Pemagatshel,Yurung,Wanglakho Thongo,Thongo
+Tag tag pai ri,BT,Pemagatshel,Yurung,Bangdala,
+BHU Water source,BT,Pemagatshel,Yurung,Khominang Yangkhar,Khominang
+School water source,BT,Pemagatshel,Yurung,Khominang Yangkhar,
+Thungo jug,BT,Pemagatshel,Yurung,Doongsingma Thongkhar,
+Shogori,BT,Pemagatshel,Chokhorling,Dezama_Shoguri,Shogori
+Tsunlung Grangnang,BT,Pemagatshel,Chokhorling,Dezama_Shoguri,
+Menchu dop,BT,Pemagatshel,Chokhorling,Chhoekhorling _Gazawong,
+Dongdongma,BT,Pemagatshel,Chokhorling,Chhoekhorling _Gazawong,
+Yargyewoong,BT,Pemagatshel,Chokhorling,Yargyewoong,
+Yongbari,BT,Pemagatshel,Dechhenling,Doongchhilo_ Kholomri,Doongchhilo
+Tsampari,BT,Pemagatshel,Dechhenling,Dechhenling_Goenpawoong,
+Sangmari,BT,Pemagatshel,Dechhenling,Namdagling,
+Garamala Khola,BT,Dagana,Gesarling,Tashithang,Tashithang
+Bjukipani,BT,Dagana,Gesarling,Tashithang,Tashithang
+Bich Khola,BT,Dagana,Gesarling,Tashithang,Tashithang
+Bich Pani,BT,Dagana,Gesarling,Tashithang,Tashithang
+Devikholtsa,BT,Dagana,Gesarling,Phuensumgang,Phuensumgang
+Karmichok,BT,Dagana,Gesarling,Phuensumgang,Phuensumgang
+Mobir Khola,BT,Dagana,Gesarling,Phuensumgang,Phuensumgang
+Samchhu,BT,Dagana,Gesarling,Samtengang,Samtengang
+PakshingChhu,BT,Dagana,Gesarling,Gesarling,Gesarling
+Amphikhola,BT,Dagana,Trashiding,Tashiding,Middle Tashiding
+Devitar,BT,Dagana,Lhamoizingkha,Tshamzhigosa,Devitar
+Papji,BT,Dagana,Lhamoizingkha,Tshamzhigosa,Papji
+Chechugoenpa lami lake,BT,Dagana,Tseza,Tashigang,Rapteygoenpa
+Kutishinggitsawa,BT,Dagana,Tseza,Tashigang,Tashigang
+Ekumelong Tsho,BT,Dagana,Drugyelgang,Pangna-patala,Nikumelong
+Thochulungma,BT,Dagana,Drugyelgang,Pangna-patala,Patala
+Wangchu lungma,BT,Dagana,Drugyelgang,Pangna-patala,Patala
+Akchulum,BT,Dagana,Drugyelgang,Pangserpo,Krongtod
+Tardalum,BT,Dagana,Drugyelgang,Pangserpo,Krongmad
+Pepchulum,BT,Dagana,Drugyelgang,Ambithang-Pangserpo,Karithang
+Drakarpo,BT,Dagana,Drugyelgang,Ambithang-Pangserpo,Sampalinang
+Chulumchhu,BT,Dagana,Drugyelgang,Ambithang-Pangserpo,Ambithang
+Sakarchen,BT,Dagana,Drugyelgang,Thangna,Sakachen
+Tsendeshinglumchu,BT,Dagana,Drugyelgang,Thangna,Sakachen
+Thriduganglumchu,BT,Dagana,Drugyelgang,Thangna,Sakachen
+Pakechu-1,BT,Dagana,Drugyelgang,Thangna,Sherpakrong
+Pakechu-2,BT,Dagana,Drugyelgang,Thangna,Tingsibje
+Emanang,BT,Dagana,Drugyelgang,Thangna,Sherpakrong
+Amchukukuli lumchu,BT,Dagana,Drugyelgang,Thangna,Sherpakrong
+Sangaymolumchu,BT,Dagana,Drugyelgang,Thangna,
+Thinleylumchu,BT,Dagana,Drugyelgang,Thangna,Sertochen
+Omanalumchu,BT,Dagana,Drugyelgang,Thangna,Umadangsa
+Tsherkachulumchu,BT,Dagana,Drugyelgang,Thangna,Sertochen
+Tingsibjechu,BT,Dagana,Drugyelgang,Thangna,Tingsibje
+Umadangsachu,BT,Dagana,Drugyelgang,Thangna,Umadangsa
+chimilumchu,BT,Dagana,Drugyelgang,Thangna,Sherpakrong
+Pangchokpalilumchu,BT,Dagana,Drugyelgang,Budipang-pangna,Pangna
+Bumchisingdilungma,BT,Dagana,Drugyelgang,Budipang-pangna,Pangna
+Pongpalungma,BT,Dagana,Drugyelgang,Budipang-pangna,Pangna
+Lamphoda,BT,Dagana,Drugyelgang,Budipang-pangna,Budipang
+Sangkiri,BT,Haa,Uesu,Pajekha_Sangkiri,Sangkiri
+Pajayka,BT,Haa,Uesu,Pajekha_Sangkiri,Pajekha
+Kana,BT,Haa,Uesu,Geyruna_Karnag,Karnag
+Tshaphel,BT,Haa,Uesu,Tshaphel_Tsiloongkha,Tshaphel
+Tselungkha,BT,Haa,Uesu,Tshaphel_Tsiloongkha,Tsiloongkha
+Baytsa,BT,Haa,Uesu,Betso_Doomchhog,Betso
+Domchu,BT,Haa,Uesu,Betso_Doomchhog,Doomchhog
+Drangoen Takchu,BT,Haa,Uesu,Kipri_Tagchhu,
+Bangyena,BT,Haa,Uesu,Kipri_Tagchhu,Baang_Yana
+Pepchhuna,BT,Haa,,,
+Jagolungna,BT,Haa,,,
+Jogolungna,BT,Haa,,,
+Sombay Ama 1,BT,Haa,,,
+Sangbay Ama 2,BT,Haa,,,
+Henchhu,BT,Haa,,,
+Gaytalum,BT,Haa,,,
+Gaytalum 2,BT,Haa,,,
+Choechengkha,BT,Haa,,,
+Choechenkha 2,BT,Haa,,,
+kabarmo chu (1.33 lps),BT,Wangduephodrang,Bjena,Bjenagloongpa_Thingmakha,Balakha
+nyena (.66 lps ),BT,Wangduephodrang,Bjena,Bjenagloongpa_Thingmakha,Thingmakha
+woogchu zakha,BT,Wangduephodrang,Bjena,Tashi Tokha,Tashi Tokha
+Dajaygang chu,BT,Wangduephodrang,Bjena,Tashi Tokha,Darjegang
+Upper Chaskhar,BT,Sarpang,Chhuzagang,Chaskhar,Chaskhar/Dawathang
+Therwar,BT,Sarpang,Chhuzagang,Chaskhar,Chaskhar
+chaskar,BT,Sarpang,Chhuzagang,Chaskhar,Chaskhar
+Pangzur,BT,Sarpang,Chhuzagang,Pangzor,Pangzor
+Dawathang,BT,Sarpang,Chhuzagang,Barthang,Barthang(Daragoan)
+Yueling,BT,Sarpang,Chhuzagang,Thongjabi-Yueling,Yueling
+Yueling,BT,Sarpang,Chhuzagang,Thongjabi-Yueling,Thongjabi
+Thonjabe,BT,Sarpang,Chhuzagang,Thongjabi-Yueling,Thongjabi
+Karbethang,BT,Sarpang,Chhuzagang,Pangzor,Pangzor Kalikhola
+Shawapang,BT,Sarpang,Chhuzagang,Nimaling-Shawapong,Shawapong
+Barthang,BT,Sarpang,Chhuzagang,Barthang,Barthang
+Bji shing Lumpa,BT,Haa,Bji,Yangthang,Jangtoed
+Yatsho Lumpa,BT,Haa,Bji,Yangthang,Jangtoed
+Aje Phu,BT,Haa,Bji,Choompa_Jamgoen,Jamgoen
+Pha ju,BT,Haa,Bji,Yangthang,Yangoen
+Yangphu,BT,Haa,Bji,Tsenka_Taloong,Tsenka
+Tshen Zhusa,BT,Haa,Bji,Tsenka_Taloong,Tsenka
+Tshomitsha,BT,Haa,Bji,Tsenka_Taloong,Tsenka
+Tshomitsho,BT,Haa,Bji,Tsenka_Taloong,Tsenka
+Rado,BT,Haa,Bji,Tsenka_Taloong,Chhubarna
+Om chu,BT,Haa,Bji,Tsenka_Taloong,Dangsana
+Gong Tshey tsha,BT,Haa,Bji,Gensa_Tokey,Gensa
+Chana Phu,BT,Haa,Bji,Gensa_Tokey,Tokey Gom
+Peta sima phu,BT,Haa,Bji,Choompa_Jamgoen,Choompa
+Yetshe phu,BT,Haa,Bji,Choompa_Jamgoen,Jamgoen
+Coma lakha,BT,Haa,Bji,Choompa_Jamgoen,Yetsephu
+Komla,BT,Haa,Bji,Chenpa_Geychukha,Chenpa
+Menchu lumpa,BT,Haa,Bji,Chenpa_Geychukha,Geychhukha
+Menchu lumpa,BT,Haa,Bji,Chenpa_Geychukha,Machena
+Damthang,BT,Haa,Bji,Chenpa_Geychukha,Damthang
+Lishurama,BT,Haa,Katsho,Dragding_Karjena,Gangkha
+Naktshang,BT,Haa,Katsho,Dragding_Karjena,Nagtshang
+Tshome kha,BT,Haa,Katsho,Dragding_Karjena,Namchhu
+Haasakha,BT,Haa,Katsho,Dragding_Karjena,Karjena
+Benpurama,BT,Haa,Katsho,Ingo_Pharikha,In-go
+Kamsha,BT,Haa,Katsho,Bali_Mombitshokha,Bali
+Katsho Damtha,BT,Haa,Katsho,Bali_Mombitshokha,Mombitshokha
+Saakha kha,BT,Haa,Katsho,Kargoen_Hatam,Hatam
+Gumbutsa,BT,Haa,Katsho,Wangtsa,
+Dokha,BT,Haa,Sama,Dorikha_Langjogang,Dorikha
+Saish Chang,BT,Haa,Sama,Balamnang,Balamnang
+Dotenkha,BT,Haa,Sama,Balamnang,Balamnang
+Dadotshawa,BT,Haa,Sama,Dorikha_Langjogang,
+Atshalakha,BT,Haa,Sama,Dorikha_Langjogang,
+Bachona,BT,Haa,Sama,Dorikha_Langjogang,
+Norbugang,BT,Haa,Sama,Langpa_Norbugang,
+Puduna,BT,Haa,Sama,Pudunang,Pudunang
+Thangkha,BT,Haa,Sama,Pudunang,
+Tsheshing Kha,BT,Haa,Sama,,
+Upper Jyenkhana,BT,Haa,Sama,Pudunang,Jenkanang
+Lower Jyenkhana,BT,Haa,Sama,Pudunang,Jenkanang
+Jyenkhana,BT,Haa,Sama,Pudunang,Jenkanang
+Yatha Longchu,BT,Haa,Sama,Shar-ri,
+Yatha Longchu Sham,BT,Haa,Sama,Shar-ri,
+Damphuna,BT,Haa,Sama,Shar-ri,
+Chuggumna,BT,Haa,Sama,Shar-ri,
+Dolena,BT,Haa,Sama,Shar-ri,
+Shenga Rongchu,BT,Punakha,Shengabjimi,,
+Tana Menchu,BT,Punakha,Dzoma,Tana Eusa,
+Phendey Yurwa,BT,Punakha,Toepisa,,
+Hoka Tsho,BT,Punakha,Kabjisa,Choetenningpo-Yusakha,
+Nandalal Kulo,BT,Tsirang,Barzhong,,
+Mishera Kulo,BT,Tsirang,Barzhong,Barshong Toed,
+Luitel Kulo,BT,Tsirang,Barzhong,Barshong Toed,
+Puspalal Powdel Kulo,BT,Tsirang,Barzhong,Barshong Toed,
+Shangrula Kulo,BT,Tsirang,Barzhong,Barshong Toed,
+Dhan Bdr Kharka Kulo,BT,Tsirang,Barzhong,Barshong Toed,
+Karma Drubchu Kulo,BT,Tsirang,Barzhong,,
+Lal Bdr Bhujel Kulo,BT,Tsirang,Barzhong,,
+Damchu Kulo,BT,Tsirang,Barzhong,Barshong Toed,
+Dago Dema,BT,Tsirang,Barzhong,Barshong Toed,
+Nim Dorji Tamang,BT,Tsirang,Barzhong,Barshong Toed,
+lal Bdr Tamang,BT,Tsirang,Barzhong,Choonyikhang,
+Waiba Kulo,BT,Tsirang,Barzhong,Choonyikhang,
+Goirey Kulo,BT,Tsirang,Barzhong,Choonyikhang,
+Buro Kulo,BT,Tsirang,Barzhong,Choonyikhang,
+Tamang Kulo,BT,Tsirang,Barzhong,Choonyikhang,
+Bara Durey Kulo,BT,Tsirang,Barzhong,Choonyikhang,
+Garekhola Kulo,BT,Tsirang,Barzhong,Choonyikhang,
+Balwani,BT,Tsirang,Barzhong,Toedsang,
+Peta Koti Dara,BT,Tsirang,Barzhong,Toedsang,
+Devitheny kulo,BT,Tsirang,Barzhong,Toedsang,
+Sangpang Kulo,BT,Tsirang,Barzhong,Toedsang,
+Layo Kulo,BT,Tsirang,Barzhong,Toedsang,
+Sierkiy Khola Kulo,BT,Tsirang,Barzhong,Gangtogkha,
+Gairkholsa Kulo,BT,Tsirang,Barzhong,Barshong Maed,
+Gari Kholsa,BT,Tsirang,Barzhong,Barshong Maed,
+Ganggatry Kulo,BT,Tsirang,Barzhong,Barshong Maed,
+Salarey Kulo,BT,Tsirang,Barzhong,Barshong Maed,
+Timsina Kulo,BT,Tsirang,Barzhong,Toedsang,
+Gotamey Kulo,BT,Tsirang,Barzhong,Barshong Maed,
+Chuwa Kharkhay,BT,Tsirang,Rangthangling,Charingma_Rangth- angling,
+Jaganath Kulo,BT,Tsirang,Rangthangling,Charingma_Rangth- angling,
+Dhakal Kulo,BT,Tsirang,Rangthangling,Charingma_Rangth- angling,
+Kamikulo,BT,Tsirang,Rangthangling,Charingma_Rangth- angling,
+Theba Kulo,BT,Tsirang,Rangthangling,Charingma_Rangth- angling,
+Lampatey Kulo,BT,Tsirang,Rangthangling,Charingma_Rangth- angling,
+Zulphey Khulo,BT,Tsirang,Rangthangling,Charingma_Rangth- angling,Charingma (Zulphay- gaon)
+Sumba Kulo,BT,Tsirang,Rangthangling,Charingma_Rangth- angling,
+Yedhar Kulo,BT,Tsirang,Rangthangling,Charingma_Rangth- angling,
+Ratey Khulo,BT,Tsirang,Rangthangling,Charingma_Rangth- angling,Rangthangling
+Nimazor A,BT,Tsirang,Rangthangling,Charingma_Rangth- angling,Rangthangling
+NImazor B,BT,Tsirang,Rangthangling,Gagaling_Nyimazor,Nyimazor(Herabotay)
+Chapratsi,BT,Tsirang,Rangthangling,Charingma_Rangth- angling,Rangthangling
+Devithan,BT,Tsirang,Rangthangling,Charingma_Rangth- angling,Rangthangling
+Bondukey,BT,Tsirang,Rangthangling,Charingma_Rangth- angling,Rangthangling
+Bakshing Kulo,BT,Tsirang,Rangthangling,Charingma_Rangth- angling,Rangthangling
+Alainchi Kulo,BT,Tsirang,Rangthangling,Charingma_Rangth- angling,Rangthangling
+Mongar Kulo,BT,Tsirang,Rangthangling,Soonkosh,
+Mosanay Kulo,BT,Tsirang,Rangthangling,Soonkosh,Soonkosh
+Basee Kulo,BT,Tsirang,Rangthangling,Soonkosh,Soonkosh
+Khopi,BT,Tsirang,Rangthangling,Soonkosh,Dawthongsa(Saunay)
+Lararchu kullo,BT,Tsirang,Sergithang,Tashithang,Tashithang(Patale Tar)
+Moktan Kulo,BT,Tsirang,Tsholingkhor,Kapazhing,Kapazhing
+Mewa Kulo,BT,Tsirang,Tsholingkhor,Kapazhing,Kapazhing
+Poowalay Kulo,BT,Tsirang,Tsholingkhor,Kapazhing,Tsholingkhar (Kapazh- ing)
+Thutey Kulo,BT,Tsirang,Tsholingkhor,Kapazhing,Tsholingkhar (Kapazh- ing)
+Spring Kulo,BT,Tsirang,Tsholingkhor,Kapazhing,Tsholingkhar (Kapazh- ing)
+Baskota Kulo,BT,Tsirang,Tsholingkhor,Kapazhing,Kapazhing
+Kali Kholay Kulo,BT,Tsirang,Tsholingkhor,Kapazhing,Tsholingkhar (Kapazh- ing)
+Laxman Kulo,BT,Tsirang,Tsholingkhor,Kapazhing,Tsholingkhar (Kapazh- ing)
+Mongar Kulo,BT,Tsirang,Tsholingkhor,Kapazhing,Tsholingkhar (Kapazh- ing)
+Khorpeney Kulo,BT,Tsirang,Tsholingkhor,Tsholingkhar Toed,Tsholingkhar Toed(Upper Tshokana)
+Thrutey Kulo,BT,Tsirang,Tsholingkhor,Tsholingkhar Toed,Tsholingkhar Toed(Upper Tshokana)
+Dukpa,BT,Tsirang,Tsholingkhor,Gomsoom,Gomsoom(Tintalay)
+Panday,BT,Tsirang,Tsholingkhor,Gomsoom,Gomsoom(Tintalay)
+Sama Kulo,BT,Tsirang,Tsholingkhor,Gomsoom,Gomsoom(Tintalay)
+DC Kulo,BT,Tsirang,Tsholingkhor,Gomsoom,Gomsoom(Tintalay)
+Naya Mandal,BT,Tsirang,Tsholingkhor,Tsholingkhar Maed,Tsholingkhar Maed(Lower Tshokana)
+Puranu Mandal,BT,Tsirang,Tsholingkhor,Tsholingkhar Maed,Tsholingkhar Maed(Lower Tshokana)
+Thrutey Kulo,BT,Tsirang,Tsholingkhor,Tsholingkhar Maed,Tsholingkhar Maed(Lower Tshokana)
+Duupe,BT,Tsirang,Tsholingkhor,Tsholingkhar Maed,Tsholingkhar Maed(Lower Tshokana)
+Thrutey (Budhey),BT,Tsirang,Tsholingkhor,Tsholingkhar Maed,Tsholingkhar Maed(Lower Tshokana)
+Thrulo(Koiraka) Kulo,BT,Tsirang,Tsholingkhor,Tsholingkhar Maed,Tsholingkhar Maed(Lower Tshokana)
+Neya Kulo,BT,Tsirang,Tsholingkhor,Tsholingkhar Maed,Tsholingkhar Maed(Lower Tshokana)
+Phetay Kulo,BT,Tsirang,Tsholingkhor,Tsholingkhar Maed,Tsholingkhar Maed(Lower Tshokana)
+Thing Kulo,BT,Tsirang,Tsholingkhor,Droobchhugang,Droobchhugang (Harpaypani)
+Timshina,BT,Tsirang,Tsholingkhor,Droobchhugang,Alenchi(Alaichey)
+Neopaney Kulo,BT,Tsirang,Tsholingkhor,Droobchhugang,Droobchhugang (Harpaypani)
+Barakoti Kulo,BT,Tsirang,Tsholingkhor,Droobchhugang,Droobchhugang (Harpaypani)
+Thrutey Kulo,BT,Tsirang,Tsholingkhor,Droobchhugang,Droobchhugang (Harpaypani)
+Ghishing,BT,Tsirang,Tsholingkhor,Droobchhugang,Alenchi(Alaichey)
+Bhupal Kulo,BT,Tsirang,Tsholingkhor,Droobchhugang,Droobchhugang (Harpaypani)
+Uttaray Kulo,BT,Tsirang,Patakla,Patshaling Toed,Bakshing
+Jowbari Kulo,BT,Tsirang,Patakla,Patshaling Maed_ Tsakaling,Patshaling Maed
+Melay Kulo,BT,Tsirang,Patakla,Patshaling Toed,Patshaling Toed
+Betini Kulo,BT,Tsirang,Patakla,Patshaling Maed_ Tsakaling,Patshaling Maed
+Mondal Kulo,BT,Tsirang,Patakla,Pangthang,Pangthang(Pakhay)
+Sachey Kulo,BT,Tsirang,Patakla,Pangthang,Pangthang(Pakhay)
+Gantey Kulo,BT,Tsirang,Patakla,Pangthang,Pangthang(Pakhay)
+Dhimal Kulo,BT,Tsirang,Patakla,Pangthang,Pangthang(Pakhay)
+Rigney Kulo,BT,Tsirang,Patakla,Pangthang,Pangthang(Pakhay)
+Kuwapani Kulo,BT,Tsirang,Patakla,Pangthang,Pangthang(Pakhay)
+Jukay Pani Kulo,BT,Tsirang,Patakla,Pangthang,Pangthang(Pakhay)
+Thulo Kholcha Kulo,BT,Tsirang,Patakla,Pangthang,Pangthang(Pakhay)
+laya kulo,BT,Tsirang,Kikorthang,Sa-Tsangma,Sa-Tsangma(Majuwa)
+Jogi Kulo,BT,Tsirang,Kikorthang,Nyizergang,Nyizergang(Upper Salami)
+Pairo Kulo,BT,Tsirang,Kikorthang,Nyizergang,Nyizergang(Upper Salami)
+Rai Kulo,BT,Tsirang,Kikorthang,,
+Ramphu Kulo,BT,Tsirang,Kikorthang,Nyizergang,Nyizergang(Upper Salami)
+Thapa Kulo,BT,Tsirang,Kikorthang,Nyizergang,Nyizergang(Upper Salami)
+Balu and Suberi Kulo,BT,Tsirang,Kikorthang,Tashiyangjong,Tashiyangjong(Lower Salami)
+Mahat Kulo,BT,Tsirang,Kikorthang,Tashiyangjong,Tashiyangjong(Lower Salami)
+Naya Kulo,BT,Tsirang,Kikorthang,Tashiyangjong,Tashiyangjong(Lower Salami)
+Darlami Kulo,BT,Tsirang,Kikorthang,Tashiyangjong,
+Dhal Kulo,BT,Tsirang,Kikorthang,Tashiyangjong,Tashiyangjong(Lower Salami)
+Thutay Kulo,BT,Tsirang,Kikorthang,Tashiyangjong,Tashiyangjong(Lower Salami)
+Koirala Kulo,BT,Tsirang,Kikorthang,Tashiyangjong,Tashiyangjong(Lower Salami)
+Gurasey Kulo,BT,Tsirang,Kikorthang,Tashiyangjong,Tashiyangjong(Lower Salami)
+Mongar Kulo,BT,Tsirang,Kikorthang,Maenchhana,Maenchhana(Mithun)
+Maj Kulo,BT,Tsirang,Kikorthang,Maenchhana,Maenchhana(Mithun)
+Kheti Kulo,BT,Tsirang,Kikorthang,Maenchhana,
+Haldar kulo,BT,Tsirang,Kikorthang,Dekiling,
+Jarki Kulo,BT,Tsirang,Kikorthang,Dekiling,Doongkarchhoeling
+Thulu Kulo,BT,Tsirang,Kikorthang,Dekiling,Dekiling(Lower Bockray)
+Mondal Kulo,BT,Tsirang,Kikorthang,Dekiling,Dekiling(Lower Bockray)
+Bir Kulo,BT,Tsirang,Kikorthang,Dekiling,Dekiling(Lower Bockray)
+Tamang Kulo,BT,Tsirang,Kikorthang,Dekiling,Doongkarchhoeling
+Alley Kulo,BT,Tsirang,Kikorthang,Dekiling,Dekiling(Lower Bockray)
+Phul Bari Kulo,BT,Tsirang,Kikorthang,Dekiling,Dekiling(Lower Bockray)
+Adhikari Kulo,BT,Tsirang,Kikorthang,Dekiling,Dekiling(Lower Bockray)
+Bhich Kulo,BT,Tsirang,Kikorthang,Dekiling,Dekiling(Lower Bockray)
+Ghimeray Kulo B,BT,Tsirang,Kikorthang,Dekiling,Doongkarchhoeling
+Ghimerey Kulo A,BT,Tsirang,Kikorthang,Dekiling,Dekiling(Lower Bockray)
+Jeroo Kulo,BT,Tsirang,Kikorthang,Dekiling,Dekiling(Lower Bockray)
+Jukey Dara,BT,Tsirang,Phuentenchhu,Tashichhoeling,Tashichholing(Burichu)
+Upreti,BT,Tsirang,Phuentenchhu,Tashichhoeling,
+narsinggay,BT,Tsirang,Phuentenchhu,Tashichhoeling,Tashichholing(Burichu)
+Dalay,BT,Tsirang,Phuentenchhu,Tashichhoeling,Tashichholing(Burichu)
+Lhachuma/Mondule,BT,Tsirang,Phuentenchhu,Tashichhoeling,Tashichholing(Burichu)
+Pawkhola,BT,Tsirang,Phuentenchhu,Tashichhoeling,Tashichholing(Burichu)
+Thrutey,BT,Tsirang,Phuentenchhu,Tashichhoeling,Tashichholing(Burichu)
+Thinley Kulu,BT,Tsirang,Phuentenchhu,Tashichhoeling,Tashichholing(Burichu)
+Bararey Kulu,BT,Tsirang,Phuentenchhu,Tashichhoeling,Tashichholing(Burichu)
+Dhaley Kulo,BT,Tsirang,Phuentenchhu,Tashichhoeling,Tashichholing(Burichu)
+Matsaley Kulu,BT,Tsirang,Phuentenchhu,Tashichhoeling,Tashichholing(Burichu)
+Rinzin kulu,BT,Tsirang,Phuentenchhu,Tashichhoeling,Tashichholing(Burichu)
+Gimerey,BT,Tsirang,Phuentenchhu,Norbuthang,Drongtoed(Saureni)
+mundol,BT,Tsirang,Phuentenchhu,Norbuthang,Drongtoed(Saureni)
+Thutey,BT,Tsirang,Phuentenchhu,Norbuthang,Norboothang(Manitar)
+Koiraley Kulo,BT,Tsirang,Phuentenchhu,Norbuthang,Norboothang(Manitar)
+Devithaney/Bich Kulu,BT,Tsirang,Phuentenchhu,Norbuthang,Norboothang(Manitar)
+Hatey Dungay/Kulu Upper/Kami,BT,Tsirang,Phuentenchhu,Norbuthang,Norboothang(Manitar)
+Cheney,BT,Tsirang,Phuentenchhu,Norbuthang,Drongtoed(Saureni)
+Kumtey Kulu,BT,Tsirang,Phuentenchhu,Norbuthang,Drongtoed(Saureni)
+Hatey Dungay Kulu Lower,BT,Tsirang,Phuentenchhu,Norbuthang,Drongtoed(Saureni)
+Kaijal Botey,BT,Tsirang,Phuentenchhu,Norbuthang,Norboothang(Manitar)
+Lhmu Dhuwali,BT,Tsirang,Phuentenchhu,Norbuthang,Drongtoed(Saureni)
+Bhoj Puray Kulu,BT,Tsirang,Phuentenchhu,Norbuthang,Drongtoed(Saureni)
+Bagirath kulu,BT,Tsirang,Phuentenchhu,Norbuthang,Norboothang(Manitar)
+Goilay Botay Kulu,BT,Tsirang,Phuentenchhu,Norbuthang,Norboothang(Manitar)
+Damai,BT,Tsirang,Phuentenchhu,Peljorling,Peljorling(Dhansiri)
+Dhar Kharey,BT,Tsirang,Phuentenchhu,Peljorling,Chhubabsa(Tshangay)
+Mundol,BT,Tsirang,Phuentenchhu,Peljorling,Peljorling(Dhansiri)
+Chaleyshay,BT,Tsirang,Phuentenchhu,Peljorling,Peljorling(Dhansiri)
+Chubabsa,BT,Tsirang,Phuentenchhu,Peljorling,Chhubabsa(Tshangay)
+Golaytar,BT,Tsirang,Phuentenchhu,Peljorling,Peljorling(Dhansiri)
+Goleytar Amaley Kulu,BT,Tsirang,Phuentenchhu,Peljorling,Peljorling(Dhansiri)
+Upper Chagay,BT,Tsirang,Phuentenchhu,Peljorling,Peljorling(Dhansiri)
+Bangtar Kulu,BT,Tsirang,Phuentenchhu,Goentegkha_Tong- shinggang,Draagithog(S/Melay)
+Aleydarey KULU,BT,Tsirang,Phuentenchhu,Peljorling,Peljorling(Dhansiri)
+Saurani KULU,BT,Tsirang,Phuentenchhu,Peljorling,Peljorling(Dhansiri)
+Devithan,BT,Tsirang,Phuentenchhu,Peljorling,Peljorling(Dhansiri)
+Tilay Kulu,BT,Tsirang,Phuentenchhu,Peljorling,Peljorling(Dhansiri)
+Gurung Kulu,BT,Tsirang,Phuentenchhu,Peljorling,Peljorling(Dhansiri)
+Chedhey KULU,BT,Tsirang,Phuentenchhu,Serzhong,Serzhong(Phaleday)
+Devi Thaney,BT,Tsirang,Phuentenchhu,Serzhong,Serzhong(Phaleday)
+Paray Kulu,BT,Tsirang,Phuentenchhu,Serzhong,Serzhong(Phaleday)
+Khorong Kulu,BT,Tsirang,Phuentenchhu,Serzhong,Chhubabsa(Tshangay)
+Devi Thaney,BT,Tsirang,Phuentenchhu,Norbuthang,
+Phelingtar,BT,Tsirang,Phuentenchhu,Goentegkha_Tong- shinggang,Draagithog(S/Melay)
+Thrulu Kulu,BT,Tsirang,Phuentenchhu,Goentegkha_Tong- shinggang,Tongshinggang(T/ Melay)
+khaling kulu,BT,Tsirang,Phuentenchhu,Goentegkha_Tong- shinggang,Draagithog(S/Melay)
+Rumdaley Kulu A,BT,Tsirang,Phuentenchhu,Goentegkha_Tong- shinggang,Draagithog(S/Melay)
+Rumdaley Kulu B,BT,Tsirang,Phuentenchhu,Goentegkha_Tong- shinggang,Draagithog(S/Melay)
+Karani Kulu,BT,Tsirang,Phuentenchhu,Goentegkha_Tong- shinggang,Dhodomchen (Dhapk- hola)
+Dorokhey KULU,BT,Tsirang,Phuentenchhu,Goentegkha_Tong- shinggang,Tongshinggang(T/ Melay)
+Tashipang Kulu,BT,Tsirang,Mendrelgang,Tashipang,Tashipang(Gurungaon)
+Jurkey Kulo,BT,Tsirang,Mendrelgang,Pemashong_Samsh- ing Gaden,Pemashong(Sarkigaon)
+Danapati Kulo,BT,Tsirang,Mendrelgang,Mendrelgang,Mendrelgang (Lami- dara)
+Thaglal Kulo,BT,Tsirang,Mendrelgang,Mendrelgang,Mendrelgang (Lami- dara)
+Antaray Kulo,BT,Tsirang,Mendrelgang,Riserbu,Riserbu(Rateykhola)
+Bja-Goe Menchu,BT,Paro,Lungnyi,Jieu_Woochhu,Jieu
+Damthangkha,BT,Paro,Lungnyi,Jieu_Woochhu,Woochhu
+Bjam-Tasa,BT,Paro,Lungnyi,Jieu_Woochhu,Jieu
+Densuna,BT,Paro,Lungnyi,Jieu_Woochhu,Jieu
+Jew-Phu,BT,Paro,Lungnyi,Jieu_Woochhu,Jieu
+Khey-Karpo,BT,Paro,Lungnyi,Naemjog,Naemjog
+Tshoreykha,BT,Paro,Lungnyi,Dzongdraag_Gadraag,Dzongdraagkha
+Bjazhi Zampa,BT,Paro,Lungnyi,Dzongdraag_Gadraag,Gadraagna
+Zanglay La,BT,Paro,Lungnyi,Dzongdraag_Gadraag,Gadraagna
+Bozena,BT,Paro,Lungnyi,Dzongdraag_Gadraag,Gadraagna
+Gabja-Rongchu,BT,Paro,Lungnyi,Baangdey,Baangdey
+Remina,BT,Paro,Lungnyi,Baangdey,
+Gungbu,BT,Paro,Lungnyi,Pangbisa,
+Chab Babsa,BT,Paro,Lungnyi,Pangbisa,Ugyenguru
+Zhamjana,BT,Paro,Lungnyi,Pangbisa,
+Sel-Chhu,BT,Paro,Doteng,Jabji_Loogchhoed,
+Katekha,BT,Paro,Doteng,Jabji_Loogchhoed,
+Woogar Lungchhu,BT,Paro,Doteng,Aa-tsho_Phunoob,
+Barmai Lungchhu,BT,Paro,Doteng,Aa-tsho_Phunoob,
+Drakey Phang Tshochhu,BT,Paro,Doteng,Aa-tsho_Phunoob,
+Guruphang Tshoye Chhu,BT,Paro,Doteng,Phooshar,
+Nye Gongmai Chhu,BT,Paro,Doteng,Phooshar,
+Zhingri Lung Chhu,BT,Paro,Doteng,Phooshar,
+Chhoekhor Doesai Chhu,BT,Paro,Doteng,Phooshar,
+Sergi Lung Chhu,BT,Paro,Doteng,Phooshar,
+Dampa Rong Chhu,BT,Paro,Doteng,Phooshar,
+Kotey Zelchhu,BT,Paro,Doteng,Chhubar,
+Gong Chhu,BT,Paro,Doteng,Joogar_Pachhu,
+Gongmed Lung Chhu,BT,Paro,Doteng,Joogar_Pachhu,
+Wagombrak,BT,Monggar,Narang,Dongshom,Dongshum
+Wagombrak,BT,Monggar,Narang,Thrinangphu,Gutshaphu
+Dongri,BT,Monggar,Narang,Khalong,Deki Pangthang
+Rekha Pek,BT,Monggar,Narang,Gomchu,Brokchilu
+Benjo Lungchhu,BT,Paro,Tsento,Chhungjey_Zamsar,Zamsar
+Damphu Lungchhu,BT,Paro,Tsento,Chhungjey_Zamsar,Zamsar
+Chunjey Lungchhu,BT,Paro,Tsento,Chhungjey_Zamsar,Chhungjey
+Gomre Phurang Chhu,BT,Paro,Tsento,Chhungjey_Zamsar,Chhungjey
+Chula Lum,BT,Paro,Tsento,Mitshig_Shana,Shana
+Thariphu Chhu,BT,Paro,Tsento,Mitshig_Shana,Shana
+Phuchunang Lum Chhu,BT,Paro,Tsento,Mitshig_Shana,Chhuyul
+Zona Lum Chhu,BT,Paro,Tsento,Mitshig_Shana,Lemdo
+Chakha Chhu,BT,Paro,Tsento,Mitshig_Shana,Mitshig
+Yoegophu Lum Chhu,BT,Paro,Tsento,Mitshig_Shana,Mitshig
+Kalungka,BT,Paro,Tsento,Nyamjey_Phangdo,Phangdo
+Dhamphu Dokasham,BT,Paro,Tsento,Nyamjey_Phangdo,Phangdo
+Balaha,BT,Paro,Tsento,Nyamjey_Phangdo,Phangdo
+Nyechhu Phu,BT,Paro,Tsento,Nyechhu_Shar-ri,Nyechhu
+Jagayphu,BT,Paro,Tsento,Nyechhu_Shar-ri,Shar-ri (Tsendo)
+Tsenjophu,BT,Paro,Tsento,Nyechhu_Shar-ri,Shar-ri (Tsendo)
+Tshampahire,BT,Monggar,Balam,Balam,Upper Balam
+Mantshangre,BT,Monggar,Balam,Balam,Upper Balam
+Zorbrangsa Re,BT,Monggar,Balam,Balam,Upper Balam
+Karshingchamo Re,BT,Monggar,Balam,Balam,Upper Balam
+Narchhulu Re,BT,Monggar,Balam,Khebshing,Bangnehoi
+Zala Re,BT,Monggar,Balam,Selkhar,Shelri Pam
+Sangyangmo Re,BT,Monggar,Balam,Selkhar,Selkhar
+Dungmanma Re,BT,Monggar,Balam,Selkhar,Dungmanba
+Gumpoktor Re,BT,Monggar,Balam,Selkhar,Gumpoktor
+Radhi,BT,Monggar,Balam,Selkhar,Radhi
+Zalakhe,BT,Monggar,Balam,Jadung,Upper jadung
+Shingchong Re,BT,Monggar,Balam,Jadung,Upper jadung
+Yourangbu,BT,Monggar,Balam,Jadung,Yangbari
+Karmacholing,BT,Monggar,Chhali,Gonpa,Karmacholing
+Satshalo spring,BT,Monggar,Chaskhar,Doongsingma_Pam,Dungsingma
+Balam,BT,Monggar,Chaskhar,Borphai_Chagsakhar,Balam
+Gumdari,BT,Monggar,Chaskhar,Yetong_Jarshingpogtor,Gumdari
+Yabung,BT,Monggar,Chaskhar,Kharnang_Kheshingra,Sangbari
+Jakjoi,BT,Monggar,Chaskhar,Yangrapoongshing,Jakhoi
+Gop,BT,Monggar,Drametse,Ba-Ging_Shadang,Baging
+Waichur,BT,Monggar,Drametse,Ba-Ging_Shadang,Baging
+Shaphangma,BT,Monggar,Drametse,Drametse_Shaphangma,Shaphangma
+Yengkhartshing,BT,Monggar,Drametse,Drametse_Shaphangma,Drametse
+Daksamanang,BT,Monggar,Drepung,Drepoong,Daksamanang
+Bainang Re,BT,Monggar,Drepung,Nyamla Bainangri,Bainangri
+Daksamanang,BT,Monggar,Drepung,Nyamla Bainangri,Nyamla
+Yejib,BT,Monggar,Drepung,Zunglen,Zunglen
+Yetsalo,BT,Monggar,Drepung,Tsangkhar,Chaksuzor
+Chaksuzor,BT,Monggar,Drepung,Tsangkhar,Tsangkhar
+Daksamanang,BT,Monggar,Drepung,Drepoong,Tadzong
+"Sakarmi, Woop",BT,Monggar,Drepung,Drepoong,Woop pek
+Damkhar,BT,Monggar,Gongdue,Damkhar_Weringla,Damkhar
+Pangthang,BT,Monggar,Gongdue,Damkhar_Weringla,Pangthang
+Salabi,BT,Monggar,Gongdue,Damkhar_Weringla,Salabi
+Weiringla,BT,Monggar,Gongdue,Damkhar_Weringla,Weringla
+Gorthongla,BT,Monggar,Gongdue,Phazong,Gorthongla
+Pam,BT,Monggar,Gongdue,Phazong,Pam
+Medene,BT,Monggar,Gongdue,Phazong,Medene
+Bangbangla,BT,Monggar,Gongdue,Phazong,Bangbangla
+Daksa,BT,Monggar,Gongdue,Daagsa_Kumazong,Daksa
+Kumazong,BT,Monggar,Gongdue,Daagsa_Kumazong,Kumadzong
+Bograbi,BT,Monggar,Gongdue,Daagsa_Kumazong,Bogarbi
+Bakla,BT,Monggar,Gongdue,Baagla_Dengkaling,Bakla
+Edi,BT,Monggar,Gongdue,Baagla_Dengkaling,Edi
+Yangbari,BT,Monggar,Gongdue,Pikari_Yangbari,Yangbari
+Kormaed,BT,Monggar,Gongdue,Pikari_Yangbari,Kormaed
+Laptsari,BT,Monggar,Jurmey,Bilam_Dangkila,Bilam
+Menchuri,BT,Monggar,Jurmey,Bilam_Dangkila,Bilam
+Sengri,BT,Monggar,Jurmey,Moogtangkhar_Tsangkhazor,Muktangkhar
+Yarakla,BT,Monggar,Jurmey,Koknala_Ya-Ragla,Ya-Rakla
+Wagombrak,BT,Monggar,Narang,Dongshom,Bemeri
+Dongshum,BT,Monggar,Narang,Dongshom,Dongshum
+Wagombrak,BT,Monggar,Narang,Thrinangphu,Thrinangphu
+Wagombrak,BT,Monggar,Narang,Na-Rang,Narang
+Rekha Pek,BT,Monggar,Narang,Gomchu,Gomchu
+Dongri,BT,Monggar,Narang,Khalong,Khalong
+Dochuri,BT,Monggar,Kengkhar,Phosothong_singchongri,Shingchongri
+Daiohodrang,BT,Monggar,Kengkhar,Phosothong_singchongri,Shingchongri
+Daiphodrang,BT,Monggar,Kengkhar,Phosothong_singchongri,Trangthung
+Ngoithufuri,BT,Monggar,Kengkhar,Phosothong_singchongri,Munma
+Mukeyamari,BT,Monggar,Kengkhar,Phosothong_singchongri,Gongpa
+Mukeymari,BT,Monggar,Kengkhar,Phosothong_singchongri,Brongphu
+Singsiri,BT,Monggar,Kengkhar,Dogtang_Mooroong,Dogtang
+Singsiri,BT,Monggar,Kengkhar,Dogtang_Mooroong,Pangthang
+Tsangdari,BT,Monggar,Kengkhar,Dogtang_Mooroong,Murung
+Kaisekma,BT,Monggar,Kengkhar,Dogtang_Mooroong,Murung
+Dowri,BT,Monggar,Kengkhar,Dogtang_Mooroong,Romangla
+Omshari,BT,Monggar,Kengkhar,Dogtang_Mooroong,Dogtang
+Dongdala,BT,Monggar,Kengkhar,Olokid_Talabi,Menchabelam
+Gurtsiri,BT,Monggar,Kengkhar,Olokid_Talabi,Tsalabi
+Khodangri,BT,Monggar,Kengkhar,Olokid_Talabi,Oliki
+Sepnari,BT,Monggar,Kengkhar,Neykorlong_Warongborang,Nakolog
+Sepnari,BT,Monggar,Kengkhar,Neykorlong_Warongborang,Nanaric
+Moitangri,BT,Monggar,Kengkhar,Kyidpari_Yudari,Udari
+Moitangri,BT,Monggar,Kengkhar,Kyidpari_Yudari,Udari
+Khesingri,BT,Monggar,Kengkhar,Kyidpari_Yudari,Kidpari
+Perkheri,BT,Monggar,Kengkhar,Kyidpari_Yudari,Pogola
+Perkheri,BT,Monggar,Kengkhar,Kyidpari_Yudari,Kidpari
+Tshashongri,BT,Monggar,Kengkhar,Kyidpari_Yudari,Kidpari
+Kithpari,BT,Monggar,Kengkhar,Kyidpari_Yudari,Singsiri
+Daglari,BT,Monggar,Kengkhar,Kyidpari_Yudari,Kidpari
+Moitangri,BT,Monggar,Kengkhar,Tongla_Zi-Tsibi,Tongla
+Kumshingmari,BT,Monggar,Kengkhar,Tongla_Zi-Tsibi,Tonglagoenpa
+Dupchu,BT,Monggar,Kengkhar,Tongla_Zi-Tsibi,Shajula
+Kognangri,BT,Monggar,Kengkhar,Tongla_Zi-Tsibi,Zitsebi
+Nerawunburi,BT,Monggar,Kengkhar,Tongla_Zi-Tsibi,Tongla
+Karmacholing,BT,Monggar,Chhali,Gonpa,
+Threnchu,BT,Monggar,Chhali,Gonpa,
+Yangtang,BT,Monggar,Chhali,Gonpa,
+Threnchu,BT,Monggar,Chhali,Pangthang,pangthang
+Kesangma,BT,Monggar,Chhali,Pangthang,Thampang
+Phatikhoi,BT,Monggar,Chhali,Chulabi,Chulabi
+Kesangma,BT,Monggar,Chhali,Chulabi,Chasar
+Broksar,BT,Monggar,Chhali,Chulabi,Bakhim
+Broksar,BT,Monggar,Chhali,Chulabi,
+Chungpabung,BT,Monggar,Chhali,Chaling,
+Namachu,BT,Monggar,Chhali,Chaling,Kharigup
+Namkaling,BT,Monggar,Chhali,Chaling,
+Yoetenkhetshang,BT,Monggar,Chhali,Chaling,Bana
+Patikhoi,BT,Monggar,Chhali,Wangmakhar,Jambi
+Threnchu,BT,Monggar,Chhali,Wangmakhar,
+Bushing Rongma,BT,Monggar,Chhali,Wangmakhar,
+Pelung,BT,Monggar,Ngatshang,Yadi_Yekhar,Pelung
+Yekhar,BT,Monggar,Ngatshang,Yadi_Yekhar,Yadhi-Yekhar
+Bumpazor,BT,Monggar,Ngatshang,Yadi_Yekhar,Bumpazor
+Garpaling,BT,Monggar,Ngatshang,Yadi_Yekhar,Garpaling
+Phanas,BT,Monggar,Ngatshang,Nyingala_Phanasi,Phanas
+Zorgonpa,BT,Monggar,Ngatshang,Nyingala_Phanasi,
+Ningala,BT,Monggar,Ngatshang,Nyingala_Phanasi,Phanas
+Jarshingwang,BT,Monggar,Ngatshang,Nyingala_Phanasi,Jarshiwang
+Jagoegonpa,BT,Monggar,Ngatshang,Pelshoob,Goenpa
+Domlung,BT,Monggar,Ngatshang,Pelshoob,Domlung
+Pelshoop,BT,Monggar,Ngatshang,Pelshoob,Dekurung
+Omkhar,BT,Monggar,Ngatshang,Pelshoob,Omkhar
+Goenpa,BT,Monggar,Ngatshang,Pelshoob,Goenpa
+Sangacholing,BT,Monggar,Ngatshang,Pelshoob,Pelshoop
+Yadi RWSS,BT,Monggar,Ngatshang,Pelshoob,Pelshoop
+Thumbari,BT,Monggar,Ngatshang,Thoomdari,Thumbari
+Zangdari,BT,Monggar,Ngatshang,Thoomdari,Zangdari
+Tagor,BT,Monggar,Ngatshang,Thoomdari,Tagor
+Shingthari,BT,Monggar,Ngatshang,Ngatshang,Shingtharing
+Gochakpu,BT,Monggar,Ngatshang,Ngatshang,Gochakpu
+Kochigang,BT,Monggar,Ngatshang,Ngatshang,Kochigoenpa
+Mentshang,BT,Monggar,Ngatshang,Ngatshang,Mentsang
+Kochigoenpa,BT,Monggar,Ngatshang,Ngatshang,Kochigoenpa
+"Brakar Chu, Drobar, Kazomgokha",BT,Monggar,Saleng,Saling,Saling
+Namling,BT,Monggar,Saleng,Thridangbi,
+"Broksar, Khajira",BT,Monggar,Saleng,Drogsar,Drogsar
+Gorsumbi,BT,Monggar,Saleng,Drogsar,Maangling
+"Jajamari, Jukaphai",BT,Monggar,Saleng,Kalapang_Risa,Kalapang
+Thongjari,BT,Monggar,Saleng,Kalapang_Risa,Resa
+Chubar,BT,Monggar,Saleng,Tsenzabi_Masangdaza,Jangdung
+"Bediri, Jugilam",BT,Monggar,Saleng,Tsenzabi_Masangdaza,Masangdaza
+Khomnangbi,BT,Monggar,Saleng,Tsenzabi_Masangdaza,Pangsibi
+"Jachu,Tortorla,Mangthandrechu,Nepo Tungkangla",BT,Monggar,Saleng,Tsenzabi_Masangdaza,
+Shongjari,BT,Monggar,Saleng,,
+Jungang,BT,Monggar,Saleng,Seng-Gor,Seng-Gor
+Chompa,BT,Monggar,Mongar,Themnangbi_Ketongri,
+Sourangyoe,BT,Monggar,Mongar,Themnangbi_Ketongri,
+Ri-Toed,BT,Monggar,Mongar,Themnangbi_Ketongri,
+Chorten Singma,BT,Monggar,Mongar,Themnangbi_Ketongri,
+Thogpari,BT,Monggar,Mongar,Themnangbi_Ketongri,
+Larjab,BT,Monggar,Mongar,Themnangbi_Ketongri,
+Roushingyey and Mouza,BT,Monggar,Mongar,Gyalpoizhing_Wangling,
+Lower Roushing,BT,Monggar,Mongar,Gyalpoizhing_Wangling,
+Takpanakseyey Lower,BT,Monggar,Mongar,Gyalpoizhing_Wangling,
+Takpanakseyey Upper,BT,Monggar,Mongar,Gyalpoizhing_Wangling,
+Chukuri,BT,Monggar,Mongar,Gyalpoizhing_Wangling,
+Brungshingwog,BT,Monggar,Mongar,Gyalpoizhing_Wangling,
+Bozongree,BT,Monggar,Mongar,Gyalpoizhing_Wangling,
+Zangrong,BT,Monggar,Mongar,Konbar_Tagchu,
+Shingsapha,BT,Monggar,Mongar,Konbar_Tagchu,
+Rashulam,BT,Monggar,Mongar,Konbar_Tagchu,
+Shugulugsa,BT,Monggar,Mongar,Konbar_Tagchu,
+Zarangshi Khatoed,BT,Monggar,Mongar,Konbar_Tagchu,
+Zarangshi Khamey,BT,Monggar,Mongar,Konbar_Tagchu,
+Hodhonhshi,BT,Monggar,Mongar,Konbar_Tagchu,
+Mombangsa,BT,Monggar,Mongar,Konbar_Tagchu,
+Ngalongzamo,BT,Monggar,Mongar,Konbar_Tagchu,
+Shingthang Zampa,BT,Monggar,Mongar,Kidekhar,
+"Thrigpuri ""A,BT,Monggar,""Mongar",Kidekhar,,,,
+Khairi,BT,Monggar,Mongar,Kidekhar,
+"Thripuri ""B,BT,Monggar,""Mongar",Kidekhar,,,,
+Kamangyey,BT,Monggar,Mongar,Kidekhar,
+Phai Dhar yey,BT,Monggar,Mongar,Kidekhar,
+Dozam,BT,Monggar,Mongar,Wengkhar_Yagpoogang,Wengkhar
+Bachenmo,BT,Monggar,Mongar,Wengkhar_Yagpoogang,Wengkhar
+Remong (Tongseng),BT,Monggar,Mongar,Wengkhar_Yagpoogang,Wengkhar
+Remongyakpugang,BT,Monggar,Mongar,Wengkhar_Yagpoogang,Wengkhar
+Damtshang,BT,Monggar,Mongar,Wengkhar_Yagpoogang,Wengkhar
+Changyong,BT,Monggar,Mongar,Wengkhar_Yagpoogang,Wengkhar
+Dorgayshing,BT,Monggar,Mongar,Wengkhar_Yagpoogang,Wengkhar
+Yengtshang,BT,Monggar,Mongar,Wengkhar_Yagpoogang,Wengkhar
+Changyong (Jaibab),BT,Monggar,Mongar,Wengkhar_Yagpoogang,Wengkhar
+Mantshang,BT,Monggar,Mongar,Wengkhar_Yagpoogang,Wengkhar
+Numshing Ree & Zangzing Mo Jue,BT,Monggar,Mongar,Phosorong,Phosorong
+Baytshenang Poktor,BT,Monggar,Mongar,Phosorong,Phosorong
+Menchuri,BT,Monggar,Mongar,Phosorong,Phosorong
+Soitshong,BT,Monggar,Mongar,Phosorong,Phosorong
+Songthurpa & Lower Gupchuwang,BT,Monggar,Mongar,Phosorong,Phosorong
+Upper Gupchuwong (jamch)oing,BT,Monggar,Mongar,Phosorong,Phosorong
+Upper Gupchuwong (Lupangthang,BT,Monggar,Mongar,Phosorong,Phosorong
+Bargonpajug,BT,Monggar,Mongar,Phosorong,Phosorong
+Yakpogang,BT,Monggar,Mongar,Phosorong,Phosorong
+Dolungjug,BT,Monggar,Mongar,Phosorong,Phosorong
+Zargang,BT,Monggar,Mongar,Phosorong,Phosorong
+Chochorma Toddh,BT,Monggar,Mongar,Phosorong,Phosorong
+Re sharang,BT,Monggar,Mongar,Phosorong,Phosorong
+Joupoyongjug,BT,Monggar,Mongar,Phosorong,Phosorong
+Shameyig Khamey,BT,Monggar,Mongar,Phosorong,Phosorong
+Shiling,BT,Monggar,Shermung,Muhung,Shiling
+Muhung Gangtok,BT,Monggar,Shermung,Muhung,
+Mensakpa,BT,Monggar,Shermung,Muhung,
+Jabgang,BT,Monggar,Shermung,Jabgang,Jabgang
+Soenakhar Primary school,BT,Monggar,Shermung,Soenakhar,
+Wambur,BT,Monggar,Shermung,Soenakhar,Wambur
+Mangzhing,BT,Monggar,Shermung,Serzhong,Mangzhing
+Serzhong,BT,Monggar,Shermung,Serzhong,Serzhong
+Namchagang,BT,Monggar,Shermung,Soenakhar,Namchagang
+Soenakhar,BT,Monggar,Shermung,Soenakhar,
+Lower Gongdar,BT,Monggar,Shermung,Serzhong,
+Kheshingri,BT,Monggar,Shermung,Muhung,
+Gangmung,BT,Monggar,Shermung,Gangmung,Gangmung
+Thiling Toed,BT,Monggar,Shermung,Jabgang,Thiling
+Thramo,BT,Monggar,Shermung,Jabgang,Thramo
+Pangthang,BT,Monggar,Shermung,Muhung,
+Jangkhar,BT,Monggar,Shermung,Soenakhar,Jangkhar
+Tshaburi,BT,Monggar,Shermung,Serzhong,
+Babdhung,BT,Monggar,Shermung,Soenakhar,
+Reling Jalam,BT,Monggar,Shermung,Soenakhar,Riling
+Riling,BT,Monggar,Shermung,Soenakhar,Riling
+Goenpa,BT,Monggar,Shermung,Muhung,
+Shrimuhung Lower Secondary School,BT,Monggar,Shermung,Serzhong,
+Latibiyubgba/kasungma,BT,Monggar,Silambi,Nagor,Pang
+Lichira,BT,Monggar,Silambi,Nagor,Laiju
+Prangbrangsa,BT,Monggar,Silambi,Nagor,Laiju
+Brogsartog,BT,Monggar,Silambi,Nagor,Laiju
+Kongpolaiyungpa,BT,Monggar,Silambi,Nagor,
+Galingyungba,BT,Monggar,Silambi,Nagor,Goenpa
+Pangbra,BT,Monggar,Silambi,Gyalgong,Gyelong Toe
+Pratang,BT,Monggar,Silambi,Gyalgong,Gyelong Toe
+Gorkangla,BT,Monggar,Silambi,Dag,
+Peshingla,BT,Monggar,Silambi,Dag,Pishimbi
+Phudoma,BT,Monggar,Silambi,Wama,
+KOmthang,BT,Monggar,Silambi,Wama,
+Phogpola,BT,Monggar,Silambi,Wama,
+Namdari,BT,Monggar,Silambi,Wama,
+Thangbrang,BT,Monggar,Silambi,Wama,Yari Jawla
+Brogsar,BT,Monggar,Silambi,Wama,
+Chubar,BT,Monggar,Silambi,Wama,Changchangma
+Dungtongma,BT,Monggar,Silambi,Silambi,Silambi
+Taria,BT,Monggar,Silambi,Silambi,
+Barbibang,BT,Monggar,Silambi,Silambi,Barbrang
+Khalipong,BT,Monggar,Silambi,Silambi,Salipong
+Dungkarbi,BT,Monggar,Silambi,Silambi,Rukangla
+Threma Rongchu,BT,Haa,Katsho,Wangtsa,Chhurunggang
+Banjar,BT,Monggar,Tsamang,Banjar,Banjair
+Banjar Pam,BT,Monggar,Tsamang,Banjar,Banjair
+Motogchan,BT,Monggar,Tsamang,Banjar,
+Jargoth,BT,Monggar,Tsamang,Banjar,Jargot
+Gomechenbelpo,BT,Monggar,Tsamang,Banjar,Gomchenbarpo
+Nangar,BT,Monggar,Tsamang,Drangmaling_ Nang-gor,Drangmaling
+Dramaling,BT,Monggar,Tsamang,Drangmaling_ Nang-gor,Drangmaling
+Khuling,BT,Monggar,Tsamang,Ganglapong Maed,Ganglapong Maed
+Khuling,BT,Monggar,Tsamang,Ganglapong Maed,Khuling
+Lhakhang,BT,Monggar,Tsamang,Ganglapong Maed,
+Ganalapoong,BT,Monggar,Tsamang,Ganglapong Toed,Ganglapong Toed
+Autshonge,BT,Monggar,Tsamang,Ganglapong Toed,Ganglapong Toed
+Sothruling,BT,Monggar,Tsamang,Ganglapong Toed,Ganglapong Toed
+Ganglapoong,BT,Monggar,Tsamang,Ganglapong Toed,Ganglapong Toed
+Tokari,BT,Monggar,Tsamang,Thuenmong_Tokari,
+Labi,BT,Monggar,Tsamang,Thuenmong_Tokari,
+Tokari/Shokang,BT,Monggar,Tsamang,Thuenmong_Tokari,
+Tabsina,BT,Monggar,Tsamang,Thuenmong_Tokari,
+Toenshing,BT,Monggar,Tsamang,Thuenmong_Tokari,
+Etakpa,BT,Monggar,Tsamang,Thuenmong_Tokari,
+Shojabi,BT,Monggar,Tsamang,Thuenmong_Tokari,
+Goenpa,BT,Monggar,Tsamang,Thuenmong_Tokari,
+Artang,BT,Monggar,Tsamang,Thuenmong_Tokari,
+Pam,BT,Monggar,Tsamang,Thuenmong_Tokari,Pam
+Brepajab,BT,Monggar,Tsamang,Thuenmong_Tokari,
+Serbum Lhakhang,BT,Monggar,Tsamang,Thuenmong_Tokari,
+School and BHU,BT,Monggar,Tsamang,Thuenmong_Tokari,
+Bochu,BT,Haa,,,
+chachu,BT,Haa,,,
+Mashithang,BT,Haa,,,

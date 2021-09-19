@@ -32,12 +32,13 @@ __all__ = ("S3SHP",)
 
 import os
 
+from io import StringIO
+
 from gluon import *
 from gluon.contenttype import contenttype
 from gluon.storage import Storage
 from gluon.streamer import DEFAULT_CHUNK_SIZE
 
-from s3compat import StringIO
 from ..s3codec import S3Codec
 from ..s3utils import s3_str, s3_unicode, s3_strip_markup
 

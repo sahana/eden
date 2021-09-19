@@ -35,115 +35,14 @@ class index(S3CustomController):
         register_form = None
         register_div = None
 
-        # Contact Form
-        request_email = settings.get_frontpage("request_email")
-        if request_email:
-            from s3dal import Field
-            from gluon.validators import IS_NOT_EMPTY
-            from gluon.sqlhtml import SQLFORM
-            fields = [Field("name",
-                            label="Your name",
-                            requires=IS_NOT_EMPTY(),
-                            ),
-                      Field("address",
-                            label="Your e-mail address",
-                            requires=IS_NOT_EMPTY(),
-                            ),
-                      Field("subject",
-                            label="Subject",
-                            requires=IS_NOT_EMPTY(),
-                            ),
-                      Field("message", "text",
-                            label="Message",
-                            requires=IS_NOT_EMPTY(),
-                            ),
-                      ]
-            from s3 import s3_mark_required
-            labels, required = s3_mark_required(fields)
-            s3.has_required = required
-
-            response.form_label_separator = ""
-            contact_form = SQLFORM.factory(formstyle = settings.get_ui_formstyle(),
-                                           submit_button = T("Submit"),
-                                           labels = labels,
-                                           separator = "",
-                                           table_name = "contact", # Dummy table name
-                                           _id="mailform",
-                                           *fields
-                                           )
-
-            if contact_form.accepts(request.post_vars,
-                                    current.session,
-                                    formname="contact_form",
-                                    keepvalues=False,
-                                    hideerror=False):
-                # Processs Contact Form
-                form_vars = contact_form.vars
-                sender = "%s <%s>" % (form_vars.name, form_vars.address)
-                result = current.msg.send_email(to=request_email,
-                                                sender=sender,
-                                                subject=form_vars.subject,
-                                                message=form_vars.message,
-                                                reply_to=form_vars.address,
-                                                )
-                if result:
-                    response.confirmation = "Thank you for your message - we'll be in touch shortly"
-            if s3.cdn:
-                if s3.debug:
-                    s3.scripts.append("http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.js")
-                else:
-                    s3.scripts.append("http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.min.js")
-            else:
-                if s3.debug:
-                    s3.scripts.append("/%s/static/scripts/jquery.validate.js" % request.application)
-                else:
-                    s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % request.application)
-            validation_script = '''
-$('#mailform').validate({
- errorClass:'req',
- rules:{
-  name:{
-   required:true
-  },
-  address: {
-   required:true,
-   email:true
-  },
-  subject:{
-   required:true
-  },
-  message:{
-   required:true
-  }
- },
- messages:{
-  name:"Enter your name",
-  subject:"Enter a subject",
-  message:"Enter a message",
-  address:{
-   required:"Please enter a valid email address",
-   email:"Please enter a valid email address"
-  }
- },
- errorPlacement:function(error,element){
-  error.appendTo(element.parents('div.controls'))
- },
- submitHandler:function(form){
-  form.submit()
- }
-})'''
-            s3.jquery_ready.append(validation_script)
-
-        else:
-            contact_form = ""
-
         if AUTHENTICATED not in roles:
 
-            login_buttons = DIV(A(T("Login"),
-                                  _id="show-login",
-                                  _class="tiny secondary button"),
-                                _id="login-buttons"
-                                )
+            #login_buttons = DIV(A(T("Login"),
+            #                      _id = "show-login",
+            #                      _class = "tiny secondary button",
+            #                      ),
+            #                    _id = "login-buttons"
+            #                    )
             script = '''
 $('#show-mailform').click(function(e){
  e.preventDefault()
@@ -167,19 +66,20 @@ $('#show-login').click(function(e){
 
             if self_registration is True:
                 # Provide a Registration box on front page
-                login_buttons.append(A(T("Register"),
-                                       _id="show-register",
-                                       _class="tiny secondary button",
-                                       _style="margin-left:5px"))
-                script = '''
-$('#show-register').click(function(e){
- e.preventDefault()
- $('#login_form').hide()
- $('#register_form').show()
- $('#login_box').show()
- $('#intro').slideUp()
-})'''
-                s3.jquery_ready.append(script)
+                #login_buttons.append(A(T("Register"),
+                #                       _id = "show-register",
+                #                       _class = "tiny secondary button",
+                #                       _style = "margin-left:5px",
+                #                       ))
+                #script = '''
+#$('#show-register').click(function(e){
+# e.preventDefault()
+# $('#login_form').hide()
+# $('#register_form').show()
+# $('#login_box').show()
+# $('#intro').slideUp()
+#})'''
+                #s3.jquery_ready.append(script)
 
                 register_form = auth.register()
                 register_div = DIV(H3(T("Register")),
@@ -202,17 +102,16 @@ $('#login-btn').click(function(e){
             login_form = auth.login(inline=True)
             login_div = DIV(H3(T("Login")),
                             P(XML(T("Registered users can <b>login</b> to access the system"))))
-        else:
-            login_buttons = ""
+        #else:
+        #    login_buttons = ""
 
-        output["login_buttons"] = login_buttons
+        #output["login_buttons"] = login_buttons
         output["self_registration"] = self_registration
         output["registered"] = registered
         output["login_div"] = login_div
         output["login_form"] = login_form
         output["register_div"] = register_div
         output["register_form"] = register_form
-        output["contact_form"] = contact_form
 
         # Slick slider
         if s3.debug:

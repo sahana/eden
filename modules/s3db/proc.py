@@ -38,17 +38,18 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3ProcurementPlansModel",
-           "S3PurchaseOrdersModel",
+__all__ = ("ProcurementPlansModel",
+           "PurchaseOrdersModel",
            "proc_rheader"
            )
 
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
+#from .supply import SupplyItemPackQuantity
 
 # =============================================================================
-class S3ProcurementPlansModel(S3Model):
+class ProcurementPlansModel(S3Model):
     """
         Procurement Plans
 
@@ -183,7 +184,7 @@ class S3ProcurementPlansModel(S3Model):
                      #      "double",
                      #      compute = record_pack_quantity), # defined in supply
                      #Field.Method("pack_quantity",
-                     #             self.supply_item_pack_quantity(tablename=tablename)),
+                     #             SupplyItemPackQuantity(tablename)),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -272,7 +273,7 @@ class S3ProcurementPlansModel(S3Model):
             return current.messages.UNKNOWN_OPT
 
 # =============================================================================
-class S3PurchaseOrdersModel(S3Model):
+class PurchaseOrdersModel(S3Model):
     """
         Purchase Orders (PO)
 
@@ -397,11 +398,8 @@ class S3PurchaseOrdersModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
-                     #Field("pack_quantity",
-                     #      "double",
-                     #      compute = record_pack_quantity), # defined in supply
                      #Field.Method("pack_quantity",
-                     #             self.supply_item_pack_quantity(tablename=tablename)),
+                     #             SupplyItemPackQuantity(tablename)),
                      s3_comments(),
                      *s3_meta_fields())
 

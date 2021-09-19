@@ -6,17 +6,14 @@
     http://eden.sahanafoundation.org/wiki/BluePrintScenario
 """
 
-module = request.controller
-resourcename = request.function
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """
 
-    return s3db.cms_index(module, alt_function="index_alt")
+    return s3db.cms_index(c, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -68,8 +65,13 @@ def event():
                     s3.crud_strings["dc_response"].label_create = T("Add Assessment")
 
                 elif cname == "target":
-                    # @ToDo: Filter Locations available based on Event Locations
-                    #s3db.dc_target.location_id.default = r.record.location_id
+                    # Filter Locations available based on Event Locations
+                    ltable = s3db.event_event_location
+                    locations = db(ltable.event_id == r.id).select(ltable.location_id)
+                    if len(locations) == 1:
+                        s3db.dc_target.location_id.default = locations.first().location_id
+                    #else:
+                    #    # @ToDo: Filter to Event Locations
                     s3.crud_strings["dc_target"].label_create = T("Add Target")
 
             elif method in ("create", "list", "summary"):
@@ -127,6 +129,7 @@ def incident():
                         r.method = "assign"
                     if r.method == "assign":
                         r.custom_action = s3db.hrm_AssignMethod(component="assign")
+
                 cname = r.component_name
                 if cname == "config":
                     s3db.configure("gis_config",
@@ -148,8 +151,7 @@ def incident():
                 elif cname in ("asset", "human_resource", "event_organisation", "organisation", "site"):
                     atable = s3db.table("budget_allocation")
                     if atable:
-                        field = atable.budget_entity_id
-                        field.readable = field.writable = True
+                        atable.budget_entity_id.default = r.record.budget_entity_id
 
                     #s3.crud.submit_button = T("Assign")
                     #s3.crud.submit_button = T("Add")
@@ -179,19 +181,11 @@ $.filterOptionsS3({
                         f = ltable.event_id
                         f.default = r.record.event_id
                         f.readable = f.writable = False
-                        if cname in ("asset", "human_resource"):
-                            # DateTime
-                            datetime_represent = s3base.S3DateTime.datetime_represent
-                            for f in (ltable.start_date, ltable.end_date):
-                                f.requires = IS_EMPTY_OR(IS_UTC_DATETIME())
-                                f.represent = lambda dt: datetime_represent(dt, utc=True)
-                                f.widget = S3CalendarWidget(timepicker = True)
 
                 elif cname == "incident_asset":
                     atable = s3db.table("budget_allocation")
                     if atable:
-                        field = atable.budget_entity_id
-                        field.readable = field.writable = True
+                        atable.budget_entity_id.default = r.record.budget_entity_id
 
                     #s3.crud.submit_button = T("Assign")
                     #s3.crud.submit_button = T("Add")
@@ -236,9 +230,11 @@ $.filterOptionsS3({
                     s3_action_buttons(r)
                     if "msg" in settings.modules:
                         s3base.S3CRUD.action_button(url = URL(f="compose",
-                                                              vars = {"hrm_id": "[id]"}),
+                                                              vars = {"hrm_id": "[id]"}
+                                                              ),
                                                     _class = "action-btn send",
-                                                    label = str(T("Send Notification")))
+                                                    label = s3_str(T("Send Notification")),
+                                                    )
         return output
     s3.postp = postp
 
@@ -254,10 +250,11 @@ def incident_report():
     def prep(r):
         if r.http == "GET":
             if r.method in ("create", "create.popup"):
+                get_vars_get = get_vars.get
                 # Lat/Lon from Feature?
                 # @ToDo: S3PoIWidget() instead to pickup the passed Lat/Lon/WKT
                 field = r.table.location_id
-                lat = get_vars.get("lat", None)
+                lat = get_vars_get("lat", None)
                 if lat is not None:
                     lon = get_vars.get("lon", None)
                     if lon is not None:
@@ -269,7 +266,7 @@ def incident_report():
                         location_id = s3db.gis_location.insert(**form_vars)
                         field.default = location_id
                 # WKT from Feature?
-                wkt = get_vars.get("wkt", None)
+                wkt = get_vars_get("wkt", None)
                 if wkt is not None:
                     form_vars = Storage(wkt = wkt,
                                         )
@@ -277,6 +274,14 @@ def incident_report():
                     s3db.gis_location_onvalidation(form)
                     location_id = s3db.gis_location.insert(**form_vars)
                     field.default = location_id
+                # Incident Type from caller?
+                incident_type = get_vars_get("incident_type", None)
+                if incident_type is not None:
+                    ttable = s3db.event_incident_type
+                    incident_type = db(ttable.name == incident_type).select(ttable.id,
+                                                                            limitby = (0, 1)
+                                                                            ).first()
+                    r.table.incident_type_id.default = incident_type.id
 
         return True
     s3.prep = prep
@@ -559,7 +564,7 @@ def compose():
         redirect(URL(f="index"))
 
     # URL to redirect to after message sent
-    url = URL(c = module,
+    url = URL(c = "event",
               f = "compose",
               vars = {fieldname: hrm_id},
               )

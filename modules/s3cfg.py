@@ -36,7 +36,6 @@ from collections import OrderedDict
 from gluon import current, URL
 from gluon.storage import Storage
 
-from s3compat import basestring, INTEGER_TYPES
 from s3theme import FORMSTYLES
 
 class S3Config(Storage):
@@ -179,16 +178,12 @@ class S3Config(Storage):
         # Allow templates to append rather than replace
         self.fin.currencies = {}
         self.fire = Storage()
-        # @ToDo: Move to self.ui
-        self.frontpage = Storage()
-        self.frontpage.rss = []
         self.gis = Storage()
         # Allow templates to append rather than replace
         self.gis.countries = []
         self.hms = Storage()
         self.hrm = Storage()
         self.inv = Storage()
-        self.irs = Storage()
         self.L10n = Storage()
         # Allow templates to append rather than replace
         self.L10n.languages = {"en": "English"}
@@ -300,6 +295,8 @@ class S3Config(Storage):
             else:
                 s3.debug = False
                 track_changes(False)
+
+        return debug
 
     # -------------------------------------------------------------------------
     # Template
@@ -777,15 +774,6 @@ class S3Config(Storage):
         """
         return self.auth.get("registration_link_user_to_default")
 
-    def get_auth_opt_in_team_list(self):
-        return self.auth.get("opt_in_team_list", [])
-
-    def get_auth_opt_in_to_email(self):
-        return self.get_auth_opt_in_team_list() != []
-
-    def get_auth_opt_in_default(self):
-        return self.auth.get("opt_in_default", False)
-
     def get_auth_registration_requests_home_phone(self):
         return self.auth.get("registration_requests_home_phone", False)
 
@@ -991,7 +979,6 @@ class S3Config(Storage):
             ("asset", T("Assets")),
             ("project", T("Projects")),
             ("survey", T("Assessments")),
-            ("irs", T("Incidents"))
         ]))
 
     def get_auth_access_levels(self):
@@ -1061,6 +1048,21 @@ class S3Config(Storage):
         """
 
         return self.base.get("allow_testing", True)
+
+    def get_base_custom_models(self):
+        """
+            Custom Models
+            - a dict {prefix: template}
+            Also need to enable prefix in modules and add to template's __init__.py __all__
+        """
+        return self.base.get("custom_models", {})
+
+    def get_base_rest_controllers(self):
+        """
+            Re-routed RESTful CRUD controllers
+            - a dict {(controller, function): (prefix, name)}
+        """
+        return self.base.get("rest_controllers")
 
     def get_base_migrate(self):
         """ Whether to allow Web2Py to migrate the SQL database to the new structure """
@@ -2167,7 +2169,7 @@ class S3Config(Storage):
 
         setting = self.ui.get("formstyle", "default")
 
-        if isinstance(setting, basestring):
+        if isinstance(setting, str):
             # Try to find the corresponding _inline formstyle
             inline_formstyle_name = "%s_inline" % setting
             formstyle = FORMSTYLES.get(inline_formstyle_name)
@@ -2544,10 +2546,10 @@ class S3Config(Storage):
             'css' is a folder relative to static/styles
             - /jstree.css or /jstree.min.css is added as-required
         """
-        return self.ui.get("hierarchy_theme", dict(css = "plugins",
-                                                   icons = False,
-                                                   stripes = True,
-                                                   ))
+        return self.ui.get("hierarchy_theme", {"css": "plugins",
+                                               "icons": False,
+                                               "stripes": True,
+                                               })
 
     def get_ui_hierarchy_cascade_option_in_tree(self):
         """
@@ -4254,12 +4256,6 @@ class S3Config(Storage):
         """
         return self.__lazy("hrm", "event_course_mandatory", default=True)
 
-    #def get_hrm_event_programme(self):
-    #    """
-    #        Whether (Training) Events should be linked to Programmes
-    #    """
-    #    return self.__lazy("hrm", "event_programme", default=False)
-
     def get_hrm_event_site(self):
         """
             How (Training) Events should be Located:
@@ -4733,6 +4729,12 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Inventory Management Settings
     #
+    def get_inv_bin_site_layout(self):
+        """
+            Use structured Org Site Layout rather than just freetext Bin field
+        """
+        return self.inv.get("bin_site_layout", False)
+
     def get_inv_collapse_tabs(self):
         return self.inv.get("collapse_tabs", True)
 
@@ -4754,6 +4756,12 @@ class S3Config(Storage):
         """
         return self.inv.get("minimums", False)
 
+    def get_inv_stock_cards(self):
+        """
+            Use Stock Cards
+        """
+        return self.inv.get("stock_cards", False)
+
     def get_inv_recv_tab_label(self):
         label = self.inv.get("recv_tab_label")
         if not label:
@@ -4773,11 +4781,39 @@ class S3Config(Storage):
         """
         return self.inv.get("direct_stock_edits", False)
 
+    def get_inv_recv_ref_writable(self):
+        """
+            Whether Received Shipment Reference should be manually editable
+            - only possible before shipment processed
+        """
+        return self.inv.get("recv_ref_writable", False)
+
+    def get_inv_send_ref_writable(self):
+        """
+            Whether Sent Shipment Reference should be manually editable
+            - only possible before shipment processed
+        """
+        return self.inv.get("send_ref_writable", False)
+
     def get_inv_org_dependent_warehouse_types(self):
         """
             Whether Warehouse Types vary by Organisation
         """
         return self.inv.get("org_dependent_warehouse_types", False)
+
+    def get_inv_send_req_multi(self):
+        """
+            Whether Outbound Shipments can link to multiple Requests
+            - and hence use inv_send_req link table
+        """
+        return self.inv.get("send_req_multi", False)
+
+    def get_inv_recv_req_multi(self):
+        """
+            Whether Incoming Shipments can link to multiple Requests
+            - and hence use inv_recv_req link table
+        """
+        return self.inv.get("recv_req_multi", False)
 
     def get_inv_send_show_mode_of_transport(self):
         """
@@ -4890,21 +4926,6 @@ class S3Config(Storage):
         """
         return self.inv.get("warehouse_code_unique", False)
 
-    def get_inv_warehouse_locations(self):
-        """
-            Use structured Warehouse Locations rather than just freetext Bin field
-        """
-        return self.inv.get("warehouse_locations", False)
-
-    # -------------------------------------------------------------------------
-    # IRS
-    #
-    def get_irs_vehicle(self):
-        """
-            Use Vehicles to respond to Incident Reports?
-        """
-        return self.irs.get("vehicle", False)
-
     # -------------------------------------------------------------------------
     # Members
     #
@@ -4980,7 +5001,7 @@ class S3Config(Storage):
         """
         default_organisation = self.__lazy("org", "default_organisation", default=None)
         if default_organisation:
-            if not isinstance(default_organisation, INTEGER_TYPES):
+            if not isinstance(default_organisation, int):
                 # Check Session cache
                 default_organisation_id = current.session.s3.default_organisation_id
                 if default_organisation_id:
@@ -5009,7 +5030,7 @@ class S3Config(Storage):
         """
         default_site = self.org.get("default_site", None)
         if default_site:
-            if not isinstance(default_site, INTEGER_TYPES):
+            if not isinstance(default_site, int):
                 # Check Session cache
                 default_site_id = current.session.s3.default_site_id
                 if default_site_id:
@@ -5929,6 +5950,12 @@ class S3Config(Storage):
         """
         return self.req.get("inline_forms", True)
 
+    def get_req_match_tab(self):
+        """
+            Whether to show the Match Requests tab
+        """
+        return self.req.get("match_tab", True)
+
     def get_req_prompt_match(self):
         """
             Whether a Requester is prompted to match each line item in an Item request
@@ -6103,19 +6130,6 @@ class S3Config(Storage):
             @todo: move this documentation to the wiki?
         """
         return self.xforms.get("resources")
-
-    # -------------------------------------------------------------------------
-    # Frontpage Options
-    #
-    def get_frontpage(self, key=None, default=None):
-        """
-            Template-specific frontpage configuration options
-        """
-
-        if key:
-            return self.frontpage.get(key, default)
-        else:
-            return default
 
     # -------------------------------------------------------------------------
     # Custom template options

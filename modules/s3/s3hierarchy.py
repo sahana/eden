@@ -39,9 +39,9 @@ from gluon import DIV, FORM, LI, UL, current
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3compat import long, unicodeT, xrange
 from .s3utils import s3_str
 from .s3rest import S3Method
+from .s3crud import S3CRUD
 from .s3widgets import SEPARATORS
 
 DEFAULT = lambda: None
@@ -62,7 +62,7 @@ class S3HierarchyCRUD(S3Method):
         """
 
         if r.http == "GET":
-            if r.representation == "html":
+            if r.representation in ("html", "tree"):
                 output = self.tree(r, **attr)
             elif r.representation == "json" and "node" in r.get_vars:
                 output = self.node_json(r, **attr)
@@ -95,9 +95,7 @@ class S3HierarchyCRUD(S3Method):
                 r.error(405, "HierarchyCRUD not yet supported for individual Components")
             else:
                 record = None
-                # @ToDo: This won't work for e.g. components defined with link tables
-                ctable = component.table
-                _filter = (ctable[component.fkey] == r.id)
+                _filter = resource.parent.rfilter.get_query() & resource._join(implicit = True)
         else:
             record = r.record
             # @todo: apply all resource filters?
@@ -109,10 +107,22 @@ class S3HierarchyCRUD(S3Method):
             r.error(405, "No hierarchy configured for %s" % tablename)
 
         # Widget ID
-        widget_id = "%s-hierarchy" % tablename
+        # - can be passed in from s3.ui.hierarchicalopts.js
+        widget_id = r.get_vars.get("widget_id", "%s-hierarchy" % tablename)
 
         # Render the tree
         tree = self.render_tree(hierarchy, widget_id, record=record)
+
+        if r.representation == "tree":
+            return tree
+
+        # Build the form
+        form = FORM(DIV(tree,
+                        _class = "s3-hierarchy-tree",
+                        ),
+                    _id = widget_id,
+                    )
+        output["form"] = form
 
         crud_string = self.crud_string
 
@@ -123,39 +133,31 @@ class S3HierarchyCRUD(S3Method):
             title = crud_string(tablename, "title_list")
         output["title"] = title
 
-        # Build the form
-        form = FORM(DIV(tree,
-                        _class = "s3-hierarchy-tree",
-                        ),
-                    _id = widget_id,
-                    )
-        output["form"] = form
-
         # Widget options and scripts
         T = current.T
         resource_config = resource.get_config
+        url = r.url
 
         if component:
-            # @ToDo: way of adding a new top-level node
             if resource_config("hierarchy_method_no_open"):
                 # No point in seeing an Open menu item
                 open_url = None
             else:
-                open_url = r.url(method = "read",
-                                 component_id = "[id]",
-                                 #representation = "popup",
-                                 )
+                open_url = url(method = "read",
+                               component_id = "[id]",
+                               #representation = "popup",
+                               )
         else:
-            open_url = r.url(method = "read",
-                             id = "[id]",
-                             )
+            open_url = url(method = "read",
+                           id = "[id]",
+                           )
 
         widget_opts = {
             "widgetID": widget_id,
 
             "openLabel": s3_str(T("Open")),
             "openURL": open_url,
-            "ajaxURL": r.url(id=None, representation="json"),
+            "ajaxURL": url(id=None, representation="json"),
 
             "editLabel": s3_str(T("Edit")),
             "editTitle": s3_str(crud_string(tablename, "title_update")),
@@ -172,34 +174,53 @@ class S3HierarchyCRUD(S3Method):
         if resource_config("editable", True) and \
            has_permission("update", tablename):
             if component:
-                widget_opts["editURL"] = r.url(method = "update",
-                                               component_id = "[id]",
-                                               representation = "popup",
-                                               )
+                widget_opts["editURL"] = url(method = "update",
+                                             component_id = "[id]",
+                                             representation = "popup",
+                                             )
             else:
-                widget_opts["editURL"] = r.url(method = "update",
-                                               id = "[id]",
-                                               representation = "popup",
-                                               )
+                widget_opts["editURL"] = url(method = "update",
+                                             id = "[id]",
+                                             representation = "popup",
+                                             )
 
         if resource_config("deletable", True) and \
            has_permission("delete", tablename):
             if component:
-                widget_opts["deleteURL"] = r.url(method = "delete",
-                                                 component_id = "[id]",
-                                                 representation = "json",
-                                                 )
+                widget_opts["deleteURL"] = url(method = "delete",
+                                               component_id = "[id]",
+                                               representation = "json",
+                                               )
             else:
-                widget_opts["deleteURL"] = r.url(method = "delete",
-                                                 id = "[id]",
-                                                 representation = "json",
-                                                 )
+                widget_opts["deleteURL"] = url(method = "delete",
+                                               id = "[id]",
+                                               representation = "json",
+                                               )
 
+        add_btn = None
         if resource_config("insertable", True) and \
            has_permission("create", tablename):
-            widget_opts["addURL"] = r.url(method = "create",
-                                          representation = "popup",
-                                          )
+            widget_opts["addURL"] = url(method = "create",
+                                        representation = "popup",
+                                        )
+            if not record:
+                # Provide a way to add new top-level items
+                _href = url(method = "create",
+                            representation = "popup",
+                            vars = {"refresh": widget_id},
+                            )
+                add_btn = S3CRUD.crud_button(tablename = tablename,
+                                             name = "label_create",
+                                             _class = "s3_modal",
+                                             _href = _href,
+                                             _id = "add-btn",
+                                             )
+                if current.deployment_settings.ui.formstyle == "bootstrap":
+                    add_btn.add_class("btn btn-primary")
+                else:
+                    add_btn.add_class("action-btn")
+
+        output["root_add_btn"] = add_btn # 'add_btn' removed from output by postp for inv_warehouse
 
         # Theme options
         theme = current.deployment_settings.get_ui_hierarchy_theme()
@@ -238,7 +259,7 @@ class S3HierarchyCRUD(S3Method):
         node_id = r.get_vars["node"]
         if node_id:
             try:
-                node_id = long(node_id)
+                node_id = int(node_id)
             except ValueError:
                 pass
             else:
@@ -263,7 +284,8 @@ class S3HierarchyCRUD(S3Method):
         return json.dumps(data, separators = SEPARATORS)
 
     # -------------------------------------------------------------------------
-    def render_tree(self, hierarchy, widget_id, record=None):
+    @staticmethod
+    def render_tree(hierarchy, widget_id, record=None):
         """
             Render the tree
 
@@ -432,7 +454,7 @@ class S3HierarchyCRUD(S3Method):
         hcolumns = []
         colprefix = "HIERARCHY"
         htype = "string" if rfield.ftype == "virtual" else rfield.ftype
-        for level in xrange(depth+1):
+        for level in range(depth + 1):
             col = "%s.%s" % (colprefix, level)
             if level == 0:
                 headers[col] = root
@@ -698,10 +720,10 @@ class S3Hierarchy(object):
             theset = self.__theset
             theset.clear()
             for node_id, item in data["nodes"].items():
-                theset[long(node_id)] = {"p": item["p"],
-                                         "c": item["c"],
-                                         "s": set(item["s"]) \
-                                              if item["s"] else set()}
+                theset[int(node_id)] = {"p": item["p"],
+                                        "c": item["c"],
+                                        "s": set(item["s"]) \
+                                             if item["s"] else set()}
             self.__status(dirty = False,
                           dbupdate = None,
                           dbstatus = True)
@@ -1505,7 +1527,7 @@ class S3Hierarchy(object):
                                 renderer = represent)
             if LABEL in node:
                 label = node[LABEL]
-            if type(label) is unicodeT:
+            if type(label) is str:
                 label = s3_str(label)
             return label
         return None
@@ -1751,7 +1773,7 @@ class S3Hierarchy(object):
         if path is None:
             if depth is None:
                 depth = self.depth(node_id)
-            path = dict(("%s.%s" % (prefix, l), "") for l in xrange(depth+1))
+            path = dict(("%s.%s" % (prefix, l), "") for l in range(depth + 1))
 
         # Set the hierarchy column
         label = node_data.get(hcol) if hcol else node_id
@@ -1774,7 +1796,7 @@ class S3Hierarchy(object):
             self.export_node(child,
                              prefix = prefix,
                              depth = depth,
-                             level = level+1,
+                             level = level + 1,
                              path = dict(path),
                              hcol = hcol,
                              columns = columns,

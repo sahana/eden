@@ -51,17 +51,18 @@ import sys
 import subprocess
 import unicodedata
 
-from gluon import *
-from gluon.storage import Storage
-from gluon.contenttype import contenttype
-
+from io import StringIO
+from html.entities import name2codepoint
 try:
     from lxml import etree
 except ImportError:
     sys.stderr.write("ERROR: lxml module needed for XML handling\n")
     raise
 
-from s3compat import StringIO, name2codepoint, unichr, xrange
+from gluon import *
+from gluon.storage import Storage
+from gluon.contenttype import contenttype
+
 from .s3datetime import S3DateTime
 from .s3rest import S3Method
 from .s3utils import s3_represent_value, s3_str, s3_unicode, s3_validate
@@ -951,7 +952,7 @@ class S3PDF(S3Method):
                 if uploadformat == "image":
                     # store each page into db/disk
                     payloadtable = db.ocr_payload
-                    for eachpage in xrange(1, numpages + 1):
+                    for eachpage in range(1, numpages + 1):
                         varname = "page%s" % eachpage
                         fileholder = r.vars[varname]
                         pagenumber = eachpage
@@ -1029,7 +1030,7 @@ class S3PDF(S3Method):
                         os.remove(imgfilepath)
 
                     else:
-                        for eachpage in xrange(0, numpages):
+                        for eachpage in range(0, numpages):
                             imagefilename = "%s-%s.png" % (outputfilename[:-4],
                                                      eachpage)
                             imgfilepath = os.path.join(ocr_temp_dir,
@@ -1366,12 +1367,12 @@ class S3PDF(S3Method):
         # so we only store those.
         oneago = None
         thisrow = list(range(1, len(seq2) + 1) + [0])
-        for x in xrange(len(seq1)):
+        for x in range(len(seq1)):
             # Python lists wrap around for negative indices, so put the
             # leftmost column at the *end* of the list. This matches with
             # the zero-indexed strings and saves extra calculation.
             twoago, oneago, thisrow = oneago, thisrow, [0] * len(seq2) + [x + 1]
-            for y in xrange(len(seq2)):
+            for y in range(len(seq2)):
                 delcost = oneago[y] + 1
                 addcost = thisrow[y - 1] + 1
                 subcost = oneago[y - 1] + (seq1[x] != seq2[y])
@@ -1561,7 +1562,7 @@ class S3PDF(S3Method):
                                                _class="field-%s" % fieldnum)
 
                         else:
-                            for line in xrange(1, 3):
+                            for line in range(1, 3):
                                 ctablecontent.append(TR(TD(IMG(_src=URL(request.application,
                                                                         r.prefix,
                                                                         "%s/upload.pdf" % urlprefix,
@@ -1660,7 +1661,7 @@ class S3PDF(S3Method):
                                                _class="field-%s" % fieldnum)
 
                         else:
-                            for line in xrange(1, 3):
+                            for line in range(1, 3):
                                 ctablecontent.append(TR(TD(IMG(_src=URL(request.application,
                                                                         r.prefix,
                                                                         "%s/upload.pdf" % urlprefix,
@@ -1695,7 +1696,7 @@ class S3PDF(S3Method):
 
                 else:
                     if field.type in ["string", "integer", "double"]:
-                        for line in xrange(1, field.lines + 1):
+                        for line in range(1, field.lines + 1):
                             ctablecontent.append(TR(TD(IMG(_src=URL(request.application,
                                                                     r.prefix,
                                                                     "%s/upload.pdf" % urlprefix,
@@ -1782,7 +1783,7 @@ class S3PDF(S3Method):
                                            _value=value, _name=name)
 
                     elif field.type == "textbox":
-                        for line in xrange(1, field.lines + 1):
+                        for line in range(1, field.lines + 1):
                             ctablecontent.append(TR(TD(IMG(_src=URL(request.application,
                                                                     r.prefix,
                                                                     "%s/upload.pdf" % urlprefix,
@@ -2354,8 +2355,8 @@ class S3PDF(S3Method):
                             # Only show 4 options per row
                             opts = []
                             oppend = opts.append
-                            range = int(math.ceil(numoptions / 4.0))
-                            for row in xrange(range):
+                            this_range = int(math.ceil(numoptions / 4.0))
+                            for row in range(this_range):
                                 labels = []
                                 lappend = labels.append
                                 values = []
@@ -2376,7 +2377,7 @@ class S3PDF(S3Method):
                                                        values))
                         else:
                             append(DrawHintBox(T("Enter a value carefully without spelling mistakes, this field needs to match existing data.").decode("utf-8")))
-                            for line in xrange(2):
+                            for line in range(2):
                                 append(StringInputBoxes(numBoxes=None,
                                                         etreeElem=s3ocr_layout_field_etree))
                 else:
@@ -2388,7 +2389,7 @@ class S3PDF(S3Method):
                         if fieldtype in ["string", "textbox"]:
                             #form.linespace(3)
                             num_lines = int(get("lines", 1))
-                            for line in xrange(num_lines):
+                            for line in range(num_lines):
                                 append(StringInputBoxes(numBoxes=None,
                                                         etreeElem=s3ocr_layout_field_etree))
 
@@ -3360,7 +3361,7 @@ if reportLabImported:
             yCoord = pageheight - \
                      (self.layoutCoords[1] + ypadding + margin) - \
                      markerOrigin[1]
-            for box in xrange(numBoxes):
+            for box in range(numBoxes):
                 self.canv.rect(widthPointer,
                                0,
                                self.sideLength,
@@ -3424,7 +3425,7 @@ if reportLabImported:
 
             sideLength = self.sideLength
             rect = self.canv.rect
-            for box in xrange(1, 11):
+            for box in range(1, 11):
                 if box not in (3, 6):
                     rect(widthPointer,
                          0,
@@ -3529,7 +3530,7 @@ if reportLabImported:
                      (self.layoutCoords[1] + ypadding + margin) - \
                      markerOrigin[1]
 
-            for box in xrange(1, 18):
+            for box in range(1, 18):
                 if box not in (3, 6, 7, 10, 13):
                     self.canv.rect(widthPointer,
                                    0,
@@ -3780,7 +3781,7 @@ def html_unescape(text):
     """
 
     return re.sub("&(%s);" % "|".join(name2codepoint),
-                  lambda m: unichr(name2codepoint[m.group(1)]),
+                  lambda m: chr(name2codepoint[m.group(1)]),
                   text)
 
 # =============================================================================
@@ -3864,7 +3865,7 @@ class S3OCRImageParser(object):
         is_component = True if len(self.r.resource.components) == 1 else False
 
         # Open each page
-        for eachpage in xrange(1, pages+1):
+        for eachpage in range(1, pages+1):
             payloadtable = "ocr_payload"
             row =\
                 db((db[payloadtable]["image_set_uuid"]==set_uuid) &\
@@ -4385,8 +4386,8 @@ class S3OCRImageParser(object):
 
         width, height = image.size
 
-        for x in xrange(width):
-            for y in xrange(height):
+        for x in range(width):
+            for y in range(height):
                 if image.getpixel((x,y)) < 180 :
                     image.putpixel((x,y), 0)
                 else:
@@ -4424,13 +4425,13 @@ class S3OCRImageParser(object):
         im = im.convert("L")
 
         regions = {}
-        pixel_region = [[0 for y in xrange(height)] for x in xrange(width)]
+        pixel_region = [[0 for y in range(height)] for x in range(width)]
         equivalences = {}
         n_regions = 0
 
         # First pass: find regions.
-        for x in xrange(width):
-            for y in xrange(height):
+        for x in range(width):
+            for y in range(height):
                 # Look for a black pixel
                 if im.getpixel((x, y)) == 0 : # BLACK
                     # get the region number from north or west or create new region
@@ -4457,8 +4458,8 @@ class S3OCRImageParser(object):
                     pixel_region[x][y] = new_region
 
         # Scan image again, assigning all equivalent regions the same region value.
-        for x in xrange(width):
-            for y in xrange(height):
+        for x in range(width):
+            for y in range(height):
                 r = pixel_region[x][y]
                 if r > 0:
                     while r in equivalences:

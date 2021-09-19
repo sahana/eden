@@ -31,6 +31,8 @@
 __all__ = ("S3PDFCard",
            )
 
+from io import BytesIO
+
 try:
     from reportlab.lib.pagesizes import A4, LETTER, landscape, portrait
     from reportlab.platypus import BaseDocTemplate, PageTemplate, Flowable, \
@@ -47,7 +49,6 @@ except ImportError:
 
 from gluon import current, HTTP
 
-from s3compat import BytesIO
 from ..s3codec import S3Codec
 from ..s3resource import S3Resource
 from ..s3utils import s3_str

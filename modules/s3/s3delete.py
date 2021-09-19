@@ -121,7 +121,8 @@ class S3Delete(object):
         rows = self.extract()
         if not rows:
             # No rows to delete
-            # => not an error, but log anyway to assist caller debugging
+            # => not always an error (caller must decide this)
+            #    log anyway to assist caller debugging
             if not cascade:
                 current.log.debug("Delete %s: no rows found" % tablename)
             return 0

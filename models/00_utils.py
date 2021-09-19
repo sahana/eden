@@ -18,12 +18,13 @@ if request.is_local:
         stable = s3db.pr_subscription
         utable = s3db.pr_person_user
         join = [stable.on(stable.id == rtable.subscription_id),
-                utable.on(utable.pe_id == stable.pe_id)]
+                utable.on(utable.pe_id == stable.pe_id),
+                ]
 
         user = db(rtable.auth_token == auth_token).select(utable.user_id,
-                                                          join=join,
-                                                          limitby=(0, 1)) \
-                                                  .first()
+                                                          join = join,
+                                                          limitby = (0, 1)
+                                                          ).first()
         if user:
             # Impersonate subscriber
             auth.s3_impersonate(user.user_id)
@@ -57,7 +58,7 @@ S3MainMenu = default_menus.S3MainMenu
 S3OptionsMenu = default_menus.S3OptionsMenu
 
 current.menu = Storage(oauth="", options=None, override={})
-if auth.permission.format in ("html"):
+if auth.permission.format == "html":
 
     # NB cascading templates:
     #
@@ -96,9 +97,9 @@ if auth.permission.format in ("html"):
                 continue
             try:
                 deployment_menus = __import__(package % name,
-                                              fromlist=["S3MainMenu",
-                                                        "S3OptionsMenu",
-                                                        ],
+                                              fromlist = ["S3MainMenu",
+                                                          "S3OptionsMenu",
+                                                          ],
                                               )
             except ImportError:
                 # No menus.py (using except is faster than os.stat)
@@ -185,7 +186,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
         c = request.controller
         f = request.function
         attr = settings.customise_controller("%s_%s" % (c, f), **attr)
-        from s3 import DYNAMIC_PREFIX, s3_get_extension
+        from s3 import DYNAMIC_PREFIX, s3_get_extension, s3_request
         r = s3_request(DYNAMIC_PREFIX,
                        dynamic,
                        f = "%s/%s" % (f, dynamic),
@@ -194,11 +195,11 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                        )
     else:
         # Customise Controller from Template
-        attr = settings.customise_controller(
-                    "%s_%s" % (prefix or request.controller,
-                               resourcename or request.function,
-                               ),
-                    **attr)
+        attr = settings.customise_controller("%s_%s" % (prefix or request.controller,
+                                                        resourcename or request.function,
+                                                        ),
+                                             **attr)
+        from s3 import s3_request
         r = s3_request(prefix, resourcename)
 
     # Customize target resource(s) from Template

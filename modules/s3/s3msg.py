@@ -45,16 +45,20 @@ import re
 import string
 import sys
 
+from io import StringIO
 try:
     from lxml import etree
 except ImportError:
     sys.stderr.write("ERROR: lxml module needed for XML handling\n")
     raise
+from urllib.parse import urlencode
+from urllib import request as urllib2
+from urllib.request import urlopen
+from urllib.error import HTTPError, URLError
 
 from gluon import current, redirect
 from gluon.html import *
 
-from s3compat import HTTPError, PY2, StringIO, urlencode, urllib2, urlopen, URLError
 #from .s3codec import S3Codec
 from .s3crud import S3CRUD
 from .s3datetime import s3_decode_iso_datetime
@@ -63,15 +67,10 @@ from .s3utils import s3_str, s3_unicode
 from .s3validators import IS_IN_SET, IS_ONE_OF
 from .s3widgets import S3PentityAutocompleteWidget
 
+from s3db.msg import msg_parser_enabled
+
 PHONECHARS = string.digits
 TWITTERCHARS = "%s%s_" % (string.digits, string.ascii_letters)
-if PY2:
-    # Inverted permitted character sets for use with str.translate
-    # => faster, but not working for unicode and hence not supported in Py3
-    IDENTITYTRANS = ALLCHARS = string.maketrans("", "")
-    NOTPHONECHARS = ALLCHARS.translate(IDENTITYTRANS, PHONECHARS)
-    NOTTWITTERCHARS = ALLCHARS.translate(IDENTITYTRANS, TWITTERCHARS)
-
 TWITTER_MAX_CHARS = 140
 TWITTER_HAS_NEXT_SUFFIX = u' \u2026'
 TWITTER_HAS_PREV_PREFIX = u'\u2026 '
@@ -118,19 +117,19 @@ class S3Msg(object):
                              "FAX":         T("Fax"),
                              "HOME_PHONE":  T("Home Phone"),
                              "RADIO":       T("Radio Callsign"),
-                             "RSS":         T("RSS Feed"),
+                             #"RSS":         T("RSS Feed"),
                              "SKYPE":       T("Skype"),
                              "SMS":         MOBILE,
                              "TWITTER":     T("Twitter"),
                              "WHATSAPP":    T("WhatsApp"),
                              #"XMPP":       "XMPP",
                              #"WEB":        T("Website"),
-                             "WORK_PHONE":  T("Work phone"),
-                             "IRC":         T("IRC handle"),
-                             "GITHUB":      T("Github Repo"),
-                             "GCM":         T("Google Cloud Messaging"),
+                             "WORK_PHONE":  T("Work Phone"),
+                             #"IRC":         T("IRC handle"),
+                             #"GITHUB":      T("Github Repo"),
+                             #"GCM":         T("Google Cloud Messaging"),
                              "LINKEDIN":    T("LinkedIn Profile"),
-                             "BLOG":        T("Blog"),
+                             #"BLOG":        T("Blog"),
                              "OTHER":       T("Other")
                              }
 
@@ -170,10 +169,7 @@ class S3Msg(object):
         else:
             default_country_code = settings.get_L10n_default_country_code()
 
-        if PY2:
-            clean = phone.translate(IDENTITYTRANS, NOTPHONECHARS)
-        else:
-            clean = "".join(c for c in phone if c in PHONECHARS)
+        clean = "".join(c for c in phone if c in PHONECHARS)
 
         # If number starts with a 0 then need to remove this & add the country code in
         if clean[0] == "0":
@@ -229,11 +225,13 @@ class S3Msg(object):
             m_id = pmessage.message_id
 
             message = db(mtable.id == m_id).select(mtable.from_address,
-                                                   limitby=(0, 1)).first()
+                                                   limitby = (0, 1)
+                                                   ).first()
             sender = message.from_address
 
             srecord = db(stable.sender == sender).select(stable.priority,
-                                                         limitby=(0, 1)).first()
+                                                         limitby = (0, 1)
+                                                         ).first()
 
             return srecord.priority
         except:
@@ -258,13 +256,15 @@ class S3Msg(object):
         query = (stable.channel_id == channel_id) & \
                 (stable.is_parsed == False)
         messages = current.db(query).select(stable.id,
-                                            stable.message_id)
+                                            stable.message_id,
+                                            )
         for message in messages:
             # Parse the Message
             reply_id = parser(function_name, message.message_id)
             # Update to show that we've parsed the message & provide a link to the reply
             message.update_record(is_parsed = True,
-                                  reply_id = reply_id)
+                                  reply_id = reply_id,
+                                  )
         return
 
     # =========================================================================
@@ -1156,11 +1156,24 @@ class S3Msg(object):
 
         # Get Configuration
         if channel_id:
-            sms_api = db(table.channel_id == channel_id).select(limitby=(0, 1)
+            sms_api = db(table.channel_id == channel_id).select(table.parameters,
+                                                                table.message_variable,
+                                                                table.to_variable,
+                                                                table.url,
+                                                                table.username,
+                                                                table.password,
+                                                                limitby = (0, 1)
                                                                 ).first()
         else:
             # @ToDo: Check for Organisation-specific Gateway
-            sms_api = db(table.enabled == True).select(limitby=(0, 1)).first()
+            sms_api = db(table.enabled == True).select(table.parameters,
+                                                       table.message_variable,
+                                                       table.to_variable,
+                                                       table.url,
+                                                       table.username,
+                                                       table.password,
+                                                       limitby = (0, 1)
+                                                       ).first()
         if not sms_api:
             return False
 
@@ -1375,10 +1388,7 @@ class S3Msg(object):
             letters, digits, and _
         """
 
-        if PY2:
-            return account.translate(IDENTITYTRANS, NOTTWITTERCHARS)
-        else:
-            return "".join(c for c in account if c in TWITTERCHARS)
+        return "".join(c for c in account if c in TWITTERCHARS)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1724,10 +1734,9 @@ class S3Msg(object):
         store = dtable.file.store
         update_super = s3db.update_super
         # Is this channel connected to a parser?
-        parser = s3db.msg_parser_enabled(channel_id)
+        parser = msg_parser_enabled(channel_id)
         if parser:
-            ptable = db.msg_parsing_status
-            pinsert = ptable.insert
+            pinsert = db.msg_parsing_status.insert
 
         # ---------------------------------------------------------------------
         def parse_email(message):
@@ -1759,7 +1768,7 @@ class S3Msg(object):
                         # Plain text will come first
                         body = part.get_payload(decode = True)
                     continue
-                attachments.append((filename, part.get_payload(decode=True)))
+                attachments.append((filename, part.get_payload(decode = True)))
 
             # Store in DB
             data = {"channel_id": channel_id,
@@ -1786,13 +1795,16 @@ class S3Msg(object):
                 newfilename = store(fp, filename)
                 fp.close()
                 document_id = dinsert(name = filename,
-                                      file = newfilename)
+                                      file = newfilename,
+                                      )
                 update_super(dtable, {"id": document_id})
                 ainsert(message_id = message_id,
-                        document_id = document_id)
+                        document_id = document_id,
+                        )
             if parser:
                 pinsert(message_id = message_id,
-                        channel_id = channel_id)
+                        channel_id = channel_id,
+                        )
 
         dellist = []
         if protocol == "pop3":
@@ -1957,10 +1969,9 @@ class S3Msg(object):
             decode = s3_decode_iso_datetime
 
             # Is this channel connected to a parser?
-            parser = s3db.msg_parser_enabled(channel_id)
+            parser = msg_parser_enabled(channel_id)
             if parser:
-                ptable = db.msg_parsing_status
-                pinsert = ptable.insert
+                pinsert = db.msg_parsing_status.insert
 
             for message in messages:
                 sender_phone = message.find("phone_number").text
@@ -1975,7 +1986,8 @@ class S3Msg(object):
                 update_super(mtable, record)
                 if parser:
                     pinsert(message_id = record["message_id"],
-                            channel_id = channel_id)
+                            channel_id = channel_id,
+                            )
 
         return "OK"
 
@@ -2039,10 +2051,9 @@ class S3Msg(object):
             update_super = s3db.update_super
 
             # Is this channel connected to a parser?
-            parser = s3db.msg_parser_enabled(channel_id)
+            parser = msg_parser_enabled(channel_id)
             if parser:
-                ptable = db.msg_parsing_status
-                pinsert = ptable.insert
+                pinsert = db.msg_parsing_status.insert
 
             for sms in messages:
                 if (sms["direction"] == "inbound") and \
@@ -2052,15 +2063,18 @@ class S3Msg(object):
                                   body = sms["body"],
                                   status = sms["status"],
                                   from_address = sender,
-                                  received_on = sms["date_sent"])
+                                  received_on = sms["date_sent"],
+                                  )
                     record = {"id": _id}
                     update_super(mtable, record)
                     message_id = record["message_id"]
                     sinsert(message_id = message_id,
-                            sid=sms["sid"])
+                            sid = sms["sid"],
+                            )
                     if parser:
                         pinsert(message_id = message_id,
-                                channel_id = channel_id)
+                                channel_id = channel_id,
+                                )
         return "OK"
 
     # -------------------------------------------------------------------------
@@ -2086,18 +2100,13 @@ class S3Msg(object):
             return "No Such RSS Channel: %s" % channel_id
 
         # http://pythonhosted.org/feedparser
-        if PY2:
-            # Use Stable v5.2.1
-            # - current known reason is to prevent SSL: CERTIFICATE_VERIFY_FAILED
-            import feedparser521 as feedparser
+        # Python 3.x: Requires pip install sgmllib3k
+        if sys.version_info[1] >= 7:
+            # Use system version (6.0.0b1+) which is required for Python 3.7
+            import feedparser
         else:
-            # Python 3.x: Requires pip install sgmllib3k
-            if sys.version_info[1] >= 7:
-                # Use 6.0.0b1 which is required for Python 3.7
-                import feedparser
-            else:
-                # Python 3.6 requires 5.2.1 with 2to3 run on it to prevent SSL: CERTIFICATE_VERIFY_FAILED
-                import feedparser5213 as feedparser
+            # Python 3.6 requires 5.2.1 with 2to3 run on it to prevent SSL: CERTIFICATE_VERIFY_FAILED
+            import feedparser5213 as feedparser
 
         # Basic Authentication
         username = channel.username
@@ -2148,10 +2157,7 @@ class S3Msg(object):
                 return
         if d.bozo:
             # Something doesn't seem right
-            if PY2:
-                status = "ERROR: %s" % d.bozo_exception.message
-            else:
-                status = "ERROR: %s" % d.bozo_exception
+            status = "ERROR: %s" % d.bozo_exception
             S3Msg.update_channel_status(channel_id,
                                         status = status,
                                         period = (300, 3600),
@@ -2180,10 +2186,9 @@ class S3Msg(object):
         update_super = s3db.update_super
 
         # Is this channel connected to a parser?
-        parser = s3db.msg_parser_enabled(channel_id)
+        parser = msg_parser_enabled(channel_id)
         if parser:
-            ptable = db.msg_parsing_status
-            pinsert = ptable.insert
+            pinsert = db.msg_parsing_status.insert
 
         entries = d.entries
         if entries:
@@ -2299,7 +2304,8 @@ class S3Msg(object):
                                     )
                 if parser:
                     pinsert(message_id = exists.message_id,
-                            channel_id = channel_id)
+                            channel_id = channel_id,
+                            )
 
             else:
                 _id = minsert(channel_id = channel_id,
@@ -2321,7 +2327,8 @@ class S3Msg(object):
                             )
                 if parser:
                     pinsert(message_id = record["message_id"],
-                            channel_id = channel_id)
+                            channel_id = channel_id,
+                            )
 
         if entries:
             # Check again to see if there were any new ones
@@ -2461,7 +2468,8 @@ class S3Msg(object):
         else:
             # Initialise
             stable.insert(channel_id = channel_id,
-                          status = status)
+                          status = status,
+                          )
         if period:
             # Amend the frequency of the scheduled task
             ttable = db.scheduler_task
@@ -2471,7 +2479,8 @@ class S3Msg(object):
                      (ttable.status.belongs(["RUNNING", "QUEUED", "ALLOCATED"])))
             exists = db(query).select(ttable.id,
                                       ttable.period,
-                                      limitby=(0, 1)).first()
+                                      limitby = (0, 1)
+                                      ).first()
             if not exists:
                 return
             old_period = exists.period
@@ -2690,15 +2699,16 @@ class S3Compose(S3CRUD):
             pass
         else:
             redirect(URL(c="default", f="user", args="login",
-                         vars={"_next": url}))
+                         vars = {"_next": url},
+                         ))
 
         if not current.deployment_settings.has_module("msg"):
             current.session.error = T("Cannot send messages if Messaging module disabled")
-            redirect(URL(f="index"))
+            redirect(URL(f = "index"))
 
         if not auth.permission.has_permission("update", c="msg"):
             current.session.error = T("You do not have permission to send messages")
-            redirect(URL(f="index"))
+            redirect(URL(f = "index"))
 
         #_vars = r.get_vars
 
@@ -2769,7 +2779,8 @@ class S3Compose(S3CRUD):
             user = current.auth.user
             if user:
                 authenticated_user = "%s %s - " % (user.first_name,
-                                                   user.last_name)
+                                                   user.last_name,
+                                                   )
         else:
             authenticated_user = ""
 
@@ -2953,6 +2964,8 @@ class S3Compose(S3CRUD):
                 pe_field.widget = S3PentityAutocompleteWidget(types = (recipient_type,))
             else:
                 # @ToDo A new widget (tree?) required to handle multiple persons and groups
+                # - may have to add rules in the template's customise_pr_pentity_controller to filter the options appropriately
+                # - permission sets (inc realms) should only be applied to the instances, not the super-entity
                 pe_field.widget = S3PentityAutocompleteWidget()
 
             pe_field.comment = DIV(_class="tooltip",

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import datetime
 from os import path
 
 from gluon import *
@@ -10,6 +11,8 @@ from s3 import ICON, IS_FLOAT_AMOUNT, s3_str, \
 
 from s3db.inv import SHIP_DOC_PENDING, SHIP_DOC_COMPLETE, \
                      SHIP_STATUS_SENT, SHIP_STATUS_RECEIVED, SHIP_STATUS_RETURNING
+
+from s3db.pr import OU
 
 THEME = "RMS"
 
@@ -320,6 +323,124 @@ def deploy_index():
     return output
 
 # =============================================================================
+def inv_operators_for_sites(site_ids):
+    """
+        Determine to whom Alerts should be sent for specific Site(s)
+
+        @ToDo: Use site_contact instead?
+            + Much faster/more generic lookup for the Server
+            - More to setup for the Users
+            Need to allow visibility of HRM
+            Need to expose field
+            Ideally do this automatically for new users? Hard!
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    stable = s3db.org_site
+    site_entities = db(stable.site_id.belongs(site_ids)).select(stable.site_id,
+                                                                stable.instance_type,
+                                                                )
+    # Sort by Instance Type
+    sites_by_type = {}
+    for row in site_entities:
+        instance_type = row.instance_type
+        if instance_type not in sites_by_type:
+            sites_by_type[instance_type] = []
+        sites_by_type[instance_type].append(row.site_id)
+
+    # Lookup Names & PE IDs
+    sites = {}
+    for instance_type in sites_by_type:
+        itable = s3db.table(instance_type)
+        instances = db(itable.site_id.belongs(sites_by_type[instance_type])).select(itable.name,
+                                                                                    itable.pe_id,
+                                                                                    itable.site_id,
+                                                                                    )
+        for row in instances:
+            sites[row.site_id] = {"name": row.name,
+                                  "pe_id": row.pe_id,
+                                  }
+    gtable = db.auth_group
+    mtable = db.auth_membership
+    utable = db.auth_user
+    ltable = s3db.pr_person_user
+
+    atable = s3db.pr_affiliation
+    rtable = s3db.pr_role
+
+    # Lookup realm for all wh_operator/logs_manager with default realm outside of loop
+    # Incorporates a Bulk version of s3db.pr_realm()
+    query = (gtable.uuid.belongs(("wh_operator",
+                                  "logs_manager",
+                                  ))) & \
+            (gtable.id == mtable.group_id) & \
+            (mtable.pe_id == None) & \
+            (mtable.deleted == False) & \
+            (mtable.user_id == utable.id) & \
+            (utable.id == ltable.user_id) & \
+            (atable.pe_id == ltable.pe_id) & \
+            (atable.deleted == False) & \
+            (atable.role_id == rtable.id) & \
+            (rtable.deleted == False) & \
+            (rtable.role_type == OU)
+    wh_operators_default_realm = db(query).select(ltable.pe_id,
+                                                  ltable.user_id,
+                                                  utable.language,
+                                                  rtable.pe_id,
+                                                  )
+
+    use_admin = []
+
+    for site_id in sites:
+
+        site = sites[site_id]
+        pe_id = site["pe_id"]
+
+        # Find the relevant wh_operator/logs_manager
+        entities = s3db.pr_get_ancestors(pe_id)
+        entities.append(pe_id)
+
+        query = (gtable.uuid.belongs(("wh_operator",
+                                      "logs_manager",
+                                      ))) & \
+                (gtable.id == mtable.group_id) & \
+                (mtable.pe_id.belongs(entities)) & \
+                (mtable.deleted == False) & \
+                (mtable.user_id == utable.id) & \
+                (utable.id == ltable.user_id)
+        operators = db(query).select(ltable.pe_id,
+                                     ltable.user_id,
+                                     utable.language,
+                                     )
+        operators = list(operators)
+        for row in wh_operators_default_realm:
+            if row["pr_role.pe_id"] in entities:
+                operators.append(row)
+
+        if operators:
+            site["operators"] = operators
+        else:
+            # Send to ADMIN instead
+            use_admin.append(site_id)
+
+    if use_admin:
+        query = (gtable.uuid == "ADMIN") & \
+                (gtable.id == mtable.group_id) & \
+                (mtable.deleted == False) & \
+                (mtable.user_id == utable.id) & \
+                (utable.id == ltable.user_id)
+        operators = db(query).select(ltable.pe_id,
+                                     ltable.user_id,
+                                     utable.language,
+                                     )
+        for site_id in use_admin:
+            sites[site_id]["operators"] = operators
+
+    return sites
+
+# =============================================================================
 class inv_dashboard(S3CustomController):
     """
         Dashboard for Warehouse Management module
@@ -331,6 +452,20 @@ class inv_dashboard(S3CustomController):
         T = current.T
         db = current.db
         s3db = current.s3db
+        user = current.auth.user
+        user_id = user.id
+
+        # Huuricane Season lasts from 1/6 to 30/11
+        now = current.request.utcnow
+        if 5 < now.month < 12:
+            SEASON = T("this Season")
+            SEASON_START = datetime.date(now.year, 6, 1)
+            SEASON_END = None
+        else:
+            SEASON = T("last Season")
+            last_year = now.year - 1
+            SEASON_START = datetime.date(last_year, 6, 1)
+            SEASON_END = datetime.date(last_year, 12, 1)
 
         # Shipments
         stable = s3db.inv_send
@@ -554,7 +689,7 @@ class inv_dashboard(S3CustomController):
                              DIV(ICON("briefcase"),
                                  _class = "columns medium-1",
                                  ),
-                             _class = "row",
+                             _class = "ship-card row",
                              ),
                         ]
         sappend = shipment_rows.append
@@ -603,13 +738,33 @@ class inv_dashboard(S3CustomController):
                         DIV(filing_opts_get(row.filing_status),
                             _class = "columns medium-1",
                             ),
-                        _class = "row",
+                        _class = "ship-card row",
                         ))
 
         shipments = DIV(*shipment_rows)
 
-        # Notifications
-        notifications = DIV(I(T("Notifications...")))
+        # Alerts
+        table = s3db.auth_user_notification
+        query = (table.user_id == user_id) & \
+                (table.deleted == False)
+        rows = db(query).select(table.name,
+                                table.url,
+                                orderby = ~table.created_on,
+                                )
+        alert_rows = []
+        for row in rows:
+            alert_rows.append(DIV(A(DIV(ICON("bell-o"),
+                                        _class = "columns medium-1"
+                                        ),
+                                    DIV(row.name,
+                                        _class = "columns medium-11"
+                                        ),
+                                    _href = row.url,
+                                    _target = "_blank",
+                                    ),
+                                  _class = "alert-card row",
+                                  ))
+        alerts = DIV(*alert_rows)
 
         # Capacity
         # Define the Pivot Table
@@ -627,11 +782,11 @@ class inv_dashboard(S3CustomController):
 
         # KPI
         # Which Warehouses are we responsible for?
-        user = current.auth.user
         wtable = s3db.inv_warehouse
         gtable = db.auth_group
         mtable = db.auth_membership
-        query = (mtable.user_id == user.id) & \
+        query = (mtable.user_id == user_id) & \
+                (mtable.deleted == False) & \
                 (mtable.group_id == gtable.id) & \
                 (gtable.uuid.belongs("ORG_ADMIN",
                                      "logs_manager",
@@ -680,16 +835,15 @@ class inv_dashboard(S3CustomController):
                   "track_item.item_id$weight", # extra_fields
                   "track_item.item_id$volume", # extra_fields
                   ]
-        sresource = s3db.resource("inv_send",
-                                  filter = (stable.status.belongs([SHIP_STATUS_SENT,
-                                                                   SHIP_STATUS_RECEIVED,
-                                                                   SHIP_STATUS_RETURNING,
-                                                                   ]))
-                                  )
-        # @ToDo: Filter by last month?
-        srows = sresource.select(fields,
-                                 as_rows = True,
-                                 )
+        query = (stable.status.belongs([SHIP_STATUS_SENT,
+                                        SHIP_STATUS_RECEIVED,
+                                        SHIP_STATUS_RETURNING,
+                                        ])) & \
+                (stable.date > SEASON_START)
+        if SEASON_END:
+            query &= (stable.date > SEASON_END)
+        sresource = s3db.resource("inv_send", filter = query)
+        srows = sresource.select(fields, as_rows = True)
         num_shipments = len(set([row["inv_send.id"] for row in srows]))
         shipments_weight = 0
         shipments_volume = 0
@@ -713,26 +867,26 @@ class inv_dashboard(S3CustomController):
         for row in warehouses:
             free_capacities.append(LI("%s: %s m3" % (row.name, float_represent(row.free_capacity, precision=1))))
 
-        kpi = UL(LI("%s: %s" % (T("Number of warehouses"), len(warehouses))),
-                 LI("%s: %s" % (T("Number of Shipments sent"), num_shipments)),
-                 LI("%s: %s kg" % (T("Total weight sent"), float_represent(shipments_weight, precision=1))),
-                 LI("%s: %s m3" % (T("Total volume sent"), float_represent(shipments_volume, precision=3))),
-                 LI("%s: %s kg" % (T("Total weight stockpiled"), float_represent(stockpile_weight, precision=1))),
+        kpi = UL(LI("%s: %s kg" % (T("Total weight stockpiled"), float_represent(stockpile_weight, precision=1))),
                  LI("%s: %s m3" % (T("Total volume stockpiled"), float_represent(stockpile_volume, precision=1))),
+                 LI("%s %s: %s" % (T("Number of Shipments sent"), SEASON, num_shipments)),
+                 LI("%s %s: %s kg" % (T("Total weight sent"), SEASON, float_represent(shipments_weight, precision=1))),
+                 LI("%s %s: %s m3" % (T("Total volume sent"), SEASON, float_represent(shipments_volume, precision=3))),
+                 LI("%s: %s" % (T("Number of warehouses"), len(warehouses))),
                  LI("%s:" % T("Remaining stockpile capacities available"),
                     free_capacities
                     ),
                  )
 
         # Preparedness Checklist
-        checklist = UL()
+        #checklist = UL()
 
         output = {"title": T("Dashboard"),
                   "shipments": shipments,
-                  "notifications": notifications,
+                  "alerts": alerts,
                   "capacity": capacity,
                   "kpi": kpi,
-                  "checklist": checklist,
+                  #"checklist": checklist,
                   }
 
         # Custom view

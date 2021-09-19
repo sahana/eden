@@ -31,10 +31,11 @@ import json
 import sys
 import datetime
 
+from io import BytesIO
+
 from gluon import current, URL, DIV
 from gluon.storage import Storage
 
-from s3compat import BytesIO, unicodeT
 from .s3datetime import s3_parse_datetime, s3_utc
 from .s3rest import S3Method
 from .s3import import S3ImportItem
@@ -1249,7 +1250,7 @@ class S3SyncDataArchive(object):
         elif isinstance(obj, (str, bytes)):
             archive.writestr(name, obj)
 
-        elif isinstance(obj, unicodeT):
+        elif isinstance(obj, str):
             # Convert unicode objects to str (Py2 backwards-compatibility)
             archive.writestr(name, s3_str(obj))
 

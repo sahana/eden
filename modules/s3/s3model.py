@@ -243,6 +243,7 @@ class S3Model(object):
 
         prefix, name = tablename.split("_", 1)
         if prefix == DYNAMIC_PREFIX:
+            # Load Dynamic Table
             try:
                 found = S3DynamicModel(tablename).table
             except AttributeError:
@@ -275,6 +276,39 @@ class S3Model(object):
                 if not loaded:
                     for n in generic:
                         s3models[n](prefix)
+
+        else:
+            custom_models = current.deployment_settings.get_base_custom_models()
+            if prefix in custom_models:
+                # Use Web2Py's Custom Importer rather than importlib.import_module
+                parent = __import__("templates.%s" % custom_models[prefix], fromlist=[prefix])
+                module = parent.__dict__[prefix]
+                models.__dict__[prefix] = module
+
+                names = module.__all__
+                s3models = module.__dict__
+
+                if not db_only and tablename in names:
+                    # A name defined at module level (e.g. a class)
+                    s3db.classes[tablename] = (prefix, tablename)
+                    found = s3models[tablename]
+                else:
+                    # A name defined in an S3Model
+                    generic = []
+                    loaded = False
+                    for n in names:
+                        model = s3models[n]
+                        if hasattr(model, "_s3model"):
+                            if hasattr(model, "names"):
+                                if tablename in model.names:
+                                    model(prefix)
+                                    loaded = True
+                                    break
+                            else:
+                                generic.append(n)
+                    if not loaded:
+                        for n in generic:
+                            s3models[n](prefix)
 
         if found:
             return found
@@ -373,9 +407,17 @@ class S3Model(object):
         s3.load_all_models = True
 
         models = current.models
+        settings = current.deployment_settings
 
         # Load models
         if models is not None:
+            # Add Custom Models
+            custom_models = settings.get_base_custom_models()
+            for prefix in custom_models:
+                parent = __import__("templates.%s" % custom_models[prefix], fromlist=[prefix])
+                module = parent.__dict__[prefix]
+                models.__dict__[prefix] = module
+
             for name in models.__dict__:
                 if type(models.__dict__[name]).__name__ == "module":
                     cls.load(name)
@@ -388,19 +430,21 @@ class S3Model(object):
 
         # Define Scheduler tables
         # - already done during Scheduler().init() run during S3Task().init() in models/tasks.py
-        #settings = current.deployment_settings
         #current.s3task.scheduler.define_tables(current.db,
         #                                       migrate = settings.get_base_migrate())
 
         # Define sessions table
-        if current.deployment_settings.get_base_session_db():
+        if settings.get_base_session_db():
             # Copied from https://github.com/web2py/web2py/blob/master/gluon/globals.py#L895
             # Not DRY, but no easy way to make it so
             current.db.define_table("web2py_session",
-                                    Field("locked", "boolean", default=False),
+                                    Field("locked", "boolean",
+                                          default = False,
+                                          ),
                                     Field("client_ip", length=64),
                                     Field("created_datetime", "datetime",
-                                          default=current.request.now),
+                                          default = current.request.now,
+                                          ),
                                     Field("modified_datetime", "datetime"),
                                     Field("unique_key", length=64),
                                     Field("session_data", "blob"),
@@ -960,15 +1004,15 @@ class S3Model(object):
             ltable = None
 
         prefix, name = tn.split("_", 1)
-        component = Storage(defaults=hook.defaults,
-                            multiple=hook.multiple,
-                            tablename=tn,
-                            table=ctable,
-                            prefix=prefix,
-                            name=name,
-                            alias=alias,
-                            label=hook.label,
-                            plural=hook.plural,
+        component = Storage(defaults = hook.defaults,
+                            multiple = hook.multiple,
+                            tablename = tn,
+                            table = ctable,
+                            prefix = prefix,
+                            name = name,
+                            alias = alias,
+                            label = hook.label,
+                            plural = hook.plural,
                             )
 
         if hook.supertable is not None:
@@ -1744,14 +1788,16 @@ class S3Model(object):
         query = (supertable._id == superid)
         entry = db(query).select(supertable.instance_type,
                                  supertable.uuid,
-                                 limitby=(0, 1)).first()
+                                 limitby = (0, 1)
+                                 ).first()
         if entry:
             instance_type = entry.instance_type
             prefix, name = instance_type.split("_", 1)
             instancetable = current.s3db[entry.instance_type]
-            query = instancetable.uuid == entry.uuid
+            query = (instancetable.uuid == entry.uuid)
             record = db(query).select(instancetable.id,
-                                      limitby=(0, 1)).first()
+                                      limitby = (0, 1)
+                                      ).first()
             if record:
                 return (prefix, name, record.id)
         return (None, None, None)
@@ -1864,7 +1910,7 @@ class S3DynamicModel(object):
                 (ttable.deleted == False)
         row = current.db(query).select(ttable.title,
                                        ttable.settings,
-                                       limitby = (0, 1),
+                                       limitby = (0, 1)
                                        ).first()
         if row:
             # Configure CRUD strings
@@ -2282,13 +2328,13 @@ class S3DynamicModel(object):
 
         if fieldtype == "integer":
             parse = int
-            requires = IS_INT_IN_RANGE(minimum=minimum,
-                                       maximum=maximum,
+            requires = IS_INT_IN_RANGE(minimum = minimum,
+                                       maximum = maximum,
                                        )
         elif fieldtype == "double":
             parse = float
-            requires = IS_FLOAT_IN_RANGE(minimum=minimum,
-                                         maximum=maximum,
+            requires = IS_FLOAT_IN_RANGE(minimum = minimum,
+                                         maximum = maximum,
                                          )
         else:
             parse = None

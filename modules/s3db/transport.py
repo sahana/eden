@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3TransportModel",
+__all__ = ("TransportModel",
            "transport_rheader",
            )
 
@@ -38,7 +38,7 @@ from ..s3 import *
 from ..s3layouts import S3PopupLink
 
 # =============================================================================
-class S3TransportModel(S3Model):
+class TransportModel(S3Model):
     """
         http://eden.sahanafoundation.org/wiki/BluePrint/Transport
     """
@@ -1009,7 +1009,7 @@ def transport_rheader(r, tabs=None):
                               ["location_id"],
                               ]
             if settings.has_module("req"):
-                tabs.extend(s3db.req_tabs(r))
+                tabs.extend(s3db.req_tabs(r, match=False))
             if settings.has_module("inv"):
                 tabs.extend(s3db.inv_tabs(r))
 

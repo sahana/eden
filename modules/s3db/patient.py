@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3PatientModel",)
+__all__ = ("PatientModel",)
 
 from gluon import *
 from gluon.storage import Storage
@@ -35,7 +35,7 @@ from gluon.storage import Storage
 from ..s3 import *
 
 # =============================================================================
-class S3PatientModel(S3Model):
+class PatientModel(S3Model):
     """
     """
 
@@ -117,14 +117,15 @@ class S3PatientModel(S3Model):
                                      represent = patient_represent,
                                      requires = IS_ONE_OF(db,
                                                           "patient_patient.id",
-                                                          patient_represent),
+                                                          patient_represent,
+                                                          ),
                                      )
         # Search method
         filter_widgets = [
             S3TextFilter(["person_id$first_name",
                           "person_id$middle_name",
                           "person_id$last_name",
-                          "person_id$local_name",
+                          #"person_id$person_details.local_name",
                          ],
                          label = T("Search"),
                          comment=T("To search for a patient, enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all patients."),

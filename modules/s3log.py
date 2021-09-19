@@ -103,19 +103,13 @@ class S3Log(object):
             Set up current.log
         """
 
-        if hasattr(current, "log"):
-            return
         current.log = cls()
-        return
 
     # -------------------------------------------------------------------------
     def configure_logger(self):
         """
             Configure output handlers
         """
-
-        if hasattr(current, "log"):
-            return
 
         settings = current.deployment_settings
         console = settings.get_log_console()
@@ -198,7 +192,6 @@ class S3Log(object):
                 extra = {"caller": "(%s %s %s)" % caller}
 
         logger.log(severity, msg, extra=extra)
-        return
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -301,7 +294,7 @@ class S3LogRecorder(object):
             return
         strbuf = self.strbuf
         if strbuf is None:
-            from s3compat import StringIO
+            from io import StringIO
             strbuf = StringIO()
         handler = logging.StreamHandler(strbuf)
 
@@ -310,7 +303,6 @@ class S3LogRecorder(object):
 
         self.handler = handler
         self.strbuf = strbuf
-        return
 
     # -------------------------------------------------------------------------
     def read(self):

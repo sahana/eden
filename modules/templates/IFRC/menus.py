@@ -457,13 +457,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
         if organisation_id:
             db = current.db
             s3db = current.s3db
-            otable = s3db.org_organisation
+            ortable = s3db.org_organisation_region
             rtable = s3db.org_region
-            query = (otable.id == organisation_id) & \
-                    (otable.region_id == rtable.id)
+            query = (ortable.organisation_id == organisation_id) & \
+                    (ortable.region_id == rtable.id)
             region = db(query).select(rtable.name,
                                       cache = s3db.cache,
-                                      limitby=(0, 1)
+                                      limitby = (0, 1)
                                       ).first()
             if region and region.name in ("Asia Pacific", "East Asia", "Pacific", "South Asia", "South East Asia"):
                 # Asia-Pacific
@@ -476,11 +476,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         (htable.person_id == person_id)
                 member = db(query).select(htable.id,
                                           cache = s3db.cache,
-                                          limitby = (0, 1),
+                                          limitby = (0, 1)
                                           ).first()
                 if member:
                     profile = M("My Surge Profile",
-                                c="deploy", f="human_resource", args=[member.id, "profile"],
+                                c="deploy", f="human_resource",
+                                args = [member.id, "profile"],
                                 )
                 else:
                     profile = None
@@ -517,7 +518,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                     #  ),
                                     M("Import Members", c="deploy", f="person", m="import"),
                                     M("Report by Region", c="deploy", f="human_resource", m="report",
-                                      vars=Storage(rows = "organisation_id$region_id",
+                                      vars=Storage(rows = "organisation_id$organisation_region.region_id",
                                                    cols = "organisation_id",
                                                    fact = "count(person_id)",
                                                    ),
@@ -946,6 +947,41 @@ class S3OptionsMenu(default.S3OptionsMenu):
         else:
             # Use HRM
             return self.hrm()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def po():
+        """ PO / Population Outreach """
+
+        due_followups = current.s3db.po_due_followups()
+        DUE_FOLLOWUPS = current.T("Due Follow-ups")
+        if due_followups:
+            follow_up_label = "%s (%s)" % (DUE_FOLLOWUPS, due_followups)
+        else:
+            follow_up_label = DUE_FOLLOWUPS
+
+        return M(c="po")(
+                    M("Overview", f="index"),
+                    M("Households", f="household", m="summary")(
+                        M("Create", m="create"),
+                        M("Import", m="import"),
+                    ),
+                    M(follow_up_label, f="due_followups",
+                      translate=False,
+                      ),
+                    M("Areas", f="area")(
+                        M("Create", m="create"),
+                    ),
+                    M("Referral Agencies", f="organisation")(
+                        M("Create", m="create"),
+                    ),
+                    M("Emotional Needs", f="emotional_need")(
+                        M("Create", m="create"),
+                    ),
+                    M("Practical Needs", f="practical_need")(
+                        M("Create", m="create"),
+                    ),
+                )
 
     # -------------------------------------------------------------------------
     @staticmethod

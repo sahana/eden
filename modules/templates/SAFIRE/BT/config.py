@@ -33,6 +33,10 @@ def config(settings):
     modules["transport"] = {"name_nice": T("Transport"), "module_type": 10}
     modules["water"] = {"name_nice": T("Water"), "module_type": 10}
 
+    settings.cr.people_registration = True
+
+    settings.gis.latlon_selector = True
+
     settings.hrm.id_cards = True
 
     settings.supply.catalog_multi = False
@@ -73,14 +77,19 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_dc_target_resource(r, tablename):
 
+        if r.controller in ("event",
+                            "hrm", # Training Event Evaluations
+                            ):
+            return
+
         s3db = current.s3db
 
         template_name = r.get_vars.get("~.template_id$name")
         if template_name:
             ttable = s3db.dc_template
             template = current.db(ttable.name == template_name).select(ttable.id,
-                                                                  limitby = (0, 1)
-                                                                  ).first()
+                                                                       limitby = (0, 1)
+                                                                       ).first()
             if template:
                 f = s3db.dc_target.template_id
                 f.default = template.id

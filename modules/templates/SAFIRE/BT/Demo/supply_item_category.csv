@@ -1,33 +1,33 @@
-Catalogue,Parent Category,Category
-Default,,Communication & ICT Equipment
-Default,Communication & ICT Equipment,Computer & Peripherals
-Default,Communication & ICT Equipment,Radio set
-Default,Communication & ICT Equipment,repeater system
-Default,Communication & ICT Equipment,Satellite Equipment
-Default,,Communication equipment
-Default,Communication equipment,Equipment
-Default,Communication equipment,Handsets programming cablle
-Default,,Office Equipment
-Default,Office Equipment,Furniture
-Default,,Search & Rescue Equipment
-Default,Search & Rescue Equipment,Anchors
-Default,Search & Rescue Equipment,Ascender/Descender
-Default,Search & Rescue Equipment,Bridle
-Default,Search & Rescue Equipment,Carabiners
-Default,Search & Rescue Equipment,Figure of 8
-Default,Search & Rescue Equipment,Fire Fighting Gears
-Default,Search & Rescue Equipment,First Aid Kits
-Default,Search & Rescue Equipment,Gloves
-Default,Search & Rescue Equipment,Harness
-Default,Search & Rescue Equipment,Helmet
-Default,Search & Rescue Equipment,Other Rescue Equipment
-Default,Search & Rescue Equipment,Prusiks
-Default,Search & Rescue Equipment,Pulleys
-Default,Search & Rescue Equipment,Rescue boot
-Default,Search & Rescue Equipment,River Rescue Equipment
-Default,Search & Rescue Equipment,Ropes
-Default,Search & Rescue Equipment,Searchlight
-Default,Search & Rescue Equipment,Slings
-Default,Search & Rescue Equipment,Stretchers
-Default,Search & Rescue Equipment,Suits
-Default,Search & Rescue Equipment,Urban Search and Rescue Equipment
+Catalogue,Parent Category,Category,Asset
+Default,,Communication & ICT Equipment,True
+Default,Communication & ICT Equipment,Computer & Peripherals,True
+Default,Communication & ICT Equipment,Radio set,True
+Default,Communication & ICT Equipment,repeater system,True
+Default,Communication & ICT Equipment,Satellite Equipment,True
+Default,,Communication equipment,True
+Default,Communication equipment,Equipment,True
+Default,Communication equipment,Handsets programming cable,True
+Default,,Office Equipment,True
+Default,Office Equipment,Furniture,True
+Default,,Search & Rescue Equipment,True
+Default,Search & Rescue Equipment,Anchors,True
+Default,Search & Rescue Equipment,Ascender/Descender,True
+Default,Search & Rescue Equipment,Bridle,True
+Default,Search & Rescue Equipment,Carabiners,True
+Default,Search & Rescue Equipment,Figure of 8,True
+Default,Search & Rescue Equipment,Fire Fighting Gears,True
+Default,Search & Rescue Equipment,First Aid Kits,True
+Default,Search & Rescue Equipment,Gloves,True
+Default,Search & Rescue Equipment,Harness,True
+Default,Search & Rescue Equipment,Helmet,True
+Default,Search & Rescue Equipment,Other Rescue Equipment,True
+Default,Search & Rescue Equipment,Prusiks,True
+Default,Search & Rescue Equipment,Pulleys,True
+Default,Search & Rescue Equipment,Rescue boot,True
+Default,Search & Rescue Equipment,River Rescue Equipment,True
+Default,Search & Rescue Equipment,Ropes,True
+Default,Search & Rescue Equipment,Searchlight,True
+Default,Search & Rescue Equipment,Slings,True
+Default,Search & Rescue Equipment,Stretchers,True
+Default,Search & Rescue Equipment,Suits,True
+Default,Search & Rescue Equipment,Urban Search and Rescue Equipment,True

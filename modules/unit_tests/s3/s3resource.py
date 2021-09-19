@@ -40,10 +40,11 @@ class ComponentJoinConstructionTests(unittest.TestCase):
 
         rtable = resource.table
         ctable = component.table
-        expected = (ctable.person_id == rtable.id) & \
+        expected = (rtable.id == ctable.person_id) & \
                    (ctable.deleted == False)
 
         join = component.get_join()
+
         self.assertEqual(str(join), str(expected))
 
     # -------------------------------------------------------------------------
@@ -59,6 +60,7 @@ class ComponentJoinConstructionTests(unittest.TestCase):
                    (ctable.deleted == False)
 
         join = component.get_join()
+
         self.assertEqual(str(join), str(expected))
 
     # -------------------------------------------------------------------------
@@ -72,11 +74,12 @@ class ComponentJoinConstructionTests(unittest.TestCase):
         project_project = resource.table
         project_task_project = component.link.table
         project_task = component.table
-        expected = (((project_task_project.project_id == project_project.id) &
-                   (project_task_project.deleted == False)) &
+        expected = (((project_project.id == project_task_project.project_id) & \
+                   (project_task_project.deleted == False)) & \
                    (project_task_project.task_id == project_task.id))
 
         join = component.get_join()
+
         self.assertEqual(str(join), str(expected))
 
 # =============================================================================
@@ -94,19 +97,18 @@ class ComponentLeftJoinConstructionTests(unittest.TestCase):
     def testGetLeftJoinSimpleComponent(self):
         """ Left Join for a simple component """
 
-        assertEqual = self.assertEqual
-        assertTrue = self.assertTrue
-
         resource = current.s3db.resource("pr_person")
         component = resource.components["identity"]
 
         rtable = resource.table
         ctable = component.table
-        expected = ctable.on((ctable.person_id == rtable.id) &
+        expected = ctable.on((rtable.id == ctable.person_id) & \
                              (ctable.deleted == False))
 
         ljoin = component.get_left_join()
-        assertTrue(isinstance(ljoin, list))
+
+        self.assertTrue(isinstance(ljoin, list))
+        assertEqual = self.assertEqual
         assertEqual(len(ljoin), 1)
         assertEqual(str(ljoin[0]), str(expected))
 
@@ -114,19 +116,18 @@ class ComponentLeftJoinConstructionTests(unittest.TestCase):
     def testGetLeftJoinSuperComponent(self):
         """ Left Join for a super-component """
 
-        assertEqual = self.assertEqual
-        assertTrue = self.assertTrue
-
         resource = current.s3db.resource("pr_person")
         component = resource.components["contact"]
 
         rtable = resource.table
         ctable = component.table
-        expected = ctable.on((rtable.pe_id == ctable.pe_id) &
+        expected = ctable.on((rtable.pe_id == ctable.pe_id) & \
                              (ctable.deleted == False))
 
         ljoin = component.get_left_join()
-        assertTrue(isinstance(ljoin, list))
+
+        self.assertTrue(isinstance(ljoin, list))
+        assertEqual = self.assertEqual
         assertEqual(len(ljoin), 1)
         assertEqual(str(ljoin[0]), str(expected))
 
@@ -135,9 +136,6 @@ class ComponentLeftJoinConstructionTests(unittest.TestCase):
     def testGetLeftJoinLinkTableComponent(self):
         """ Left Join for a link-table component """
 
-        assertEqual = self.assertEqual
-        assertTrue = self.assertTrue
-
         resource = current.s3db.resource("project_project")
         component = resource.components["task"]
 
@@ -145,12 +143,14 @@ class ComponentLeftJoinConstructionTests(unittest.TestCase):
         ltable = component.link.table
         ctable = component.table
 
-        expected_l = ltable.on((ltable.project_id == rtable.id) &
+        expected_l = ltable.on((rtable.id == ltable.project_id) & \
                                (ltable.deleted == False))
         expected_r = ctable.on(ltable.task_id == ctable.id)
 
         ljoin = component.get_left_join()
-        assertTrue(isinstance(ljoin, list))
+
+        self.assertTrue(isinstance(ljoin, list))
+        assertEqual = self.assertEqual
         assertEqual(len(ljoin), 2)
         assertEqual(str(ljoin[0]), str(expected_l))
         assertEqual(str(ljoin[1]), str(expected_r))
@@ -2793,7 +2793,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
 
         # Check that the aliased table is properly joined
         expected = org_test_office.on(
-                        ((org_test_office.organisation_id == org_organisation.id) &
+                        ((org_organisation.id == org_test_office.organisation_id) &
                          (org_test_office.deleted == False)) &
                         (org_test_office.office_type_id == 5))
         assertEqual(str(rfilter.get_joins(left=True)[0]), str(expected))
@@ -2816,7 +2816,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
 
         rfilter = component.rfilter
         expected = org_organisation.on(
-                        (org_test_office.organisation_id == org_organisation.id) &
+                        (org_organisation.id == org_test_office.organisation_id) &
                         (org_test_office.office_type_id == 5))
         assertEqual(str(rfilter.get_joins(left=True)[0]), str(expected))
 

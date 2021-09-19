@@ -27,10 +27,10 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("CRShelterModel",
-           "CRShelterServiceModel",
-           "CRShelterInspectionModel",
-           "CRShelterRegistrationModel",
+__all__ = ("ShelterModel",
+           "ShelterServiceModel",
+           "ShelterInspectionModel",
+           "ShelterRegistrationModel",
            "cr_shelter_rheader",
            "cr_update_shelter_population",
            "cr_update_housing_unit_population",
@@ -51,7 +51,7 @@ NIGHT = 1
 DAY_AND_NIGHT = 2
 
 # =============================================================================
-class CRShelterModel(S3Model):
+class ShelterModel(S3Model):
 
     names = ("cr_shelter_type",
              "cr_shelter",
@@ -1030,7 +1030,7 @@ class CRShelterModel(S3Model):
         return current.messages["NONE"]
 
 # =============================================================================
-class CRShelterServiceModel(S3Model):
+class ShelterServiceModel(S3Model):
     """ Model for Shelter Services """
 
     names = ("cr_shelter_service",
@@ -1131,7 +1131,7 @@ class CRShelterServiceModel(S3Model):
     #            }
 
 # =============================================================================
-class CRShelterInspectionModel(S3Model):
+class ShelterInspectionModel(S3Model):
     """ Model for Shelter / Housing Unit Flags """
 
     names = ("cr_shelter_flag",
@@ -1599,7 +1599,7 @@ class CRShelterInspectionModel(S3Model):
             link.update_record(task_id = None)
 
 # =============================================================================
-class CRShelterRegistrationModel(S3Model):
+class ShelterRegistrationModel(S3Model):
 
     names = ("cr_shelter_allocation",
              "cr_shelter_registration",

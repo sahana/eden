@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3SituationModel",
+__all__ = ("SituationModel",
            )
 
 from gluon import *
@@ -36,7 +36,7 @@ from ..s3 import *
 #from s3layouts import S3PopupLink
 
 # =============================================================================
-class S3SituationModel(S3Model):
+class SituationModel(S3Model):
     """
         Situation Super Entity & Presence tables for Trackable resources
     """

@@ -16,6 +16,10 @@ def config(settings):
     settings.base.system_name = T("Social Tenure Domain Model")
     settings.base.system_name_short = T("STDM")
 
+    # Custom Models
+    settings.base.custom_models = {"climate": "Climate",
+                                   }
+
     # PrePopulate data
     settings.base.prepopulate += ("historic/STDM", "default/users", "historic/STDM/Demo")
 

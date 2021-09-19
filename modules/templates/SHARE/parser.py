@@ -34,11 +34,16 @@ __all__ = ["S3Parser"]
 
 import os
 
+from io import StringIO
+from urllib import parse as urlparse
+from urllib import request as urllib2
+from urllib.error import HTTPError
+from urllib.request import urlopen
+
 from gluon import current
 from gluon.tools import fetch
 
 from s3.s3parser import S3Parsing
-from s3compat import HTTPError, StringIO, urllib2, urlopen, urlparse
 
 # =============================================================================
 class S3Parser(object):

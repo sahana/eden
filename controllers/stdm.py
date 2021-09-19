@@ -2,29 +2,28 @@
 
 """
     Social Tenure Domain Model
+
+   The model for this is in templates.STDM.stdm.py
 """
 
-module = request.controller
-resourcename = request.function
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """
 
-    return s3db.cms_index(module)
+    return s3db.cms_index(c)
 
 # -----------------------------------------------------------------------------
 def person():
     """ RESTful CRUD controller """
 
-    s3db.set_method("pr", resourcename,
+    s3db.set_method("pr", "person",
                     method = "contacts",
                     action = s3db.pr_Contacts)
 
-    return s3_rest_controller("pr", resourcename,
+    return s3_rest_controller("pr", "person",
                               rheader = s3db.stdm_rheader,
                               )
 
@@ -72,7 +71,7 @@ def group():
         return True
     s3.prep = prep
 
-    return s3_rest_controller("pr", resourcename,
+    return s3_rest_controller("pr", "group",
                               rheader = s3db.stdm_rheader,
                               )
 
@@ -96,7 +95,7 @@ def group_member_role():
         msg_list_empty = T("No Household Relations currently defined"),
     )
 
-    return s3_rest_controller("pr", resourcename,
+    return s3_rest_controller("pr", "group_member_role",
                               #rheader = s3db.stdm_rheader,
                               )
 

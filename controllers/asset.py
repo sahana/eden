@@ -6,17 +6,14 @@
     http://eden.sahanafoundation.org/wiki/BluePrint/Assets
 """
 
-module = request.controller
-resourcename = request.function
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """
 
-    return s3db.cms_index(module, alt_function="index_alt")
+    return s3db.cms_index(c, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -25,23 +22,27 @@ def index_alt():
     """
 
     # Just redirect to the list of Assets
-    s3_redirect_default(URL(f="asset"))
+    s3_redirect_default(URL(f = "asset"))
 
 # -----------------------------------------------------------------------------
 def create():
     """ Redirect to asset/create """
 
-    redirect(URL(f="asset", args="create"))
+    redirect(URL(f = "asset",
+                 args = "create",
+                 ))
 
 # -----------------------------------------------------------------------------
 def asset():
     """ RESTful CRUD controller """
 
     # Use the item() controller in this module to set options correctly
-    s3db.asset_asset.item_id.comment = S3PopupLink(f="item",
-        label=T("Create Item"),
-        title=T("Item"),
-        tooltip=T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog."))
+    s3db.asset_asset.item_id.comment = \
+        S3PopupLink(f = "item",
+                    label = T("Create Item"),
+                    title = T("Item"),
+                    tooltip = T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog."),
+                    )
 
     # Defined in Model for use from Multiple Controllers for unified menus
     return s3db.asset_controller()
@@ -56,8 +57,9 @@ def brand():
 def catalog():
     """ RESTful CRUD controller """
 
+    from s3db.supply import supply_catalog_rheader
     return s3_rest_controller("supply", "catalog",
-                              rheader = s3db.supply_catalog_rheader,
+                              rheader = supply_catalog_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -74,18 +76,18 @@ def item():
         # Limit the Categories to just those which can be Assets
         # - make category mandatory so that filter works
         field = s3db.supply_item.item_category_id
-        field.requires = IS_ONE_OF(db,
-                                   "supply_item_category.id",
+        field.requires = IS_ONE_OF(db, "supply_item_category.id",
                                    s3db.supply_item_category_represent,
                                    filterby = "can_be_asset",
                                    filter_opts = (True,),
                                    sort = True,
                                    )
 
-        field.comment = S3PopupLink(f="item_category",
-                                    label=T("Create Item Category"),
-                                    title=T("Item Category"),
-                                    tooltip=T("Only Categories of type 'Asset' will be seen in the dropdown."))
+        field.comment = S3PopupLink(f = "item_category",
+                                    label = T("Create Item Category"),
+                                    title = T("Item Category"),
+                                    tooltip = T("Only Categories of type 'Asset' will be seen in the dropdown."),
+                                    )
 
     # Defined in the Model for use from Multiple Controllers for unified menus
     return s3db.supply_item_controller()
@@ -159,7 +161,8 @@ def telephone():
                    )
 
     # Type is Telephone
-    TELEPHONE = s3db.asset_types["TELEPHONE"]
+    from s3db.asset import asset_types
+    TELEPHONE = asset_types["TELEPHONE"]
     field = table.type
     field.default = TELEPHONE
     field.readable = False
@@ -175,24 +178,23 @@ def telephone():
 
     field = table.item_id
     field.label = T("Telephone Type")
-    field.comment = S3PopupLink(f="item",
+    #field.widget = None # We want a simple dropdown, which is the default anyway
+    field.comment = S3PopupLink(f = "item",
                                 # Use this controller for options.json rather than looking for one called 'asset'
-                                vars=dict(parent="telephone"),
-                                label=T("Add Telephone Type"),
-                                info=T("Add a new telephone type"),
-                                title=T("Telephone Type"),
-                                tooltip=T("Only Items whose Category are of type 'Telephone' will be seen in the dropdown."))
+                                vars = {"parent": "telephone"},
+                                label = T("Add Telephone Type"),
+                                info = T("Add a new telephone type"),
+                                title = T("Telephone Type"),
+                                tooltip = T("Only Items whose Category are of type 'Telephone' will be seen in the dropdown."),
+                                )
 
     # Only select from telephones
-    field.widget = None # We want a simple dropdown
     ctable = s3db.supply_item_category
-    itable = s3db.supply_item
-    query = (ctable.is_telephone == True) & \
-            (itable.item_category_id == ctable.id)
-    field.requires = IS_ONE_OF(db(query),
-                               "supply_item.id",
-                               "%(name)s",
-                               sort=True)
+    telephone_categories = db(ctable.is_telephone == True).select(ctable.id)
+    field.requires.set_filter(filterby = "item_category_id",
+                              filter_opts = [row.id for row in telephone_categories],
+                              )
+
     # CRUD strings
     s3.crud_strings[tablename] = Storage(
         label_create = T("Add Telephone"),

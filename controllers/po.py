@@ -2,19 +2,19 @@
 
 """
     Population Outreach Module - Controllers
+
+   The model for this is in templates.IFRC.po.py
 """
 
-module = request.controller
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """
 
     # Page title
-    module_name = settings.modules[module].get("name_nice")
+    module_name = settings.modules[c].get("name_nice")
 
     response.title = module_name
     output = {"module_name": module_name}

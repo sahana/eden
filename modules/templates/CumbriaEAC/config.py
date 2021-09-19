@@ -1297,7 +1297,7 @@ def config(settings):
             row_index += 1
 
         # Write output
-        from s3compat import BytesIO
+        from io import BytesIO
         output = BytesIO()
         book.save(output)
         output.seek(0)

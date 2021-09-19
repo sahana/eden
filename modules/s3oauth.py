@@ -38,10 +38,13 @@ __all__ = ("FaceBookAccount",
 import json
 import time
 
+from urllib import request as urllib2
+from urllib.error import HTTPError
+from urllib.request import urlopen
+from urllib.parse import urlencode
+
 from gluon import current, HTTP, IS_SLUG, redirect, URL
 from gluon.contrib.login_methods.oauth20_account import OAuthAccount
-
-from s3compat import HTTPError, urlencode, urllib2, urlopen
 
 REDIRECT_MSG = "You are not authenticated: you are being redirected " \
                "to the <a href='%s'> authentication server</a>"

@@ -1,11 +1,14 @@
 ﻿# -*- coding: utf-8 -*-
+"""
+    climate - Climate Data Portal
 
-module = request.controller
+   The model for this is in templates.Climate.climate.py
+"""
 
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
-ClimateDataPortal = local_import("ClimateDataPortal")
+from templates.Climate import ClimateDataPortal
 SampleTable = ClimateDataPortal.SampleTable
 DSL = local_import("ClimateDataPortal.DSL")
 
@@ -20,7 +23,7 @@ def _map_plugin(**client_config):
 
 # -----------------------------------------------------------------------------
 def index():
-    module_name = settings.modules[module].get("name_nice", T("Climate"))
+    module_name = settings.modules[c].get("name_nice", T("Climate"))
 
     # Include an embedded Overview Map on the index page
     config = gis.get_config()

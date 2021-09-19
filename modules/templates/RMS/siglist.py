@@ -36,7 +36,6 @@ from gluon import current, DIV, H4, H5, IMG, TABLE, TD, TH, TR
 from gluon.contenttype import contenttype
 
 from s3 import S3Method, s3_format_fullname
-from s3compat import long
 
 # =============================================================================
 class HRSignatureList(S3Method):
@@ -147,7 +146,7 @@ class HRSignatureList(S3Method):
             elif len(org_ids) == 1:
                 # Filtered to a single organisation
                 try:
-                    organisation_id = long(org_ids[0])
+                    organisation_id = int(org_ids[0])
                 except (ValueError, TypeError):
                     pass
             else:
@@ -205,7 +204,7 @@ class HRSignatureList(S3Method):
             prog_ids = progfilter.split(",")
             if len(prog_ids) == 1:
                 try:
-                    programme_id = long(prog_ids[0])
+                    programme_id = int(prog_ids[0])
                 except (ValueError, TypeError):
                     pass
 

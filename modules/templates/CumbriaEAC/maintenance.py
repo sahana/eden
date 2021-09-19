@@ -18,7 +18,7 @@ class Daily():
         request = current.request
 
         now = request.utcnow
-        month_past = now - datetime.timedelta(weeks=4)
+        month_past = now - datetime.timedelta(weeks = 4)
 
         # Cleanup Scheduler logs
         table = s3db.scheduler_run
@@ -47,7 +47,7 @@ class Daily():
                     pass
 
         # Cleanup Uploaded Import Spreadsheets
-        week_past = now - datetime.timedelta(weeks=1)
+        week_past = now - datetime.timedelta(weeks = 1)
 
         from s3.s3import import S3Importer
         S3Importer.define_upload_table()

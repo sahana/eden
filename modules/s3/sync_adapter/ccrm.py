@@ -27,10 +27,15 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+from urllib import parse as urlparse
+from urllib import request as urllib2
+from urllib.error import HTTPError
+from urllib.request import urlopen
+from urllib.parse import urlencode
+
 from gluon import *
 from gluon.storage import Storage
 
-from s3compat import HTTPError, urlencode, urllib2, urlopen, urlparse
 from ..s3sync import S3SyncBaseAdapter
 
 # =============================================================================

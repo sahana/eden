@@ -31,6 +31,7 @@
 
 __all__ = ("DataCollectionTemplateModel",
            "DataCollectionModel",
+           "TrainingEventAssessmentModel",
            #"dc_TargetReport",
            "dc_TargetXLS",
            "dc_answer_form",
@@ -1062,7 +1063,8 @@ class DataCollectionModel(S3Model):
                      s3_language(readable = False,
                                  writable = False,
                                  ),
-                     location_id(widget = S3LocationSelector(show_map = False,
+                     location_id(widget = S3LocationSelector(show_latlon = False,
+                                                             show_map = False,
                                                              show_postcode = False,
                                                              )),
                      #self.org_organisation_id(),
@@ -1221,8 +1223,8 @@ class DataCollectionModel(S3Model):
 
         # @todo: representation including template name, location and date
         #        (not currently required since always hidden)
-        represent = S3Represent(lookup=tablename,
-                                fields=["date"],
+        represent = S3Represent(lookup = tablename,
+                                fields = ["date"],
                                 )
 
         # Reusable field
@@ -1232,7 +1234,7 @@ class DataCollectionModel(S3Model):
                                       requires = IS_ONE_OF(db, "dc_response.id",
                                                            represent,
                                                            ),
-                                      comment = S3PopupLink(f="respnse",
+                                      comment = S3PopupLink(f = "respnse",
                                                             ),
                                       )
 
@@ -1263,6 +1265,53 @@ class DataCollectionModel(S3Model):
                 }
 
 # =============================================================================
+class TrainingEventAssessmentModel(S3Model):
+    """
+        (Training) Events <> Data Collection Assessments Link Table
+         Can be used for:
+            * Needs Assessment / Readiness checklist
+            * Tests (either for checking learning/application or for final grade)
+            * Evaluation (currently the only use case - for IFRC's Bangkok CCST)
+    """
+
+    names = ("dc_target_event",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # @ToDo: Deployment_setting if use expanded beyond Bangkok CCST
+        type_opts = {1: T("Other"),
+                     3: T("3-month post-event Evaluation"),
+                     12: T("12-month post-event Evaluation"),
+                     }
+
+        # =====================================================================
+        # (Training) Events <> DC Targets Link Table
+        #
+        tablename = "dc_target_event"
+        self.define_table(tablename,
+                          self.hrm_training_event_id(empty = False,
+                                                     ondelete = "CASCADE",
+                                                     ),
+                          self.dc_target_id(empty = False,
+                                            ondelete = "CASCADE",
+                                            ),
+                          Field("survey_type",
+                                default = 1,
+                                label = T("Type"),
+                                requires = IS_EMPTY_OR(IS_IN_SET(type_opts)),
+                                represent = S3Represent(options = type_opts),
+                                ),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
 def dc_answer_form(r, tablename):
     """
         Customise the form for Answers to a Template
@@ -1290,14 +1339,14 @@ def dc_answer_form(r, tablename):
                 (ttable.table_id == dtable.id)
         template = db(query).select(ttable.id,
                                     ttable.layout,
-                                    limitby = (0, 1),
+                                    limitby = (0, 1)
                                     ).first()
         template_id = template.id
     else:
         # Going via Component
         template_id = r.record.template_id
         template = db(ttable.id == template_id).select(ttable.layout,
-                                                       limitby = (0, 1),
+                                                       limitby = (0, 1)
                                                        ).first()
     layout = template.layout
 
@@ -1328,10 +1377,6 @@ def dc_answer_form(r, tablename):
               ftable.label,
               qtable.id,
               qtable.code,
-              # @ToDo: Get all these from settings
-              #qtable.totals,
-              #qtable.grid,
-              #qtable.show_hidden,
               qtable.settings,
               ]
     if translate:
@@ -1346,6 +1391,7 @@ def dc_answer_form(r, tablename):
     codes = {}
     grids = {}
     grid_children = {}
+    grid_fields = {}
     show_hidden = {}
     questions = {}
     for question in rows:
@@ -1353,37 +1399,40 @@ def dc_answer_form(r, tablename):
         code = question["dc_question.code"]
         if code:
             codes[code] = field_name
-        # @ToDo: Get all these from settings
-        #totals = question["dc_question.totals"]
-        #if totals:
-        #    auto_totals[field_name] = {"codes": totals,
-        #                               "fields": [],
-        #                               }
-        #grid = question["dc_question.grid"]
-        #if grid:
-        #    len_grid = len(grid)
-        #    if len_grid == 2:
-        #        # Grid Pseudo-Question
-        #        if not code:
-        #            # @ToDo: Make mandatory in onvalidation
-        #            raise ValueError("Code required for Grid Questions")
-        #        rows = [s3_str(T(v)) for v in grid[0]]
-        #        cols = [s3_str(T(v)) for v in grid[1]]
-        #        fields = [[0 for x in range(len(rows))] for y in range(len(cols))]
-        #        grids[code] = {"r": rows,
-        #                       "c": cols,
-        #                       "f": fields,
-        #                       }
-        #    elif len_grid == 3:
-        #        # Child Question
-        #        grid_children[field_name] = grid
-        #    else:
-        #        current.log.warning("Invalid grid data for %s - ignoring" % (code or field_name))
-        #hides = question["dc_question.show_hidden"]
-        #if hides:
-        #    show_hidden[field_name] = {"codes": hides,
-        #                               "fields": [],
-        #                               }
+        settings = question["dc_question.settings"] or {}
+        total = settings.get("total")
+        if total:
+            auto_totals[field_name] = {"codes": total,
+                                       "fields": [],
+                                       }
+        grid = settings.get("grid")
+        if grid:
+            len_grid = len(grid)
+            if len_grid == 2:
+                # Grid Pseudo-Question
+                grid_child = False
+                if not code:
+                    # @ToDo: Make mandatory in onvalidation
+                    raise ValueError("Code required for Grid Questions")
+                rows = [s3_str(T(v)) for v in grid[0]]
+                cols = [s3_str(T(v)) for v in grid[1]]
+                fields = [[0 for x in range(len(rows))] for y in range(len(cols))]
+                grids[code] = {"r": rows,
+                               "c": cols,
+                               "f": fields,
+                               }
+            elif len_grid == 3:
+                # Child Question
+                grid_child = True
+                grid_children[field_name] = grid
+            else:
+                current.log.warning("Invalid grid data for %s - ignoring" % (code or field_name))
+                continue
+        hides = settings.get("hides")
+        if hides:
+            show_hidden[field_name] = {"codes": hides,
+                                       "fields": [],
+                                       }
 
         label = None
         if translate:
@@ -1394,6 +1443,12 @@ def dc_answer_form(r, tablename):
                                                  "code": code,
                                                  "label": label,
                                                  }
+        if grid and grid_child:
+            grid_code = grid[0]
+            if grid_code in grid_fields:
+                grid_fields[grid_code].append((label, field_name))
+            else:
+                grid_fields[grid_code] = [(label, field_name)]
 
     # Append questions to the form, with subheadings
     crud_fields = []
@@ -1414,6 +1469,9 @@ def dc_answer_form(r, tablename):
                 # Grid Pseudo-Question
                 fname = question["code"]
                 cappend(S3SQLDummyField(fname))
+                # Append all Children
+                for child in grid_fields[fname]:
+                    cappend(child)
         elif item_type == "subheading":
             text = None
             if translate:

@@ -144,9 +144,6 @@
                 <data field="middle_name"><xsl:value-of select="col[@field='Middle Name']"/></data>
             </xsl:if>
             <data field="last_name"><xsl:value-of select="col[@field='Last Name']"/></data>
-            <xsl:if test="col[@field='Initials']!=''">
-                <data field="initials"><xsl:value-of select="col[@field='Initials']"/></data>
-            </xsl:if>
             <xsl:if test="col[@field='DOB']!=''">
                 <data field="date_of_birth"><xsl:value-of select="col[@field='DOB']"/></data>
             </xsl:if>
@@ -157,6 +154,9 @@
             </xsl:if>
 
             <resource name="pr_person_details">
+                <xsl:if test="col[@field='Initials']!=''">
+                    <data field="initials"><xsl:value-of select="col[@field='Initials']"/></data>
+                </xsl:if>
                 <xsl:if test="col[@field='Father Name']!=''">
                     <data field="father_name"><xsl:value-of select="col[@field='Father Name']"/></data>
                 </xsl:if>

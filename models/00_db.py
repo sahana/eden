@@ -13,7 +13,7 @@ if settings.get_L10n_languages_readonly():
 get_vars = request.get_vars
 
 # Are we running in debug mode?
-settings.check_debug()
+debug = settings.check_debug()
 
 import datetime
 import json
@@ -138,9 +138,6 @@ from s3.s3data import *
 # GIS Module
 gis = s3base.GIS()
 current.gis = gis
-
-# s3_request
-s3_request = s3base.s3_request
 
 # Field Selectors
 FS = s3base.FS

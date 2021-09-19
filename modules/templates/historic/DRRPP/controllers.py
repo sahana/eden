@@ -834,7 +834,7 @@ class organisations():
         for rfield in rfields:
             colname = rfield.colname
             cols.append({"name": colname, "label": rfield.label})
-            for i in xrange(numrows):
+            for i in range(numrows):
                 if len(rows) == i:
                     rows.append([])
                 rows[i].append(records[i][colname])

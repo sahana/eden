@@ -1,12 +1,12 @@
 /**
-    Supply Static JS Code
+    Static JS Code related to Supply, Inv & Req
 */
 
 S3.supply = Object();
 
-/* Globals called by S3OptionsFilter */
-
-// Filter Item Packs based on Items
+/**
+ * Globals called by filterOptionsS3 when Item Packs filtered based on Items
+ */
 S3.supply.fncPrepItem = function(data) {
     for (var i = 0; i < data.length; i++) {
         if (data[i].quantity == 1) {
@@ -24,178 +24,361 @@ S3.supply.fncRepresentItem = function(record, PrepResult) {
     }
 }
 
+// ============================================================================
 $(document).ready(function() {
-    // Displays the number of items available in an inventory
-    var InvItemPackIDChange = function() {
-        // Cancel previous request
-        try {S3.JSONRequest[$(this).attr('id')].abort();} catch(err) {}
 
-        $('#TotalQuantity').remove();   
-        if ($('[name="inv_item_id"]').length > 0) {
-            id = $('[name="inv_item_id"]').val();
-        } else if  ($('[name="send_inv_item_id"]').length > 0) {
-            id = $('[name="send_inv_item_id"]').val();
-        //}
-        // Following condition removed since it doesn't appear to be correct
-        // the ajax call is looking for the number of items in stock, but
-        // this is the supply catalogue id - not an id related to an inventory
-        //else if  ($('[name = "item_id"]').length > 0) {
-        //    id = $('[name = "item_id"]').val();
-        } else {
-            return;
-        }
-
-        var url = S3.Ap.concat('/inv/inv_item_quantity.json/' + id);
-        if ($('#inv_quantity_throbber').length === 0) {
-            $('[name="quantity"]').after('<div id="inv_quantity_throbber" class="throbber"/>'); 
-        }
-        
-        // Save JSON Request by element id
-        S3.JSONRequest[$(this).attr('id')] = $.getJSON(url, function(data) {
-            // @ToDo: Error Checking
-            var InvQuantity = data.iquantity; 
-            var InvPackQuantity = data.pquantity; 
-
-            var PackName = $('[name="item_pack_id"] option:selected').text();
-            var re = /\(([0-9]*)\sx/;
-            var RegExpResult = re.exec(PackName);
-            var PackQuantity;
-            if (RegExpResult === null) {
-                PackQuantity = 1;
-            } else {
-                PackQuantity = RegExpResult[1];
-            }
-
-            var Quantity = (InvQuantity * InvPackQuantity) / PackQuantity;
-
-            TotalQuantity = '<span id="TotalQuantity"> / ' + Quantity.toFixed(2) + ' ' + PackName + ' (' + i18n.in_inv + ')</span>';
-            $('#inv_quantity_throbber').remove();
-            $('[name="quantity"]').after(TotalQuantity);
-        });
-    }
-
-    // Displays the number of items available in an inventory
+    /**
+     * Incoming Shipments
+     * - Show/Hide fields according to Shipment Type
+     */
     var InvRecvTypeChange = function() {
         var RecvType = $("#inv_recv_type").val();
         if (RecvType != undefined) {
-            if ( RecvType == 11) { // @ToDo: pass this value instead of hardcoding it base on s3cfg.py 
+            if ( RecvType == 11) { // @ToDo: pass this value instead of hardcoding it - base on s3cfg.py 
                 // Internal Shipment 
                 $('[id^="inv_recv_from_site_id__row"]').show();
                 $('[id^="inv_recv_organisation_id__row"]').hide();
-            } else if ( RecvType >= 32) { // @ToDo: pass this value instead of hardcoding it base on s3cfg.py 
-                // External Shipment 
+            } else if ( RecvType >= 32) { // @ToDo: pass this value instead of hardcoding it - base on s3cfg.py 
+                // External Shipment: Donation, Purchase, Consignment, In-Transit
                 $('[id^="inv_recv_from_site_id__row"]').hide();
                 $('[id^="inv_recv_organisation_id__row"]').show();
-            } else { // @ToDo: pass this value instead of hardcoding it base on s3cfg.py 
-                // External Shipment 
+            } else {
+                // Unknown Type
                 $('[id^="inv_recv_from_site_id__row"]').hide();
                 $('[id^="inv_recv_organisation_id__row"]').hide();
             }
-            
         }
-    }
+    };
 
-    $('#inv_track_item_item_pack_id').change(InvItemPackIDChange);
     InvRecvTypeChange();
     $('#inv_recv_type').change(InvRecvTypeChange);
-/**
-    // Item ID Field
-    // Assets don't use Packs, so skip
-    if ($("#asset_asset_item_id").val() == undefined &
-    	  "#supply_catalog_item_item_id").val() == undefined) {
-        S3FilterFieldChange({
-            'FilterField':	'item_id',
-            'Field':		'item_pack_id',
-            'FieldResource':'item_pack',
-            'FieldPrefix':	'supply',
-            'msgNoRecords':	i18n.no_packs,
-            'fncPrep':		S3.supply.fncPrepItem,
-            'fncRepresent':	S3.supply.fncRepresentItem
-        });
-    }
 
-    // Inv Item Field
-    S3FilterFieldChange({
-		'FilterField':	'inv_item_id',
-		'Field':		'item_pack_id',
-		'FieldResource':'item_pack',
-		'FieldPrefix':	'supply',
-	    'url':		 	S3.Ap.concat('/inv/inv_item_packs.json/'),
-		'msgNoRecords':	i18n.no_packs,
-		'fncPrep':		S3.supply.fncPrepItem,
-		'fncRepresent':	S3.supply.fncRepresentItem
-	});
-    
-    // Req Item Field
-    S3FilterFieldChange({
-		'FilterField':	'req_item_id',
-		'Field':		'item_pack_id',
-		'FieldResource':'item_pack',
-		'FieldPrefix':	'supply',
-	    'url':		 	S3.Ap.concat('/req/req_item_packs.json/'),
-		'msgNoRecords':	i18n.no_packs,
-		'fncPrep':		S3.supply.fncPrepItem,
-		'fncRepresent':	S3.supply.fncRepresentItem
-	});
-*/
     // ========================================================================
     /**
-     * Function to show the transactions related to request commit, transit &
-     * fulfil quantities
+     * Outgoing Shipments
+     * - replace filterOptionsS3 to show item packs for Inv Item
+     * - show available Stock
+     * - if data provided from global (currently just RMS) then also set req_item_id
+     */
+
+    var invItemField = $('#inv_track_item_send_inv_item_id'),
+        ReqItemRow = $('#inv_track_item_req_item_id__row');
+
+    if (ReqItemRow.length) {
+        // Hide it by Default
+        ReqItemRow.hide();
+    }
+
+    var InvItemIDChange = function() {
+        // Update the available packs for this item
+        // Display the number of these items available in this site's inventory
+
+        var inv_item_id = invItemField.val(),
+            ItemPackField = $('#inv_track_item_item_pack_id'),
+            QuantityField = $('#inv_track_item_quantity');
+
+        // Remove old Items
+        ItemPackField.html('');
+        QuantityField.val('');
+        $('#TotalQuantity').remove();
+
+        if (inv_item_id === '') {
+            // No Inv Item available yet
+            return
+        }
+
+        var elementID = $(this).attr('id');
+
+        // Cancel previous AJAX request
+        try {S3.JSONRequest[elementID].abort();} catch(err) {}
+
+        var inv_items = S3.supply.inv_items;
+        if (undefined === inv_items) {
+            // Lookup data via AJAX
+            if ($('#item_pack_throbber').length === 0) {
+                ItemPackField.after('<div id="item_pack-throbber" class="throbber"/>');
+            }
+            var url = S3.Ap.concat('/inv/inv_item_quantity.json/' + inv_item_id);
+
+            // Save JSON Request by element id
+            S3.JSONRequest[elementID] = $.getJSON(url, function(data) {
+
+                var i,
+                    InvQuantity = data.quantity,
+                    opt,
+                    PackQuantity,
+                    PackName,
+                    pack,
+                    packs = data.packs,
+                    packsLength = packs.length,
+                    piece,
+                    selected,
+                    first = true;
+
+                for (i = 0; i < packsLength; i++) {
+                    pack = packs[i];
+                    if (pack.quantity == 1) {
+                        piece = pack.name;
+                        break;
+                    }
+                }
+
+                // Update available Packs
+                for (i = 0; i < packsLength; i++) {
+                    pack = packs[i];
+                    if (first) {
+                        PackQuantity = pack.quantity;
+                        PackName = pack.name;
+                        selected = ' selected';
+                    } else {
+                        selected = '';
+                    }
+                    if (pack.quantity !== 1) {
+                        opt = '<option value="' + pack.id + '"' + selected + '>' + pack.name + ' (' + pack.quantity + ' x ' + piece + ')</option>';
+                    } else {
+                        opt = '<option value="' + pack.id + '"' + selected + '>' + pack.name + '</option>';
+                    }
+                    ItemPackField.append(opt);
+                    first = false;
+                }
+
+                $('#item_pack-throbber').remove();
+
+                // Calculate Available Stock Quantity for this Pack
+                var Quantity = InvQuantity / PackQuantity;
+
+                // Display Available Stock Quantity
+                var TotalQuantity = '<span id="TotalQuantity"> / ' + Quantity.toFixed(2) + ' ' + PackName + ' (' + i18n.in_inv + ')</span>';
+                QuantityField.after(TotalQuantity);
+
+                if (packsLength > 1) {
+                    var item_pack_id;
+                    ItemPackField.on('change', function() {
+                        item_pack_id = parseInt(ItemPackField.val());
+                        for (i = 0; i < packsLength; i++) {
+                            pack = packs[i]
+                            if (pack.id == item_pack_id) {
+                                PackQuantity = pack.quantity;
+                                PackName = pack.name;
+                                // Calculate Available Stock Quantity for this Pack
+                                Quantity = InvQuantity / PackQuantity;
+
+                                // Display Available Stock Quantity
+                                $('#TotalQuantity').html(Quantity.toFixed(2) + ' ' + PackName + ' (' + i18n.in_inv + ')');
+                                break;
+                            }
+                        }
+                    });
+                }
+            });
+        } else {
+            // Use data provided (currently just RMS template)
+            // - Pack Options
+            // - Available Stock Quantity
+            // - REQ Quantity
+            // - req_item_id
+
+            var i,
+                first = true,
+                data = inv_items[inv_item_id],
+                opt,
+                pack,
+                packs = data.packs,
+                packsLength = packs.length,
+                PackQuantity,
+                PackName,
+                piece,
+                req_items = data.req_items,
+                req_item = req_items[0],
+                selected,
+                InvQuantity = req_item.inv_quantity;
+
+            for (i = 0; i < packsLength; i++) {
+                pack = packs[i];
+                if (pack.quantity == 1) {
+                    piece = pack.name;
+                    break;
+                }
+            }
+
+            // Update available Packs
+            for (i = 0; i < packsLength; i++) {
+                pack = packs[i];
+                if (first) {
+                    PackQuantity = pack.quantity;
+                    PackName = pack.name;
+                    selected = ' selected';
+                } else {
+                    selected = '';
+                }
+                if (pack.quantity !== 1) {
+                    opt = '<option value="' + pack.id + '"' + selected + '>' + pack.name + ' (' + pack.quantity + ' x ' + piece + ')</option>';
+                } else {
+                    opt = '<option value="' + pack.id + '"' + selected + '>' + pack.name + '</option>';
+                }
+                ItemPackField.append(opt);
+                first = false;
+            }
+
+            // Calculate Available Stock Quantity for this Pack
+            // - inv_quantity will be the same in every row
+            var Quantity = InvQuantity / PackQuantity; // inv_quantity includes inv_pack_quantity
+
+            // Display Available Stock Quantity
+            var TotalQuantity = '<span id="TotalQuantity"> / ' + Quantity.toFixed(2) + ' ' + PackName + ' (' + i18n.in_inv + ')</span>';
+            QuantityField.after(TotalQuantity);
+
+            // Update Send Quantity
+            var updateSendQuantity = function() {
+                if (req_items.length == 1) {
+                    // Default to REQ Quantity
+                    var ReqQuantity = req_item.req_quantity / PackQuantity;
+                    if (ReqQuantity <= Quantity) {
+                        // We can send the full quantity requested
+                        QuantityField.val(ReqQuantity);
+                    } else {
+                        // We can only send what we have in stock!
+                        QuantityField.val(Quantity);
+                    }
+
+                    // Set req_item_id, so that we can track request fulfilment
+                    $('#inv_track_item_req_item_id').val(req_item.req_item_id);
+
+                } else {
+                    // Multiple Req Items for the same Inv Item
+                    // Display ReqItemRow
+                    ReqItemRow.show();
+                    // Populate with Options
+                    var req_item_id,
+                        ReqItemField = $('#inv_track_item_req_item_id'),
+                        ReqQuantity;
+                    ReqItemField.html('');
+                    for (i = 0; i < req_items.length; i++) {
+                        req_item = req_items[i];
+                        ReqItemField.append(new Option(req_item.req_ref, req_item.req_item_id));
+                        if (first) {
+                            ReqQuantity = req_item.req_quantity / PackQuantity;
+                            if (ReqQuantity <= Quantity) {
+                                // We can send the full quantity requested
+                                QuantityField.val(ReqQuantity);
+                            } else {
+                                // We can only send what we have in stock!
+                                QuantityField.val(Quantity);
+                            }
+                        }
+                        first = false;
+                    }
+                    ReqItemField.on('change', function() {
+                        // Update the Quantity accordingly
+                        req_item_id = parseInt(ReqItemField.val());
+                        for (i = 0; i < req_items.length; i++) {
+                            req_item = req_items[i];
+                            if (req_item.req_item_id == req_item_id) {
+                                ReqQuantity = req_item.req_quantity / PackQuantity;
+                                if (ReqQuantity <= Quantity) {
+                                    // We can send the full quantity requested
+                                    QuantityField.val(ReqQuantity);
+                                } else {
+                                    // We can only send what we have in stock!
+                                    QuantityField.val(Quantity);
+                                }
+                                break;
+                            }
+                        }
+                    });
+                }
+            }
+
+            updateSendQuantity();
+
+            if (packsLength > 1) {
+                var item_pack_id;
+                ItemPackField.on('change', function() {
+                    item_pack_id = parseInt(ItemPackField.val());
+                    for (i = 0; i < packsLength; i++) {
+                        pack = packs[i]
+                        if (pack.id == item_pack_id) {
+                            PackQuantity = pack.quantity;
+                            PackName = pack.name;
+                            // Calculate Available Stock Quantity for this Pack
+                            Quantity = InvQuantity / PackQuantity;
+
+                            // Display Available Stock Quantity
+                            $('#TotalQuantity').html(Quantity.toFixed(2) + ' ' + PackName + ' (' + i18n.in_inv + ')');
+
+                            // Update Send Quantity
+                            updateSendQuantity();
+                            break;
+                        }
+                    }
+                });
+            }
+        }
+    };
+
+    invItemField.change(InvItemIDChange);
+
+    // ========================================================================
+    /**
+     * req_item_quantity_represent
      */
 	$(document).on('click', '.quantity.ajax_more', function(e) {
+
 		e.preventDefault();
+
 		var DIV = $(this);
-        var ShipmentType;
-		var App;
+
 		if (DIV.hasClass('collapsed')) {
+
+            var App,
+                ShipmentType,
+                Component;
+
 			if (DIV.hasClass('fulfil')) {
 				App = 'inv';
 				ShipmentType = 'recv';
+                Component = 'track_item';
 			} else if (DIV.hasClass('transit')) {
-				ShipmentType = 'send';
 				App = 'inv';
+				ShipmentType = 'send';
+                Component = 'track_item';
 			} else if (DIV.hasClass('commit')) {
-				ShipmentType = 'commit';
 				App = 'req';
+				ShipmentType = 'commit';
+                Component = 'commit_item';
 			}
 			DIV.after('<div class="ajax_throbber quantity_req_ajax_throbber"/>')
 			   .removeClass('collapsed')
 			   .addClass('expanded');
 
 			// Get the req_item_id
-			var UpdateURL = $('.action-btn', DIV.parent().parent().parent()).attr('href');
-			var re = /req_item\/(\d*).*/i;
-			var req_item_id = re.exec(UpdateURL)[1];
-			var url = S3.Ap.concat('/', App, '/', ShipmentType, '_item_json.json/', req_item_id);
-			//var url = S3.Ap.concat('/', App, '/', ShipmentType, '_item.s3json?/',
-			//		   ShipmentType, '_item.req_item_id=', req_item_id);
+			var i,
+                re = /req_item\/(\d*).*/i,
+                ResultTable,
+                LineURL,
+                UpdateURL = $('.action-btn', DIV.parent().parent().parent()).attr('href'),
+                req_item_id = re.exec(UpdateURL)[1],
+                url = S3.Ap.concat('/req/', ShipmentType, '_item_json.json/', req_item_id);
 			$.ajax( {
 				url: url,
 				dataType: 'json',
 				context: DIV
 			}).done(function(data) {
-                RecvTable = '<table class="recv_table">';
-                for (i=0; i<data.length; i++) {
-                    RecvTable += '<tr><td>';
-                    if (i===0) {
+                ResultTable = '<table class="recv_table">';
+                for (i = 0; i < data.length; i++) {
+                    ResultTable += '<tr><td>';
+                    if (i === 0) {
                         // Header Row
-                        RecvTable += data[0].id;
+                        ResultTable += data[0].id;
                     } else {
-                        RecvURL = S3.Ap.concat('/', App, '/', ShipmentType, '/',  data[i].id, '/track_item');
-                        RecvTable += "<a href='" + RecvURL + "'>";
-                        if (data[i].date !== null) {
-                            RecvTable += data[i].date.substring(0, 10) + ' - ';
-                            RecvTable += data[i].name + '</a>';
-                        } else {
-                            RecvTable +=  ' - </a>';
-                        }
+                        LineURL = S3.Ap.concat('/', App, '/', ShipmentType, '/',  data[i].id, '/' + Component);
+                        ResultTable += "<a href='" + LineURL + "'>" + data[i].name + ' - ' + data[i].date + '</a>';
                     }
-                    RecvTable += '</td><td>' + data[i].quantity + '</td></tr>';
+                    ResultTable += '</td><td>' + data[i].quantity + '</td></tr>';
                 }
-                RecvTable += '</table>';
+                ResultTable += '</table>';
                 $('.quantity_req_ajax_throbber', this.parent()).remove();
-                this.parent().after(RecvTable);
+                this.parent().after(ResultTable);
             });
 		} else {
 			DIV.removeClass('expanded')
@@ -203,147 +386,6 @@ $(document).ready(function() {
 			$('.recv_table', DIV.parent().parent() ).remove();
 		}
 	});
-
-	// ========================================================================
-	/**
-     * ASSET APPLICATION JS
-	 * @ToDo: - Populate Location based on site(?)
-	 */
-	// ------------------------------------------------------------------------
-	/**
-     * Code to switch between location & site widgets
-	 * @ToDo: Find a better way to show/hide location widget
-	 */
-    /*
-	$('[name="site_or_location"]').change(function() {
-		if ($('#asset_log_site_or_location').length == 1) {
-			$('[id^="asset_log_site_id__row"]').hide();
-			// $('[id^="asset_log_location_id__row"]').hide();
-			$('tr[id^="gis_location"]').hide();
-			$('span[id^="gis_loc"]').hide();
-			$('#gis_location_map-btn').hide();
-			$('td.subheading').hide()
-		}
-		if ($('[name="site_or_location"]:checked').val() == '1') {
-			// Enable Site Input
-			$('[id^="asset_log_site_id__row"]').show();
-			$('[id^="asset_log_room_id__row"]').show();
-			$('tr[id^="gis_location"]').hide();
-			$('span[id^="gis_loc"]').hide();
-			$('#gis_location_map-btn').hide();
-			$('td.subheading').hide();
-		} else if ($('[name="site_or_location"]:checked').val() == '2'){
-			// Enable Location Input
-			$('[id^="asset_log_site_id__row"]').hide();
-			$('[id^="asset_log_room_id__row"]').hide();
-			// $('[id^="asset_log_location_id__row"]').hide();
-			$('tr[id^="gis_location"]').show();
-			$('span[id^="gis_loc"]').show();
-			$('#gis_location_map-btn').show();
-			$('td.subheading').show();
-		}
-	});
-	$('[name="site_or_location"]').change();
-	*/
-	/* Populate Organisation based on Site  */
-	/*
-	$('#asset_log_site_id').change( function() {
-		// Cancel previous request
-		
-		if ($('#asset_log_person_id').val() != '' || $('#asset_log_organisation_id').val() != '') {
-			// Don't populate if the person & org are already set
-		
-			try {S3.JSONRequest[$(this).attr('id')].abort()} catch(err) {};
-			
-			var site_id = $('#asset_log_site_id').val()
-			if (site_id != "") {
-				$('#dummy_asset_log_organisation_id').after('<div id="organisation_ajax_throbber" class="ajax_throbber"/>')
-													 .hide()
-				var url = S3.Ap.concat('/org/site_org_json/', site_id);	
-				
-				// Save JSON Request by element id
-				S3.JSONRequest[$(this).attr('id')] = $.ajax( { 
-					url: url,
-					dataType: 'json'
-				}).done(function(data) {
-                    $('#organisation_ajax_throbber').remove();
-                    if (data.length > 0) {
-                        $('#dummy_asset_log_organisation_id').show()
-                                                             .val(data[0].name)
-                                                             .prop('disabled', true);
-                        $('#asset_log_organisation_id').val(data[0].id);
-                    } else {
-                        $('#dummy_asset_log_organisation_id').show()
-                                                             .val('')
-                                                             .prop('disabled', false);
-                        $('#asset_log_organisation_id').val('');
-                    }
-                    
-                });
-			} else {
-				$('#dummy_asset_log_organisation_id').val('')
-													 .prop('disabled', false);
-				$('#asset_log_organisation_id').val('');
-			}
-		}
-	});
-	*/
-	/** Populate Site & Org Based on Person
-	/* @ToDo: have this only select the correct site - and not disable the field
-     */
-	/*$('#asset_log_person_id').change( function() {
-		// Cancel previous request
-		try {S3.JSONRequest[$(this).attr('id')].abort()} catch(err) {};
-		
-		// Do NOT Populate Organisation based on Site
-		$('#asset_log_site_id').change( function() {}); 
-		
-		var person_id = $('#asset_log_person_id').val()
-		if (person_id != '') {
-			$('#asset_log_site_id').after('<div id="site_ajax_throbber" class="ajax_throbber"/>')
-								   .hide()
-			$('#dummy_asset_log_organisation_id').after('<div id="organisation_ajax_throbber" class="ajax_throbber"/>')
-												 .hide()
-			var url = S3.Ap.concat('/hrm/staff_org_site_json/', person_id);	
-			
-			// Save JSON Request by element id
-			S3.JSONRequest[$(this).attr('id')] = $.ajax({ 
-				url: url,
-				dataType: 'json'
-			}).done(function(data) {
-                $('#site_ajax_throbber').remove();
-                $('#organisation_ajax_throbber').remove();
-                if (data.length > 0) {
-                    $('#dummy_asset_log_organisation_id').show()
-                     .val(data[0].name)
-                     .prop('disabled', true);
-                    $('#asset_log_organisation_id').val(data[0].id);
-                    $('#asset_log_site_id').show()
-                                           .val(data[0].site_id)
-                                           .prop('disabled', true)
-                                           .change();
-                } else {
-                    $('#dummy_asset_log_organisation_id').show()
-                     .val('')
-                     .prop('disabled', false);
-                    $('#asset_log_organisation_id').val('');
-                    $('#asset_log_site_id').show()
-                                           .val('')
-                                           .prop('disabled', false)
-                                           .change();
-                }
-                
-            });
-		} else {
-			$('#asset_log_site_id').show()
-								   .val('')
-								   .prop('disabled', false)
-								   .change();
-			$('#asset_log_organisation_id').val('');
-			$('#dummy_asset_log_organisation_id').val('')
-												 .prop('disabled', false);
-		}
-	});*/
 });
 
 // END ========================================================================

@@ -1,9 +1,10 @@
-Organisation,Facility,Facility Type,Asset No,Item Name
-Department of Disaster Management,DDM-Thimphu-Store,Warehouse,HH1,Rescue hard hat
-Department of Disaster Management,DDM-Thimphu-Store,Warehouse,HH2,Rescue hard hat
-Department of Disaster Management,DDM-Thimphu-Store,Warehouse,HH3,Rescue hard hat
-Department of Disaster Management,DDM-Thimphu-Store,Warehouse,HH4,Rescue hard hat
-Department of Disaster Management,DDM-Thimphu-Store,Warehouse,HH5,Rescue hard hat
-Department of Disaster Management,DDM-Thimphu-Store,Warehouse,HH6,Rescue hard hat
-Department of Disaster Management,DDM-Thimphu-Store,Warehouse,HH7,Rescue hard hat
-Department of Disaster Management,DDM-Thimphu-Store,Warehouse,HH8,Rescue hard hat
+Organisation,Facility,Facility Type,Asset No,Item Name,Assigned To
+Department of Disaster Management,DDM-Thimphu-Store,Warehouse,HH1,Helmet,
+Department of Disaster Management,DDM-Thimphu-Store,Warehouse,HH2,Helmet,
+Department of Disaster Management,DDM-Thimphu-Store,Warehouse,HH3,Helmet,
+Department of Disaster Management,DDM-Thimphu-Store,Warehouse,HH4,Helmet,
+Department of Disaster Management,DDM-Thimphu-Store,Warehouse,HH5,Helmet,
+Department of Disaster Management,DDM-Thimphu-Store,Warehouse,HH6,Helmet,
+Department of Disaster Management,DDM-Thimphu-Store,Warehouse,HH7,Helmet,
+Department of Disaster Management,DDM-Thimphu-Store,Warehouse,HH8,Helmet,
+Department of Disaster Management,DDM-Thimphu-Store,Warehouse,LT1,Laptop,Jigme Thinlye Namgyal

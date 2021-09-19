@@ -12,17 +12,15 @@
            - Kits harder
 """
 
-module = request.controller
-
 # NB Requires 'project' module too
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # =============================================================================
 def index():
     """ Module's Home Page """
 
-    module_name = settings.modules[module].get("name_nice")
+    module_name = settings.modules[c].get("name_nice")
     response.title = module_name
     return {"module_name": module_name, 
             }
@@ -172,11 +170,19 @@ def project():
 
 # =============================================================================
 def parameter():
-    """ REST controller for budget parameters """
+    """
+        REST controller for budget parameters
+        - should always be 1 & only 1 record
+    """
 
-    s3db.configure("budget_parameter", deletable=False)
+    s3db.configure("budget_parameter",
+                   deletable = False,
+                   )
+
     table = s3db.budget_parameter
-    record = db().select(table.id, limitby=(0, 1)).first()
+    record = db().select(table.id,
+                         limitby = (0, 1)
+                         ).first()
     if not record:
         record_id = table.insert()
     else:
@@ -188,7 +194,7 @@ def parameter():
         return output
     s3.postp = postp
 
-    r = s3_request(args=[str(record_id)])
+    r = s3base.s3_request(args = [str(record_id)])
     return r()
 
 # =============================================================================
@@ -205,7 +211,7 @@ def kit_export_xls():
         session.error = "xlwt module not available within the running Python - this needs installing for XLS output!"
         redirect(URL(c="kit"))
 
-    from s3compat import BytesIO
+    from io import BytesIO
     output = BytesIO()
 
     book = xlwt.Workbook()
@@ -305,7 +311,7 @@ def kit_export_pdf():
         session.warning = T("No data in this table - cannot create PDF!")
         redirect(URL(r=request))
 
-    from s3compat import BytesIO
+    from io import BytesIO
     output = BytesIO()
 
     #class MySubReport(SubReport):
@@ -403,7 +409,7 @@ def kit_export_csv():
     output = ""
 
     for resourcename in ["kit", "item", "kit_item"]:
-        _table = module + "_" + resourcename
+        _table = "budget_" + resourcename
         table = db[_table]
         # Filter Search list to just those records which user can read
         query = auth.s3_accessible_query("read", table)
@@ -454,6 +460,7 @@ def item_export_pdf():
         Uses Geraldo Grouping Report
         @ToDo: Use S3PDF Method
     """
+
     try:
         from reportlab.lib.units import cm
         from reportlab.lib.pagesizes import A4
@@ -474,7 +481,7 @@ def item_export_pdf():
         session.warning = T("No data in this table - cannot create PDF!")
         redirect(URL(f="item"))
 
-    from s3compat import BytesIO
+    from io import BytesIO
     output = BytesIO()
 
     class MyReport(Report):

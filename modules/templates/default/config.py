@@ -62,10 +62,6 @@ def config(settings):
     # Always notify the approver of a new (verified) user, even if the user is automatically approved
     #settings.auth.always_notify_approver = False
 
-    # The name of the teams that users are added to when they opt-in to receive alerts
-    #settings.auth.opt_in_team_list = ["Updates"]
-    # Uncomment this to set the opt in default to True
-    #settings.auth.opt_in_default = True
     # Uncomment this to request the Home Phone when a user registers
     #settings.auth.registration_requests_home_phone = True
     # Uncomment this to request the Mobile Phone when a user registers
@@ -754,87 +750,6 @@ def config(settings):
     #settings.cr.shelter_inspection_task_active_statuses = (2, 3, 6)
 
     # -------------------------------------------------------------------------
-    # Disaster Victim Registry / Case Management
-
-    # Uncomment to use the term Beneficiary instead of Case
-    #settings.dvr.label = "Beneficiary"
-
-    # Uncomment this to enable tracking of transfer origin/destination sites
-    #settings.dvr.track_transfer_sites = True
-    # Uncomment this to enable features to manage transferability of cases
-    #settings.dvr.manage_transferability = True
-
-    # Uncomment this to enable household size in cases, set to "auto" for automatic counting
-    #settings.dvr.household_size = True
-
-    # Uncomment this to expose flags to mark appointment types as mandatory
-    #settings.dvr.mandatory_appointments = True
-    # Uncomment this to have appointments with personal presence update last_seen_on
-    #settings.dvr.appointments_update_last_seen_on = True
-    # Uncomment this to automatically update the case status when appointments are completed
-    #settings.dvr.appointments_update_case_status = True
-    # Uncomment this to automatically close appointments when registering certain case events
-    #settings.dvr.case_events_close_appointments = True
-
-    # Uncomment this to have allowance payments update last_seen_on
-    #settings.dvr.payments_update_last_seen_on = True
-
-    # Uncomment this to use service types for group/case activites
-    #settings.dvr.activity_use_service_type = True
-    # Uncomment this to use sectors in group/case activities
-    #settings.dvr.activity_sectors = True
-    # Uncomment this to use case activity types
-    #settings.dvr.activity_types = True
-    # Uncomment this to use hierarchical case activity types
-    #settings.dvr.activity_types_hierarchical = True
-    # Uncomment this to use status field in case activities
-    #settings.dvr.case_activity_use_status = True
-    # Uncomment this to disable follow-up fields in case activities
-    #settings.dvr.case_activity_follow_up = False
-
-    # Uncomment this to include case activity docs on beneficiary documents-tab
-    #settings.dvr.case_include_activity_docs = True
-    # Uncomment this to include case group docs on beneficiary documents-tab
-    #settings.dvr.case_include_group_docs = True
-
-    # Uncomment this if Case activities use multiple Needs
-    #settings.dvr.case_activity_needs_multiple = True
-    # Uncomment this to use service types for needs
-    #settings.dvr_needs_use_service_type = True
-    # Uncomment this to use hierarchical need types
-    #settings.dvr.needs_hierarchical = True
-    # Uncomment this to use hierarchical vulnerability types
-    #settings.dvr.vulnerability_types_hierarchical = True
-
-    # Uncomment this to manage individual response actions in case activities
-    #settings.dvr.manage_response_actions = True
-    # Uncomment this to not use response action types
-    #settings.dvr.response_types = False
-    # Uncomment this to use response themes
-    #settings.dvr.response_themes = True
-    # Uncomment this to not use org-specific response themes
-    #settings.dvr.response_themes_org_specific = False
-    # Uncomment this to link response themes to org sectors
-    #settings.dvr.response_themes_sectors = True
-    # Uncomment this to link response themes to needs
-    #settings.dvr.response_themes_needs = True
-    # Uncomment this to automatically link responses to case activities
-    #settings.dvr.response_activity_autolink = True
-    # Uncomment this to activate features for response planning
-    #settings.dvr.response_planning = True
-    # Uncomment this to use a separate due-date for responses
-    #settings.dvr.response_due_date = True
-    # Uncomment this to use date+time for responses (instead of just date)
-    #settings.dvr.response_use_time = True
-
-    # Configure a regular expression pattern for ID Codes (QR Codes)
-    #settings.dvr.id_code_pattern = "(?P<label>[^,]*),(?P<first_name>[^,]*),(?P<last_name>[^,]*),(?P<date_of_birth>[^,]*)"
-    # Uncomment this to show a warning during event registration if the person is not currently checked-in
-    #settings.dvr.event_registration_checkin_warning = True
-    # Uncomment this to show profile pictures in event registration UI only on demand
-    #settings.dvr.event_registration_show_picture = False
-
-    # -------------------------------------------------------------------------
     # Events
     # Uncomment to use the term Disaster instead of Event
     #settings.event.label = "Disaster"
@@ -1274,11 +1189,6 @@ def config(settings):
     #settings.project.task_status_opts =
 
     # -------------------------------------------------------------------------
-    # Incidents
-    # Uncomment this to use vehicles when responding to Incident Reports
-    #settings.irs.vehicle = True
-
-    # -------------------------------------------------------------------------
     # Transport
     # Uncomment to make Airport codes unique
     #settings.transport.airport_code_unique = True
@@ -1512,11 +1422,6 @@ def config(settings):
         #    #description = "Tracking of Patients",
         #    module_type = 10
         #)),
-        #("po", Storage(
-        #    name_nice = T("Population Outreach"),
-        #    #description = "Population Outreach",
-        #    module_type = 10
-        #)),
         #("security", Storage(
         #   name_nice = T("Security"),
         #   #description = "Security Management System",
@@ -1527,30 +1432,6 @@ def config(settings):
         #    #description = "Manages vulnerability indicators",
         #    module_type = 10,
         # )),
-        #("work", Storage(
-        #   name_nice = T("Jobs"),
-        #   #description = "Simple Volunteer Jobs Management",
-        #   restricted = False,
-        #   module_type = None,
-        #)),
-        # Deprecated: Replaced by BR
-        #("dvr", Storage(
-        #    name_nice = T("Beneficiary Registry"),
-        #    #description = "Disaster Victim Registry",
-        #    module_type = 10
-        #)),
-        # Deprecated: Replaced by event
-        #("irs", Storage(
-        #    name_nice = T("Incidents"),
-        #    #description = "Incident Reporting System",
-        #    module_type = 10
-        #)),
-        # Deprecated: Replaced by DC
-        #("survey", Storage(
-        #    name_nice = T("Surveys"),
-        #    #description = "Create, enter, and manage surveys.",
-        #    module_type = 5,
-        #)),
         # These are specialist modules
         #("cap", Storage(
         #    name_nice = T("CAP"),
@@ -1567,36 +1448,6 @@ def config(settings):
         #   name_nice = T("Missing Person Registry"),
         #   #description = "Helps to report and search for missing persons",
         #   module_type = 10,
-        #)),
-        # Requires RPy2 & PostgreSQL
-        #("climate", Storage(
-        #    name_nice = T("Climate"),
-        #    #description = "Climate data portal",
-        #    module_type = 10,
-        #)),
-        #("delphi", Storage(
-        #    name_nice = T("Delphi Decision Maker"),
-        #    #description = "Supports the decision making of large groups of Crisis Management Experts by helping the groups create ranked list.",
-        #    restricted = False,
-        #    module_type = 10,
-        #)),
-        # @ToDo: Port these Assessments to the Survey module
-        #("building", Storage(
-        #    name_nice = T("Building Assessments"),
-        #    #description = "Building Safety Assessments",
-        #    module_type = 10,
-        #)),
-        # Deprecated by Surveys module
-        # - depends on CR, IRS & Impact
-        #("assess", Storage(
-        #    name_nice = T("Assessments"),
-        #    #description = "Rapid Assessments & Flexible Impact Assessments",
-        #    module_type = 10,
-        #)),
-        #("impact", Storage(
-        #    name_nice = T("Impacts"),
-        #    #description = "Used by Assess",
-        #    module_type = None,
         #)),
         #("ocr", Storage(
         #   name_nice = T("Optical Character Recognition"),

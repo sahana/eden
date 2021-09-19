@@ -4,8 +4,6 @@
     XForms - Controllers
 """
 
-module = request.controller
-
 # -----------------------------------------------------------------------------
 def forms():
     """ Controller to download form list and individual forms """
@@ -31,10 +29,10 @@ def forms():
         method = ["xform.%s" % extension]
         if len(args) > 1:
             method.insert(0, args[1])
-        r = s3_request(prefix, name,
-                       args = method,
-                       extension = None,
-                       )
+        r = s3base.s3_request(prefix, name,
+                              args = method,
+                              extension = None,
+                              )
         r.set_handler("xform", S3XForms)
         output = r()
     else:
@@ -353,7 +351,7 @@ def importxml(db, xmlinput):
         @todo: deprecate
     """
 
-    from s3compat import StringIO
+    from io import StringIO
     import xml.dom.minidom
 
     try:
@@ -417,8 +415,8 @@ def submission():
     if not auth.s3_logged_in():
         auth.permission.fail()
 
-    from s3compat import StringIO
     import cgi
+    from io import StringIO
     from lxml import etree
 
     source = request.post_vars.get("xml_submission_file", None)
@@ -428,7 +426,7 @@ def submission():
         else:
             xmlinput = source.value
 
-        if isinstance(xmlinput, basestring):
+        if isinstance(xmlinput, str):
             xmlinput = StringIO(xmlinput)
     elif request.env.request_method == "HEAD":
         raise HTTP(204)

@@ -32,11 +32,11 @@ Infectious disease control,,MEDIUM,File daily situational summary reports,
 Infectious disease control,,NORMAL,Cleanup, decommission and evict sites,
 Landslide Search and Rescue,,HIGH,Identify and share search area,
 Landslide Search and Rescue,,HIGH,Report number of missing persons,
-Search Missing Person,,HIGH,Confirm missing persons report is filed
-Search Missing Person,,HIGH,Issue a public alert
-Search Missing Person,,MEDIUM,Assign family and friends counselor
-Search Missing Person,,MEDIUM,Update situational reports
-Search Missing Person,,NORMAL,Submit final situational report
+Search Missing Person,,HIGH,Confirm missing persons report is filed,
+Search Missing Person,,HIGH,Issue a public alert,
+Search Missing Person,,MEDIUM,Assign family and friends counselor,
+Search Missing Person,,MEDIUM,Update situational reports,
+Search Missing Person,,NORMAL,Submit final situational report,
 Snow storm missing person,,URGENT,File missing persons report,
 Snow storm missing person,,URGENT,Inform Gewog police staion,
 Snow storm missing person,,HIGH,Alert SAR teams to get ready and dispatch,

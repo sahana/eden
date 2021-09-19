@@ -36,7 +36,6 @@ from gluon import current, redirect
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3compat import basestring
 from .s3crud import S3CRUD
 from .s3report import S3Report
 from .s3query import FS
@@ -335,7 +334,7 @@ class S3Profile(S3CRUD):
 
         label = widget.get("label", "")
         # Activate if-required
-        #if label and isinstance(label, basestring):
+        #if label and isinstance(label, str):
         if label:
             label = current.T(label)
         icon = widget.get("icon", "")
@@ -371,7 +370,7 @@ class S3Profile(S3CRUD):
 
         label = widget.get("label", "")
         # Activate if-required
-        #if label and isinstance(label, basestring):
+        #if label and isinstance(label, str):
         if label:
             label = current.T(label)
         icon = widget.get("icon", "")
@@ -497,7 +496,7 @@ class S3Profile(S3CRUD):
         # Interactive only below here
         label = widget_get("label", "")
         # Activate if-required
-        #if label and isinstance(label, basestring):
+        #if label and isinstance(label, str):
         if label:
             label = T(label)
         icon = widget_get("icon", "")
@@ -712,7 +711,7 @@ class S3Profile(S3CRUD):
             # Card holder label and icon
             label = widget_get("label", "")
             # Activate if-required
-            #if label and isinstance(label, basestring):
+            #if label and isinstance(label, str):
             if label:
                 label = current.T(label)
             else:
@@ -809,7 +808,7 @@ class S3Profile(S3CRUD):
 
         label = widget_get("label", "")
         # Activate if-required
-        #if label and isinstance(label, basestring):
+        #if label and isinstance(label, str):
         if label:
             label = current.T(label)
         icon = widget_get("icon", "")
@@ -897,7 +896,7 @@ class S3Profile(S3CRUD):
         widget_get = widget.get
 
         label = widget_get("label", "")
-        if label and isinstance(label, basestring):
+        if label and isinstance(label, str):
             label = T(label)
         icon = widget_get("icon", "")
         if icon:
@@ -1084,7 +1083,7 @@ class S3Profile(S3CRUD):
 
         # Card holder label and icon
         label = widget_get("label", "")
-        if label and isinstance(label, basestring):
+        if label and isinstance(label, str):
             label = current.T(label)
         icon = widget_get("icon", "")
         if icon:
@@ -1120,7 +1119,7 @@ class S3Profile(S3CRUD):
 
         # Card holder label and icon
         profile_label = widget_get("label", "")
-        if profile_label and isinstance(profile_label, basestring):
+        if profile_label and isinstance(profile_label, str):
             profile_label = current.T(profile_label)
         icon = widget_get("icon", "")
         if icon:
@@ -1343,7 +1342,7 @@ class S3Profile(S3CRUD):
             # CRUD string
             label_create = widget_get("label_create", None)
             # Activate if-required
-            #if label_create and isinstance(label_create, basestring):
+            #if label_create and isinstance(label_create, str):
             if label_create:
                 label_create = current.T(label_create)
             else:

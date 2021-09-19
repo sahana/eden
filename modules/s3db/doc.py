@@ -27,26 +27,26 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3DocumentLibrary",
-           "S3DocumentTagModel",
-           "S3CKEditorModel",
-           "S3DataCardModel",
+__all__ = ("DocumentLibrary",
+           "DocumentTagModel",
+           "CKEditorModel",
+           "DataCardModel",
            "doc_image_represent",
            "doc_document_list_layout",
            )
 
 import os
 
+from io import BytesIO
 from uuid import uuid4
 
 from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3compat import BytesIO
 
 # =============================================================================
-class S3DocumentLibrary(S3Model):
+class DocumentLibrary(S3Model):
 
     names = ("doc_entity",
              "doc_document",
@@ -101,8 +101,6 @@ class S3DocumentLibrary(S3Model):
                                inv_recv = T("Incoming Shipment"),
                                inv_send = T("Sent Shipment"),
                                inv_warehouse = T("Warehouse"),
-                               # @ToDo: Deprecate
-                               #irs_ireport = T("Incident Report"),
                                police_station = T("Police Station"),
                                pr_group = T("Team"),
                                project_project = T("Project"),
@@ -117,8 +115,6 @@ class S3DocumentLibrary(S3Model):
                                req_need_response = T("Activity Group"),
                                req_req = T("Request"),
                                security_seized_item = T("Seized Item"),
-                               # @ToDo: Deprecate
-                               #stats_people = T("People"),
                                #stdm_tenure = T("Tenure"),
                                vulnerability_document = T("Vulnerability Document"),
                                vulnerability_risk = T("Risk"),
@@ -543,7 +539,7 @@ class S3DocumentLibrary(S3Model):
                                  )
 
 # =============================================================================
-class S3DocumentTagModel(S3Model):
+class DocumentTagModel(S3Model):
     """
         Document Tags
     """
@@ -754,7 +750,7 @@ class doc_DocumentRepresent(S3Represent):
         return v
 
 # =============================================================================
-class S3CKEditorModel(S3Model):
+class CKEditorModel(S3Model):
     """
         Storage for Images used by CKEditor
         - and hence the s3_richtext_widget
@@ -828,7 +824,7 @@ class S3CKEditorModel(S3Model):
         return ftype
 
 # =============================================================================
-class S3DataCardModel(S3Model):
+class DataCardModel(S3Model):
     """
         Model to manage context-specific features of printable
         data cards (S3PDFCard)

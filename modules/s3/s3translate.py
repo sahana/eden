@@ -29,13 +29,15 @@
 
 import os
 import parser
+import pickle
 import token
+
+from io import BytesIO
 
 from gluon import current
 from gluon.languages import read_dict, write_dict
 from gluon.storage import Storage
 
-from s3compat import PY2, BytesIO, STRING_TYPES, pickle
 from .s3fields import S3ReusableField
 
 """
@@ -850,7 +852,7 @@ class TranslateReadFiles(object):
         else:
             # Just use current template
             template = current.deployment_settings.get_template()
-            if isinstance(template, STRING_TYPES):
+            if isinstance(template, str):
                 template_list = [template]
             else:
                 template_list = template
@@ -1081,7 +1083,6 @@ class Strings(object):
         for mod in modlist:
             if hasattr(models, mod):
                 obj = getattr(models, mod)
-                # Currently only inv module has a depends list
                 if hasattr(obj, "depends"):
                     for element in obj.depends:
                         if element not in modlist:
@@ -1144,10 +1145,7 @@ class Strings(object):
 
         data = []
         dappend = data.append
-        if PY2:
-            f = open(fileName, "r")
-        else:
-            f = open(fileName, "r", encoding="utf-8", newline="")
+        f = open(fileName, "r", encoding="utf-8", newline="")
         transReader = csv.reader(f)
         for row in transReader:
             dappend(row)
@@ -1179,10 +1177,7 @@ class Strings(object):
 
         import csv
 
-        if PY2:
-            f = open(fileName, "w")
-        else:
-            f = open(fileName, "w", encoding="utf-8")
+        f = open(fileName, "w", encoding="utf-8")
 
         # Quote all the elements while writing
         transWriter = csv.writer(f,
@@ -1276,9 +1271,11 @@ class Strings(object):
         import xlwt
 
         from gluon.contenttype import contenttype
-        
-        #if not PY2:
-        #    import unicodedata
+
+        # Accent Folding - why?
+        #import unicodedata
+        #def string_escape(s):
+        #    return unicodedata.normalize("NFD", s).encode("ascii", "ignore").decode("utf-8")
 
         # Define spreadsheet properties
         wbk = xlwt.Workbook("utf-8")
@@ -1293,14 +1290,6 @@ class Strings(object):
         sheet.write(0, 2, "target", style)
 
         row_num = 1
-
-        # Accent Folding - why?
-        #if PY2:
-        #    def string_escape(s):
-        #        return s.decode("string-escape").decode("utf-8")
-        #else:
-        #    def string_escape(s):
-        #        return unicodedata.normalize("NFD", s).encode("ascii", "ignore").decode("utf-8")
 
         # Write the data to spreadsheet
         for (loc, d1, d2) in Strings:

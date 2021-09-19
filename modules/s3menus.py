@@ -671,28 +671,25 @@ class S3OptionsMenu(object):
         """ BUDGET Controller """
 
         return M(c="budget")(
+                    M("Parameters", f="parameter"),
                     M("Budgets", f="budget")(
                         M("Create", m="create"),
                     ),
                     M("Staff Types", f="staff")(
                         M("Create", m="create"),
                     ),
-                    M("Projects", f="project")(
-                        M("Create", m="create"),
-                    ),
                     M("Locations", f="location")(
-                        M("Create", m="create"),
-                    ),
-                    M("Bundles", f="bundle")(
-                        M("Create", m="create"),
-                    ),
-                    M("Kits", f="kit")(
                         M("Create", m="create"),
                     ),
                     M("Items", f="item")(
                         M("Create", m="create"),
                     ),
-                    M("Parameters", f="parameter"),
+                    M("Kits", f="kit")(
+                        M("Create", m="create"),
+                    ),
+                    M("Bundles", f="bundle")(
+                        M("Create", m="create"),
+                    ),
                 )
 
     # -------------------------------------------------------------------------
@@ -801,70 +798,6 @@ class S3OptionsMenu(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def delphi():
-        """ DELPHI / Delphi Decision Maker """
-
-        #ADMIN = current.session.s3.system_roles.ADMIN
-
-        return M(c="delphi")(
-                    M("Active Problems", f="problem")(
-                        M("Create", m="create"),
-                    ),
-                    M("Groups", f="group")(
-                        M("Create", m="create"),
-                    ),
-                    #M("Solutions", f="solution"),
-                    #M("Administration", restrict=[ADMIN])(
-                        #M("Groups", f="group"),
-                        #M("Group Memberships", f="membership"),
-                        #M("Problems", f="problem"),
-                    #)
-                )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def deploy():
-        """ Deployments """
-
-        deploy_team = current.deployment_settings.get_deploy_team_label()
-        team_menu = "%(team)s Members" % {"team": deploy_team}
-
-        return M()(M("Missions",
-                     c="deploy", f="mission", m="summary")(
-                        M("Create", m="create"),
-                        M("Active Missions", m="summary",
-                          vars={"~.status__belongs": "2"}),
-                   ),
-                   M("Alerts",
-                     c="deploy", f="alert")(
-                        M("Create", m="create"),
-                        M("InBox",
-                          c="deploy", f="email_inbox",
-                        ),
-                        M("Settings",
-                          c="deploy", f="email_channel",
-                          p="update", t="msg_email_channel",
-                          ),
-                   ),
-                   M("Assignments",
-                     c="deploy", f="assignment", m="summary"
-                   ),
-                   M("Job Titles",
-                     c="deploy", f="job_title"
-                   ),
-                   M(team_menu,
-                     c="deploy", f="human_resource", m="summary")(
-                        M("Add Member",
-                          c="deploy", f="application", m="select",
-                          p="create", t="deploy_application",
-                          ),
-                        M("Import Members",
-                          c="deploy", f="person", m="import"),
-                   ),
-                  )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def disease():
         """ Disease Case Tracking and Contact Tracing """
 
@@ -940,45 +873,6 @@ class S3OptionsMenu(object):
                         M("Create", m="create"),
                     ),
                     M("Dashboard", f="index"),
-                )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def dvr():
-        """ DVR Menu """
-
-        if current.deployment_settings.get_dvr_label(): # == "Beneficiary"
-            return M(c="dvr")(
-                        M("Beneficiaries", f="person")(
-                            M("Create", m="create"),
-                        ),
-                    )
-
-        return M(c="dvr")(
-                    M("Cases", f="person")(
-                        M("Create", m="create"),
-                        M("Archived Cases", vars={"archived": "1"}),
-                    ),
-                    #M("Activities", f="case_activity")(
-                    #    M("Emergencies", vars = {"~.emergency": "True"}),
-                    #    M("All Activities"),
-                    #    M("Report", m="report"),
-                    #),
-                    M("Case Types", f="case_type")(
-                       M("Create", m="create"),
-                    ),
-                    M("Need Types", f="need")(
-                      M("Create", m="create"),
-                    ),
-                    M("Housing Types", f="housing_type")(
-                      M("Create", m="create"),
-                    ),
-                    M("Income Sources", f="income_source")(
-                      M("Create", m="create"),
-                    ),
-                    M("Beneficiary Types", f="beneficiary_type")(
-                      M("Create", m="create"),
-                    ),
                 )
 
     # -------------------------------------------------------------------------
@@ -1086,12 +980,12 @@ class S3OptionsMenu(object):
                         #M("Map", m="map"),
                         #M("Import", m="import"),
                     ),
-                    M("Water Sources", f="water_source")(
+                    M("Water Sources", c="water", f="reservoir")(
                         M("Create", m="create"),
                         M("Map", m="map"),
                         M("Import", m="import"),
                     ),
-                    M("Hazard Points", f="hazard_point")(
+                    M("Hazard Points", c="vulnerability", f="risk")(
                         M("Create", m="create"),
                         M("Import", m="import"),
                     )
@@ -1519,46 +1413,6 @@ class S3OptionsMenu(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def survey():
-        """ SURVEY / Survey """
-
-        ADMIN = current.session.s3.system_roles.ADMIN
-
-        # Do we have a series_id?
-        series_id = False
-        get_vars = Storage()
-        try:
-            series_id = int(current.request.args[0])
-        except (IndexError, ValueError):
-            try:
-                series_id = int(current.request.get_vars["viewing"].split(".")[1])
-            except (AttributeError, IndexError, ValueError):
-                pass
-        if series_id:
-            get_vars.viewing = "survey_complete.%s" % series_id
-
-        return M(c="survey")(
-                    M("Assessment Templates", f="template")(
-                        M("Create", m="create"),
-                    ),
-                    #M("Section", f="section")(
-                    #    M("Create", args="create"),
-                    #),
-                    M("Disaster Assessments", f="series")(
-                        M("Create", m="create"),
-                    ),
-                    M("Administration", f="admin", restrict=[ADMIN])(
-                        M("Import Templates", f="question_list",
-                          m="import", p="create"),
-                        M("Import Template Layout", f="formatter",
-                          m="import", p="create"),
-                        M("Import Completed Assessment Forms", f="complete",
-                          m="import", p="create", vars=get_vars, check=series_id),
-                    ),
-                )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def member():
         """ Membership Management """
 
@@ -1600,7 +1454,8 @@ class S3OptionsMenu(object):
                                         "sms_smtp_channel",
                                         "sms_webapi_channel",
                                         "tropo_channel",
-                                        "twitter_channel"):
+                                        "twitter_channel",
+                                        ):
             return self.admin()
 
         settings_messaging = self.settings_messaging()
@@ -1693,41 +1548,6 @@ class S3OptionsMenu(object):
 
         return M(c="patient")(
                     M("Patients", f="patient")(
-                        M("Create", m="create"),
-                    ),
-                )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def po():
-        """ PO / Population Outreach """
-
-        due_followups = current.s3db.po_due_followups()
-        DUE_FOLLOWUPS = current.T("Due Follow-ups")
-        if due_followups:
-            follow_up_label = "%s (%s)" % (DUE_FOLLOWUPS, due_followups)
-        else:
-            follow_up_label = DUE_FOLLOWUPS
-
-        return M(c="po")(
-                    M("Overview", f="index"),
-                    M("Households", f="household", m="summary")(
-                        M("Create", m="create"),
-                        M("Import", m="import"),
-                    ),
-                    M(follow_up_label, f="due_followups",
-                      translate=False,
-                      ),
-                    M("Areas", f="area")(
-                        M("Create", m="create"),
-                    ),
-                    M("Referral Agencies", f="organisation")(
-                        M("Create", m="create"),
-                    ),
-                    M("Emotional Needs", f="emotional_need")(
-                        M("Create", m="create"),
-                    ),
-                    M("Practical Needs", f="practical_need")(
                         M("Create", m="create"),
                     ),
                 )
@@ -2025,72 +1845,6 @@ class S3OptionsMenu(object):
                 )
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def stdm():
-        """ Social Tenure Domain Model """
-        ADMIN = current.session.s3.system_roles.ADMIN
-        has_role = current.auth.s3_has_role
-
-        informal = lambda i: has_role("INFORMAL_SETTLEMENT")
-        gov = lambda i: has_role("LOCAL_GOVERNMENT")
-        rural = lambda i: has_role("RURAL_AGRICULTURE")
-
-        return M(c="stdm")(
-                    M("Administrative Units", c="gis", f="location",
-                                              vars={"~.level__ne": None},
-                      restrict=ADMIN)(
-                        M("Create", m="create",
-                                    vars={"~.level__ne": None}),
-                    ),
-                    #M("Spatial Units", c="gis", f="location",
-                    #                   vars={"~.level": None})(
-                    #    M("Create", m="create", vars={"~.level": None}),
-                    #),
-                    M("Gardens", f="garden",
-                      check=rural)(
-                        M("Create", m="create"),
-                        M("Import", m="import"),
-                    ),
-                    M("Parcels", f="parcel",
-                      check=gov)(
-                        M("Create", m="create"),
-                        M("Import", m="import"),
-                    ),
-                    M("Structures", f="structure",
-                      check=informal)(
-                        M("Create", m="create"),
-                        M("Import", m="import"),
-                    ),
-                    M("Parties")(
-                        M("People", f="person"),
-                        M("Groups", f="group"),
-                        M("Farmers", f="farmer", check=rural),
-                        M("Planners", f="planner", check=gov),
-                        M("Surveyors", f="surveyor", check=gov),
-                    ),
-                    M("Surveys", f="gov_survey", check=gov)(
-                        M("Create", m="create"),
-                    ),
-                    M("Surveys", f="rural_survey", check=rural)(
-                        M("Create", m="create"),
-                    ),
-                    M("Tenures", f="tenure")(
-                        M("Create", m="create"),
-                    ),
-                    M("Lookup Lists", restrict=ADMIN)(
-                        M("Disputes", f="dispute"),
-                        M("Household Relations", f="group_member_role"),
-                        M("Input Services", f="input_service"),
-                        M("Land Uses", f="landuse"),
-                        M("Officer Ranks", f="job_title"),
-                        M("Ownership Types", f="ownership_type"),
-                        M("Parcel Types", f="parcel_type"),
-                        M("Socio-economic Impacts", f="socioeconomic_impact"),
-                        M("Tenure Types", f="tenure_type"),
-                    ),
-                )
-
-    # -------------------------------------------------------------------------
     def sync(self):
         """ SYNC menu """
 
@@ -2199,29 +1953,6 @@ class S3OptionsMenu(object):
                         M("Create", m="create"),
                         M("Map", m="map"),
                         #M("Import", m="import"),
-                    ),
-                )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def work():
-        """ WORK: Simple Volunteer Jobs Management """
-
-        return M(c="work")(
-                    # @todo: my jobs
-                    M("Joblist", f="job", m="datalist"),
-                    M("Jobs", f="job")(
-                        M("Create", m="create"),
-                    ),
-                    M("Assignments", f="assignment")(
-                        M("Create", m="create"),
-                    ),
-                    # Hide until implemented:
-                    #M("Contexts", f="context")(
-                    #    M("Create", m="create"),
-                    #),
-                    M("Job Types", f="job_type")(
-                        M("Create", m="create"),
                     ),
                 )
 

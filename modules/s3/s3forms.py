@@ -50,7 +50,6 @@ from gluon.sqlhtml import StringWidget
 from gluon.tools import callback
 from gluon.validators import Validator
 
-from s3compat import basestring, unicodeT, xrange
 from s3dal import Field, original_tablename
 from .s3query import FS
 from .s3utils import s3_mark_required, s3_store_last_record_id, s3_str, s3_validate
@@ -198,7 +197,7 @@ class S3SQLForm(object):
             submit.extend(settings.custom_submit)
             buttons = []
             for name, label, _class in submit:
-                if isinstance(label, basestring):
+                if isinstance(label, str):
                     label = T(label)
                 button = INPUT(_type = "submit",
                                _class = "btn crud-submit-button",
@@ -2810,7 +2809,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         """
 
         # @todo: catch uploads during validation errors
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             try:
                 value = json.loads(value)
             except JSONERRORS:
@@ -2850,7 +2849,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         if value is None:
             value = field.default
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             data = json.loads(value)
         else:
             data = value
@@ -2908,7 +2907,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             # Mark to client-side JS that we should open Edit Row
             _class = "%s single" % _class
         item = None
-        for i in xrange(len(items)):
+        for i in range(len(items)):
             has_rows = True
             item = items[i]
             # Get the item record ID
@@ -3100,7 +3099,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             @param value: the value returned from extract()
         """
 
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             data = json.loads(value)
         else:
             data = value
@@ -3530,7 +3529,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     data[idxname] = filename
                 else:
                     value = item[fname]["value"]
-                    if type(value) is unicodeT:
+                    if type(value) is str:
                         value = s3_str(value)
                     widget = formfield.widget
                     if isinstance(widget, S3Selector):
@@ -3778,7 +3777,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 self.upload[upload] = nfilename
                 return nfilename
 
-            elif isinstance(f, basestring):
+            elif isinstance(f, str):
                 # Previously uploaded file
                 return f
 

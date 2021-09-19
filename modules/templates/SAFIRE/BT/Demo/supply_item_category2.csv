@@ -1,2 +1,3 @@
 Catalog,Category,Code,Asset,Telephone,Vehicle
 Default,Assets,Assets,True,,
+Default,Vehicles,Vehicles,True,,True

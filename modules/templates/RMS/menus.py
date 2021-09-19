@@ -291,8 +291,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                               ),
                         ),
                         M("Import Inventory", c="inv", f="inv_item", m="import",
-                          restrict=["ORG_ADMIN",
-                                    "logs_manager"]),
+                          restrict=["ADMIN"]),
                         M("Parameters", c="inv", link=False,
                           restrict=["ORG_ADMIN",
                                     "logs_manager"])(
@@ -306,8 +305,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             M("Stock limit", f="minimum"),
                         ),
                         M("Reports", c="inv", link=False)(
-                            M("Short Inventory", f="inv_item", m="report"),
-                            M("Detailed Inventory", f="inv_item"),
+                            M("Inventory", f="inv_item", m="summary"),
                             M("Stock Movements", f="inv_item", m="grouped",
                               vars = {"report": "movements"},
                               ),

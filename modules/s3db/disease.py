@@ -41,11 +41,12 @@ __all__ = ("DiseaseDataModel",
 import datetime
 import json
 
+from functools import reduce
+
 from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3compat import basestring, reduce
 from s3layouts import S3PopupLink
 
 # Monitoring upgrades {new_level:previous_levels}
@@ -2120,7 +2121,7 @@ class DiseaseStatsModel(S3Model):
             return
 
         # Test to see which date format we have based on how we were called
-        if isinstance(records, basestring):
+        if isinstance(records, str):
             from_json = True
             from dateutil.parser import parse
             records = json.loads(records)

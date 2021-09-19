@@ -4,11 +4,8 @@
     Project Tracking & Management
 """
 
-module = request.controller
-resourcename = request.function
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 mode_task = settings.get_project_mode_task()
 
@@ -16,7 +13,7 @@ mode_task = settings.get_project_mode_task()
 def index():
     """ Module's Custom Home Page """
 
-    return settings.customise_home(module, alt_function="index_alt")
+    return settings.customise_home(c, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -27,18 +24,22 @@ def index_alt():
     if mode_task:
         if settings.get_project_projects():
             # Bypass home page & go directly to task list for a project
-            s3_redirect_default(URL(f="project", vars={"tasks":1}))
+            s3_redirect_default(URL(f = "project",
+                                    vars = {"tasks":1},
+                                    ))
         else:
             # Bypass home page & go directly to task list
-            s3_redirect_default(URL(f="task"))
+            s3_redirect_default(URL(f = "task"))
     else:
         # Bypass home page & go directly to projects list
-        s3_redirect_default(URL(f="project"))
+        s3_redirect_default(URL(f = "project"))
 
 # =============================================================================
 def create():
     """ Redirect to project/create """
-    redirect(URL(f="project", args="create"))
+    redirect(URL(f = "project",
+                 args = "create",
+                 ))
 
 # -----------------------------------------------------------------------------
 def project():
@@ -349,8 +350,8 @@ def project():
 
                 if "open" in r.get_vars:
                     # Show only the Open Tasks for this Project (unused?)
-                    statuses = s3.project_task_active_statuses
-                    query = FS("status").belongs(statuses)
+                    from s3db.project import project_task_active_statuses
+                    query = FS("status").belongs(project_task_active_statuses)
                     r.resource.add_component_filter("task", query)
 
                 # Filter activities and milestones to the current project
@@ -374,9 +375,9 @@ def project():
                 component.table.project_location_id.requires = \
                     IS_EMPTY_OR(IS_ONE_OF(db, "project_location.id",
                                           s3db.project_location_represent,
-                                          sort=True,
-                                          filterby="project_id",
-                                          filter_opts=[r.id],
+                                          sort = True,
+                                          filterby = "project_id",
+                                          filter_opts = [r.id],
                                           )
                                 )
 
@@ -491,7 +492,7 @@ def project():
         return output
     s3.postp = postp
 
-    return s3_rest_controller(module, "project",
+    return s3_rest_controller("project", "project",
                               csv_template = "project",
                               hide_filter = {None: False,
                                              #"indicator_data": False,
@@ -529,7 +530,7 @@ def open_tasks_for_project():
         return output
     s3.postp = postp
 
-    return s3_rest_controller(module, "project",
+    return s3_rest_controller("project", "project",
                               hide_filter = False,
                               )
 
@@ -673,7 +674,7 @@ def organisation():
                 (T("Contacts"), "human_resource"),
                 ]
         rheader = lambda r: s3db.org_rheader(r, tabs)
-        return s3_rest_controller("org", resourcename,
+        return s3_rest_controller("org", "organisation",
                                   rheader = rheader,
                                   )
 
@@ -754,7 +755,7 @@ def activity_organisation():
         return True
     s3.prep = prep
 
-    return s3_rest_controller(module, "activity_organisation")
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def activity():
@@ -955,7 +956,7 @@ def report():
         @ToDo: Why is this needed? To have no rheader?
     """
 
-    return s3_rest_controller(module, "activity")
+    return s3_rest_controller("project", "activity")
 
 # -----------------------------------------------------------------------------
 def partners():
@@ -1108,10 +1109,12 @@ def time():
                     (ttable.deleted == False)
             if "update" not in request.args:
                 # Only log time against Open Tasks
-                query &= (ttable.status.belongs(s3db.project_task_active_statuses))
+                from s3db.project import project_task_active_statuses
+                query &= (ttable.status.belongs(project_task_active_statuses))
             dbset = db(query)
+            from s3db.project import project_TaskRepresent
             table.task_id.requires = IS_ONE_OF(dbset, "project_task.id",
-                                               s3db.project_task_represent_w_project
+                                               project_TaskRepresent(show_project = True),
                                                )
         list_fields = ["id",
                        "date",
@@ -1316,7 +1319,9 @@ def comment_parse(comment, comments, task_id=None):
                                ptable.first_name,
                                ptable.middle_name,
                                ptable.last_name,
-                               left=left, limitby=(0, 1)).first()
+                               left = left,
+                               limitby = (0, 1)
+                               ).first()
         if row:
             person = row.pr_person
             user = row[utable._tablename]
@@ -1335,20 +1340,28 @@ def comment_parse(comment, comments, task_id=None):
         header = author
     thread = LI(DIV(s3base.s3_avatar_represent(comment.created_by),
                     DIV(DIV(header,
-                            _class="comment-header"),
+                            _class = "comment-header",
+                            ),
                         DIV(XML(comment.body),
-                            _class="comment-body"),
-                        _class="comment-text"),
+                            _class = "comment-body",
+                            ),
+                        _class = "comment-text",
+                        ),
                         DIV(DIV(comment.created_on,
-                                _class="comment-date"),
+                                _class = "comment-date",
+                                ),
                             DIV(A(T("Reply"),
-                                  _class="action-btn"),
-                                _onclick="comment_reply(%i);" % comment.id,
-                                _class="comment-reply"),
-                            _class="fright"),
-                    _id="comment-%i" % comment.id,
-                    _task_id=task_id,
-                    _class="comment-box"))
+                                  _class = "action-btn",
+                                  ),
+                                _onclick = "comment_reply(%i);" % comment.id,
+                                _class = "comment-reply",
+                                ),
+                            _class = "fright",
+                            ),
+                    _id = "comment-%i" % comment.id,
+                    _task_id = task_id,
+                    _class = "comment-box",
+                    ))
 
     # Add the children of this thread
     children = UL(_class="children")
@@ -1379,14 +1392,14 @@ def comments():
     field.writable = field.readable = False
 
     # Create S3Request for S3SQLForm
-    r = s3_request(prefix = "project",
-                   name = "comment",
-                   # Override task_id
-                   args = [],
-                   vars = None,
-                   # Override .loads
-                   extension = "html",
-                   )
+    r = s3base.s3_request(prefix = "project",
+                          name = "comment",
+                          # Override task_id
+                          args = [],
+                          vars = None,
+                          # Override .loads
+                          extension = "html",
+                          )
 
     # Customise resource
     r.customise_resource()
@@ -1425,10 +1438,12 @@ $('#submit_record__row input').click(function(){
 
     output = DIV(output,
                  DIV(H4(T("New Comment"),
-                        _id="comment-title"),
+                        _id = "comment-title",
+                        ),
                      form,
-                     _id="comment-form",
-                     _class="clear"),
+                     _id = "comment-form",
+                     _class = "clear",
+                     ),
                  SCRIPT(script))
 
     return XML(output)

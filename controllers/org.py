@@ -4,17 +4,14 @@
     Organization Registry - Controllers
 """
 
-module = request.controller
-#resourcename = request.function
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """
 
-    return s3db.cms_index(module, alt_function="index_alt")
+    return s3db.cms_index(c, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -23,7 +20,7 @@ def index_alt():
     """
 
     # Just redirect to the list of Organisations
-    s3_redirect_default(URL(f="organisation"))
+    s3_redirect_default(URL(f = "organisation"))
 
 # -----------------------------------------------------------------------------
 def capacity_assessment():
@@ -198,7 +195,7 @@ def org_search():
 
     s3.prep = lambda r: r.method == "search_ac"
 
-    return s3_rest_controller(module, "organisation")
+    return s3_rest_controller("org", "organisation")
 
 # -----------------------------------------------------------------------------
 def organisation_list_represent(l):
@@ -269,7 +266,18 @@ def site():
     def prep(r):
         if r.representation != "json" and \
            r.method not in ("search_ac", "search_address_ac", "site_contact_person"):
-            return False
+            if r.id:
+                # Redirect to the instance controller
+                (prefix, resourcename, id) = s3db.get_instance(db.org_site, r.id)
+                args = r.args
+                args[0] = id
+                redirect(URL(c=prefix, f=resourcename,
+                             args = args,
+                             vars = r.get_vars,
+                             ))
+            else:
+                # Not supported
+                return False
 
         # Location Filter
         s3db.gis_location_filter(r)

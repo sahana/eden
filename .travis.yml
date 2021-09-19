@@ -23,8 +23,6 @@ addons:
 env:
   - DB=mysql
   - DB=sqlite3
-  - DB=postgres-10
-  - DB=postgres-10+postgis
   - DB=postgres-11
   - DB=postgres-11+postgis
 

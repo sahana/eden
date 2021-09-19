@@ -27,10 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3SupplyModel",
-           "S3SupplyDistributionModel",
-           "S3SupplyDistributionDVRActivityModel",
-           "S3SupplyPersonModel",
+__all__ = ("SupplyModel",
+           "SupplyDistributionModel",
+           "SupplyPersonModel",
            "supply_item_add",
            "supply_item_rheader",
            "supply_item_controller",
@@ -45,6 +44,7 @@ __all__ = ("S3SupplyModel",
            "supply_ItemCategoryRepresent",
            "supply_get_shipping_code",
            "supply_item_pack_quantities",
+           "SupplyItemPackQuantity",
            )
 
 import re
@@ -53,7 +53,6 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3compat import xrange
 from s3dal import Row
 from s3layouts import S3PopupLink
 
@@ -67,7 +66,7 @@ um_patterns = (r"\sper\s?(.*)$",                         # CHOCOLATE, per 100g
                )
 
 # =============================================================================
-class S3SupplyModel(S3Model):
+class SupplyModel(S3Model):
     """
         Generic Supply functionality such as catalogs and items that is used
         across multiple modules.
@@ -91,7 +90,6 @@ class S3SupplyModel(S3Model):
              "supply_kit_item",
              "supply_item_represent",
              "supply_item_category_represent",
-             "supply_item_pack_quantity",
              )
 
     def model(self):
@@ -109,7 +107,9 @@ class S3SupplyModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
-        float_represent = IS_FLOAT_AMOUNT.represent
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=2)
+
         translate = settings.get_L10n_translate_supply_item()
         if translate:
             translate_represent = T
@@ -257,9 +257,11 @@ class S3SupplyModel(S3Model):
         telephone = settings.get_asset_telephones()
         vehicle = settings.has_module("vehicle")
 
-        item_category_represent = supply_ItemCategoryRepresent(translate=translate)
+        item_category_represent = supply_ItemCategoryRepresent(translate = translate)
         item_category_represent_nocodes = \
-            supply_ItemCategoryRepresent(translate=translate, use_code=False)
+            supply_ItemCategoryRepresent(translate = translate,
+                                         use_code = False,
+                                         )
 
         if format == "xls":
             parent_represent = item_category_represent_nocodes
@@ -269,7 +271,8 @@ class S3SupplyModel(S3Model):
         item_category_requires = IS_EMPTY_OR(
                                     IS_ONE_OF(db, "supply_item_category.id",
                                               item_category_represent_nocodes,
-                                              sort=True)
+                                              sort = True,
+                                              )
                                     )
 
         tablename = "supply_item_category"
@@ -408,8 +411,7 @@ $.filterOptionsS3({
                            ),
                      Field("unit_value", "double",
                            label = T("Value per Unit"),
-                           represent = lambda v: \
-                                IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           represent = float_represent,
                            readable = track_pack_values,
                            writable = track_pack_values,
                            ),
@@ -437,33 +439,28 @@ $.filterOptionsS3({
                            ),
                      Field("weight", "double",
                            label = T("Weight (kg)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
-                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
+                           represent = float_represent,
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum = 0.0)),
                            ),
                      Field("length", "double",
                            label = T("Length (m)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
-                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
+                           represent = float_represent,
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum = 0.0)),
                            ),
                      Field("width", "double",
                            label = T("Width (m)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
-                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
+                           represent = float_represent,
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum = 0.0)),
                            ),
                      Field("height", "double",
                            label = T("Height (m)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
-                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
+                           represent = float_represent,
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum = 0.0)),
                            ),
                      Field("volume", "double",
                            label = T("Volume (m3)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=3),
-                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
+                           represent = float_represent,
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum = 0.0)),
                            ),
                      Field("url",
                            label = T("URL"),
@@ -517,24 +514,23 @@ $.filterOptionsS3({
 
         # Reusable Field
         supply_item_tooltip = T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog.")
-        supply_item_id = S3ReusableField("item_id",
-            "reference %s" % tablename, # 'item_id' for backwards-compatibility
-            label = T("Item"),
-            ondelete = "RESTRICT",
-            represent = supply_item_represent,
-            requires = IS_ONE_OF(db, "supply_item.id",
-                                 supply_item_represent,
-                                 sort = True,
-                                 ),
-            sortby = "name",
-            widget = S3AutocompleteWidget("supply", "item"),
-            comment = S3PopupLink(c = "supply",
-                                  f = "item",
-                                  label = ADD_ITEM,
-                                  title = T("Item"),
-                                  tooltip = supply_item_tooltip,
-                                  ),
-            )
+        supply_item_id = S3ReusableField("item_id", "reference %s" % tablename, # 'item_id' for backwards-compatibility
+                                         label = T("Item"),
+                                         ondelete = "RESTRICT",
+                                         represent = supply_item_represent,
+                                         requires = IS_ONE_OF(db, "supply_item.id",
+                                                              supply_item_represent,
+                                                              sort = True,
+                                                              ),
+                                         sortby = "name",
+                                         widget = S3AutocompleteWidget("supply", "item"),
+                                         comment = S3PopupLink(c = "supply",
+                                                               f = "item",
+                                                               label = ADD_ITEM,
+                                                               title = T("Item"),
+                                                               tooltip = supply_item_tooltip,
+                                                               ),
+                                         )
 
         # ---------------------------------------------------------------------
         filter_widgets = [
@@ -606,10 +602,14 @@ $.filterOptionsS3({
                        supply_distribution_item = "item_id",
                        # Inventory Items
                        inv_inv_item = "item_id",
-                       # Order Items
+                       # Shipment Items
                        inv_track_item = "item_id",
+                       # Stock Cards
+                       inv_stock_card = "item_id",
                        # Procurement Plan Items
                        proc_plan_item = "item_id",
+                       # Order Items
+                       req_order_item = "item_id",
                        # Request Items
                        req_req_item = "item_id",
                        # Supply Kit Items
@@ -727,13 +727,11 @@ $.filterOptionsS3({
                      Field("quantity", "double", notnull=True,
                            default = 1,
                            label = T("Quantity"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
+                           represent = float_represent,
                            ),
                      Field("pack_value", "double",
                            label = T("Value per Pack"),
-                           represent = lambda v: \
-                                IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           represent = float_represent,
                            readable = track_pack_values,
                            writable = track_pack_values,
                            ),
@@ -768,15 +766,14 @@ $.filterOptionsS3({
                     represent = item_pack_represent,
                     # Do not display any packs initially
                     # will be populated by filterOptionsS3
-                    requires = IS_ONE_OF_EMPTY_SELECT(db,
-                                         "supply_item_pack.id",
-                                         item_pack_represent,
-                                         sort=True,
-                                         # @ToDo: Enforce "Required" for imports
-                                         # @ToDo: Populate based on item_id in controller instead of IS_ONE_OF_EMPTY_SELECT
-                                         # filterby = "item_id",
-                                         # filter_opts = (....),
-                                         ),
+                    requires = IS_ONE_OF_EMPTY_SELECT(db, "supply_item_pack.id",
+                                                      item_pack_represent,
+                                                      sort = True,
+                                                      # @ToDo: Enforce "Required" for imports
+                                                      # @ToDo: Populate based on item_id in controller instead of IS_ONE_OF_EMPTY_SELECT
+                                                      # filterby = "item_id",
+                                                      # filter_opts = (....),
+                                                      ),
                     script = '''
 $.filterOptionsS3({
  'trigger':'item_id',
@@ -822,8 +819,7 @@ $.filterOptionsS3({
                                     ),
                      Field("quantity", "double",
                            label = T("Quantity"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
+                           represent = float_represent,
                            ),
                      item_pack_id(),
                      s3_comments(),
@@ -854,8 +850,7 @@ $.filterOptionsS3({
                      Field("quantity", "double", notnull=True,
                            default = 1,
                            label = T("Quantity"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
+                           represent = float_represent,
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" %
                                                   (T("Quantity"),
@@ -967,7 +962,6 @@ $.filterOptionsS3({
                 "supply_item_pack_id": item_pack_id,
                 "supply_item_represent": supply_item_represent,
                 "supply_item_category_represent": item_category_represent,
-                "supply_item_pack_quantity": SupplyItemPackQuantity,
                 "supply_item_pack_represent": item_pack_represent,
                 }
 
@@ -982,7 +976,6 @@ $.filterOptionsS3({
                 "supply_item_category_id": dummy("item_category_id"),
                 "supply_item_entity_id": dummy("item_entity_id"),
                 "supply_item_pack_id": dummy("item_pack_id"),
-                "supply_item_pack_quantity": lambda tablename: lambda row: 0,
                 }
 
     # -------------------------------------------------------------------------
@@ -1061,7 +1054,8 @@ $.filterOptionsS3({
             query = (table.deleted != True) & \
                     (table.code.lower() == code.lower())
             duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
+                                                 limitby = (0, 1)
+                                                 ).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -1085,7 +1079,8 @@ $.filterOptionsS3({
                 query &= (table.catalog_id == catalog_id)
 
             duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
+                                                 limitby = (0, 1)
+                                                 ).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -1282,7 +1277,7 @@ $.filterOptionsS3({
             form_vars.file = f
 
 # =============================================================================
-class S3SupplyDistributionModel(S3Model):
+class SupplyDistributionModel(S3Model):
     """
         Supply Distribution Model
         - depends on Stats module
@@ -1290,7 +1285,7 @@ class S3SupplyDistributionModel(S3Model):
         A Distribution is an Item (which could be a Kit) distributed to a single Location
         - usually as part of an Activity
 
-        @ToDo: Deprecate this in favour of S3ProjectActivityItemModel?
+        @ToDo: Deprecate this in favour of ProjectActivityItemModel?
                - not based on stats, but simpler as less joins.
                - could be based on stats if we make all supply_item into stats_parameter instances
     """
@@ -1478,7 +1473,7 @@ class S3SupplyDistributionModel(S3Model):
             if not start_year or not end_year:
                 return {start_year:start_year} or {end_year:end_year}
             years = {}
-            for year in xrange(start_year, end_year + 1):
+            for year in range(start_year, end_year + 1):
                 years[year] = year
             return years
 
@@ -1769,40 +1764,10 @@ class S3SupplyDistributionModel(S3Model):
         elif not date:
             return [end_date.year]
         else:
-            return list(xrange(date.year, end_date.year + 1))
+            return list(range(date.year, end_date.year + 1))
 
 # =============================================================================
-class S3SupplyDistributionDVRActivityModel(S3Model):
-    """
-        Model to link distributions to DVR activities / case activities
-    """
-
-    names = ("supply_distribution_case_activity",
-             )
-
-    def model(self):
-
-        # ---------------------------------------------------------------------
-        # Supply Distributions <=> Case Activity Link Table
-        #
-        tablename = "supply_distribution_case_activity"
-        self.define_table(tablename,
-                          self.dvr_activity_id(ondelete = "CASCADE",
-                                               ),
-                          self.dvr_case_activity_id(ondelete = "CASCADE",
-                                                    ),
-                          self.supply_distribution_id(empty = False,
-                                                      ondelete = "CASCADE",
-                                                      ),
-                          *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
-
-# =============================================================================
-class S3SupplyPersonModel(S3Model):
+class SupplyPersonModel(S3Model):
     """
         Link table between People & Items
         - e.g. Donations
@@ -2332,29 +2297,47 @@ def supply_item_rheader(r):
         if item:
 
             T = current.T
+            settings = current.deployment_settings
 
             tabs = [(T("Edit Details"), None),
                     (T("Packs"), "item_pack"),
                     (T("Alternative Items"), "item_alt"),
                     (T("In Inventories"), "inv_item"),
-                    (T("Requested"), "req_item"),
-                    (T("In Catalogs"), "catalog_item"),
                     ]
+            tabs_append = tabs.append
+            if settings.get_inv_stock_cards():
+                tabs_append((T("Stock Cards"), "stock_card"))
+            tabs_append((T("Requested"), "req_item"))
+            if settings.get_req_order_item():
+                tabs_append((T("Ordered"), "order_item"))
+            tabs_append((T("In Catalogs"), "catalog_item"))
             if item.kit == True:
-                tabs.append((T("Kit Items"), "kit_item"))
+                tabs_append((T("Kit Items"), "kit_item"))
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             table = r.table
 
+            brand_field = table.brand_id
+            if brand_field.readable:
+                brand_row = TR(TH("%s: " % brand_field.label),
+                               brand_field.represent(item.brand_id),
+                               )
+            else:
+                brand_row = ""
+
+            model_field = table.model
+            if model_field.readable:
+                model_row = TR(TH("%s: " % model_field.label),
+                               item.model or current.messages["NONE"],
+                               )
+            else:
+                model_row = ""
+
             rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
                                    item.name,
                                    ),
-                                TR(TH("%s: " % table.brand_id.label),
-                                   table.brand_id.represent(item.brand_id),
-                                   ),
-                                TR(TH("%s: " % table.model.label),
-                                   item.model or current.messages["NONE"],
-                                   ),
+                                brand_row,
+                                model_row,
                                 ),
                           rheader_tabs
                          )
@@ -2792,18 +2775,32 @@ def supply_item_controller():
 
     def postp(r, output):
         if r.interactive and \
-           r.component and \
-           r.component.name == "inv_item":
-            # Open Natively
-            # Custom Action Buttons
-            s3.actions = [{"label": s3_str(s3.crud_labels.READ),
-                           "url": URL(c = "inv",
-                                      f = "inv_item",
-                                      args = ["[id]"],
-                                      ),
-                           "_class": "action-btn",
-                           },
-                          ]
+           r.component:
+            cname = r.component_name
+            if cname == "inv_item":
+                # Open Natively
+                # Custom Action Buttons
+                s3.actions = [{"label": s3_str(s3.crud_labels.READ),
+                               "url": URL(c = "inv",
+                                          f = "inv_item",
+                                          args = ["[id]"],
+                                          ),
+                               "_class": "action-btn",
+                               },
+                              ]
+            elif cname == "stock_card":
+                # Open Natively
+                # Custom Action Buttons
+                s3.actions = [{"label": s3_str(s3.crud_labels.READ),
+                               "url": URL(c = "inv",
+                                          f = "stock_card",
+                                          args = ["[id]",
+                                                  "stock_log",
+                                                  ],
+                                          ),
+                               "_class": "action-btn",
+                               },
+                              ]
 
         return output
     s3.postp = postp

@@ -38,6 +38,8 @@ import sys
 import time
 
 from collections import OrderedDict
+from html.parser import HTMLParser
+from urllib import parse as urlparse
 
 from gluon import current, redirect, HTTP, URL, \
                   A, BEAUTIFY, CODE, DIV, IMG, PRE, SPAN, TABLE, TAG, TR, XML, \
@@ -46,8 +48,6 @@ from gluon.storage import Storage
 from gluon.languages import lazyT
 from gluon.tools import addrow
 
-from s3compat import HTMLParser, INTEGER_TYPES, PY2, STRING_TYPES, \
-                     basestring, long, unichr, unicodeT, urlparse
 from s3dal import Expression, Field, Row, S3DAL
 from .s3datetime import ISOFORMAT, s3_decode_iso_datetime, s3_relative_datetime
 
@@ -82,9 +82,9 @@ def s3_store_last_record_id(tablename, record_id):
     session = current.session
 
     # Web2py type "Reference" can't be pickled in session (no crash,
-    # but renders the server unresponsive) => always convert into long
+    # but renders the server unresponsive) => always convert into int
     try:
-        record_id = long(record_id)
+        record_id = int(record_id)
     except ValueError:
         return False
 
@@ -127,7 +127,7 @@ def s3_validate(table, field, value, record=None):
 
     default = (value, None)
 
-    if isinstance(field, basestring):
+    if isinstance(field, str):
         fieldname = field
         if fieldname in table.fields:
             field = table[fieldname]
@@ -251,7 +251,7 @@ def s3_represent_value(field,
                              )
         if isinstance(text, DIV):
             text = str(text)
-        elif not isinstance(text, basestring):
+        elif not isinstance(text, str):
             text = s3_unicode(text)
     else:
         if val is None:
@@ -488,7 +488,7 @@ def s3_truncate(text, length=48, nice=True):
 
 
     if len(text) > length:
-        if type(text) is unicodeT:
+        if type(text) is str:
             encode = False
         else:
             # Make sure text is multi-byte-aware before truncating it
@@ -662,7 +662,7 @@ def s3_fullname(person=None, pe_id=None, truncate=True):
     record = None
     query = None
 
-    if isinstance(person, INTEGER_TYPES) or str(person).isdigit():
+    if isinstance(person, int) or str(person).isdigit():
         db = current.db
         ptable = db.pr_person
         query = (ptable.id == person)
@@ -771,7 +771,7 @@ def s3_phone_represent(value):
 
     if not value:
         return current.messages["NONE"]
-    return s3_str("%s%s" % (unichr(8206), s3_unicode(value)))
+    return s3_str("%s%s" % (chr(8206), s3_unicode(value)))
 
 # =============================================================================
 def s3_url_represent(url):
@@ -826,7 +826,7 @@ def s3_qrcode_represent(value, row=None, show_value=True):
     # Write the SVG into a buffer
     qr_svg = qr.make_image()
 
-    from s3compat import BytesIO
+    from io import BytesIO
     stream = BytesIO()
     qr_svg.save(stream)
 
@@ -1466,81 +1466,30 @@ def s3_get_foreign_key(field, m2m=True):
     return (rtablename, key, multiple)
 
 # =============================================================================
-if PY2:
+def s3_unicode(s, encoding="utf-8"):
+    """
+        Convert an object into a str, for backwards-compatibility
 
-    def s3_unicode(s, encoding="utf-8"):
-        """
-            Convert an object into an unicode instance, to be used
-            instead of unicode(s)
+        @param s: the object
+        @param encoding: the character encoding
+    """
 
-            @param s: the object
-            @param encoding: the character encoding
-        """
-
-        if type(s) is unicode:
-            return s
-        try:
-            if not isinstance(s, basestring):
-                if hasattr(s, "__unicode__"):
-                    s = unicode(s)
-                else:
-                    try:
-                        s = unicode(str(s), encoding, "strict")
-                    except UnicodeEncodeError:
-                        if not isinstance(s, Exception):
-                            raise
-                        s = " ".join([s3_unicode(arg, encoding) for arg in s])
-            else:
-                s = s.decode(encoding)
-        except UnicodeDecodeError:
-            if not isinstance(s, Exception):
-                raise
-            s = " ".join([s3_unicode(arg, encoding) for arg in s])
+    if type(s) is str:
         return s
+    elif type(s) is bytes:
+        return s.decode(encoding, "strict")
+    else:
+        return str(s)
 
-    def s3_str(s):
-        """
-            Unicode-safe conversion of an object s into a utf-8 encoded str,
-            to be used instead of str(s)
-
-            @param s: the object
-
-            @note: assumes utf-8, for other character encodings use explicit:
-
-                    - s3_unicode(s, encoding=<in>).encode(<out>)
-        """
-
-        if type(s) is str:
-            return s
-        else:
-            return s3_unicode(s).encode("utf-8", "strict")
-
-else:
-
-    def s3_unicode(s, encoding="utf-8"):
-        """
-            Convert an object into a str, for backwards-compatibility
-
-            @param s: the object
-            @param encoding: the character encoding
-        """
-
-        if type(s) is str:
-            return s
-        elif type(s) is bytes:
-            return s.decode(encoding, "strict")
-        else:
-            return str(s)
-
-    # In Python-3 this is just an alias:
-    s3_str = s3_unicode
+# In Python-3 this is just an alias:
+s3_str = s3_unicode
 
 # =============================================================================
 def s3_flatlist(nested):
     """ Iterator to flatten mixed iterables of arbitrary depth """
     for item in nested:
         if isinstance(item, collections.Iterable) and \
-           not isinstance(item, basestring):
+           not isinstance(item, str):
             for sub in s3_flatlist(item):
                 yield sub
         else:
@@ -1690,7 +1639,7 @@ def s3_get_extension_from_url(url):
     if not url:
         return ext
 
-    from s3compat import urlparse
+    from urllib import parse as urlparse
     try:
         parsed = urlparse.urlparse(url)
     except (ValueError, AttributeError):
@@ -1757,7 +1706,7 @@ def search_vars_represent(search_vars):
         @return: HTML as string
     """
 
-    from s3compat import pickle
+    import pickle
 
     s = ""
     search_vars = search_vars.replace("&apos;", "'")
@@ -2216,14 +2165,12 @@ class S3TypeConverter(object):
         if b is None:
             return None
         if type(a) is type:
-            if a in STRING_TYPES:
+            if a is str:
                 return cls._str(b)
             if a is int:
                 return cls._int(b)
             if a is bool:
                 return cls._bool(b)
-            if a is long:
-                return cls._long(b)
             if a is float:
                 return cls._float(b)
             if a is datetime.datetime:
@@ -2238,7 +2185,7 @@ class S3TypeConverter(object):
         if isinstance(a, (list, tuple, set)):
             if isinstance(b, (list, tuple, set)):
                 return b
-            elif isinstance(b, basestring):
+            elif isinstance(b, str):
                 if "," in b:
                     b = b.split(",")
                 else:
@@ -2253,14 +2200,12 @@ class S3TypeConverter(object):
         if isinstance(b, (list, tuple, set)):
             cnv = cls.convert
             return [cnv(a, item) for item in b]
-        if isinstance(a, basestring):
+        if isinstance(a, str):
             return cls._str(b)
         if isinstance(a, bool):
             return cls._bool(b)
         if isinstance(a, int):
             return cls._int(b)
-        if isinstance(a, long):
-            return cls._long(b)
         if isinstance(a, float):
             return cls._float(b)
         if isinstance(a, datetime.datetime):
@@ -2278,12 +2223,12 @@ class S3TypeConverter(object):
 
         if isinstance(b, bool):
             return b
-        if isinstance(b, basestring):
+        if isinstance(b, str):
             if b.lower() in ("true", "1"):
                 return True
             elif b.lower() in ("false", "0"):
                 return False
-        if isinstance(b, INTEGER_TYPES):
+        if isinstance(b, int):
             if b == 0:
                 return False
             else:
@@ -2295,7 +2240,7 @@ class S3TypeConverter(object):
     def _str(b):
         """ Convert into string """
 
-        if isinstance(b, basestring):
+        if isinstance(b, str):
             return b
         return str(b)
 
@@ -2307,15 +2252,6 @@ class S3TypeConverter(object):
         if isinstance(b, int):
             return b
         return int(b)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _long(b):
-        """ Convert into long """
-
-        if isinstance(b, long):
-            return b
-        return long(b)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2333,7 +2269,7 @@ class S3TypeConverter(object):
 
         if isinstance(b, datetime.datetime):
             return b
-        elif isinstance(b, basestring):
+        elif isinstance(b, str):
             # NB: converting from string (e.g. URL query) assumes the string
             #     is specified for the local time zone, unless a timezone is
             #     explicitly specified in the string (e.g. trailing Z in ISO)
@@ -2371,7 +2307,7 @@ class S3TypeConverter(object):
 
         if isinstance(b, datetime.date):
             return b
-        elif isinstance(b, basestring):
+        elif isinstance(b, str):
             value = None
             if b and b.lstrip()[0] in "+-nN":
                 # Relative datime expression?
@@ -2403,7 +2339,7 @@ class S3TypeConverter(object):
 
         if isinstance(b, datetime.time):
             return b
-        elif isinstance(b, basestring):
+        elif isinstance(b, str):
             value, error = IS_TIME()(b)
             if error:
                 raise ValueError

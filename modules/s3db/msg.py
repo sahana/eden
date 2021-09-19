@@ -27,25 +27,32 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3ChannelModel",
-           "S3MessageModel",
-           "S3MessageAttachmentModel",
-           "S3MessageContactModel",
-           "S3MessageTagModel",
-           "S3EmailModel",
-           "S3FacebookModel",
-           "S3MCommonsModel",
-           "S3GCMModel",
-           "S3ParsingModel",
-           "S3RSSModel",
-           "S3SMSModel",
-           "S3SMSOutboundModel",
-           "S3TropoModel",
-           "S3TwilioModel",
-           "S3TwitterModel",
-           "S3TwitterSearchModel",
-           "S3XFormsModel",
-           "S3BaseStationModel",
+__all__ = ("ChannelModel",
+           "MessageModel",
+           "MessageAttachmentModel",
+           "MessageContactModel",
+           "MessageTagModel",
+           "EmailModel",
+           "FacebookModel",
+           "MCommonsModel",
+           "GCMModel",
+           "ParsingModel",
+           "RSSModel",
+           "SMSModel",
+           "SMSOutboundModel",
+           "TropoModel",
+           "TwilioModel",
+           "TwitterModel",
+           "TwitterSearchModel",
+           "XFormsModel",
+           "BaseStationModel",
+           "msg_channel_enable",
+           "msg_channel_disable",
+           "msg_channel_onaccept",
+           #"msg_channel_poll",
+           "msg_parser_enabled",
+           "msg_parser_enable",
+           #"msg_parser_disable",
            )
 
 from gluon import *
@@ -56,7 +63,7 @@ from ..s3 import *
 SEPARATORS = (",", ":")
 
 # =============================================================================
-class S3ChannelModel(S3Model):
+class ChannelModel(S3Model):
     """
         Messaging Channels
         - all Inbound & Outbound channels for messages are instances of this
@@ -67,11 +74,6 @@ class S3ChannelModel(S3Model):
              "msg_channel_limit",
              "msg_channel_status",
              "msg_channel_id",
-             "msg_channel_enable",
-             "msg_channel_disable",
-             "msg_channel_enable_interactive",
-             "msg_channel_disable_interactive",
-             "msg_channel_onaccept",
              )
 
     def model(self):
@@ -164,199 +166,189 @@ class S3ChannelModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         return {"msg_channel_id": channel_id,
-                "msg_channel_enable": self.channel_enable,
-                "msg_channel_disable": self.channel_disable,
-                "msg_channel_enable_interactive": self.channel_enable_interactive,
-                "msg_channel_disable_interactive": self.channel_disable_interactive,
-                "msg_channel_onaccept": self.channel_onaccept,
-                "msg_channel_poll": self.channel_poll,
                 }
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def channel_enable(tablename, channel_id):
-        """
-            Enable a Channel
-            - Schedule a Poll for new messages
-            - Enable all associated Parsers
+# =============================================================================
+def msg_channel_enable(tablename, channel_id):
+    """
+        Enable a Channel
+        - Schedule a Poll for new messages
+        - Enable all associated Parsers
 
-            CLI API for shell scripts & to be called by S3Method
-        """
+        CLI API for shell scripts & to be called by S3Method
+    """
 
-        db = current.db
-        s3db = current.s3db
-        table = s3db.table(tablename)
-        record = db(table.channel_id == channel_id).select(table.id, # needed for update_record
-                                                           table.enabled,
-                                                           limitby=(0, 1),
-                                                           ).first()
-        if not record.enabled:
-            # Flag it as enabled
-            # Update Instance
-            record.update_record(enabled = True)
-            # Update Super
-            s3db.update_super(table, record)
+    db = current.db
+    s3db = current.s3db
+    table = s3db.table(tablename)
+    record = db(table.channel_id == channel_id).select(table.id, # needed for update_record
+                                                       table.enabled,
+                                                       limitby = (0, 1)
+                                                       ).first()
+    if not record.enabled:
+        # Flag it as enabled
+        # Update Instance
+        record.update_record(enabled = True)
+        # Update Super
+        s3db.update_super(table, record)
 
-        # Enable all Parser tasks on this channel
-        ptable = s3db.msg_parser
-        query = (ptable.channel_id == channel_id) & \
-                (ptable.deleted == False)
-        parsers = db(query).select(ptable.id)
-        for parser in parsers:
-            s3db.msg_parser_enable(parser.id)
+    # Enable all Parser tasks on this channel
+    ptable = s3db.msg_parser
+    query = (ptable.channel_id == channel_id) & \
+            (ptable.deleted == False)
+    parsers = db(query).select(ptable.id)
+    for parser in parsers:
+        s3db.msg_parser_enable(parser.id)
 
-        # Do we have an existing Task?
-        ttable = db.scheduler_task
-        args = '["%s", %s]' % (tablename, channel_id)
-        query = ((ttable.function_name == "msg_poll") & \
-                 (ttable.args == args) & \
-                 (ttable.status.belongs(["RUNNING", "QUEUED", "ALLOCATED"])))
-        exists = db(query).select(ttable.id,
-                                  limitby=(0, 1)).first()
-        if exists:
-            return "Channel already enabled"
-        else:
-            current.s3task.schedule_task("msg_poll",
-                                         args = [tablename, channel_id],
-                                         period = 300,  # seconds
-                                         timeout = 300, # seconds
-                                         repeats = 0    # unlimited
-                                         )
-            return "Channel enabled"
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def channel_enable_interactive(r, **attr):
-        """
-            Enable a Channel
-            - Schedule a Poll for new messages
-
-            S3Method for interactive requests
-        """
-
-        tablename = r.tablename
-        result = current.s3db.msg_channel_enable(tablename, r.record.channel_id)
-        current.session.confirmation = result
-        fn = tablename.split("_", 1)[1]
-        redirect(URL(f=fn))
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def channel_disable(tablename, channel_id):
-        """
-            Disable a Channel
-            - Remove schedule for Polling for new messages
-            - Disable all associated Parsers
-
-            CLI API for shell scripts & to be called by S3Method
-        """
-
-        db = current.db
-        s3db = current.s3db
-        table = s3db.table(tablename)
-        record = db(table.channel_id == channel_id).select(table.id, # needed for update_record
-                                                           table.enabled,
-                                                           limitby=(0, 1),
-                                                           ).first()
-        if record.enabled:
-            # Flag it as disabled
-            # Update Instance
-            record.update_record(enabled = False)
-            # Update Super
-            s3db.update_super(table, record)
-
-        # Disable all Parser tasks on this channel
-        ptable = s3db.msg_parser
-        parsers = db(ptable.channel_id == channel_id).select(ptable.id)
-        for parser in parsers:
-            s3db.msg_parser_disable(parser.id)
-
-        # Do we have an existing Task?
-        ttable = db.scheduler_task
-        args = '["%s", %s]' % (tablename, channel_id)
-        query = ((ttable.function_name == "msg_poll") & \
-                 (ttable.args == args) & \
-                 (ttable.status.belongs(["RUNNING", "QUEUED", "ALLOCATED"])))
-        exists = db(query).select(ttable.id,
-                                  limitby=(0, 1)).first()
-        if exists:
-            # Disable all
-            db(query).update(status="STOPPED")
-            return "Channel disabled"
-        else:
-            return "Channel already disabled"
-
-    # --------------------------------------------------------------------------
-    @staticmethod
-    def channel_disable_interactive(r, **attr):
-        """
-            Disable a Channel
-            - Remove schedule for Polling for new messages
-
-            S3Method for interactive requests
-        """
-
-        tablename = r.tablename
-        result = current.s3db.msg_channel_disable(tablename, r.record.channel_id)
-        current.session.confirmation = result
-        fn = tablename.split("_", 1)[1]
-        redirect(URL(f=fn))
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def channel_onaccept(form):
-        """
-            Process the Enabled Flag
-        """
-
-        form_vars = form.vars
-        if form.record:
-            # Update form
-            # Process if changed
-            if form.record.enabled and not form_vars.enabled:
-                current.s3db.msg_channel_disable(form.table._tablename,
-                                                 form_vars.channel_id)
-            elif form_vars.enabled and not form.record.enabled:
-                current.s3db.msg_channel_enable(form.table._tablename,
-                                                form_vars.channel_id)
-        else:
-            # Create form
-            # Process only if enabled
-            if form_vars.enabled:
-                current.s3db.msg_channel_enable(form.table._tablename,
-                                                form_vars.channel_id)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def channel_poll(r, **attr):
-        """
-            Poll a Channel for new messages
-
-            S3Method for interactive requests
-        """
-
-        tablename = r.tablename
-        current.s3task.run_async("msg_poll",
-                                 args = [tablename, r.record.channel_id])
-        current.session.confirmation = \
-            current.T("The poll request has been submitted, so new messages should appear shortly - refresh to see them")
-        if tablename == "msg_email_channel":
-            fn = "email_inbox"
-        elif tablename == "msg_mcommons_channel":
-            fn = "sms_inbox"
-        elif tablename == "msg_rss_channel":
-            fn = "rss"
-        elif tablename == "msg_twilio_channel":
-            fn = "sms_inbox"
-        elif tablename == "msg_twitter_channel":
-            fn = "twitter_inbox"
-        else:
-            return "Unsupported channel: %s" % tablename
-
-        redirect(URL(f=fn))
+    # Do we have an existing Task?
+    ttable = db.scheduler_task
+    args = '["%s", %s]' % (tablename, channel_id)
+    query = ((ttable.function_name == "msg_poll") & \
+             (ttable.args == args) & \
+             (ttable.status.belongs(["RUNNING", "QUEUED", "ALLOCATED"])))
+    exists = db(query).select(ttable.id,
+                              limitby = (0, 1)
+                              ).first()
+    if exists:
+        return "Channel already enabled"
+    else:
+        current.s3task.schedule_task("msg_poll",
+                                     args = [tablename, channel_id],
+                                     period = 300,  # seconds
+                                     timeout = 300, # seconds
+                                     repeats = 0    # unlimited
+                                     )
+        return "Channel enabled"
 
 # =============================================================================
-class S3MessageModel(S3Model):
+def msg_channel_enable_interactive(r, **attr):
+    """
+        Enable a Channel
+        - Schedule a Poll for new messages
+
+        S3Method for interactive requests
+    """
+
+    tablename = r.tablename
+    result = msg_channel_enable(tablename, r.record.channel_id)
+    current.session.confirmation = result
+    fn = tablename.split("_", 1)[1]
+    redirect(URL(f = fn))
+
+# =============================================================================
+def msg_channel_disable(tablename, channel_id):
+    """
+        Disable a Channel
+        - Remove schedule for Polling for new messages
+        - Disable all associated Parsers
+
+        CLI API for shell scripts & to be called by S3Method
+    """
+
+    db = current.db
+    s3db = current.s3db
+    table = s3db.table(tablename)
+    record = db(table.channel_id == channel_id).select(table.id, # needed for update_record
+                                                       table.enabled,
+                                                       limitby = (0, 1)
+                                                       ).first()
+    if record.enabled:
+        # Flag it as disabled
+        # Update Instance
+        record.update_record(enabled = False)
+        # Update Super
+        s3db.update_super(table, record)
+
+    # Disable all Parser tasks on this channel
+    ptable = s3db.msg_parser
+    parsers = db(ptable.channel_id == channel_id).select(ptable.id)
+    for parser in parsers:
+        msg_parser_disable(parser.id)
+
+    # Do we have an existing Task?
+    ttable = db.scheduler_task
+    args = '["%s", %s]' % (tablename, channel_id)
+    query = ((ttable.function_name == "msg_poll") & \
+             (ttable.args == args) & \
+             (ttable.status.belongs(["RUNNING", "QUEUED", "ALLOCATED"])))
+    exists = db(query).select(ttable.id,
+                              limitby = (0, 1)
+                              ).first()
+    if exists:
+        # Disable all
+        db(query).update(status = "STOPPED")
+        return "Channel disabled"
+    else:
+        return "Channel already disabled"
+
+# =============================================================================
+def msg_channel_disable_interactive(r, **attr):
+    """
+        Disable a Channel
+        - Remove schedule for Polling for new messages
+
+        S3Method for interactive requests
+    """
+
+    tablename = r.tablename
+    result = msg_channel_disable(tablename, r.record.channel_id)
+    current.session.confirmation = result
+    fn = tablename.split("_", 1)[1]
+    redirect(URL(f = fn))
+
+# =============================================================================
+def msg_channel_onaccept(form):
+    """
+        Process the Enabled Flag
+    """
+
+    form_vars = form.vars
+    if form.record:
+        # Update form
+        # Process if changed
+        if form.record.enabled and not form_vars.enabled:
+            msg_channel_disable(form.table._tablename,
+                                form_vars.channel_id)
+        elif form_vars.enabled and not form.record.enabled:
+            msg_channel_enable(form.table._tablename,
+                               form_vars.channel_id)
+    else:
+        # Create form
+        # Process only if enabled
+        if form_vars.enabled:
+            msg_channel_enable(form.table._tablename,
+                               form_vars.channel_id)
+
+# =============================================================================
+def msg_channel_poll(r, **attr):
+    """
+        Poll a Channel for new messages
+
+        S3Method for interactive requests
+    """
+
+    tablename = r.tablename
+    current.s3task.run_async("msg_poll",
+                             args = [tablename, r.record.channel_id])
+    current.session.confirmation = \
+        current.T("The poll request has been submitted, so new messages should appear shortly - refresh to see them")
+    if tablename == "msg_email_channel":
+        fn = "email_inbox"
+    elif tablename == "msg_mcommons_channel":
+        fn = "sms_inbox"
+    elif tablename == "msg_rss_channel":
+        fn = "rss"
+    elif tablename == "msg_twilio_channel":
+        fn = "sms_inbox"
+    elif tablename == "msg_twitter_channel":
+        fn = "twitter_inbox"
+    else:
+        return "Unsupported channel: %s" % tablename
+
+    redirect(URL(f = fn))
+
+# =============================================================================
+class MessageModel(S3Model):
     """
         Messages
     """
@@ -402,7 +394,7 @@ class S3MessageModel(S3Model):
                           # came in on allows correlation to Outbound
                           # messages (campaign_message, deployment_alert, etc)
                           self.msg_channel_id(),
-                          s3_datetime(default="now"),
+                          s3_datetime(default = "now"),
                           Field("body", "text",
                                 label = T("Message"),
                                 ),
@@ -437,7 +429,9 @@ class S3MessageModel(S3Model):
                   )
 
         # Reusable Field
-        message_represent = S3Represent(lookup = tablename, fields = ["body"])
+        message_represent = S3Represent(lookup = tablename,
+                                        fields = ["body"],
+                                        )
         message_id = S3ReusableField("message_id", "reference %s" % tablename,
                                      ondelete = "RESTRICT",
                                      represent = message_represent,
@@ -470,11 +464,11 @@ class S3MessageModel(S3Model):
                            }
 
         opt_msg_status = S3ReusableField("status", "integer",
-                                         notnull=True,
-                                         requires = IS_IN_SET(MSG_STATUS_OPTS,
-                                                              zero = None),
+                                         notnull = True,
                                          default = 1,
                                          label = T("Status"),
+                                         requires = IS_IN_SET(MSG_STATUS_OPTS,
+                                                              zero = None),
                                          represent = lambda opt: \
                                                      MSG_STATUS_OPTS.get(opt,
                                                                  UNKNOWN_OPT)
@@ -537,7 +531,7 @@ class S3MessageModel(S3Model):
                 }
 
 # =============================================================================
-class S3MessageAttachmentModel(S3Model):
+class MessageAttachmentModel(S3Model):
     """
         Message Attachments
         - link table between msg_message & doc_document
@@ -562,7 +556,7 @@ class S3MessageAttachmentModel(S3Model):
         return {}
 
 # =============================================================================
-class S3MessageContactModel(S3Model):
+class MessageContactModel(S3Model):
     """
         Contact Form
     """
@@ -643,22 +637,22 @@ class S3MessageContactModel(S3Model):
 
         # CRUD strings
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create=T("Contact Form"),
-            title_display=T("Contact Details"),
-            title_list=T("Contacts"),
-            title_update=T("Edit Contact"),
-            label_list_button=T("List Contacts"),
-            label_delete_button=T("Delete Contact"),
-            msg_record_created=T("Contact added"),
-            msg_record_modified=T("Contact updated"),
-            msg_record_deleted=T("Contact deleted"),
-            msg_list_empty=T("No Contacts currently registered"))
+            label_create = T("Contact Form"),
+            title_display = T("Contact Details"),
+            title_list = T("Contacts"),
+            title_update = T("Edit Contact"),
+            label_list_button = T("List Contacts"),
+            label_delete_button = T("Delete Contact"),
+            msg_record_created = T("Contact added"),
+            msg_record_modified = T("Contact updated"),
+            msg_record_deleted = T("Contact deleted"),
+            msg_list_empty = T("No Contacts currently registered"))
 
         # ---------------------------------------------------------------------
         return {}
 
 # =============================================================================
-class S3MessageTagModel(S3Model):
+class MessageTagModel(S3Model):
     """
         Message Tags
     """
@@ -680,7 +674,7 @@ class S3MessageTagModel(S3Model):
         tablename = "msg_tag"
         self.define_table(tablename,
                           # FK not instance
-                          self.msg_message_id(ondelete="CASCADE"),
+                          self.msg_message_id(ondelete = "CASCADE"),
                           # key is a reserved word in MySQL
                           Field("tag",
                                 label = T("Key"),
@@ -702,7 +696,7 @@ class S3MessageTagModel(S3Model):
         return {}
 
 # =============================================================================
-class S3EmailModel(S3ChannelModel):
+class EmailModel(ChannelModel):
     """
         Email
             InBound Channels
@@ -760,21 +754,21 @@ class S3EmailModel(S3ChannelModel):
                      *s3_meta_fields())
 
         configure(tablename,
-                  onaccept = self.msg_channel_onaccept,
+                  onaccept = msg_channel_onaccept,
                   super_entity = "msg_channel",
                   )
 
         set_method("msg", "email_channel",
                    method = "enable",
-                   action = self.msg_channel_enable_interactive)
+                   action = msg_channel_enable_interactive)
 
         set_method("msg", "email_channel",
                    method = "disable",
-                   action = self.msg_channel_disable_interactive)
+                   action = msg_channel_disable_interactive)
 
         set_method("msg", "email_channel",
                    method = "poll",
-                   action = self.msg_channel_poll)
+                   action = msg_channel_poll)
 
         # ---------------------------------------------------------------------
         # Email Messages: InBox & Outbox
@@ -836,7 +830,7 @@ class S3EmailModel(S3ChannelModel):
         return {}
 
 # =============================================================================
-class S3FacebookModel(S3ChannelModel):
+class FacebookModel(ChannelModel):
     """
         Facebook
             Channels
@@ -902,15 +896,15 @@ class S3FacebookModel(S3ChannelModel):
 
         set_method("msg", "facebook_channel",
                    method = "enable",
-                   action = self.msg_channel_enable_interactive)
+                   action = msg_channel_enable_interactive)
 
         set_method("msg", "facebook_channel",
                    method = "disable",
-                   action = self.msg_channel_disable_interactive)
+                   action = msg_channel_disable_interactive)
 
         #set_method("msg", "facebook_channel",
         #           method = "poll",
-        #           action = self.msg_channel_poll)
+        #           action = msg_channel_poll)
 
         # ---------------------------------------------------------------------
         # Facebook Messages: InBox & Outbox
@@ -967,7 +961,7 @@ class S3FacebookModel(S3ChannelModel):
             current.db(current.s3db.msg_facebook_channel.id != form.vars.id).update(login = False)
 
         # Normal onaccept processing
-        S3ChannelModel.channel_onaccept(form)
+        ChannelModel.channel_onaccept(form)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -983,7 +977,7 @@ class S3FacebookModel(S3ChannelModel):
         return c
 
 # =============================================================================
-class S3MCommonsModel(S3ChannelModel):
+class MCommonsModel(ChannelModel):
     """
         Mobile Commons Inbound SMS Settings
         - Outbound can use Web API
@@ -1033,27 +1027,27 @@ class S3MCommonsModel(S3ChannelModel):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       onaccept = self.msg_channel_onaccept,
+                       onaccept = msg_channel_onaccept,
                        super_entity = "msg_channel",
                        )
 
         set_method("msg", "mcommons_channel",
                    method = "enable",
-                   action = self.msg_channel_enable_interactive)
+                   action = msg_channel_enable_interactive)
 
         set_method("msg", "mcommons_channel",
                    method = "disable",
-                   action = self.msg_channel_disable_interactive)
+                   action = msg_channel_disable_interactive)
 
         set_method("msg", "mcommons_channel",
                    method = "poll",
-                   action = self.msg_channel_poll)
+                   action = msg_channel_poll)
 
         # ---------------------------------------------------------------------
         return {}
 
 # =============================================================================
-class S3GCMModel(S3ChannelModel):
+class GCMModel(ChannelModel):
     """
         Google Cloud Messaging
             Channels
@@ -1101,15 +1095,15 @@ class S3GCMModel(S3ChannelModel):
 
         set_method("msg", "gcm_channel",
                    method = "enable",
-                   action = self.msg_channel_enable_interactive)
+                   action = msg_channel_enable_interactive)
 
         set_method("msg", "gcm_channel",
                    method = "disable",
-                   action = self.msg_channel_disable_interactive)
+                   action = msg_channel_disable_interactive)
 
         #set_method("msg", "gcm_channel",
         #           method = "poll",
-        #           action = self.msg_channel_poll)
+        #           action = msg_channel_poll)
 
         # ---------------------------------------------------------------------
         return {}
@@ -1123,10 +1117,10 @@ class S3GCMModel(S3ChannelModel):
             current.db(current.s3db.msg_gcm_channel.id != form.vars.id).update(enabled = False)
 
         # Normal onaccept processing
-        S3ChannelModel.channel_onaccept(form)
+        ChannelModel.channel_onaccept(form)
 
 # =============================================================================
-class S3ParsingModel(S3Model):
+class ParsingModel(S3Model):
     """
         Message Parsing Model
     """
@@ -1134,13 +1128,7 @@ class S3ParsingModel(S3Model):
     names = ("msg_parser",
              "msg_parsing_status",
              "msg_session",
-             "msg_keyword",
              "msg_sender",
-             "msg_parser_enabled",
-             "msg_parser_enable",
-             "msg_parser_disable",
-             "msg_parser_enable_interactive",
-             "msg_parser_disable_interactive",
              )
 
     def model(self):
@@ -1228,18 +1216,6 @@ class S3ParsingModel(S3Model):
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Keywords for Message Parsing
-        #
-        tablename = "msg_keyword"
-        define_table(tablename,
-                     Field("keyword",
-                           label = T("Keyword"),
-                           ),
-                     # @ToDo: Move this to a link table
-                     self.event_incident_type_id(),
-                     *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
         # Senders for Message Parsing
         # - whitelist / blacklist / prioritise
         #
@@ -1256,10 +1232,7 @@ class S3ParsingModel(S3Model):
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        return {"msg_parser_enabled": self.parser_enabled,
-                "msg_parser_enable": self.parser_enable,
-                "msg_parser_disable": self.parser_disable,
-                }
+        return {}
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -1280,70 +1253,6 @@ class S3ParsingModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def parser_enabled(channel_id):
-        """
-            Helper function to see if there is a Parser connected to a Channel
-            - used to determine whether to populate the msg_parsing_status table
-        """
-
-        table = current.s3db.msg_parser
-        record = current.db(table.channel_id == channel_id).select(table.enabled,
-                                                                   limitby=(0, 1),
-                                                                   ).first()
-        if record and record.enabled:
-            return True
-        else:
-            return False
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def parser_enable(id):
-        """
-            Enable a Parser
-            - Connect a Parser to a Channel
-
-            CLI API for shell scripts & to be called by S3Method
-
-            @ToDo: Ensure only 1 Parser is connected to any Channel at a time
-        """
-
-        db = current.db
-        s3db = current.s3db
-        table = s3db.msg_parser
-        record = db(table.id == id).select(table.id, # needed for update_record
-                                           table.enabled,
-                                           table.channel_id,
-                                           table.function_name,
-                                           limitby=(0, 1),
-                                           ).first()
-        if not record.enabled:
-            # Flag it as enabled
-            record.update_record(enabled = True)
-
-        channel_id = record.channel_id
-        function_name = record.function_name
-
-        # Do we have an existing Task?
-        ttable = db.scheduler_task
-        args = '[%s, "%s"]' % (channel_id, function_name)
-        query = ((ttable.function_name == "msg_parse") & \
-                 (ttable.args == args) & \
-                 (ttable.status.belongs(["RUNNING", "QUEUED", "ALLOCATED"])))
-        exists = db(query).select(ttable.id,
-                                  limitby=(0, 1)).first()
-        if exists:
-            return "Parser already enabled"
-        else:
-            current.s3task.schedule_task("msg_parse",
-                                         args = [channel_id, function_name],
-                                         period = 300,  # seconds
-                                         timeout = 300, # seconds
-                                         repeats = 0    # unlimited
-                                         )
-            return "Parser enabled"
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def parser_enable_interactive(r, **attr):
         """
             Enable a Parser
@@ -1352,47 +1261,9 @@ class S3ParsingModel(S3Model):
             S3Method for interactive requests
         """
 
-        result = current.s3db.msg_parser_enable(r.id)
+        result = msg_parser_enable(r.id)
         current.session.confirmation = result
         redirect(URL(f="parser"))
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def parser_disable(id):
-        """
-            Disable a Parser
-            - Disconnect a Parser from a Channel
-
-            CLI API for shell scripts & to be called by S3Method
-        """
-
-        db = current.db
-        s3db = current.s3db
-        table = s3db.msg_parser
-        record = db(table.id == id).select(table.id, # needed for update_record
-                                           table.enabled,
-                                           table.channel_id,
-                                           table.function_name,
-                                           limitby=(0, 1),
-                                           ).first()
-        if record.enabled:
-            # Flag it as disabled
-            record.update_record(enabled = False)
-
-        # Do we have an existing Task?
-        ttable = db.scheduler_task
-        args = '[%s, "%s"]' % (record.channel_id, record.function_name)
-        query = ((ttable.function_name == "msg_parse") & \
-                 (ttable.args == args) & \
-                 (ttable.status.belongs(["RUNNING", "QUEUED", "ALLOCATED"])))
-        exists = db(query).select(ttable.id,
-                                  limitby=(0, 1)).first()
-        if exists:
-            # Disable all
-            db(query).update(status="STOPPED")
-            return "Parser disabled"
-        else:
-            return "Parser already disabled"
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1404,7 +1275,7 @@ class S3ParsingModel(S3Model):
             S3Method for interactive requests
         """
 
-        result = current.s3db.msg_parser_disable(r.id)
+        result = msg_parser_disable(r.id)
         current.session.confirmation = result
         redirect(URL(f="parser"))
 
@@ -1419,17 +1290,118 @@ class S3ParsingModel(S3Model):
             # Update form
             # process of changed
             if form.record.enabled and not form.vars.enabled:
-                current.s3db.msg_parser_disable(form.vars.id)
+                msg_parser_disable(form.vars.id)
             elif form.vars.enabled and not form.record.enabled:
-                current.s3db.msg_parser_enable(form.vars.id)
+                msg_parser_enable(form.vars.id)
         else:
             # Create form
             # Process only if enabled
             if form.vars.enabled:
-                current.s3db.msg_parser_enable(form.vars.id)
+                msg_parser_enable(form.vars.id)
 
 # =============================================================================
-class S3RSSModel(S3ChannelModel):
+def msg_parser_enabled(channel_id):
+    """
+        Helper function to see if there is a Parser connected to a Channel
+        - used to determine whether to populate the msg_parsing_status table
+    """
+
+    table = current.s3db.msg_parser
+    record = current.db(table.channel_id == channel_id).select(table.enabled,
+                                                               limitby = (0, 1)
+                                                               ).first()
+    if record and record.enabled:
+        return True
+    else:
+        return False
+
+# =============================================================================
+def msg_parser_enable(id):
+    """
+        Enable a Parser
+        - Connect a Parser to a Channel
+
+        CLI API for shell scripts & to be called by S3Method
+
+        @ToDo: Ensure only 1 Parser is connected to any Channel at a time
+    """
+
+    db = current.db
+    s3db = current.s3db
+    table = s3db.msg_parser
+    record = db(table.id == id).select(table.id, # needed for update_record
+                                       table.enabled,
+                                       table.channel_id,
+                                       table.function_name,
+                                       limitby = (0, 1)
+                                       ).first()
+    if not record.enabled:
+        # Flag it as enabled
+        record.update_record(enabled = True)
+
+    channel_id = record.channel_id
+    function_name = record.function_name
+
+    # Do we have an existing Task?
+    ttable = db.scheduler_task
+    args = '[%s, "%s"]' % (channel_id, function_name)
+    query = ((ttable.function_name == "msg_parse") & \
+             (ttable.args == args) & \
+             (ttable.status.belongs(["RUNNING", "QUEUED", "ALLOCATED"])))
+    exists = db(query).select(ttable.id,
+                              limitby = (0, 1)
+                              ).first()
+    if exists:
+        return "Parser already enabled"
+    else:
+        current.s3task.schedule_task("msg_parse",
+                                     args = [channel_id, function_name],
+                                     period = 300,  # seconds
+                                     timeout = 300, # seconds
+                                     repeats = 0    # unlimited
+                                     )
+        return "Parser enabled"
+
+# -------------------------------------------------------------------------
+def msg_parser_disable(id):
+    """
+        Disable a Parser
+        - Disconnect a Parser from a Channel
+
+        CLI API for shell scripts & to be called by S3Method
+    """
+
+    db = current.db
+    s3db = current.s3db
+    table = s3db.msg_parser
+    record = db(table.id == id).select(table.id, # needed for update_record
+                                       table.enabled,
+                                       table.channel_id,
+                                       table.function_name,
+                                       limitby = (0, 1)
+                                       ).first()
+    if record.enabled:
+        # Flag it as disabled
+        record.update_record(enabled = False)
+
+    # Do we have an existing Task?
+    ttable = db.scheduler_task
+    args = '[%s, "%s"]' % (record.channel_id, record.function_name)
+    query = ((ttable.function_name == "msg_parse") & \
+             (ttable.args == args) & \
+             (ttable.status.belongs(["RUNNING", "QUEUED", "ALLOCATED"])))
+    exists = db(query).select(ttable.id,
+                              limitby = (0, 1)
+                              ).first()
+    if exists:
+        # Disable all
+        db(query).update(status="STOPPED")
+        return "Parser disabled"
+    else:
+        return "Parser already disabled"
+
+# =============================================================================
+class RSSModel(ChannelModel):
     """
         RSS channel
     """
@@ -1514,21 +1486,21 @@ class S3RSSModel(S3ChannelModel):
                                       "date",
                                       "channel_status.status",
                                       ],
-                       onaccept = self.msg_channel_onaccept,
+                       onaccept = msg_channel_onaccept,
                        super_entity = "msg_channel",
                        )
 
         set_method("msg", "rss_channel",
                    method = "enable",
-                   action = self.msg_channel_enable_interactive)
+                   action = msg_channel_enable_interactive)
 
         set_method("msg", "rss_channel",
                    method = "disable",
-                   action = self.msg_channel_disable_interactive)
+                   action = msg_channel_disable_interactive)
 
         set_method("msg", "rss_channel",
                    method = "poll",
-                   action = self.msg_channel_poll)
+                   action = msg_channel_poll)
 
         # ---------------------------------------------------------------------
         # RSS Feed Posts
@@ -1619,7 +1591,7 @@ class S3RSSModel(S3ChannelModel):
         return {}
 
 # =============================================================================
-class S3SMSModel(S3Model):
+class SMSModel(S3Model):
     """
         SMS: Short Message Service
 
@@ -1684,7 +1656,7 @@ class S3SMSModel(S3Model):
         return {}
 
 # =============================================================================
-class S3SMSOutboundModel(S3Model):
+class SMSOutboundModel(S3Model):
     """
         SMS: Short Message Service
         - Outbound Channels
@@ -1859,7 +1831,7 @@ class S3SMSOutboundModel(S3Model):
         return {}
 
 # =============================================================================
-class S3TropoModel(S3Model):
+class TropoModel(S3Model):
     """
         Tropo can be used to send & receive SMS, Twitter & XMPP
 
@@ -1900,15 +1872,15 @@ class S3TropoModel(S3Model):
 
         set_method("msg", "tropo_channel",
                    method = "enable",
-                   action = self.msg_channel_enable_interactive)
+                   action = msg_channel_enable_interactive)
 
         set_method("msg", "tropo_channel",
                    method = "disable",
-                   action = self.msg_channel_disable_interactive)
+                   action = msg_channel_disable_interactive)
 
         set_method("msg", "tropo_channel",
                    method = "poll",
-                   action = self.msg_channel_poll)
+                   action = msg_channel_poll)
 
         # ---------------------------------------------------------------------
         # Tropo Scratch pad for outbound messaging
@@ -1926,7 +1898,7 @@ class S3TropoModel(S3Model):
         return {}
 
 # =============================================================================
-class S3TwilioModel(S3ChannelModel):
+class TwilioModel(ChannelModel):
     """
         Twilio Inbound SMS channel
         - for Outbound, use Web API
@@ -1977,21 +1949,21 @@ class S3TwilioModel(S3ChannelModel):
                      *s3_meta_fields())
 
         self.configure(tablename,
-                       onaccept = self.msg_channel_onaccept,
+                       onaccept = msg_channel_onaccept,
                        super_entity = "msg_channel",
                        )
 
         set_method("msg", "twilio_channel",
                    method = "enable",
-                   action = self.msg_channel_enable_interactive)
+                   action = msg_channel_enable_interactive)
 
         set_method("msg", "twilio_channel",
                    method = "disable",
-                   action = self.msg_channel_disable_interactive)
+                   action = msg_channel_disable_interactive)
 
         set_method("msg", "twilio_channel",
                    method = "poll",
-                   action = self.msg_channel_poll)
+                   action = msg_channel_poll)
 
         # ---------------------------------------------------------------------
         # Twilio Message extensions
@@ -2008,7 +1980,7 @@ class S3TwilioModel(S3ChannelModel):
         return {}
 
 # =============================================================================
-class S3TwitterModel(S3Model):
+class TwitterModel(S3Model):
 
     names = ("msg_twitter_channel",
              "msg_twitter",
@@ -2083,15 +2055,15 @@ class S3TwitterModel(S3Model):
 
         set_method("msg", "twitter_channel",
                    method = "enable",
-                   action = self.msg_channel_enable_interactive)
+                   action = msg_channel_enable_interactive)
 
         set_method("msg", "twitter_channel",
                    method = "disable",
-                   action = self.msg_channel_disable_interactive)
+                   action = msg_channel_disable_interactive)
 
         set_method("msg", "twitter_channel",
                    method = "poll",
-                   action = self.msg_channel_poll)
+                   action = msg_channel_poll)
 
         # ---------------------------------------------------------------------
         # Twitter Messages: InBox & Outbox
@@ -2186,7 +2158,7 @@ class S3TwitterModel(S3Model):
             current.db(current.s3db.msg_twitter_channel.id != form.vars.id).update(login = False)
 
         # Normal onaccept processing
-        S3ChannelModel.channel_onaccept(form)
+        ChannelModel.channel_onaccept(form)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2230,7 +2202,7 @@ class S3TwitterModel(S3Model):
             s3[k] = ""
 
 # =============================================================================
-class S3TwitterSearchModel(S3ChannelModel):
+class TwitterSearchModel(ChannelModel):
     """
         Twitter Searches
          - results can be fed to KeyGraph
@@ -2393,8 +2365,8 @@ class S3TwitterSearchModel(S3ChannelModel):
         current.session.confirmation = \
             current.T("The search request has been submitted, so new messages should appear shortly - refresh to see them")
         # Filter results to this Search
-        redirect(URL(f="twitter_result",
-                     vars={"~.search_id": id}))
+        redirect(URL(f = "twitter_result",
+                     vars = {"~.search_id": id}))
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -2410,7 +2382,7 @@ class S3TwitterSearchModel(S3ChannelModel):
         current.session.confirmation = \
             current.T("The search results are now being processed with KeyGraph")
         # @ToDo: Link to KeyGraph results
-        redirect(URL(f="twitter_result"))
+        redirect(URL(f = "twitter_result"))
 
 # =============================================================================
     @staticmethod
@@ -2506,8 +2478,9 @@ S3.timeline.now="''', now.isoformat(), '''"
 
         else:
             r.error(405, current.ERROR.BAD_METHOD)
+
 # =============================================================================
-class S3XFormsModel(S3Model):
+class XFormsModel(S3Model):
     """
         XForms are used by the ODK Collect mobile client
 
@@ -2535,7 +2508,7 @@ class S3XFormsModel(S3Model):
         return {}
 
 # =============================================================================
-class S3BaseStationModel(S3Model):
+class BaseStationModel(S3Model):
     """
         Base Stations (Cell Towers) are a type of Site
 
@@ -2577,8 +2550,8 @@ class S3BaseStationModel(S3Model):
                                 ),
                           self.org_organisation_id(
                                  label = T("Operator"),
-                                 requires = self.org_organisation_requires(required=True,
-                                                                           updateable=True),
+                                 requires = self.org_organisation_requires(required = True,
+                                                                           updateable = True),
                                  #widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
                                  ),
                           self.gis_location_id(),
@@ -2587,18 +2560,18 @@ class S3BaseStationModel(S3Model):
 
         # CRUD strings
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create=T("Create Base Station"),
-            title_display=T("Base Station Details"),
-            title_list=T("Base Stations"),
-            title_update=T("Edit Base Station"),
-            title_upload=T("Import Base Stations"),
-            title_map=T("Map of Base Stations"),
-            label_list_button=T("List Base Stations"),
-            label_delete_button=T("Delete Base Station"),
-            msg_record_created=T("Base Station added"),
-            msg_record_modified=T("Base Station updated"),
-            msg_record_deleted=T("Base Station deleted"),
-            msg_list_empty=T("No Base Stations currently registered"))
+            label_create = T("Create Base Station"),
+            title_display = T("Base Station Details"),
+            title_list = T("Base Stations"),
+            title_update = T("Edit Base Station"),
+            title_upload = T("Import Base Stations"),
+            title_map = T("Map of Base Stations"),
+            label_list_button = T("List Base Stations"),
+            label_delete_button = T("Delete Base Station"),
+            msg_record_created = T("Base Station added"),
+            msg_record_modified = T("Base Station updated"),
+            msg_record_deleted = T("Base Station deleted"),
+            msg_list_empty = T("No Base Stations currently registered"))
 
         self.configure(tablename,
                        deduplicate = S3Duplicate(),

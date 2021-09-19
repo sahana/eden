@@ -18,6 +18,9 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
+        if not current.auth.is_logged_in():
+            return None
+
         settings = current.deployment_settings
         if settings.get_event_label(): # == "Disaster"
             EVENTS = "Disasters"
@@ -39,7 +42,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Human Resources", c="hrm", f="staff"),
                 MM("Infrastructure", c="transport", f="index"),
                 MM("Population", c="stats", f="demographic_data"),
-                MM("Stores Management", c="inv", f="index"),
+                MM("Item Management", c="asset", f="index"),
                 ),
                MM("DRR", link=False)(
                 MM("Projects", c="project", f="project", m="summary"),
@@ -151,7 +154,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                        ),
                    M("Trainings", c="hrm", f="training_event", m="summary")(
                        M("Create", m="create"),
-                       #M("Import", m="import", p="create"),
+                       M("Courses", f="course"),
+                       M("Certificates", f="certificate"),
                        ),
                    )
 
@@ -159,24 +163,22 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def hrm(self):
         """ Human Resources menu """
 
-        if current.request.function == "training_event":
+        if current.request.function in ("training_event", "course", "certificate"):
             return self.project()
         else:
             return super(S3OptionsMenu, self).hrm()
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def inv():
-        """ Inventory menu """
+    def asset():
+        """ Assets menu """
 
-        return M()(M("Inventory Report", c="inv", f="inv_item", m="summary")(
-                       M("Create", m="create"),
-                       #M("Import", m="import", p="create"),
-                       ),
-                   M("Receive Item", c="inv", f="recv", m="create"),
-                   M("Transfer Item", c="inv", f="send", m="create"),
-                   M("Assign Item", c="asset", f="asset"),
+        return M()(M("Receive Item", c="asset", f="asset", m="create"),
+                   M("Issue Item", c="asset", f="asset"),
                    M("Return Item", c="asset", f="asset"),
+                   M("Item Adjustment", c="inv", f="adj"),
+                   M("Transfer Item", c="inv", f="send"),
+                   M("Accept/Reject Item", c="inv", f="recv"),
                    M("Stores", c="inv", f="warehouse", m="summary")(
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
@@ -189,13 +191,17 @@ class S3OptionsMenu(default.S3OptionsMenu):
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
                        ),
+                   #M("Inventory Report", c="inv", f="inv_item", m="summary")(
+                   #    M("Create", m="create"),
+                   #    #M("Import", m="import", p="create"),
+                   #    ),
                    )
 
     # -------------------------------------------------------------------------
-    def asset(self):
-        """ Assets menu """
+    def inv(self):
+        """ Inventory menu """
 
-        return self.inv()
+        return self.asset()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -210,7 +216,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
                        ),
-                   M("Sanitation Facilities", c="org", f="facility", m="summary")(
+                   M("Sanitation Facilities", c="org", f="facility", m="summary",
+                     vars = {"site_facility_type.facility_type_id$name": "Sanitation Facility"})(
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
                        ),
@@ -222,7 +229,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
                        ),
-                   M("Cultural Sites", c="org", f="facility", m="summary")(
+                   M("Cultural Sites", c="org", f="facility", m="summary",
+                     vars = {"site_facility_type.facility_type_id$name": "Cultural Site"})(
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
                        ),

@@ -4,17 +4,14 @@
     Police
 """
 
-module = request.controller
-resourcename = request.function
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """
 
-    return settings.customise_home(module, alt_function="index_alt")
+    return settings.customise_home(c, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -23,7 +20,9 @@ def index_alt():
     """
 
     # Just redirect to the Police Stations Summary View
-    s3_redirect_default(URL(f="station", args="summary"))
+    s3_redirect_default(URL(f = "station",
+                            args = "summary",
+                            ))
 
 # -----------------------------------------------------------------------------
 def station():

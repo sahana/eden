@@ -14,10 +14,10 @@
 </div>
 <div class='row'>
 {{pass}}
+{{if root_add_btn:}}
  <div class='small-12 columns'>
-  {{try:}}{{=H3(subtitle)}}{{except:}}{{pass}}
- </div>
- <div id='map' class='small-12 columns'></div>
+  {{=root_add_btn}}
+ </div>{{pass}}
  <div class='small-12 columns'>
   <div class='form-container'>
    {{try:}}{{=form}}{{except:}}{{pass}}

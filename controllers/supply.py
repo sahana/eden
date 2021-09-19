@@ -6,10 +6,8 @@
     Generic Supply functionality such as catalogs and items that are used across multiple applications
 """
 
-module = request.controller
-
-if not settings.has_module("supply"):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # =============================================================================
 def index():
@@ -17,7 +15,7 @@ def index():
         Application Home page
     """
 
-    module_name = settings.modules[module].get("name_nice")
+    module_name = settings.modules[c].get("name_nice")
     response.title = module_name
     return {"module_name": module_name,
             }

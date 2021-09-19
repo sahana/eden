@@ -39,71 +39,12 @@ from gluon.sqlhtml import TimeWidget
 from gluon.storage import Storage
 from gluon.languages import lazyT
 
-from s3compat import PY2, basestring
 from s3dal import SQLCustomType
 from .s3datetime import S3DateTime
 from .s3navigation import S3ScriptItem
 from .s3utils import s3_unicode, s3_str, S3MarkupStripper
 from .s3validators import IS_ISO639_2_LANGUAGE_CODE, IS_ONE_OF, IS_UTC_DATE, IS_UTC_DATETIME
 from .s3widgets import S3CalendarWidget, S3DateWidget
-
-# =============================================================================
-class FieldS3(Field):
-    """
-        S3 extensions of the gluon.sql.Field class
-            - add "sortby" attribute (used by IS_ONE_OF)
-
-        @ToDo: Deprecate now that Field supports this natively via **others
-    """
-
-    def __init__(self, fieldname,
-                 type = "string",
-                 length = None,
-                 default = None,
-                 required = False,
-                 requires = "<default>",
-                 ondelete = "CASCADE",
-                 notnull = False,
-                 unique = False,
-                 uploadfield = True,
-                 widget = None,
-                 label = None,
-                 comment = None,
-                 writable = True,
-                 readable = True,
-                 update = None,
-                 authorize = None,
-                 autodelete = False,
-                 represent = None,
-                 uploadfolder = None,
-                 compute = None,
-                 sortby = None):
-
-        self.sortby = sortby
-
-        Field.__init__(self,
-                       fieldname,
-                       type = type,
-                       length = length,
-                       default = default,
-                       required = required,
-                       requires = requires,
-                       ondelete = ondelete,
-                       notnull = notnull,
-                       unique = unique,
-                       uploadfield = uploadfield,
-                       widget = widget,
-                       label = label,
-                       comment = comment,
-                       writable = writable,
-                       readable = readable,
-                       update = update,
-                       authorize = authorize,
-                       autodelete = autodelete,
-                       represent = represent,
-                       uploadfolder = uploadfolder,
-                       compute = compute,
-                       )
 
 # =============================================================================
 def s3_fieldmethod(name, f, represent=None, search_field=None):
@@ -186,7 +127,7 @@ class S3ReusableField(object):
         else:
             widget = DEFAULT
 
-        if isinstance(widget, basestring):
+        if isinstance(widget, str):
             if widget == DEFAULT and "widget" in ia:
                 widget = ia["widget"]
             else:
@@ -203,15 +144,12 @@ class S3ReusableField(object):
             comment = ia.get("comment")
             if comment:
                 ia["comment"] = TAG[""](comment,
-                                        S3ScriptItem(script=script),
+                                        S3ScriptItem(script = script),
                                         )
             else:
-                ia["comment"] = S3ScriptItem(script=script)
+                ia["comment"] = S3ScriptItem(script = script)
 
-        if ia.get("sortby") is not None:
-            return FieldS3(name, self.__type, **ia)
-        else:
-            return Field(name, self.__type, **ia)
+        return Field(name, self.__type, **ia)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -317,18 +255,11 @@ class S3Represent(object):
 
         # Attributes to simulate being a function for sqlhtml's count_expected_args()
         # Make sure we indicate only 1 position argument
-        if PY2:
-            self.func_code = Storage(co_argcount = 1)
-            self.func_defaults = None
-        else:
-            self.__code__ = Storage(co_argcount = 1)
-            self.__defaults__ = None
+        self.__code__ = Storage(co_argcount = 1)
+        self.__defaults__ = None
 
         # Detect lookup_rows override
-        if PY2:
-            self.custom_lookup = self.lookup_rows.__func__ is not S3Represent.lookup_rows.__func__
-        else:
-            self.custom_lookup = self.lookup_rows.__func__ is not S3Represent.lookup_rows
+        self.custom_lookup = self.lookup_rows.__func__ is not S3Represent.lookup_rows
 
     # -------------------------------------------------------------------------
     def lookup_rows(self, key, values, fields=None):
@@ -458,9 +389,10 @@ class S3Represent(object):
         if self.list_type:
             # Is a list-type => use multiple
             return self.multiple(value,
-                                 rows=row,
-                                 list_type=False,
-                                 show_link=show_link)
+                                 rows = row,
+                                 list_type = False,
+                                 show_link = show_link,
+                                 )
 
         # Prefer the row over the value
         if row and self.table:
@@ -635,7 +567,7 @@ class S3Represent(object):
         if self.options is not None:
             if self.translate:
                 T = current.T
-                self.theset = {opt: T(label) if isinstance(label, basestring) else label
+                self.theset = {opt: T(label) if isinstance(label, str) else label
                                for opt, label in self.options.items()}
             else:
                 self.theset = self.options
@@ -663,12 +595,12 @@ class S3Represent(object):
         # What type of renderer do we use?
         labels = self.labels
         # String template?
-        self.slabels = isinstance(labels, (basestring, lazyT))
+        self.slabels = isinstance(labels, (str, lazyT))
         # External renderer?
         self.clabels = callable(labels)
 
         # Hierarchy template
-        if isinstance(self.hierarchy, basestring):
+        if isinstance(self.hierarchy, str):
             self.htemplate = self.hierarchy
         else:
             self.htemplate = "%s > %s"
@@ -695,7 +627,7 @@ class S3Represent(object):
         table = self.table
         for _v in values:
             v = _v
-            if v is not None and table and isinstance(v, basestring):
+            if v is not None and table and isinstance(v, str):
                 try:
                     v = int(_v)
                 except ValueError:
@@ -1289,25 +1221,28 @@ def s3_role_required():
 
     T = current.T
     gtable = current.auth.settings.table_group
-    represent = S3Represent(lookup="auth_group", fields=["role"])
-    return FieldS3("role_required", gtable,
-                   sortby="role",
-                   requires = IS_EMPTY_OR(
+    represent = S3Represent(lookup = "auth_group",
+                            fields = ["role"],
+                            )
+    return Field("role_required", gtable,
+                 sortby = "role",
+                 requires = IS_EMPTY_OR(
                                 IS_ONE_OF(current.db, "auth_group.id",
                                           represent,
-                                          zero=T("Public"))),
-                   #widget = S3AutocompleteWidget("admin",
-                   #                              "group",
-                   #                              fieldname="role"),
-                   represent = represent,
-                   label = T("Role Required"),
-                   comment = DIV(_class="tooltip",
-                                 _title="%s|%s" % (T("Role Required"),
+                                          zero = T("Public"),
+                                          )),
+                 #widget = S3AutocompleteWidget("admin",
+                 #                              "group",
+                 #                              fieldname = "role"),
+                 represent = represent,
+                 label = T("Role Required"),
+                 comment = DIV(_class = "tooltip",
+                               _title = "%s|%s" % (T("Role Required"),
                                                    T("If this record should be restricted then select which role is required to access the record here."),
                                                    ),
-                                 ),
-                   ondelete = "RESTRICT",
-                   )
+                               ),
+                 ondelete = "RESTRICT",
+                 )
 
 # -----------------------------------------------------------------------------
 def s3_roles_permitted(name="roles_permitted", **attr):
@@ -1336,7 +1271,7 @@ def s3_roles_permitted(name="roles_permitted", **attr):
     if "ondelete" not in attr:
         attr["ondelete"] = "RESTRICT"
 
-    return FieldS3(name, "list:reference auth_group", **attr)
+    return Field(name, "list:reference auth_group", **attr)
 
 # =============================================================================
 def s3_comments(name="comments", **attr):
@@ -1756,8 +1691,8 @@ def s3_datetime(name="date", **attr):
         represent_method = S3DateTime.datetime_represent
     if represent_method:
         represent = lambda dt: represent_method(dt,
-                                                utc=True,
-                                                calendar=calendar,
+                                                utc = True,
+                                                calendar = calendar,
                                                 )
     attributes["represent"] = represent
 
@@ -1767,9 +1702,9 @@ def s3_datetime(name="date", **attr):
             validator = IS_UTC_DATE
         else:
             validator = IS_UTC_DATETIME
-        requires = validator(calendar=calendar,
-                             minimum=earliest,
-                             maximum=latest,
+        requires = validator(calendar = calendar,
+                             minimum = earliest,
+                             maximum = latest,
                              )
         empty = attributes.pop("empty", None)
         if empty is False:

@@ -32,17 +32,17 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3DNSModel",
-           "S3GandiDNSModel",
-           "S3GoDaddyDNSModel",
-           "S3CloudModel",
-           "S3AWSCloudModel",
-           "S3OpenStackCloudModel",
-           "S3EmailProviderModel",
-           "S3GoogleEmailModel",
-           "S3SMTPModel",
-           "S3SetupDeploymentModel",
-           "S3SetupMonitorModel",
+__all__ = ("DNSModel",
+           "GandiDNSModel",
+           "GoDaddyDNSModel",
+           "CloudModel",
+           "AWSCloudModel",
+           "OpenStackCloudModel",
+           "EmailProviderModel",
+           "GoogleEmailModel",
+           "SMTPModel",
+           "SetupDeploymentModel",
+           "SetupMonitorModel",
            "setup_instance_deploy",
            "setup_instance_settings_read",
            "setup_monitor_run_task",
@@ -66,7 +66,6 @@ import time
 from gluon import *
 
 from ..s3 import *
-from s3compat import basestring
 
 TIME_FORMAT = "%b %d %Y %H:%M:%S"
 MSG_FORMAT = "%(now)s - %(category)s - %(data)s\n\n"
@@ -88,7 +87,7 @@ INSTANCE_TYPES = {1: "prod",
                   }
 
 # =============================================================================
-class S3DNSModel(S3Model):
+class DNSModel(S3Model):
     """
         Domain Name System (DNS) Providers
         - super-entity
@@ -154,7 +153,7 @@ class S3DNSModel(S3Model):
                 }
 
 # =============================================================================
-class S3GandiDNSModel(S3DNSModel):
+class GandiDNSModel(DNSModel):
     """
         Gandi LiveDNS
         - DNS Provider Instance
@@ -204,7 +203,7 @@ class S3GandiDNSModel(S3DNSModel):
         return {}
 
 # =============================================================================
-class S3GoDaddyDNSModel(S3DNSModel):
+class GoDaddyDNSModel(DNSModel):
     """
         GoDaddy DNS
         - DNS Provider Instance
@@ -253,7 +252,7 @@ class S3GoDaddyDNSModel(S3DNSModel):
         return {}
 
 # =============================================================================
-class S3CloudModel(S3Model):
+class CloudModel(S3Model):
     """
         Clouds
         - super-entity
@@ -319,7 +318,7 @@ class S3CloudModel(S3Model):
                 }
 
 # =============================================================================
-class S3AWSCloudModel(S3CloudModel):
+class AWSCloudModel(CloudModel):
     """
         Amazon Web Services
         - Cloud Instance
@@ -500,7 +499,7 @@ class S3AWSCloudModel(S3CloudModel):
                                      )
 
 # =============================================================================
-class S3OpenStackCloudModel(S3CloudModel):
+class OpenStackCloudModel(CloudModel):
     """
         OpenStack
         - Cloud Instance
@@ -678,7 +677,7 @@ class S3OpenStackCloudModel(S3CloudModel):
                                      )
 
 # =============================================================================
-class S3EmailProviderModel(S3Model):
+class EmailProviderModel(S3Model):
     """
         Email Providers (we just use Groups currently)
         - super-entity
@@ -743,7 +742,7 @@ class S3EmailProviderModel(S3Model):
                 }
 
 # =============================================================================
-class S3GoogleEmailModel(S3EmailProviderModel):
+class GoogleEmailModel(EmailProviderModel):
     """
         Google
         - Email Group Provider Instance
@@ -882,7 +881,7 @@ class S3GoogleEmailModel(S3EmailProviderModel):
         os.unlink(creds_path)
 
 # =============================================================================
-class S3SMTPModel(S3Model):
+class SMTPModel(S3Model):
     """
         SMTP Smart Hosts
         - tested with:
@@ -960,7 +959,7 @@ class S3SMTPModel(S3Model):
                 }
 
 # =============================================================================
-class S3SetupDeploymentModel(S3Model):
+class SetupDeploymentModel(S3Model):
 
     names = ("setup_deployment",
              "setup_deployment_id",
@@ -2280,7 +2279,7 @@ dropdown.change(function() {
                      )
 
 # =============================================================================
-class S3SetupMonitorModel(S3Model):
+class SetupMonitorModel(S3Model):
 
     names = ("setup_monitor_server",
              "setup_monitor_check",
@@ -4371,7 +4370,7 @@ def setup_instance_settings_read(instance_id, deployment_id):
     from gluon.serializers import json as jsons # Need support for T()
     for setting in file_settings:
         current_value = file_settings[setting]
-        if not isinstance(current_value, basestring):
+        if not isinstance(current_value, str):
             # NB Storage & OrderedDict will come out as dict
             current_value = jsons(current_value)
         s = db_get(setting)

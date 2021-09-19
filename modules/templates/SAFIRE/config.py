@@ -284,8 +284,10 @@ def config(settings):
 
                 editable = current.auth.s3_has_permission("UPDATE", "event_incident", record_id)
 
-                if editable:
+                if editable and r.method == "plan":
                     # Dropdown of Scenarios to select
+                    # @ToDo: Move this to a Popup behind an Action Button, to make it clearer that this isn't a maintained link
+                    # @ToDo: Also add 'Clear' button to clear all elements & start from a blank slate
                     stable = current.s3db.event_scenario
                     query = (stable.incident_type_id == incident_type_id) & \
                             (stable.deleted == False)
@@ -300,7 +302,7 @@ def config(settings):
                         dappend(OPTION(T("Select Scenario")))
                         for s in scenarios:
                             dappend(OPTION(s.name, _value=s.id))
-                        scenarios = TR(TH("%s: " % T("Scenario")),
+                        scenarios = TR(TH("%s: " % T("Apply Scenario")),
                                        dropdown,
                                        )
                         s3 = current.response.s3
@@ -348,13 +350,12 @@ def config(settings):
                                     TR(TH("%s: " % table.location_id.label),
                                        table.location_id.represent(record.location_id),
                                        ),
-                                    # @ToDo: Add Zone
-                                    TR(TH("%s: " % table.severity.label),
-                                       table.severity.represent(record.severity),
-                                       ),
-                                    TR(TH("%s: " % table.level.label),
-                                       table.level.represent(record.level),
-                                       ),
+                                    #TR(TH("%s: " % table.severity.label),
+                                    #   table.severity.represent(record.severity),
+                                    #   ),
+                                    #TR(TH("%s: " % table.level.label),
+                                    #   table.level.represent(record.level),
+                                    #   ),
                                     TR(TH("%s: " % table.organisation_id.label),
                                        table.organisation_id.represent(record.organisation_id),
                                        ),
@@ -468,6 +469,50 @@ def config(settings):
         return rheader
 
     # -------------------------------------------------------------------------
+    def customise_dc_target_resource(r, tablename):
+
+        if r.controller in ("event",
+                            "hrm", # Training Event Evaluations
+                            ):
+            return
+
+        s3db = current.s3db
+
+        from s3 import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3SQLCustomForm, S3SQLInlineLink
+
+        crud_form = S3SQLCustomForm(S3SQLInlineLink("event",
+                                                    field = "event_id",
+                                                    #label = type_label,
+                                                    multiple = False,
+                                                    ),
+                                    "template_id",
+                                    "date",
+                                    "location_id",
+                                    "comments",
+                                    )
+
+        filter_widgets = [S3OptionsFilter("event__link.event_id"),
+                          S3LocationFilter(),
+                          S3DateFilter("date"),
+                          ]
+
+        list_fields = ["event__link.event_id",
+                       "location_id$L1",
+                       "location_id$L2",
+                       "name",
+                       (T("Reporting Date"), "date"),
+                       (T("Reported by"), "created_by"),
+                       ]
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_dc_target_resource = customise_dc_target_resource
+
+    # -------------------------------------------------------------------------
     def customise_event_event_controller(**attr):
 
         #s3 = current.response.s3
@@ -495,6 +540,13 @@ def config(settings):
             msg_record_deleted = T("Call Log removed"),
             msg_list_empty = T("No Calls currently logged"),
             )
+
+        from s3 import S3LocationSelector
+
+        current.s3db.event_incident_report.location_id.widget = \
+            S3LocationSelector(polygons = True,
+                               show_address = True,
+                               )
 
     settings.customise_event_incident_report_resource = customise_event_incident_report_resource
 
@@ -558,39 +610,20 @@ def config(settings):
     # -------------------------------------------------------------------------
     def event_incident_create_onaccept(form):
         """
-            Automate Level based on Type, Zone (intersect from Location) & Severity
-            @ToDo: Move this to SAFIRE/SC
+            Alert Lead Agency
         """
 
-        db = current.db
-        s3db = current.s3db
-
-        form_vars_get = form.vars.get
-        incident_id = form_vars_get("id")
-
-        # If Incident Type is Chemical then level must be > 2
-        level = form_vars_get("level")
-        if level and int(level) < 3:
-            incident_type_id = form_vars_get("incident_type_id")
-            ittable = s3db.event_incident_type
-            incident_type = db(ittable.id == incident_type_id).select(ittable.name,
-                                                                      limitby = (0, 1)
-                                                                      ).first().name
-            if incident_type == "Chemical Hazard":
-                itable = s3db.event_incident
-                db(itable.id == incident_id).update(level = 3)
-                current.response.warning = T("Chemical Hazard Incident so Level raised to 3")
-
-        # Alert Lead Agency
-        organisation_id = form_vars_get("organisation_id")
+        organisation_id = form.vars.get("organisation_id")
         if organisation_id:
-            otable = s3db.org_organisation_tag
+            # Alert Lead Agency via their Duty Number
+            otable = current.s3db.org_organisation_tag
             query = (otable.organisation_id == organisation_id) & \
                     (otable.tag == "duty")
-            duty = db(query).select(otable.value,
-                                    limitby = (0, 1)
-                                    ).first()
+            duty = current.db(query).select(otable.value,
+                                            limitby = (0, 1)
+                                            ).first()
             if duty:
+                incident_id = form.vars.get("id")
                 # @ToDo: i18n
                 current.msg.send_sms_via_api(duty.value,
                     "You have been assigned an Incident: %s%s" % (settings.get_base_public_url(),
@@ -606,10 +639,6 @@ def config(settings):
         s3db = current.s3db
 
         table = s3db.event_incident
-        f = table.severity
-        f.readable = f.writable = True
-        f = table.level
-        f.readable = f.writable = True
         table.location_id.widget = S3LocationSelector(polygons = True,
                                                       show_address = True,
                                                       )
@@ -709,13 +738,6 @@ def config(settings):
         table = current.s3db.event_asset
         table.item_id.label = T("Item Type")
         table.asset_id.label = T("Specific Item")
-        # DateTime
-        from gluon import IS_EMPTY_OR
-        from s3 import IS_UTC_DATETIME, S3CalendarWidget, S3DateTime
-        for f in (table.start_date, table.end_date):
-            f.requires = IS_EMPTY_OR(IS_UTC_DATETIME())
-            f.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
-            f.widget = S3CalendarWidget(timepicker = True)
 
         if settings.get_incident_label(): # == "Ticket"
             current.response.s3.crud_strings[tablename] = Storage(

@@ -17,12 +17,8 @@
     http://eden.sahanafoundation.org/wiki/BluePrintBaselineData
 """
 
-module = request.controller
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
-
-resourcename = request.function
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # -----------------------------------------------------------------------------
 # Define the Model
@@ -70,19 +66,18 @@ human_resource_id = s3db.hrm_human_resource_id
 ireport_id = s3db.irs_ireport_id
 
 # Impact as component of assessments
-add_components("assess_assess", impact_impact="assess_id")
+add_components("assess_assess",
+               impact_impact = "assess_id",
+               )
 
 def assess_tables():
     """ Load the Assess Tables when needed """
-
-    module = "assess"
 
     # =========================================================================
     # Flexible Impact Assessments
     # =========================================================================
     # Assessment
     #
-    resourcename = "assess"
     tablename = "assess_assess"
     define_table(tablename,
                  Field("datetime", "datetime",
@@ -249,8 +244,6 @@ def assess_tables():
 def rat_tables():
     """ Load the RAT Tables when needed """
 
-    module = "assess"
-
     # Load the models we depend on
     if settings.has_module("cr"):
         shelter_id = s3db.shelter_id
@@ -297,7 +290,7 @@ def rat_tables():
         if isinstance(opt, (list, tuple)):
             opts = opt
             vals = [str(set.get(o, o)) for o in opts]
-        #elif isinstance(opt, basestring):
+        #elif isinstance(opt, str):
         #    opts = opt.split("|")
         #    vals = [str(set.get(int(o), o)) for o in opts if o]
         elif isinstance(opt, int):
@@ -444,7 +437,7 @@ def rat_tables():
         id = form.vars.get("id", None)
 
         if id:
-            for x in xrange(2, 10):
+            for x in range(2, 10):
                 section = "assess_section%s" % x
                 set = db(db[section].assessment_id == id)
                 record = set.select(db[section].id, limitby=(0, 1)).first()
@@ -1200,7 +1193,7 @@ def rat_tables():
         99: T("Other (specify)")
     }
 
-    rat_ranking_opts = xrange(1, 7)
+    rat_ranking_opts = range(1, 7)
 
     tablename = "assess_section7"
     define_table(tablename,
@@ -1844,12 +1837,9 @@ def impact_tables():
         assess_tables()
     assess_id = s3.assess_id
 
-    module = "impact"
-
     # -------------------------------------------------------------------------
     # Impact Type
-    resourcename = "type"
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "impact_type"
     db.define_table(tablename,
                     Field("name", length=128, notnull=True, unique=True),
                     sector_id(),
@@ -1926,7 +1916,7 @@ def impact_tables():
 def index():
     """ Module's Home Page """
 
-    module_name = settings.modules[module].get("name_nice")
+    module_name = settings.modules[c].get("name_nice")
     response.title = module_name
     return {"module_name": module_name,
             }
@@ -1934,7 +1924,9 @@ def index():
 # -----------------------------------------------------------------------------
 def create():
     """ Redirect to assess/create """
-    redirect(URL(f="assess", args="create"))
+    redirect(URL(f = "assess",
+                 args = "create",
+                 ))
 
 # =============================================================================
 # UN Common Operational Datasets
@@ -1956,7 +1948,7 @@ def rat():
     # Load Models
     assess_tables()
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     table = db[tablename]
 
     # Villages only
@@ -2168,7 +2160,7 @@ def assess():
     assess_tables()
     impact_tables()
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     table = db[tablename]
 
     # Pre-processor
@@ -2201,10 +2193,7 @@ def impact_type():
     # Load Models
     impact_tables()
 
-    module = "impact"
-    resourcename = "type"
-
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller("impact", "type")
 
 # -----------------------------------------------------------------------------
 def baseline_type():

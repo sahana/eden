@@ -27,24 +27,28 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3VehicleModel",)
+__all__ = ("VehicleModel",)
 
 from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
 
+# Dependency list for translate-module
+depends = ["asset"]
+
 # =============================================================================
-class S3VehicleModel(S3Model):
+class VehicleModel(S3Model):
     """
         Vehicle Management Functionality
+        - extends Assets
 
         http://eden.sahanafoundation.org/wiki/BluePrint/Vehicle
     """
 
     names = ("vehicle_vehicle_type",
              "vehicle_vehicle",
-             "vehicle_vehicle_id",
+             #"vehicle_vehicle_id",
              )
 
     def model(self):
@@ -55,7 +59,8 @@ class S3VehicleModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: \
+                           IS_FLOAT_AMOUNT.represent(v, precision=2)
         int_represent = IS_INT_AMOUNT.represent
 
         # ---------------------------------------------------------------------
@@ -80,19 +85,16 @@ class S3VehicleModel(S3Model):
                      #      ),
                      Field("vehicle_height", "double",
                            label = T("Vehicle Height (m)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
+                           represent = float_represent,
                            ),
                      Field("vehicle_weight", "double",
                            comment = T("Gross Vehicle Weight Rating (GVWR)"),
                            label = T("Vehicle Weight (kg)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
+                           represent = float_represent,
                            ),
                      Field("weight", "double",
                            label = T("Payload Weight (kg)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
+                           represent = float_represent,
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" %
                                                   (T("Payload Weight"),
@@ -102,30 +104,27 @@ class S3VehicleModel(S3Model):
                            ),
                      Field("length", "double",
                            label = T("Payload Length (m)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
+                           represent = float_represent,
                            ),
                      Field("width", "double",
                            label = T("Payload Width (m)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
+                           represent = float_represent,
                            ),
                      Field("height", "double",
                            label = T("Payload Height (m)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
+                           represent = float_represent,
                            ),
                      Field("volume", "double",
                            label = T("Payload Volume (m3)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
+                           represent = float_represent,
                            ),
                      s3_comments(),
                      *s3_meta_fields())
 
-        type_represent = S3Represent(lookup=tablename,
-                                     fields=["code", "name"],
-                                     translate=True)
+        type_represent = S3Represent(lookup = tablename,
+                                     fields = ["code", "name"],
+                                     translate = True,
+                                     )
 
         crud_strings[tablename] = Storage(
             label_create = T("Create Vehicle Type"),
@@ -142,7 +141,7 @@ class S3VehicleModel(S3Model):
             )
 
         configure(tablename,
-                  deduplicate = S3Duplicate(primary=("code",)),
+                  deduplicate = S3Duplicate(primary = ("code",)),
                   )
 
         vehicle_type_id = S3ReusableField("vehicle_type_id", "reference %s" % tablename,
@@ -152,8 +151,9 @@ class S3VehicleModel(S3Model):
                                           requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "vehicle_vehicle_type.id",
                                                                   type_represent,
-                                                                  orderby="vehicle_vehicle_type.code",
-                                                                  sort=True)),
+                                                                  orderby = "vehicle_vehicle_type.code",
+                                                                  sort = True,
+                                                                  )),
                                           sortby = "code",
                                           # Allow changing by whether hierarchical or not
                                           #widget = vehicle_type_widget,
@@ -233,7 +233,7 @@ class S3VehicleModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {"vehicle_vehicle_id": vehicle_id,
+        return {#"vehicle_vehicle_id": vehicle_id,
                 }
 
     # -------------------------------------------------------------------------
@@ -241,7 +241,7 @@ class S3VehicleModel(S3Model):
     def defaults():
         """ Return safe defaults for names in case the model is disabled """
 
-        return {"vehicle_vehicle_id": S3ReusableField.dummy("vehicle_id"),
+        return {#"vehicle_vehicle_id": S3ReusableField.dummy("vehicle_id"),
                 }
 
 # END =========================================================================

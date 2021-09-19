@@ -27,9 +27,10 @@
     OTHER DEALINGS IN THE SOFTWARE.
 
     @todo: update for new template path modules/template
+    @ToDo: update to use foundation.joyride.js instead of jquery.joyride.js
 """
 
-__all__ = ("S3GuidedTourModel",
+__all__ = ("GuidedTourModel",
            "tour_rheader",
            "tour_builder",
            )
@@ -39,7 +40,7 @@ from gluon.storage import Storage
 from ..s3 import *
 
 # =============================================================================
-class S3GuidedTourModel(S3Model):
+class GuidedTourModel(S3Model):
 
     """ Details about which guided tours this Person has completed """
 

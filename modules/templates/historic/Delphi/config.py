@@ -17,6 +17,10 @@ def config(settings):
     settings.base.system_name = T("Decision Support 2.0")
     settings.base.system_name_short = T("Decision Support 2.0")
 
+    # Custom Models
+    settings.base.custom_models = {"delphi": "Delphi",
+                                  }
+
     # Pre-Populate
     settings.base.prepopulate += ("historic/Delphi",
                                   #"historic/Delphi/Demo",

@@ -13,7 +13,7 @@
          Facility Code...................site_id.code & asset_log.site_id.code
          Facility Type......optional.....Facility, Hospital, Shelter, Warehouse, Office (default)
          Room............................asset_log.room_id
-         Assigned To.....................pr_person.email <- @ToDo: Get this working
+         Assigned To.....................pr_person.first_name middle_name last_name
          Condition.......................asset_log.cond
          Catalog.........................supply_catalog_item.catalog_id.name
          Asset No........................number
@@ -453,14 +453,57 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Person">
-        <xsl:variable name="AssignedTo" select="col[@field='Assigned To']/text()"/>
+        <xsl:variable name="Assignee" select="col[@field='Assigned To']/text()"/>
 
-        <xsl:if test="$AssignedTo!=''">
+        <xsl:if test="$Assignee!=''">
+            <xsl:variable name="first_name">
+                <xsl:choose>
+                    <xsl:when test="contains($Assignee, ' ')">
+                        <xsl:value-of select="substring-before($Assignee, ' ')"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$Assignee"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+            <xsl:variable name="last_part">
+                <xsl:choose>
+                    <xsl:when test="contains($Assignee, ' ')">
+                        <xsl:value-of select="substring-after($Assignee, ' ')"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:text></xsl:text>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+            <xsl:variable name="middle_name">
+                <xsl:choose>
+                    <xsl:when test="contains($last_part, ' ')">
+                        <xsl:value-of select="substring-before($last_part, ' ')"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:text></xsl:text>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+            <xsl:variable name="last_name">
+                <xsl:choose>
+                    <xsl:when test="contains($last_part, ' ')">
+                        <xsl:value-of select="substring-after($last_part, ' ')"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$last_part"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+
             <resource name="pr_person">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$AssignedTo"/>
+                    <xsl:value-of select="$Assignee"/>
                 </xsl:attribute>
-                <data field="first_name"><xsl:value-of select="$AssignedTo"/></data>
+                <data field="first_name"><xsl:value-of select="$first_name"/></data>
+                <data field="middle_name"><xsl:value-of select="$middle_name"/></data>
+                <data field="last_name"><xsl:value-of select="$last_name"/></data>
             </resource>
         </xsl:if>
 

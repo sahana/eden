@@ -27,15 +27,14 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3TranslateModel",)
+__all__ = ("TranslateModel",)
 
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
-from s3compat import PY2
 
 # =============================================================================
-class S3TranslateModel(S3Model):
+class TranslateModel(S3Model):
 
     names = ("translate_language",
              "translate_percentage",
@@ -108,10 +107,7 @@ class S3TranslateModel(S3Model):
             form.errors["file"] = current.T("No file uploaded.")
             return
 
-        if PY2:
-            header = csvfile.read(1024)
-        else:
-            header = csvfile.read(1024).decode("utf-8")
+        header = csvfile.read(1024).decode("utf-8")
 
         try:
             dialect = csv.Sniffer().sniff(header)

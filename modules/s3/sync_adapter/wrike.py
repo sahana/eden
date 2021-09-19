@@ -35,10 +35,14 @@ try:
 except ImportError:
     sys.stderr.write("ERROR: lxml module needed for XML handling\n")
     raise
+from urllib import parse as urlparse
+from urllib import request as urllib2
+from urllib.error import HTTPError
+from urllib.request import urlopen
+from urllib.parse import urlencode
 
 from gluon import *
 
-from s3compat import HTTPError, urlencode, urllib2, urlopen, urlparse
 from ..s3datetime import s3_encode_iso_datetime
 from ..s3sync import S3SyncBaseAdapter
 from ..s3utils import s3_unicode

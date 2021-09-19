@@ -31,7 +31,6 @@
 
 from gluon import current, A, DIV, LI, UL
 
-from s3compat import basestring
 from .s3filter import S3FilterForm
 from .s3gis import MAP
 from .s3rest import S3Method
@@ -118,7 +117,7 @@ class S3Summary(S3Method):
                 # Label
                 label = section["label"]
                 translate = section.get("translate", True)
-                if isinstance(label, basestring) and translate:
+                if isinstance(label, str) and translate:
                     label = current.T(label)
 
                 # Add tab

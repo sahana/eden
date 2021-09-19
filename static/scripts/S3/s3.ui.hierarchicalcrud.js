@@ -174,6 +174,24 @@
         },
 
         /**
+         * Reload Tree
+         * - called from s3.popup.js after a new top-level node created
+         */
+        reload: function() {
+            // Load the data
+            var ajaxURL = this.options.ajaxURL.replace('json', 'tree'),
+                self = this;
+            $.getS3(ajaxURL, function (data) {
+
+                // Replace in the DOM
+                self.tree.html(data);
+
+                // Redraw the Tree
+                self.refresh();
+            }, 'html');
+        },
+
+        /**
          * Open a node
          *
          * @param {jQuery} node - the node object (li element)
@@ -210,7 +228,7 @@
                 ajaxURL = ajaxURL + '?node=' + record_id;
                 var tree = this.tree,
                     treeID = this.treeID;
-                $.getJSONS3(ajaxURL, function (data) {
+                $.getJSONS3(ajaxURL, function(data) {
                     if (data.label) {
                         tree.jstree('rename_node', node, data.label);
                     }
@@ -398,6 +416,7 @@
          * Unbind events (before refresh)
          */
         _unbindEvents: function() {
+            this.tree.jstree('destroy', 'true'); // true = keep_html
             return true;
         }
     });

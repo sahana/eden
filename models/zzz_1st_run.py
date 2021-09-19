@@ -203,11 +203,6 @@ if len(pop_list) > 0:
     path_join = os.path.join
     request_folder = request.folder
 
-    if settings.get_auth_opt_in_to_email():
-        table = db.pr_group
-        for team in settings.get_auth_opt_in_team_list():
-            table.insert(name = team, group_type = 5)
-
     # Synchronisation
     db.sync_config.insert() # Defaults are fine
 

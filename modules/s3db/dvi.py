@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3DVIModel",)
+__all__ = ("DVIModel",)
 
 from gluon import *
 from gluon.storage import Storage
@@ -35,7 +35,7 @@ from ..s3 import *
 from s3layouts import S3PopupLink
 
 # =============================================================================
-class S3DVIModel(S3Model):
+class DVIModel(S3Model):
 
     names = ("dvi_recreq",
              "dvi_body",

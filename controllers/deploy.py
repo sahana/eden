@@ -2,19 +2,18 @@
 
 """
     Deployments
+
+    The model for this is in templates.RMS.deploy.py
 """
 
-module = request.controller
-resourcename = request.function
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # -----------------------------------------------------------------------------
 def index():
     """ Customisable module homepage """
 
-    return settings.customise_home(module, alt_function="index_alt")
+    return settings.customise_home(c, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -549,7 +548,7 @@ def alert():
                 if settings.get_org_regions():
                     recipient_filters.insert(1,
                         s3base.S3HierarchyFilter(
-                            "human_resource_id$organisation_id$region_id",
+                            "human_resource_id$organisation_id$organisation_region.region_id",
                             lookup="org_region",
                             hidden=True,
                         )

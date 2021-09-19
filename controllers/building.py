@@ -21,10 +21,8 @@
     @ToDo: add other forms (ATC-38, ATC-45)
 """
 
-module = request.controller
-
-if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+if not settings.has_module(c):
+    raise HTTP(404, body="Module disabled: %s" % c)
 
 # -----------------------------------------------------------------------------
 # Define the Model
@@ -122,8 +120,7 @@ s3uuid_8char = SQLCustomType(type = "string",
                              decoder = (lambda x: x))
 
 # NZSEE Level 1 (~ATC-20 Rapid Evaluation) Safety Assessment Form ---------
-resourcename = "nzseel1"
-tablename = "%s_%s" % (module, resourcename)
+tablename = "building_nzseel1"
 db.define_table(tablename,
                 Field("ticket_id",
                       type=s3uuid_8char,
@@ -283,8 +280,7 @@ s3db.configure(tablename,
 # -------------------------------------------------------------------------
 
 # NZSEE Level 2 (~ATC-20 Rapid Evaluation) Safety Assessment Form
-resourcename = "nzseel2"
-tablename = "%s_%s" % (module, resourcename)
+tablename = "building_nzseel2"
 
 db.define_table(tablename,
                 Field("ticket_id",
@@ -559,7 +555,7 @@ def index():
 
     """ Module's Home Page """
 
-    module_name = settings.modules[module].get("name_nice")
+    module_name = settings.modules[c].get("name_nice")
     response.title = module_name
     return {"module_name": module_name,
             }
@@ -573,9 +569,7 @@ def nzseel1():
         @ToDo: Action Button to create a new L2 Assessment from an L1
     """
 
-    resourcename = "nzseel1"
-
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     table = db[tablename]
 
     # Pre-populate Inspector ID
@@ -584,7 +578,7 @@ def nzseel1():
     # Subheadings in forms:
     s3db.configure(tablename,
                    deletable = False,
-                   create_next = URL(module, resourcename, args="[id]"),
+                   create_next = URL(c, f, args="[id]"),
                    subheadings = {"name": ".", # Description in ATC-20
                                   "collapse": "%s / %s" % (T("Overall Hazards"), T("Damage")),
                                   "posting": ".",
@@ -651,9 +645,7 @@ def nzseel2():
         RESTful CRUD controller
     """
 
-    resourcename = "nzseel2"
-
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "%s_%s" % (c, f)
     table = db[tablename]
 
     # Pre-populate Inspector ID
@@ -662,7 +654,7 @@ def nzseel2():
     # Subheadings in forms:
     s3db.configure(tablename,
         deletable=False,
-        create_next = URL(module,resourcename, args="[id]"),
+        create_next = URL(c, f, args="[id]"),
         subheadings = {"name": ".", # Description in ATC-20
                        "collapse": "%s / %s" % (T("Overall Hazards"), T("Damage")),
                        "posting_existing": ".",

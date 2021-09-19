@@ -18,6 +18,9 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
+        if not current.auth.is_logged_in():
+            return None
+
         settings = current.deployment_settings
         if settings.get_event_label(): # == "Disaster"
             EVENTS = "Disasters"
