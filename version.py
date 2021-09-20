@@ -1,9 +1,11 @@
-#!/bin/python27/python.exe
+#!/bin/python
 
-import os
 import datetime
+import subprocess
+
 now = datetime.datetime.today()
 
-version, rest = open("VERSION", "r").read()[1:].split(" ", 1)
-output = "r%s (%s)" % (int(version) + 1, str(now)[:-7])
+version = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode("ascii").strip()
+
+output = "eden-dev-%s (%s)" % (version, str(now)[:-7])
 open("VERSION", "w").write(output)
