@@ -44,7 +44,6 @@ __all__ = ("EventModel",
            "EventImpactModel",
            "EventMapModel",
            "EventNeedModel",
-           "EventNeedResponseModel",
            "EventOrganisationModel",
            "EventProjectModel",
            "EventRequestModel",
@@ -2872,64 +2871,6 @@ class EventNeedModel(S3Model):
         return {}
 
 # =============================================================================
-class EventNeedResponseModel(S3Model):
-    """
-        Link Events &/or Incidents with Need Responses (Activity Groups)
-    """
-
-    names = ("event_event_need_response",
-             )
-
-    def model(self):
-
-        #T = current.T
-
-        if current.deployment_settings.get_event_cascade_delete_incidents():
-            ondelete = "CASCADE"
-        else:
-            ondelete = "SET NULL"
-
-        # ---------------------------------------------------------------------
-        # Events <> Impacts
-        #
-
-        tablename = "event_event_need_response"
-        self.define_table(tablename,
-                          self.event_event_id(ondelete = ondelete),
-                          self.event_incident_id(ondelete = "CASCADE"),
-                          self.req_need_response_id(empty = False,
-                                                    ondelete = "CASCADE",
-                                                    ),
-                          *s3_meta_fields())
-
-        # Table configuration
-        self.configure(tablename,
-                       deduplicate = S3Duplicate(primary = ("event_id",
-                                                            "incident_id",
-                                                            "need_response_id",
-                                                            ),
-                                                 ),
-                       onaccept = lambda form: \
-                        set_event_from_incident(form, "event_event_need_response"),
-                       )
-
-        # Not accessed directly
-        #current.response.s3.crud_strings[tablename] = Storage(
-        #    label_create = T("Add Activity Group"),
-        #    title_display = T("Activity Group Details"),
-        #    title_list = T("Activity Groups"),
-        #    title_update = T("Edit Activity Group"),
-        #    label_list_button = T("List Activity Groups"),
-        #    label_delete_button = T("Delete Activity Group"),
-        #    msg_record_created = T("Activity Group added"),
-        #    msg_record_modified = T("Activity Group updated"),
-        #    msg_record_deleted = T("Activity Group removed"),
-        #    msg_list_empty = T("No Activity Groups currently registered in this Event"))
-
-        # Pass names back to global scope (s3.*)
-        return {}
-
-# =============================================================================
 class EventOrganisationModel(S3Model):
     """
         Link Organisations to Events &/or Incidents
@@ -5333,6 +5274,7 @@ def set_event_from_incident(form, tablename):
 
 # Alias
 event_set_event_from_incident = set_event_from_incident
+
 # =============================================================================
 # Custom Resource Methods
 

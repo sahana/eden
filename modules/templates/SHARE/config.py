@@ -27,6 +27,10 @@ def config(settings):
                                 args = ["SHARE", "img", "sharemenulogo.png"],
                                 )
 
+    # Custom Models
+    settings.base.custom_models = {"need": "SHARE",
+                                   }
+
     # PrePopulate data
     settings.base.prepopulate += ("SHARE",)
 
