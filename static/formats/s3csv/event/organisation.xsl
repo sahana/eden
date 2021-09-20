@@ -11,6 +11,7 @@
          Incident.............string..........Incident Name
          Organisation.........string..........Organisation Name
          Status...............string..........Status
+         Comments.............string..........Comments
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -98,6 +99,8 @@
                     <data field="status">5</data>
                 </xsl:when>
             </xsl:choose>
+
+            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
         </resource>
     </xsl:template>
 

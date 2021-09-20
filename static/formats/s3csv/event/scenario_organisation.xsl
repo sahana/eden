@@ -8,8 +8,8 @@
 
          CSV fields:
          Scenario................event_scenario_organisation.scenario_id$name
-         Organisation............event_scenario_asset.item_id$name
-         Comments................event_scenario_asset.comments
+         Organisation............event_scenario_organisation.organisation_id$name
+         Comments................event_scenario_organisation.comments
 
     *********************************************************************** -->
     

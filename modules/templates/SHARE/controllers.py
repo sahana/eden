@@ -91,24 +91,24 @@ class index(S3CustomController):
                     #            f="index",
                     #            args="dashboard",
                     #            ),
-                    _href = URL(c="req",
-                                f="need_line",
-                                args="map",
+                    _href = URL(c="need",
+                                f="line",
+                                args = "map",
                                 ),
                     _class = "small primary button",
                     )
 
         create_btn = A(T("CREATE A NEED"),
-                       _href = URL(c="req",
+                       _href = URL(c="need",
                                    f="need",
-                                   args="create",
+                                   args = "create",
                                    ),
                        _class = "small primary button",
                        )
 
         output["needs_btn"] = DIV(SPAN(map_btn),
                                   SPAN(create_btn),
-                                  _class="button-group radius",
+                                  _class = "button-group radius",
                                   )
 
         output["about_btn"] = A("%s >" % T("Read More"),
@@ -132,15 +132,18 @@ class index(S3CustomController):
                     (table.deleted != True)
             item = current.db(query).select(table.body,
                                             table.id,
-                                            limitby=(0, 1)).first()
+                                            limitby = (0, 1)
+                                            ).first()
             if item:
                 if ADMIN:
                     item = DIV(XML(item.body),
                                BR(),
                                A(T("Edit"),
-                                 _href=URL(c="cms", f="post",
-                                           args=[item.id, "update"]),
-                                 _class="action-btn"))
+                                 _href = URL(c="cms", f="post",
+                                             args = [item.id, "update"],
+                                             ),
+                                 _class = "action-btn",
+                                 ))
                 else:
                     item = DIV(XML(item.body))
             elif ADMIN:
@@ -149,11 +152,13 @@ class index(S3CustomController):
                 else:
                     _class = "action-btn"
                 item = A(T("Edit"),
-                         _href=URL(c="cms", f="post", args="create",
-                                   vars={"module": module,
-                                         "resource": resource
-                                         }),
-                         _class="%s cms-edit" % _class)
+                         _href = URL(c="cms", f="post",
+                                     args = "create",
+                                     vars = {"module": module,
+                                             "resource": resource
+                                             }),
+                         _class = "%s cms-edit" % _class,
+                         )
             else:
                 item = ""
         else:
@@ -265,7 +270,9 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     if person:
         if person_id:
             # @ToDo: deployment_setting for controller to use?
-            person_url = URL(c="hrm", f="person", args=[person_id])
+            person_url = URL(c="hrm", f="person",
+                             args = [person_id],
+                             )
         else:
             person_url = "#"
         person = A(person,
@@ -574,8 +581,8 @@ class dashboard(S3CustomController):
         map_id = "default_map"
 
         ftable = s3db.gis_layer_feature
-        query = (ftable.controller == "req") & \
-                (ftable.function == "need_line")
+        query = (ftable.controller == "need") & \
+                (ftable.function == "line")
         layer = current.db(query).select(ftable.layer_id,
                                          limitby = (0, 1)
                                          ).first()
@@ -603,7 +610,7 @@ class dashboard(S3CustomController):
 
         # ---------------------------------------------------------------------
         # Display needs list
-        resource = s3db.resource("req_need_line")
+        resource = s3db.resource("need_line")
         #resource.table.commit_status.represent = None
         #list_id = "req_datalist"
         #list_fields = [#"purpose",
@@ -614,17 +621,18 @@ class dashboard(S3CustomController):
         #               "date",
         #               ]
         # Order with most recent request first
-        #orderby = "req_need.date"
+        #orderby = "need_need.date"
         #datalist, numrows = resource.datalist(fields = list_fields,
         #                                      limit = None,
         #                                      list_id = list_id,
         #                                      orderby = orderby,
         #                                      )
         #if numrows == 0:
-        #    current.response.s3.crud_strings["req_need"].msg_no_match = T("No needs at present.")
+        #    current.response.s3.crud_strings["need_need"].msg_no_match = T("No needs at present.")
 
-        #ajax_url = URL(c="req", f="need", args="datalist.dl",
-        #               vars={"list_id": list_id})
+        #ajax_url = URL(c="need", f="need",
+        #               args = "datalist.dl",
+        #               vars = {"list_id": list_id})
         #@ToDo: Implement pagination properly
         #output[list_id] = datalist.html(ajaxurl = ajax_url,
         #                                pagesize = 0,
@@ -698,7 +706,7 @@ class dashboard(S3CustomController):
 class project_ActivityRepresent(S3Represent):
     """
         Representation of Activities by Organisation
-        - unused as we now use req_need_response instead
+        - unused as we now use need_need_response instead
     """
 
     def __init__(self,
@@ -746,8 +754,9 @@ class project_ActivityRepresent(S3Represent):
         rows = current.db(query).select(atable.id,
                                         atable.name,
                                         aotable.organisation_id,
-                                        left=left,
-                                        limitby=limitby)
+                                        left = left,
+                                        limitby = limitby,
+                                        )
         self.queries += 1
         return rows
 
@@ -772,7 +781,7 @@ class project_ActivityRepresent(S3Represent):
                 return current.messages["NONE"]
 
 # =============================================================================
-class req_NeedRepresent(S3Represent):
+class need_NeedRepresent(S3Represent):
     """ Representation of Needs by Req Number """
 
     def __init__(self,
@@ -780,10 +789,10 @@ class req_NeedRepresent(S3Represent):
                  multiple = False,
                  ):
 
-        super(req_NeedRepresent,
-              self).__init__(lookup = "req_need",
-                             fields = ["req_need.name",
-                                       "req_need_tag.value",
+        super(need_NeedRepresent,
+              self).__init__(lookup = "need_need",
+                             fields = ["need_need.name",
+                                       "need_need_tag.value",
                                        ],
                              show_link = show_link,
                              multiple = multiple,
@@ -801,8 +810,8 @@ class req_NeedRepresent(S3Represent):
         """
 
         s3db = current.s3db
-        ntable = s3db.req_need
-        nttable = s3db.req_need_tag
+        ntable = s3db.need_need
+        nttable = s3db.need_tag
 
         left = nttable.on((nttable.need_id == ntable.id) & \
                           (nttable.tag == "req_number"))
@@ -818,8 +827,9 @@ class req_NeedRepresent(S3Represent):
         rows = current.db(query).select(ntable.id,
                                         ntable.name,
                                         nttable.value,
-                                        left=left,
-                                        limitby=limitby)
+                                        left = left,
+                                        limitby = limitby,
+                                        )
         self.queries += 1
         return rows
 
@@ -828,16 +838,16 @@ class req_NeedRepresent(S3Represent):
         """
             Represent a single Row
 
-            @param row: the req_need Row
+            @param row: the need_need Row
         """
 
         # Custom Row (with the tag left-joined)
-        req_number = row["req_need_tag.value"]
+        req_number = row["need_need_tag.value"]
         if req_number:
             return s3_str(req_number)
         else:
             # Fallback to name
-            name = row["req_need.name"]
+            name = row["need_need.name"]
             if name:
                 return s3_str(name)
             else:
@@ -867,7 +877,7 @@ class HomepageStatistics(object):
         db = current.db
         s3db = current.s3db
 
-        table = s3db.req_need_line
+        table = s3db.need_line
         etable = s3db.event_event
         ltable = s3db.event_event_need
 
@@ -906,8 +916,8 @@ class HomepageStatistics(object):
         db = current.db
         s3db = current.s3db
 
-        table = s3db.req_need_line
-        ntable = s3db.req_need
+        table = s3db.need_line
+        ntable = s3db.need_need
         etable = s3db.event_event
         ltable = s3db.event_event_need
 
@@ -934,7 +944,9 @@ class HomepageStatistics(object):
         data = []
         if locations:
             # Get labels for locations
-            location_represent = S3Represent(lookup="gis_location", fields=["L2"])
+            location_represent = S3Represent(lookup = "gis_location",
+                                             fields = ["L2"],
+                                             )
             location_labels = location_represent.bulk(locations)
 
             # Count need lines per status and location
@@ -991,7 +1003,7 @@ class HomepageStatistics(object):
         db = current.db
         s3db = current.s3db
 
-        table = s3db.req_need_line
+        table = s3db.need_line
         etable = s3db.event_event
         ltable = s3db.event_event_need
 

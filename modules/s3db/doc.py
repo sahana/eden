@@ -101,6 +101,10 @@ class DocumentLibrary(S3Model):
                                inv_recv = T("Incoming Shipment"),
                                inv_send = T("Sent Shipment"),
                                inv_warehouse = T("Warehouse"),
+                               # Only used by SHARE template
+                               # @ToDo: Configure this in the template
+                               need_need = T("Need"),
+                               need_response = T("Activity Group"),
                                police_station = T("Police Station"),
                                pr_group = T("Team"),
                                project_project = T("Project"),

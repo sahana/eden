@@ -140,7 +140,7 @@ def req_status():
 # =============================================================================
 def req_timeframe():
     """
-        Used by req_need_item, and hence SHARE
+        Used only by req_need_item, and hence nothing currently
     """
     T = current.T
     timeframe_opts = {1: T("0-12 hours"),
@@ -2310,7 +2310,7 @@ class RequestNeedsModel(S3Model):
         - Sites can request Time from local volunteers or accept drop-off for Goods
         - Projects can request x (tbc: MapPH usecase)
 
-        - Used by CCC & SHARE
+        - Used by CCC
     """
 
     names = ("req_need",
@@ -2377,11 +2377,6 @@ class RequestNeedsModel(S3Model):
 
         # Components
         self.add_components(tablename,
-                            event_event = {"link": "event_event_need",
-                                            "joinby": "need_id",
-                                            "key": "event_id",
-                                            "multiple": False,
-                                            },
                             org_organisation = {"link": "req_need_organisation",
                                                 "joinby": "need_id",
                                                 "key": "organisation_id",
@@ -2390,27 +2385,16 @@ class RequestNeedsModel(S3Model):
                             req_need_organisation = {"joinby": "need_id",
                                                      "multiple": False,
                                                      },
-                            org_sector = {"link": "req_need_sector",
-                                          "joinby": "need_id",
-                                          "key": "sector_id",
-                                          "multiple": False,
-                                          },
                             org_site = {"link": "req_need_site",
                                         "joinby": "need_id",
                                         "key": "site_id",
                                         "multiple": False,
                                         },
-                            project_activity = {"link": "req_need_activity",
-                                                "joinby": "need_id",
-                                                "key": "activity_id",
-                                                },
                             req_need_contact = {"joinby": "need_id",
                                                 # Can redefine as multiple=True in template if-required
                                                 "multiple": False,
                                                 },
-                            req_need_demographic = "need_id",
                             req_need_item = "need_id",
-                            req_need_line = "need_id",
                             req_need_person = "need_id",
                             req_need_skill = "need_id",
                             req_need_tag = {"name": "tag",
@@ -2461,7 +2445,7 @@ class RequestNeedsContactModel(S3Model):
         Simple Requests Management System
         - optional link to Contacts (People)
 
-        - Used by CCC & SHARE
+        - Used by CCC
     """
 
     names = ("req_need_contact",
@@ -2502,7 +2486,7 @@ class RequestNeedsItemsModel(S3Model):
         Simple Requests Management System
         - optional extension to support Items, but still not using Inventory-linked Requests
 
-        - Used by SHARE
+        - Unused currently (SHARE now uses it's own need_item)
     """
 
     names = ("req_need_item",
@@ -2682,7 +2666,7 @@ class RequestNeedsOrganisationModel(S3Model):
         - optional link to Organisations
         - link exposed in Templates as-required
 
-        - Used by CCC & SHARE
+        - Used by CCC
     """
 
     names = ("req_need_organisation",
@@ -2842,7 +2826,7 @@ class RequestNeedsTagModel(S3Model):
     """
         Needs Tags
 
-        - used by CCC & SHARE
+        - used by CCC
     """
 
     names = ("req_need_tag",

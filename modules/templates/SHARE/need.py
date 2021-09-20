@@ -27,14 +27,19 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("NeedsActivityModel",
+__all__ = ("NeedsModel",
+           "NeedsActivityModel",
+           "NeedsContactModel",
            "NeedsDemographicsModel",
+           "NeedsEventModel",
+           "NeedsItemsModel",
            "NeedsLineModel",
+           "NeedsOrganisationModel",
            "NeedsResponseModel",
            "NeedsResponseEventModel",
            "NeedsResponseLineModel",
            "NeedsResponseOrganisationModel",
-           "NeedsSectorModel",
+           "NeedsTagModel",
            #"need_rheader",
            )
 
@@ -42,6 +47,58 @@ from gluon import *
 from gluon.storage import Storage
 from s3 import *
 from s3layouts import S3PopupLink
+
+REQ_STATUS_NONE     = 0
+REQ_STATUS_PARTIAL  = 1
+REQ_STATUS_COMPLETE = 2
+REQ_STATUS_CANCEL   = 3
+
+# =============================================================================
+def need_priority_opts():
+    T = current.T
+    return {3: T("High"),
+            2: T("Medium"),
+            1: T("Low")
+            }
+
+def need_priority():
+    priority_opts = need_priority_opts()
+    return S3ReusableField("priority", "integer",
+                           default = 2,
+                           label = current.T("Priority"),
+                           #@ToDo: Colour code the priority text - red, orange, green
+                           #represent = need_priority_represent,
+                           represent = S3Represent(options = priority_opts),
+                           requires = IS_EMPTY_OR(
+                                           IS_IN_SET(priority_opts)
+                                           ),
+                           )
+
+# =============================================================================
+def need_status_opts():
+    T = current.T
+    return {REQ_STATUS_NONE:     SPAN(T("None"),
+                                      _class = "req_status_none",
+                                      ),
+            REQ_STATUS_PARTIAL:  SPAN(T("Partial"),
+                                      _class = "req_status_partial",
+                                      ),
+            REQ_STATUS_COMPLETE: SPAN(T("Complete"),
+                                      _class = "req_status_complete",
+                                      ),
+            }
+
+def need_status():
+    status_opts = need_status_opts()
+    return S3ReusableField("status", "integer",
+                           label = current.T("Fulfilment Status"),
+                           represent = S3Represent(options = status_opts),
+                           requires = IS_EMPTY_OR(
+                                        IS_IN_SET(status_opts,
+                                                  zero = None,
+                                                  )
+                                        ),
+                           )
 
 # =============================================================================
 def need_timeframe():
@@ -65,6 +122,123 @@ def need_timeframe():
                            )
 
 # =============================================================================
+class NeedsModel(S3Model):
+    """
+        Simple Requests Management System
+        - Starts as Simple free text Needs
+        - Extensible via Key-Value Tags
+        - Extensible with Items, etc
+        Use cases:
+        - SHARE: local governments express needs to be met by NGOs (/Private Sector/Public in future)
+    """
+
+    names = ("need_need",
+             "need_need_id",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        # ---------------------------------------------------------------------
+        # Needs
+        #
+        tablename = "need_need"
+        self.define_table(tablename,
+                          self.super_link("doc_id", "doc_entity"),
+                          self.gis_location_id(), # Can be hidden, e.g. if using Sites (can then sync this onaccept)
+                          s3_datetime(default = "now",
+                                      widget = "date",
+                                      ),
+                          s3_datetime("end_date",
+                                      label = T("End Date"),
+                                      # Enable in Templates if-required
+                                      readable = False,
+                                      writable = False,
+                                      ),
+                          need_priority()(),
+                          Field("name", notnull = True,
+                                label = T("Summary of Needs"),
+                                requires = IS_NOT_EMPTY(),
+                                ),
+                          s3_comments("description",
+                                      label = T("Description"),
+                                      comment = None,
+                                      ),
+                          need_status()(),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # CRUD strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Needs"),
+            title_list = T("Needs"),
+            title_display = T("Needs"),
+            title_update = T("Edit Needs"),
+            title_upload = T("Import Needs"),
+            label_list_button = T("List Needs"),
+            label_delete_button = T("Delete Needs"),
+            msg_record_created = T("Needs added"),
+            msg_record_modified = T("Needs updated"),
+            msg_record_deleted = T("Needs deleted"),
+            msg_list_empty = T("No Needs currently registered"),
+            )
+
+        self.configure(tablename,
+                       super_entity = "doc_entity",
+                       )
+
+        # Components
+        self.add_components(tablename,
+                            event_event = {"link": "need_event",
+                                           "joinby": "need_id",
+                                           "key": "event_id",
+                                           "multiple": False,
+                                           },
+                            org_organisation = {"link": "need_organisation",
+                                                "joinby": "need_id",
+                                                "key": "organisation_id",
+                                                "multiple": False,
+                                                },
+                            project_activity = {"link": "need_activity",
+                                                "joinby": "need_id",
+                                                "key": "activity_id",
+                                                },
+                            need_contact = {"joinby": "need_id",
+                                            # Can redefine as multiple=True in template if-required
+                                            "multiple": False,
+                                            },
+                            need_demographic = "need_id",
+                            need_item = "need_id",
+                            need_line = "need_id",
+                            need_tag = "need_id",
+                            )
+
+        # NB SHARE over-rides this to show the req_number
+        represent = S3Represent(lookup = tablename,
+                                #show_link = True,
+                                )
+        need_id = S3ReusableField("need_id", "reference %s" % tablename,
+                                  label = T("Need"),
+                                  ondelete = "CASCADE",
+                                  represent = represent,
+                                  requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "need_need.id",
+                                                          represent,
+                                                          orderby = "need_need.date",
+                                                          sort = True,
+                                                          )),
+                                  sortby = "date",
+                                  )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"need_need_id": need_id,
+                }
+
+# =============================================================================
 class NeedsActivityModel(S3Model):
     """
         Simple Requests Management System
@@ -82,7 +256,7 @@ class NeedsActivityModel(S3Model):
 
         tablename = "need_activity"
         self.define_table(tablename,
-                          self.req_need_id(empty = False),
+                          self.need_need_id(empty = False),
                           self.project_activity_id(empty = False),
                           s3_comments(),
                           *s3_meta_fields())
@@ -90,6 +264,45 @@ class NeedsActivityModel(S3Model):
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary = ("need_id",
                                                             "activity_id",
+                                                            ),
+                                                 ),
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class NeedsContactModel(S3Model):
+    """
+        Simple Requests Management System
+        - optional link to Contacts (People)
+    """
+
+    names = ("need_contact",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Needs <=> Persons
+        #
+
+        tablename = "need_contact"
+        self.define_table(tablename,
+                          self.need_need_id(empty = False),
+                          self.pr_person_id(empty = False,
+                                            label = T("Contact"),
+                                            ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("need_id",
+                                                            "person_id",
                                                             ),
                                                  ),
                        )
@@ -133,7 +346,7 @@ class NeedsDemographicsModel(S3Model):
 
         tablename = "need_demographic"
         self.define_table(tablename,
-                          self.req_need_id(empty = False),
+                          self.need_need_id(empty = False),
                           self.super_link("parameter_id", "stats_parameter",
                                           instance_types = ("stats_demographic",),
                                           label = T("Demographic"),
@@ -199,6 +412,159 @@ class NeedsDemographicsModel(S3Model):
         return {}
 
 # =============================================================================
+class NeedsEventModel(S3Model):
+    """
+        Link Events &/or Incidents with Needs
+    """
+
+    names = ("need_event",
+             )
+
+    def model(self):
+
+        #T = current.T
+
+        if current.deployment_settings.get_event_cascade_delete_incidents():
+            ondelete = "CASCADE"
+        else:
+            ondelete = "SET NULL"
+
+        # ---------------------------------------------------------------------
+        # Events <> Needs
+        #
+
+        tablename = "need_event"
+        self.define_table(tablename,
+                          self.event_event_id(ondelete = ondelete),
+                          self.need_need_id(empty = False,
+                                            ondelete = "CASCADE",
+                                            ),
+                          *s3_meta_fields())
+
+        # Table configuration
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("event_id",
+                                                            "need_id",
+                                                            ),
+                                                 ),
+                       )
+
+        # Not accessed directly
+        #current.response.s3.crud_strings[tablename] = Storage(
+        #    label_create = T("Add Need"),
+        #    title_display = T("Need Details"),
+        #    title_list = T("Needs"),
+        #    title_update = T("Edit Need"),
+        #    label_list_button = T("List Needs"),
+        #    label_delete_button = T("Delete Need"),
+        #    msg_record_created = T("Need added"),
+        #    msg_record_modified = T("Need updated"),
+        #    msg_record_deleted = T("Need removed"),
+        #    msg_list_empty = T("No Needs currently registered in this Event"))
+
+        # Pass names back to global scope (s3.*)
+        return {}
+        
+# =============================================================================
+class NeedsItemsModel(S3Model):
+    """
+        Simple Requests Management System
+        - optional extension to support Items, but still not using Inventory-linked Requests
+    """
+
+    names = ("need_item",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=2)
+
+        # ---------------------------------------------------------------------
+        # Needs <=> Supply Items
+        #
+
+        tablename = "need_item"
+        self.define_table(tablename,
+                          self.need_need_id(empty = False),
+                          self.supply_item_category_id(),
+                          self.supply_item_id(empty = False,
+                                              # Default:
+                                              #ondelete = "RESTRICT",
+                                              # Filter Item dropdown based on Category
+                                              script = '''
+$.filterOptionsS3({
+ 'trigger':'item_category_id',
+ 'target':'item_id',
+ 'lookupPrefix':'supply',
+ 'lookupResource':'item',
+})''',
+                                              # Don't use Auto-complete
+                                              widget = None,
+                                              ),
+                          self.supply_item_pack_id(),
+                          need_timeframe()(),
+                          Field("quantity", "double",
+                                label = T("Quantity"),
+                                #label = T("Quantity Requested"),
+                                represent = float_represent,
+                                requires = IS_EMPTY_OR(
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
+                                ),
+                          Field("quantity_committed", "double",
+                                label = T("Quantity Committed"),
+                                represent = float_represent,
+                                requires = IS_EMPTY_OR(
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
+                                # Enable in templates as-required
+                                readable = False,
+                                # Normally set automatically
+                                writable = False,
+                                ),
+                          Field("quantity_uncommitted", "double",
+                                label = T("Quantity Uncommitted"),
+                                represent = float_represent,
+                                requires = IS_EMPTY_OR(
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
+                                # Enable in templates as-required
+                                readable = False,
+                                # Normally set automatically
+                                writable = False,
+                                ),
+                          Field("quantity_delivered", "double",
+                                label = T("Quantity Delivered"),
+                                represent = float_represent,
+                                requires = IS_EMPTY_OR(
+                                            IS_FLOAT_AMOUNT(minimum = 1.0)
+                                            ),
+                                # Enable in templates as-required
+                                readable = False,
+                                # Normally set automatically
+                                writable = False,
+                                ),
+                          need_priority()(),
+                          s3_comments(),
+                          need_status()(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("need_id",
+                                                            "item_id",
+                                                            ),
+                                                 ),
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
 class NeedsLineModel(S3Model):
     """
         Simple Requests Management System
@@ -233,7 +599,7 @@ class NeedsLineModel(S3Model):
 
         tablename = "need_line"
         self.define_table(tablename,
-                          self.req_need_id(empty = False),
+                          self.need_need_id(empty = False),
                           # A less precise location for this line
                           # Here to more easily allow multiple dropdowns within an Inline form
                           self.gis_location_id("coarse_location_id"),
@@ -351,9 +717,7 @@ $.filterOptionsS3({
                                 writable = False,
                                 ),
                           #s3_comments(),
-                          req_status()("status",
-                                       label = T("Fulfilment Status"),
-                                       ),
+                          need_status()(),
                           *s3_meta_fields())
 
         # Components
@@ -382,30 +746,41 @@ $.filterOptionsS3({
                 }
 
 # =============================================================================
-class NeedsSectorModel(S3Model):
+class NeedsOrganisationModel(S3Model):
     """
         Simple Requests Management System
-        - optional link to Sectors
+        - optional link to Organisations
+        - link exposed in Templates as-required
     """
 
-    names = ("need_sector",
+    names = ("need_organisation",
              )
 
     def model(self):
 
         # ---------------------------------------------------------------------
-        # Needs <=> Sectors
+        # Needs <=> Organisations
         #
-        tablename = "need_sector"
+        organisation_id = self.org_organisation_id # Load normal model
+        CREATE = current.response.s3.crud_strings["org_organisation"].label_create
+
+        tablename = "need_organisation"
         self.define_table(tablename,
-                          self.req_need_id(empty = False),
-                          self.org_sector_id(empty = False),
+                          self.need_need_id(empty = False),
+                          organisation_id(comment = S3PopupLink(c = "org",
+                                                                f = "organisation",
+                                                                label = CREATE,
+                                                                tooltip = None,
+                                                                vars = {"prefix": "need"},
+                                                                ),
+                                          empty = False,
+                                          ),
                           s3_comments(),
                           *s3_meta_fields())
 
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary = ("need_id",
-                                                            "sector_id",
+                                                            "organisation_id",
                                                             ),
                                                  ),
                        )
@@ -437,7 +812,7 @@ class NeedsResponseModel(S3Model):
         tablename = "need_response"
         self.define_table(tablename,
                           self.super_link("doc_id", "doc_entity"),
-                          self.req_need_id(),
+                          self.need_need_id(),
                           self.gis_location_id(),
                           s3_date(default = "now"),
                           s3_comments("name",
@@ -487,11 +862,11 @@ class NeedsResponseModel(S3Model):
                                                 "key": "organisation_id",
                                                 "multiple": False,
                                                 },
-                            req_need_response_line = "need_response_id",
+                            need_response_line = "need_response_id",
                             )
 
 
-        # NB Only instance of this being used (SHARE) over-rides this to show the req_number
+        # NB SHARE over-rides this to show the req_number
         represent = S3Represent(lookup = tablename,
                                 show_link = True,
                                 )
@@ -539,7 +914,6 @@ class NeedsResponseEventModel(S3Model):
         tablename = "need_response_event"
         self.define_table(tablename,
                           self.event_event_id(ondelete = ondelete),
-                          self.event_incident_id(ondelete = "CASCADE"),
                           self.need_response_id(empty = False,
                                                 ondelete = "CASCADE",
                                                 ),
@@ -548,12 +922,9 @@ class NeedsResponseEventModel(S3Model):
         # Table configuration
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary = ("event_id",
-                                                            "incident_id",
                                                             "need_response_id",
                                                             ),
                                                  ),
-                       onaccept = lambda form: \
-                        self.event_set_event_from_incident(form, "need_response_event"),
                        )
 
         # Not accessed directly
@@ -715,7 +1086,7 @@ class NeedsResponseOrganisationModel(S3Model):
                                                                 f = "organisation",
                                                                 label = CREATE,
                                                                 tooltip = None,
-                                                                vars = {"prefix": "req"},
+                                                                vars = {"prefix": "need"},
                                                                 ),
                                           empty = False,
                                           ),
@@ -741,6 +1112,56 @@ class NeedsResponseOrganisationModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
+        return {}
+
+# =============================================================================
+class NeedsTagModel(S3Model):
+    """
+        Needs Tags
+    """
+
+    names = ("need_tag",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Need Tags
+        # - Key-Value extensions
+        # - can be used to add structured extensions, such as:
+        #   * Reference
+        #   * Cash Donations accepted (/ Details)
+        #   * Goods drop-off point (/ Details)
+        #   * Transport required (/ Details)
+        #   * Security needed (/ Details)
+        #   * Volunteering Opportunities (/ Details)
+        # - can be used to provide conversions to external systems, such as:
+        #   * HXL
+        # - can be a Triple Store for Semantic Web support
+        #
+        tablename = "need_tag"
+        self.define_table(tablename,
+                          self.need_need_id(),
+                          # key is a reserved word in MySQL
+                          Field("tag",
+                                label = T("Key"),
+                                ),
+                          Field("value",
+                                label = T("Value"),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("need_id",
+                                                            "tag",
+                                                            ),
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
         return {}
 
 # =============================================================================

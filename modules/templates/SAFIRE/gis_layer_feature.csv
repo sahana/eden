@@ -1,5 +1,6 @@
 Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Site,Points,Trackable,Style,Opacity,Folder,Visible,Enabled,Cluster Threshold,Refresh
 Assets,,asset,asset,asset,Flag,{number} (T('Asset'))<br />{person_id},"number,person_id",,,True,True,,,,False,,,
-Incident Reports,,event,incident_report,incident,Danger Area,{name} (T('Incident'))<br />{incident_type_id},"name,incident_type_id",~.closed=False,,True,,,,,False,,,
+Incident Reports,,event,incident_report,incident,Danger Area,{name} (T('Incident'))<br />{incident_type_id},"name,incident_type_id",~.closed=False,,False,,,,,False,,,
+Incidents,,event,incident,incident,Danger Area,{name} (T('Incident'))<br />{incident_type_id},"name,incident_type_id",~.closed=False,,False,,,,,False,,,
 Locations,Used by Location Details,gis,location,,,{name},"name,gis_feature_type",~.level__ne=None&~.end_date=None,,,,"[{'prop':'gis_feature_type','cat':1,'externalGraphic':'img/markers/marker_red.png'},{'prop':'gis_feature_type','cat':3,'fill':'00BFFF','fillOpacity':0.5},{'prop':'gis_feature_type','cat':6,'fill':'00BFFF','fillOpacity':0.5}]",0.9,,False,,0,0
 Warehouses,All Active Warehouses,inv,warehouse,warehouse,Building,{name} (T('Warehouse'))<br />{organisation_id},"name,organisation_id",~.obsolete=False,,True,,,,,False,,,

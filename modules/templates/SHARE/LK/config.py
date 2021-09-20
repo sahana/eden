@@ -61,6 +61,12 @@ def config(settings):
                                                  "multiple": False,
                                                  },
                                                 ),
+                            need_need = {"link": "need_event",
+                                         "joinby": "event_id",
+                                         "key": "need_id",
+                                         "actuate": "hide",
+                                         "autodelete": False,
+                                         },
                             )
 
         from s3 import S3SQLCustomForm, S3SQLInlineComponent
