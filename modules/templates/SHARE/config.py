@@ -201,10 +201,6 @@ def config(settings):
             access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
             module_type = None  # This item is handled separately for the menu
         )),
-        #("tour", Storage(
-        #    name_nice = T("Guided Tour Functionality"),
-        #    module_type = None,
-        #)),
         ("translate", Storage(
             name_nice = T("Translation Functionality"),
             #description = "Selective translation of strings based on module.",
@@ -278,13 +274,6 @@ def config(settings):
             restricted = True,
             module_type = 5,
         )),
-        # Vehicle depends on Assets
-        #("vehicle", Storage(
-        #    name_nice = "Vehicles",
-        #    #description = "Manage Vehicles",
-        #    restricted = True,
-        #    module_type = 10,
-        #)),
         ("req", Storage(
             name_nice = "Requests",
             #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
@@ -298,35 +287,12 @@ def config(settings):
             restricted = True,
             module_type = 2
         )),
-        #("cr", Storage(
-        #    name_nice = T("Shelters"),
-        #    #description = "Tracks the location, capacity and breakdown of victims in Shelters",
-        #    restricted = True,
-        #    module_type = 10
-        #)),
-        #("hms", Storage(
-        #    name_nice = T("Hospitals"),
-        #    #description = "Helps to monitor status of hospitals",
-        #    restricted = True,
-        #    module_type = 10
-        #)),
-        #("dvr", Storage(
-        #   name_nice = T("Disaster Victim Registry"),
-        #   #description = "Allow affected individuals & households to register to receive compensation and distributions",
-        #   restricted = True,
-        #   module_type = 10,
-        #)),
         ("event", Storage(
             name_nice = "Events",
             #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
             restricted = True,
             module_type = 10,
         )),
-        #("transport", Storage(
-        #   name_nice = T("Transport"),
-        #   restricted = True,
-        #   module_type = 10,
-        #)),
         ("stats", Storage(
             name_nice = T("Statistics"),
             #description = "Manages statistics",
@@ -491,6 +457,7 @@ def config(settings):
             msg_list_empty = T("No Situational Updates currently registered"))
 
     settings.customise_event_sitrep_resource = customise_event_sitrep_resource
+
     # -----------------------------------------------------------------------------
     def customise_event_sitrep_controller(**attr):
 
@@ -532,6 +499,7 @@ def config(settings):
         return attr
 
     settings.customise_event_sitrep_controller = customise_event_sitrep_controller
+
     # -----------------------------------------------------------------------------
     def customise_gis_location_controller(**attr):
 
@@ -582,6 +550,7 @@ def config(settings):
         return attr
 
     settings.customise_gis_location_controller = customise_gis_location_controller
+
     # -------------------------------------------------------------------------
     def customise_msg_twitter_channel_resource(r, tablename):
 
@@ -772,8 +741,10 @@ S3.search.ajaxUpdateOptions('#datalist-filter-form')
 S3.tagit()
 S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                                   URL(c="cms", f="tag",
-                                      args="tag_list.json"),
-                                  readonly)
+                                      args = "tag_list.json",
+                                      ),
+                                  readonly,
+                                  )
         s3.jquery_ready.append(script)
 
         attr["rheader"] = None
