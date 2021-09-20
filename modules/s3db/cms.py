@@ -1672,8 +1672,10 @@ if(!cb.prop('checked')){cb.click()}}}'''
 '''S3.tagit=function(){$('.s3-tags').tagit({autocomplete:{source:'%s'},%s})}
 S3.tagit()
 S3.redraw_fns.push('tagit')''' % (URL(c="cms", f="tag",
-                                      args="search_ac.json"),
-                                  readonly)
+                                      args = "search_ac.json",
+                                      ),
+                                  readonly,
+                                  )
         s3.jquery_ready.append(script)
 
     s3db.configure("cms_post",
@@ -1734,15 +1736,16 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         label = record["event_post.%s_id" % event_resource]
         if label and label != NONE:
             link=URL(c="event", f=event_resource,
-                     args=[raw["event_post.%s_id" % event_resource],
-                          "profile"]
+                     args = [raw["event_post.%s_id" % event_resource],
+                             "profile",
+                             ]
                      )
             subtitle.append(DIV(A(ICON(event_resource),
                                   label,
-                                  _href=link,
-                                  _target="_blank",
+                                  _href = link,
+                                  _target = "_blank",
                                   ),
-                                _class="card-subtitle"
+                                _class = "card-subtitle"
                                 ))
     if subtitle:
         subtitle.append(body)
@@ -1751,12 +1754,12 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     # Allow records to be truncated
     # (not yet working for HTML)
     body = DIV(body,
-               _class="s3-truncate",
+               _class = "s3-truncate",
                )
 
     date = record["cms_post.date"] or ""
     date = SPAN(date,
-                _class="date-title",
+                _class = "date-title",
                 )
 
     location_id = raw["cms_post.location_id"]
@@ -1771,17 +1774,19 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                 data[level[1:]] = raw["gis_location.%s" % level]
             onclick = '''S3.filter_location(%s)''' % json.dumps(data, separators=SEPARATORS)
             location = SPAN(A(location,
-                              _href="#",
-                              _onclick=onclick,
+                              _href = "#",
+                              _onclick = onclick,
                               ),
-                            _class="location-title",
+                            _class = "location-title",
                             )
         else:
-            location_url = URL(c="gis", f="location", args=[location_id, "profile"])
+            location_url = URL(c="gis", f="location",
+                               args = [location_id, "profile"],
+                               )
             location = SPAN(A(location,
-                              _href=location_url,
+                              _href = location_url,
                               ),
-                            _class="location-title",
+                            _class = "location-title",
                             )
     else:
         location = ""
@@ -1814,11 +1819,13 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     if person:
         if person_id:
             # @ToDo: deployment_setting for controller to use?
-            person_url = URL(c="pr", f="person", args=[person_id])
+            person_url = URL(c="pr", f="person",
+                             args = [person_id],
+                             )
         else:
             person_url = "#"
         person = A(person,
-                   _href=person_url,
+                   _href = person_url,
                    )
 
     avatar = ""
@@ -1828,30 +1835,35 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         organisation_id = raw[org_field]
         if organisation_id:
             organisation = record[org_field]
-            org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+            org_url = URL(c="org", f="organisation",
+                          args = [organisation_id, "profile"],
+                          )
             organisation = A(organisation,
-                             _href=org_url,
-                             _class="card-organisation",
+                             _href = org_url,
+                             _class = "card-organisation",
                              )
 
             # Avatar
             # Try Organisation Logo
             otable = db.org_organisation
             row = db(otable.id == organisation_id).select(otable.logo,
-                                                          limitby=(0, 1)
+                                                          limitby = (0, 1)
                                                           ).first()
             if row and row.logo:
-                logo = URL(c="default", f="download", args=[row.logo])
-                avatar = IMG(_src=logo,
-                             _height=50,
-                             _width=50,
-                             _style="padding-right:5px",
-                             _class="media-object")
+                logo = URL(c="default", f="download",
+                           args = [row.logo],
+                           )
+                avatar = IMG(_src = logo,
+                             _height = 50,
+                             _width = 50,
+                             _style = "padding-right:5px",
+                             _class = "media-object",
+                             )
             else:
                 avatar = organisation
             avatar = A(avatar,
-                       _href=org_url,
-                       _class="pull-left",
+                       _href = org_url,
+                       _class = "pull-left",
                        )
 
     org_group = ""
@@ -1859,49 +1871,51 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         org_group_id = raw[org_group_field]
         if org_group_id:
             org_group = record[org_group_field]
-            org_group_url = URL(c="org", f="group", args=[org_group_id, "profile"])
+            org_group_url = URL(c="org", f="group",
+                                args = [org_group_id, "profile"],
+                                )
             org_group = A(org_group,
-                          _href=org_group_url,
-                          _class="card-org-group",
+                          _href = org_group_url,
+                          _class = "card-org-group",
                           )
 
     if not avatar and person_id:
         # Personal Avatar
         avatar = s3_avatar_represent(person_id,
-                                     tablename="pr_person",
-                                     _class="media-object")
+                                     tablename = "pr_person",
+                                     _class = "media-object")
 
         avatar = A(avatar,
-                   _href=person_url,
-                   _class="pull-left",
+                   _href = person_url,
+                   _class = "pull-left",
                    )
 
     if person and organisation:
         card_person = DIV(person,
                           " - ",
                           organisation,
-                          _class="card-person",
+                          _class = "card-person",
                           )
     elif person and org_group:
         card_person = DIV(person,
                           " - ",
                           org_group,
-                          _class="card-person",
+                          _class = "card-person",
                           )
     elif person:
         card_person = DIV(person,
-                          _class="card-person",
+                          _class = "card-person",
                           )
     #elif organisation:
     #    card_person = DIV(organisation,
-    #                      _class="card-person",
+    #                      _class = "card-person",
     #                      )
     elif org_group:
         card_person = DIV(org_group,
-                          _class="card-person",
+                          _class = "card-person",
                           )
     else:
-        card_person = DIV(_class="card-person",
+        card_person = DIV(_class = "card-person",
                           )
 
     permit = current.auth.s3_has_permission
@@ -1911,7 +1925,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     if settings.get_cms_show_tags():
         tags = raw["cms_tag.name"]
         if tags or updateable:
-            tag_list = UL(_class="s3-tags",
+            tag_list = UL(_class = "s3-tags",
                           )
             tag_list["_data-post_id"] = record_id
         else:
@@ -1946,19 +1960,20 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         else:
             fn = "post"
         edit_btn = A(ICON("edit"),
-                     _href=URL(c="cms", f=fn,
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": list_id,
-                                     "record": record_id}
-                               ),
-                     _class="s3_modal",
-                     _title=T("Edit %(type)s") % {"type": series_title},
+                     _href = URL(c="cms", f=fn,
+                                 args = [record_id, "update.popup"],
+                                 vars = {"refresh": list_id,
+                                         "record": record_id,
+                                         }
+                                 ),
+                     _class = "s3_modal",
+                     _title = T("Edit %(type)s") % {"type": series_title},
                      )
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
         delete_btn = A(ICON("delete"),
-                       _class="dl-item-delete",
+                       _class = "dl-item-delete",
                        )
     else:
         delete_btn = ""
@@ -1968,32 +1983,36 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         query = (ltable.post_id == record_id) & \
                 (ltable.user_id == user.id)
         exists = db(query).select(ltable.id,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1)
                                   ).first()
         if exists:
             bookmark_btn = A(ICON("bookmark"),
-                             _onclick="$.getS3('%s',function(){$('#%s').datalist('ajaxReloadItem',%s)})" %
+                             _onclick = "$.getS3('%s',function(){$('#%s').datalist('ajaxReloadItem',%s)})" %
                                 (URL(c="cms", f="post",
-                                     args=[record_id, "remove_bookmark"]),
+                                     args = [record_id, "remove_bookmark"],
+                                     ),
                                  list_id,
-                                 record_id),
-                             _title=T("Remove Bookmark"),
+                                 record_id,
+                                 ),
+                             _title = T("Remove Bookmark"),
                              )
         else:
             bookmark_btn = A(ICON("bookmark-empty"),
-                             _onclick="$.getS3('%s',function(){$('#%s').datalist('ajaxReloadItem',%s)})" %
+                             _onclick = "$.getS3('%s',function(){$('#%s').datalist('ajaxReloadItem',%s)})" %
                                 (URL(c="cms", f="post",
-                                     args=[record_id, "add_bookmark"]),
+                                     args = [record_id, "add_bookmark"],
+                                     ),
                                  list_id,
-                                 record_id),
-                             _title=T("Add Bookmark"),
+                                 record_id,
+                                 ),
+                             _title = T("Add Bookmark"),
                              )
     else:
         bookmark_btn = ""
     toolbox = DIV(bookmark_btn,
                   edit_btn,
                   delete_btn,
-                  _class="edit-bar fright",
+                  _class = "edit-bar fright",
                   )
 
     # Dropdown of available documents
@@ -2002,11 +2021,11 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         if not isinstance(documents, list):
             documents = [documents]
         doc_list_id = "attachments-%s" % item_id
-        doc_list = UL(_class="f-dropdown dropdown-menu",
-                      _role="menu",
-                      _id=doc_list_id,
+        doc_list = UL(_class = "f-dropdown dropdown-menu",
+                      _role = "menu",
+                      _id = doc_list_id,
                       # Foundation:
-                      data={"dropdown-content": ""},
+                      data = {"dropdown-content": ""},
                       )
         retrieve = db.doc_document.file.retrieve
         for doc in documents:
@@ -2015,29 +2034,31 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
             except (IOError, TypeError):
                 doc_name = NONE
             doc_url = URL(c="default", f="download",
-                          args=[doc])
+                          args = [doc],
+                          )
             doc_item = LI(A(ICON("file"),
                             " ",
                             doc_name,
-                            _href=doc_url,
+                            _href = doc_url,
                             ),
-                          _role="menuitem",
+                          _role = "menuitem",
                           )
             doc_list.append(doc_item)
         docs = DIV(A(ICON("attachment"),
-                     SPAN(_class="caret"),
-                     _class="btn dropdown-toggle dropdown",
-                     _href="#",
-                     data={# Both Bootstrap & Foundation:
-                           "dropdown": doc_list_id,
-                           # Foundation:
-                           "options": "is_hover:true; hover_timeout:5000",
-                           # Bootstrap:
-                           "toggle": "dropdown",
-                           },
+                     SPAN(_class = "caret",
+                          ),
+                     _class = "btn dropdown-toggle dropdown",
+                     _href = "#",
+                     data = {# Both Bootstrap & Foundation:
+                             "dropdown": doc_list_id,
+                             # Foundation:
+                             "options": "is_hover:true; hover_timeout:5000",
+                             # Bootstrap:
+                             "toggle": "dropdown",
+                             },
                      ),
                    doc_list,
-                   _class="btn-group attachments dropdown pull-right",
+                   _class = "btn-group attachments dropdown pull-right",
                    )
     else:
         docs = ""
@@ -2046,14 +2067,15 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     if links:
         if not isinstance(links, list):
             links = [links]
-        link_list = DIV(_class="media card-links")
+        link_list = DIV(_class = "media card-links",
+                        )
         for link in links:
             link_item = A(ICON("link"),
                           " ",
                           link,
-                          _href=link,
-                          _target="_blank",
-                          _class="card-link",
+                          _href = link,
+                          _target = "_blank",
+                          _class = "card-link",
                           )
             link_list.append(link_item)
     else:
@@ -2067,15 +2089,19 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         else:
             title = ""
         card_label = SPAN(" %s" % title,
-                          _class="card-title")
+                          _class = "card-title",
+                          )
     else:
         # Mixed resource lists (Home, News Feed)
         icon = series.lower().replace(" ", "_")
         series_title = SPAN(" %s" % series_title,
-                            _class="card-title")
+                            _class = "card-title",
+                            )
         raw_title = raw["cms_post.title"]
         if settings.get_cms_show_titles() and raw_title:
-            title = SPAN(s3_truncate(raw_title), _class="card-title2")
+            title = SPAN(s3_truncate(raw_title),
+                         _class = "card-title2",
+                         )
             card_label = TAG[""](ICON(icon),
                                  series_title,
                                  title,
@@ -2096,31 +2122,31 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         header = DIV(date,
                      location,
                      toolbox,
-                     _class="card-header",
+                     _class = "card-header",
                      )
     else:
         header = DIV(card_label,
                      location,
                      date,
                      toolbox,
-                     _class="card-header",
+                     _class = "card-header",
                      )
 
     item = DIV(header,
                DIV(avatar,
                    DIV(DIV(body,
                            card_person,
-                           _class="media",
+                           _class = "media",
                            ),
-                       _class="media-body",
+                       _class = "media-body",
                        ),
-                   _class="media",
+                   _class = "media",
                    ),
                tags,
                docs,
                link_list,
-               _class=item_class,
-               _id=item_id,
+               _class = item_class,
+               _id = item_id,
                )
 
     return item

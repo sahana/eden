@@ -361,7 +361,7 @@ def sitrep():
                     (stable.template_id == ttable.id) & \
                     (ttable.table_id == dtable.id)
             template = db(query).select(dtable.name,
-                                        limitby=(0, 1),
+                                        limitby = (0, 1),
                                         ).first()
             try:
                 dtablename = template.name
@@ -396,12 +396,14 @@ def sitrep():
                 #)
 
                 # Custom Form with Questions & Subheadings sorted correctly
-                s3db.dc_answer_form(r, tablename)
+                from s3db.dc import dc_answer_form
+                dc_answer_form(r, tablename)
 
         return True
     s3.prep = prep
 
-    return s3_rest_controller(rheader = s3db.event_rheader)
+    from s3db.event import event_rheader
+    return s3_rest_controller(rheader = event_rheader)
 
 # -----------------------------------------------------------------------------
 def template():
@@ -412,41 +414,10 @@ def template():
 
     s3db.dc_template.master.default = "event_sitrep"
 
+    from s3db.dc import dc_rheader
     return s3_rest_controller("dc", "template",
-                              rheader = s3db.dc_rheader,
+                              rheader = dc_rheader,
                               )
-
-# -----------------------------------------------------------------------------
-def resource():
-    """
-        RESTful CRUD controller
-    """
-
-    def prep(r):
-        if r.interactive:
-            if r.method in ("create", "update"):
-                table = r.table
-                if r.method == "create":
-                    # Enable Location field
-                    field = table.location_id
-                    field.readable = field.writable = True
-
-                get_vars = r.get_vars
-                # Context from a Profile page?"
-                #location_id = get_vars.get("(location)")
-                #if location_id:
-                #    field = table.location_id
-                #    field.default = location_id
-                #    field.readable = field.writable = False
-                incident_id = get_vars.get("~.(incident)")
-                if incident_id:
-                    field = table.incident_id
-                    field.default = incident_id
-                    field.readable = field.writable = False
-        return True
-    s3.prep = prep
-
-    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def person():

@@ -46,7 +46,6 @@ __all__ = ("EventModel",
            "EventOrganisationModel",
            "EventProjectModel",
            "EventRequestModel",
-           "EventResourceModel",
            "EventSiteModel",
            "EventShelterModel",
            "EventSitRepModel",
@@ -1137,186 +1136,6 @@ class EventRequestModel(S3Model):
                                                  ),
                        onaccept = lambda form: \
                         set_event_from_incident(form, "event_request"),
-                       )
-
-        # Pass names back to global scope (s3.*)
-        return {}
-
-# =============================================================================
-class EventResourceModel(S3Model):
-    """
-        Resources Assigned to Events/Incidents
-        - depends on Stats module
-
-        Whilst there is a Quantity option, this is envisaged to usually be 1
-        - these are typically named, trackable resources
-
-        @UsedBy: MCOP (but not WACOP)
-
-        @ToDo: Optional link to org_resource to e.g. mark resources as assigned
-        @ToDo: Deprecate & Remove
-    """
-
-    names = ("event_resource",)
-
-    def model(self):
-
-        if not current.deployment_settings.has_module("stats"):
-            current.log.warning("Event Resource Model needs Stats module enabling")
-            return {}
-
-        T = current.T
-        super_link = self.super_link
-
-        status_opts = {1: T("Available"),
-                       2: T("Assigned"),
-                       3: T("En Route"),
-                       }
-
-        #if current.deployment_settings.get_event_cascade_delete_incidents():
-        #    ondelete = "CASCADE"
-        #else:
-        #    ondelete = "SET NULL"
-
-        # ---------------------------------------------------------------------
-        # Resources
-        #
-        tablename = "event_resource"
-        self.define_table(tablename,
-                          # Instance
-                          super_link("data_id", "stats_data"),
-                          super_link("track_id", "sit_trackable"),
-                          # Resources are normally managed at the Incident level
-                          #self.event_event_id(ondelete = ondelete,
-                          #                    # enable in template if-required
-                          #                    readable = False,
-                          #                    writable = False,
-                          #                    ),
-                          self.event_incident_id(ondelete = "CASCADE"),
-                          # This is a component, so needs to be a super_link
-                          # - can't override field name, ondelete or requires
-                          super_link("parameter_id", "stats_parameter",
-                                     empty = False,
-                                     instance_types = ("org_resource_type",),
-                                     label = T("Resource Type"),
-                                     represent = S3Represent(lookup="stats_parameter",
-                                                             translate=True),
-                                     readable = True,
-                                     writable = True,
-                                     comment = S3PopupLink(c = "org",
-                                                           f = "resource_type",
-                                                           vars = {"child": "parameter_id"},
-                                                           title = T("Create Resource Type"),
-                                                           ),
-                                     ),
-                          Field("status", "integer",
-                                label = T("Status"),
-                                represent = lambda opt: \
-                                    status_opts.get(opt) or current.messages.UNKNOWN_OPT,
-                                requires = IS_IN_SET(status_opts),
-                                ),
-                          Field("name",
-                                label = T("Name"),
-                                ),
-                          Field("value", "integer",
-                                default = 1,
-                                label = T("Quantity"),
-                                requires = IS_INT_IN_RANGE(0, None),
-                                ),
-                          self.org_organisation_id(),
-                          self.pr_person_id(label = T("Contact")),
-                          # @ToDo: Make use of S3Track:
-                          # Base Location: Enable field only in Create form
-                          self.gis_location_id(#readable = False,
-                                               #writable = False,
-                                               ),
-                          #Field.Method("location", lambda row: self.sit_location(row, tablename)),
-                          # @ToDo: Deprecate once we start using S3Track
-                          s3_datetime(default = "now"),
-                          s3_comments(),
-                          *s3_meta_fields())
-
-        # CRUD strings
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create=T("Add Resource"),
-            title_display=T("Resource Details"),
-            title_list=T("Resources"),
-            title_update=T("Edit Resource"),
-            title_map=T("Map of Resources"),
-            title_upload=T("Import Resources"),
-            label_list_button=T("List Resources"),
-            label_delete_button=T("Delete Resource"),
-            msg_record_created=T("Resource added"),
-            msg_record_modified=T("Resource updated"),
-            msg_record_deleted=T("Resource deleted"),
-            msg_list_empty=T("No Resources assigned to Incident"))
-
-        # Custom Methods
-        #self.set_method("event", "resource",
-        #                method = "check-in",
-        #                action = S3CheckInMethod())
-
-        # List Fields
-        #list_fields = ["id",
-        #               "incident_id",
-        #               "parameter_id",
-        #               "status",
-        #               "name",
-        #               "value",
-        #               "organisation_id",
-        #               "person_id",
-        #               "location_id",
-        #               #(T("Location"), "location"),
-        #               "comments",
-        #               ]
-
-        # Filter Widgets
-        filter_widgets = [S3TextFilter(["organisation_id$name",
-                                        "location_id",
-                                        "parameter_id$name",
-                                        "comments",
-                                        ],
-                                       label = T("Search"),
-                                       ),
-                          S3OptionsFilter("parameter_id",
-                                          label = T("Type"),
-                                          ),
-                          ]
-
-        # Report options
-        report_fields = ["incident_id",
-                         "organisation_id",
-                         "parameter_id",
-                         ]
-
-        report_options = Storage(rows = report_fields,
-                                 cols = report_fields,
-                                 fact = [(T("Total Number of Resources"), "sum(value)"),
-                                         (T("Number of Resources"), "count(value)"),
-                                         ],
-                                 defaults = Storage(rows = "incident_id",
-                                                    cols = "parameter_id",
-                                                    fact = "sum(value)",
-                                                    totals = True,
-                                                    chart = "barchart:rows",
-                                                    #table = "collapse",
-                                                    )
-                                 )
-
-        self.configure(tablename,
-                       context = {#"event": "event_id",
-                                  "incident": "incident_id",
-                                  "location": "location_id",
-                                  "organisation": "organisation_id",
-                                  },
-                       filter_widgets = filter_widgets,
-                       #list_fields = list_fields,
-                       list_layout = event_resource_list_layout,
-                       #onaccept = lambda form: \
-                       # set_event_from_incident(form, "event_resource"),
-                       orderby = "event_resource.date desc",
-                       report_options = report_options,
-                       super_entity = ("stats_data", "sit_trackable"),
                        )
 
         # Pass names back to global scope (s3.*)
@@ -3902,7 +3721,7 @@ class IncidentModel(S3Model):
 
         set_method("event", "incident",
                    method = "assign",
-                   action = self.pr_AssignMethod(component="human_resource"))
+                   action = self.pr_AssignMethod(component = "human_resource"))
 
         set_method("event", "incident",
                    method = "event",
