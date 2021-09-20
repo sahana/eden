@@ -2642,15 +2642,15 @@ class EventTeamModel(S3Model):
             msg_list_empty = T("No Group Statuses currently defined"),
             )
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         status_id = S3ReusableField("status_id", "reference %s" % tablename,
                                     label = T("Status"),
                                     ondelete = "RESTRICT",
                                     represent = represent,
                                     requires = IS_ONE_OF(db, "event_team_status.id",
                                                          represent,
-                                                         orderby="event_team_status.name",
-                                                         sort=True,
+                                                         orderby = "event_team_status.name",
+                                                         sort = True,
                                                          ),
                                     sortby = "name",
                                     )
@@ -2690,11 +2690,13 @@ class EventTeamModel(S3Model):
             msg_list_empty = T("No Teams currently assigned to this incident"))
 
         configure(tablename,
+                  context = {"incident": "incident_id",
+                             },
                   # Team can be assigned to multiple incidents,
                   # so updates must match both incident_id and group_id:
-                  deduplicate = S3Duplicate(primary=("incident_id",
-                                                     "group_id",
-                                                     )),
+                  deduplicate = S3Duplicate(primary = ("incident_id",
+                                                       "group_id",
+                                                       )),
                   onaccept = lambda form: \
                         set_event_from_incident(form, "event_team"),
                   )
@@ -2988,6 +2990,8 @@ class EventOrganisationModel(S3Model):
             msg_list_empty = T("No Organizations currently registered in this incident"))
 
         self.configure(tablename,
+                       context = {"incident": "incident_id",
+                                  },
                        deduplicate = S3Duplicate(primary = ("event_id",
                                                             "incident_id",
                                                             "organisation_id",
@@ -5397,7 +5401,8 @@ class event_ActionPlan(S3Method):
                                     "url": r.url(component = component,
                                                  component_id = "[id]",
                                                  method = "update.popup",
-                                                 vars = {"refresh": list_id}),
+                                                 vars = {"refresh": list_id},
+                                                 ),
                                     "_class": "action-btn edit s3_modal",
                                     },
                                    ]
@@ -5406,7 +5411,8 @@ class event_ActionPlan(S3Method):
                                     "url": r.url(component = component,
                                                  component_id = "[id]",
                                                  method = "read.popup",
-                                                 vars = {"refresh": list_id}),
+                                                 vars = {"refresh": list_id},
+                                                 ),
                                     "_class": "action-btn edit s3_modal",
                                     },
                                    ]
@@ -5502,6 +5508,7 @@ class event_ActionPlan(S3Method):
                       "create_component": "organisation",
                       #"pagesize": None, # all records
                       "list_fields": ["organisation_id",
+                                      "status",
                                       "comments",
                                       ],
                       }
