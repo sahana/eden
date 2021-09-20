@@ -43,8 +43,6 @@ __all__ = ("EventModel",
            "EventTeamModel",
            "EventImpactModel",
            "EventMapModel",
-           "EventNeedModel",
-           "EventNeedResponseModel",
            "EventOrganisationModel",
            "EventProjectModel",
            "EventRequestModel",
@@ -57,7 +55,6 @@ __all__ = ("EventModel",
            "IncidentModel",
            "IncidentLogModel",
            "IncidentReportModel",
-           "IncidentReportOrganisationGroupModel",
            "IncidentTypeModel",
            "IncidentTypeTagModel",
            "ScenarioModel",
@@ -548,12 +545,6 @@ class EventModel(S3Model):
                                          "actuate": "hide",
                                          "autodelete": False,
                                          },
-                            req_need = {"link": "event_event_need",
-                                        "joinby": "event_id",
-                                        "key": "need_id",
-                                        "actuate": "hide",
-                                        "autodelete": False,
-                                        },
                             req_req = {"link": "event_request",
                                        "joinby": "event_id",
                                        "key": "req_id",
@@ -1163,6 +1154,7 @@ class EventResourceModel(S3Model):
         @UsedBy: MCOP (but not WACOP)
 
         @ToDo: Optional link to org_resource to e.g. mark resources as assigned
+        @ToDo: Deprecate & Remove
     """
 
     names = ("event_resource",)
@@ -1325,44 +1317,6 @@ class EventResourceModel(S3Model):
                        orderby = "event_resource.date desc",
                        report_options = report_options,
                        super_entity = ("stats_data", "sit_trackable"),
-                       )
-
-        # Pass names back to global scope (s3.*)
-        return {}
-
-# =============================================================================
-class IncidentReportOrganisationGroupModel(S3Model):
-    """
-        Links between Incident Reports & Organisation Groups
-    """
-
-    names = ("event_incident_report_group",
-             )
-
-    def model(self):
-
-        represent = S3Represent(lookup="event_incident_report")
-
-        # ---------------------------------------------------------------------
-        # Incident Reports <> Coalitions link table
-        #
-        tablename = "event_incident_report_group"
-        self.define_table(tablename,
-                          Field("incident_report_id", self.event_incident_report,
-                                represent = represent,
-                                requires = IS_ONE_OF(current.db, "event_incident_report.id",
-                                                     represent,
-                                                     sort=True,
-                                                     ),
-                                ),
-                          self.org_group_id(empty=False),
-                          *s3_meta_fields())
-
-        self.configure(tablename,
-                       deduplicate = S3Duplicate(primary = ("incident_report_id",
-                                                            "org_group_id",
-                                                            ),
-                                                 ),
                        )
 
         # Pass names back to global scope (s3.*)
@@ -2809,122 +2763,6 @@ class EventMapModel(S3Model):
                                                             ),
                                                  ),
                        )
-
-        # Pass names back to global scope (s3.*)
-        return {}
-
-# =============================================================================
-class EventNeedModel(S3Model):
-    """
-        Link Events &/or Incidents with Needs
-    """
-
-    names = ("event_event_need",
-             )
-
-    def model(self):
-
-        #T = current.T
-
-        if current.deployment_settings.get_event_cascade_delete_incidents():
-            ondelete = "CASCADE"
-        else:
-            ondelete = "SET NULL"
-
-        # ---------------------------------------------------------------------
-        # Events <> Impacts
-        #
-
-        tablename = "event_event_need"
-        self.define_table(tablename,
-                          self.event_event_id(ondelete = ondelete),
-                          self.event_incident_id(ondelete = "CASCADE"),
-                          self.req_need_id(empty = False,
-                                           ondelete = "CASCADE",
-                                           ),
-                          *s3_meta_fields())
-
-        # Table configuration
-        self.configure(tablename,
-                       deduplicate = S3Duplicate(primary = ("event_id",
-                                                            "incident_id",
-                                                            "need_id",
-                                                            ),
-                                                 ),
-                       onaccept = lambda form: \
-                        set_event_from_incident(form, "event_event_need"),
-                       )
-
-        # Not accessed directly
-        #current.response.s3.crud_strings[tablename] = Storage(
-        #    label_create = T("Add Need"),
-        #    title_display = T("Need Details"),
-        #    title_list = T("Needs"),
-        #    title_update = T("Edit Need"),
-        #    label_list_button = T("List Needs"),
-        #    label_delete_button = T("Delete Need"),
-        #    msg_record_created = T("Need added"),
-        #    msg_record_modified = T("Need updated"),
-        #    msg_record_deleted = T("Need removed"),
-        #    msg_list_empty = T("No Needs currently registered in this Event"))
-
-        # Pass names back to global scope (s3.*)
-        return {}
-
-# =============================================================================
-class EventNeedResponseModel(S3Model):
-    """
-        Link Events &/or Incidents with Need Responses (Activity Groups)
-    """
-
-    names = ("event_event_need_response",
-             )
-
-    def model(self):
-
-        #T = current.T
-
-        if current.deployment_settings.get_event_cascade_delete_incidents():
-            ondelete = "CASCADE"
-        else:
-            ondelete = "SET NULL"
-
-        # ---------------------------------------------------------------------
-        # Events <> Impacts
-        #
-
-        tablename = "event_event_need_response"
-        self.define_table(tablename,
-                          self.event_event_id(ondelete = ondelete),
-                          self.event_incident_id(ondelete = "CASCADE"),
-                          self.req_need_response_id(empty = False,
-                                                    ondelete = "CASCADE",
-                                                    ),
-                          *s3_meta_fields())
-
-        # Table configuration
-        self.configure(tablename,
-                       deduplicate = S3Duplicate(primary = ("event_id",
-                                                            "incident_id",
-                                                            "need_response_id",
-                                                            ),
-                                                 ),
-                       onaccept = lambda form: \
-                        set_event_from_incident(form, "event_event_need_response"),
-                       )
-
-        # Not accessed directly
-        #current.response.s3.crud_strings[tablename] = Storage(
-        #    label_create = T("Add Activity Group"),
-        #    title_display = T("Activity Group Details"),
-        #    title_list = T("Activity Groups"),
-        #    title_update = T("Edit Activity Group"),
-        #    label_list_button = T("List Activity Groups"),
-        #    label_delete_button = T("Delete Activity Group"),
-        #    msg_record_created = T("Activity Group added"),
-        #    msg_record_modified = T("Activity Group updated"),
-        #    msg_record_deleted = T("Activity Group removed"),
-        #    msg_list_empty = T("No Activity Groups currently registered in this Event"))
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -4822,14 +4660,6 @@ class IncidentReportModel(S3Model):
                                               },
                             # Format for event_IncidentAssignMethod
                             event_incident_report_incident = "incident_report_id",
-                            # Coalitions
-                            org_group = {"link": "event_incident_report_group",
-                                         "joinby": "incident_report_id",
-                                         "key": "group_id",
-                                         "actuate": "hide",
-                                         },
-                            # Format for InlineComponent/filter_widget
-                            event_incident_report_group = "incident_report_id",
                             )
 
         # ---------------------------------------------------------------------
@@ -5333,6 +5163,7 @@ def set_event_from_incident(form, tablename):
 
 # Alias
 event_set_event_from_incident = set_event_from_incident
+
 # =============================================================================
 # Custom Resource Methods
 
@@ -6771,7 +6602,7 @@ def event_notification_dispatcher(r, **attr):
             if event_id != None:
                 etable = s3db.event_event
                 event = current.db(etable.id == event_id).select(etable.name,
-                                                                 limitby=(0, 1),
+                                                                 limitby = (0, 1),
                                                                  ).first()
                 event_name = event.name
             else:
@@ -6787,7 +6618,9 @@ def event_notification_dispatcher(r, **attr):
             text += "%s %s" % (T("Closed?"), closed)
             text += "\n************************************************\n"
 
-            url = URL(c="event", f="incident", args=r.id)
+            url = URL(c="event", f="incident",
+                      args = r.id,
+                      )
 
         # Create the form
         opts = {"type": "SMS",
@@ -6866,55 +6699,65 @@ def event_event_list_layout(list_id, item_id, resource, rfields, record,
     table = current.db.event_event
     if permit("update", table, record_id=record_id):
         edit_btn = A(ICON("edit"),
-                     _href=URL(c="event", f="event",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": list_id,
-                                     "record": record_id},
-                               ),
-                     _class="s3_modal",
-                     _title=S3CRUD.crud_string(resource.tablename,
-                                               "title_update"),
+                     _href = URL(c="event", f="event",
+                                 args = [record_id, "update.popup"],
+                                 vars  ={"refresh": list_id,
+                                         "record": record_id,
+                                         },
+                                 ),
+                     _class = "s3_modal",
+                     _title = S3CRUD.crud_string(resource.tablename,
+                                                 "title_update"),
                      )
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
         delete_btn = A(ICON("delete"),
-                       _class="dl-item-delete",
-                       _title=S3CRUD.crud_string(resource.tablename,
-                                                 "label_delete_button"),
+                       _class = "dl-item-delete",
+                       _title = S3CRUD.crud_string(resource.tablename,
+                                                   "label_delete_button"),
                        )
     else:
         delete_btn = ""
     edit_bar = DIV(edit_btn,
                    delete_btn,
-                   _class="edit-bar fright",
+                   _class = "edit-bar fright",
                    )
 
     # Render the item
     item = DIV(DIV(ICON(icon),
-                   SPAN(event_type, _class="type-title"),
-                   SPAN(location, _class="location-title"),
-                   SPAN(start_date, _class="date-title"),
+                   SPAN(event_type,
+                        _class = "type-title",
+                        ),
+                   SPAN(location,
+                        _class = "location-title",
+                        ),
+                   SPAN(start_date,
+                        _class = "date-title",
+                        ),
                    edit_bar,
-                   _class="card-header",
+                   _class = "card-header",
                    ),
                DIV(DIV(A(name,
-                          _href=URL(c="event", f="event",
-                                    args=[record_id, "profile"])),
-                        _class="card-title"),
+                         _href = URL(c="event", f="event",
+                                     args = [record_id, "profile"],
+                                     ),
+                         ),
+                       _class = "card-title",
+                       ),
                    DIV(DIV((description or ""),
                            DIV(author or "",
-                               _class="card-person",
+                               _class = "card-person",
                                ),
-                           _class="media",
+                           _class = "media",
                            ),
-                       _class="media-body",
+                       _class = "media-body",
                        ),
-                   _class="media",
+                   _class = "media",
                    ),
                #docs,
-               _class=item_class,
-               _id=item_id,
+               _class = item_class,
+               _id = item_id,
                )
 
     return item
@@ -6950,17 +6793,19 @@ def event_incident_list_layout(list_id, item_id, resource, rfields, record,
     org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
     org_logo = raw["org_organisation.logo"]
     if org_logo:
-        org_logo = A(IMG(_src=URL(c="default", f="download", args=[org_logo]),
-                         _class="media-object",
+        org_logo = A(IMG(_src = URL(c="default", f="download",
+                                    args = [org_logo],
+                                    ),
+                         _class = "media-object",
                          ),
-                     _href=org_url,
-                     _class="pull-left",
+                     _href = org_url,
+                     _class = "pull-left",
                      )
     else:
         # @ToDo: use a dummy logo image
-        org_logo = A(IMG(_class="media-object"),
-                     _href=org_url,
-                     _class="pull-left",
+        org_logo = A(IMG(_class = "media-object"),
+                     _href = org_url,
+                     _class = "pull-left",
                      )
 
     # Edit Bar
@@ -6969,59 +6814,67 @@ def event_incident_list_layout(list_id, item_id, resource, rfields, record,
     table = current.db.event_incident
     if permit("update", table, record_id=record_id):
         edit_btn = A(ICON("edit"),
-                     _href=URL(c="event", f="incident",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": list_id,
-                                     "record": record_id},
-                               ),
-                     _class="s3_modal",
-                     _title=S3CRUD.crud_string(resource.tablename,
-                                               "title_update"),
+                     _href = URL(c="event", f="incident",
+                                 args = [record_id, "update.popup"],
+                                 vars = {"refresh": list_id,
+                                         "record": record_id,
+                                         },
+                                 ),
+                     _class = "s3_modal",
+                     _title = S3CRUD.crud_string(resource.tablename,
+                                                 "title_update"),
                      )
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
         delete_btn = A(ICON("delete"),
-                       _class="dl-item-delete",
-                       _title=S3CRUD.crud_string(resource.tablename,
-                                                 "label_delete_button"),
+                       _class = "dl-item-delete",
+                       _title = S3CRUD.crud_string(resource.tablename,
+                                                   "label_delete_button"),
                        )
     else:
         delete_btn = ""
     edit_bar = DIV(edit_btn,
                    delete_btn,
-                   _class="edit-bar fright",
+                   _class = "edit-bar fright",
                    )
 
     # Render the item
     item = DIV(DIV(ICON(icon),
-                   SPAN(location, _class="location-title"),
-                   SPAN(start_date, _class="date-title"),
+                   SPAN(location,
+                        _class = "location-title",
+                        ),
+                   SPAN(start_date,
+                        _class = "date-title",
+                        ),
                    edit_bar,
-                   _class="card-header",
+                   _class = "card-header",
                    ),
                DIV(DIV(A(name,
-                          _href=URL(c="event", f="incident",
-                                    args=[record_id, "profile"])),
-                        _class="card-title"),
+                         _href = URL(c="event", f="incident",
+                                     args = [record_id, "profile"],
+                                     ),
+                         ),
+                       _class = "card-title",
+                       ),
                    DIV(DIV((description or ""),
                            DIV(author or "",
                                " - ",
                                A(organisation,
-                                 _href=org_url,
-                                 _class="card-organisation",
+                                 _href = org_url,
+                                 _class = "card-organisation",
                                  ),
-                               _class="card-person",
+                               _class = "card-person",
                                ),
-                           _class="media",
+                           _class = "media",
                            ),
-                       _class="media-body",
+                       _class = "media-body",
                        ),
-                   _class="media",
+                   _class = "media",
                    ),
                #docs,
-               _class=item_class,
-               _id=item_id,
+               _class = item_class,
+               _id = item_id,
                )
 
     return item
@@ -7062,7 +6915,9 @@ def event_resource_list_layout(list_id, item_id, resource, rfields, record):
                   )
     logo = raw["org_organisation.logo"]
     if logo:
-        logo = A(IMG(_src = URL(c="default", f="download", args=[logo]),
+        logo = A(IMG(_src = URL(c="default", f="download",
+                                args = [logo],
+                                ),
                      _class = "media-object",
                      ),
                  _href = org_url,
@@ -7070,7 +6925,8 @@ def event_resource_list_layout(list_id, item_id, resource, rfields, record):
                  )
     else:
         # @ToDo: use a dummy logo image
-        logo = A(IMG(_class="media-object"),
+        logo = A(IMG(_class = "media-object",
+                     ),
                  _href = org_url,
                  _class = "pull-left",
                  )

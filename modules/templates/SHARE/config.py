@@ -10,10 +10,6 @@ from s3 import S3ReportRepresent
 def config(settings):
     """
         Settings for the SHARE Template
-
-        Migration Issues:
-            req_need.name is now length=64
-            (SHARE can use req_need.description instead if the notnull=True removed)
     """
 
     T = current.T
@@ -26,6 +22,17 @@ def config(settings):
                                 f = "themes",
                                 args = ["SHARE", "img", "sharemenulogo.png"],
                                 )
+
+    # Custom Models
+    settings.base.custom_models = {"need": "SHARE",
+                                   }
+
+    # Custom Controllers
+    settings.base.rest_controllers = {("need", "need"): ("need", "need"),
+                                      ("need", "line"): ("need", "line"),
+                                      ("need", "response"): ("need", "response"),
+                                      ("need", "response_line"): ("need", "response_line"),
+                                      }
 
     # PrePopulate data
     settings.base.prepopulate += ("SHARE",)
@@ -262,24 +269,29 @@ def config(settings):
             restricted = True,
             module_type = None, # Not displayed
         )),
-        ("inv", Storage(
-            name_nice = T("Warehouses"),
-            #description = "Receiving and Sending Items",
-            restricted = True,
-            module_type = 4
-        )),
-        ("asset", Storage(
-            name_nice = "Assets",
-            #description = "Recording and Assigning Assets",
-            restricted = True,
-            module_type = 5,
-        )),
-        ("req", Storage(
-            name_nice = "Requests",
-            #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+        ("need", Storage(
+            name_nice = "Needs",
             restricted = True,
             module_type = 10,
         )),
+        #("inv", Storage(
+        #    name_nice = T("Warehouses"),
+        #    #description = "Receiving and Sending Items",
+        #    restricted = True,
+        #    module_type = 4
+        #)),
+        #("asset", Storage(
+        #    name_nice = "Assets",
+        #    #description = "Recording and Assigning Assets",
+        #    restricted = True,
+        #    module_type = 5,
+        #)),
+        #("req", Storage(
+        #    name_nice = "Requests",
+        #    #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+        #    restricted = True,
+        #    module_type = 10,
+        #)),
         # Used just for Statuses
         ("project", Storage(
             name_nice = "Tasks",
@@ -755,7 +767,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
     settings.customise_pr_forum_controller = customise_pr_forum_controller
 
     # -------------------------------------------------------------------------
-    def req_need_commit(r, **attr):
+    def need_commit(r, **attr):
         """
             Custom method to Commit to a Need by creating an Activity Group
         """
@@ -766,7 +778,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
         db = current.db
         s3db = current.s3db
 
-        ntable = s3db.req_need
+        ntable = s3db.need_need
         ntable_id = ntable.id
         netable = s3db.event_event_need
         left = [netable.on(netable.need_id == ntable_id),
@@ -778,7 +790,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                                                limitby = (0, 1)
                                                ).first()
 
-        nttable = s3db.req_need_tag
+        nttable = s3db.need_tag
         query = (nttable.need_id == need_id) & \
                 (nttable.tag.belongs(("address", "contact"))) & \
                 (nttable.deleted == False)
@@ -792,28 +804,27 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             elif tag.tag == "contact":
                 contact = tag.value
 
-        nrtable = s3db.req_need_response
+        nrtable = s3db.need_response
         need_response_id = nrtable.insert(need_id = need_id,
-                                          name = need["req_need.name"],
-                                          location_id = need["req_need.location_id"],
+                                          name = need["need_need.name"],
+                                          location_id = need["need_need.location_id"],
                                           contact = contact,
                                           address = address,
                                           )
         organisation_id = current.auth.user.organisation_id
         if organisation_id:
-            s3db.req_need_response_organisation.insert(need_response_id = need_response_id,
-                                                       organisation_id = organisation_id,
-                                                       role = 1,
-                                                       )
+            s3db.need_response_organisation.insert(need_response_id = need_response_id,
+                                                   organisation_id = organisation_id,
+                                                   role = 1,
+                                                   )
 
         event_id = need["event_event_need.event_id"]
         if event_id:
-            aetable = s3db.event_event_need_response
-            aetable.insert(need_response_id = need_response_id,
-                           event_id = event_id,
-                           )
+            s3db.need_response_event.insert(need_response_id = need_response_id,
+                                            event_id = event_id,
+                                            )
 
-        nltable = s3db.req_need_line
+        nltable = s3db.need_line
         query = (nltable.need_id == need_id) & \
                 (nltable.deleted == False)
         lines = db(query).select(nltable.id,
@@ -831,7 +842,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                                  nltable.status,
                                  )
         if lines:
-            linsert = s3db.req_need_response_line.insert
+            linsert = s3db.need_response_line.insert
             for line in lines:
                 value_uncommitted = line.value_uncommitted
                 if value_uncommitted is None:
@@ -861,16 +872,16 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                         quantity = quantity,
                         )
                 # Update Need Line status
-                req_need_line_status_update(need_line_id)
+                need_line_status_update(need_line_id)
 
         # Redirect to Update
         from gluon import redirect
-        redirect(URL(c= "req", f="need_response",
+        redirect(URL(c= "need", f="response",
                      args = [need_response_id, "update"],
                      ))
 
     # -------------------------------------------------------------------------
-    def req_need_line_commit(r, **attr):
+    def need_line_commit(r, **attr):
         """
             Custom method to Commit to a Need Line by creating an Activity
         """
@@ -881,7 +892,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
         db = current.db
         s3db = current.s3db
 
-        nltable = s3db.req_need_line
+        nltable = s3db.need_line
         query = (nltable.id == need_line_id)
         line = db(query).select(nltable.id,
                                 nltable.need_id,
@@ -902,7 +913,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
 
         need_id = line.need_id
 
-        ntable = s3db.req_need
+        ntable = s3db.need_need
         ntable_id = ntable.id
         netable = s3db.event_event_need
         left = [netable.on(netable.need_id == ntable_id),
@@ -914,7 +925,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                                                limitby = (0, 1)
                                                ).first()
 
-        nttable = s3db.req_need_tag
+        nttable = s3db.need_tag
         query = (nttable.need_id == need_id) & \
                 (nttable.tag.belongs(("address", "contact"))) & \
                 (nttable.deleted == False)
@@ -928,19 +939,19 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             elif tag.tag == "contact":
                 contact = tag.value
 
-        nrtable = s3db.req_need_response
+        nrtable = s3db.need_response
         need_response_id = nrtable.insert(need_id = need_id,
-                                          name = need["req_need.name"],
-                                          location_id = need["req_need.location_id"],
+                                          name = need["need_need.name"],
+                                          location_id = need["need_need.location_id"],
                                           contact = contact,
                                           address = address,
                                           )
         organisation_id = current.auth.user.organisation_id
         if organisation_id:
-            s3db.req_need_response_organisation.insert(need_response_id = need_response_id,
-                                                       organisation_id = organisation_id,
-                                                       role = 1,
-                                                       )
+            s3db.need_response_organisation.insert(need_response_id = need_response_id,
+                                                   organisation_id = organisation_id,
+                                                   role = 1,
+                                                   )
 
         event_id = need["event_event_need.event_id"]
         if event_id:
@@ -964,30 +975,30 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             # Only commit to the remainder
             quantity = quantity_uncommitted
 
-        s3db.req_need_response_line.insert(need_response_id = need_response_id,
-                                           need_line_id = need_line_id,
-                                           coarse_location_id = line.coarse_location_id,
-                                           location_id = line.location_id,
-                                           sector_id = line.sector_id,
-                                           parameter_id = line.parameter_id,
-                                           value = value,
-                                           item_category_id = line.item_category_id,
-                                           item_id = line.item_id,
-                                           item_pack_id = line.item_pack_id,
-                                           quantity = quantity,
-                                           )
+        s3db.need_response_line.insert(need_response_id = need_response_id,
+                                       need_line_id = need_line_id,
+                                       coarse_location_id = line.coarse_location_id,
+                                       location_id = line.location_id,
+                                       sector_id = line.sector_id,
+                                       parameter_id = line.parameter_id,
+                                       value = value,
+                                       item_category_id = line.item_category_id,
+                                       item_id = line.item_id,
+                                       item_pack_id = line.item_pack_id,
+                                       quantity = quantity,
+                                       )
 
         # Update Need Line status
-        req_need_line_status_update(need_line_id)
+        need_line_status_update(need_line_id)
 
         # Redirect to Update
         from gluon import redirect
-        redirect(URL(c= "req", f="need_response",
+        redirect(URL(c= "need", f="response",
                      args = [need_response_id, "update"],
                      ))
 
     # -------------------------------------------------------------------------
-    def req_need_line_status_update(need_line_id):
+    def need_line_status_update(need_line_id):
         """
             Update the Need Line's fulfilment Status
         """
@@ -996,7 +1007,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
         s3db = current.s3db
 
         # Read the Line details
-        nltable = s3db.req_need_line
+        nltable = s3db.need_line
         iptable = s3db.supply_item_pack
         query = (nltable.id == need_line_id)
         left = iptable.on(nltable.item_pack_id == iptable.id)
@@ -1009,7 +1020,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                                      limitby = (0, 1)
                                      ).first()
         need_pack_qty = need_line["supply_item_pack.quantity"]
-        need_line = need_line["req_need_line"]
+        need_line = need_line["need_line"]
         need_parameter_id = need_line.parameter_id
         need_value = need_line.value or 0
         need_value_committed = 0
@@ -1036,7 +1047,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             CANCELLED = 999999
 
         # Read the details of all Response Lines linked to this Need Line
-        rltable = s3db.req_need_response_line
+        rltable = s3db.need_response_line
         iptable = s3db.supply_item_pack
         query = (rltable.need_line_id == need_line_id) & \
                 (rltable.deleted == False)
@@ -1054,7 +1065,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                                           )
         for line in response_lines:
             pack_qty = line["supply_item_pack.quantity"]
-            line = line["req_need_response_line"]
+            line = line["need_response_line"]
             if line.status_id == CANCELLED:
                 continue
             if line.parameter_id == need_parameter_id:
@@ -1094,7 +1105,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                                               )
 
     # -------------------------------------------------------------------------
-    def req_need_postprocess(form):
+    def need_postprocess(form):
         """
             Set the Realm
             Set the Request Number
@@ -1106,7 +1117,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
         s3db = current.s3db
 
         # Lookup Organisation
-        notable = s3db.req_need_organisation
+        notable = s3db.need_organisation
         org_link = db(notable.need_id == need_id).select(notable.organisation_id,
                                                          limitby = (0, 1),
                                                          ).first()
@@ -1135,9 +1146,9 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
         realm_entity = org.pe_id
 
         # Set Realm
-        ntable = s3db.req_need
+        ntable = s3db.need_need
         db(ntable.id == need_id).update(realm_entity = realm_entity)
-        nltable = s3db.req_need_line
+        nltable = s3db.need_line
         db(nltable.need_id == need_id).update(realm_entity = realm_entity)
 
         if form.record:
@@ -1155,7 +1166,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             return
 
         # Lookup most recently-used value
-        nttable = s3db.req_need_tag
+        nttable = s3db.need_tag
         query = (nttable.tag == "req_number") & \
                 (nttable.need_id != need_id) & \
                 (nttable.need_id == notable.need_id) & \
@@ -1179,7 +1190,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                        )
 
     # -------------------------------------------------------------------------
-    def customise_req_need_resource(r, tablename):
+    def customise_need_need_resource(r, tablename):
 
         from gluon import IS_EMPTY_OR, IS_IN_SET
 
@@ -1191,7 +1202,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
         db = current.db
         s3db = current.s3db
 
-        table = s3db.req_need
+        table = s3db.need_need
         table.name.widget = lambda f, v: \
             s3_comments_widget(f, v, _placeholder = "e.g. 400 families require drinking water in Kegalle DS Division in 1-2 days.")
 
@@ -1205,7 +1216,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                                                       required_levels = ("L1", "L2"),
                                                       show_map = False)
 
-        ltable = s3db.req_need_line
+        ltable = s3db.need_line
         f = ltable.coarse_location_id
         f.label = T("Division")
         # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
@@ -1220,49 +1231,49 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
 
         # Custom Filtered Components
         s3db.add_components(tablename,
-                            req_need_tag = (# Address
-                                            {"name": "address",
-                                             "joinby": "need_id",
-                                             "filterby": {"tag": "address",
-                                                          },
-                                             "multiple": False,
-                                             },
-                                            # Contact
-                                            {"name": "contact",
-                                             "joinby": "need_id",
-                                             "filterby": {"tag": "contact",
-                                                          },
-                                             "multiple": False,
-                                             },
-                                            # Issue
-                                            {"name": "issue",
-                                             "joinby": "need_id",
-                                             "filterby": {"tag": "issue",
-                                                          },
-                                             "multiple": False,
-                                             },
-                                            # Req Number
-                                            {"name": "req_number",
-                                             "joinby": "need_id",
-                                             "filterby": {"tag": "req_number",
-                                                          },
-                                             "multiple": False,
-                                             },
-                                            # Original Request From
-                                            {"name": "request_from",
-                                             "joinby": "need_id",
-                                             "filterby": {"tag": "request_from",
-                                                          },
-                                             "multiple": False,
-                                             },
-                                            # Verified
-                                            {"name": "verified",
-                                             "joinby": "need_id",
-                                             "filterby": {"tag": "verified",
-                                                          },
-                                             "multiple": False,
-                                             },
-                                            )
+                            need_tag = (# Address
+                                        {"name": "address",
+                                         "joinby": "need_id",
+                                         "filterby": {"tag": "address",
+                                                      },
+                                         "multiple": False,
+                                         },
+                                        # Contact
+                                        {"name": "contact",
+                                         "joinby": "need_id",
+                                         "filterby": {"tag": "contact",
+                                                      },
+                                         "multiple": False,
+                                         },
+                                        # Issue
+                                        {"name": "issue",
+                                         "joinby": "need_id",
+                                         "filterby": {"tag": "issue",
+                                                      },
+                                         "multiple": False,
+                                         },
+                                        # Req Number
+                                        {"name": "req_number",
+                                         "joinby": "need_id",
+                                         "filterby": {"tag": "req_number",
+                                                      },
+                                         "multiple": False,
+                                         },
+                                        # Original Request From
+                                        {"name": "request_from",
+                                         "joinby": "need_id",
+                                         "filterby": {"tag": "request_from",
+                                                      },
+                                         "multiple": False,
+                                         },
+                                        # Verified
+                                        {"name": "verified",
+                                         "joinby": "need_id",
+                                         "filterby": {"tag": "verified",
+                                                      },
+                                         "multiple": False,
+                                         },
+                                        )
                             )
 
         # Individual settings for specific tag components
@@ -1318,7 +1329,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             if organisation_id:
                 org_readonly = True
             else:
-                rotable = s3db.req_need_organisation
+                rotable = s3db.need_organisation
                 org_link = db(rotable.need_id == r.id).select(rotable.organisation_id,
                                                               limitby = (0, 1)
                                                               ).first()
@@ -1326,12 +1337,12 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                     org_readonly = True
                 else:
                     org_readonly = False
-            #table = s3db.req_need_item
+            #table = s3db.need_item
             #table.quantity.label = T("Quantity Requested")
             #table.quantity_committed.readable = True
             #table.quantity_uncommitted.readable = True
             #table.quantity_delivered.readable = True
-            #need_item = S3SQLInlineComponent("need_item",
+            #need_item = S3SQLInlineComponent("item",
             #                                 label = T("Items Needed"),
             #                                 fields = ["item_category_id",
             #                                           "item_id",
@@ -1345,12 +1356,12 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             #                                           "comments",
             #                                           ],
             #                                 )
-            #table = s3db.req_need_demographic
+            #table = s3db.need_demographic
             #table.value.label = T("Number in Need")
             #table.value_committed.readable = True
             #table.value_uncommitted.readable = True
             #table.value_reached.readable = True
-            #demographic = S3SQLInlineComponent("need_demographic",
+            #demographic = S3SQLInlineComponent("demographic",
             #                                   label = T("People Affected"),
             #                                   fields = [(T("Type"), "parameter_id"),
             #                                             #(T("Needed within Timeframe"), "timeframe"),
@@ -1369,7 +1380,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             ltable.quantity_committed.readable = True
             ltable.quantity_uncommitted.readable = True
             ltable.quantity_delivered.readable = True
-            line = S3SQLInlineComponent("need_line",
+            line = S3SQLInlineComponent("line",
                                         label = "",
                                         fields = ["coarse_location_id",
                                                   "location_id",
@@ -1393,7 +1404,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
         else:
             # Create
             org_readonly = organisation_id is not None
-            #need_item = S3SQLInlineComponent("need_item",
+            #need_item = S3SQLInlineComponent("item",
             #                                 label = T("Items Needed"),
             #                                 fields = ["item_category_id",
             #                                           "item_id",
@@ -1404,7 +1415,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             #                                           "comments",
             #                                           ],
             #                                 )
-            #demographic = S3SQLInlineComponent("need_demographic",
+            #demographic = S3SQLInlineComponent("demographic",
             #                                   label = T("People Affected"),
             #                                   fields = [(T("Type"), "parameter_id"),
             #                                             #(T("Needed within Timeframe"), "timeframe"),
@@ -1412,7 +1423,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             #                                             "comments",
             #                                             ],
             #                                   )
-            line = S3SQLInlineComponent("need_line",
+            line = S3SQLInlineComponent("line",
                                         label = "",
                                         fields = ["coarse_location_id",
                                                   "location_id",
@@ -1471,7 +1482,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                        ]
 
         from .controllers import project_ActivityRepresent
-        natable = s3db.req_need_activity
+        natable = s3db.need_activity
         #f = natable.activity_id
         #f.represent = project_ActivityRepresent()
         natable.activity_id.represent = project_ActivityRepresent()
@@ -1493,9 +1504,11 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                                                    ))
 
         crud_form = S3SQLCustomForm(*crud_fields,
-                                    postprocess = req_need_postprocess)
+                                    postprocess = need_postprocess)
 
-        need_line_summary = URL(c="req", f="need_line", args="summary")
+        need_line_summary = URL(c="need", f="line",
+                                args = "summary",
+                                )
 
         s3db.configure(tablename,
                        create_next = need_line_summary,
@@ -1504,10 +1517,10 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                        crud_form = crud_form,
                        )
 
-    settings.customise_req_need_resource = customise_req_need_resource
+    settings.customise_need_need_resource = customise_need_need_resource
 
     # -------------------------------------------------------------------------
-    def req_need_rheader(r):
+    def need_rheader(r):
         """
             Resource Header for Needs
         """
@@ -1547,23 +1560,24 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
         return rheader
 
     # -------------------------------------------------------------------------
-    def customise_req_need_controller(**attr):
+    def customise_need_need_controller(**attr):
 
         line_id = current.request.get_vars.get("line")
         if line_id:
             from gluon import redirect
-            nltable = current.s3db.req_need_line
+            nltable = current.s3db.need_line
             line = current.db(nltable.id == line_id).select(nltable.need_id,
                                                             limitby = (0, 1)
                                                             ).first()
             if line:
                 redirect(URL(args = [line.need_id],
-                             vars = {}))
+                             vars = {},
+                             ))
 
         # Custom commit method to create an Activity Group from a Need
-        current.s3db.set_method("req", "need",
+        current.s3db.set_method("need", "need",
                                 method = "commit",
-                                action = req_need_commit)
+                                action = need_commit)
 
         s3 = current.response.s3
 
@@ -1585,7 +1599,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                     # Custom Button
                     from gluon import A
                     output["commit"] = A(T("Commit"),
-                                         _href = URL(args=[r.id, "commit"]),
+                                         _href = URL(args = [r.id, "commit"]),
                                          _class = "action-btn",
                                          #_id = "commit-btn",
                                          )
@@ -1595,11 +1609,11 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             return output
         s3.postp = postp
 
-        attr["rheader"] = req_need_rheader
+        attr["rheader"] = need_rheader
 
         return attr
 
-    settings.customise_req_need_controller = customise_req_need_controller
+    settings.customise_need_need_controller = customise_need_need_controller
 
     # -------------------------------------------------------------------------
     def homepage_stats_update():
@@ -1614,13 +1628,13 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
     settings.tasks.homepage_stats_update = homepage_stats_update
 
     # -------------------------------------------------------------------------
-    def req_need_line_update_stats(r, **attr):
+    def need_line_update_stats(r, **attr):
         """
             Method to manually update the data files for the charts
             on the homepage; can be run by POSTing an empty request
-            to req/need_line/update_stats, e.g. via:
+            to need/line/update_stats, e.g. via:
 
-            <form action='{{=URL(c="req", f="need_line", args=["update_stats"])}}' method='post'>
+            <form action='{{=URL(c="need", f="line", args=["update_stats"])}}' method='post'>
                 <button type='submit'>{{=T("Update Stats")}}</button>
             </form>
 
@@ -1643,7 +1657,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             r.error("405", current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
-    def customise_req_need_line_resource(r, tablename):
+    def customise_need_line_resource(r, tablename):
 
         from gluon import IS_EMPTY_OR, IS_IN_SET, SPAN
 
@@ -1651,27 +1665,27 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
 
         s3db = current.s3db
 
-        current.response.s3.crud_strings["req_need_line"]["title_map"] = T("Map of Needs")
+        current.response.s3.crud_strings["need_line"]["title_map"] = T("Map of Needs")
 
-        req_status_opts = {0: SPAN(T("Uncommitted"),
-                                       _class = "req_status_none",
-                                       ),
-                           1: SPAN(T("Partially Committed"),
-                                   _class = "req_status_partial",
-                                   ),
-                           2: SPAN(T("Fully Committed"),
-                                   _class = "req_status_committed",
-                                   ),
-                           3: SPAN(T("Complete"),
-                                   _class = "req_status_complete",
-                                   ),
-                           }
+        need_status_opts = {0: SPAN(T("Uncommitted"),
+                                    _class = "req_status_none",
+                                    ),
+                            1: SPAN(T("Partially Committed"),
+                                    _class = "req_status_partial",
+                                    ),
+                            2: SPAN(T("Fully Committed"),
+                                    _class = "req_status_committed",
+                                    ),
+                            3: SPAN(T("Complete"),
+                                    _class = "req_status_complete",
+                                    ),
+                            }
 
-        table = s3db.req_need_line
+        table = s3db.need_line
 
         f = table.status
-        f.requires = IS_EMPTY_OR(IS_IN_SET(req_status_opts, zero = None))
-        f.represent = S3Represent(options = req_status_opts)
+        f.requires = IS_EMPTY_OR(IS_IN_SET(need_status_opts, zero = None))
+        f.represent = S3Represent(options = need_status_opts)
 
         f = table.coarse_location_id
         f.label = T("Division")
@@ -1688,15 +1702,15 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             f.label = T("GN")
 
         # Custom method to (manually) update homepage statistics
-        s3db.set_method("req", "need_line",
+        s3db.set_method("need", "line",
                         method = "update_stats",
-                        action = req_need_line_update_stats,
+                        action = need_line_update_stats,
                         )
 
-    settings.customise_req_need_line_resource = customise_req_need_line_resource
+    settings.customise_need_line_resource = customise_need_line_resource
 
     # -------------------------------------------------------------------------
-    def customise_req_need_line_controller(**attr):
+    def customise_need_line_controller(**attr):
 
         from s3 import S3OptionsFilter, S3TextFilter #, S3DateFilter, S3LocationFilter
 
@@ -1731,40 +1745,40 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                                )
 
         # Custom Filtered Components
-        s3db.add_components("req_need",
-                            req_need_tag = (# Req Number
-                                            {"name": "req_number",
-                                             "joinby": "need_id",
-                                             "filterby": {"tag": "req_number",
-                                                          },
-                                             "multiple": False,
-                                             },
-                                            # Original Request From
-                                            {"name": "request_from",
-                                             "joinby": "need_id",
-                                             "filterby": {"tag": "request_from",
-                                                          },
-                                             "multiple": False,
-                                             },
-                                            # Verified
-                                            {"name": "verified",
-                                             "joinby": "need_id",
-                                             "filterby": {"tag": "verified",
-                                                          },
-                                             "multiple": False,
-                                             },
-                                            ),
+        s3db.add_components("need_need",
+                            need_tag = (# Req Number
+                                        {"name": "req_number",
+                                         "joinby": "need_id",
+                                         "filterby": {"tag": "req_number",
+                                                      },
+                                         "multiple": False,
+                                         },
+                                        # Original Request From
+                                        {"name": "request_from",
+                                         "joinby": "need_id",
+                                         "filterby": {"tag": "request_from",
+                                                      },
+                                         "multiple": False,
+                                         },
+                                        # Verified
+                                        {"name": "verified",
+                                         "joinby": "need_id",
+                                         "filterby": {"tag": "verified",
+                                                      },
+                                         "multiple": False,
+                                         },
+                                        ),
                             )
 
-        s3db.add_components("req_need_response",
-                            req_need_response_organisation = (# Agency
-                                                              {"name": "agency",
-                                                               "joinby": "need_response_id",
-                                                               "filterby": {"role": 1,
-                                                                            },
-                                                               #"multiple": False,
-                                                               },
-                                                              ),
+        s3db.add_components("need_response",
+                            need_response_organisation = (# Agency
+                                                          {"name": "agency",
+                                                           "joinby": "need_response_id",
+                                                           "filterby": {"role": 1,
+                                                                        },
+                                                           #"multiple": False,
+                                                           },
+                                                          ),
                             )
 
         filter_widgets = [S3TextFilter(["need_id$req_number.value",
@@ -1815,12 +1829,12 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                           #                ),
                           ]
 
-        s3db.configure("req_need_line",
+        s3db.configure("need_line",
                        filter_widgets = filter_widgets,
                        # We create a custom Create Button to create a Need not a Need Line
                        listadd = False,
                        list_fields = [(T("Status"), "status"),
-                                      (T("Orgs responding"), "need_response_line.need_response_id$agency.organisation_id"),
+                                      (T("Orgs responding"), "response_line.need_response_id$agency.organisation_id"),
                                       "need_id$date",
                                       (T("Need entered by"), "need_id$organisation__link.organisation_id"),
                                       (T("Original Request From"), "need_id$request_from.value"),
@@ -1837,29 +1851,29 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                                       "timeframe",
                                       (T("Request Number"), "need_id$req_number.value"),
                                       ],
-                       popup_url = URL(c="req", f="need",
+                       popup_url = URL(c="need", f="need",
                                        vars = {"line": "[id]"}
                                        ),
                        )
 
         # Custom commit method to create an Activity from a Need Line
-        s3db.set_method("req", "need_line",
+        s3db.set_method("need", "line",
                         method = "commit",
-                        action = req_need_line_commit)
+                        action = need_line_commit)
 
         s3 = current.response.s3
 
-        s3.crud_strings["req_need_line"] = Storage(
+        s3.crud_strings["need_line"] = Storage(
             #label_create = T("Add Needs"),
             title_list = T("Needs"),
-            #title_display=T("Needs"),
-            #title_update=T("Edit Needs"),
+            #title_display = T("Needs"),
+            #title_update = T("Edit Needs"),
             #title_upload = T("Import Needs"),
             #label_list_button = T("List Needs"),
-            #label_delete_button=T("Delete Needs"),
-            msg_record_created=T("Needs added"),
-            msg_record_modified=T("Needs updated"),
-            msg_record_deleted=T("Needs deleted"),
+            #label_delete_button = T("Delete Needs"),
+            msg_record_created = T("Needs added"),
+            msg_record_modified = T("Needs updated"),
+            msg_record_deleted = T("Needs deleted"),
             msg_list_empty = T("No Needs currently registered"),
             )
 
@@ -1880,28 +1894,32 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                 # Normal Action Buttons
                 #S3CRUD.action_buttons(r)
                 # Custom Action Buttons
-                deletable = current.db(auth.s3_accessible_query("delete", "req_need_line")).select(s3db.req_need_line.id)
+                deletable = current.db(auth.s3_accessible_query("delete", "need_line")).select(s3db.need_line.id)
                 restrict_d = [str(row.id) for row in deletable]
                 s3.actions = [{"label": s3_str(T("Open")),
                                "_class": "action-btn",
-                               "url": URL(f="need", vars={"line": "[id]"}),
+                               "url": URL(c="need", f="need",
+                                          vars = {"line": "[id]"},
+                                          ),
                                },
                               {"label": s3_str(T("Delete")),
                                "_class": "delete-btn",
-                               "url": URL(args=["[id]", "delete"]),
+                               "url": URL(args = ["[id]", "delete"]),
                                "restrict": restrict_d,
                                },
                               ]
-                if auth.s3_has_permission("create", "req_need_response"):
+                if auth.s3_has_permission("create", "need_response"):
                     s3.actions.append({"label": s3_str(T("Commit")),
                                        "_class": "action-btn",
-                                       "url": URL(args=["[id]", "commit"]),
+                                       "url": URL(args = ["[id]", "commit"]),
                                        })
 
                 # Custom Create Button
                 add_btn = DIV(DIV(DIV(A(T("Add Needs"),
                                         _class = "action-btn",
-                                        _href = URL(f="need", args="create"),
+                                        _href = URL(c="need", f="need",
+                                                    args = "create",
+                                                    ),
                                         ),
                                       _id = "list-btn-add",
                                       ),
@@ -1916,10 +1934,10 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
 
         return attr
 
-    settings.customise_req_need_line_controller = customise_req_need_line_controller
+    settings.customise_need_line_controller = customise_need_line_controller
 
     # -------------------------------------------------------------------------
-    def req_need_response_postprocess(form):
+    def need_response_postprocess(form):
         """
             Set the Realm
             Ensure that the Need Lines (if-any) have the correct Status
@@ -1931,7 +1949,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
         need_response_id = form.vars.id
 
         # Lookup Organisation
-        nrotable = s3db.req_need_response_organisation
+        nrotable = s3db.need_response_organisation
         query = (nrotable.need_response_id == need_response_id) & \
                 (nrotable.role == 1)
         org_link = db(query).select(nrotable.organisation_id,
@@ -1950,23 +1968,21 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
         realm_entity = org.pe_id
 
         # Set Realm
-        nrtable = s3db.req_need_response
+        nrtable = s3db.need_response
         db(nrtable.id == need_response_id).update(realm_entity = realm_entity)
-        rltable = s3db.req_need_response_line
+        rltable = s3db.need_response_line
         db(rltable.need_response_id == need_response_id).update(realm_entity = realm_entity)
 
         # Lookup the Need Lines
-        query = (rltable.need_response_id == need_response_id) & \
-                (rltable.deleted == False)
-        response_lines = db(query).select(rltable.need_line_id)
+        response_lines = db(rltable.need_response_id == need_response_id).select(rltable.need_line_id)
 
         for line in response_lines:
             need_line_id = line.need_line_id
             if need_line_id:
-                req_need_line_status_update(need_line_id)
+                need_line_status_update(need_line_id)
 
     # -------------------------------------------------------------------------
-    def customise_req_need_response_resource(r, tablename):
+    def customise_need_response_resource(r, tablename):
 
         from s3 import s3_comments_widget, \
                        S3LocationDropdownWidget, S3LocationSelector, \
@@ -1976,7 +1992,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
         #db = current.db
         s3db = current.s3db
 
-        table = s3db.req_need_response
+        table = s3db.need_response
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Add Activities"),
@@ -1998,7 +2014,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                                                       required_levels = ("L1", "L2"),
                                                       show_map = False)
 
-        ltable = s3db.req_need_response_line
+        ltable = s3db.need_response_line
         f = ltable.coarse_location_id
         f.label = T("Division")
         # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
@@ -2016,28 +2032,28 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
 
         # Custom Filtered Components
         s3db.add_components(tablename,
-                            req_need_response_organisation = (# Agency
-                                                              {"name": "agency",
-                                                               "joinby": "need_response_id",
-                                                               "filterby": {"role": 1,
-                                                                            },
-                                                               "multiple": False,
-                                                               },
-                                                              # Partners
-                                                              {"name": "partner",
-                                                               "joinby": "need_response_id",
-                                                               "filterby": {"role": 2,
-                                                                            },
-                                                               #"multiple": False,
-                                                               },
-                                                              # Donors
-                                                              {"name": "donor",
-                                                               "joinby": "need_response_id",
-                                                               "filterby": {"role": 3,
-                                                                            },
-                                                               #"multiple": False,
-                                                               },
-                                                              ),
+                            need_response_organisation = (# Agency
+                                                          {"name": "agency",
+                                                           "joinby": "need_response_id",
+                                                           "filterby": {"role": 1,
+                                                                        },
+                                                           "multiple": False,
+                                                           },
+                                                          # Partners
+                                                          {"name": "partner",
+                                                           "joinby": "need_response_id",
+                                                           "filterby": {"role": 2,
+                                                                        },
+                                                           #"multiple": False,
+                                                           },
+                                                          # Donors
+                                                          {"name": "donor",
+                                                           "joinby": "need_response_id",
+                                                           "filterby": {"role": 3,
+                                                                        },
+                                                           #"multiple": False,
+                                                           },
+                                                          ),
                             )
 
         # Individual settings for specific tag components
@@ -2081,7 +2097,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                        "location_id",
                        (T("Date entered"), "date"),
                        (T("Summary of Needs/Activities"), "name"),
-                       S3SQLInlineComponent("need_response_line",
+                       S3SQLInlineComponent("response_line",
                                             label = "",
                                             fields = ["coarse_location_id",
                                                       "location_id",
@@ -2114,21 +2130,23 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                        ]
 
         if r.id and r.resource.tablename == tablename and r.record.need_id:
-            from .controllers import req_NeedRepresent
+            from .controllers import need_NeedRepresent
             f = table.need_id
-            f.represent = req_NeedRepresent()
+            f.represent = need_NeedRepresent()
             f.writable = False
             crud_fields.insert(7, "need_id")
 
         # Post-process to update need status for response line changes
         crud_form = S3SQLCustomForm(*crud_fields,
-                                    postprocess = req_need_response_postprocess)
+                                    postprocess = need_response_postprocess)
         # Make sure need status gets also updated when response lines are deleted
-        s3db.configure("req_need_response_line",
-                       ondelete = req_need_response_line_ondelete,
+        s3db.configure("need_response_line",
+                       ondelete = need_response_line_ondelete,
                        )
 
-        need_response_line_summary = URL(c="req", f="need_response_line", args="summary")
+        need_response_line_summary = URL(c="need", f="response_line",
+                                         args = "summary",
+                                         )
 
         s3db.configure(tablename,
                        crud_form = crud_form,
@@ -2137,15 +2155,15 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                        update_next = need_response_line_summary,
                        )
 
-    settings.customise_req_need_response_resource = customise_req_need_response_resource
+    settings.customise_need_response_resource = customise_need_response_resource
 
     # -------------------------------------------------------------------------
-    def customise_req_need_response_controller(**attr):
+    def customise_need_response_controller(**attr):
 
         line_id = current.request.get_vars.get("line")
         if line_id:
             from gluon import redirect
-            nltable = current.s3db.req_need_response_line
+            nltable = current.s3db.need_response_line
             line = current.db(nltable.id == line_id).select(nltable.need_response_id,
                                                             limitby = (0, 1)
                                                             ).first()
@@ -2173,10 +2191,10 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
 
         return attr
 
-    settings.customise_req_need_response_controller = customise_req_need_response_controller
+    settings.customise_need_response_controller = customise_need_response_controller
 
     # -------------------------------------------------------------------------
-    def req_need_response_line_ondelete(row):
+    def need_response_line_ondelete(row):
         """
             Ensure that the Need Line (if-any) has the correct Status
         """
@@ -2189,7 +2207,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
         response_line_id = row.get("id")
 
         # Lookup the Need Line
-        rltable = s3db.req_need_response_line
+        rltable = s3db.need_response_line
         record = db(rltable.id == response_line_id).select(rltable.deleted_fk,
                                                            limitby = (0, 1)
                                                            ).first()
@@ -2203,23 +2221,23 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             return
 
         # Check that the Need Line hasn't been deleted
-        nltable = s3db.req_need_line
+        nltable = s3db.need_line
         need_line = db(nltable.id == need_line_id).select(nltable.deleted,
                                                           limitby = (0, 1)
                                                           ).first()
 
         if need_line and not need_line.deleted:
-            req_need_line_status_update(need_line_id)
+            need_line_status_update(need_line_id)
 
     # -------------------------------------------------------------------------
-    def customise_req_need_response_line_resource(r, tablename):
+    def customise_need_response_line_resource(r, tablename):
 
         from s3 import S3Represent
 
         s3db = current.s3db
-        table = s3db.req_need_response_line
+        table = s3db.need_response_line
 
-        #current.response.s3.crud_strings["req_need_response_line"] = Storage(title_map = T("Map of Activities"),)
+        #current.response.s3.crud_strings["need_response_line"] = Storage(title_map = T("Map of Activities"),)
 
         # Settings for Map Popups
         f = table.coarse_location_id
@@ -2232,22 +2250,22 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
         f.represent = S3Represent(lookup = "gis_location")
 
         s3db.configure(tablename,
-                       ondelete = req_need_response_line_ondelete,
-                       popup_url = URL(c="req", f="need_response",
+                       ondelete = need_response_line_ondelete,
+                       popup_url = URL(c="need", f="response",
                                        vars = {"line": "[id]"}
                                        ),
                        report_represent = NeedResponseLineReportRepresent,
                        )
 
-    settings.customise_req_need_response_line_resource = customise_req_need_response_line_resource
+    settings.customise_need_response_line_resource = customise_need_response_line_resource
 
     # -------------------------------------------------------------------------
-    def customise_req_need_response_line_controller(**attr):
+    def customise_need_response_line_controller(**attr):
 
         from s3 import S3OptionsFilter #, S3DateFilter, S3LocationFilter, S3TextFilter
 
         s3db = current.s3db
-        table = s3db.req_need_response_line
+        table = s3db.need_response_line
 
         settings.base.pdf_orientation = "Landscape"
 
@@ -2278,29 +2296,29 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                                )
 
         # Custom Filtered Components
-        s3db.add_components("req_need_response",
-                            req_need_response_organisation = (# Agency
-                                                              {"name": "agency",
-                                                               "joinby": "need_response_id",
-                                                               "filterby": {"role": 1,
-                                                                            },
-                                                               #"multiple": False,
-                                                               },
-                                                              # Partners
-                                                              {"name": "partner",
-                                                               "joinby": "need_response_id",
-                                                               "filterby": {"role": 2,
-                                                                            },
-                                                               #"multiple": False,
-                                                               },
-                                                              # Donors
-                                                              {"name": "donor",
-                                                               "joinby": "need_response_id",
-                                                               "filterby": {"role": 3,
-                                                                            },
-                                                               #"multiple": False,
-                                                               },
-                                                              ),
+        s3db.add_components("need_response",
+                            need_response_organisation = (# Agency
+                                                          {"name": "agency",
+                                                           "joinby": "need_response_id",
+                                                           "filterby": {"role": 1,
+                                                                        },
+                                                           #"multiple": False,
+                                                           },
+                                                          # Partners
+                                                          {"name": "partner",
+                                                           "joinby": "need_response_id",
+                                                           "filterby": {"role": 2,
+                                                                        },
+                                                           #"multiple": False,
+                                                           },
+                                                          # Donors
+                                                          {"name": "donor",
+                                                           "joinby": "need_response_id",
+                                                           "filterby": {"role": 3,
+                                                                        },
+                                                           #"multiple": False,
+                                                           },
+                                                          ),
                             )
 
         s3 = current.response.s3
@@ -2370,7 +2388,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                            ]
 
             if r.interactive:
-                s3.crud_strings["req_need_response_line"] = Storage(
+                s3.crud_strings["need_response_line"] = Storage(
                     #label_create = T("Add Activity"),
                     title_list = T("Activities"),
                     #title_display = T("Activity"),
@@ -2395,12 +2413,12 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             #    gis_represent = S3Represent(lookup = "gis_location")
             #
             #    def quantity_delivered_w_location(row):
-            #        quantity_delivered = row["req_need_response_line.quantity_delivered"]
-            #        location_id = row["req_need_response_line.location_id"]
+            #        quantity_delivered = row["need_response_line.quantity_delivered"]
+            #        location_id = row["need_response_line.location_id"]
             #        if not location_id:
-            #            location_id = row["req_need_response_line.coarse_location_id"]
+            #            location_id = row["need_response_line.coarse_location_id"]
             #        if not location_id:
-            #            location_id = row["req_need_response.location_id"]
+            #            location_id = row["need_response.location_id"]
             #        location = gis_represent(location_id)
             #        return "%s (%s)" % (quantity_delivered, location)
             #
@@ -2417,7 +2435,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             if r.representation != "pdf":
                 list_fields.insert(0, (T("Disaster"), "need_response_id$event__link.event_id"))
 
-            s3db.configure("req_need_response_line",
+            s3db.configure("need_response_line",
                            filter_widgets = filter_widgets,
                            # We create a custom Create Button to create a Need Response not a Need Response Line
                            listadd = False,
@@ -2442,11 +2460,13 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                 #S3CRUD.action_buttons(r)
                 # Custom Action Buttons
                 auth = current.auth
-                deletable = current.db(auth.s3_accessible_query("delete", "req_need_response_line")).select(table.id)
+                deletable = current.db(auth.s3_accessible_query("delete", "need_response_line")).select(table.id)
                 restrict_d = [str(row.id) for row in deletable]
                 s3.actions = [{"label": s3_str(T("Open")),
                                "_class": "action-btn",
-                               "url": URL(f="need_response", vars={"line": "[id]"}),
+                               "url": URL(f="need_response",
+                                          vars = {"line": "[id]"},
+                                          ),
                                },
                               {"label": s3_str(T("Delete")),
                                "_class": "delete-btn",
@@ -2458,7 +2478,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                 # Custom Create Button
                 add_btn = DIV(DIV(DIV(A(T("Add Activity"),
                                         _class = "action-btn",
-                                        _href = URL(f="need_response", args="create"),
+                                        _href = URL(f="response", args="create"),
                                         ),
                                       _id = "list-btn-add",
                                       ),
@@ -2473,7 +2493,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
 
         return attr
 
-    settings.customise_req_need_response_line_controller = customise_req_need_response_line_controller
+    settings.customise_need_response_line_controller = customise_need_response_line_controller
 
 # =============================================================================
 class NeedResponseLineReportRepresent(S3ReportRepresent):
@@ -2487,13 +2507,13 @@ class NeedResponseLineReportRepresent(S3ReportRepresent):
         """
             Represent record_ids (custom)
 
-            @param record_ids: req_need_response_line record IDs
+            @param record_ids: need_response_line record IDs
 
             @returns: a JSON-serializable dict {recordID: representation}
         """
 
         # Represent the location IDs
-        resource = current.s3db.resource("req_need_response_line",
+        resource = current.s3db.resource("need_response_line",
                                          id = record_ids,
                                          )
 
@@ -2506,12 +2526,12 @@ class NeedResponseLineReportRepresent(S3ReportRepresent):
         output = {}
         for row in rows:
             raw = row["_row"]
-            if raw["req_need_response_line.location_id"]:
-                repr_str = row["req_need_response_line.location_id"]
+            if raw["need_response_line.location_id"]:
+                repr_str = row["need_response_line.location_id"]
             else:
                 # Fall back to coarse_location_id if no GN available
-                repr_str = row["req_need_response_line.coarse_location_id"]
-            output[raw["req_need_response_line.id"]] = repr_str
+                repr_str = row["need_response_line.coarse_location_id"]
+            output[raw["need_response_line.id"]] = repr_str
 
         return output
 

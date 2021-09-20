@@ -104,8 +104,9 @@ class DocumentLibrary(S3Model):
                                inv_recv = T("Incoming Shipment"),
                                inv_send = T("Sent Shipment"),
                                inv_warehouse = T("Warehouse"),
-                               # need_reponse only used by SHARE template
+                               # Only used by SHARE template
                                # @ToDo: Extend entity_types within the template
+                               need_need = T("Need"),
                                need_response = T("Activity Group"),
                                police_station = T("Police Station"),
                                pr_group = T("Team"),

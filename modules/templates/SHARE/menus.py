@@ -37,19 +37,19 @@ class S3MainMenu(default.S3MainMenu):
         """ Custom Modules Menu """
 
         menu= [MM("", c="default", f="index", icon="home"),
-               MM("Needs", c="req", f="need_line", m="summary")(
+               MM("Needs", c="need", f="line", m="summary")(
                 #MM("Statistics",  m="report"),
                 #MM("Map", m="map"),
-                MM("View", c="req", f="need_line", m="summary"),
-                MM("Create", c="req", f="need", m="create", p="read"),
-                MM("Dashboard", c="req", f="need_line", m="map"),
+                MM("View", c="need", f="line", m="summary"),
+                MM("Create", c="need", f="need", m="create", p="read"),
+                MM("Dashboard", c="need", f="line", m="map"),
                 ),
-               MM("4W", c="req", f="need_response_line", m="summary")(
+               MM("4W", c="need", f="response_line", m="summary")(
                 #MM("Statistics",  m="report"),
                 #MM("Map", m="map"),
-                MM("View", c="req", f="need_response_line", m="summary"),
-                MM("Create", c="req", f="need_response", m="create", p="read"),
-                MM("Dashboard", c="req", f="need_response_line", m="map"),
+                MM("View", c="need", f="response_line", m="summary"),
+                MM("Create", c="need", f="response", m="create", p="read"),
+                MM("Dashboard", c="need", f="response_line", m="map"),
                 ),
                MM("Situational Updates", c="event", f="sitrep", m="summary"),
                MM("Organizations", c="org", f="organisation", m="summary")(
@@ -271,12 +271,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def req():
+    def need():
         """ Requests Management """
 
         #ADMIN = current.session.s3.system_roles.ADMIN
 
-        #return M(c="req")(
+        #return M(c="need")(
         #            M("Needs", f="need", m="summary")(
         #                M("Create", m="create"),
         #                #M("Statistics", m="report"),
