@@ -27,10 +27,15 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("RequestModel",
-           "RequestApproverModel",
-           "RequestItemModel",
-           "RequestRecurringModel",
+__all__ = ("InventoryRequisitionModel",
+           "InventoryRequisitionApproverModel",
+           "InventoryRequisitionItemModel",
+           "InventoryRequisitionRecurringModel",
+           "InventoryRequisitionOrderItemModel",
+           "InventoryRequisitionProjectModel",
+           "InventoryRequisitionTagModel",
+           "InventoryCommitModel",
+           "InventoryCommitItemModel",
            "RequestNeedsModel",
            "RequestNeedsContactModel",
            "RequestNeedsItemsModel",
@@ -39,15 +44,10 @@ __all__ = ("RequestModel",
            "RequestNeedsPersonModel",
            "RequestNeedsSiteModel",
            "RequestNeedsTagModel",
-           "RequestOrderItemModel",
-           "RequestProjectModel",
-           "RequestTagModel",
-           "CommitModel",
            #"req_CheckMethod",
            "req_add_from_template",
            "req_approvers",
            "req_create_form_mods",
-           "req_hide_quantities",
            "req_inline_form",
            #"req_is_approver",
            "req_match",
@@ -158,11 +158,16 @@ def req_timeframe():
                            )
 
 # =============================================================================
-class RequestModel(S3Model):
+class InventoryRequisitionModel(S3Model):
     """
-        Model for Requests
+        Model for Requisitions for Inventory Items
+        - i.e. Consumable Goods, which are not to be managed as Assets
 
-        @ToDo: Move to inv_req
+        Can be used without Req for both raising Requisitions & fulfilling them
+
+        In the future, this may be used for fulfilling Inventory Requisitions raised via req_requisition
+
+        @ToDo: Move to inv_requisition
     """
 
     names = ("req_req",
@@ -1271,11 +1276,11 @@ class RequestModel(S3Model):
         db(query).delete()
 
 # =============================================================================
-class RequestApproverModel(S3Model):
+class InventoryRequisitionApproverModel(S3Model):
     """
-        Model for request approvers
+        Model for Approvers for Inventory Requisitions raised via inv_requisition
 
-        @ToDo: Move to inv_req_approver
+        @ToDo: Move to inv_requisition_approver
     """
 
     names = ("req_approver",
@@ -1362,11 +1367,11 @@ class RequestApproverModel(S3Model):
         return {}
 
 # =============================================================================
-class RequestItemModel(S3Model):
+class InventoryRequisitionApproverModel(S3Model):
     """
-        Model for requested items
+        Model for Inventory Requisition Items
 
-        @ToDo: Move to inv_req_item
+        @ToDo: Move to inv_requisition_item
     """
 
     names = ("req_req_item",
@@ -1766,11 +1771,11 @@ $.filterOptionsS3({
             item.method = item.METHOD.UPDATE
 
 # =============================================================================
-class RequestRecurringModel(S3Model):
+class InventoryRequisitionRecurringModel(S3Model):
     """
-        Adjuvant model to support request generation by scheduler
+        Adjuvant model to support Scheduler-generated Inventory Requisitions
 
-        @ToDo: Replace with inv_req_job
+        @ToDo: Move to inv_requsition_job
     """
 
     names = ("req_job",
@@ -2399,11 +2404,11 @@ class RequestNeedsTagModel(S3Model):
         return {}
 
 # =============================================================================
-class RequestTagModel(S3Model):
+class InventoryRequisitionTagModel(S3Model):
     """
-        Request Tags
+        Inventory Requisition Tags
 
-        @ToDo: Move to inv_req_tag
+        @ToDo: Move to inv_requisition_tag
     """
 
     names = ("req_req_tag",
@@ -2444,12 +2449,12 @@ class RequestTagModel(S3Model):
         return {}
 
 # =============================================================================
-class RequestOrderItemModel(S3Model):
+class InventoryRequisitionOrderItemModel(S3Model):
     """
-        Simple Item Ordering for Requests
+        Simple Item Ordering for fulfilment of Inventory Requisitions
         - for when Procurement model isn't being used
 
-        @ToDo: Move to inv_req_item_order
+        @ToDo: Move to inv_item_order
     """
 
     names = ("req_order_item",
@@ -2517,9 +2522,9 @@ class RequestOrderItemModel(S3Model):
         return {}
 
 # =============================================================================
-class RequestProjectModel(S3Model):
+class InventoryRequisitionProjectModel(S3Model):
     """
-        Link Requests to Projects
+        Link Inventory Requisitions to Projects
 
         @ToDo: Move to inv_req_project
     """
@@ -2551,9 +2556,9 @@ class RequestProjectModel(S3Model):
         return {}
 
 # =============================================================================
-class CommitModel(S3Model):
+class InventoryCommitModel(S3Model):
     """
-        Model for commits (pledges)
+        Model for Commits (Pledges) to Inventory Requisitions
 
         @ToDo: Move to inv_commit
     """
@@ -2830,9 +2835,9 @@ class CommitModel(S3Model):
         req_update_commit_quantities_and_status(req)
 
 # =============================================================================
-class CommitItemModel(S3Model):
+class InventoryCommitItemModel(S3Model):
     """
-        Model for committed (pledged) items
+        Model for Committed (Pledged) Items for Inventory Requisitions
 
         @ToDo: Move to inv_commit_item
     """
@@ -2960,7 +2965,7 @@ class CommitItemModel(S3Model):
 # -------------------------------------------------------------------------
 def req_tabs(r, match=True):
     """
-        Add a set of rheader tabs for a site's request management
+        Add a set of rheader tabs for a site's Inventory Requisition management
 
         @param r: the S3Request (for permission checking)
         @param match: request matching is applicable for this type of site
@@ -3059,7 +3064,7 @@ def req_update_status(req_id):
 # -------------------------------------------------------------------------
 def req_update_commit_quantities_and_status(req):
     """
-        Update commit quantities and status of a request
+        Update commit quantities and status of an Inventory Requisition
 
         @param req: the req_req record (Row)
     """
@@ -3138,7 +3143,7 @@ def req_update_commit_quantities_and_status(req):
 # =============================================================================
 def req_req_details(row):
     """
-        Field method for requests, representing all requested items/skills
+        Field method for Inventory Requisitions, representing all requested items
         as string (for use in data tables/lists)
     """
 
@@ -3170,7 +3175,7 @@ def req_req_details(row):
 # =============================================================================
 def req_req_drivers(row):
     """
-        Field method for requests, representing all assigned drivers
+        Field method for Inventory Requisitions, representing all assigned drivers
         as string (for use in data tables/lists)
     """
 
@@ -3202,7 +3207,7 @@ def req_req_drivers(row):
 # =============================================================================
 def req_rheader(r, check_page=False):
     """
-        Resource Header for Requests & Needs
+        Resource Header for Inventory Requisitions & Needs
 
         @todo: improve structure/readability
     """
@@ -3458,7 +3463,7 @@ def req_rheader(r, check_page=False):
 # =============================================================================
 def req_match(rheader = None):
     """
-        Generic controller to display all requests a site could potentially
+        Generic controller to display all Inventory Requisitions a site could potentially
         fulfill as a tab of that site instance
             - add as req_match controller to the module, then
             - configure as rheader-tab "req_match/" for the site resource
@@ -3581,7 +3586,7 @@ def req_match(rheader = None):
 def req_send_commit():
     """
         Controller function to create a Shipment containing all
-        items in a commitment (interactive)
+        Items in a Commitment (interactive)
 
         @ToDo: Rewrite as Method
         @ToDo: Support for inv_send_req_multi (not needed for RMS)
@@ -3679,8 +3684,8 @@ def req_send_commit():
 # =============================================================================
 class req_CheckMethod(S3Method):
     """
-        Check to see if you can match a Request
-            - Using the Inventory of your Site if this is an Items request
+        Check to see if you can match an Inventory Requisition
+        - from the Inventory Items in your Site
     """
 
     def apply_method(self, r, **attr):
@@ -4036,7 +4041,7 @@ class req_ReqItemRepresent(S3Represent):
 # =============================================================================
 class req_CommitRepresent(S3Represent):
     """
-        Represent a commit
+        Represent a Commit
     """
 
     def __init__(self):
@@ -4151,8 +4156,8 @@ def req_job_run(r, **attr):
 # =============================================================================
 def req_add_from_template(req_id):
     """
-        Add a Request from a Template (scheduled function to create
-        recurring requests)
+        Add an Inventory Requisition from a Template
+        - scheduled function to create recurring requests
 
         @param req_id: record ID of the request template
     """
@@ -4214,7 +4219,7 @@ def req_add_from_template(req_id):
 # =============================================================================
 def req_is_approver(site_id):
     """
-        Check if User has permission to Approve a Request
+        Check if User has permission to Approve an Inventory Requisition
     """
 
     auth = current.auth
@@ -4261,7 +4266,7 @@ def req_is_approver(site_id):
 # =============================================================================
 def req_approvers(site_id):
     """
-        Return people permitted to Approve a Request
+        Return people permitted to Approve an Inventory Requisition
     """
 
     db = current.db
@@ -4352,26 +4357,10 @@ $.filterOptionsS3({
     s3.scripts.append("/%s/static/scripts/S3/s3.req_create.js" % r.application)
 
 # =============================================================================
-def req_hide_quantities(table):
-    """
-        Hide per-status quantity fields in Request create-forms
-
-        @param table: the Table (req_item or req_skill)
-    """
-
-    if not current.deployment_settings.get_req_item_quantities_writable():
-        table.quantity_commit.readable = \
-        table.quantity_commit.writable = False
-        table.quantity_transit.readable = \
-        table.quantity_transit.writable = False
-        table.quantity_fulfil.readable = \
-        table.quantity_fulfil.writable = False
-
-# =============================================================================
 def req_inline_form(method):
     """
         Function to be called from REST prep functions
-         - to add req_item & req_skill components as inline forms
+         - to add req_item components as inline forms
 
         @param method: the URL request method
     """
@@ -4496,7 +4485,7 @@ $.filterOptionsS3({
 # =============================================================================
 class req_ReqRepresent(S3Represent):
     """
-        Represent a Request
+        Represent an Inventory Requisition
     """
 
     def __init__(self,
@@ -4567,7 +4556,7 @@ class req_ReqRepresent(S3Represent):
 # =============================================================================
 class req_ReqRefRepresent(S3Represent):
     """
-        Represent a Request Reference
+        Represent an Inventory Requisition Reference
     """
 
     def __init__(self,

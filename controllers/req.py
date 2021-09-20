@@ -33,7 +33,7 @@ def create():
 # -----------------------------------------------------------------------------
 def req():
     """
-        REST Controller for Request Instances
+        REST Controller for Inventory Requisition Instances
     """
 
     s3.filter = (s3db.req_req.is_template == False)
@@ -44,7 +44,7 @@ def req():
 # -----------------------------------------------------------------------------
 def req_template():
     """
-        REST Controller for Request Templates
+        REST Controller for Inventory Requisition Templates
     """
 
     # Hide fields which aren't relevant to templates
@@ -114,7 +114,7 @@ def req_template():
 # -----------------------------------------------------------------------------
 def marker_fn(record):
     """
-        Function to decide which Marker to use for Requests Map
+        Function to decide which Marker to use for Inventory Requisitions Map
     """
 
     # Base Icon based on Type
@@ -230,8 +230,13 @@ def req_controller(template = False):
                 elif r.component_name == "req_item":
                     ctable = r.component.table
                     ctable.site_id.writable = ctable.site_id.readable = False
-                    from s3db.req import req_hide_quantities
-                    req_hide_quantities(ctable)
+                    if not settings.get_req_item_quantities_writable():
+                        ctable.quantity_commit.readable = \
+                        ctable.quantity_commit.writable = False
+                        ctable.quantity_transit.readable = \
+                        ctable.quantity_transit.writable = False
+                        ctable.quantity_fulfil.readable = \
+                        ctable.quantity_fulfil.writable = False
                     if use_workflow and workflow_status in (3, 4, 5): # Approved, Completed, Cancelled
                         # Lock all fields
                         s3db.configure("req_req_item",
@@ -753,7 +758,14 @@ def req_item():
                 # Hide fields which don't make sense in a Create form
                 # - includes one embedded in list_create
                 # - list_fields over-rides, so still visible within list itself
-                s3db.req_hide_quantities(r.table)
+                if not settings.get_req_item_quantities_writable():
+                    table = r.table
+                    table.quantity_commit.readable = \
+                    table.quantity_commit.writable = False
+                    table.quantity_transit.readable = \
+                    table.quantity_transit.writable = False
+                    table.quantity_fulfil.readable = \
+                    table.quantity_fulfil.writable = False
 
         return True
     s3.prep = prep
@@ -1599,7 +1611,7 @@ def send_item_json():
 # -----------------------------------------------------------------------------
 def req_item_packs():
     """
-        Called by S3OptionsFilter to provide the pack options for an Item
+        Called by S3OptionsFilter to provide the pack options for a Requisition Item
 
         Access via the .json representation to avoid work rendering menus, etc
     """
