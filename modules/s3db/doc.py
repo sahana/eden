@@ -83,10 +83,13 @@ class DocumentLibrary(S3Model):
                                cap_resource = T("CAP Resource"),
                                cms_post = T("Post"),
                                cr_shelter = T("Shelter"),
+                               # Deploy only used by IFRC/RMS templates
+                               # @ToDo: Extend entity_types within the template
                                deploy_mission = T("Mission"),
                                dc_response = T(settings.get_dc_response_label()),
-                               dvr_case = T("Case"),
-                               dvr_case_activity = T("Case Activity"),
+                               # DVR only used by archived DRK/STL templates
+                               #dvr_case = T("Case"),
+                               #dvr_case_activity = T("Case Activity"),
                                event_event = T("Event"),
                                event_incident = T("Incident"),
                                event_incident_report = T("Incident Report"),
@@ -102,7 +105,7 @@ class DocumentLibrary(S3Model):
                                inv_send = T("Sent Shipment"),
                                inv_warehouse = T("Warehouse"),
                                # Only used by SHARE template
-                               # @ToDo: Configure this in the template
+                               # @ToDo: Extend entity_types within the template
                                need_need = T("Need"),
                                need_response = T("Activity Group"),
                                police_station = T("Police Station"),
@@ -116,9 +119,9 @@ class DocumentLibrary(S3Model):
                                org_group = T("Organization Group"),
                                org_office = T("Office"),
                                req_need = T("Need"),
-                               req_need_response = T("Activity Group"),
                                req_req = T("Request"),
                                security_seized_item = T("Seized Item"),
+                               # STDM only used by archived STDM template
                                #stdm_tenure = T("Tenure"),
                                vulnerability_document = T("Vulnerability Document"),
                                vulnerability_risk = T("Risk"),
