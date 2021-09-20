@@ -5346,29 +5346,6 @@ class event_ActionPlan(S3Method):
             * Assets
     """
 
-    def __init__(self, form=None):
-        """
-            Constructor
-
-            @param form: widget config to inject at the top of the page,
-                         or a callable to produce such a widget config
-        """
-
-        if not form:
-            form = {"type": "form",
-                    "tablename": "event_incident",
-                    "sqlform": S3SQLCustomForm("action_plan",
-                                               S3SQLInlineComponent(
-                                                "document",
-                                                name = "document",
-                                                label = current.T("Attachments"),
-                                                fields = [("", "file")],
-                                                ),
-                                               ),
-                    }
-
-        self.form = form
-
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
@@ -5553,12 +5530,19 @@ class event_ActionPlan(S3Method):
                       }
             pwappend(widget)
 
-            form = self.form
-            if form:
-                if callable(form):
-                    form = form(r)
-                if form is not None:
-                    pwappend(form)
+            form = {"type": "form",
+                    "tablename": "event_incident",
+                    "filter": (FS("~.id") == r.id),
+                    "sqlform": S3SQLCustomForm("action_plan",
+                                               S3SQLInlineComponent(
+                                                    "document",
+                                                    name = "document",
+                                                    label = current.T("Attachments"),
+                                                    fields = [("", "file")],
+                                                    ),
+                                               ),
+                   }
+            pwappend(form)
 
             tablename = r.tablename
 
@@ -5569,7 +5553,9 @@ class event_ActionPlan(S3Method):
                 # Maintain normal rheader for consistency
                 rheader = attr["rheader"]
                 profile_header = TAG[""](H2(s3.crud_strings["event_incident"].title_display),
-                                         DIV(rheader(r), _id="rheader"),
+                                         DIV(rheader(r),
+                                             _id = "rheader",
+                                             ),
                                          )
             else:
                 html = False
@@ -5603,29 +5589,6 @@ class event_ScenarioActionPlan(S3Method):
             * People
             * Assets
     """
-
-    def __init__(self, form=None):
-        """
-            Constructor
-
-            @param form: widget config to inject at the top of the page,
-                         or a callable to produce such a widget config
-        """
-
-        if not form:
-            form = {"type": "form",
-                    "tablename": "event_scenario",
-                    "sqlform": S3SQLCustomForm("action_plan",
-                                               S3SQLInlineComponent(
-                                                "document",
-                                                name = "document",
-                                                label = current.T("Attachments"),
-                                                fields = [("", "file")],
-                                                ),
-                                               ),
-                    }
-
-        self.form = form
 
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
@@ -5811,12 +5774,19 @@ class event_ScenarioActionPlan(S3Method):
                           )
             pwappend(widget)
 
-            form = self.form
-            if form:
-                if callable(form):
-                    form = form(r)
-                if form is not None:
-                    pwappend(form)
+            form = {"type": "form",
+                    "tablename": "event_scenario",
+                    "filter": (FS("~.id") == r.id),
+                    "sqlform": S3SQLCustomForm("action_plan",
+                                               S3SQLInlineComponent(
+                                                    "document",
+                                                    name = "document",
+                                                    label = current.T("Attachments"),
+                                                    fields = [("", "file")],
+                                                    ),
+                                               ),
+                   }
+            pwappend(form)
 
             tablename = r.tablename
 

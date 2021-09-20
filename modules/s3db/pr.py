@@ -196,6 +196,8 @@ class PersonEntityModel(S3Model):
         else:
             org_group_label = T("Organization group")
         pe_types = Storage(cr_shelter = SHELTER,
+                           # Deploy only used by IFRC/RMS templates
+                           # @ToDo: Extend entity_types within the template
                            deploy_alert = T("Deployment Alert"),
                            dvi_body = T("Body"),
                            dvi_morgue = T("Morgue"),
@@ -208,6 +210,8 @@ class PersonEntityModel(S3Model):
                            org_group = org_group_label,
                            org_facility = T("Facility"),
                            org_office = T("Office"),
+                           # PO only used by IFRC template
+                           # @ToDo: Extend entity_types within the template
                            #po_area = T("Recovery Outreach Area"),
                            po_household = T("Household"),
                            police_station = T("Police Station"),
