@@ -30,7 +30,6 @@
 __all__ = ("RequestModel",
            "RequestApproverModel",
            "RequestItemModel",
-           "RequestSkillModel",
            "RequestRecurringModel",
            "RequestNeedsModel",
            "RequestNeedsContactModel",
@@ -44,9 +43,6 @@ __all__ = ("RequestModel",
            "RequestProjectModel",
            "RequestTagModel",
            "CommitModel",
-           "CommitItemModel",
-           "CommitPersonModel",
-           "CommitSkillModel",
            #"req_CheckMethod",
            "req_add_from_template",
            "req_approvers",
@@ -166,7 +162,7 @@ class RequestModel(S3Model):
     """
         Model for Requests
 
-        @ToDo: Strip out 'type' & move to inv_req
+        @ToDo: Move to inv_req
     """
 
     names = ("req_req",
@@ -209,29 +205,6 @@ class RequestModel(S3Model):
         use_commit = settings.get_req_use_commit()
         use_req_number = settings.get_req_use_req_number()
         use_workflow = settings.get_req_workflow()
-
-        # Request Types
-        req_types_deployed = settings.get_req_req_type()
-        req_types = {}
-        if settings.has_module("inv") and "Stock" in req_types_deployed:
-            # Number hardcoded in controller & JS
-            req_types[1] = settings.get_req_type_inv_label()
-        #if settings.has_module("asset") and "Asset" in req_types_deployed:
-        #    req_types[2] = T("Assets")
-        if settings.has_module("hrm") and "People" in req_types_deployed:
-            req_types[3] = settings.get_req_type_hrm_label()
-        #if settings.has_module("cr") and "Shelter" in req_types_deployed:
-        #    req_types[4] = T("Shelter")
-        if "Other" in req_types_deployed:
-            req_types[9] = T("Other")
-
-        # Default Request Type
-        if len(req_types) == 1:
-            default_type = list(req_types.keys())[0]
-        else:
-            default_type = current.request.get_vars.get("type")
-            if default_type:
-                default_type = int(default_type)
 
         # Defaults for Requesting Site and Requester
         requester_is_author = settings.get_req_requester_is_author()
@@ -290,15 +263,6 @@ class RequestModel(S3Model):
         self.define_table(tablename,
                           # Instance
                           super_link("doc_id", "doc_entity"),
-                          Field("type", "integer",
-                                default = default_type,
-                                label = T("Request Type"),
-                                represent = lambda opt: \
-                                            req_types.get(opt, UNKNOWN_OPT),
-                                requires = IS_IN_SET(req_types, zero=None),
-                                readable = not default_type,
-                                writable = not default_type,
-                                ),
                           req_ref(# Adds no value when not using show_link
                                   #represent = req_ReqRefRepresent(),
                                   readable = use_req_number,
@@ -332,8 +296,6 @@ class RequestModel(S3Model):
                                      widget = site_widget,
                                      writable = True,
                                      ),
-                          #Field("location",
-                          #      label = T("Neighborhood")),
                           # Donations: What will the Items be used for?; People: Task Details
                           s3_comments("purpose",
                                       comment = "",
@@ -359,13 +321,13 @@ class RequestModel(S3Model):
                                       #represent = "date",
                                       #widget = "date",
                                       ),
-                          s3_datetime("date_required_until",
-                                      label = T("Date Required Until"),
-                                      past = 0,
-                                      future = 8760, # Hours, so 1 year
-                                      readable = False,
-                                      writable = False
-                                      ),
+                          #s3_datetime("date_required_until",
+                          #            label = T("Date Required Until"),
+                          #            past = 0,
+                          #            future = 8760, # Hours, so 1 year
+                          #            readable = False,
+                          #            writable = False
+                          #            ),
                           person_id("requester_id",
                                     default = requester_default,
                                     empty = settings.get_req_requester_optional(),
@@ -555,26 +517,11 @@ class RequestModel(S3Model):
                                                   options = req_status_opts,
                                                   cols = 3,
                                                   ))
-
-        if not default_type:
-            filter_widgets.insert(position,
-                                  S3OptionsFilter("type",
-                                                  label = T("Type"),
-                                                  cols = len(req_types),
-                                                  ))
-        if default_type == 1 or (not default_type and 1 in req_types):
-            filter_widgets.insert(position + 2,
-                                  S3OptionsFilter("req_item.item_id$item_category_id",
-                                                  label = T("Item Category"),
-                                                  hidden = True,
-                                                  ))
-        if default_type == 3 or (not default_type and 3 in req_types):
-            filter_widgets.insert(position + 2,
-                                  S3OptionsFilter("req_skill.skill_id",
-                                                  # Better to default (easier to customise/consistency)
-                                                  #label = T("Skill"),
-                                                  hidden = True,
-                                                  ))
+        filter_widgets.insert(position + 2,
+                              S3OptionsFilter("req_item.item_id$item_category_id",
+                                              label = T("Item Category"),
+                                              hidden = True,
+                                              ))
         if use_commit:
             filter_widgets.insert(position,
                                   S3OptionsFilter("commit_status",
@@ -610,29 +557,18 @@ class RequestModel(S3Model):
                                                 ),
                                  sortby = "date",
                                  )
-        list_fields = ["id",
-                       "date",
+        list_fields = ["date",
                        "date_required",
                        "site_id",
                        "requester_id",
                        ]
 
-        # @ToDo: Allow a single column to support different components based on type
-        # - this is the 'Details' VF
-        # @ToDo: Include Qty too (Computed VF in component?)
-        # - this is done in the 'Details' VF
-        #if default_type == 1 or (not default_type and 1 in req_types):
-        #    list_fields.append((T("Requested Items"), "req_item.item_id"))
-        #if default_type == 3 or (not default_type and 3 in req_types):
-        #    list_fields.append((T("Requested Skills"), "req_skill.skill_id"))
-
         if use_req_number:
             list_fields.insert(1, "req_ref")
         list_fields.extend(("priority",
-                            (T("Details"), "details"),
-                            ))
-        if 1 in req_types:
-            list_fields.append((T("Drivers"), "drivers"))
+                           (T("Details"), "details"),
+                           T("Drivers"), "drivers")
+                           )
         if use_commit:
             list_fields.append("commit_status")
         if transit_status:
@@ -647,13 +583,10 @@ class RequestModel(S3Model):
                                   "site": "site_id",
                                   },
                        deduplicate = S3Duplicate(primary = ("req_ref",)),
-                       extra_fields = ("req_ref", "type"),
+                       extra_fields = ("req_ref",),
                        filter_widgets = filter_widgets,
                        onaccept = self.req_onaccept,
                        ondelete = self.req_req_ondelete,
-                       # Why was this set? Should be consistent with other resources
-                       # Can add this to be specific templates/views which need this if-required
-                       #listadd = False,
                        list_fields = list_fields,
                        orderby = "req_req.date desc",
                        report_options = Storage(
@@ -673,7 +606,6 @@ class RequestModel(S3Model):
                        # - reduce load on templates which don't need this
                        #update_realm = True,
                        realm_components = ("req_item",
-                                           "req_skill",
                                            ),
                        )
 
@@ -713,10 +645,6 @@ class RequestModel(S3Model):
                        req_req_item = {"joinby": "req_id",
                                        "multiple": multiple_req_items,
                                        },
-                       # Requested Skills
-                       req_req_skill = {"joinby": "req_id",
-                                        "multiple": multiple_req_items,
-                                        },
                        # Commitment
                        req_commit = "req_id",
                        # Item Categories
@@ -820,11 +748,10 @@ class RequestModel(S3Model):
         else:
             code = None
         if record.date_required and record.date_required < now:
-            date_required = now + datetime.timedelta(days=14)
+            date_required = now + datetime.timedelta(days = 14) # @ToDo: This figure should be configurable
         else:
             date_required = record.date_required
-        new_req_id = table.insert(type = record.type,
-                                  req_ref = code,
+        new_req_id = table.insert(req_ref = code,
                                   date = now,
                                   date_required = date_required,
                                   priority = record.priority,
@@ -836,50 +763,31 @@ class RequestModel(S3Model):
                                   comments = record.comments,
                                   )
         # Make a copy of each child record
-        if record.type == 1:
-            # Items
-            ritable = s3db.req_req_item
-            items = db(ritable.req_id == req_id).select(ritable.id,
-                                                        ritable.item_entity_id,
-                                                        ritable.item_id,
-                                                        ritable.item_pack_id,
-                                                        ritable.quantity,
-                                                        ritable.pack_value,
-                                                        ritable.currency,
-                                                        ritable.site_id,
-                                                        ritable.comments,
-                                                        )
-            if items:
-                insert = ritable.insert
-                for item in items:
-                    insert(req_id = new_req_id,
-                           item_entity_id = item.item_entity_id,
-                           item_id = item.item_id,
-                           item_pack_id = item.item_pack_id,
-                           quantity = item.quantity,
-                           pack_value = item.pack_value,
-                           currency = item.currency,
-                           site_id = item.site_id,
-                           comments = item.comments,
-                           )
-        elif record.type == 3:
-            # People and skills
-            rstable = s3db.req_req_skill
-            skills = db(rstable.req_id == req_id).select(rstable.id,
-                                                         rstable.skill_id,
-                                                         rstable.quantity,
-                                                         rstable.site_id,
-                                                         rstable.comments,
-                                                         )
-            if skills:
-                insert = rstable.insert
-                for skill in skills:
-                    insert(req_id = new_req_id,
-                           skill_id = skill.skill_id,
-                           quantity = skill.quantity,
-                           site_id = skill.site_id,
-                           comments = skill.comments,
-                           )
+        # Items
+        ritable = s3db.req_req_item
+        items = db(ritable.req_id == req_id).select(ritable.id,
+                                                    ritable.item_entity_id,
+                                                    ritable.item_id,
+                                                    ritable.item_pack_id,
+                                                    ritable.quantity,
+                                                    ritable.pack_value,
+                                                    ritable.currency,
+                                                    ritable.site_id,
+                                                    ritable.comments,
+                                                    )
+        if items:
+            insert = ritable.insert
+            for item in items:
+                insert(req_id = new_req_id,
+                       item_entity_id = item.item_entity_id,
+                       item_id = item.item_id,
+                       item_pack_id = item.item_pack_id,
+                       quantity = item.quantity,
+                       pack_value = item.pack_value,
+                       currency = item.currency,
+                       site_id = item.site_id,
+                       comments = item.comments,
+                       )
 
         redirect(URL(f = "req",
                      args = [new_req_id, "update"],
@@ -914,72 +822,34 @@ class RequestModel(S3Model):
                          args = [r.id, "commit"],
                          ))
 
-        req_type = record.type
-
         # Create the commitment
         cid = table.insert(req_id = req_id,
-                           type = req_type,
                            )
 
-        if req_type == 1:
-            # Items
-            ritable = s3db.req_req_item
-            items = db(ritable.req_id == req_id).select(ritable.id,
-                                                        ritable.item_pack_id,
-                                                        ritable.quantity,
-                                                        ritable.comments,
-                                                        )
-            if items:
-                citable = s3db.req_commit_item
-                insert = citable.insert
-                for item in items:
-                    commit_item_id = item.id
-                    quantity = item.quantity
-                    insert(commit_id = cid,
-                           req_item_id = commit_item_id,
-                           item_pack_id = item.item_pack_id,
-                           quantity = quantity,
-                           comments = item.comments,
-                           )
-                    # Mark Item in the Request as Committed
-                    db(ritable.id == commit_item_id).update(quantity_commit = quantity)
-            # Mark Request as Committed
-            db(s3db.req_req.id == req_id).update(commit_status = REQ_STATUS_COMPLETE)
-            msg = T("You have committed to all items in this Request. Please check that all details are correct and update as-required.")
-
-        elif req_type == 3:
-            # People
-            rstable = s3db.req_req_skill
-            skills = db(rstable.req_id == req_id).select(rstable.id,
-                                                         rstable.skill_id,
-                                                         rstable.quantity,
-                                                         rstable.comments,
-                                                         )
-            if skills:
-                # @ToDo:
-                #if current.deployment_settings.get_req_commit_people():
-                #else:
-                cstable = s3db.req_commit_skill
-                insert = cstable.insert
-                for skill in skills:
-                    commit_skill_id = skill.id
-                    quantity = skill.quantity
-                    insert(commit_id = cid,
-                           skill_id = skill.skill_id,
-                           quantity = quantity,
-                           comments = skill.comments,
-                           )
-                    # Mark Item in the Request as Committed
-                    db(rstable.id == commit_skill_id).update(quantity_commit = quantity)
-            # Mark Request as Committed
-            db(s3db.req_req.id == req_id).update(commit_status = REQ_STATUS_COMPLETE)
-            msg = T("You have committed for all people in this Request. Please check that all details are correct and update as-required.")
-
-        else:
-            # Other
-            # Mark Request as Committed
-            db(s3db.req_req.id == req_id).update(commit_status = REQ_STATUS_COMPLETE)
-            msg = T("You have committed to this Request. Please check that all details are correct and update as-required.")
+        # Items
+        ritable = s3db.req_req_item
+        items = db(ritable.req_id == req_id).select(ritable.id,
+                                                    ritable.item_pack_id,
+                                                    ritable.quantity,
+                                                    ritable.comments,
+                                                    )
+        if items:
+            citable = s3db.req_commit_item
+            insert = citable.insert
+            for item in items:
+                commit_item_id = item.id
+                quantity = item.quantity
+                insert(commit_id = cid,
+                       req_item_id = commit_item_id,
+                       item_pack_id = item.item_pack_id,
+                       quantity = quantity,
+                       comments = item.comments,
+                       )
+                # Mark Item in the Request as Committed
+                db(ritable.id == commit_item_id).update(quantity_commit = quantity)
+        # Mark Request as Committed
+        db(s3db.req_req.id == req_id).update(commit_status = REQ_STATUS_COMPLETE)
+        msg = T("You have committed to all items in this Request. Please check that all details are correct and update as-required.")
 
         if "send" in r.args:
             redirect(URL(f = "send_commit",
@@ -1006,27 +876,14 @@ class RequestModel(S3Model):
 
         record = r.record
 
-        if record.type == 1:
-            pdf_componentname = "req_item"
-            list_fields = ["item_id",
-                           "item_pack_id",
-                           "quantity",
-                           "quantity_commit",
-                           "quantity_transit",
-                           "quantity_fulfil",
-                           ]
-        elif record.type == 3:
-            pdf_componentname = "req_skill"
-            list_fields = ["skill_id",
-                           "quantity",
-                           "quantity_commit",
-                           "quantity_transit",
-                           "quantity_fulfil",
-                           ]
-        else:
-            # Not Supported - redirect to normal PDF
-            redirect(URL(args = current.request.args[0],
-                         extension = "pdf"))
+        pdf_componentname = "req_item"
+        list_fields = ["item_id",
+                       "item_pack_id",
+                       "quantity",
+                       "quantity_commit",
+                       "quantity_transit",
+                       "quantity_fulfil",
+                       ]
 
         if current.deployment_settings.get_req_use_req_number():
             filename = record.req_ref
@@ -1162,8 +1019,6 @@ class RequestModel(S3Model):
     def req_approve(r, **attr):
         """
             Approve a Request (custom REST method)
-
-            NB This is currently hardcoded to Items Requests not Person Requests
         """
 
         record = r.record
@@ -1252,8 +1107,7 @@ class RequestModel(S3Model):
                   committed/fulfilled statuses
                 - add requester as human resource of the requesting site if
                   configured to do so automatically
-                - configure post-create/update redirection depending on request
-                  type (e.g. request for items => select items for request)
+                - configure post-create/update redirection
         """
 
         db = current.db
@@ -1265,7 +1119,6 @@ class RequestModel(S3Model):
 
         req_id = form.vars.id
         record = db(table.id == req_id).select(table.id,
-                                               table.type,
                                                table.site_id,
                                                table.requester_id,
                                                table.is_template,
@@ -1381,23 +1234,7 @@ class RequestModel(S3Model):
                                            )
                     s3db.hrm_human_resource_onaccept(Storage(id = hr_id))
 
-        # Update the Realm if the Requesting site changes
-        # - now left to templates
-        #if form.record:
-        #    if record.site_id != form.record.site_id:
-        #        realm_entity = current.auth.get_realm_entity(table, record)
-        #        record.update_record(realm_entity = realm_entity)
-        #        req_type = record.type
-        #        if req_type == 1:
-        #            db(s3db.req_req_item.req_id == req_id).update(realm_entity = realm_entity)
-        #        #elif req_type == 2:
-        #        #    db(s3db.req_req_asset.req_id == req_id).update(realm_entity = realm_entity)
-        #        elif req_type == 3:
-        #            db(s3db.req_req_skill.req_id == req_id).update(realm_entity = realm_entity)
-        #        #elif req_type == 4:
-        #        #    db(s3db.req_req_shelter.req_id == req_id).update(realm_entity = realm_entity)
-
-        # Configure the next page to go to based on the request type
+        # Configure the next page to go to
         inline_forms = settings.get_req_inline_forms()
         if inline_forms and is_template:
             s3db.configure(tablename,
@@ -1409,39 +1246,13 @@ class RequestModel(S3Model):
                                              ))
 
         elif not inline_forms:
-            req_type = record.type
-            if req_type == 1 and settings.has_module("inv"):
-                s3db.configure(tablename,
-                               create_next = URL(c="req", f=f,
-                                                 args = ["[id]", "req_item"],
-                                                 ),
-                               update_next = URL(c="req", f=f,
-                                                 args=["[id]", "req_item"],
-                                                 ))
-            #elif req_type == 2 and settings.has_module("asset"):
-            #    s3db.configure(tablename,
-            #                   create_next = URL(c="req", f=f,
-            #                                     args = ["[id]", "req_asset"],
-            #                                     ),
-            #                   update_next = URL(c="req", f=f,
-            #                                     args = ["[id]", "req_asset"],
-            #                                     ))
-            elif req_type == 3 and settings.has_module("hrm"):
-                s3db.configure(tablename,
-                               create_next = URL(c="req", f=f,
-                                                 args = ["[id]", "req_skill"],
-                                                 ),
-                               update_next = URL(c="req", f=f,
-                                                 args = ["[id]", "req_skill"],
-                                                 ))
-            #elif req_type == 4 and settings.has_module("cr"):
-            #    s3db.configure(tablename,
-            #                   create_next = URL(c="req", f=f,
-            #                                     args = ["[id]", "req_shelter"],
-            #                                     ),
-            #                   update_next = URL(c="req", f=f,
-            #                                     args = ["[id]", "req_shelter"],
-            #                                     ))
+            s3db.configure(tablename,
+                           create_next = URL(c="req", f=f,
+                                             args = ["[id]", "req_item"],
+                                             ),
+                           update_next = URL(c="req", f=f,
+                                             args=["[id]", "req_item"],
+                                             ))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1955,297 +1766,11 @@ $.filterOptionsS3({
             item.method = item.METHOD.UPDATE
 
 # =============================================================================
-class RequestSkillModel(S3Model):
-    """
-        Modell for requested skills
-
-        @ToDo: Deprecate in favour of req_need_skill
-    """
-
-    names = ("req_req_skill",
-             "req_skill_represent",
-             )
-
-    def model(self):
-
-        T = current.T
-
-        settings = current.deployment_settings
-        quantities_writable = settings.get_req_skill_quantities_writable()
-        use_commit = settings.get_req_use_commit()
-        show_transit = settings.get_req_show_quantity_transit()
-
-        # -----------------------------------------------------------------
-        # Request Skills
-        #
-        tablename = "req_req_skill"
-
-        # Context-specific representation of None/[] for multi_skill_id
-        multi_skill_represent = S3Represent(lookup = "hrm_skill",
-                                            multiple = True,
-                                            none = T("No Skills Required"),
-                                            )
-
-        self.define_table(tablename,
-                          self.req_req_id(empty = False),
-                          # Make this a Component
-                          #Field("task",
-                          #      readable=False,
-                          #      writable=False, # Populated from req_req 'Purpose'
-                          #      label = T("Task Details")),
-                          self.hrm_multi_skill_id(
-                                label = T("Required Skills"),
-                                comment = T("Leave blank to request an unskilled person"),
-                                represent = multi_skill_represent,
-                                ),
-                          # @ToDo: Add a minimum competency rating?
-                          Field("quantity", "integer", notnull=True,
-                                default = 1,
-                                requires = IS_INT_IN_RANGE(1, None),
-                                label = T("Number of People Required"),
-                                ),
-                          self.org_site_id(),
-                          Field("quantity_commit", "integer",
-                                label = T("Quantity Committed"),
-                                default = 0,
-                                requires = IS_INT_IN_RANGE(0, None),
-                                readable = use_commit,
-                                writable = use_commit and quantities_writable,
-                                ),
-                          Field("quantity_transit", "integer",
-                                label = T("Quantity in Transit"),
-                                default = 0,
-                                requires = IS_INT_IN_RANGE(0, None),
-                                readable = show_transit,
-                                writable = show_transit and quantities_writable,
-                                ),
-                          Field("quantity_fulfil", "integer",
-                                label = T("Quantity Fulfilled"),
-                                default = 0,
-                                requires = IS_INT_IN_RANGE(0, None),
-                                writable = quantities_writable,
-                                ),
-                          s3_comments(#label = T("Task Details"),
-                                      #comment = DIV(_class="tooltip",
-                                      #              _title="%s|%s" % (T("Task Details"),
-                                      #                                T("Include any special requirements such as equipment which they need to bring.")))
-                                      ),
-                          *s3_meta_fields(),
-                          on_define = lambda table: \
-                            [table.site_id.set_attributes(label = T("Requested From")),
-                             ]
-                          )
-
-        # CRUD strings
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Add Skill to Request"),
-            title_display = T("Requested Skill Details"),
-            title_list = T("Requested Skills"),
-            title_update = T("Edit Requested Skill"),
-            label_list_button = T("List Requested Skills"),
-            label_delete_button = T("Remove Skill from Request"),
-            msg_record_created = T("Skill added to Request"),
-            msg_record_modified = T("Requested Skill updated"),
-            msg_record_deleted = T("Skill removed from Request"),
-            msg_list_empty = T("No Skills currently requested"))
-
-        list_fields = ["id",
-                       "skill_id",
-                       # @ToDo: Activate based on a deployment_setting
-                       #"task",
-                       "quantity",
-                       "quantity_transit",
-                       "quantity_fulfil",
-                       "comments",
-                       ]
-        if use_commit:
-            list_fields.insert(3, "quantity_commit")
-
-        # Filter Widgets
-        filter_widgets = [
-            S3OptionsFilter("req_id$fulfil_status",
-                            label = T("Status"),
-                            options = req_status_opts,
-                            cols = 3,
-                            ),
-            S3OptionsFilter("req_id$priority",
-                            label = T("Priority"),
-                            options = req_priority_opts,
-                            cols = 3,
-                            ),
-            S3LocationFilter("req_id$site_id$location_id",
-                             ),
-        ]
-
-        # Configuration
-        self.configure(tablename,
-                       # @ToDo: Produce a custom controller like req_item_inv_item?
-                       #create_next = URL(c="req", f="req_skill_skill",
-                       #                  args=["[id]"]),
-                       deletable = settings.get_req_multiple_req_items(),
-                       filter_widgets = filter_widgets,
-                       list_fields = list_fields,
-                       onaccept = self.req_skill_onaccept,
-                       # @ToDo: default realm to that of the req_id
-                       #realm_entity = self.req_skill_realm_entity,
-                       )
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {"req_skill_represent": self.req_skill_represent,
-                }
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def req_skill_onaccept(form):
-        """
-            On-accept actions for requested items:
-                - update committed/in-transit/fulfilled status of the request
-                  when a skill is added or quantity changed
-                - create a task from the request that people with the requested
-                  skill can be assigned to
-
-            Request Status:
-                NONE            quantity=0 for all skills
-                PARTIAL         quantity>0 but less than requested quantity for
-                                at least one skill
-                COMPLETE        quantity>=requested quantity for all skills
-        """
-
-        db = current.db
-        s3db = current.s3db
-
-        form_vars = form.vars
-
-        req_id = form_vars.get("req_id")
-        if not req_id:
-            # Reload the record to get the req_id
-            record_id = form_vars.get("id")
-            table = s3db.req_req_item
-            record = db(table.id == record_id).select(table.req_id,
-                                                      limitby = (0, 1)
-                                                      ).first()
-            if record:
-                req_id = record.req_id
-
-        if not req_id:
-            # Item has no req_req context => nothing we can (or need to) do
-            return
-
-        rtable = s3db.req_req
-        query = (rtable.id == req_id)
-        record = db(query).select(rtable.purpose,
-                                  limitby = (0, 1)
-                                  ).first()
-
-        table = s3db.req_req_skill
-        query = (table.req_id == req_id)
-        #if record:
-        #    # Copy the Task description to the Skills component
-        #    db(query).update(task=record.purpose)
-
-        is_none = {"commit": True,
-                   "transit": True,
-                   "fulfil": True,
-                   }
-
-        is_complete = {"commit": True,
-                       "transit": True,
-                       "fulfil": True,
-                       }
-
-        # Must check all skills in the req
-        req_skills = db(query).select(table.quantity,
-                                      table.quantity_commit,
-                                      table.quantity_transit,
-                                      table.quantity_fulfil,
-                                      )
-
-        for req_skill in req_skills:
-            quantity = req_skill.quantity
-            for status_type in ["commit", "transit", "fulfil"]:
-                if req_skill["quantity_%s" % status_type] < quantity:
-                    is_complete[status_type] = False
-                if req_skill["quantity_%s" % status_type]:
-                    is_none[status_type] = False
-
-        status_update = {}
-        for status_type in ["commit", "transit", "fulfil"]:
-            if is_complete[status_type]:
-                status_update["%s_status" % status_type] = REQ_STATUS_COMPLETE
-            elif is_none[status_type]:
-                status_update["%s_status" % status_type] = REQ_STATUS_NONE
-            else:
-                status_update["%s_status" % status_type] = REQ_STATUS_PARTIAL
-        query = (rtable.id == req_id)
-        db(query).update(**status_update)
-
-        if current.deployment_settings.has_module("project"):
-            # Add a Task to which the People can be assigned
-
-            # Get the request record
-            otable = s3db.org_site
-            query = (rtable.id == req_id) & \
-                    (otable.id == rtable.site_id)
-            record = db(query).select(rtable.req_ref,
-                                      rtable.purpose,
-                                      rtable.priority,
-                                      rtable.requester_id,
-                                      rtable.site_id,
-                                      otable.location_id,
-                                      limitby = (0, 1)
-                                      ).first()
-            if not record:
-                return
-
-            name = record.req_req.req_ref or "Req: %s" % req_id
-            table = s3db.project_task
-            task = table.insert(name = name,
-                                description = record.req_req.purpose,
-                                priority = record.req_req.priority,
-                                location_id = record.org_site.location_id,
-                                site_id = record.req_req.site_id,
-                                )
-
-            # Add the Request as a Component to the Task
-            table = s3db.table("req_task_req", None)
-            if table:
-                table.insert(task_id = task,
-                             req_id = req_id)
-                # @ToDo: Fire onaccept which may send them a notification?
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def req_skill_represent(record_id):
-        """
-            Represent a skill request; currently unused
-
-            @ToDo: S3Represent
-        """
-
-        if not record_id:
-            return current.messages["NONE"]
-
-        db = current.db
-        rstable = db.req_req_skill
-        hstable = db.hrm_skill
-        query = (rstable.id == record_id) & \
-                (rstable.skill_id == hstable.id)
-        record = db(query).select(hstable.name,
-                                  limitby = (0, 1)
-                                  ).first()
-        try:
-            return record.name
-        except AttributeError:
-            return current.messages.UNKNOWN_OPT
-
-# =============================================================================
 class RequestRecurringModel(S3Model):
     """
         Adjuvant model to support request generation by scheduler
 
-        @ToDo: Replace with req_need_job
+        @ToDo: Replace with inv_req_job
     """
 
     names = ("req_job",
@@ -2261,7 +1786,7 @@ class RequestRecurringModel(S3Model):
         #
         tablename = "req_job"
         self.define_table(tablename,
-                          self.req_req_id(empty=False),
+                          self.req_req_id(empty = False),
                           s3.scheduler_task_id(),
                           *s3_meta_fields())
 
@@ -3047,7 +2572,6 @@ class CommitModel(S3Model):
 
         settings = current.deployment_settings
 
-        req_types = settings.get_req_req_type()
         commit_value = settings.get_req_commit_value()
         unsolicited_commit = settings.get_req_commit_without_request()
 
@@ -3063,10 +2587,10 @@ class CommitModel(S3Model):
         # Dropdown or Autocomplete for Committing Site?
         if settings.get_org_site_autocomplete():
             site_widget = S3SiteAutocompleteWidget()
-            site_comment = DIV(_class="tooltip",
-                               _title="%s|%s" % (T("From Facility"),
-                                                 current.messages.AUTOCOMPLETE_HELP,
-                                                 ),
+            site_comment = DIV(_class = "tooltip",
+                               _title = "%s|%s" % (T("From Facility"),
+                                                   current.messages.AUTOCOMPLETE_HELP,
+                                                   ),
                                )
         else:
             site_widget = None
@@ -3098,12 +2622,6 @@ class CommitModel(S3Model):
                                                    ),
                           self.req_req_id(empty = not unsolicited_commit,
                                           ),
-                          Field("type", "integer",
-                                label = T("Type"),
-                                # These are copied automatically from the Req
-                                readable = False,
-                                writable = False,
-                                ),
                           s3_datetime(default = "now",
                                       represent = "date",
                                       ),
@@ -3166,14 +2684,6 @@ class CommitModel(S3Model):
                          ),
             ]
 
-        if len(req_types) > 1:
-            filter_widgets.insert(1, S3OptionsFilter("type",
-                                                     # Better to default (easier to customise/consistency)
-                                                     #label = T("Type"),
-                                                     cols = len(req_types),
-                                                     hidden = True,
-                                                     ))
-
         # CRUD strings
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Make Commitment"),
@@ -3196,8 +2706,8 @@ class CommitModel(S3Model):
                                     requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "req_commit.id",
                                                               commit_represent,
-                                                              orderby="req_commit.date",
-                                                              sort=True,
+                                                              orderby = "req_commit.date",
+                                                              sort = True,
                                                               )),
                                     sortby = "date",
                                     )
@@ -3205,22 +2715,11 @@ class CommitModel(S3Model):
         list_fields = ["site_id",
                        "req_id",
                        "committer_id",
+                       (T("Committed Items"), "commit_item.req_item_id$item_id"),
+                       "date",
+                       "date_available",
+                       "comments",
                        ]
-
-        # @ToDo: Allow a single column to support different components based on type
-        # @ToDo: Include Qty too (Computed VF in component?)
-        if "Stock" in req_types:
-            list_fields.append((T("Committed Items"), "commit_item.req_item_id$item_id"))
-        if "People" in req_types:
-            if settings.get_req_commit_people():
-                list_fields.append((T("Committed People"), "commit_person.human_resource_id"))
-            else:
-                list_fields.append((T("Committed Skills"), "commit_skill.skill_id"))
-
-        list_fields += ["date",
-                        "date_available",
-                        "comments",
-                        ]
 
         self.configure(tablename,
                        context = {"location": "location_id",
@@ -3242,18 +2741,7 @@ class CommitModel(S3Model):
         add_components(tablename,
                        # Committed Items
                        req_commit_item = "commit_id",
-                       # Committed Persons
-                       req_commit_person = "commit_id",
-                       # Committed Skills
-                       req_commit_skill = "commit_id",
                        )
-
-        # Custom Method to Assign HRs
-        self.set_method("req", "commit",
-                        method = "assign",
-                        action = self.hrm_AssignMethod(component="commit_person",
-                                                       next_tab="commit_person",
-                                                       ))
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -3266,7 +2754,7 @@ class CommitModel(S3Model):
     def commit_onaccept(form):
         """
             On-accept actions for commits:
-                - set location_id and request type
+                - set location_id
                 - update status of request & components
         """
 
@@ -3294,23 +2782,21 @@ class CommitModel(S3Model):
             if site and site.location_id:
                 cdata["location_id"] = site.location_id
 
+        # Update the commit
+        if cdata:
+            db(ctable.id == commit_id).update(**cdata)
+
         # Find the request
         rtable = s3db.req_req
         query = (ctable.id == commit_id) & \
                 (rtable.id == ctable.req_id)
         req = db(query).select(rtable.id,
-                               rtable.type,
                                rtable.req_status,
                                rtable.commit_status,
                                limitby = (0, 1)
                                ).first()
         if not req:
             return
-
-        # Update the commit
-        cdata["type"] = req.type
-        if cdata:
-            db(ctable.id == commit_id).update(**cdata)
 
         # Update committed quantities and request status
         req_update_commit_quantities_and_status(req)
@@ -3334,7 +2820,6 @@ class CommitModel(S3Model):
         req_id = json.loads(fks)["req_id"]
         rtable = s3db.req_req
         req = db(rtable.id == req_id).select(rtable.id,
-                                             rtable.type,
                                              rtable.commit_status,
                                              limitby = (0, 1)
                                              ).first()
@@ -3428,7 +2913,6 @@ class CommitItemModel(S3Model):
                 (ctable.id == itable.commit_id) & \
                 (rtable.id == ctable.req_id)
         req = db(query).select(rtable.id,
-                               rtable.type,
                                rtable.req_status,
                                rtable.commit_status,
                                limitby = (0, 1)
@@ -3466,226 +2950,6 @@ class CommitItemModel(S3Model):
             query = (ctable.id == commit_id) & \
                     (rtable.id == ctable.req_id)
             req = db(query).select(rtable.id,
-                                   rtable.type,
-                                   rtable.req_status,
-                                   rtable.commit_status,
-                                   limitby = (0, 1)
-                                   ).first()
-            if req:
-                req_update_commit_quantities_and_status(req)
-
-# =============================================================================
-class CommitPersonModel(S3Model):
-    """
-        Commit a named individual to a Request
-
-        Used when settings.req.commit_people = True
-
-        @ToDo: Deprecate in favour of req_need_person
-    """
-
-    names = ("req_commit_person",)
-
-    def model(self):
-
-        T = current.T
-
-        # -----------------------------------------------------------------
-        # Committed Persons
-        #
-        tablename = "req_commit_person"
-        self.define_table(tablename,
-                          self.req_commit_id(),
-                          # For reference
-                          #self.hrm_multi_skill_id(comment = None,
-                          #                        writable = False,
-                          #                        ),
-                          # This should be person not hrm as we want to mark
-                          # them as allocated across all their Org-affiliations
-                          #self.pr_person_id(),
-                          # Using HR to use hrm_Assign method (can mark person as allocated onaccept)
-                          self.hrm_human_resource_id(),
-                          s3_comments(),
-                          *s3_meta_fields())
-
-        # CRUD strings
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Add Person to Commitment"),
-            title_display = T("Committed Person Details"),
-            title_list = T("Committed People"),
-            title_update = T("Edit Committed Person"),
-            label_list_button = T("List Committed People"),
-            label_delete_button = T("Remove Person from Commitment"),
-            msg_record_created = T("Person added to Commitment"),
-            msg_record_modified = T("Committed Person updated"),
-            msg_record_deleted = T("Person removed from Commitment"),
-            msg_list_empty = T("No People currently committed"))
-
-        self.configure(tablename,
-                       deduplicate = S3Duplicate(primary = ("commit_id",
-                                                            "human_resource_id",
-                                                            ),
-                                                 ),
-                       # @ToDo: Fix this before enabling
-                       #onaccept = self.commit_person_onaccept,
-                       )
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def commit_person_onaccept(form):
-        """
-            FIXME not working
-        """
-
-        db = current.db
-        s3db = current.s3db
-        table = db.req_commit_person
-        rstable = s3db.req_req_skill
-
-        # Try to get req_skill_id from the form
-        req_skill_id = 0
-        if form:
-            req_skill_id = form.vars.get("req_skill_id", None)
-        if not req_skill_id:
-            commit_skill_id = s3_get_last_record_id("req_commit_skill")
-            r_commit_skill = table[commit_skill_id]
-            req_skill_id = r_commit_skill.req_skill_id
-
-        query = (table.req_skill_id == req_skill_id) & \
-                (table.deleted == False)
-        commit_skills = db(query).select(table.quantity)
-        quantity_commit = 0
-        for commit_skill in commit_skills:
-            quantity_commit += commit_skill.quantity
-
-        r_req_skill = db.req_req_skill[req_skill_id]
-        rstable[req_skill_id] = {"quantity_commit": quantity_commit}
-
-        # Update status_commit of the req record
-        s3_store_last_record_id("req_req_skill", r_req_skill.id)
-        #req_skill_onaccept(None)
-
-# =============================================================================
-class CommitSkillModel(S3Model):
-    """
-        Commit anonymous people to a Request
-
-        Used when settings.req.commit_people = False (default)
-
-        @ToDo: Deprecate in favour of req_need_skill
-    """
-
-    names = ("req_commit_skill",)
-
-    def model(self):
-
-        T = current.T
-
-        # -----------------------------------------------------------------
-        # Committed Skills
-        #
-        tablename = "req_commit_skill"
-        self.define_table(tablename,
-                          self.req_commit_id(),
-                          self.hrm_multi_skill_id(),
-                          Field("quantity", "double", notnull=True,
-                                label = T("Quantity"),
-                                ),
-                          s3_comments(),
-                          *s3_meta_fields())
-
-        # CRUD strings
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Add People to Commitment"),
-            title_display = T("Committed People Details"),
-            title_list = T("Committed People"),
-            title_update = T("Edit Committed People"),
-            label_list_button = T("List Committed People"),
-            label_delete_button = T("Remove People from Commitment"),
-            msg_record_created = T("People added to Commitment"),
-            msg_record_modified = T("Committed People updated"),
-            msg_record_deleted = T("People removed from Commitment"),
-            msg_list_empty = T("No People currently committed"))
-
-        self.configure(tablename,
-                       onaccept = self.commit_skill_onaccept,
-                       ondelete = self.commit_skill_ondelete,
-                       )
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def commit_skill_onaccept(form):
-        """
-            On-accept actions for committed skills
-                - update the commit quantities and -status of the request
-        """
-
-        db = current.db
-
-        try:
-            skill_id = form.vars.id
-        except AttributeError:
-            return
-
-        # Get the req
-        rtable = db.req_req
-        ctable = db.req_commit
-        stable = db.req_commit_skill
-        query = (stable.id == skill_id) & \
-                (ctable.id == stable.commit_id) & \
-                (rtable.id == ctable.req_id)
-        req = db(query).select(rtable.id,
-                               rtable.type,
-                               rtable.req_status,
-                               rtable.commit_status,
-                               limitby = (0, 1)
-                               ).first()
-        if not req:
-            return
-
-        req_update_commit_quantities_and_status(req)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def commit_skill_ondelete(row):
-        """
-            On-delete actions for committed skills
-                - update the commit quantities and -status of the request
-        """
-
-        db = current.db
-        s3db = current.s3db
-
-
-        # Get the commit_id
-        table = s3db.req_commit_skill
-        row = db(table.id == row.id).select(table.deleted_fk,
-                                            limitby = (0, 1)
-                                            ).first()
-        try:
-            deleted_fk = json.loads(row.deleted_fk)
-        except:
-            return
-
-        commit_id = deleted_fk.get("commit_id")
-        if commit_id:
-
-            ctable = s3db.req_commit
-            rtable = s3db.req_req
-            query = (ctable.id == commit_id) & \
-                    (rtable.id == ctable.req_id)
-            req = db(query).select(rtable.id,
-                                   rtable.type,
                                    rtable.req_status,
                                    rtable.commit_status,
                                    limitby = (0, 1)
@@ -3805,183 +3069,71 @@ def req_update_commit_quantities_and_status(req):
     ctable = s3db.req_commit
 
     req_id = req.id
-    req_type = req.type
 
-    if req_type == 1: # Items
+    pack_quantities = s3db.supply_item_pack_quantities
 
-        pack_quantities = s3db.supply_item_pack_quantities
+    # Get all commits for this request
+    citable = s3db.req_commit_item
+    query = (ctable.req_id == req_id) & \
+            (citable.commit_id == ctable.id) & \
+            (citable.deleted == False)
+    citems = db(query).select(citable.item_pack_id,
+                              citable.quantity,
+                              )
+    pqty = pack_quantities(item.item_pack_id for item in citems)
 
-        # Get all commits for this request
-        citable = s3db.req_commit_item
-        query = (ctable.req_id == req_id) & \
-                (citable.commit_id == ctable.id) & \
-                (citable.deleted == False)
-        citems = db(query).select(citable.item_pack_id,
-                                  citable.quantity,
+    # Determine committed quantities per pack type
+    commit_qty = {}
+    for item in citems:
+
+        item_pack_id = item.item_pack_id
+        committed_quantity = (item.quantity * pqty.get(item_pack_id, 1))
+
+        if item_pack_id in commit_qty:
+            commit_qty[item_pack_id] += committed_quantity
+        else:
+            commit_qty[item_pack_id] = committed_quantity
+
+    ritable = s3db.req_req_item
+    query = (ritable.req_id == req_id) & \
+            (ritable.deleted == False)
+    if not any(qty for qty in commit_qty.values()):
+        # Nothing has been committed for this request so far
+        commit_status = REQ_STATUS_NONE
+        db(query).update(quantity_commit = 0)
+    else:
+        # Get all requested items for this request
+        ritems = db(query).select(ritable.id,
+                                  ritable.item_pack_id,
+                                  ritable.quantity,
+                                  ritable.quantity_commit,
                                   )
-        pqty = pack_quantities(item.item_pack_id for item in citems)
 
-        # Determine committed quantities per pack type
-        commit_qty = {}
-        for item in citems:
+        pack_ids = (item.item_pack_id for item in ritems
+                                      if item.item_pack_id not in pqty)
+        pqty.update(pack_quantities(pack_ids))
 
-            item_pack_id = item.item_pack_id
-            committed_quantity = (item.quantity * pqty.get(item_pack_id, 1))
+        # Assume complete unless we find a gap
+        commit_status = REQ_STATUS_COMPLETE
 
-            if item_pack_id in commit_qty:
-                commit_qty[item_pack_id] += committed_quantity
-            else:
-                commit_qty[item_pack_id] = committed_quantity
+        # Update committed quantity for each requested item (if changed),
+        # and check if there is still a commit-gap
+        for item in ritems:
 
-        ritable = s3db.req_req_item
-        query = (ritable.req_id == req_id) & \
-                (ritable.deleted == False)
-        if not any(qty for qty in commit_qty.values()):
-            # Nothing has been committed for this request so far
-            commit_status = REQ_STATUS_NONE
-            db(query).update(quantity_commit = 0)
-        else:
-            # Get all requested items for this request
-            ritems = db(query).select(ritable.id,
-                                      ritable.item_pack_id,
-                                      ritable.quantity,
-                                      ritable.quantity_commit,
-                                      )
+            committed_quantity = commit_qty.get(item.item_pack_id) or 0
+            requested_quantity = item.quantity * pqty.get(item_pack_id, 1)
 
-            pack_ids = (item.item_pack_id for item in ritems
-                                          if item.item_pack_id not in pqty)
-            pqty.update(pack_quantities(pack_ids))
+            if committed_quantity != item.quantity_commit:
+                # Update it
+                item.update_record(quantity_commit=committed_quantity)
 
-            # Assume complete unless we find a gap
-            commit_status = REQ_STATUS_COMPLETE
-
-            # Update committed quantity for each requested item (if changed),
-            # and check if there is still a commit-gap
-            for item in ritems:
-
-                committed_quantity = commit_qty.get(item.item_pack_id) or 0
-                requested_quantity = item.quantity * pqty.get(item_pack_id, 1)
-
-                if committed_quantity != item.quantity_commit:
-                    # Update it
-                    item.update_record(quantity_commit=committed_quantity)
-
-                if committed_quantity < requested_quantity:
-                    # Gap!
-                    commit_status = REQ_STATUS_PARTIAL
-
-        # Update commit-status of the request (if changed)
-        if commit_status != req.commit_status:
-            req.update_record(commit_status=commit_status)
-
-    elif req_type == 3: # People
-
-        # If this is a single person commitment, then create the
-        # commit_person record automatically
-        #table = s3db.req_commit_person
-        #table.insert(commit_id = commit_id,
-        #             #skill_id = ???,
-        #             person_id = auth.s3_logged_in_person())
-        ## @ToDo: Mark Person's allocation status as 'Committed'
-
-        # Get all commits for this request
-        cstable = s3db.req_commit_skill
-        query = (ctable.req_id == req_id) & \
-                (cstable.commit_id == ctable.id) & \
-                (cstable.deleted == False)
-        cskills = db(query).select(cstable.skill_id,
-                                   cstable.quantity,
-                                   )
-
-        rstable = s3db.req_req_skill
-        query = (rstable.req_id == req_id) & \
-                (rstable.deleted == False)
-
-        if not any(row.quantity for row in cskills):
-            # Nothing has been committed for this request so far
-            commit_status = REQ_STATUS_NONE
-            db(query).update(quantity_commit = 0)
-        else:
-            # Get all requested skill(set)s for this request
-            rskills = db(query).select(rstable.id,
-                                       rstable.skill_id,
-                                       rstable.quantity,
-                                       rstable.quantity_commit,
-                                       )
-
-            # Match requested and committed skill sets
-            # - find the least complex committed skill set to
-            #   fulfill a requested skill set
-            # - start with most complex requested skill sets
-            req_skills = sorted(({"id": row.id,
-                                  "skillset": set(row.skill_id),
-                                  "requested": row.quantity,
-                                  "committed": row.quantity_commit,
-                                  } for row in rskills),
-                                 key = lambda s: -len(s["skillset"]),
-                                 )
-
-            cmt_skills = sorted(({"skillset": set(row.skill_id),
-                                  "available": row.quantity,
-                                  } for row in cskills),
-                                 key = lambda s: len(s["skillset"]),
-                                 )
-
-            none = complete = True
-            for req_skill_set in req_skills:
-
-                requested_quantity = req_skill_set["requested"]
-                quantity_commit = 0
-
-                for cmt_skill_set in cmt_skills:
-
-                    available = cmt_skill_set["available"]
-                    required = requested_quantity - quantity_commit
-                    if not available or not required:
-                        continue
-
-                    if req_skill_set["skillset"] <= cmt_skill_set["skillset"]:
-
-                        # Apply available quantity
-                        to_commit = min(required, available)
-                        quantity_commit += to_commit
-                        cmt_skill_set["available"] -= to_commit
-
-                    if quantity_commit == requested_quantity:
-                        break
-
-                # If quantity_commit has changed => update it in the DB
-                if quantity_commit != req_skill_set["committed"]:
-                    # Update committed quantity
-                    db(rstable.id == req_skill_set["id"]).update(quantity_commit = quantity_commit)
-
-                if requested_quantity > quantity_commit:
-                    complete = False
-                if quantity_commit > 0:
-                    none = False
-
-            if none:
-                commit_status = REQ_STATUS_NONE
-            elif complete:
-                commit_status = REQ_STATUS_COMPLETE
-            else:
+            if committed_quantity < requested_quantity:
+                # Gap!
                 commit_status = REQ_STATUS_PARTIAL
 
-        if commit_status != req.commit_status:
-            req.update_record(commit_status = commit_status)
-
-    elif req_type == 9: # Other
-
-        # Assume Partial not Complete
-        # @ToDo: Provide a way for the committer to specify this
-        data = {}
-        if req.commit_status == REQ_STATUS_NONE:
-            data["commit_status"] = REQ_STATUS_PARTIAL
-        if req.req_status == REQ_STATUS_NONE:
-            # Show as 'Responded'
-            data["req_status"] = REQ_STATUS_PARTIAL
-        if data:
-            req.update_record(**data)
+    # Update commit-status of the request (if changed)
+    if commit_status != req.commit_status:
+        req.update_record(commit_status = commit_status)
 
 # =============================================================================
 def req_req_details(row):
@@ -3992,45 +3144,26 @@ def req_req_details(row):
 
     if hasattr(row, "req_req"):
         row = row.req_req
+
     try:
         record_id = row.id
-        req_type = row.type
     except AttributeError:
         return None
 
-    if req_type == 1:
-        s3db = current.s3db
-        itable = s3db.supply_item
-        ltable = s3db.req_req_item
-        query = (ltable.deleted != True) & \
-                (ltable.req_id == record_id) & \
-                (ltable.item_id == itable.id)
-        items = current.db(query).select(itable.name,
-                                         ltable.quantity,
-                                         )
-        if items:
-            items = ["%s %s" % (int(item.req_req_item.quantity),
-                                item.supply_item.name)
-                     for item in items]
-            return ",".join(items)
-
-    elif req_type == 3:
-        s3db = current.s3db
-        ltable = s3db.req_req_skill
-        query = (ltable.deleted != True) & \
-                (ltable.req_id == record_id)
-        skills = current.db(query).select(ltable.skill_id,
-                                          ltable.quantity,
-                                          )
-        if skills:
-            represent = S3Represent(lookup = "hrm_skill",
-                                    multiple = True,
-                                    none = current.T("Unskilled")
-                                    )
-            skills = ["%s %s" % (skill.quantity,
-                                 represent(skill.skill_id)) \
-                      for skill in skills]
-            return ",".join(skills)
+    s3db = current.s3db
+    itable = s3db.supply_item
+    ltable = s3db.req_req_item
+    query = (ltable.deleted != True) & \
+            (ltable.req_id == record_id) & \
+            (ltable.item_id == itable.id)
+    items = current.db(query).select(itable.name,
+                                     ltable.quantity,
+                                     )
+    if items:
+        items = ["%s %s" % (int(item.req_req_item.quantity),
+                            item.supply_item.name)
+                 for item in items]
+        return ",".join(items)
 
     return current.messages["NONE"]
 
@@ -4043,27 +3176,26 @@ def req_req_drivers(row):
 
     if hasattr(row, "req_req"):
         row = row.req_req
+
     try:
         req_ref = row.req_ref
-        req_type = row.type
     except AttributeError:
         return None
 
-    if req_type == 1:
-        s3db = current.s3db
-        stable = s3db.inv_send
-        query = (stable.deleted != True) & \
-                (stable.req_ref == req_ref)
-        drivers = current.db(query).select(stable.driver_name,
-                                           stable.driver_phone,
-                                           stable.vehicle_plate_no,
-                                           )
-        if drivers:
-            drivers = ["%s %s %s" % (driver.driver_name or "",
-                                     driver.driver_phone or "",
-                                     driver.vehicle_plate_no or "") \
-                       for driver in drivers]
-            return ",".join(drivers)
+    s3db = current.s3db
+    stable = s3db.inv_send
+    query = (stable.deleted != True) & \
+            (stable.req_ref == req_ref)
+    drivers = current.db(query).select(stable.driver_name,
+                                       stable.driver_phone,
+                                       stable.vehicle_plate_no,
+                                       )
+    if drivers:
+        drivers = ["%s %s %s" % (driver.driver_name or "",
+                                 driver.driver_phone or "",
+                                 driver.vehicle_plate_no or "") \
+                   for driver in drivers]
+        return ",".join(drivers)
 
     return current.messages["NONE"]
 
@@ -4096,53 +3228,29 @@ def req_rheader(r, check_page=False):
         use_commit = settings.get_req_use_commit()
         use_workflow = settings.get_req_workflow()
 
-        rtype = record.type
-        if rtype == 1 and settings.has_module("inv"):
-            items = True
-            people = False
-        elif rtype == 3 and settings.has_module("hrm"):
-            items = False
-            people = True
-        else:
-            items = False
-            people = False
-
         site_id = record.site_id
         workflow_status = record.workflow_status
 
         tabs = [(T("Edit Details"), None)]
-        if items:
-            if settings.get_req_multiple_req_items():
-                req_item_tab_label = T("Items")
-            else:
-                req_item_tab_label = T("Item")
-            tabs.append((req_item_tab_label, "req_item"))
-        elif people:
-            tabs.append((T("Skills"), "req_skill"))
+        if settings.get_req_multiple_req_items():
+            req_item_tab_label = T("Items")
+        else:
+            req_item_tab_label = T("Item")
+        tabs.append((req_item_tab_label, "req_item"))
         #if settings.get_req_document_filing():
         tabs.append((T("Documents"), "document"))
         if is_template:
             tabs.append((T("Schedule"), "job"))
         else:
-            # Hide these if no Items/Skills on one of these requests yet
+            # Hide these if no Items on one of these requests yet
             auth = current.auth
             req_id = record.id
-            if items:
-                user = auth.user
-                user_site_id = user.site_id if user else None
-                ritable = s3db.req_req_item
-                possibly_complete = db(ritable.req_id == req_id).select(ritable.id,
-                                                                        limitby = (0, 1)
-                                                                        )
-            elif people:
-                user = auth.user
-                organisation_id = user.organisation_id if user else None
-                rstable = s3db.req_req_skill
-                possibly_complete = db(rstable.req_id == req_id).select(rstable.id,
-                                                                        limitby = (0, 1)
-                                                                        )
-            else:
-                possibly_complete = True
+            user = auth.user
+            user_site_id = user.site_id if user else None
+            ritable = s3db.req_req_item
+            possibly_complete = db(ritable.req_id == req_id).select(ritable.id,
+                                                                    limitby = (0, 1)
+                                                                    )
             if possibly_complete:
                 if use_commit:
                     tabs.append((T("Commitments"), "commit"))
@@ -4205,9 +3313,9 @@ def req_rheader(r, check_page=False):
         else:
             rheader_tabs = DIV()
 
-        if items and r.component and \
-                     r.component_name == "commit" and \
-                     r.component_id:
+        if r.component and \
+           r.component_name == "commit" and \
+           r.component_id:
             prepare_btn = A(T("Prepare Shipment"),
                             _href = URL(f = "send_commit",
                                         args = [r.component_id]
@@ -4573,7 +3681,6 @@ class req_CheckMethod(S3Method):
     """
         Check to see if you can match a Request
             - Using the Inventory of your Site if this is an Items request
-            - Using the Skills of your HRs if this is a Skills request
     """
 
     def apply_method(self, r, **attr):
@@ -4582,21 +3689,6 @@ class req_CheckMethod(S3Method):
 
             @param r: the S3Request
             @param attr: controller options for this request
-        """
-
-        req_type = r.record.type
-        if req_type == 1:
-            return self.inv_match(r, **attr)
-        elif req_type == 3:
-            return self.skills_match(r, **attr)
-        else:
-            r.error(405, current.ERROR.BAD_METHOD)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def inv_match(r, **attr):
-        """
-            Match a Request's Items with a Site's Inventory
         """
 
         T = current.T
@@ -4767,170 +3859,6 @@ class req_CheckMethod(S3Method):
 
         else:
             output["items"] = s3.crud_strings.req_req_item.msg_list_empty
-
-        response.view = "list.html"
-
-        return output
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def skills_match(r, **attr):
-        """
-            Match a Request's Skills with an Organisation's HRs
-
-            @ToDo: Optionally Filter by Site
-                (Volunteers don't currently link to a Site)
-            @ToDo: Check Availability
-                    - when the Volunteer has said they will work
-                    - where the Volunteer has said they will work
-                    - don't commit the same time slot twice
-        """
-
-        T = current.T
-        db = current.db
-        s3db = current.s3db
-        response = current.response
-        s3 = response.s3
-
-        output = {"title": T("Check Request"),
-                  "rheader": req_rheader(r, check_page=True),
-                  "subtitle": T("Requested Skills"),
-                  }
-
-        # Read req_skills
-        table = s3db.req_req_skill
-        query = (table.req_id == r.id ) & \
-                (table.deleted == False )
-        req_skills_multi = db(query).select(table.id,
-                                            table.skill_id,
-                                            table.quantity,
-                                            table.quantity_commit,
-                                            table.quantity_transit,
-                                            table.quantity_fulfil,
-                                            )
-
-        if len(req_skills_multi):
-            organisation_id = r.get_vars.get("organisation_id") or \
-                              current.auth.user.organisation_id
-
-            if organisation_id:
-                org_name = s3db.org_organisation_represent(organisation_id,
-                                                           show_link=False)
-                qty_in_label = s3_str(T("Quantity in %s")) % org_name
-            else:
-                qty_in_label = T("Quantity Available")
-
-            # Build the Output Representation
-            row = TR(TH(table.skill_id.label),
-                     TH(table.quantity.label),
-                     #TH(table.quantity_transit.label),
-                     #TH(table.quantity_fulfil.label),
-                     TH(T("Quantity Oustanding")),
-                     TH(qty_in_label),
-                     TH(T("Match?"))
-                     )
-            #use_commit = current.deployment_settings.get_req_use_commit()
-            #if use_commit:
-            #    row.insert(3, TH(table.quantity_commit.label))
-            items = TABLE(THEAD(row),
-                          _id="list",
-                          _class="dataTable display",
-                          )
-
-            if organisation_id:
-
-                req_skills = []
-                for row in req_skills_multi:
-                    skills_multi = row.skill_id
-                    for skill_id in skills_multi:
-                        if skill_id not in req_skills:
-                            req_skills.append(skill_id)
-
-                # Get the People from this Org with at least one of the Requested Skills
-                # NB This isn't exact yet since we may need people to have multiple skills
-                htable = s3db.hrm_human_resource
-                #ptable = s3db.pr_person
-                ctable = s3db.hrm_competency
-                query = (htable.organisation_id == organisation_id) & \
-                        (htable.deleted == False) & \
-                        (htable.person_id == ctable.person_id) & \
-                        (ctable.deleted == False) & \
-                        (ctable.skill_id.belongs(req_skills))
-                skills = db(query).select(htable.id,
-                                          ctable.skill_id,
-                                          )
-                people = {}
-                for s in skills:
-                    hr_id = s[htable.id]
-                    if hr_id in people:
-                        people[hr_id].append(s[ctable.skill_id])
-                    else:
-                        people[hr_id] = [s[ctable.skill_id]]
-
-                multi_skill_represent = table.skill_id.represent
-                no_match = True
-                for req_skill in req_skills_multi:
-                    skills = req_skill.skill_id
-                    req_quantity = req_skill.quantity
-                    # Do we have any outstanding quantity?
-                    quantity_outstanding = req_quantity - max(req_skill.quantity_fulfil, req_skill.quantity_transit)
-                    if quantity_outstanding:
-                        len_skills = len(skills)
-                        matches = []
-                        for p in people:
-                            smatches = 0
-                            for s in skills:
-                                if s in people[p]:
-                                    smatches += 1
-                            if smatches == len_skills:
-                                matches.append(p)
-                        org_quantity = len(matches)
-                        if org_quantity != 0:
-                            no_match = False
-                            if org_quantity < req_quantity:
-                                status = SPAN(T("Partial"), _class="req_status_partial")
-                            else:
-                                status = SPAN(T("YES"), _class="req_status_complete")
-                        else:
-                            status = SPAN(T("NO"), _class="req_status_none")
-                    else:
-                        org_quantity = T("N/A")
-                        status = SPAN(T("N/A"), _class="req_status_none")
-
-                    items.append(TR(#A(req_item.id),
-                                    multi_skill_represent(skills),
-                                    req_quantity,
-                                    # This requires an action btn to get the req_id
-                                    #req_skill.quantity_commit, # if use_commit
-                                    #req_skill.quantity_transit,
-                                    #req_skill.quantity_fulfil,
-                                    #req_item_quantity_represent(req_skill.quantity_commit, "commit"), # if use_commit
-                                    #req_item_quantity_represent(req_skill.quantity_fulfil, "fulfil"),
-                                    #req_item_quantity_represent(req_skill.quantity_transit, "transit"),
-                                    quantity_outstanding,
-                                    org_quantity,
-                                    status,
-                                    )
-                                 )
-
-                if not no_match:
-                    commit_btn = A(T("Assign People to this Request"),
-                                   _href = URL(c = "req",
-                                               f = "req",
-                                               args = [r.id, "commit_all", "assign"],
-                                               ),
-                                   _class = "action-btn"
-                                   )
-                    s3.rfooter = TAG[""](commit_btn)
-            else:
-                response.error = T("User has no Organization to check against!")
-
-            output["items"] = items
-            s3.no_sspag = True # pag won't work
-            s3.no_formats = True
-
-        else:
-            output["items"] = s3.crud_strings.req_req_skill.msg_list_empty
 
         response.view = "list.html"
 
@@ -5138,34 +4066,22 @@ class req_CommitRepresent(S3Represent):
             query = (table.id.belongs(values))
 
         rows = current.db(query).select(table.id,
-                                        table.type,
                                         table.date,
-                                        table.organisation_id,
                                         table.site_id,
                                         limitby = (0, count)
                                         )
         self.queries += 1
 
-        # Collect site_ids/organisation_ids after commit type
-        organisation_ids = set()
+        # Collect site_ids
         site_ids = set()
         for row in rows:
-            if row.type == 1:
-                site_ids.add(row.site_id)
-            else:
-                organisation_ids.add(row.organisation_id)
+            site_ids.add(row.site_id)
 
         # Bulk-represent site_ids
         if site_ids:
             represent = table.site_id.represent
             if represent and hasattr(represent, "bulk"):
                 represent.bulk(list(site_ids))
-
-        # Bulk-represent organisation_ids
-        if organisation_ids:
-            represent = table.organisation_id.represent
-            if represent and hasattr(represent, "bulk"):
-                represent.bulk(list(organisation_ids))
 
         return rows
 
@@ -5179,25 +4095,8 @@ class req_CommitRepresent(S3Represent):
 
         table = self.table
 
-        try:
-            commit_type = row.type
-        except AttributeError:
-            # Unknown commit type => assume "other"
-            commit_type = None
-
-        # Determine the committer field and id after commit type
-        if commit_type == 1:
-            field = table.site_id
-            committer_id = row.site_id
-        else:
-            field = table.organisation_id
-            committer_id = row.organisation_id
-
-        # Represent the committer (site or org)
-        if committer_id and field.represent:
-            committer = field.represent(committer_id)
-        else:
-            committer = None
+        # Represent the committer (site)
+        committer = table.site_id.represent(row.site_id)
 
         # Represent the commit date
         if row.date:
@@ -5258,16 +4157,15 @@ def req_add_from_template(req_id):
         @param req_id: record ID of the request template
     """
 
-    fieldnames = ["type",
-                  "priority",
+    db = current.db
+    s3db = current.s3db
+    table = s3db.req_req
+    fieldnames = ["priority",
                   "site_id",
                   "purpose",
                   "requester_id",
                   "comments",
                   ]
-    db = current.db
-    s3db = current.s3db
-    table = s3db.req_req
     fields = [table[field] for field in fieldnames]
 
     # Load Template
@@ -5293,41 +4191,23 @@ def req_add_from_template(req_id):
 
     new_req_id = table.insert(**data)
 
-    if template.type == 1:
-        # Copy across req_item
-        table = s3db.req_req_item
-        fieldnames = ["site_id",
-                      "item_id",
-                      "item_pack_id",
-                      "quantity",
-                      "pack_value",
-                      "currency",
-                      "comments",
-                      ]
-        fields = [table[field] for field in fieldnames]
-        items = db(table.req_id == req_id).select(*fields)
-        for item in items:
-            data = {"req_id": new_req_id}
-            for field in fieldnames:
-                data[field] = item[field]
-            table.insert(**data)
-
-    elif template.type == 3:
-        # Copy across req_skill
-        table = s3db.req_req_skill
-        fieldnames = ["site_id",
-                      "task",
-                      "skill_id",
-                      "quantity",
-                      "comments",
-                      ]
-        fields = [table[field] for field in fieldnames]
-        skills = db(table.req_id == req_id).select(*fields)
-        for skill in skills:
-            data = {"req_id": new_req_id}
-            for field in fieldnames:
-                data[field] = skill[field]
-            table.insert(**data)
+    # Copy across req_items
+    table = s3db.req_req_item
+    fieldnames = ["site_id",
+                  "item_id",
+                  "item_pack_id",
+                  "quantity",
+                  "pack_value",
+                  "currency",
+                  "comments",
+                  ]
+    fields = [table[field] for field in fieldnames]
+    items = db(table.req_id == req_id).select(*fields)
+    for item in items:
+        data = {"req_id": new_req_id}
+        for field in fieldnames:
+            data[field] = item[field]
+        table.insert(**data)
 
     return new_req_id
 
@@ -5413,7 +4293,7 @@ def req_approvers(site_id):
                             } for row in approvers}
 
 # =============================================================================
-def req_create_form_mods():
+def req_create_form_mods(r):
     """
         Function to be called from REST prep functions
          - main module & components (sites & events)
@@ -5428,13 +4308,7 @@ def req_create_form_mods():
 
     if not settings.get_req_inline_forms():
         # Amend the Save button
-        default_type = table.type.default
-        if default_type:
-            req_submit_button = {1: T("Save and add Items"),
-                                 3: T("Save and add People"),
-                                 9: T("Save"),
-                                 }
-            s3.crud.submit_button = req_submit_button[default_type]
+        s3.crud.submit_button = T("Save and add Items")
 
     # Hide fields which don't make sense in a Create form
     table.req_ref.readable = False
@@ -5467,52 +4341,15 @@ $.filterOptionsS3({
 'optional':true,
 })''' % T("No contacts yet defined for this site"))
         #table.site_id.comment = A(T("Set as default Site"),
-        #                          _id="req_req_site_id_link",
-        #                          _target="_blank",
-        #                          _href=URL(c="default",
-        #                                    f="user",
-        #                                    args=["profile"]))
+        #                          _id = "req_req_site_id_link",
+        #                          _target = "_blank",
+        #                          _href = URL(c="default",
+        #                                      f="user",
+        #                                      args = ["profile"],
+        #                                      ),
+        #                          )
 
-    req_types = settings.get_req_req_type()
-    if "People" in req_types:
-        # Show the Required Until Field
-        # (gets turned-off by JS for other types)
-        table.date_required_until.writable = True
-
-    request = current.request
-    if "type" not in request.get_vars:
-        # Script to inject into Pages which include Request create forms
-        req_helptext = '''
-i18n.req_purpose="%s"
-i18n.req_site_id="%s"
-i18n.req_request_for_id="%s"
-i18n.req_recv_by_id="%s"
-i18n.req_items_purpose="%s"
-i18n.req_items_site_id="%s"
-i18n.req_items_recv_by_id="%s"
-i18n.req_people_purpose="%s"
-i18n.req_people_site_id="%s"
-i18n.req_people_recv_by_id="%s"
-i18n.req_next_msg="%s"
-i18n.req_other_msg="%s"
-i18n.req_details_mandatory="%s"''' % (table.purpose.label,
-                                  table.site_id.label,
-                                  table.request_for_id.label,
-                                  table.recv_by_id.label,
-                                  T("What the Items will be used for"),
-                                  T("Deliver To"),
-                                  T("Delivered To"),
-                                  T("Task Details"),
-                                  T("Report To"),
-                                  T("Reported To"),
-                                  T("Please enter the details on the next screen."),
-                                  T("Please enter request details here."),
-                                  T("Details field is required!"))
-        s3.js_global.append(req_helptext)
-        s3.scripts.append("/%s/static/scripts/S3/s3.req_create_variable.js" % request.application)
-
-    else:
-        s3.scripts.append("/%s/static/scripts/S3/s3.req_create.js" % request.application)
+    s3.scripts.append("/%s/static/scripts/S3/s3.req_create.js" % r.application)
 
 # =============================================================================
 def req_hide_quantities(table):
@@ -5531,12 +4368,11 @@ def req_hide_quantities(table):
         table.quantity_fulfil.writable = False
 
 # =============================================================================
-def req_inline_form(req_type, method):
+def req_inline_form(method):
     """
         Function to be called from REST prep functions
          - to add req_item & req_skill components as inline forms
 
-        @param req_type: the request type (1=items, 3=skills)
         @param method: the URL request method
     """
 
@@ -5544,40 +4380,39 @@ def req_inline_form(req_type, method):
     s3db = current.s3db
     table = s3db.req_req
     s3 = current.response.s3
-    postprocess = s3.req_req_postprocess
+    # Was used by NYC template
+    #postprocess = s3.req_req_postprocess
 
-    if req_type == 1:
+    # Custom Form
+    settings = current.deployment_settings
+    fields = [#req_ref
+              "site_id",
+              #is_template
+              "requester_id",
+              "date",
+              "priority",
+              "date_required",
+              S3SQLInlineComponent(
+                "req_item",
+                label = T("Items"),
+                fields = ["item_id",
+                          "item_pack_id",
+                          "quantity",
+                          "comments"
+                          ]
+              ),
+              #purpose
+              "comments",
+              ]
 
-        # Custom Form
-        settings = current.deployment_settings
-        fields = [#req_ref
-                  "site_id",
-                  #is_template
-                  "requester_id",
-                  "date",
-                  "priority",
-                  "date_required",
-                  S3SQLInlineComponent(
-                    "req_item",
-                    label = T("Items"),
-                    fields = ["item_id",
-                              "item_pack_id",
-                              "quantity",
-                              "comments"
-                              ]
-                  ),
-                  #purpose
-                  "comments",
-                  ]
+    if method in ("create", "update"):
+        # Dropdown not Autocomplete
+        itable = s3db.req_req_item
+        itable.item_id.widget = None
 
-        if method in ("create", "update"):
-            # Dropdown not Autocomplete
-            itable = s3db.req_req_item
-            itable.item_id.widget = None
-
-            # Options-filter item=>pack
-            jquery_ready = s3.jquery_ready
-            jquery_ready.append('''
+        # Options-filter item=>pack
+        jquery_ready = s3.jquery_ready
+        jquery_ready.append('''
 $.filterOptionsS3({
 'trigger':{'alias':'req_item','name':'item_id'},
 'target':{'alias':'req_item','name':'item_pack_id'},
@@ -5588,9 +4423,9 @@ $.filterOptionsS3({
 'fncPrep':S3.supply.fncPrepItem,
 'fncRepresent':S3.supply.fncRepresentItem
 })''')
-            if settings.get_req_requester_from_site():
-                # Filter the list of Contacts to those for the site
-                jquery_ready.append('''
+        if settings.get_req_requester_from_site():
+            # Filter the list of Contacts to those for the site
+            jquery_ready.append('''
 $.filterOptionsS3({
 'trigger':'site_id',
 'target':'requester_id',
@@ -5600,133 +4435,60 @@ $.filterOptionsS3({
 'optional':true,
 })''' % T("No contacts yet defined for this site"))
 
-                # Popup link to allow adding a contact (...for the site)
-                table.requester_id.widget = None
-                table.requester_id.comment = S3PopupLink(c = "pr",
-                                                         f = "person",
-                                                         vars = {"child": "requester_id",
-                                                                 "parent": "req",
-                                                                 },
-                                                         title = s3.crud_strings["pr_person"].label_create,
-                                                         )
+            # Popup link to allow adding a contact (...for the site)
+            table.requester_id.widget = None
+            table.requester_id.comment = S3PopupLink(c = "pr",
+                                                     f = "person",
+                                                     vars = {"child": "requester_id",
+                                                             "parent": "req",
+                                                             },
+                                                     title = s3.crud_strings["pr_person"].label_create,
+                                                     )
 
-                # Link to user profile to allow setting this site
-                # as their current default site, so that they appear
-                # in the dropdown themselves
-                table.site_id.comment = A(T("Set as default Site"),
-                                          _id = "req_req_site_id_link",
-                                          _target = "_blank",
-                                          _href = URL(c = "default",
-                                                      f = "user",
-                                                      args = ["profile"],
-                                                      ),
-                                          )
+            # Link to user profile to allow setting this site
+            # as their current default site, so that they appear
+            # in the dropdown themselves
+            table.site_id.comment = A(T("Set as default Site"),
+                                      _id = "req_req_site_id_link",
+                                      _target = "_blank",
+                                      _href = URL(c = "default",
+                                                  f = "user",
+                                                  args = ["profile"],
+                                                  ),
+                                      )
 
-        if method in ("update", "read"):
-            # Append status details
-            status_fields = []
-            if settings.get_req_status_writable():
-                if settings.get_req_use_commit():
-                    status_fields.append("commit_status")
-                if settings.get_req_show_quantity_transit():
-                    status_fields.append("transit_status")
-                status_fields.append("fulfil_status")
-            status_fields.append("date_recv")
+    if method in ("update", "read"):
+        # Append status details
+        status_fields = []
+        if settings.get_req_status_writable():
+            if settings.get_req_use_commit():
+                status_fields.append("commit_status")
+            if settings.get_req_show_quantity_transit():
+                status_fields.append("transit_status")
+            status_fields.append("fulfil_status")
+        status_fields.append("date_recv")
 
-            fields.extend(status_fields)
+        fields.extend(status_fields)
 
-            # Show request number?
-            if settings.get_req_use_req_number():
-                if settings.get_req_generate_req_number():
-                    table.req_ref.writable = False
-                fields.insert(0, "req_ref")
-        else:
-            # Is-template flag can only be set during create
-            fields.insert(1, "is_template")
-
-        if settings.get_req_items_ask_purpose():
-            fields.insert(-1, "purpose")
-
-        if postprocess:
-            crud_form = S3SQLCustomForm(*fields, postprocess=postprocess)
-        else:
-            crud_form = S3SQLCustomForm(*fields)
-        s3db.configure("req_req",
-                       crud_form = crud_form,
-                       )
-
-    elif req_type == 3:
-        # Custom Form
-        stable = s3db.req_req_skill
-        stable.skill_id.label = T("Required Skills (optional)")
-        # Custom Form
-        settings = current.deployment_settings
-        fields = ["site_id",
-                  "requester_id",
-                  "date",
-                  "priority",
-                  "date_required",
-                  "date_required_until",
-                  "purpose",
-                  S3SQLInlineComponent(
-                    "req_skill",
-                    label = T("Skills"),
-                    fields = ["quantity",
-                              "skill_id",
-                              "comments"
-                              ]
-                  ),
-                  "comments",
-                  ]
-        if method == "update":
-            if settings.get_req_status_writable():
-                fields.insert(8, "fulfil_status")
-                if settings.get_req_show_quantity_transit():
-                    fields.insert(8, "transit_status")
-                if settings.get_req_use_commit():
-                    fields.insert(8, "commit_status")
-            fields.insert(8, "date_recv")
-
-            if settings.get_req_requester_from_site():
-                # Filter the list of Contacts to those for the site
-                table.requester_id.widget = None
-                table.requester_id.comment = S3PopupLink(c = "pr",
-                                                         f = "person",
-                                                         vars = {"child": "requester_id",
-                                                                 "parent": "req",
-                                                                 },
-                                                         title = s3.crud_strings["pr_person"].label_create,
-                                                         )
-                s3.jquery_ready.append('''
-$.filterOptionsS3({
-'trigger':'site_id',
-'target':'requester_id',
-'lookupResource':'staff',
-'lookupURL':S3.Ap.concat('/hrm/staff_for_site/'),
-'msgNoRecords':'%s',
-'optional':true,
-})''' % T("No contacts yet defined for this site"))
-                table.site_id.comment = A(T("Set as default Site"),
-                                          _id = "req_req_site_id_link",
-                                          _target = "_blank",
-                                          _href = URL(c="default",
-                                                      f="user",
-                                                      args = ["profile"],
-                                                      ),
-                                          )
-
-        else:
-            fields.insert(1, "is_template")
-        if settings.get_req_use_req_number() and \
-           not settings.get_req_generate_req_number():
+        # Show request number?
+        if settings.get_req_use_req_number():
+            if settings.get_req_generate_req_number():
+                table.req_ref.writable = False
             fields.insert(0, "req_ref")
-        if postprocess:
-            crud_form = S3SQLCustomForm(*fields, postprocess=postprocess)
-        else:
-            crud_form = S3SQLCustomForm(*fields)
-        s3db.configure("req_req",
-                       crud_form = crud_form,
-                       )
+    else:
+        # Is-template flag can only be set during create
+        fields.insert(1, "is_template")
+
+    if settings.get_req_items_ask_purpose():
+        fields.insert(-1, "purpose")
+
+    #if postprocess:
+    #    crud_form = S3SQLCustomForm(*fields, postprocess=postprocess)
+    #else:
+    crud_form = S3SQLCustomForm(*fields)
+    s3db.configure("req_req",
+                   crud_form = crud_form,
+                   )
 
     # Reset to standard submit button
     s3.crud.submit_button = T("Save")

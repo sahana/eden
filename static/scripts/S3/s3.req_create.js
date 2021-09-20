@@ -19,8 +19,6 @@ $(document).ready(function() {
             $('#req_req_date__row').hide();
             $('#req_req_date_required__row1').hide();
             $('#req_req_date_required__row').hide();
-            $('#req_req_date_required_until__row1').hide();
-            $('#req_req_date_required_until__row').hide();
             $('#req_req_recv_by_id__row1').hide();
             $('#req_req_recv_by_id__row').hide();
         } else {
@@ -30,8 +28,6 @@ $(document).ready(function() {
             $('#req_req_date_required__row').show();
             $('#req_req_recv_by_id__row1').show();
             $('#req_req_recv_by_id__row').show();
-            $('#req_req_date_required_until__row1').show();
-            $('#req_req_date_required_until__row').show();
         }
     });
 });

@@ -830,7 +830,6 @@ def config(settings):
     # Request Management
     # Uncomment to disable Inline Forms in Requests module
     settings.req.inline_forms = False
-    settings.req.req_type = ["Stock"]
     # No need to use Commits
     settings.req.use_commit = False
     #settings.req.document_filing = True

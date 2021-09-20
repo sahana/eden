@@ -137,7 +137,7 @@ def station():
                         # Hide fields which don't make sense in a Create form
                         # inc list_create (list_fields over-rides)
                         from s3db.req import req_create_form_mods
-                        req_create_form_mods()
+                        req_create_form_mods(r)
 
                 elif component_name in ("asset", "vehicle"):
                     atable = s3db.asset_asset

@@ -224,7 +224,7 @@ def shelter():
                     if r.method != "update" and r.method != "read":
                         # Hide fields which don't make sense in a Create form
                         # inc list_create (list_fields over-rides)
-                        s3db.req_create_form_mods()
+                        s3db.req_create_form_mods(r)
 
         return True
     s3.prep = prep

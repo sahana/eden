@@ -5852,22 +5852,19 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Requests Management Settings
     #
-    def get_req_req_type(self):
-        """
-            The Types of Request which can be made.
-            Select one or more from:
-            * People
-            * Stock
-            * Other
-            tbc: Assets, Shelter, Food
-        """
-        return self.req.get("req_type", ("Stock", "People", "Other"))
+    #def get_req_req_type(self):
+    #    """
+    #        The Types of Request which can be made.
+    #        Select one or more from:
+    #        * People
+    #        * Stock
+    #        * Other
+    #        tbc: Assets, Shelter, Food
+    #    """
+    #    return self.req.get("req_type", ("Stock", "People", "Other"))
 
-    def get_req_type_inv_label(self):
-        return current.T(self.req.get("type_inv_label", "Warehouse Stock"))
-
-    def get_req_type_hrm_label(self):
-        return current.T(self.req.get("type_hrm_label", "People"))
+    #def get_req_type_inv_label(self):
+    #    return current.T(self.req.get("type_inv_label", "Warehouse Stock"))
 
     def get_req_copyable(self):
         """
@@ -5920,10 +5917,6 @@ class S3Config(Storage):
         """ Whether Item Quantities should be manually editable """
         return self.req.get("item_quantities_writable", False)
 
-    def get_req_skill_quantities_writable(self):
-        """ Whether People Quantities should be manually editable """
-        return self.req.get("skill_quantities_writable", False)
-
     def get_req_summary(self):
         # Whether to use Summary page for Requests
         return self.req.get("summary", False)
@@ -5962,26 +5955,11 @@ class S3Config(Storage):
         """
         return self.req.get("prompt_match", True)
 
-    #def get_req_summary(self):
-    #    """
-    #        Whether to use Summary Needs for Sites (Office/Facility currently):
-    #    """
-    #    return self.req.get("summary", False)
-
     def get_req_use_commit(self):
         """
             Whether there is a Commit step in Requests Management
         """
         return self.req.get("use_commit", True)
-
-    def get_req_commit_people(self):
-        """
-            Whether Skills Requests should be Committed with Named Indviduals
-            or just Anonymous Skill
-
-            @ToDo: Make this do something
-        """
-        return self.req.get("commit_people", False)
 
     def get_req_commit_value(self):
         """
