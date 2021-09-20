@@ -38,6 +38,7 @@ def config(settings):
     settings.gis.latlon_selector = True
 
     settings.hrm.id_cards = True
+    settings.hrm.show_organisation = True
 
     settings.supply.catalog_multi = False
 

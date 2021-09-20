@@ -1721,6 +1721,7 @@ class PersonModel(S3Model):
                 fields.append("human_resource.job_title_id$name")
                 show_orgs = settings.get_hrm_show_organisation()
                 if show_orgs:
+                    # @ToDo: Support for Branches
                     fields.append("human_resource.organisation_id$name")
 
             name_format = settings.get_pr_name_format()
@@ -2190,6 +2191,7 @@ class PersonModel(S3Model):
             fields.append("human_resource.job_title_id$name")
             show_orgs = settings.get_hrm_show_organisation()
             if show_orgs:
+                # @ToDo: Support for Branches
                 fields.append("human_resource.organisation_id$name")
 
         rows = resource.select(fields=fields,
@@ -10910,6 +10912,7 @@ class pr_PersonSearchAutocomplete(S3Method):
                 fields.append("human_resource.job_title_id$name")
                 show_orgs = settings.get_hrm_show_organisation()
                 if show_orgs:
+                    # @ToDo: Support for Branches
                     fields.append("human_resource.organisation_id$name")
 
             # Sort results alphabetically (according to name format)
