@@ -1367,7 +1367,7 @@ class InventoryRequisitionApproverModel(S3Model):
         return {}
 
 # =============================================================================
-class InventoryRequisitionApproverModel(S3Model):
+class InventoryRequisitionItemModel(S3Model):
     """
         Model for Inventory Requisition Items
 

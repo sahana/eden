@@ -942,7 +942,8 @@ def config(settings):
 
             if r.method == "create"and r.http == "POST":
                 r.resource.configure(create_next = URL(c="event", f="scenario",
-                                                       args = ["[id]", "plan"]),
+                                                       args = ["[id]", "plan"],
+                                                       ),
                                      )
 
             return True

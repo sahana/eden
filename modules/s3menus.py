@@ -1768,17 +1768,6 @@ class S3OptionsMenu(object):
 
         ADMIN = current.session.s3.system_roles.ADMIN
         settings = current.deployment_settings
-        types = settings.get_req_req_type()
-        if len(types) == 1:
-            t = types[0]
-            if t == "Stock":
-                create_menu = M("Create", m="create", vars={"type": 1})
-            elif t == "People":
-                create_menu = M("Create", m="create", vars={"type": 3})
-            else:
-                create_menu = M("Create", m="create")
-        else:
-            create_menu = M("Create", m="create")
 
         if settings.get_req_summary():
             method = "summary"
@@ -1787,19 +1776,14 @@ class S3OptionsMenu(object):
 
         recurring = lambda i: settings.get_req_recurring()
         use_commit = lambda i: settings.get_req_use_commit()
-        req_items = lambda i: "Stock" in types
-        req_skills = lambda i: "People" in types
 
         return M(c="req")(
                     M("Requests", f="req", m=method)(
-                        create_menu,
+                        M("Create", m="create"),
                         M("List Recurring Requests", f="req_template", check=recurring),
                         M("Map", m="map"),
                         M("Report", m="report"),
-                        M("Search All Requested Items", f="req_item",
-                          check=req_items),
-                        M("Search All Requested Skills", f="req_skill",
-                          check=req_skills),
+                        M("Search All Requested Items", f="req_item"),
                     ),
                     M("Commitments", f="commit", check=use_commit)(
                     ),
