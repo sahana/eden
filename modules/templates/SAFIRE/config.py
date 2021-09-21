@@ -364,7 +364,7 @@ def config(settings):
                                        ),
                                     scenarios,
                                     TR(TH("%s: " % table.comments.label),
-                                       record.comments,
+                                       record.comments or current.messages["NONE"],
                                        ),
                                     TR(TH("%s: " % table.date.label),
                                        table.date.represent(record.date),
