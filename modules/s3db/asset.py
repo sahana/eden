@@ -1023,17 +1023,6 @@ def asset_log_prep(r):
             else:
                 table[f].writable = False
         return
-    # If there was ever a site set with editable layout_id then:
-    #    record = db(table.id == r.component_id).select(table.site_id,
-    #                                                   limitby = (0, 1)
-    #                                                   ).first()
-    #    site_id = record.site_id
-    #    f = table.layout_id
-    #    # We can't update this dynamically
-    #    #f.requires.other.set_filter(filterby = "site_id",
-    #    #                            filter_opts = [site_id],
-    #    #                            )
-    #    f.widget.filter = (s3db.org_site_layout.site_id == site_id)
     elif method == "read":
         return
 
@@ -1070,6 +1059,8 @@ def asset_log_prep(r):
         table.date_until.readable = table.date_until.writable = False
         table.person_id.readable = table.person_id.writable = False
         table.organisation_id.readable = table.organisation_id.writable = True
+        # Start Empty
+        table.layout_id.widget.filter = (FS("site_id") == 0)
 
     elif status == ASSET_LOG_RETURN:
         crud_strings.msg_record_created = T("Returned")
@@ -1088,9 +1079,13 @@ def asset_log_prep(r):
             table.person_id.requires = table.person_id.requires.other
             table.check_in_to_person.readable = table.check_in_to_person.writable = True
             table.site_id.requires = IS_EMPTY_OR(table.site_id.requires)
+            # Start Empty
+            table.layout_id.widget.filter = (FS("site_id") == 0)
 
         elif method == "assignsite":
             crud_strings.msg_record_created = T("Assigned to Facility/Site")
+            # Start Empty
+            table.layout_id.widget.filter = (FS("site_id") == 0)
 
         elif method == "assignorg":
             crud_strings.msg_record_created = T("Assigned to Organization")
@@ -1098,6 +1093,8 @@ def asset_log_prep(r):
             field.readable = field.writable = True
             field.requires = field.requires.other
             table.site_id.requires = IS_EMPTY_OR(table.site_id.requires)
+            # Start Empty
+            table.layout_id.widget.filter = (FS("site_id") == 0)
     else:
         # Can Update Status &/or Condition
         crud_strings.msg_record_created = T("Status Updated")
@@ -1273,9 +1270,8 @@ def asset_controller():
     def postp(r, output):
         if r.interactive and r.method != "import":
             if r.component_name == "log":
-                pass
-                #script = "/%s/static/scripts/S3/s3.asset_log.js" % r.application
-                #s3.scripts.append(script)
+                script = "/%s/static/scripts/S3/s3.asset_log.js" % r.application
+                s3.scripts.append(script)
             else:
                 script = "/%s/static/scripts/S3/s3.asset.js" % r.application
                 s3.scripts.append(script)

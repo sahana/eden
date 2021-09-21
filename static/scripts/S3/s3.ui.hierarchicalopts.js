@@ -151,12 +151,13 @@
                 self = this;
 
             if (!tree.find('li').length) {
-                this.button.hide();
+                // .hide() not strong enough to beat the !important on .form-container form .ui-multiselect
+                this.button.attr('style', 'display:none!important');
                 this.noopts.show();
                 return;
             } else {
                 this.noopts.hide();
-                this.button.show();
+                this.button.attr('style', '');
             }
 
             // Move error-wrapper behind button
