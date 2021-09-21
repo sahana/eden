@@ -167,16 +167,18 @@ def shelter():
             if r.id:
                 table.obsolete.readable = table.obsolete.writable = True
             if r.component:
-                if r.component.name == "inv_item" or \
-                   r.component.name == "recv" or \
-                   r.component.name == "send":
+                if r.component_name == "inv_item" or \
+                   r.component_name == "recv" or \
+                   r.component_name == "send":
                     # Filter out items which are already in this inventory
-                    s3db.inv_prep(r)
+                    from s3db.inv import inv_prep
+                    inv_prep(r)
 
-                elif r.component.name == "human_resource":
-                    s3db.org_site_staff_config(r)
+                elif r.component_name == "human_resource":
+                    from s3db.org import org_site_staff_config
+                    org_site_staff_config(r)
 
-                elif r.component.name == "rat":
+                elif r.component_name == "rat":
                     # Hide the Implied fields
                     db.assess_rat.location_id.writable = False
                     db.assess_rat.location_id.default = r.record.location_id
@@ -186,7 +188,7 @@ def shelter():
                     if staff_id:
                         db.assess_rat.staff_id.default = staff_id.id
 
-                elif r.component.name == "shelter_registration":
+                elif r.component_name == "shelter_registration":
                     if settings.get_cr_shelter_housing_unit_management():
                         # Filter housing units to units of this shelter
                         field = s3db.cr_shelter_registration.shelter_unit_id
@@ -207,7 +209,7 @@ def shelter():
                         msg_list_empty = T("No people currently registered in this shelter")
                     )
 
-                elif r.component.name == "shelter_allocation":
+                elif r.component_name == "shelter_allocation":
                     s3.crud_strings.cr_shelter_allocation = Storage(
                         label_create = T("Allocate Group"),
                         title_display = T("Allocation Details"),
@@ -220,11 +222,12 @@ def shelter():
                         msg_list_empty = T("No groups currently allocated for this shelter")
                     )
 
-                elif r.component.name == "req":
+                elif r.component_name == "req":
                     if r.method != "update" and r.method != "read":
                         # Hide fields which don't make sense in a Create form
                         # inc list_create (list_fields over-rides)
-                        s3db.req_create_form_mods(r)
+                        from s3db.inv import inv_req_create_form_mods
+                        inv_req_create_form_mods(r)
 
         return True
     s3.prep = prep
@@ -298,12 +301,14 @@ def incoming():
     """
 
     # @ToDo: Create this function!
-    return s3db.inv_incoming()
+    from s3db.inv import inv_incoming
+    return inv_incoming()
 
 # -----------------------------------------------------------------------------
 def req_match():
     """ Match Requests """
 
-    return s3db.req_match()
+    from s3db.inv import inv_req_match
+    return inv_req_match()
 
 # END =========================================================================

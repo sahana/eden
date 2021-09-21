@@ -6,13 +6,13 @@
          Request Approvers - CSV Import Stylesheet
 
          CSV fields:
-         Entity............................req_approver.pe_id$name
-         Entity Type.......................req_approver.pe_id$instance_type
-         Title.............................req_approver.title
-         First Name........................req_approver.person_id$first_name
-         Middle Name.......................req_approver.person_id$middle_name
-         Last Name.........................req_approver.person_id$last_name
-         Matcher...........................req_approver.matcher
+         Entity............................inv_req_approver.pe_id$name
+         Entity Type.......................inv_req_approver.pe_id$instance_type
+         Title.............................inv_req_approver.title
+         First Name........................inv_req_approver.person_id$first_name
+         Middle Name.......................inv_req_approver.person_id$middle_name
+         Last Name.........................inv_req_approver.person_id$last_name
+         Matcher...........................inv_req_approver.matcher
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -51,7 +51,7 @@
             </xsl:call-template>
         </xsl:variable>
 
-        <resource name="req_approver">
+        <resource name="inv_req_approver">
             <reference field="pe_id">
                 <xsl:attribute name="resource">
                     <xsl:value-of select="$EntityType"/>

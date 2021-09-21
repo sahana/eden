@@ -1274,8 +1274,10 @@ def hms_hospital_rheader(r, tabs=None):
                        permit("create", "hrm_human_resource_site"):
                         tabs.append((T("Assign %(staff)s") % {"staff": STAFF}, "assign"))
 
-                tabs.extend(s3db.req_tabs(r, match=False))
-                tabs.extend(s3db.inv_tabs(r))
+                if settings.has_module("inv"):
+                    from .inv import inv_tabs, inv_req_tabs
+                    tabs.extend(inv_req_tabs(r, match=False))
+                    tabs.extend(inv_tabs(r))
 
                 tabs.append((T("User Roles"), "roles"))
 

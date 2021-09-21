@@ -544,7 +544,7 @@ class EventModel(S3Model):
                                          "actuate": "hide",
                                          "autodelete": False,
                                          },
-                            req_req = {"link": "event_request",
+                            inv_req = {"link": "event_request",
                                        "joinby": "event_id",
                                        "key": "req_id",
                                        "actuate": "hide",
@@ -1124,7 +1124,7 @@ class EventRequestModel(S3Model):
                                               ondelete = ondelete,
                                               ),
                           self.event_incident_id(ondelete = "CASCADE"),
-                          self.req_req_id(#ondelete = "CASCADE", # default anyway
+                          self.inv_req_id(#ondelete = "CASCADE", # default anyway
                                           ),
                           *s3_meta_fields())
 

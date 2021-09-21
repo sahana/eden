@@ -530,12 +530,11 @@ $.filterOptionsS3({
                            represent = S3Represent(options = asset_log_status_opts),
                            requires = IS_IN_SET(asset_log_status_opts),
                            ),
-                     s3_datetime("datetime",
-                                 default = "now",
+                     s3_datetime(default = "now",
                                  empty = False,
                                  represent = "date",
                                  ),
-                     s3_datetime("datetime_until",
+                     s3_datetime("date_until",
                                  label = T("Date Until"),
                                  represent = "date",
                                  ),
@@ -617,7 +616,7 @@ $.filterOptionsS3({
         # Resource configuration
         configure(tablename,
                   listadd = False,
-                  list_fields = ["datetime",
+                  list_fields = ["date",
                                  "status",
                                  "datetime_until",
                                  "organisation_id",
@@ -630,7 +629,7 @@ $.filterOptionsS3({
                                  "comments",
                                  ],
                   onaccept = self.asset_log_onaccept,
-                  orderby = "asset_log.datetime desc",
+                  orderby = "asset_log.date desc",
                   )
 
         # ---------------------------------------------------------------------
@@ -767,8 +766,8 @@ $.filterOptionsS3({
 
             current_log = asset_get_current_log(asset_id)
 
-            log_time = current_log.datetime
-            current_time = form_vars.get("datetime").replace(tzinfo = None)
+            log_time = current_log.date
+            current_time = form_vars.get("date").replace(tzinfo = None)
             new = log_time <= current_time
 
         if new:
@@ -981,17 +980,17 @@ def asset_get_current_log(asset_id):
     # Get the log with the maximum time
     asset_log = current.db(query).select(table.id,
                                          table.status,
-                                         table.datetime,
+                                         table.date,
                                          table.cond,
                                          table.person_id,
                                          table.organisation_id,
                                          table.site_id,
                                          #table.location_id,
-                                         orderby = ~table.datetime,
+                                         orderby = ~table.date,
                                          limitby = (0, 1)
                                          ).first()
     if asset_log:
-        return Storage(datetime = asset_log.datetime,
+        return Storage(date = asset_log.date,
                        person_id = asset_log.person_id,
                        cond = int(asset_log.cond or 0),
                        status = int(asset_log.status or 0),
@@ -1049,13 +1048,13 @@ def asset_log_prep(r):
     if status == ASSET_LOG_SET_BASE:
         crud_strings.msg_record_created = T("Base Facility/Site Set")
         table.by_person_id.label = T("Set By")
-        table.datetime_until.readable = table.datetime_until.writable = False
+        table.date_until.readable = table.date_until.writable = False
         table.person_id.readable = table.person_id.writable = False
         table.organisation_id.readable = table.organisation_id.writable = True
 
     elif status == ASSET_LOG_RETURN:
         crud_strings.msg_record_created = T("Returned")
-        table.datetime_until.readable = table.datetime_until.writable = False
+        table.date_until.readable = table.date_until.writable = False
         table.person_id.readable = table.person_id.writable = False
         table.by_person_id.default = current_log.person_id
         table.by_person_id.label = T("Returned By")
@@ -1084,7 +1083,7 @@ def asset_log_prep(r):
         # Can Update Status &/or Condition
         crud_strings.msg_record_created = T("Status Updated")
         table.by_person_id.label = T("Updated By")
-        table.datetime_until.readable = table.datetime_until.writable = False
+        table.date_until.readable = table.date_until.writable = False
         table.person_id.readable = table.person_id.writable = False
         table.site_id.readable = table.site_id.writable = False
         table.room_id.readable = table.room_id.writable = False

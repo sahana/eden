@@ -24,29 +24,28 @@ def airport():
 
         if r.interactive:
             if r.component:
-                if r.component.name == "human_resource":
-                    s3db.org_site_staff_config(r)
-                elif r.component.name == "inv_item":
-                    # remove CRUD generated buttons in the tabs
-                    s3db.configure("inv_inv_item",
-                                   create = False,
-                                   deletable = False,
-                                   editable = False,
-                                   listadd = False,
-                                   )
+                if r.component_name == "human_resource":
+                    from s3db.org import org_site_staff_config
+                    org_site_staff_config(r)
+                elif r.component_name == "inv_item":
+                    # Filter out items which are already in this inventory
+                    from s3db.inv import inv_prep
+                    inv_prep(r)
             elif r.method == "update":
                 field = r.table.obsolete
                 field.readable = field.writable = True
         return True
     s3.prep = prep
 
-    return s3_rest_controller(rheader = s3db.transport_rheader)
+    from s3db.transport import transport_rheader
+    return s3_rest_controller(rheader = transport_rheader)
 
 # -----------------------------------------------------------------------------
 def border_crossing():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(rheader = s3db.transport_rheader)
+    from s3db.transport import transport_rheader
+    return s3_rest_controller(rheader = transport_rheader)
 
 # -----------------------------------------------------------------------------
 def border_control_point():
@@ -59,29 +58,28 @@ def border_control_point():
 
         if r.interactive:
             if r.component:
-                if r.component.name == "human_resource":
-                    s3db.org_site_staff_config(r)
-                elif r.component.name == "inv_item":
-                    # remove CRUD generated buttons in the tabs
-                    s3db.configure("inv_inv_item",
-                                   create = False,
-                                   deletable = False,
-                                   editable = False,
-                                   listadd = False,
-                                   )
+                if r.component_name == "human_resource":
+                    from s3db.org import org_site_staff_config
+                    org_site_staff_config(r)
+                elif r.component_name == "inv_item":
+                    # Filter out items which are already in this inventory
+                    from s3db.inv import inv_prep
+                    inv_prep(r)
             #elif r.method == "update":
             #    field = r.table.obsolete
             #    field.readable = field.writable = True
         return True
     s3.prep = prep
 
-    return s3_rest_controller(rheader = s3db.transport_rheader)
+    from s3db.transport import transport_rheader
+    return s3_rest_controller(rheader = transport_rheader)
 
 # -----------------------------------------------------------------------------
 def bridge():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(rheader = s3db.transport_rheader)
+    from s3db.transport import transport_rheader
+    return s3_rest_controller(rheader = transport_rheader)
 
 # -----------------------------------------------------------------------------
 def heliport():
@@ -94,23 +92,21 @@ def heliport():
 
         if r.interactive:
             if r.component:
-                if r.component.name == "human_resource":
-                    s3db.org_site_staff_config(r)
-                elif r.component.name == "inv_item":
-                    # remove CRUD generated buttons in the tabs
-                    s3db.configure("inv_inv_item",
-                                   create = False,
-                                   deletable = False,
-                                   editable = False,
-                                   listadd = False,
-                                   )
+                if r.component_name == "human_resource":
+                    from s3db.org import org_site_staff_config
+                    org_site_staff_config(r)
+                elif r.component_name == "inv_item":
+                    # Filter out items which are already in this inventory
+                    from s3db.inv import inv_prep
+                    inv_prep(r)
             elif r.method == "update":
                 field = r.table.obsolete
                 field.readable = field.writable = True
         return True
     s3.prep = prep
 
-    return s3_rest_controller(rheader = s3db.transport_rheader)
+    from s3db.transport import transport_rheader
+    return s3_rest_controller(rheader = transport_rheader)
 
 # -----------------------------------------------------------------------------
 def seaport():
@@ -123,23 +119,21 @@ def seaport():
 
         if r.interactive:
             if r.component:
-                if r.component.name == "human_resource":
-                    s3db.org_site_staff_config(r)
-                elif r.component.name == "inv_item":
-                    # remove CRUD generated buttons in the tabs
-                    s3db.configure("inv_inv_item",
-                                   create = False,
-                                   deletable = False,
-                                   editable = False,
-                                   listadd = False,
-                                   )
+                if r.component_name == "human_resource":
+                    from s3db.org import org_site_staff_config
+                    org_site_staff_config(r)
+                elif r.component_name == "inv_item":
+                    # Filter out items which are already in this inventory
+                    from s3db.inv import inv_prep
+                    inv_prep(r)
             elif r.method == "update":
                 field = r.table.obsolete
                 field.readable = field.writable = True
         return True
     s3.prep = prep
 
-    return s3_rest_controller(rheader = s3db.transport_rheader)
+    from s3db.transport import transport_rheader
+    return s3_rest_controller(rheader = transport_rheader)
 
 # -----------------------------------------------------------------------------
 def incoming():
@@ -156,7 +150,8 @@ def incoming():
 def req_match():
     """ Match Requests """
 
-    from s3db.req import req_match
-    return req_match(rheader = s3db.transport_rheader)
+    from s3db.inv import inv_req_match
+    from s3db.transport import transport_rheader
+    return inv_req_match(rheader = transport_rheader)
 
 # END =========================================================================

@@ -102,6 +102,7 @@ class DocumentLibrary(S3Model):
                                hrm_training_event_report = T("Training Event Report"),
                                inv_adj = T("Stock Adjustment"),
                                inv_recv = T("Incoming Shipment"),
+                               inv_requisition = T("Requisition"),
                                inv_send = T("Sent Shipment"),
                                inv_warehouse = T("Warehouse"),
                                # Only used by SHARE template
@@ -119,7 +120,6 @@ class DocumentLibrary(S3Model):
                                org_group = T("Organization Group"),
                                org_office = T("Office"),
                                req_need = T("Need"),
-                               req_req = T("Request"),
                                security_seized_item = T("Seized Item"),
                                # STDM only used by archived STDM template
                                #stdm_tenure = T("Tenure"),

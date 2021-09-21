@@ -145,7 +145,7 @@ def config(settings):
                             "po_area": OID,
                             "po_household": "area_id",
                             "po_organisation_area": "area_id",
-                            "req_req_item": "req_id",
+                            "inv_req_item": "req_id",
                             }
 
         # Default Foreign Keys (ordered by priority)
@@ -212,7 +212,7 @@ def config(settings):
         use_user_organisation = False
         #use_user_root_organisation = False
 
-        if tablename in ("org_facility", "req_req"):
+        if tablename in ("org_facility", "inv_req"):
             # Facilities & Requisitions are in the user organisation's realm
             use_user_organisation = True
 
@@ -701,16 +701,15 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Request Management
     # Uncomment to disable Inline Forms in Requests module
-    settings.req.inline_forms = False
-    settings.req.req_type = ["Stock"]
-    settings.req.use_commit = False
+    settings.inv.req_inline_forms = False
+    settings.inv.use_commit = False
     # Should Requests ask whether Transportation is required?
-    settings.req.ask_transport = True
-    settings.req.pack_values = False
+    settings.inv.req_ask_transport = True
+    settings.inv.req_pack_values = False
     # Disable Request Matching as we don't want users making requests to see what stock is available
-    #settings.req.prompt_match = False # HNRC
+    #settings.inv.req_prompt_match = False # HNRC
     # Uncomment to disable Recurring Request
-    #settings.req.recurring = False # HNRC
+    #settings.inv.req_recurring = False # HNRC
 
     # =========================================================================
     # Template Modules
@@ -837,12 +836,12 @@ def config(settings):
                 restricted = True,
                 #module_type = 5,
             )),
-        ("req", Storage(
-                name_nice = T("Requests"),
-                #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
-                restricted = True,
-                #module_type = 10,
-            )),
+        #("req", Storage(
+        #        name_nice = T("Requests"),
+        #        #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+        #        restricted = True,
+        #        #module_type = 10,
+        #    )),
         ("project", Storage(
                 name_nice = T("Projects"),
                 #description = "Tracking of Projects, Activities and Tasks",
@@ -9010,39 +9009,39 @@ $.filterOptionsS3({
     settings.customise_project_location_resource = customise_project_location_resource
 
     # -------------------------------------------------------------------------
-    def customise_req_commit_controller(**attr):
+    def customise_inv_commit_controller(**attr):
 
         # Request is mandatory
-        field = current.s3db.req_commit.req_id
+        field = current.s3db.inv_commit.req_id
         field.requires = field.requires.other
 
         return attr
 
-    settings.customise_req_commit_controller = customise_req_commit_controller
+    settings.customise_inv_commit_controller = customise_inv_commit_controller
 
     # -------------------------------------------------------------------------
-    def customise_req_req_resource(r, tablename):
+    def customise_inv_req_resource(r, tablename):
 
-        from s3db.req import req_ReqRefRepresent
+        from s3db.inv import inv_ReqRefRepresent
 
         s3db = current.s3db
 
         # Request is mandatory
-        field = s3db.req_commit.req_id
+        field = s3db.inv_commit.req_id
         field.requires = field.requires.other
 
-        table = s3db.req_req
-        table.req_ref.represent = req_ReqRefRepresent(show_link=True, pdf=True)
+        table = s3db.inv_req
+        table.req_ref.represent = inv_ReqRefRepresent(show_link=True, pdf=True)
         table.site_id.label = T("Deliver To")
         # Hide Drivers list_field
-        list_fields = s3db.get_config("req_req", "list_fields")
+        list_fields = s3db.get_config("inv_req", "list_fields")
         try:
             list_fields.remove((T("Drivers"), "drivers"))
         except:
             # Already removed
             pass
 
-    settings.customise_req_req_resource = customise_req_req_resource
+    settings.customise_inv_req_resource = customise_inv_req_resource
 
     # -------------------------------------------------------------------------
     def customise_vulnerability_data_resource(r, tablename):

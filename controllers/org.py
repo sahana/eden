@@ -501,7 +501,8 @@ def site_location():
 def req_match():
     """ Match Requests for Sites """
 
-    return s3db.req_match()
+    from s3db.inv import inv_req_match
+    return inv_req_match()
 
 # -----------------------------------------------------------------------------
 def incoming():

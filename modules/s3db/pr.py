@@ -7379,7 +7379,9 @@ class pr_PersonEntityRepresent(S3Represent):
 class pr_PersonRepresent(S3Represent):
     """
         Extends S3Represent to change the link method to access the person via
-                            either HRM, Vol or PR controllers
+                            different controllers
+
+        @param link_contacts: Link to Contacts Tab (unless explicit linkto provided)
     """
 
     def __init__(self,
@@ -7390,6 +7392,7 @@ class pr_PersonRepresent(S3Represent):
                  options = None,
                  translate = False,
                  linkto = None,
+                 link_contacts = False,
                  show_link = False,
                  multiple = False,
                  default = None,
@@ -7405,17 +7408,19 @@ class pr_PersonRepresent(S3Represent):
                 controller = "vol"
             else:
                 c = request.controller
-                if c == "hrm":
-                    controller = "hrm"
-                elif c == "vol":
-                    controller = "vol"
-                elif c == "br":
-                    controller = "br"
-                elif c == "dvr":
-                    controller = "dvr"
+                if c in ("hrm", "vol", "br"):
+                    controller = c
                 else:
                     controller = "pr"
-            linkto = URL(c=controller, f="person", args=["[id]"], extension="")
+
+            args = ["[id]"]
+            if link_contacts:
+                args.append("contacts")
+
+            linkto = URL(c=controller, f="person",
+                         args = args,
+                         extension = "",
+                         )
 
         if not fields:
             fields = ["first_name", "middle_name", "last_name"]
@@ -7446,6 +7451,7 @@ class pr_PersonRepresentContact(pr_PersonRepresent):
     def __init__(self,
                  labels = None,
                  linkto = None,
+                 link_contacts = False,
                  show_email = False,
                  show_phone = True,
                  access = None,
@@ -7459,6 +7465,7 @@ class pr_PersonRepresentContact(pr_PersonRepresent):
             @param linkto: a URL (as string) to link representations to,
                            with "[id]" as placeholder for the key
                            (defaults see pr_PersonRepresent)
+            @param link_contacts: Link to Contacts Tab (unless explicit linkto provided)
 
             @param show_email: include email address in representation
             @param show_phone: include phone number in representation
@@ -7475,6 +7482,7 @@ class pr_PersonRepresentContact(pr_PersonRepresent):
                                                  lookup = "pr_person",
                                                  labels = labels,
                                                  linkto = linkto,
+                                                 link_contacts = link_contacts,
                                                  show_link = show_link,
                                                  )
 

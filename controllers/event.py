@@ -45,7 +45,8 @@ def event():
                     if method != "update" and method != "read":
                         # Hide fields which don't make sense in a Create form
                         # inc list_create (list_fields over-rides)
-                        s3db.req_create_form_mods(r)
+                        from s3db.inv import inv_req_create_form_mods
+                        inv_req_create_form_mods(r)
 
                 #elif cname == "document":
                 #    # @ToDo: Filter Locations available based on Event Locations

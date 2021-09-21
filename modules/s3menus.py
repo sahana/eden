@@ -1255,21 +1255,22 @@ class S3OptionsMenu(object):
         inv_recv_list = current.response.s3.crud_strings.inv_recv.title_list
 
         settings = current.deployment_settings
+        recurring = lambda i: settings.get_inv_req_recurring()
         use_adjust = lambda i: not settings.get_inv_direct_stock_edits()
-        use_commit = lambda i: settings.get_req_use_commit()
+        use_commit = lambda i: settings.get_inv_use_commit()
 
-        return M()(
+        return M(c="inv")(
                     #M("Home", f="index"),
-                    M("Warehouses", c="inv", f="warehouse")(
+                    M("Warehouses", f="warehouse")(
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                     ),
-                    M("Warehouse Stock", c="inv", f="inv_item")(
+                    M("Warehouse Stock", f="inv_item")(
                         M("Adjust Stock Levels", f="adj", check=use_adjust),
                         M("Kitting", f="kitting"),
                         M("Import", f="inv_item", m="import", p="create"),
                     ),
-                    M("Reports", c="inv", f="inv_item")(
+                    M("Reports", f="inv_item")(
                         M("Warehouse Stock", f="inv_item", m="report"),
                         M("Expiration Report", c="inv", f="track_item",
                           vars={"report": "exp"}),
@@ -1282,18 +1283,27 @@ class S3OptionsMenu(object):
                         M("Summary of Releases", c="inv", f="track_item",
                           vars={"report": "rel"}),
                     ),
-                    M(inv_recv_list, c="inv", f="recv", translate=False)( # Already T()
+                    M("Requests", f="requisition", m="summary")(
+                        M("Create", m="create"),
+                        M("List Recurring Requests", f="req_template", check=recurring),
+                        M("Map", m="map"),
+                        M("Report", m="report"),
+                        M("Search All Requested Items", f="req_item"),
+                    ),
+                    M("Commitments", f="commit", check=use_commit)(
+                    ),
+                    M(inv_recv_list, f="recv", translate=False)( # Already T()
                         M("Create", m="create"),
                         M("Timeline", args="timeline"),
                     ),
-                    M("Sent Shipments", c="inv", f="send")(
+                    M("Sent Shipments", f="send")(
                         M("Create", m="create"),
                         M("Search Shipped Items", f="track_item"),
                         M("Timeline", args="timeline"),
                     ),
-                    M("Distributions", c="supply", f="distribution")(
-                        M("Create", m="create"),
-                    ),
+                    #M("Distributions", c="supply", f="distribution")(
+                    #    M("Create", m="create"),
+                    #),
                     M("Items", c="supply", f="item", m="summary")(
                         M("Create", m="create"),
                         M("Import", f="catalog_item", m="import", p="create"),
@@ -1313,50 +1323,21 @@ class S3OptionsMenu(object):
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
-                    M("Suppliers", c="inv", f="supplier")(
+                    M("Suppliers", f="supplier")(
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                     ),
-                    M("Facilities", c="inv", f="facility")(
+                    M("Facilities", f="facility")(
                         M("Create", m="create", t="org_facility"),
                     ),
-                    M("Facility Types", c="inv", f="facility_type",
+                    M("Facility Types", f="facility_type",
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
-                    M("Warehouse Types", c="inv", f="warehouse_type",
+                    M("Warehouse Types", f="warehouse_type",
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
-                    M("Requests", c="req", f="req")(
-                        M("Create", m="create"),
-                        M("Requested Items", f="req_item"),
-                    ),
-                    M("Commitments", c="req", f="commit", check=use_commit)(
-                    ),
-                )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def irs():
-        """ IRS / Incident Report System """
-
-        ADMIN = current.session.s3.system_roles.ADMIN
-
-        return M(c="irs")(
-                    M("Incident Reports", f="ireport")(
-                        M("Create Incident Report", m="create"),
-                        M("Open Incidents", vars={"open":1}),
-                        M("Map", m="map"),
-                        M("Timeline", args="timeline"),
-                        M("Import", m="import"),
-                        M("Report", m="report")
-                    ),
-                    M("Incident Categories", f="icategory", restrict=[ADMIN])(
-                        M("Create", m="create"),
-                    ),
-                    M("Ushahidi Import", f="ireport", restrict=[ADMIN],
-                      args="ushahidi")
                 )
 
     # -------------------------------------------------------------------------
@@ -1764,45 +1745,26 @@ class S3OptionsMenu(object):
     # -------------------------------------------------------------------------
     @staticmethod
     def req():
-        """ REQ / Request Management """
+        """ REQ / Requests Management """
 
-        ADMIN = current.session.s3.system_roles.ADMIN
-        settings = current.deployment_settings
-
-        if settings.get_req_summary():
-            method = "summary"
-        else:
-            method = None
-
-        recurring = lambda i: settings.get_req_recurring()
-        use_commit = lambda i: settings.get_req_use_commit()
+        #ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="req")(
-                    M("Requests", f="req", m=method)(
+                    M("Requests", f="need", m="summary")(
                         M("Create", m="create"),
-                        M("List Recurring Requests", f="req_template", check=recurring),
-                        M("Map", m="map"),
-                        M("Report", m="report"),
-                        M("Search All Requested Items", f="req_item"),
                     ),
-                    M("Commitments", f="commit", check=use_commit)(
-                    ),
-                    M("Items", c="supply", f="item")(
-                        M("Create", m="create"),
-                        M("Report", m="report"),
-                        M("Import", m="import", p="create"),
-                    ),
-                    # Catalog Items moved to be next to the Item Categories
-                    #M("Catalog Items", c="supply", f="catalog_item")(
-                       #M("Create", m="create"),
+                    #M("Items", c="supply", f="item")(
+                    #    M("Create", m="create"),
+                    #    M("Report", m="report"),
+                    #    M("Import", m="import", p="create"),
                     #),
-                    M("Catalogs", c="supply", f="catalog")(
-                        M("Create", m="create"),
-                    ),
-                    M("Item Categories", c="supply", f="item_category",
-                      restrict=[ADMIN])(
-                        M("Create", m="create"),
-                    ),
+                    #M("Catalogs", c="supply", f="catalog")(
+                    #    M("Create", m="create"),
+                    #),
+                    #M("Item Categories", c="supply", f="item_category",
+                    #  restrict=[ADMIN])(
+                    #    M("Create", m="create"),
+                    #),
                 )
 
     # -------------------------------------------------------------------------

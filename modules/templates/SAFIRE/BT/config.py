@@ -76,6 +76,103 @@ def config(settings):
     settings.customise_asset_asset_resource = customise_asset_asset_resource
 
     # -------------------------------------------------------------------------
+    def customise_asset_asset_controller(**attr):
+
+        workflow = current.request.get_vars.get("workflow")
+        if workflow:
+
+            s3 = current.response.s3
+
+            # Custom prep
+            standard_prep = s3.prep
+            def custom_prep(r):
+                # Call standard prep
+                if callable(standard_prep):
+                    result = standard_prep(r)
+
+                if workflow == "issue":
+                    # Filter to Unassigned Assets
+                    from s3db.asset import ASSET_LOG_ASSIGN
+                    available_assets = []
+                    aappend = available_assets.append
+                    seen = []
+                    sappend = seen.append
+                    ltable = current.s3db.asset_log
+                    logs = current.db(ltable.deleted == False).select(ltable.asset_id,
+                                                                      ltable.status,
+                                                                      orderby = ~ltable.datetime,
+                                                                      )
+                    for log in logs:
+                        asset_id = log.asset_id
+                        if asset_id in seen:
+                            continue
+                        sappend(asset_id)
+                        if log.status != ASSET_LOG_ASSIGN:
+                            aappend(asset_id)
+
+                    from s3 import FS
+                    r.resource.add_filter(FS("~.id").belongs(available_assets))
+                elif workflow == "return":
+                    # Filter to Assets with log status == ASSET_LOG_ASSIGN
+                    from s3db.asset import ASSET_LOG_ASSIGN
+                    assigned_assets = []
+                    aappend = assigned_assets.append
+                    seen = []
+                    sappend = seen.append
+                    ltable = current.s3db.asset_log
+                    logs = current.db(ltable.deleted == False).select(ltable.asset_id,
+                                                                      ltable.status,
+                                                                      orderby = ~ltable.datetime,
+                                                                      )
+                    for log in logs:
+                        asset_id = log.asset_id
+                        if asset_id in seen:
+                            continue
+                        sappend(asset_id)
+                        if log.status == ASSET_LOG_ASSIGN:
+                            aappend(asset_id)
+
+                    from s3 import FS
+                    r.resource.add_filter(FS("~.id").belongs(assigned_assets))
+
+                return result
+            s3.prep = custom_prep
+
+            # Custom postp
+            standard_postp = s3.postp
+            def custom_postp(r, output):
+                # Call standard postp
+                if callable(standard_postp):
+                    output = standard_postp(r, output)
+
+                from gluon import URL
+                from s3 import s3_str
+
+                if workflow == "issue":
+                    s3.actions = [{"label": s3_str(T("Issue")),
+                                   "url": URL(f = "asset",
+                                              args = ["[id]", "log", "assignperson"],
+                                              ),
+                                   "_class": "action-btn",
+                                   },
+                                  ]
+                elif workflow == "return":
+                    s3.actions = [{"label": s3_str(T("Return")),
+                                   "url": URL(f = "asset",
+                                              args = ["[id]", "log", "return"],
+                                              ),
+                                   "_class": "action-btn",
+                                   },
+                                  ]
+
+                return output
+            s3.postp = custom_postp
+
+        return attr
+
+    settings.customise_asset_asset_controller = customise_asset_asset_controller
+
+    # -------------------------------------------------------------------------
     def customise_dc_target_resource(r, tablename):
 
         if r.controller in ("event",

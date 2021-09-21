@@ -157,8 +157,8 @@ class S3MainMenu(default.S3MainMenu):
             homepage("member")(
                 MM("Members", c="member", f="membership", m="summary"),
             ),
-            #homepage("inv", "supply", "req", check=inv)(
-            homepage("inv", "supply", "req")(
+            #homepage("inv", "supply", check=inv)(
+            homepage("inv", "supply")(
                 #MM("Warehouses", c="inv", f="warehouse", m="summary", check=multi_warehouse),
                 MM("Warehouses", c="inv", f="warehouse", m="summary"),
                 #MM(inv_recv_list, c="inv", f="recv", check=multi_warehouse),
@@ -174,8 +174,8 @@ class S3MainMenu(default.S3MainMenu):
                 M("Suppliers", c="inv", f="supplier")(),
                 #M("Facilities", c="inv", f="facility", check=basic_warehouse)(),
                 M("Facilities", c="inv", f="facility")(),
-                M("Requests", c="req", f="req")(),
-                ##M("Commitments", f="commit")(),
+                M("Requests", c="inv", f="req")(),
+                ##M("Commitments", c="inv", f="commit")(),
             ),
             homepage("asset")(
                 MM("Assets", c="asset", f="asset", m="summary"),
@@ -849,7 +849,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 return True
             else:
                 return False
-        use_commit = lambda i: settings.get_req_use_commit()
+        use_commit = lambda i: settings.get_inv_use_commit()
 
         return M()(
                     #M("Home", f="index"),
@@ -929,11 +929,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
-                    M("Requests", c="req", f="req")(
+                    M("Requests", c="inv", f="req")(
                         M("Create", m="create"),
                         M("Requested Items", f="req_item"),
                     ),
-                    M("Commitments", c="req", f="commit", check=use_commit)(
+                    M("Commitments", c="inv", f="commit", check=use_commit)(
                     ),
                 )
 
@@ -1061,13 +1061,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
             )
 
         return menu
-
-    # -------------------------------------------------------------------------
-    def req(self):
-        """ Requests Management """
-
-        # Same as Inventory
-        return self.inv()
 
     # -------------------------------------------------------------------------
     @staticmethod

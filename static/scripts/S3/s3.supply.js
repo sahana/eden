@@ -330,20 +330,16 @@ $(document).ready(function() {
 
 		if (DIV.hasClass('collapsed')) {
 
-            var App,
-                ShipmentType,
+            var ShipmentType,
                 Component;
 
 			if (DIV.hasClass('fulfil')) {
-				App = 'inv';
 				ShipmentType = 'recv';
                 Component = 'track_item';
 			} else if (DIV.hasClass('transit')) {
-				App = 'inv';
 				ShipmentType = 'send';
                 Component = 'track_item';
 			} else if (DIV.hasClass('commit')) {
-				App = 'req';
 				ShipmentType = 'commit';
                 Component = 'commit_item';
 			}
@@ -358,7 +354,7 @@ $(document).ready(function() {
                 LineURL,
                 UpdateURL = $('.action-btn', DIV.parent().parent().parent()).attr('href'),
                 req_item_id = re.exec(UpdateURL)[1],
-                url = S3.Ap.concat('/req/', ShipmentType, '_item_json.json/', req_item_id);
+                url = S3.Ap.concat('/inv/', ShipmentType, '_item_json.json/', req_item_id);
 			$.ajax( {
 				url: url,
 				dataType: 'json',
@@ -371,7 +367,7 @@ $(document).ready(function() {
                         // Header Row
                         ResultTable += data[0].id;
                     } else {
-                        LineURL = S3.Ap.concat('/', App, '/', ShipmentType, '/',  data[i].id, '/' + Component);
+                        LineURL = S3.Ap.concat('/inv/', ShipmentType, '/',  data[i].id, '/' + Component);
                         ResultTable += "<a href='" + LineURL + "'>" + data[i].name + ' - ' + data[i].date + '</a>';
                     }
                     ResultTable += '</td><td>' + data[i].quantity + '</td></tr>';

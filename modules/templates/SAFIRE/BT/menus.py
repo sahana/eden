@@ -174,8 +174,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ Assets menu """
 
         return M()(M("Receive Item", c="asset", f="asset", m="create"),
-                   M("Issue Item", c="asset", f="asset"),
-                   M("Return Item", c="asset", f="asset"),
+                   M("Issue Item", c="asset", f="asset",
+                     vars = {"workflow": "issue"}),
+                   M("Return Item", c="asset", f="asset",
+                     vars = {"workflow": "return"}),
                    M("Item Adjustment", c="inv", f="adj"),
                    M("Transfer Item", c="inv", f="send"),
                    M("Accept/Reject Item", c="inv", f="recv"),

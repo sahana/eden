@@ -67,9 +67,6 @@ def hospital():
     # Load Models to add tabs
     if settings.has_module("inv"):
         s3db.table("inv_inv_item")
-    elif settings.has_module("req"):
-        # (gets loaded by Inv if available)
-        s3db.table("req_req")
 
     # Pre-processor
     def prep(r):
@@ -83,16 +80,19 @@ def hospital():
                    cname == "recv" or \
                    cname == "send":
                     # Filter out items which are already in this inventory
-                    s3db.inv_prep(r)
+                    from s3db.inv import inv_prep
+                    inv_prep(r)
 
                 elif cname == "human_resource":
-                    s3db.org_site_staff_config(r)
+                    from s3db.org import org_site_staff_config
+                    org_site_staff_config(r)
 
                 elif cname == "req":
                     if r.method != "update" and r.method != "read":
                         # Hide fields which don't make sense in a Create form
                         # inc list_create (list_fields over-rides)
-                        s3db.req_create_form_mods(r)
+                        from s3db.inv import inv_req_create_form_mods
+                        inv_req_create_form_mods(r)
 
                 elif cname == "status":
                     table = db.hms_status
@@ -269,7 +269,8 @@ def incoming():
 def req_match():
     """ Match Requests """
 
-    return s3db.req_match()
+    from s3db.inv import inv_req_match
+    return inv_req_match()
 
 # END =========================================================================
 

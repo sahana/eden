@@ -4927,6 +4927,157 @@ class S3Config(Storage):
         return self.inv.get("warehouse_code_unique", False)
 
     # -------------------------------------------------------------------------
+    # Inventory Requisitions Settings
+    def get_inv_req_copyable(self):
+        """
+            Provide a Copy button for Inventory Requisitions?
+        """
+        return self.inv.get("req_copyable", False)
+
+    def get_inv_req_recurring(self):
+        """
+            Do we allow creation of recurring Inventory Requisitions?
+        """
+        return self.inv.get("req_recurring", True)
+
+    def get_inv_requester_label(self):
+        return current.T(self.inv.get("requester_label", "Requester"))
+
+    def get_inv_requester_optional(self):
+        return self.inv.get("requester_optional", False)
+
+    def get_inv_requester_is_author(self):
+        """
+            Whether the User Account logging the Inventory Requisition is normally the Requester
+        """
+        return self.inv.get("requester_is_author", True)
+
+    def get_inv_requester_from_site(self):
+        """
+            Whether the Requester has to be a staff of the site making the Inventory Requisitions
+        """
+        return self.inv.get("requester_from_site", False)
+
+    def get_inv_requester_to_site(self):
+        """
+            Whether to set the Requester as being an HR for the Site if no HR record yet & as Site contact if none yet exists
+        """
+        return self.inv.get("requester_to_site", False)
+
+    def get_inv_req_date_writable(self):
+        """ Whether Inventory Requisition Date should be manually editable """
+        return self.inv.get("req_date_writable", True)
+
+    def get_inv_req_status_writable(self):
+        """ Whether Inventory Requisition Status should be manually editable """
+        return self.inv.get("req_status_writable", True)
+
+    def get_inv_req_item_quantities_writable(self):
+        """ Whether Item Quantities should be manually editable """
+        return self.inv.get("req_item_quantities_writable", False)
+
+    def get_inv_req_pack_values(self):
+        """
+            Do we show pack values in Inventory Requisitions?
+        """
+        return self.inv.get("req_pack_values", True)
+
+    def get_inv_multiple_req_items(self):
+        """
+            Can an Inventory Requisitions have multiple line items?
+            - e.g. ICS says that each request should be just for items of a single Type
+        """
+        return self.inv.get("multiple_req_items", True)
+
+    def get_inv_req_show_quantity_transit(self):
+        return self.inv.get("req_show_quantity_transit", True)
+
+    def get_inv_req_inline_forms(self):
+        """
+            Whether Requests module should use inline forms for Items
+        """
+        return self.inv.get("req_inline_forms", True)
+
+    def get_inv_req_match_tab(self):
+        """
+            Whether to show the Match Requests tab
+        """
+        return self.inv.get("req_match_tab", True)
+
+    def get_inv_req_prompt_match(self):
+        """
+            Whether a Requester is prompted to match each line item in an Inventory Requisitions
+        """
+        return self.req.get("req_prompt_match", True)
+
+    def get_inv_use_commit(self):
+        """
+            Whether there is a Commit step in Inventory Requisitions Management
+        """
+        return self.inv.get("use_commit", True)
+
+    def get_inv_commit_value(self):
+        """
+            Whether Donations should have a Value field
+        """
+        return self.inv.get("commit_value", False)
+
+    def get_inv_commit_without_request(self):
+        """
+            Whether to allow Donations to be made without a matching Inventory Requisitions
+        """
+        return self.inv.get("commit_without_request", False)
+
+    def get_inv_committer_is_author(self):
+        """ Whether the User Account logging the Commitment is normally the Committer """
+        return self.inv.get("committer_is_author", True)
+
+    def get_inv_req_ask_security(self):
+        """
+            Should Inventory Requisitions ask whether Security is required?
+        """
+        return self.inv.get("req_ask_security", False)
+
+    def get_inv_req_ask_transport(self):
+        """
+            Should Inventory Requisitions ask whether Transportation is required?
+        """
+        return self.inv.get("req_ask_transport", False)
+
+    def get_inv_req_ask_purpose(self):
+        """
+            Should Inventory Requisitions ask for Purpose?
+        """
+        return self.inv.get("req_ask_purpose", True)
+
+    def get_inv_use_req_number(self):
+        return self.inv.get("use_req_number", True)
+
+    def get_inv_generate_req_number(self):
+        return self.inv.get("generate_req_number", True)
+
+    def get_inv_req_form_name(self):
+        return self.inv.get("req_form_name", "Requisition Form")
+
+    def get_inv_req_shortname(self):
+        return self.inv.get("req_shortname", "REQ")
+
+    def get_inv_req_restrict_on_complete(self):
+        """
+            To restrict adding new commits to the Completed commits.
+        """
+        return self.inv.get("req_restrict_on_complete", False)
+
+    def get_inv_req_order_item(self):
+        return self.inv.get("req_order_item", False)
+
+    def get_inv_req_workflow(self):
+        """
+            Whether to use Workflow for Inventory Requisitions
+        """
+        return self.inv.get("req_workflow", False)
+
+    # -------------------------------------------------------------------------
     # Members
     #
     def get_member_cv_tab(self):
@@ -4969,7 +5120,7 @@ class S3Config(Storage):
                  }
 
             Example:
-                settings.mobile.forms = [("Request", "req_req")]
+                settings.mobile.forms = [("Request", "inv_req")]
         """
         return self.mobile.get("forms", [])
 
@@ -5225,7 +5376,8 @@ class S3Config(Storage):
 
     def get_org_site_inv_req_tabs(self):
         """
-            Whether Sites should have Tabs for Inv/Req
+            Whether Sites should have Tabs for Inventory & Requisitions
+            - only shows if the module is enabled & permissions granted
         """
         return self.org.get("site_inv_req_tabs", True)
 
@@ -5850,183 +6002,6 @@ class S3Config(Storage):
         return self.project.get("my_tasks_include_team_tasks", False)
 
     # -------------------------------------------------------------------------
-    # Requests Management Settings
-    #
-    #def get_req_req_type(self):
-    #    """
-    #        The Types of Request which can be made.
-    #        Select one or more from:
-    #        * People
-    #        * Stock
-    #        * Other
-    #        tbc: Assets, Shelter, Food
-    #    """
-    #    return self.req.get("req_type", ("Stock", "People", "Other"))
-
-    #def get_req_type_inv_label(self):
-    #    return current.T(self.req.get("type_inv_label", "Warehouse Stock"))
-
-    def get_req_copyable(self):
-        """
-            Provide a Copy button for Requests?
-        """
-        return self.req.get("copyable", False)
-
-    #def get_req_document_filing(self):
-    #    return self.req.get("document_filing", False)
-
-    def get_req_recurring(self):
-        """
-            Do we allow creation of recurring requests?
-        """
-        return self.req.get("recurring", True)
-
-    def get_req_requester_label(self):
-        return current.T(self.req.get("requester_label", "Requester"))
-
-    def get_req_requester_optional(self):
-        return self.req.get("requester_optional", False)
-
-    def get_req_requester_is_author(self):
-        """
-            Whether the User Account logging the Request is normally the Requester
-        """
-        return self.req.get("requester_is_author", True)
-
-    def get_req_requester_from_site(self):
-        """
-            Whether the Requester has to be a staff of the site making the Request
-        """
-        return self.req.get("requester_from_site", False)
-
-    def get_req_requester_to_site(self):
-        """
-            Whether to set the Requester as being an HR for the Site if no HR record yet & as Site contact if none yet exists
-        """
-        return self.req.get("requester_to_site", False)
-
-    def get_req_date_writable(self):
-        """ Whether Request Date should be manually editable """
-        return self.req.get("date_writable", True)
-
-    def get_req_status_writable(self):
-        """ Whether Request Status should be manually editable """
-        return self.req.get("status_writable", True)
-
-    def get_req_item_quantities_writable(self):
-        """ Whether Item Quantities should be manually editable """
-        return self.req.get("item_quantities_writable", False)
-
-    def get_req_summary(self):
-        # Whether to use Summary page for Requests
-        return self.req.get("summary", False)
-
-    def get_req_pack_values(self):
-        """
-            Do we show pack values in Requests?
-        """
-        return self.req.get("pack_values", True)
-
-    def get_req_multiple_req_items(self):
-        """
-            Can a Request have multiple line items?
-            - e.g. ICS says that each request should be just for items of a single Type
-        """
-        return self.req.get("multiple_req_items", True)
-
-    def get_req_show_quantity_transit(self):
-        return self.req.get("show_quantity_transit", True)
-
-    def get_req_inline_forms(self):
-        """
-            Whether Requests module should use inline forms for Items/Skills
-        """
-        return self.req.get("inline_forms", True)
-
-    def get_req_match_tab(self):
-        """
-            Whether to show the Match Requests tab
-        """
-        return self.req.get("match_tab", True)
-
-    def get_req_prompt_match(self):
-        """
-            Whether a Requester is prompted to match each line item in an Item request
-        """
-        return self.req.get("prompt_match", True)
-
-    def get_req_use_commit(self):
-        """
-            Whether there is a Commit step in Requests Management
-        """
-        return self.req.get("use_commit", True)
-
-    def get_req_commit_value(self):
-        """
-            Whether Donations should have a Value field
-        """
-        return self.req.get("commit_value", False)
-
-    def get_req_commit_without_request(self):
-        """
-            Whether to allow Donations to be made without a matching Request
-        """
-        return self.req.get("commit_without_request", False)
-
-    def get_req_committer_is_author(self):
-        """ Whether the User Account logging the Commitment is normally the Committer """
-        return self.req.get("committer_is_author", True)
-
-    def get_req_ask_security(self):
-        """
-            Should Requests ask whether Security is required?
-        """
-        return self.req.get("ask_security", False)
-
-    def get_req_ask_transport(self):
-        """
-            Should Requests ask whether Transportation is required?
-        """
-        return self.req.get("ask_transport", False)
-
-    def get_req_items_ask_purpose(self):
-        """
-            Should Requests for Items ask for Purpose?
-        """
-        return self.req.get("items_ask_purpose", True)
-
-    def get_req_req_crud_strings(self, req_type=None):
-        return self.req.get("req_crud_strings") and \
-               self.req.req_crud_strings.get(req_type)
-
-    def get_req_use_req_number(self):
-        return self.req.get("use_req_number", True)
-
-    def get_req_generate_req_number(self):
-        return self.req.get("generate_req_number", True)
-
-    def get_req_form_name(self):
-        return self.req.get("req_form_name", "Requisition Form")
-
-    def get_req_shortname(self):
-        return self.req.get("req_shortname", "REQ")
-
-    def get_req_restrict_on_complete(self):
-        """
-            To restrict adding new commits to the Completed commits.
-        """
-        return self.req.get("req_restrict_on_complete", False)
-
-    def get_req_order_item(self):
-        return self.req.get("order_item", False)
-
-    def get_req_workflow(self):
-        """
-            Whether to use Workflow for Requests
-        """
-        return self.req.get("workflow", False)
-
-    # -------------------------------------------------------------------------
     # Supply
     #
     def get_supply_catalog_default(self):
@@ -6103,7 +6078,7 @@ class S3Config(Storage):
                  }
 
             Example:
-                settings.xforms.resources = [("Request", "req_req")]
+                settings.xforms.resources = [("Request", "inv_req")]
 
             @todo: move this documentation to the wiki?
         """

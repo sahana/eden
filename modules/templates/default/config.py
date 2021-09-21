@@ -1024,89 +1024,47 @@ def config(settings):
     #   }
 
     # -------------------------------------------------------------------------
-    # Requests Management
-    # Uncomment to disable Inline Forms in Requests module
-    #settings.req.inline_forms = False
-    # Label for Inventory Requests
-    #settings.req.type_inv_label = "Donations"
-    # Label for People Requests
-    #settings.req.type_hrm_label = "Volunteers"
+    # Inventory Requisitions
+    # Uncomment to disable Inline Forms for Inventory Requisitions
+    #settings.inv.req_inline_forms = False
     # Label for Requester
-    #settings.req.requester_label = "Site Contact"
-    # Uncomment to disable Recurring Request
-    #settings.req.recurring = False
-    #settings.req.requester_optional = True
-    # Uncomment if the User Account logging the Request is NOT normally the Requester
-    #settings.req.requester_is_author = False
+    #settings.inv.requester_label = "Site Contact"
+    # Uncomment to disable Recurring Inventory Requisitions
+    #settings.inv.req_recurring = False
+    #settings.inv.requester_optional = True
+    # Uncomment if the User Account logging the Inventory Requisitions is NOT normally the Requester
+    #settings.inv.requester_is_author = False
     # Filter Requester as being from the Site
-    #settings.req.requester_from_site = True
+    #settings.inv.requester_from_site = True
     # Set the Requester as being an HR for the Site if no HR record yet & as Site contact if none yet exists
-    #settings.req.requester_to_site = True
-    #settings.req.date_writable = False
-    # Allow the status for requests to be set manually,
+    #settings.inv.requester_to_site = True
+    #settings.inv.req_date_writable = False
+    # Allow the status for Inventory Requisitions to be set manually,
     # rather than just automatically from commitments and shipments
-    #settings.req.status_writable = False
-    #settings.req.item_quantities_writable = True
-    #settings.req.skill_quantities_writable = True
-    #settings.req.show_quantity_transit = False
-    #settings.req.multiple_req_items = False
-    #settings.req.prompt_match = False
-    #settings.req.items_ask_purpose = False
+    #settings.inv.req_status_writable = False
+    #settings.inv.req_item_quantities_writable = True
+    #settings.inv.req_show_quantity_transit = False
+    #settings.inv.multiple_req_items = False
+    #settings.inv.req_prompt_match = False
+    #settings.inv.req_ask_purpose = False
     # Uncomment to disable the Commit step in the workflow & simply move direct to Ship
-    #settings.req.use_commit = False
+    #settings.inv.req_use_commit = False
     # Uncomment to have Donations include a 'Value' field
-    #settings.req.commit_value = True
+    #settings.inv.commit_value = True
     # Uncomment to allow Donations to be made without a matching Request
-    #settings.req.commit_without_request = True
-    # Uncomment to Commit Named People rather than simply Anonymous Skills
-    #settings.req.commit_people = True
+    #settings.inv.commit_without_request = True
     # Uncomment if the User Account logging the Commitment is NOT normally the Committer
-    #settings.req.comittter_is_author = False
-    # Should Requests ask whether Security is required?
-    #settings.req.ask_security = True
-    # Should Requests ask whether Transportation is required?
-    #settings.req.ask_transport = True
-    #settings.req.use_req_number = False
-    #settings.req.generate_req_number = False
-    #settings.req.req_form_name = "Request Issue Form"
-    #settings.req.req_shortname = "RIS"
-    # Restrict the type of requests that can be made, valid values in the
-    # list are ("Stock", "People", "Other"). If this is commented out then
-    # all types will be valid.
-    #settings.req.req_type = ("Stock",)
-    # Uncomment to enable Summary 'Site Needs' tab for Offices/Facilities
-    #settings.req.summary = True
+    #settings.inv.comittter_is_author = False
+    # Should Inventory Requisitions ask whether Security is required?
+    #settings.inv.req_ask_security = True
+    # Should Inventory Requisitions ask whether Transportation is required?
+    #settings.inv.req_ask_transport = True
+    #settings.inv.use_req_number = False
+    #settings.inv.generate_req_number = False
+    #settings.inv.req_form_name = "Request Issue Form"
+    #settings.inv.req_shortname = "RIS"
     # Uncomment to restrict adding new commits to Completed commits
-    #settings.req.req_restrict_on_complete = True
-
-    # Custom Crud Strings for specific req_req types
-    #settings.req.req_crud_strings = dict()
-    #ADD_ITEM_REQUEST = T("Make a Request for Donations")
-    # req_req Crud Strings for Item Request (type=1)
-    #settings.req.req_crud_strings[1] = Storage(
-    #    label_create = ADD_ITEM_REQUEST,
-    #    title_display = T("Request for Donations Details"),
-    #    title_list = T("Requests for Donations"),
-    #    title_update = T("Edit Request for Donations"),
-    #    label_list_button = T("List Requests for Donations"),
-    #    label_delete_button = T("Delete Request for Donations"),
-    #    msg_record_created = T("Request for Donations Added"),
-    #    msg_record_modified = T("Request for Donations Updated"),
-    #    msg_record_deleted = T("Request for Donations Canceled"),
-    #    msg_list_empty = T("No Requests for Donations"))
-    #ADD_PEOPLE_REQUEST = T("Make a Request for Volunteers")
-    # req_req Crud Strings for People Request (type=3)
-    #settings.req.req_crud_strings[3] = Storage(
-    #    label_create = ADD_PEOPLE_REQUEST,
-    #    title_display = T("Request for Volunteers Details"),
-    #    title_list = T("Requests for Volunteers"),
-    #    title_update = T("Edit Request for Volunteers"),
-    #    label_list_button = T("List Requests for Volunteers"),
-    #    label_delete_button = T("Delete Request for Volunteers"),
-    #    msg_record_created = T("Request for Volunteers Added"),
-    #    msg_record_modified = T("Request for Volunteers Updated"),
-    #    msg_record_deleted = T("Request for Volunteers Canceled"),
-    #    msg_list_empty = T("No Requests for Volunteers"))
+    #settings.inv.req_restrict_on_complete = True
 
     # -------------------------------------------------------------------------
     # Supply
@@ -1218,7 +1176,7 @@ def config(settings):
     # -----------------------------------------------------------------------------
     # XForms
     # Configure xform resources (example)
-    #settings.xforms.resources = [("Request", "req_req")]
+    #settings.xforms.resources = [("Request", "inv_req")]
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them

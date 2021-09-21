@@ -86,7 +86,7 @@ def document_tabs(r):
                 # "one_title": "1 Flood Report",
                 # "num_title": " Flood Reports",
                 #},
-                {"tablename": "req_req",
+                {"tablename": "inv_req",
                  "resource": "req",
                  "one_title": "1 Request",
                  "num_title": " Requests",

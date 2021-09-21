@@ -127,7 +127,7 @@ def config(settings):
         realm_entity = 0
         use_user_organisation = False
 
-        if tablename in ("req_req", "inv_send", "inv_recv"):
+        if tablename in ("inv_req", "inv_send", "inv_recv"):
             # Ensure that we set the realm_entity to a pr_realm for this record,
             # with the correct affiliations
             record_id = row["id"]
@@ -148,9 +148,9 @@ def config(settings):
                 site_ids = (row["site_id"],
                             from_site_id
                             )
-            elif tablename == "req_req":
+            elif tablename == "inv_req":
                 realm_name = "REQ_%s" % record_id
-                ritable = s3db.req_req_item
+                ritable = s3db.inv_req_item
                 query = (ritable.req_id == record_id) & \
                         (ritable.deleted == False)
                 request_items = db(query).select(ritable.site_id)
@@ -309,8 +309,8 @@ def config(settings):
                                 #"inv_recv": SID,
                                 #"inv_send": SID,
                                 #"inv_track_item": "track_org_id",
-                                #"req_req": "site_id",
-                                "req_req_item": "req_id",
+                                #"inv_req": "site_id",
+                                "inv_req_item": "req_id",
                                 #"po_household": "area_id",
                                 #"po_organisation_area": "area_id",
                                 }
@@ -827,28 +827,27 @@ def config(settings):
                       }
 
     # -------------------------------------------------------------------------
-    # Request Management
-    # Uncomment to disable Inline Forms in Requests module
-    settings.req.inline_forms = False
+    # Requestions
+    # Uncomment to disable Inline Forms
+    settings.inv.req_inline_forms = False
     # No need to use Commits
-    settings.req.use_commit = False
-    #settings.req.document_filing = True
+    settings.inv.req_use_commit = False
     # Should Requests ask whether Transportation is required?
-    settings.req.ask_transport = True
+    settings.inv.req_ask_transport = True
     # Request Numbers are entered manually
-    settings.req.generate_req_number = False
-    settings.req.pack_values = False
+    settings.inv.generate_req_number = False
+    settings.inv.req_pack_values = False
     # Don't Match Requests (they are assigned instead)
-    settings.req.match_tab = False
+    settings.inv.req_match_tab = False
     # HNRC disable Request Matching as don't want users making requests to see what stock is available
     # PIRAC want this to be done by the Logistics Approver
-    settings.req.prompt_match = False
+    settings.inv.req_prompt_match = False
     # Uncomment to disable Recurring Request
-    settings.req.recurring = False # HNRC
+    settings.inv.req_recurring = False
     # Use Order Items
-    settings.req.order_item = True
+    settings.inv.req_order_item = True
     # Use Workflow
-    settings.req.workflow = True
+    settings.inv.req_workflow = True
 
     # =========================================================================
     # Template Modules
@@ -980,12 +979,12 @@ def config(settings):
         #        restricted = True,
         #        #module_type = 5,
         #    )),
-        ("req", Storage(
-                name_nice = T("Requests"),
-                #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
-                restricted = True,
-                #module_type = 10,
-            )),
+        #("req", Storage(
+        #        name_nice = T("Requests"),
+        #        #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+        #        restricted = True,
+        #        #module_type = 10,
+        #    )),
         ("project", Storage(
                 name_nice = T("Projects"),
                 #description = "Tracking of Projects, Activities and Tasks",
@@ -3379,7 +3378,7 @@ Thank you"""
         s3db.add_components(tablename,
                             # Requests
                             inv_recv_req = "recv_id",
-                            req_req = {"link": "inv_recv_req",
+                            inv_req = {"link": "inv_recv_req",
                                        "joinby": "recv_id",
                                        "key": "req_id",
                                        "actuate": "hide",
@@ -3481,8 +3480,8 @@ Thank you"""
                 s3db = current.s3db
                 sites = s3db.inv_recv.site_id.requires.options(zero = False)
                 site_ids = [site[0] for site in sites]
-                rtable = s3db.req_req
-                ritable = s3db.req_req_item
+                rtable = s3db.inv_req
+                ritable = s3db.inv_req_item
                 if len(site_ids) > 1:
                     site_query = (rtable.site_id.belongs(site_ids))
                     s3.scripts.append("/%s/static/themes/RMS/js/inv_recv.js" % r.application)
@@ -3493,7 +3492,7 @@ Thank you"""
                 dbset = current.db(query)
                 from s3 import IS_ONE_OF
                 f = s3db.inv_recv_req.req_id 
-                f.requires = IS_ONE_OF(dbset, "req_req.id",
+                f.requires = IS_ONE_OF(dbset, "inv_req.id",
                                        f.represent,
                                        sort = True,
                                        )
@@ -3511,7 +3510,7 @@ Thank you"""
             Remove req_fulfil Dashboard Alert if completed
         """
 
-        from s3db.req import REQ_STATUS_COMPLETE, \
+        from s3db.inv import REQ_STATUS_COMPLETE, \
                              REQ_STATUS_PARTIAL
 
         db = current.db
@@ -3519,7 +3518,7 @@ Thank you"""
 
         # Which Requests did we act on & what is their Status?
         srtable = s3db.inv_send_req
-        rtable = s3db.req_req
+        rtable = s3db.inv_req
         query = (srtable.send_id == record.id) & \
                 (srtable.req_id == rtable.id)
         reqs = db(query).select(rtable.id,
@@ -3535,7 +3534,7 @@ Thank you"""
                 req_ids_to_check.append(row.id)
 
         if req_ids_to_check:
-            ritable = s3db.req_req_item
+            ritable = s3db.inv_req_item
             query = (ritable.req_id.belongs(req_ids_to_check)) & \
                     (ritable.site_id == record.site_id)
             req_items = db(query).select(ritable.req_id,
@@ -3579,7 +3578,7 @@ Thank you"""
         s3db.add_components(tablename,
                             # Requests
                             inv_send_req = "send_id",
-                            req_req = {"link": "inv_send_req",
+                            inv_req = {"link": "inv_send_req",
                                        "joinby": "send_id",
                                        "key": "req_id",
                                        "actuate": "hide",
@@ -3687,8 +3686,8 @@ Thank you"""
                         req_ids = [row.req_id for row in reqs]
                         iitable = s3db.inv_inv_item
                         iptable = s3db.supply_item_pack
-                        rtable = s3db.req_req
-                        ritable = s3db.req_req_item
+                        rtable = s3db.inv_req
+                        ritable = s3db.inv_req_item
                         riptable = s3db.get_aliased(iptable, "req_item_pack")
                         if len(req_ids) == 1:
                             query = (rtable.id == req_ids[0])
@@ -3715,9 +3714,9 @@ Thank you"""
                         for row in items:
                             inv_pack_quantity = row["supply_item_pack.quantity"]
                             req_pack_quantity = row["req_item_pack.quantity"]
-                            req_ref = row["req_req.req_ref"]
+                            req_ref = row["inv_req.req_ref"]
                             inv_row = row["inv_inv_item"]
-                            req_row = row["req_req_item"]
+                            req_row = row["inv_req_item"]
                             inv_item_id = inv_row.id
                             iiappend(inv_item_id)
                             if inv_item_id in inv_data:
@@ -3793,8 +3792,8 @@ Thank you"""
                 s3db = current.s3db
                 sites = s3db.inv_send.site_id.requires.options(zero = False)
                 site_ids = [site[0] for site in sites]
-                rtable = s3db.req_req
-                ritable = s3db.req_req_item
+                rtable = s3db.inv_req
+                ritable = s3db.inv_req_item
                 if len(site_ids) > 1:
                     site_query = (ritable.site_id.belongs(site_ids))
                     s3.scripts.append("/%s/static/themes/RMS/js/inv_send.js" % r.application)
@@ -3808,7 +3807,7 @@ Thank you"""
 
                 from s3 import IS_ONE_OF
                 f = s3db.inv_send_req.req_id 
-                f.requires = IS_ONE_OF(dbset, "req_req.id",
+                f.requires = IS_ONE_OF(dbset, "inv_req.id",
                                        f.represent,
                                        sort = True,
                                        )
@@ -5633,7 +5632,7 @@ Thank you"""
     settings.customise_project_location_controller = customise_project_location_controller
 
     # -------------------------------------------------------------------------
-    def req_approver_update_roles(person_id):
+    def inv_req_approver_update_roles(person_id):
         """
             Update the req_approver role to have the right realms
             # see hrm_certification_onaccept
@@ -5656,7 +5655,7 @@ Thank you"""
         user_id = user.first().user_id
 
         # What realms should this user have the req_approver role for?
-        table = s3db.req_approver
+        table = s3db.inv_req_approver
         rows = db(table.person_id == person_id).select(table.pe_id)
         realms = [row.pe_id for row in rows]
 
@@ -5681,35 +5680,35 @@ Thank you"""
                           )
 
     # -------------------------------------------------------------------------
-    def req_approver_onaccept(form):
+    def inv_req_approver_onaccept(form):
         """
             Ensure that the Approver has the req_approver role for the correct realms
         """
 
         person_id = form.vars.get("person_id")
-        req_approver_update_roles(person_id)
+        inv_req_approver_update_roles(person_id)
 
         if form.record:
             # Update form
             # - has the person changed?
             if form.record.person_id != person_id:
                 # Also update the old person
-                req_approver_update_roles(form.record.person_id)
+                inv_req_approver_update_roles(form.record.person_id)
 
     # -------------------------------------------------------------------------
-    def req_approver_ondelete(form):
+    def inv_req_approver_ondelete(form):
 
         # Update the req_approver roles for this person
-        req_approver_update_roles(form.person_id)
+        inv_req_approver_update_roles(form.person_id)
 
     # -------------------------------------------------------------------------
-    def customise_req_approver_resource(r, tablename):
+    def customise_inv_req_approver_resource(r, tablename):
 
         db = current.db
         s3db = current.s3db
         auth = current.auth
 
-        f = s3db.req_approver.pe_id
+        f = s3db.inv_req_approver.pe_id
 
         if auth.s3_has_role("ADMIN"):
             # Filter to Red Cross entities
@@ -5794,25 +5793,25 @@ Thank you"""
                                )
 
         s3db.configure(tablename,
-                       onaccept = req_approver_onaccept,
-                       ondelete = req_approver_ondelete,
+                       onaccept = inv_req_approver_onaccept,
+                       ondelete = inv_req_approver_ondelete,
                        )
 
-    settings.customise_req_approver_resource = customise_req_approver_resource
+    settings.customise_inv_req_approver_resource = customise_inv_req_approver_resource
 
     # -------------------------------------------------------------------------
-    #def customise_req_commit_controller(**attr):
+    #def customise_inv_commit_controller(**attr):
 
         # Request is mandatory
-    #    field = current.s3db.req_commit.req_id
+    #    field = current.s3db.inv_commit.req_id
     #    field.requires = field.requires.other
 
     #    return attr
 
-    #settings.customise_req_commit_controller = customise_req_commit_controller
+    #settings.customise_inv_commit_controller = customise_inv_commit_controller
 
     # -------------------------------------------------------------------------
-    def customise_req_project_req_resource(r, tablename):
+    def customise_inv_req_project_resource(r, tablename):
         """
             Customise reponse from options.s3json
         """
@@ -5827,15 +5826,15 @@ Thank you"""
                  (ptable.end_date > r.utcnow)) & \
                 (ptable.deleted == False)
         the_set = current.db(query)
-        s3db.req_project_req.project_id.requires = IS_ONE_OF(the_set, "project_project.id",
+        s3db.inv_req_project.project_id.requires = IS_ONE_OF(the_set, "project_project.id",
                                                              project_represent,
                                                              sort = True,
                                                              )
 
-    settings.customise_req_project_req_resource = customise_req_project_req_resource
+    settings.customise_inv_req_project_resource = customise_inv_req_project_resource
 
     # -------------------------------------------------------------------------
-    def req_req_onaccept(form):
+    def inv_req_onaccept(form):
         """
             Update realm if site_id changes
             - Lighter then using update_realm on every update (this is much rarer edge case))
@@ -5846,7 +5845,7 @@ Thank you"""
             # Update form
             req_id = form.vars.id
             db = current.db
-            table  = db.req_req
+            table  = db.inv_req
             if site_id not in record:
                 record = db(table.id == req_id).select(table.id,
                                                        table.site_id,
@@ -5856,7 +5855,7 @@ Thank you"""
                 realm_entity = current.auth.get_realm_entity(table, record)
                 db(table.id == req_id).update(realm_entity = realm_entity)
                 # Update Request Items
-                db(current.s3db.req_req_item.req_id == req_id).update(realm_entity = realm_entity)
+                db(current.s3db.inv_req_item.req_id == req_id).update(realm_entity = realm_entity)
 
     # -------------------------------------------------------------------------
     def on_req_approve(req_id):
@@ -5892,7 +5891,7 @@ Thank you"""
         ui_language = session_s3.language
 
         url = "%s%s" % (settings.get_base_public_url(),
-                        URL(c="req", f="req",
+                        URL(c="inv", f="req",
                             args = [req_id, "req_item"],
                             ))
         req_ref = record.req_ref
@@ -5942,7 +5941,7 @@ Thank you"""
                            name = alert,
                            url = url,
                            type = "req_fulfil",
-                           tablename = "req_req",
+                           tablename = "inv_req",
                            record_id = req_id,
                            )
 
@@ -5968,7 +5967,7 @@ Thank you"""
         ui_language = session_s3.language
 
         url = "%s%s" % (settings.get_base_public_url(),
-                        URL(c="req", f="req",
+                        URL(c="inv", f="req",
                             args = [req_id],
                             ))
         req_ref = record.req_ref
@@ -6017,7 +6016,7 @@ Thank you"""
                        name = alert,
                        url = url,
                        type = "req_approve",
-                       tablename = "req_req",
+                       tablename = "inv_req",
                        record_id = req_id,
                        )
 
@@ -6045,7 +6044,7 @@ Thank you"""
 
         # From Sites
         available_from_sites = s3db.inv_send.site_id.requires.options(zero = False)
-        ritable = s3db.req_req_item
+        ritable = s3db.inv_req_item
         if len(req_id) == 1:
             query = (ritable.req_id == req_id[0])
         else:
@@ -6060,7 +6059,7 @@ Thank you"""
 
         # To Sites
         available_to_sites = s3db.inv_send.to_site_id.requires.options(zero = False)
-        rtable = s3db.req_req
+        rtable = s3db.inv_req
         if len(req_id) == 1:
             query = (rtable.id == req_id[0])
             limitby = (0, 1)
@@ -6101,7 +6100,7 @@ Thank you"""
 
         # From Sites
         available_from_sites = s3db.inv_recv.from_site_id.requires.options(zero = False)
-        ritable = s3db.req_req_item
+        ritable = s3db.inv_req_item
         if len(req_id) == 1:
             query = (ritable.req_id == req_id[0])
         else:
@@ -6116,7 +6115,7 @@ Thank you"""
 
         # To Sites
         available_to_sites = s3db.inv_recv.site_id.requires.options(zero = False)
-        rtable = s3db.req_req
+        rtable = s3db.inv_req
         if len(req_id) == 1:
             query = (rtable.id == req_id[0])
             limitby = (0, 1)
@@ -6138,17 +6137,17 @@ Thank you"""
         return json.dumps((from_sites, to_sites), separators=SEPARATORS)
 
     # -------------------------------------------------------------------------
-    def customise_req_req_resource(r, tablename):
+    def customise_inv_req_resource(r, tablename):
 
         from gluon import IS_NOT_EMPTY
-        from s3db.req import req_ReqRefRepresent
+        from s3db.inv import inv_ReqRefRepresent
 
         auth = current.auth
         s3db = current.s3db
 
-        table = s3db.req_req
+        table = s3db.inv_req
         f = table.req_ref
-        f.represent = req_ReqRefRepresent(show_link=True, pdf=True)
+        f.represent = inv_ReqRefRepresent(show_link=True, pdf=True)
         f.requires = IS_NOT_EMPTY()
         f.widget = None
         table.priority.readable = table.priority.writable = False
@@ -6179,8 +6178,6 @@ Thank you"""
 
             # Link to Projects
             ptable = s3db.project_project
-            f = s3db.req_project_req.project_id
-            f.label = T("Project Code")
             project_represent = S3Represent(lookup = "project_project",
                                             fields = ["code"],
                                             )
@@ -6188,6 +6185,8 @@ Thank you"""
                      (ptable.end_date > r.utcnow)) & \
                     (ptable.deleted == False)
             the_set = db(query)
+            f = s3db.inv_req_project.project_id
+            f.label = T("Project Code")
             f.requires = IS_ONE_OF(the_set, "project_project.id",
                                    project_represent,
                                    sort = True,
@@ -6196,18 +6195,18 @@ Thank you"""
                                     f = "project",
                                     label = T("Create Project"),
                                     tooltip = T("If you don't see the project in the list, you can add a new one by clicking link 'Create Project'."),
-                                    vars = {"caller": "req_req_sub_project_req_project_id",
-                                            "parent": "project_req",
+                                    vars = {"caller": "inv_req_sub_project_req_project_id",
+                                            "parent": "req_project",
                                             },
                                     )
 
             crud_fields = [f for f in table.fields if table[f].readable]
-            crud_fields.insert(0, "project_req.project_id")
+            crud_fields.insert(0, "req_project.project_id")
 
             req_id = r.id
             if req_id:
                 # Never opens in Component Tab, always breaks out
-                atable = s3db.req_approver_req
+                atable = s3db.inv_req_approver_req
                 approved = db(atable.req_id == req_id).select(atable.id,
                                                               limitby = (0, 1)
                                                               )
@@ -6240,8 +6239,8 @@ Thank you"""
 
             if transport_type:
                 # Filtered components
-                s3db.add_components("req_req",
-                                    req_req_tag = ({"name": "transport_type",
+                s3db.add_components("inv_req",
+                                    inv_req_tag = ({"name": "transport_type",
                                                     "joinby": "req_id",
                                                     "filterby": {"tag": "transport_type"},
                                                     "multiple": False,
@@ -6268,7 +6267,7 @@ Thank you"""
                 SEPARATORS = (",", ":")
                 s3 = current.response.s3
                 s3.jquery_ready.append('''S3.showHidden('%s',%s,'%s')''' % \
-                    ("transport_req", json.dumps(["sub_transport_type_value"], separators=SEPARATORS), "req_req"))
+                    ("transport_req", json.dumps(["sub_transport_type_value"], separators=SEPARATORS), "inv_req"))
 
             crud_form = S3SQLCustomForm(*crud_fields)
             s3db.configure(tablename,
@@ -6277,19 +6276,19 @@ Thank you"""
 
             set_method = s3db.set_method
             # Custom Request Form
-            set_method("req", "req",
+            set_method("inv", "req",
                        method = "form",
                        action = PrintableShipmentForm,
                        )
 
             # Lookup to limit sites to those requested_from the selected Requests' Items
-            set_method("req", "req",
+            set_method("inv", "req",
                        method = "send_sites",
                        action = req_send_sites,
                        )
 
             # Lookup to limit sites in an inv_recv when a Request is selected
-            set_method("req", "req",
+            set_method("inv", "req",
                        method = "recv_sites",
                        action = req_recv_sites,
                        )
@@ -6318,7 +6317,7 @@ Thank you"""
 
         s3db.add_custom_callback(tablename,
                                  "onaccept",
-                                 req_req_onaccept,
+                                 inv_req_onaccept,
                                  )
 
         s3db.configure(tablename,
@@ -6329,10 +6328,10 @@ Thank you"""
                        on_req_submit = on_req_submit,
                        )
 
-    settings.customise_req_req_resource = customise_req_req_resource
+    settings.customise_inv_req_resource = customise_inv_req_resource
 
     # -------------------------------------------------------------------------
-    def customise_req_req_controller(**attr):
+    def customise_inv_req_controller(**attr):
 
         s3 = current.response.s3
 
@@ -6351,12 +6350,12 @@ Thank you"""
                 if workflow_status == 2: # Submitted for Approval
                     show_site_and_po = True
                     # Are we a Logistics Approver?
-                    from s3db.req import req_approvers
-                    approvers = req_approvers(r.record.site_id)
+                    from s3db.inv import inv_req_approvers
+                    approvers = inv_req_approvers(r.record.site_id)
                     person_id = current.auth.s3_logged_in_person()
                     if person_id in approvers and approvers[person_id]["matcher"]:
                         # Have we already approved?
-                        atable = s3db.req_approver_req
+                        atable = s3db.inv_req_approver_req
                         query = (atable.req_id == r.id) & \
                                 (atable.person_id == person_id)
                         approved = current.db(query).select(atable.id,
@@ -6406,10 +6405,10 @@ Thank you"""
 
         return attr
 
-    settings.customise_req_req_controller = customise_req_req_controller
+    settings.customise_inv_req_controller = customise_inv_req_controller
 
     # -------------------------------------------------------------------------
-    def req_req_item_onaccept(form):
+    def inv_req_item_onaccept(form):
         """
             Update realm's affiliations if site_id changes
         """
@@ -6420,7 +6419,7 @@ Thank you"""
             if form_vars_get("site_id") != form.record.site_id:
                 # Item has been Requested from a specific site so this needs to be affiliated to the realm
                 db = current.db
-                table = db.req_req
+                table = db.inv_req
                 record = db(table.id == form_vars_get("req_id")).select(table.id,
                                                                         table.site_id,
                                                                         )
@@ -6428,14 +6427,14 @@ Thank you"""
                 current.auth.get_realm_entity(table, record)
 
     # -------------------------------------------------------------------------
-    def customise_req_req_item_resource(r, tablename):
+    def customise_inv_req_item_resource(r, tablename):
 
         current.s3db.add_custom_callback(tablename,
                                          "onaccept",
-                                         req_req_item_onaccept,
+                                         inv_req_item_onaccept,
                                          )
 
-    settings.customise_req_req_item_resource = customise_req_req_item_resource
+    settings.customise_inv_req_item_resource = customise_inv_req_item_resource
 
     # -------------------------------------------------------------------------
     def customise_supply_item_category_resource(r, tablename):
@@ -6498,7 +6497,7 @@ class PrintableShipmentForm(S3Method):
         if r.http == "GET":
             if r.id:
                 tablename = r.tablename
-                if tablename == "req_req":
+                if tablename == "inv_req":
                     output = self.request_form(r, **attr)
                 elif tablename == "inv_send":
                     output = self.waybill(r, **attr)
@@ -6526,7 +6525,7 @@ class PrintableShipmentForm(S3Method):
         T = current.T
         s3db = current.s3db
 
-        # Master record (=req_req)
+        # Master record (=inv_req)
         resource = s3db.resource(r.tablename,
                                  id = r.id,
                                  components = ["req_item"],
@@ -6558,7 +6557,7 @@ class PrintableShipmentForm(S3Method):
 
         # Filename from send_ref
         header_row = header_data.rows[0]
-        pdf_filename = header_row["_row"]["req_req.req_ref"]
+        pdf_filename = header_row["_row"]["inv_req.req_ref"]
 
         # Component (=req_item)
         component = resource.components["req_item"]
@@ -6569,7 +6568,7 @@ class PrintableShipmentForm(S3Method):
                        ]
 
         # Aggregate methods and column names
-        aggregate = [("sum", "req_req_item.quantity"),
+        aggregate = [("sum", "inv_req_item.quantity"),
                      ]
 
         # Generate the JSON data dict
@@ -6597,7 +6596,7 @@ class PrintableShipmentForm(S3Method):
         """
             Header for Request Forms
 
-            @param data: the S3ResourceData for the req_req
+            @param data: the S3ResourceData for the inv_req
         """
 
         row = data.rows[0]
@@ -6621,15 +6620,15 @@ class PrintableShipmentForm(S3Method):
                     TR(TD(DIV(logo, H4(name)), _colspan = 2),
                        TD(DIV(title), _colspan = 2),
                        ),
-                    row_("req_req.req_ref", None),
-                    row_("req_req.date", "req_req.date_required"),
-                    row_("req_req.site_id", "req_req.purpose"),
-                    row_("req_req.requester_id", "inv_warehouse.contact"),
+                    row_("inv_req.req_ref", None),
+                    row_("inv_req.date", "inv_req.date_required"),
+                    row_("inv_req.site_id", "inv_req.purpose"),
+                    row_("inv_req.requester_id", "inv_warehouse.contact"),
                  )
 
         # Waybill comments
         ctable = TABLE(TR(TH(T("Comments"))),
-                       TR(TD(row["req_req.comments"])),
+                       TR(TD(row["inv_req.comments"])),
                        )
 
         return DIV(dtable, P("&nbsp;"), ctable)
@@ -6645,7 +6644,7 @@ class PrintableShipmentForm(S3Method):
 
         from gluon import TABLE, TD, TH, TR
         from s3db.pr import pr_PersonRepresent
-        from s3db.req import req_approvers
+        from s3db.inv import inv_req_approvers
 
         T = current.T
 
@@ -6657,7 +6656,7 @@ class PrintableShipmentForm(S3Method):
 
         record = r.record
         requester = record.requester_id
-        approvers = req_approvers(record.site_id)
+        approvers = inv_req_approvers(record.site_id)
         person_ids = [requester] + list(approvers)
 
         names = pr_PersonRepresent().bulk(person_ids)

@@ -50,9 +50,7 @@ def gauge():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller()
-
-    return output
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def river():

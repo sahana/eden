@@ -136,8 +136,8 @@ def station():
                     if r.method != "update" and r.method != "read":
                         # Hide fields which don't make sense in a Create form
                         # inc list_create (list_fields over-rides)
-                        from s3db.req import req_create_form_mods
-                        req_create_form_mods(r)
+                        from s3db.inv import inv_req_create_form_mods
+                        inv_req_create_form_mods(r)
 
                 elif component_name in ("asset", "vehicle"):
                     atable = s3db.asset_asset

@@ -1008,10 +1008,10 @@ def transport_rheader(r, tabs=None):
             rheader_fields = [["name"],
                               ["location_id"],
                               ]
-            if settings.has_module("req"):
-                tabs.extend(s3db.req_tabs(r, match=False))
             if settings.has_module("inv"):
-                tabs.extend(s3db.inv_tabs(r))
+                from .inv import inv_tabs, inv_req_tabs
+                tabs.extend(inv_req_tabs(r, match=False))
+                tabs.extend(inv_tabs(r))
 
         rheader = S3ResourceHeader(rheader_fields, tabs)(r,
                                                          table=table,

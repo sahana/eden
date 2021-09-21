@@ -3922,7 +3922,7 @@ class S3ObjectReferences(object):
             refs = S3ObjectReferences(obj).refs
         @example
             # Resolve a reference in obj
-            S3ObjectReferences(obj).resolve("req_req", "uuid", "REQ1", 57)
+            S3ObjectReferences(obj).resolve("inv_req", "uuid", "REQ1", 57)
     """
 
     TABLENAME_KEYS = ("@resource", "r")

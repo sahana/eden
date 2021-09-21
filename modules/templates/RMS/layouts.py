@@ -101,7 +101,7 @@ class S3MainMenuLayout(S3NavigationItem):
                 image = "human_talent.png"
                 module_name = T("Human Talent")
                 module_href = URL(c="hrm", f="index")
-            elif c in ("inv", "proc", "supply", "req"):
+            elif c in ("inv", "proc", "supply"):
                 image = "warehouses.png"
                 module_name = T("Warehouses")
                 if auth.s3_has_roles(("ORG_ADMIN",
@@ -110,7 +110,7 @@ class S3MainMenuLayout(S3NavigationItem):
                                       )):
                     module_href = URL(c="inv", f="index")
                 else:
-                    module_href = URL(c="req", f="req")
+                    module_href = URL(c="inv", f="req")
             elif c == "project":
                 image = "projects.png"
                 module_name = T("Projects")
@@ -212,9 +212,9 @@ class S3MainMenuLayout(S3NavigationItem):
                 # ▪ Sharing authorisation
                 # ▪ Alerts
                 # ▪ Email for notification    
-                settings = URL(c="req", f="approver")
-                if c == "req" and \
-                   f == "approver":
+                settings = URL(c="inv", f="req_approver")
+                if c == "inv" and \
+                   f == "req_approver":
                     settings_active = " active"
                 else:
                     settings_active = ""

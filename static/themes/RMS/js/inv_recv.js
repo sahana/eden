@@ -15,7 +15,7 @@ $(document).ready(function() {
 
     var lookupSites = function(req_id) {
         // Custom Method in RMS/config.py
-        ajaxURL = S3.Ap.concat('/req/req/recv_sites.json?req_id=' + req_id);
+        ajaxURL = S3.Ap.concat('/inv/req/recv_sites.json?req_id=' + req_id);
         $.getJSONS3(ajaxURL, function(data) {
             // Clear all options
             fromField.html('');

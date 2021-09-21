@@ -278,7 +278,7 @@ class PurchaseOrdersModel(S3Model):
         Purchase Orders (PO)
 
         @ToDo: Link to inv_send
-        @ToDo: Link to req_req
+        @ToDo: Link to inv_req
     """
 
     names = ("proc_order",

@@ -2257,12 +2257,6 @@ class HRSkillModel(S3Model):
                   deduplicate = S3Duplicate(),
                   )
 
-        # Components
-        add_components(tablename,
-                       # Requests
-                       req_req_skill = "skill_id",
-                       )
-
         # =====================================================================
         # Competency Ratings
         #

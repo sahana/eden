@@ -6,13 +6,13 @@
          Request Items - CSV Import Stylesheet
 
          CSV fields:
-         Request........................req_req_item.req_id & req_req.req_ref (lookup only)
-         Item...........................req_req_item.item_id & supply_item.name (lookup only)
-         Pack...........................req_req_item.pack & supply_item_pack
-         Quantity.......................req_req_item.quantity
-         Currency.......................req_req_item.currency
-         Value..........................req_req_item.pack_value
-         Comments.......................req_req_item.comments
+         Request........................inv_req_item.req_id & inv_req.req_ref (lookup only)
+         Item...........................inv_req_item.item_id & supply_item.name (lookup only)
+         Pack...........................inv_req_item.pack & supply_item_pack
+         Quantity.......................inv_req_item.quantity
+         Currency.......................inv_req_item.currency
+         Value..........................inv_req_item.pack_value
+         Comments.......................inv_req_item.comments
 
     *********************************************************************** -->
 
@@ -52,8 +52,8 @@
         <xsl:variable name="Pack" select="col[@field='Pack']"/>
 
         <!-- Request Item -->
-        <resource name="req_req_item">
-            <reference field="req_id" resource="req_req">
+        <resource name="inv_req_item">
+            <reference field="req_id" resource="inv_req">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="concat('Request:', col[@field='Request'])"/>
                 </xsl:attribute>
@@ -84,7 +84,7 @@
 
         <xsl:variable name="Request" select="col[@field='Request']"/>
 
-        <resource name="req_req">
+        <resource name="inv_req">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="concat('Request:', $Request)"/>
             </xsl:attribute>

@@ -564,7 +564,7 @@ class OrganisationModel(S3Model):
                                    "multiple": False,
                                    },
                        # Requests
-                       #req_req = "donated_by_id",
+                       #inv_req = "donated_by_id",
 
                        # Enable this to allow migration of users between instances
                        #auth_user = "organisation_id",
@@ -3184,11 +3184,6 @@ class OrganisationTypeModel(S3Model):
                             org_organisation_type_tag = {"name": "tag",
                                                          "joinby": "organisation_type_id",
                                                          },
-                            # Requestable Item Categories
-                            supply_item_category = {"link": "req_requester_category",
-                                                    "joinby": "organisation_type_id",
-                                                    "key": "item_category_id",
-                                                    },
                             )
 
         # ---------------------------------------------------------------------
@@ -3550,8 +3545,8 @@ class SiteModel(S3Model):
                                         },
 
                             # Requests
-                            req_req = site_id,
-                            req_commit = site_id,
+                            inv_req = site_id,
+                            inv_commit = site_id,
 
                             # Shifts
                             #org_site_shift = site_id,
@@ -5057,14 +5052,11 @@ def org_facility_rheader(r, tabs=None):
     r.table = s3db[tablename]
 
     tabs = [(T("Details"), None)]
-    try:
-        tabs = tabs + s3db.req_tabs(r)
-    except:
-        pass
-    try:
-        tabs = tabs + s3db.inv_tabs(r)
-    except:
-        pass
+    if settings.has_module("inv"):
+        from .inv import inv_tabs, inv_req_tabs
+        tabs.extend(inv_req_tabs(r, match=False))
+        tabs.extend(inv_tabs(r))
+
     rheader_fields = [["name"], ["location_id"]]
     rheader = S3ResourceHeader(rheader_fields, tabs)(r)
     return rheader
@@ -6847,7 +6839,7 @@ def org_site_top_req_priority(row, tablename="org_facility"):
         return None
 
     s3db = current.s3db
-    rtable = s3db.req_req
+    rtable = s3db.inv_req
     stable = s3db[tablename]
 
     query = (rtable.deleted != True) & \
@@ -7074,11 +7066,13 @@ def org_rheader(r, tabs=None):
         if SHIFTS:
             append_tab((T("Shifts"), "shift"))
         if settings.has_module("inv"):
-            tabs = tabs + s3db.inv_tabs(r)
+            from .inv import inv_tabs
+            tabs.extend(inv_tabs(r))
         if settings.get_org_needs_tab():
             append_tab((T("Needs"), "needs"))
-        elif settings.has_module("req"):
-            tabs = tabs + s3db.req_tabs(r)
+        elif settings.has_module("inv"):
+            from .inv import inv_req_tabs
+            tabs.extend(inv_req_tabs(r, match=False))
         if settings.has_module("asset"):
             append_tab((T("Assets"), "asset"))
 
@@ -7734,7 +7728,8 @@ def org_office_controller():
                 elif cname == "req" and r.method not in ("update", "read"):
                     # Hide fields which don't make sense in a Create form
                     # inc list_create (list_fields over-rides)
-                    s3db.req_create_form_mods(r)
+                    from .inv import inv_req_create_form_mods
+                    inv_req_create_form_mods(r)
 
                 elif cname == "asset":
                     # Default/Hide the Organisation & Site fields
@@ -7904,7 +7899,8 @@ def org_facility_controller():
                 elif cname == "req" and r.method not in ("update", "read"):
                     # Hide fields which don't make sense in a Create form
                     # inc list_create (list_fields over-rides)
-                    s3db.req_create_form_mods()
+                    from .inv import inv_req_create_form_mods
+                    inv_req_create_form_mods(r)
 
                 elif cname == "asset":
                     # Default/Hide the Organisation & Site fields
@@ -7950,13 +7946,15 @@ def org_facility_controller():
             append = output.append
             # Edit button
             append(TR(TD(A(T("Edit"),
-                           _target="_blank",
-                           _id="edit-btn",
-                           _href=URL(args=[r.id, "update"])))))
+                           _target = "_blank",
+                           _id = "edit-btn",
+                           _href = URL(args = [r.id, "update"])
+                           ))))
 
             # Name
             append(TR(TD(B("%s:" % T("Name"))),
-                      TD(record.name)))
+                      TD(record.name),
+                      ))
 
             site_id = record.site_id
 
@@ -7981,32 +7979,28 @@ def org_facility_controller():
             #        their staff so this is a meaningless field for them
             table = db.org_organisation
             org = db(table.id == record.organisation_id).select(table.name,
-                                                                limitby=(0, 1)
+                                                                limitby = (0, 1)
                                                                 ).first()
             if org:
                 append(TR(TD(B("%s:" % ftable.organisation_id.label)),
                           TD(org.name)))
 
-            if current.deployment_settings.has_module("req"):
+            if current.deployment_settings.has_module("inv"):
                 # Open High/Medium priority Requests
-                rtable = s3db.req_req
+                rtable = s3db.inv_req
                 query = (rtable.site_id == site_id) & \
                         (rtable.fulfil_status != 2) & \
                         (rtable.priority.belongs((2, 3)))
                 reqs = db(query).select(rtable.id,
                                         rtable.req_ref,
-                                        rtable.type,
                                         )
                 if reqs:
                     append(TR(TD(B("%s:" % T("Requests")))))
-                    req_types = {1: "req_item",
-                                 3: "req_skill",
-                                 8: "",
-                                 9: "",
-                                 }
                     vals = [A(req.req_ref,
-                              _href=URL(c="req", f="req",
-                                        args=[req.id, req_types[req.type]])) for req in reqs]
+                              _href = URL(c="req", f="req",
+                                          args=[req.id, "req_item"]
+                                          ),
+                              ) for req in reqs]
                     for val in vals:
                         append(TR(TD(val, _colspan=2)))
 
@@ -8016,7 +8010,8 @@ def org_facility_controller():
             query = (gtable.id == stable.location_id) & \
                     (stable.id == site_id)
             location = db(query).select(gtable.addr_street,
-                                        limitby=(0, 1)).first()
+                                        limitby = (0, 1)
+                                        ).first()
             if location.addr_street:
                 append(TR(TD(B("%s:" % gtable.addr_street.label)),
                           TD(location.addr_street)))

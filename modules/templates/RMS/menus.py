@@ -56,7 +56,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
             # Additional Items
             menu(M("Forums", c="pr", f="forum"),
-                 M("Request Approvers", c="req", f="approver"),
+                 M("Request Approvers", c="inv", f="req_approver"),
                  M("Map Settings", c="gis", f="config"),
                  M("Content Management", c="cms", f="index"),
                  )
@@ -106,7 +106,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Forums", c="pr", f="forum")(
                             M("Create", m="create"),
                         ),
-                       M("Request Approvers", c="req", f="approver")(
+                       M("Request Approvers", c="inv", f="req_approver")(
                         ),
                        )
 
@@ -271,28 +271,38 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def inv():
         """ INV / Inventory """
 
+        if current.request.function == "req_approver":
+            # Accessed via Settings
+            has_role = current.auth.s3_has_role
+            if has_role("ADMIN"):
+                return self.admin()
+            elif has_role("ORG_ADMIN"):
+                return self.pr()
+            else:
+                return None
+
         if current.auth.s3_has_roles(("ORG_ADMIN",
                                       "wh_operator",
                                       "logs_manager",
                                       )):
-            return M()(
-                        M("Stock Management", c="inv", link=False)(
+            return M(c="inv")(
+                        M("Stock Management",link=False)(
                             M("Stock Adjustments", f="adj"),
                             M("Kitting", f="kitting"),
                             M("Receive a new shipment", f="recv", m="create"),
                             M("Send a new shipment", f="send", m="create"),
                         ),
-                        M("Purchases", c="req", f="order_item",
+                        M("Purchases", f="order_item",
                           restrict=["ORG_ADMIN",
                                     "logs_manager"]),
-                        M("Requests", c="req", f="req")(
+                        M("Requests", f="req")(
                             M("My Requests",
                               vars = {"mine": 1},
                               ),
                         ),
-                        M("Import Inventory", c="inv", f="inv_item", m="import",
+                        M("Import Inventory", f="inv_item", m="import",
                           restrict=["ADMIN"]),
-                        M("Parameters", c="inv", link=False,
+                        M("Parameters", link=False,
                           restrict=["ORG_ADMIN",
                                     "logs_manager"])(
                             M("Warehouses", f="warehouse"),
@@ -304,7 +314,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             M("Facilities", f="facility"),
                             M("Stock limit", f="minimum"),
                         ),
-                        M("Reports", c="inv", link=False)(
+                        M("Reports", link=False)(
                             M("Inventory", f="inv_item", m="summary"),
                             M("Stock Movements", f="inv_item", m="grouped",
                               vars = {"report": "movements"},
@@ -316,15 +326,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     )
         else:
             # Normal users see their own Requests & Inventory Reports
-            return M()(
-                        M("Requests", c="req", link=False)(
+            return M(c="inv")(
+                        M("Requests", link=False)(
                             M("My Requests", f="req",
                               vars = {"mine": 1},
                               ),
                         ),
-                        M("Reports", c="inv", link=False)(
-                            M("Short Inventory", f="inv_item", m="report"),
-                            M("Detailed Inventory", f="inv_item"),
+                        M("Reports", link=False)(
+                            M("Inventory", f="inv_item", m="summary"),
                         ),
                     )
             
@@ -335,22 +344,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         # Same as Inventory
     #    return self.inv()
-
-    # -------------------------------------------------------------------------
-    def req(self):
-        """ Requests Management """
-
-        if current.request.function == "approver":
-            has_role = current.auth.s3_has_role
-            if has_role("ADMIN"):
-                return self.admin()
-            elif has_role("ORG_ADMIN"):
-                return self.pr()
-
-            return None
-
-        # Same as Inventory
-        return self.inv()
 
     # -------------------------------------------------------------------------
     @staticmethod

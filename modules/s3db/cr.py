@@ -2057,14 +2057,11 @@ def cr_shelter_rheader(r, tabs=None):
             #if settings.has_module("assess"):
             #    tabs.append((T("Assessments"), "rat"))
 
-            try:
-                tabs = tabs + s3db.req_tabs(r, match=False)
-            except:
-                pass
-            try:
-                tabs = tabs + s3db.inv_tabs(r)
-            except:
-                pass
+            if settings.has_module("inv"):
+                from .inv import inv_tabs, inv_req_tabs
+                tabs.extend(inv_req_tabs(r, match=False))
+                tabs.extend(inv_tabs(r))
+
             tabs.append((T("Assets"), "asset"))
             if settings.has_module("msg"):
                 tabs.append((T("Send Notification"), "dispatch"))

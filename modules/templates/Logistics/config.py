@@ -63,13 +63,9 @@ def config(settings):
     #settings.ui.camp = True
 
     # Requests
-    settings.req.use_commit = False
-    #settings.req.req_form_name = "Request Issue Form"
-    #settings.req.req_shortname = "RIS"
-    # Restrict the type of requests that can be made, valid values in the
-    # list are ["Stock", "People", "Other"]. If this is commented out then
-    # all types will be valid.
-    settings.req.req_type = ["Stock"]
+    settings.inv.use_commit = False
+    #settings.inv.req_form_name = "Request Issue Form"
+    #settings.inv.req_shortname = "RIS"
 
     # Inventory Management
     # Uncomment if you need a simpler (but less accountable) process for managing stock levels
@@ -218,12 +214,6 @@ def config(settings):
                 restricted = True,
                 module_type = 10,
             )),
-        ("req", Storage(
-            name_nice = T("Requests"),
-            #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
-            restricted = True,
-            module_type = 2,
-        )),
         #("cr", Storage(
         #        name_nice = T("Shelters"),
         #        #description = "Tracks the location, capacity and breakdown of victims in Shelters",

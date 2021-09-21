@@ -611,7 +611,7 @@ $.filterOptionsS3({
                        # Order Items
                        req_order_item = "item_id",
                        # Request Items
-                       req_req_item = "item_id",
+                       inv_req_item = "item_id",
                        # Supply Kit Items
                        supply_kit_item = "parent_item_id",
                        # Supply Kit Items (with link table)
@@ -2308,7 +2308,7 @@ def supply_item_rheader(r):
             if settings.get_inv_stock_cards():
                 tabs_append((T("Stock Cards"), "stock_card"))
             tabs_append((T("Requested"), "req_item"))
-            if settings.get_req_order_item():
+            if settings.get_inv_req_order_item():
                 tabs_append((T("Ordered"), "order_item"))
             tabs_append((T("In Catalogs"), "catalog_item"))
             if item.kit == True:
@@ -2738,7 +2738,7 @@ def supply_item_controller():
 
             elif r.component_name == "req_item":
                 # This is a report not a workflow
-                s3db.configure("req_req_item",
+                s3db.configure("inv_req_item",
                                listadd = False,
                                deletable = False,
                                )

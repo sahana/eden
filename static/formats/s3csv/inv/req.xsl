@@ -6,27 +6,26 @@
          Requests - CSV Import Stylesheet
 
          CSV fields:
-         Scenario.......................scenario_scenario.name (Optional)
          Event..........................event_event.name (Optional)
-         Request Type...................req_req.type
-         Template.......................req_req.is_template
-         Request Number.................req_req.req_ref
-         Date Requested.................req_req.date
-         Priority.......................req_req.priority
-         Purpose........................req_req.purpose
-         Date Required..................req_req.date_required
-         Requester......................req_req.requester_id (lookup only)
-         Assigned To....................req_req.assigned_to_id (lookup only)
-         Approved By....................req_req.approved_by_id (lookup only)
-         Requested For..................req_req.request_for_id (lookup only)
-         Requested for Facility.........req_req.site_id (lookup only)
-         Requested for Facility Type....req_req.site_id (site type)
-         Transportation Required........req_req.transport_req
-         Security Required..............req_req.security_req
-         Date Delivered.................req_req.date_recv
-         Received By....................req_req.recv_by_id (lookup only)
+         Request Type...................inv_req.type
+         Template.......................inv_req.is_template
+         Request Number.................inv_req.req_ref
+         Date Requested.................inv_req.date
+         Priority.......................inv_req.priority
+         Purpose........................inv_req.purpose
+         Date Required..................inv_req.date_required
+         Requester......................inv_req.requester_id (lookup only)
+         Assigned To....................inv_req.assigned_to_id (lookup only)
+         Approved By....................inv_req.approved_by_id (lookup only)
+         Requested For..................inv_req.request_for_id (lookup only)
+         Requested for Facility.........inv_req.site_id (lookup only)
+         Requested for Facility Type....inv_req.site_id (site type)
+         Transportation Required........inv_req.transport_req
+         Security Required..............inv_req.security_req
+         Date Delivered.................inv_req.date_recv
+         Received By....................inv_req.recv_by_id (lookup only)
          KV:XX..........................Key,Value (Key = XX in column name, value = cell in row)
-         Comments.......................req_req.comments
+         Comments.......................inv_req.comments
 
          @ToDo: Templates
 
@@ -35,7 +34,6 @@
     <xsl:output method="xml"/>
 
     <!-- Indexes for faster processing -->
-    <xsl:key name="scenario" match="row" use="col[@field='Scenario']"/>
     <xsl:key name="event" match="row" use="col[@field='Event']"/>
     <xsl:key name="facility" match="row" use="col[@field='Requested for Facility']"/>
     <xsl:key name="requester_id" match="row" use="col[@field='Requester']"/>
@@ -47,12 +45,6 @@
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
-            <!-- Scenarios -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('scenario',
-                                                                       col[@field='Scenario'])[1])]">
-                <xsl:call-template name="Scenario" />
-            </xsl:for-each>
-
             <!-- Events -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('event',
                                                                        col[@field='Event'])[1])]">
@@ -131,7 +123,7 @@
         <xsl:variable name="FacilityType" select="col[@field='Requested for Facility Type']/text()"/>
 
         <!-- Request -->
-        <resource name="req_req">
+        <resource name="inv_req">
             <xsl:if test="$Event!=''">
                 <reference field="event_id" resource="event_event">
                     <xsl:attribute name="tuid">
@@ -288,24 +280,9 @@
         <xsl:variable name="Value" select="text()"/>
 
         <xsl:if test="$Value!=''">
-            <resource name="req_req_tag" alias="tag">
+            <resource name="inv_req_tag" alias="tag">
                 <data field="tag"><xsl:value-of select="$Key"/></data>
                 <data field="value"><xsl:value-of select="$Value"/></data>
-            </resource>
-        </xsl:if>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="Scenario">
-
-        <xsl:variable name="Scenario" select="col[@field='Scenario']"/>
-
-        <xsl:if test="$Scenario!=''">
-            <resource name="scenario_scenario">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('Scenario:', $Scenario)"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$Scenario"/></data>
             </resource>
         </xsl:if>
     </xsl:template>
@@ -314,7 +291,6 @@
     <xsl:template name="Event">
 
         <xsl:variable name="Event" select="col[@field='Event']"/>
-        <xsl:variable name="Scenario" select="col[@field='Scenario']"/>
 
         <xsl:if test="$Event!=''">
             <resource name="event_event">
@@ -322,13 +298,6 @@
                     <xsl:value-of select="concat('Event:', $Event)"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$Event"/></data>
-                <xsl:if test="$Scenario!=''">
-                    <reference field="scenario_id" resource="scenario_scenario">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat('Scenario:', $Scenario)"/>
-                        </xsl:attribute>
-                    </reference>
-                </xsl:if>
             </resource>
         </xsl:if>
     </xsl:template>
