@@ -51,29 +51,6 @@
             <data field="settings"><xsl:value-of select="col[@field='Settings']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Tooltip']"/></data>
 
-            <!-- Deprecated
-            <data field="totals"><xsl:value-of select="col[@field='Totals']"/></data>
-            <data field="grid"><xsl:value-of select="col[@field='Grid']"/></data>
-            <data field="show_hidden"><xsl:value-of select="col[@field='Show Hidden']"/></data>
-            -->
-
-            <!-- Sort Options
-            <xsl:variable name="SortOptions">
-                <xsl:call-template name="uppercase">
-                    <xsl:with-param name="string">
-                        <xsl:value-of select="col[@field='Sort']/text()"/>
-                    </xsl:with-param>
-                </xsl:call-template>
-            </xsl:variable>
-            <xsl:choose>
-                <xsl:when test="starts-with($SortOptions, 'Y') or starts-with($SortOptions, 'T')">
-                    <data field="sort_options" value="true">True</data>
-                </xsl:when>
-                <xsl:when test="starts-with($SortOptions, 'N') or starts-with($SortOptions, 'F')">
-                    <data field="sort_options" value="false">False</data>
-                </xsl:when>
-            </xsl:choose> -->
-
             <!-- Required -->
             <xsl:variable name="NotEmpty">
                 <xsl:call-template name="uppercase">

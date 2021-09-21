@@ -57,7 +57,6 @@ __all__ = ("OrganisationModel",
            "FacilityModel",
            "OfficeModel",
            "OfficeTypeTagModel",
-           "RoomModel",
            "org_facility_rheader",
            "org_organisation_logo",
            "org_organisation_address",
@@ -4121,7 +4120,6 @@ class SiteLayoutModel(S3Model):
         Organisation of space within a site
 
         e.g. Building / Floor / Room
-             @ToDo: Replace org_room
         e.g. Aisle / Rack / Shelf for Warehouses
     """
 
@@ -5060,91 +5058,6 @@ def org_facility_rheader(r, tabs=None):
     rheader_fields = [["name"], ["location_id"]]
     rheader = S3ResourceHeader(rheader_fields, tabs)(r)
     return rheader
-
-# =============================================================================
-class RoomModel(S3Model):
-    """
-        Rooms are a location within a Site
-        - used by Asset module & DVR module (for activities)
-
-        @ToDO: Deprecate & replace by org_site_layout
-    """
-
-    names = ("org_room",
-             "org_room_id",
-             )
-
-    def model(self):
-
-        T = current.T
-        db = current.db
-
-        # ---------------------------------------------------------------------
-        # Rooms (for Sites)
-        # @ToDo: Validate to ensure that rooms are unique per facility
-        #
-        tablename = "org_room"
-        self.define_table(tablename,
-                          self.org_site_id(), # site_id
-                          Field("name", length=128, notnull=True,
-                                label = T("Name"),
-                                requires = [IS_NOT_EMPTY(),
-                                            IS_LENGTH(128),
-                                            ],
-                                ),
-                          *s3_meta_fields())
-
-        # CRUD strings
-        ADD_ROOM = T("Create Room")
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_ROOM,
-            title_display = T("Room Details"),
-            title_list = T("Rooms"),
-            title_update = T("Edit Room"),
-            label_list_button = T("List Rooms"),
-            label_delete_button = T("Delete Room"),
-            msg_record_created = T("Room added"),
-            msg_record_modified = T("Room updated"),
-            msg_record_deleted = T("Room deleted"),
-            msg_list_empty = T("No Rooms currently registered"))
-
-        room_comment = DIV(
-                           S3PopupLink(c = "org",
-                                       f = "room",
-                                       label = ADD_ROOM,
-                                       tooltip = T("Select a Room from the list or click 'Create Room'"),
-                                       ),
-                           # Filters Room based on site
-                           SCRIPT(
-'''$.filterOptionsS3({
- 'trigger':'site_id',
- 'target':'room_id',
- 'lookupPrefix':'org',
- 'lookupResource':'room'
-})''')
-                           )
-
-        # Reusable field for other tables to reference
-        represent = S3Represent(lookup=tablename)
-        room_id = S3ReusableField("room_id", "reference %s" % tablename,
-                                  label = T("Room"),
-                                  ondelete = "SET NULL",
-                                  represent = represent,
-                                  requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(db, "org_room.id",
-                                                          represent
-                                                          )),
-                                  sortby = "name",
-                                  comment = room_comment,
-                                  )
-
-        self.configure(tablename,
-                       deduplicate = S3Duplicate(),
-                       )
-
-        # Pass names back to global scope (s3.*)
-        return {"org_room_id": room_id,
-                }
 
 # =============================================================================
 class OfficeModel(S3Model):

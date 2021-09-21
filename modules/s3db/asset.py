@@ -573,9 +573,7 @@ $.filterOptionsS3({
                                 updateable = True,
                                 #widget = S3SiteAutocompleteWidget(),
                                 ),
-                     # @ToDo: Replace with org_site_layout:
-                     self.org_room_id(),
-                     #location_id(),
+                     self.org_site_layout_id(),
                      Field("cancel", "boolean",
                            default = False,
                            label = T("Cancel Log Entry"),
@@ -618,10 +616,10 @@ $.filterOptionsS3({
                   listadd = False,
                   list_fields = ["date",
                                  "status",
-                                 "datetime_until",
+                                 "date_until",
                                  "organisation_id",
                                  "site_id",
-                                 "room_id",
+                                 "layout_id",
                                  "person_id",
                                  #"location_id",
                                  "cancel",
@@ -1017,6 +1015,34 @@ def asset_log_prep(r):
     # Pass method via response.s3.asset_log_method to asset_log_onaccept()
     current.response.s3.asset_log_method = method
 
+    if method == "update":
+        # Can only Cancel entry
+        for f in table.fields:
+            if f == "cancel":
+                continue
+            else:
+                table[f].writable = False
+        return
+    # If there was ever a site set with editable layout_id then:
+    #    record = db(table.id == r.component_id).select(table.site_id,
+    #                                                   limitby = (0, 1)
+    #                                                   ).first()
+    #    site_id = record.site_id
+    #    f = table.layout_id
+    #    # We can't update this dynamically
+    #    #f.requires.other.set_filter(filterby = "site_id",
+    #    #                            filter_opts = [site_id],
+    #    #                            )
+    #    f.widget.filter = (s3db.org_site_layout.site_id == site_id)
+    elif method == "read":
+        return
+
+    # This causes an error with the dataTables paginate
+    # if used only in r.interactive & not also r.representation=="aadata"
+    table.cancel.readable = table.cancel.writable = False
+
+    current_log = asset_get_current_log(r.id)
+
     if method == "setbase":
         status = ASSET_LOG_SET_BASE
         r.method = "create"
@@ -1028,13 +1054,6 @@ def asset_log_prep(r):
         r.method = "create"
     else:
         status = 0
-
-    # This causes an error with the dataTables paginate
-    # if used only in r.interactive & not also r.representation=="aadata"
-    if method not in ("read", "update"):
-        table.cancel.readable = table.cancel.writable = False
-
-    current_log = asset_get_current_log(r.id)
 
     if status:
         field = table.status
@@ -1061,7 +1080,7 @@ def asset_log_prep(r):
         #table.organisation_id.default = current_log.organisation_id
         #table.site_id.default = current_log.site_id
         table.site_id.readable = table.site_id.writable = False
-        table.room_id.readable = table.room_id.writable = False
+        table.layout_id.readable = table.layout_id.writable = False
 
     elif status == ASSET_LOG_ASSIGN:
         if method == "assignperson":
@@ -1086,7 +1105,7 @@ def asset_log_prep(r):
         table.date_until.readable = table.date_until.writable = False
         table.person_id.readable = table.person_id.writable = False
         table.site_id.readable = table.site_id.writable = False
-        table.room_id.readable = table.room_id.writable = False
+        table.layout_id.readable = table.layout_id.writable = False
         field = table.status
         field.readable = field.writable = True
         field.requires = IS_IN_SET({ASSET_LOG_CHECK    : T("Check"),
@@ -1253,8 +1272,13 @@ def asset_controller():
     # Post-processor
     def postp(r, output):
         if r.interactive and r.method != "import":
-            script = "/%s/static/scripts/S3/s3.asset.js" % r.application
-            s3.scripts.append(script)
+            if r.component_name == "log":
+                pass
+                #script = "/%s/static/scripts/S3/s3.asset_log.js" % r.application
+                #s3.scripts.append(script)
+            else:
+                script = "/%s/static/scripts/S3/s3.asset.js" % r.application
+                s3.scripts.append(script)
             S3CRUD.action_buttons(r, deletable=False)
         return output
     s3.postp = postp

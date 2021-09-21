@@ -12,7 +12,7 @@
          Facility........................site_id & asset_log.site_id
          Facility Code...................site_id.code & asset_log.site_id.code
          Facility Type......optional.....Facility, Hospital, Shelter, Warehouse, Office (default)
-         Room............................asset_log.room_id
+         Room............................asset_log.layout_id (Split via / if need hierarchy...supports up to 3 levels)
          Assigned To.....................pr_person.first_name middle_name last_name
          Condition.......................asset_log.cond
          Catalog.........................supply_catalog_item.catalog_id.name
@@ -182,7 +182,6 @@
         <xsl:variable name="AssignedTo" select="col[@field='Assigned To']/text()"/>
         <xsl:variable name="Condition" select="col[@field='Condition']/text()"/>
         <xsl:variable name="RoomName" select="col[@field='Room']/text()"/>
-        <xsl:variable name="RoomTUID" select="concat($FacilityTUID, '|', $RoomName)"/>
 
         <xsl:variable name="resourcename">
             <xsl:choose>
@@ -311,7 +310,8 @@
                 </reference>
                 <!-- Room -->
                 <xsl:if test="$RoomName!=''">
-                    <reference field="room_id" resource="org_room">
+                    <xsl:variable name="RoomTUID" select="concat($FacilityTUID, '|', $RoomName)"/>
+                    <reference field="layout_id" resource="org_site_layout">
                         <xsl:attribute name="tuid">
                             <xsl:value-of select="$RoomTUID"/>
                         </xsl:attribute>
@@ -413,31 +413,73 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Room">
-        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-        <xsl:variable name="FacilityName" select="col[@field='Facility']/text()"/>
-        <xsl:variable name="FacilityCode" select="col[@field='Facility Code']/text()"/>
-        <xsl:variable name="FacilityType" select="col[@field='Facility Type']/text()"/>
-        <xsl:variable name="FacilityTUID" select="concat($OrgName, '|', $FacilityName, '|', $FacilityCode, '|', $FacilityType)"/>
         <xsl:variable name="RoomName" select="col[@field='Room']/text()"/>
-        <xsl:variable name="RoomTUID" select="concat($FacilityTUID, '|', $RoomName)"/>
-
-        <xsl:variable name="resourcename">
-            <xsl:choose>
-                <xsl:when test="$FacilityType='Office'">org_office</xsl:when>
-                <xsl:when test="$FacilityType='Facility'">org_facility</xsl:when>
-                <xsl:when test="$FacilityType='Hospital'">hms_hospital</xsl:when>
-                <xsl:when test="$FacilityType='Shelter'">cr_shelter</xsl:when>
-                <xsl:when test="$FacilityType='Warehouse'">inv_warehouse</xsl:when>
-                <xsl:otherwise>org_office</xsl:otherwise>
-            </xsl:choose>
-        </xsl:variable>
 
         <xsl:if test="$RoomName!=''">
-            <resource name="org_room">
+
+            <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+            <xsl:variable name="FacilityName" select="col[@field='Facility']/text()"/>
+            <xsl:variable name="FacilityCode" select="col[@field='Facility Code']/text()"/>
+            <xsl:variable name="FacilityType" select="col[@field='Facility Type']/text()"/>
+            <xsl:variable name="FacilityTUID" select="concat($OrgName, '|', $FacilityName, '|', $FacilityCode, '|', $FacilityType)"/>
+
+            <xsl:variable name="root_room">
+                <xsl:choose>
+                    <xsl:when test="contains($RoomName, '/')">
+                        <xsl:value-of select="substring-before($RoomName, '/')"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$RoomName"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+            <xsl:variable name="last_part">
+                <xsl:choose>
+                    <xsl:when test="contains($RoomName, '/')">
+                        <xsl:value-of select="substring-after($RoomName, '/')"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:text></xsl:text>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+            <xsl:variable name="sub_room">
+                <xsl:choose>
+                    <xsl:when test="contains($last_part, '/')">
+                        <xsl:value-of select="substring-before($last_part, '/')"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$last_part"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+            <xsl:variable name="sub_sub_room">
+                <xsl:choose>
+                    <xsl:when test="contains($last_part, '/')">
+                        <xsl:value-of select="substring-after($last_part, '/')"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:text></xsl:text>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+
+            <xsl:variable name="resourcename">
+                <xsl:choose>
+                    <xsl:when test="$FacilityType='Office'">org_office</xsl:when>
+                    <xsl:when test="$FacilityType='Facility'">org_facility</xsl:when>
+                    <xsl:when test="$FacilityType='Hospital'">hms_hospital</xsl:when>
+                    <xsl:when test="$FacilityType='Shelter'">cr_shelter</xsl:when>
+                    <xsl:when test="$FacilityType='Warehouse'">inv_warehouse</xsl:when>
+                    <xsl:otherwise>org_office</xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+
+            <resource name="org_site_layout">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$RoomTUID"/>
+                    <xsl:value-of select="concat($FacilityTUID, '|', $root_room)"/>
                 </xsl:attribute>
-                <data field="name"><xsl:value-of select="$RoomName"/></data>
+                <data field="name"><xsl:value-of select="$root_room"/></data>
                 <reference field="site_id">
                     <xsl:attribute name="resource">
                         <xsl:value-of select="$resourcename"/>
@@ -447,6 +489,51 @@
                     </xsl:attribute>
                 </reference>
             </resource>
+
+            <xsl:if test="$sub_room!=''">
+                <resource name="org_site_layout">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($FacilityTUID, '|', $root_room, '/', $sub_room)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$sub_room"/></data>
+                    <reference field="site_id">
+                        <xsl:attribute name="resource">
+                            <xsl:value-of select="$resourcename"/>
+                        </xsl:attribute>
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$FacilityTUID"/>
+                        </xsl:attribute>
+                    </reference>
+                    <reference field="parent" resource="org_site_layout">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($FacilityTUID, '|', $root_room)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+
+            <xsl:if test="$sub_sub_room!=''">
+                <resource name="org_site_layout">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($FacilityTUID, '|', $RoomName)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$sub_sub_room"/></data>
+                    <reference field="site_id">
+                        <xsl:attribute name="resource">
+                            <xsl:value-of select="$resourcename"/>
+                        </xsl:attribute>
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$FacilityTUID"/>
+                        </xsl:attribute>
+                    </reference>
+                    <reference field="parent" resource="org_site_layout">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($FacilityTUID, '|', $root_room, '/', $sub_room)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+
         </xsl:if>
 
     </xsl:template>

@@ -100,7 +100,7 @@ def vehicle():
                               )
     # Label changes
     table.sn.label = T("License Plate")
-    s3db.asset_log.room_id.label = T("Parking Area")
+    s3db.asset_log.layout_id.label = T("Parking Area")
 
     # CRUD strings
     s3.crud_strings[tablename] = Storage(

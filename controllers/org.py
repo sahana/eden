@@ -342,27 +342,6 @@ def person():
     return s3_rest_controller("pr", "person")
 
 # -----------------------------------------------------------------------------
-def room():
-    """ RESTful CRUD controller """
-
-    def prep(r):
-
-        field = r.table.site_id
-        field.readable = field.writable = True
-
-        if r.representation == "popup":
-            site_id = r.get_vars.get("site_id")
-            if site_id:
-                # Coming from dynamically filtered AddResourceLink
-                field.default = site_id
-                field.writable = False
-
-        return True
-    s3.prep = prep
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
 def mailing_list():
     """ RESTful CRUD controller """
 
