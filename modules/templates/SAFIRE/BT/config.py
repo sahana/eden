@@ -100,7 +100,7 @@ def config(settings):
                     ltable = current.s3db.asset_log
                     logs = current.db(ltable.deleted == False).select(ltable.asset_id,
                                                                       ltable.status,
-                                                                      orderby = ~ltable.datetime,
+                                                                      orderby = ~ltable.date,
                                                                       )
                     for log in logs:
                         asset_id = log.asset_id
@@ -122,7 +122,7 @@ def config(settings):
                     ltable = current.s3db.asset_log
                     logs = current.db(ltable.deleted == False).select(ltable.asset_id,
                                                                       ltable.status,
-                                                                      orderby = ~ltable.datetime,
+                                                                      orderby = ~ltable.date,
                                                                       )
                     for log in logs:
                         asset_id = log.asset_id
