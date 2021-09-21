@@ -1321,11 +1321,11 @@ def config(settings):
         #    #description = "Allow affected individuals & households to register to receive compensation and distributions",
         #    module_type = 10,
         #)),
-        #("cr", Storage(
-        #    name_nice = T("Shelters"),
-        #    #description = "Tracks the location, capacity and breakdown of victims in Shelters",
-        #    module_type = 10
-        #)),
+        ("cr", Storage(
+            name_nice = T("Shelters"),
+            #description = "Tracks the location, capacity and breakdown of victims in Shelters",
+            module_type = 10
+        )),
         #("dc", Storage(
         #   name_nice = T("Assessments"),
         #   #description = "Data collection tool",

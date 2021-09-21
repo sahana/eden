@@ -165,7 +165,7 @@ class ShelterModel(S3Model):
                                                  multiple=True
                                                  )
 
-        shelter_environment_id = S3ReusableField("cr_shelter_environment_id",
+        shelter_environment_id = S3ReusableField("shelter_environment_id",
                                                  "list:reference cr_shelter_environment",
                                                  label = T("Environmental Characteristics"),
                                                  ondelete = "RESTRICT",

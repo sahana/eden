@@ -1986,7 +1986,7 @@ class BRAssistanceModel(S3Model):
                     (table.deleted == False)
             rows = db(query).select(table.theme_id)
             theme_ids = [row.theme_id for row in rows if row.theme_id]
-            measure.update_record(theme_ids=theme_ids)
+            measure.update_record(theme_ids = theme_ids)
 
             # Auto-link to case activity
             settings = current.deployment_settings
@@ -2033,7 +2033,7 @@ class BRAssistanceModel(S3Model):
                     (table.deleted == False)
             rows = db(query).select(table.theme_id)
             theme_ids = [row.theme_id for row in rows if row.theme_id]
-            measure.update_record(theme_ids=theme_ids)
+            measure.update_record(theme_ids = theme_ids)
 
     # -------------------------------------------------------------------------
     @staticmethod
