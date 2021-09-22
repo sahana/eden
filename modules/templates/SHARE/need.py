@@ -30,7 +30,6 @@
 __all__ = ("NeedsModel",
            "NeedsActivityModel",
            "NeedsContactModel",
-           "NeedsDemographicsModel",
            "NeedsEventModel",
            "NeedsItemsModel",
            "NeedsLineModel",
@@ -303,105 +302,6 @@ class NeedsContactModel(S3Model):
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary = ("need_id",
                                                             "person_id",
-                                                            ),
-                                                 ),
-                       )
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
-
-# =============================================================================
-class NeedsDemographicsModel(S3Model):
-    """
-        Simple Requests Management System
-        - optional link to Demographics
-
-        @ToDo: Auto-populate defaults for Items based on Demographics
-    """
-
-    names = ("need_demographic",
-             )
-
-    def model(self):
-
-        T = current.T
-
-        is_float_represent = IS_FLOAT_AMOUNT.represent
-        float_represent = lambda v: is_float_represent(v, precision=2)
-
-        # ---------------------------------------------------------------------
-        # Needs <=> Demographics
-        #
-        if current.s3db.table("stats_demographic"):
-            title = current.response.s3.crud_strings["stats_demographic"].label_create
-            parameter_id_comment = S3PopupLink(c = "stats",
-                                               f = "demographic",
-                                               vars = {"child": "parameter_id"},
-                                               title = title,
-                                               )
-        else:
-            parameter_id_comment = None
-
-        tablename = "need_demographic"
-        self.define_table(tablename,
-                          self.need_need_id(empty = False),
-                          self.super_link("parameter_id", "stats_parameter",
-                                          instance_types = ("stats_demographic",),
-                                          label = T("Demographic"),
-                                          represent = self.stats_parameter_represent,
-                                          readable = True,
-                                          writable = True,
-                                          empty = False,
-                                          comment = parameter_id_comment,
-                                          ),
-                          need_timeframe()(),
-                          Field("value", "double",
-                                label = T("Number"),
-                                #label = T("Number in Need"),
-                                represent = float_represent,
-                                requires = IS_NOT_EMPTY(),
-                                ),
-                          Field("value_committed", "double",
-                                label = T("Number Committed"),
-                                represent = float_represent,
-                                requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum = 1.0)
-                                            ),
-                                # Enable in templates as-required
-                                readable = False,
-                                # Normally set automatically
-                                writable = False,
-                                ),
-                          Field("value_uncommitted", "double",
-                                label = T("Number Uncommitted"),
-                                represent = float_represent,
-                                requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum = 1.0)
-                                            ),
-                                # Enable in templates as-required
-                                readable = False,
-                                # Normally set automatically
-                                writable = False,
-                                ),
-                          Field("value_reached", "double",
-                                label = T("Number Reached"),
-                                represent = float_represent,
-                                requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum = 1.0)
-                                            ),
-                                # Enable in templates as-required
-                                readable = False,
-                                # Normally set automatically
-                                writable = False,
-                                ),
-                          s3_comments(),
-                          *s3_meta_fields())
-
-        self.configure(tablename,
-                       deduplicate = S3Duplicate(primary = ("need_id",
-                                                            "parameter_id",
                                                             ),
                                                  ),
                        )
