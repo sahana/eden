@@ -171,11 +171,11 @@ class DVIModel(S3Model):
         define_table(tablename,
                      # Instance, not Component
                      # If needed to be accessed via pr_PentityRepresent, then need to pass in custom instance_types
-                     # instance_types = Storage(dvi_morgue = T("Morgue"), ...)
+                     # instance_types = {"dvi_morgue": T("Morgue")}
                      super_link("pe_id", "pr_pentity"),
                      # Instance, not Component
                      # If needed to be accessed via org_SiteRepresent, then need to pass in custom instance_types
-                     # instance_types = Storage(dvi_morgue = T("Morgue"), ...)
+                     # instance_types = {"dvi_morgue": T("Morgue")}
                      super_link("site_id", "org_site"),
                      Field("name", length=64, unique=True, notnull=True,
                            label = T("Morgue"),
@@ -241,7 +241,7 @@ class DVIModel(S3Model):
         define_table(tablename,
                      # Instance, not Component
                      # If needed to be accessed via pr_PentityRepresent, then need to pass in custom instance_types
-                     # instance_types = Storage(dvi_body = T("Body"), ...)
+                     # instance_types = {"dvi_body": T("Body")}
                      super_link("pe_id", "pr_pentity"),
                      super_link("track_id", "sit_trackable"),
                      self.pr_pe_label(requires = [IS_NOT_EMPTY(error_message=T("Enter a unique label!")),

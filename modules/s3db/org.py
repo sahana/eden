@@ -5879,8 +5879,8 @@ class org_SiteRepresent(S3Represent):
                               with "[id]" as placeholder for the key
             @param multiple: assume a value list by default
             @param show_type: show the instance_type
-            @param instance_types: Storage(tablename = T("Label"))
-                                   None to use default instance_types
+            @param instance_types: dict of instance types to replace/add to default list
+                                   {tablename = T("Label")}
                                    
         """
 
@@ -5899,7 +5899,7 @@ class org_SiteRepresent(S3Represent):
             # Need a custom lookup
             self.lookup_rows = self.custom_lookup_rows
 
-        self.instance_types = instance_types
+        self.instance_types = instance_types or {}
         self.L10n = {}
         self.show_type = show_type
 
@@ -6125,9 +6125,8 @@ class org_SiteRepresent(S3Represent):
                 type_names = represent.multiple(facility_types)
                 name = "%s (%s)" % (name, type_names)
             else:
-                if self.instance_types:
-                    instance_type_nice = self.instance_types.get(instance_type, None)
-                else:
+                instance_type_nice = self.instance_types.get(instance_type, None)
+                if not instance_type_nice:
                     instance_type_nice = current.auth.org_site_types.get(instance_type, None)
                 if instance_type_nice:
                     name = "%s (%s)" % (name, instance_type_nice)

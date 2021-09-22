@@ -223,7 +223,7 @@ class OutreachAreaModel(S3Model):
                                                table.deleted,
                                                table.deleted_fk,
                                                table.organisation_id,
-                                               limitby=(0, 1),
+                                               limitby = (0, 1),
                                                ).first()
         if not row:
             return
@@ -301,8 +301,8 @@ class OutreachHouseholdModel(S3Model):
         define_table(tablename,
                      super_link("doc_id", "doc_entity"),
                      # Instance, not Component
-                     # If needed to be accessed via pr_PentityRepresent, then need to pass in custom instance_types
-                     # instance_types = Storage(po_household = T("Household"), ...)
+                     # If needed to be accessed via pr_PersonEntityRepresent, then need to pass in custom instance_types
+                     # instance_types = {"po_household": T("Household")}
                      super_link("pe_id", "pr_pentity"),
                      self.po_area_id(),
                      # Controller (area prep) makes it inherit Lx from area

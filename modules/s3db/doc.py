@@ -79,7 +79,7 @@ class DocumentLibrary(S3Model):
         # ---------------------------------------------------------------------
         # Document-referencing entities
         #
-        instance_types = Storage() # This can be an empty list as doc_entity is never exposed to end-users
+        instance_types = {} # This can be an empty list as doc_entity is never exposed to end-users
 
         tablename = "doc_entity"
         self.super_entity(tablename, "doc_id", instance_types)

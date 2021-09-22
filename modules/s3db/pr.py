@@ -198,30 +198,30 @@ class PersonEntityModel(S3Model):
         # instance_types
         # - used in pr_PersonEntityRepresent if show_type=True (default)
         # - can pass a custom set into the represent in templates (to change labels &/or add custom models)
-        pe_types = Storage(cr_shelter = SHELTER,
-                           # Not commonly used, so can be added in template if-required:
-                           #dvi_body = T("Body"),
-                           #dvi_morgue = T("Morgue"),
-                           edu_school = T("School"),
-                           #event_alert = T("Alert"),
-                           fire_station = T("Fire Station"),
-                           hms_hospital = T("Hospital"),
-                           hrm_training_event = T("Training Event"),
-                           inv_warehouse = T("Warehouse"),
-                           org_organisation = messages.ORGANISATION,
-                           org_group = org_group_label,
-                           org_facility = T("Facility"),
-                           org_office = T("Office"),
-                           police_station = T("Police Station"),
-                           pr_person = T("Person"),
-                           pr_forum = T("Forum"),
-                           pr_group = T("Person Group"),
-                           pr_realm = T("Realm"),
-                           # Not PEs currently:
-                           #transport_airport = T("Airport"),
-                           #transport_heliport = T("Heliport"),
-                           #transport_seaport = T("Seaport"),
-                           )
+        pe_types = {"cr_shelter": SHELTER,
+                    # Not commonly used, so can be added in template if-required:
+                    #"dvi_body": T("Body"),
+                    #"dvi_morgue": T("Morgue"),
+                    "edu_school": T("School"),
+                    #"event_alert": T("Alert"),
+                    "fire_station": T("Fire Station"),
+                    "hms_hospital": T("Hospital"),
+                    "hrm_training_event": T("Training Event"),
+                    "inv_warehouse": T("Warehouse"),
+                    "org_organisation": messages.ORGANISATION,
+                    "org_group": org_group_label,
+                    "org_facility": T("Facility"),
+                    "org_office": T("Office"),
+                    "police_station": T("Police Station"),
+                    "pr_person": T("Person"),
+                    "pr_forum": T("Forum"),
+                    "pr_group": T("Person Group"),
+                    "pr_realm": T("Realm"),
+                    # Not PEs currently:
+                    #"transport_airport": T("Airport"),
+                    #"transport_heliport": T("Heliport"),
+                    #"transport_seaport": T("Seaport"),
+                    }
 
         pr_pentity_represent = pr_PersonEntityRepresent()
 
@@ -7209,14 +7209,14 @@ class pr_PersonEntityRepresent(S3Represent):
             @param show_link: a URL (as string) to link representations to,
                               with "[id]" as placeholder for the key
             @param none: representation for empty fields (None or empty list)
-            @param instance_types: Storage(tablename = T("Label"))
-                                   None to use default instance_types
+            @param instance_types: dict of instance types to replace/add to default list
+                                   {tablename = T("Label")}
                                    
         """
 
         self.show_label = show_label
         self.default_label = default_label
-        self.instance_types = instance_types
+        self.instance_types = instance_types or {}
         self.show_type = show_type
         self.training_event_represent = None
 
@@ -7381,10 +7381,8 @@ class pr_PersonEntityRepresent(S3Represent):
             pe_str = "[%s]" % label
 
         if self.show_type:
-            if self.instance_types:
-                instance_type_nice = self.instance_types.get(instance_type, instance_type) or \
-                                     current.messages["NONE"]
-            else:
+            instance_type_nice = self.instance_types.get(instance_type, None)
+            if not instance_type_nice:
                 etable = current.s3db.pr_pentity
                 instance_type_nice = etable.instance_type.represent(instance_type)
             pe_str = "%s (%s)" % (pe_str,

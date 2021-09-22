@@ -684,7 +684,7 @@ class DeploymentModel(S3Model):
                 event_type = "Floods"
             etable = s3db.event_event_type
             event_type = db(etable.name == event_type).select(etable.id,
-                                                              limitby=(0, 1)
+                                                              limitby = (0, 1)
                                                               ).first()
             if event_type:
                 update["event_type_id"] = event_type.id
@@ -884,8 +884,8 @@ class DeploymentAlertModel(S3Model):
         tablename = "deploy_alert"
         define_table(tablename,
                      # Instance, not Component
-                     # If needed to be accessed via pr_PentityRepresent, then need to pass in custom instance_types
-                     # instance_types = Storage(deploy_alert = T("Deployment Alert"), ...)
+                     # If needed to be accessed via pr_PersonEntityRepresent, then need to pass in custom instance_types
+                     # instance_types = {"deploy_alert": T("Deployment Alert")}
                      self.super_link("pe_id", "pr_pentity"),
                      mission_id(
                         requires = IS_ONE_OF(db,
