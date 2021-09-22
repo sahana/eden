@@ -478,7 +478,7 @@ S3.gis.yx = [
 
         var strategy,
             strategies = layer.strategies;
-        for (var i=0, len=strategies.length; i < len; i++) {
+        for (var i = 0, len = strategies.length; i < len; i++) {
             strategy = strategies[i];
             if (strategy.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
                 // Re-enable
@@ -490,21 +490,24 @@ S3.gis.yx = [
                 break;
             }
         }
-        // Enable the layer if it isn't visible yet
-        if (!layer.visibility) {
-            layer.setVisibility(true);
-        }
         // Disable this event
         layer.events.un({
             'loadend': search_layer_loadend
         });
     };
     // Pass to Global scope to be called from s3.dataTables.js (obsolete?)
-    S3.gis.search_layer_loadend = search_layer_loadend;
+    //S3.gis.search_layer_loadend = search_layer_loadend;
 
     /**
      * Refresh the given layer on all maps
      * - called by s3.filter.js
+     *
+     * Issue: If the refresh hits the exact moment after the previous loading has completed
+     *        but before its loadend is fired, then the zoomBounds callback of
+     *        search_layer_loadend would be fired by the initial layer loading rather than the
+     *        refresh - thus swallowing the one-off callback sometimes.
+     *        If the initial layer loading is not bbox'ed then this is of no consequence,
+     *        so a solution is to drop the bbox-query server-side if it comes in via POST.
      *
      * Parameters:
      * layer_id - {String} ID of the layer to be refreshed
@@ -512,114 +515,69 @@ S3.gis.yx = [
      *                   [[key, value], [key, value], ...]
      */
     S3.gis.refreshLayer = function(layer_id, queries) {
-
-        var refreshLayer = function(layer) {
-
-            if (layer && (layer.s3_layer_id == layer_id)) {
-
-                var url = layer.protocol.url,
-                    protocol_options = layer.protocol.options,
-                    ajax_options;
-
-                if (queries && queries.length) {
-
-                    // Apply filters to ajax URL
-                    url = S3.search.filterURL(url, queries);
-
-                    // Convert to POST
-                    ajax_options = {
-                        data: [],
-                        type: 'GET',
-                        url: url,
-                    };
-                    S3.search.searchRewriteAjaxOptions(ajax_options, 'form');
-
-                    // Update protocol options
-                    protocol_options.params = ajax_options.data;
-                    protocol_options.readWithPOST = true;
-                    protocol_options.url = ajax_options.url;
-                }
-
-                // If map is showing then refresh the layer
-                map = this.map;
-                if (map.s3.mapWin.isVisible()) {
-
-                    // Enable the layer if not visible yet
-                    if (!layer.visibility) {
-                        layer.setVisibility(true);
+        var maps = S3.gis.maps;
+        var map_id, map, layers, i, len, layer, url, strategies, j, jlen, strategy;
+        for (map_id in maps) {
+            map = maps[map_id];
+            layers = map.layers;
+            for (i = 0, len = layers.length; i < len; i++) {
+                layer = layers[i];
+                if (layer && (layer.s3_layer_id == layer_id)) {
+                    // Apply any URL filters
+                    if (queries && queries.length) {
+                        url = layer.protocol.url;
+                        url = S3.search.filterURL(url, queries);
+                        //layer.protocol.options.url = url;
+                        // Convert to POST
+                        var ajax_options = {data: [],
+                                            type: 'GET',
+                                            url: url,
+                                            };
+                        S3.search.searchRewriteAjaxOptions(ajax_options, 'form');
+                        var protocol_options = layer.protocol.options;
+                        protocol_options.params = ajax_options['data'];
+                        protocol_options.readWithPOST = true;
+                        protocol_options.url = ajax_options['url'];
                     }
-
-                    // Wait for layersLoaded
-                    $.when(layersLoaded(this.map_id)).then(
-                        function(/* status */) {
-
-                            var strategies = layer.strategies,
-                                numStrategies = strategies.length,
-                                strategy,
-                                i;
-
-                            // Disable clustering until refreshed
-                            for (i = 0; i < numStrategies; i++) {
-                                strategy = strategies[i];
-                                if (strategy.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
-                                    strategy.deactivate();
-                                    break;
-                                }
+                    // If map is showing then refresh the layer
+                    if (map.s3.mapWin.isVisible()) {
+                        // Set an event to re-enable Clustering when the layer is reloaded
+                        layer.events.on({
+                            'loadend': search_layer_loadend
+                        });
+                        strategies = layer.strategies;
+                        jlen = strategies.length;
+                        // Disable BBOX and Clustering to get correct bounds
+                        for (j = 0; j < jlen; j++) {
+                            strategy = strategies[j];
+                            if (strategy.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
+                                strategy.deactivate();
+                                break;
                             }
-                            // Set an event to re-enable Clustering when the layer has been reloaded
-                            // - we do this only on loadstart, because if there is a previous
-                            //   response (e.g. from initial layer loading after switching to
-                            //   the map tab of summary), triggerRead will fire loadend first,
-                            //   thereby consuming our one-off loadend handler before the reload
-                            //   even starts
-                            var set_search_layer_loadend = function() {
-                                layer.events.on({'loadend': search_layer_loadend});
-                                layer.events.un({'loadstart': set_search_layer_loadend});
-                            };
-                            // Close open popups before reloading
-                            while (layer.map.popups.length) {
-                                layer.map.removePopup(layer.map.popups[0]);
-                            }
-                            // Reload the layer, disabling current bounds
-                            for (i = 0; i < numStrategies; i++) {
-                                strategy = strategies[i];
+                        }
+                        if (layer.visibility) {
+                            // Reload the layer
+                            for (j = 0; j < jlen; j++) {
+                                strategy = strategies[j];
                                 if (strategy.CLASS_NAME == 'OpenLayers.Strategy.BBOX' ||
                                     strategy.CLASS_NAME == 'OpenLayers.Strategy.ZoomBBOX') {
                                     // Set bounds to maxExtent so that filter doesn't apply
                                     strategy.bounds = null;
-                                    // Trigger read to reload the layer
-                                    layer.events.on({
-                                        'loadstart': set_search_layer_loadend
-                                    });
                                     strategy.triggerRead();
                                     break;
                                 }
                             }
-                            // Call Custom Call-back
-                            if (undefined !== map.s3.layerRefreshed) {
-                                map.s3.layerRefreshed(layer);
-                            }
-                        },
-                        function(status) {
-                            // Layer-loading failed
-                            s3_debug(status);
-                        },
-                        function(status) {
-                            // Layer-loading still in progress
-                            s3_debug(status);
+                        } else {
+                            // Show the Layer
+                            layer.setVisibility(true);
                         }
-                    );
+                        if (undefined != map.s3.layerRefreshed) {
+                            // Call Custom Call-back
+                            map.s3.layerRefreshed(layer);
+                        }
+                    }
                 }
             }
-        };
-
-        var maps = S3.gis.maps,
-            map_id,
-            map;
-
-        for (map_id in maps) {
-            map = maps[map_id];
-            map.layers.forEach(refreshLayer, {"map_id": map_id, "map": map});
         }
     };
 
@@ -1312,7 +1270,7 @@ S3.gis.yx = [
                             var child,
                                 dir,
                                 sibling;
-                            for (var i=0; i < len; i++) {
+                            for (var i = 0; i < len; i++) {
                                 dir = children[i];
                                 //child = this.createNode(dir); // Adds baseAttrs which we don't want
                                 child = new Ext.tree.TreePanel.nodeTypes[dir.nodeType](dir);
@@ -3681,8 +3639,7 @@ S3.gis.yx = [
     var tooltipSelect = function(event) {
 
         var feature = event.feature,
-            layer = feature.layer,
-            j;
+            layer = feature.layer;
 
         // Style the feature as highlighted
         feature.renderIntent = 'select';
@@ -3725,7 +3682,7 @@ S3.gis.yx = [
                         key,
                         keys = s3_popup_format.split('{');
 
-                    for (j = 0; j < keys.length; j++) {
+                    for (var j = 0; j < keys.length; j++) {
                         key = keys[j].split('}')[0];
                         defaults[key] = '';
                     }
@@ -4003,11 +3960,10 @@ S3.gis.yx = [
             return;
         }*/
         var geometry = feature.geometry,
-            i,
             len;
         if (geometry.CLASS_NAME != 'OpenLayers.Geometry.Point') {
             // If there is a Point feature also-firing then we shouldn't
-            for (i=0, len=s3.clicking.length; i<len; ++i) {
+            for (var i = 0, len = s3.clicking.length; i < len; ++i) {
                 if (s3.clicking[i].geometry.CLASS_NAME == 'OpenLayers.Geometry.Point') {
                     return;
                 }
@@ -4035,8 +3991,7 @@ S3.gis.yx = [
             row,
             value,
             title,
-            template,
-            j;
+            template;
 
         if (feature.cluster) {
             // Cluster
@@ -4046,7 +4001,7 @@ S3.gis.yx = [
             //var length = Math.min(cluster.length, 9);
             var length = cluster.length,
                 map_id = s3.id;
-            for (i = 0; i < length; i++) {
+            for (var i = 0; i < length; i++) {
                 attributes = cluster[i].attributes;
                 if (undefined !== layer.s3_popup_format) {
                     // GeoJSON Feature Layers
@@ -4057,7 +4012,7 @@ S3.gis.yx = [
                     var defaults = {},
                         key,
                         keys = s3_popup_format.split('{');
-                    for (j = 0; j < keys.length; j++) {
+                    for (var j = 0; j < keys.length; j++) {
                         key = keys[j].split('}')[0];
                         defaults[key] = '';
                     }
@@ -4213,19 +4168,20 @@ S3.gis.yx = [
                     } else {
                         name = '<h3>' + attributes.name + '</h3>';
                     }
-                    var description;
+                    var description,
+                        link,
+                        data,
+                        image;
                     if (undefined === attributes.description) {
                         description = '';
                     } else {
                         description = '<p>' + attributes.description + '</p>';
                     }
-                    var link;
                     if (undefined === attributes.link) {
                         link = '';
                     } else {
                         link = '<a href="' + attributes.link + '" target="_blank">' + attributes.link + '</a>';
                     }
-                    var data;
                     if (undefined === attributes.data) {
                         data = '';
                     } else if (attributes.data.indexOf('http://') === 0) {
@@ -4235,7 +4191,6 @@ S3.gis.yx = [
                     } else {
                         data = '<p>' + attributes.data + '</p>';
                     }
-                    var image;
                     if (undefined === attributes.image) {
                         image = '';
                     } else if (attributes.image.indexOf('http://') === 0) {
@@ -5456,10 +5411,9 @@ S3.gis.yx = [
     var addPolygonPanel = function(map_id, control) {
 
         if (undefined === control) {
-            var i,
-                len,
+            var len,
                 controls = S3.gis.maps[map_id].controls;
-            for (i=0, len=controls.length; i < len; i++) {
+            for (var i = 0, len = controls.length; i < len; i++) {
                 control = controls[i];
                 if (control.CLASS_NAME == 'OpenLayers.Control.DrawFeature') {
                     break;
@@ -6139,7 +6093,7 @@ S3.gis.yx = [
                             // We have vars
                             var pairs = document.location.search.split('?')[1].split('&');
                             var pair = [];
-                            for (var i=0; i < pairs.length; i++) {
+                            for (var i = 0; i < pairs.length; i++) {
                                 pair = pairs[i].split('=');
                                 if ((decodeURIComponent(pair[0]) == 'config') && decodeURIComponent(pair[1]) != config_id) {
                                     pairs[i] = 'config=' + config_id;
@@ -6511,7 +6465,7 @@ S3.gis.yx = [
                                 });
                                 var pcs = [],
                                     q;
-                                for (var i=0; i < ids.length; i++) {
+                                for (var i = 0; i < ids.length; i++) {
                                     q = $('#' + ids[i]).serialize();
                                     if (q) {
                                         pcs.push(q);
@@ -6530,7 +6484,7 @@ S3.gis.yx = [
                                     pcs.push(q);
                                 }
                                 if (pcs.length > 0) {
-                                    var query = pcs.join("&");
+                                    var query = pcs.join('&');
                                     $.ajaxS3({
                                         type: 'POST',
                                         url: update_url,
@@ -6566,7 +6520,7 @@ S3.gis.yx = [
             tooltip: i18n.gis_clearlayers,
             handler: function() {
                 var layers = map.layers;
-                for (var i=0, len=layers.length; i < len; i++) {
+                for (var i = 0, len = layers.length; i < len; i++) {
                     var layer = layers[i];
                     if (!layer.isBaseLayer) {
                         layer.setVisibility(false);

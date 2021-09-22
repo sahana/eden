@@ -561,7 +561,7 @@ class S3Request(object):
         del get_vars["$search"]
         for k, v in filters.items():
             k0 = k[0]
-            if k == "$filter" or k[0:2] == "$$" or \
+            if k == "$filter" or k[0:2] == "$$" or k == "bbox" or \
                k0 != "_" and ("." in k or k0 == "(" and ")" in k):
                 try:
                     value = decode(v) if decode else v
