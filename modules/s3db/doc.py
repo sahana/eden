@@ -79,57 +79,10 @@ class DocumentLibrary(S3Model):
         # ---------------------------------------------------------------------
         # Document-referencing entities
         #
-        entity_types = Storage(asset_asset = T("Asset"),
-                               cap_resource = T("CAP Resource"),
-                               cms_post = T("Post"),
-                               cr_shelter = T("Shelter"),
-                               # Deploy only used by IFRC/RMS templates
-                               # @ToDo: Extend entity_types within the template
-                               deploy_mission = T("Mission"),
-                               dc_response = T(settings.get_dc_response_label()),
-                               # DVR only used by archived DRK/STL templates
-                               #dvr_case = T("Case"),
-                               #dvr_case_activity = T("Case Activity"),
-                               event_event = T("Event"),
-                               event_incident = T("Incident"),
-                               event_incident_report = T("Incident Report"),
-                               event_scenario = T("Scenario"),
-                               event_sitrep = T("Situation Report"),
-                               fin_expense = T("Expense"),
-                               fire_station = T("Fire Station"),
-                               hms_hospital = T("Hospital"),
-                               hrm_human_resource = T("Human Resource"),
-                               hrm_training_event_report = T("Training Event Report"),
-                               inv_adj = T("Stock Adjustment"),
-                               inv_recv = T("Incoming Shipment"),
-                               inv_requisition = T("Requisition"),
-                               inv_send = T("Sent Shipment"),
-                               inv_warehouse = T("Warehouse"),
-                               # Only used by SHARE template
-                               # @ToDo: Extend entity_types within the template
-                               need_need = T("Need"),
-                               need_response = T("Activity Group"),
-                               police_station = T("Police Station"),
-                               pr_group = T("Team"),
-                               project_project = T("Project"),
-                               project_activity = T("Project Activity"),
-                               project_framework = T("Project Framework"),
-                               project_programme = T("Project Programme"),
-                               project_task = T("Task"),
-                               org_facility = T("Facility"),
-                               org_group = T("Organization Group"),
-                               org_office = T("Office"),
-                               req_need = T("Need"),
-                               security_seized_item = T("Seized Item"),
-                               # STDM only used by archived STDM template
-                               #stdm_tenure = T("Tenure"),
-                               vulnerability_document = T("Vulnerability Document"),
-                               vulnerability_risk = T("Risk"),
-                               vulnerability_evac_route = T("Evacuation Route"),
-                               )
+        instance_types = Storage() # This can be an empty list as doc_entity is never exposed to end-users
 
         tablename = "doc_entity"
-        self.super_entity(tablename, "doc_id", entity_types)
+        self.super_entity(tablename, "doc_id", instance_types)
 
         # Components
         doc_id = "doc_id"

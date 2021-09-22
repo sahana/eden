@@ -883,6 +883,9 @@ class DeploymentAlertModel(S3Model):
 
         tablename = "deploy_alert"
         define_table(tablename,
+                     # Instance, not Component
+                     # If needed to be accessed via pr_PentityRepresent, then need to pass in custom instance_types
+                     # instance_types = Storage(deploy_alert = T("Deployment Alert"), ...)
                      self.super_link("pe_id", "pr_pentity"),
                      mission_id(
                         requires = IS_ONE_OF(db,

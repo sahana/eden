@@ -1399,23 +1399,28 @@ class S3Model(object):
 
         table = db.define_table(tablename,
                                 Field(key, "id",
-                                      readable=False,
-                                      writable=False),
+                                      readable = False,
+                                      writable = False,
+                                      ),
                                 Field("deleted", "boolean",
-                                      readable=False,
-                                      writable=False,
-                                      default=False),
+                                      default = False,
+                                      readable = False,
+                                      writable = False,
+                                      ),
                                 Field("instance_type",
                                       represent = lambda opt: \
                                         types.get(opt, opt) or \
                                             current.messages["NONE"],
-                                      readable=False,
-                                      writable=False),
+                                      readable = False,
+                                      writable = False,
+                                      ),
                                 Field("uuid", length=128,
-                                      readable=False,
-                                      writable=False),
-                                sequence_name=sequence_name,
-                                *fields, **args)
+                                      readable = False,
+                                      writable = False,
+                                      ),
+                                sequence_name = sequence_name,
+                                *fields,
+                                **args)
 
         return table
 

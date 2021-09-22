@@ -300,6 +300,9 @@ class OutreachHouseholdModel(S3Model):
         tablename = "po_household"
         define_table(tablename,
                      super_link("doc_id", "doc_entity"),
+                     # Instance, not Component
+                     # If needed to be accessed via pr_PentityRepresent, then need to pass in custom instance_types
+                     # instance_types = Storage(po_household = T("Household"), ...)
                      super_link("pe_id", "pr_pentity"),
                      self.po_area_id(),
                      # Controller (area prep) makes it inherit Lx from area

@@ -116,12 +116,12 @@ class DVIModel(S3Model):
                      Field("description", "text"),
                      location_id(label=T("Location")),
                      Field("status", "integer",
-                           requires = IS_IN_SET(task_status,
-                                                zero=None),
                            default = 1,
                            label = T("Task Status"),
-                           represent = lambda opt: \
-                                       task_status.get(opt, UNKNOWN_OPT)),
+                           requires = IS_IN_SET(task_status,
+                                                zero=None),
+                           represent = S3Represent(options = task_status),
+                           ),
                      *s3_meta_fields())
 
         # CRUD Strings
@@ -139,7 +139,7 @@ class DVIModel(S3Model):
 
         # Resource configuration
         configure(tablename,
-                  orderby="dvi_recreq.date desc",
+                  orderby = "dvi_recreq.date desc",
                   list_fields = ["id",
                                  "date",
                                  "marker",
@@ -150,24 +150,32 @@ class DVIModel(S3Model):
                                  ])
 
         # Reusable fields
-        represent = S3Represent(lookup="dvi_recreq",
+        represent = S3Represent(lookup = "dvi_recreq",
                                 fields = ["marker", "date", "bodies_found"],
                                 labels = T("[%(marker)s] %(date)s: %(bodies_found)s bodies"),
                                 )
         dvi_recreq_id = S3ReusableField("dvi_recreq_id", "reference %s" % tablename,
-                                        requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                                        "dvi_recreq.id",
-                                                        represent)),
+                                        requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "dvi_recreq.id",
+                                                              represent,
+                                                              )),
                                         represent = represent,
-                                        label=T("Recovery Request"),
-                                        ondelete = "RESTRICT")
+                                        label = T("Recovery Request"),
+                                        ondelete = "RESTRICT",
+                                        )
 
         # ---------------------------------------------------------------------
         # Morgue
         #
         tablename = "dvi_morgue"
         define_table(tablename,
+                     # Instance, not Component
+                     # If needed to be accessed via pr_PentityRepresent, then need to pass in custom instance_types
+                     # instance_types = Storage(dvi_morgue = T("Morgue"), ...)
                      super_link("pe_id", "pr_pentity"),
+                     # Instance, not Component
+                     # If needed to be accessed via org_SiteRepresent, then need to pass in custom instance_types
+                     # instance_types = Storage(dvi_morgue = T("Morgue"), ...)
                      super_link("site_id", "org_site"),
                      Field("name", length=64, unique=True, notnull=True,
                            label = T("Morgue"),
@@ -194,10 +202,13 @@ class DVIModel(S3Model):
 
         # Reusable Field
         morgue_id = S3ReusableField("morgue_id", "reference %s" % tablename,
-                                    requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                                    "dvi_morgue.id", "%(name)s")),
-                                    represent = S3Represent(lookup="dvi_morgue"),
-                                    ondelete = "RESTRICT")
+                                    requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "dvi_morgue.id",
+                                                          "%(name)s",
+                                                          )),
+                                    represent = S3Represent(lookup = "dvi_morgue"),
+                                    ondelete = "RESTRICT",
+                                    )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -219,8 +230,8 @@ class DVIModel(S3Model):
 
         # Components
         self.add_components("dvi_morgue",
-                            dvi_body="morgue_id",
-                           )
+                            dvi_body = "morgue_id",
+                            )
 
         # ---------------------------------------------------------------------
         # Body
@@ -228,6 +239,9 @@ class DVIModel(S3Model):
         bool_repr = lambda opt: YES if opt else ""
         tablename = "dvi_body"
         define_table(tablename,
+                     # Instance, not Component
+                     # If needed to be accessed via pr_PentityRepresent, then need to pass in custom instance_types
+                     # instance_types = Storage(dvi_body = T("Body"), ...)
                      super_link("pe_id", "pr_pentity"),
                      super_link("track_id", "sit_trackable"),
                      self.pr_pe_label(requires = [IS_NOT_EMPTY(error_message=T("Enter a unique label!")),
@@ -318,6 +332,7 @@ class DVIModel(S3Model):
 
         tablename = "dvi_checklist"
         define_table(tablename,
+                     # Component, not Instance
                      super_link("pe_id", "pr_pentity"),
                      checklist_item("personal_effects",
                                     label = T("Inventory of Effects")),
@@ -400,28 +415,31 @@ class DVIModel(S3Model):
 
         tablename = "dvi_identification"
         define_table(tablename,
+                     # Component, not Instance
                      super_link("pe_id", "pr_pentity"),
                      Field("status", "integer",
-                           requires = IS_IN_SET(dvi_id_status, zero=None),
                            default = 1,
                            label = T("Identification Status"),
-                           represent = lambda opt: \
-                                       dvi_id_status.get(opt, UNKNOWN_OPT)),
+                           requires = IS_IN_SET(dvi_id_status, zero=None),
+                           represent = S3Represent(options = dvi_id_status),
+                           ),
                      person_id("identity",
-                               label=T("Identified as"),
+                               label = T("Identified as"),
                                comment = self.person_id_comment("identity"),
-                               empty=False),
+                               empty = False,
+                               ),
                      person_id("identified_by",
-                               default=current.auth.s3_logged_in_person(),
-                               label=T("Identified by"),
+                               default = current.auth.s3_logged_in_person(),
+                               label = T("Identified by"),
                                comment = self.person_id_comment("identified_by"),
-                               empty=False),
+                               empty = False,
+                               ),
                      Field("method", "integer",
-                           requires = IS_IN_SET(dvi_id_methods, zero=None),
                            default = 1,
                            label = T("Method used"),
-                           represent = lambda opt: \
-                                       dvi_id_methods.get(opt, UNKNOWN_OPT)),
+                           requires = IS_IN_SET(dvi_id_methods, zero=None),
+                           represent = S3Represent(options = dvi_id_methods),
+                           ),
                      Field("comment", "text"),
                      *s3_meta_fields())
 

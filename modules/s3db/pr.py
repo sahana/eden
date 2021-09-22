@@ -195,12 +195,14 @@ class PersonEntityModel(S3Model):
             org_group_label = T(org_group_label)
         else:
             org_group_label = T("Organization group")
+        # instance_types
+        # - used in pr_PersonEntityRepresent if show_type=True (default)
+        # - can pass a custom set into the represent in templates (to change labels &/or add custom models)
         pe_types = Storage(cr_shelter = SHELTER,
-                           # Deploy only used by IFRC/RMS templates
-                           # @ToDo: Extend entity_types within the template
-                           deploy_alert = T("Deployment Alert"),
-                           dvi_body = T("Body"),
-                           dvi_morgue = T("Morgue"),
+                           # Not commonly used, so can be added in template if-required:
+                           #dvi_body = T("Body"),
+                           #dvi_morgue = T("Morgue"),
+                           edu_school = T("School"),
                            #event_alert = T("Alert"),
                            fire_station = T("Fire Station"),
                            hms_hospital = T("Hospital"),
@@ -210,15 +212,15 @@ class PersonEntityModel(S3Model):
                            org_group = org_group_label,
                            org_facility = T("Facility"),
                            org_office = T("Office"),
-                           # PO only used by IFRC template
-                           # @ToDo: Extend entity_types within the template
-                           #po_area = T("Recovery Outreach Area"),
-                           po_household = T("Household"),
                            police_station = T("Police Station"),
                            pr_person = T("Person"),
                            pr_forum = T("Forum"),
                            pr_group = T("Person Group"),
                            pr_realm = T("Realm"),
+                           # Not PEs currently:
+                           #transport_airport = T("Airport"),
+                           #transport_heliport = T("Heliport"),
+                           #transport_seaport = T("Seaport"),
                            )
 
         pr_pentity_represent = pr_PersonEntityRepresent()
@@ -7195,6 +7197,7 @@ class pr_PersonEntityRepresent(S3Represent):
                  show_link = False,
                  linkto = None,
                  none = None,
+                 instance_types = None,
                  ):
         """
             Constructor
@@ -7203,10 +7206,17 @@ class pr_PersonEntityRepresent(S3Represent):
             @param default_label: the default for the ID tag label
             @param show_type: show the instance_type
             @param multiple: assume a value list by default
+            @param show_link: a URL (as string) to link representations to,
+                              with "[id]" as placeholder for the key
+            @param none: representation for empty fields (None or empty list)
+            @param instance_types: Storage(tablename = T("Label"))
+                                   None to use default instance_types
+                                   
         """
 
         self.show_label = show_label
         self.default_label = default_label
+        self.instance_types = instance_types
         self.show_type = show_type
         self.training_event_represent = None
 
@@ -7244,13 +7254,16 @@ class pr_PersonEntityRepresent(S3Represent):
             db = current.db
             petable = db.pr_pentity
             pe_record = db(petable._id == k).select(petable.instance_type,
-                                                    limitby=(0, 1)
+                                                    limitby = (0, 1)
                                                     ).first()
             if not pe_record:
                 return v
             tablename = pe_record.instance_type
             prefix, name = tablename.split("_", 1)
-            url = URL(c=prefix, f=name, args=["read"], vars={"~.pe_id": k})
+            url = URL(c=prefix, f=name,
+                      args = ["read"],
+                      vars = {"~.pe_id": k},
+                      )
             # Strip off any .aadata extension!
             url = url.replace(".aadata", "")
             return A(v, _href=url)
@@ -7281,7 +7294,8 @@ class pr_PersonEntityRepresent(S3Represent):
         etable = s3db.pr_pentity
         rows = db(key.belongs(values)).select(key,
                                               etable.pe_label,
-                                              etable.instance_type)
+                                              etable.instance_type,
+                                              )
         self.queries += 1
 
         keyname = key.name
@@ -7307,7 +7321,7 @@ class pr_PersonEntityRepresent(S3Represent):
                 training_event_represent._setup()
                 rows = training_event_represent.lookup_rows(table[keyname],
                                                             values,
-                                                            pe_id=True)
+                                                            pe_id = True)
                 self.training_event_represent = training_event_represent
             else:
                 if instance_type in instance_fields:
@@ -7367,8 +7381,12 @@ class pr_PersonEntityRepresent(S3Represent):
             pe_str = "[%s]" % label
 
         if self.show_type:
-            etable = current.s3db.pr_pentity
-            instance_type_nice = etable.instance_type.represent(instance_type)
+            if self.instance_types:
+                instance_type_nice = self.instance_types.get(instance_type, instance_type) or \
+                                     current.messages["NONE"]
+            else:
+                etable = current.s3db.pr_pentity
+                instance_type_nice = etable.instance_type.represent(instance_type)
             pe_str = "%s (%s)" % (pe_str,
                                   s3_str(instance_type_nice),
                                   )

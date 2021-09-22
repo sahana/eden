@@ -5870,7 +5870,19 @@ class org_SiteRepresent(S3Represent):
                  # @ToDo when-useful:
                  #show_type = None,
                  show_type = True,
+                 instance_types = None,
                  ):
+        """
+            Constructor
+
+            @param show_link: a URL (as string) to link representations to,
+                              with "[id]" as placeholder for the key
+            @param multiple: assume a value list by default
+            @param show_type: show the instance_type
+            @param instance_types: Storage(tablename = T("Label"))
+                                   None to use default instance_types
+                                   
+        """
 
         settings = current.deployment_settings
 
@@ -5887,6 +5899,7 @@ class org_SiteRepresent(S3Represent):
             # Need a custom lookup
             self.lookup_rows = self.custom_lookup_rows
 
+        self.instance_types = instance_types
         self.L10n = {}
         self.show_type = show_type
 
@@ -6052,7 +6065,7 @@ class org_SiteRepresent(S3Represent):
             self.l10n = db(query).select(table.site_id,
                                          table.name_l10n,
                                          limitby = (0, count),
-                                         ).as_dict(key="site_id")
+                                         ).as_dict(key = "site_id")
 
         return rows
 
@@ -6074,10 +6087,11 @@ class org_SiteRepresent(S3Represent):
                 return v
             else:
                 c, f = instance_type.split("_", 1)
-                return A(v, _href=URL(c=c, f=f, args=[instance_id],
-                                      # remove the .aaData extension in paginated views
-                                      extension=""
-                                      ))
+                return A(v, _href = URL(c=c, f=f,
+                                        args = [instance_id],
+                                        # remove the .aaData extension in paginated views
+                                        extension=""
+                                        ))
         else:
             # We have no way to determine the linkto
             return v
@@ -6111,9 +6125,12 @@ class org_SiteRepresent(S3Represent):
                 type_names = represent.multiple(facility_types)
                 name = "%s (%s)" % (name, type_names)
             else:
-                instance_type = current.auth.org_site_types.get(instance_type, None)
-                if instance_type:
-                    name = "%s (%s)" % (name, instance_type)
+                if self.instance_types:
+                    instance_type_nice = self.instance_types.get(instance_type, None)
+                else:
+                    instance_type_nice = current.auth.org_site_types.get(instance_type, None)
+                if instance_type_nice:
+                    name = "%s (%s)" % (name, instance_type_nice)
 
         return s3_str(name)
 
