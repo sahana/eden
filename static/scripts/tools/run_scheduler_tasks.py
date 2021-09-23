@@ -81,7 +81,7 @@ if __name__ == "__main__":
         query = (db.scheduler_task.task_name == task)
     else:
         query = (db.scheduler_task.id > 0)
-    scheduled_tasks = db(query).select(orderby=db.scheduler_task.task_name)
+    scheduled_tasks = db(query).select(orderby = db.scheduler_task.task_name)
     # Pick up the associated function objects from the scheduler's task list.
     # These are also stored in the S3Task instance -- both lists should be the
     # same.

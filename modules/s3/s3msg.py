@@ -63,7 +63,7 @@ from gluon.html import *
 from .s3crud import S3CRUD
 from .s3datetime import s3_decode_iso_datetime
 from .s3forms import S3SQLDefaultForm
-from .s3utils import s3_str, s3_unicode
+from .s3utils import s3_str
 from .s3validators import IS_IN_SET, IS_ONE_OF
 from .s3widgets import S3PentityAutocompleteWidget
 
@@ -140,7 +140,7 @@ class S3Msg(object):
                                  "TWITTER":     T("Twitter"),
                                  "FACEBOOK":    T("Facebook"),
                                  #"XMPP":        "XMPP",
-                                 "FTP":         T("FTP"),         # Used by SAMBRO
+                                 "FTP":         T("FTP"),         # Used by SAMBRO, handled via Sync
                                  "GCM":         T("Mobile App"),  # Used by SAMBRO
                                  }
 
@@ -165,8 +165,8 @@ class S3Msg(object):
         table = current.s3db.msg_sms_outbound_gateway
 
         if channel_id:
-            row = current.db(table.channel_id == channel_id) \
-                         .select(limitby=(0, 1)).first()
+            row = current.db(table.channel_id == channel_id).select(limitby = (0, 1)
+                                                                    ).first()
             default_country_code = row["msg_sms_outbound_gateway.default_country_code"]
         else:
             default_country_code = settings.get_L10n_default_country_code()
@@ -178,10 +178,13 @@ class S3Msg(object):
             # Add default country code
             if default_country_code == 39:
                 # Italy keeps 0 after country code
-                clean = "%s%s" % (default_country_code, clean)
+                clean = "%s%s" % (default_country_code,
+                                  clean,
+                                  )
             else:
                 clean = "%s%s" % (default_country_code,
-                                  clean.lstrip("0"))
+                                  clean.lstrip("0"),
+                                  )
 
         return clean
 
@@ -203,7 +206,7 @@ class S3Msg(object):
         decoded = decode_header(header)
 
         # Build string
-        return " ".join([s3_unicode(part[0], part[1] or "ASCII")
+        return " ".join([s3_str(part[0], part[1] or "ASCII")
                          for part in decoded])
 
     # =========================================================================
@@ -311,8 +314,10 @@ class S3Msg(object):
         if auth.is_logged_in() or auth.basic():
             pass
         else:
-            redirect(URL(c="default", f="user", args="login",
-                         vars={"_next" : url}))
+            redirect(URL(c="default", f="user",
+                         args = "login",
+                         vars = {"_next" : url},
+                         ))
 
         # Authenticated users need to have update rights on the msg controller
         if not auth.permission.has_permission("update", c="msg"):
@@ -449,7 +454,8 @@ class S3Msg(object):
                     insert(message_id = message_id,
                            pe_id = _id,
                            contact_method = contact_method,
-                           system_generated = system_generated)
+                           system_generated = system_generated,
+                           )
                     listindex = listindex + 1
                 except:
                     return listindex
@@ -458,7 +464,8 @@ class S3Msg(object):
                 table.insert(message_id = message_id,
                              pe_id = pe_id,
                              contact_method = contact_method,
-                             system_generated = system_generated)
+                             system_generated = system_generated,
+                             )
             except:
                 return False
 
@@ -605,17 +612,20 @@ class S3Msg(object):
                         return self.send_sms_via_api(address,
                                                      message,
                                                      message_id,
-                                                     channel_id)
+                                                     channel_id,
+                                                     )
 
                     elif outgoing_sms_handler == "msg_sms_smtp_channel":
                         return self.send_sms_via_smtp(address,
                                                       message,
-                                                      channel_id)
+                                                      channel_id,
+                                                      )
 
                     elif outgoing_sms_handler == "msg_sms_modem_channel":
                         return self.send_sms_via_modem(address,
                                                        message,
-                                                       channel_id)
+                                                       channel_id,
+                                                       )
 
                     elif outgoing_sms_handler == "msg_sms_tropo_channel":
                         # NB This does not mean the message is sent
@@ -623,7 +633,8 @@ class S3Msg(object):
                                                        message_id,
                                                        address,
                                                        message,
-                                                       channel_id)
+                                                       channel_id,
+                                                       )
 
                 elif contact_method == "TWITTER":
                     return self.send_tweet(message, address)
@@ -666,7 +677,8 @@ class S3Msg(object):
 
         rows = db(query).select(*fields,
                                 left = left,
-                                orderby = ~outbox.retries)
+                                orderby = ~outbox.retries,
+                                )
         if not rows:
             return
 
@@ -802,8 +814,9 @@ class S3Msg(object):
 
             elif entity_type == "pr_group":
                 # Re-queue the message for each member in the group
-                gquery = (gtable.pe_id == pe_id)
-                recipients = db(gquery).select(ptable.pe_id, left=gleft)
+                recipients = db(gtable.pe_id == pe_id).select(ptable.pe_id,
+                                                              left = gleft,
+                                                              )
                 pe_ids = set(r.pe_id for r in recipients)
                 pe_ids.discard(None)
                 if pe_ids:
@@ -811,14 +824,16 @@ class S3Msg(object):
                         outbox.insert(message_id = message_id,
                                       pe_id = pe_id,
                                       contact_method = contact_method,
-                                      system_generated = True)
+                                      system_generated = True,
+                                      )
                     chainrun = True
                 status = True
 
             elif entity_type == "pr_forum":
                 # Re-queue the message for each member in the group
-                fquery = (ftable.pe_id == pe_id)
-                recipients = db(fquery).select(ptable.pe_id, left=fleft)
+                recipients = db(ftable.pe_id == pe_id).select(ptable.pe_id,
+                                                              left = fleft,
+                                                              )
                 pe_ids = set(r.pe_id for r in recipients)
                 pe_ids.discard(None)
                 if pe_ids:
@@ -826,14 +841,16 @@ class S3Msg(object):
                         outbox.insert(message_id = message_id,
                                       pe_id = pe_id,
                                       contact_method = contact_method,
-                                      system_generated = True)
+                                      system_generated = True,
+                                      )
                     chainrun = True
                 status = True
 
             elif htable and entity_type == "org_organisation":
                 # Re-queue the message for each HR in the organisation
-                oquery = (otable.pe_id == pe_id)
-                recipients = db(oquery).select(ptable.pe_id, left=oleft)
+                recipients = db(otable.pe_id == pe_id).select(ptable.pe_id,
+                                                              left = oleft,
+                                                              )
                 pe_ids = set(r.pe_id for r in recipients)
                 pe_ids.discard(None)
                 if pe_ids:
@@ -841,14 +858,16 @@ class S3Msg(object):
                         outbox.insert(message_id = message_id,
                                       pe_id = pe_id,
                                       contact_method = contact_method,
-                                      system_generated = True)
+                                      system_generated = True,
+                                      )
                     chainrun = True
                 status = True
 
             elif entity_type == "hrm_training_event":
                 # Re-queue the message for each participant
-                equery = (etable.pe_id == pe_id)
-                recipients = db(equery).select(ptable.pe_id, left=tleft)
+                recipients = db(etable.pe_id == pe_id).select(ptable.pe_id,
+                                                              left = tleft,
+                                                              )
                 pe_ids = set(r.pe_id for r in recipients)
                 pe_ids.discard(None)
                 if pe_ids:
@@ -856,14 +875,16 @@ class S3Msg(object):
                         outbox.insert(message_id = message_id,
                                       pe_id = pe_id,
                                       contact_method = contact_method,
-                                      system_generated = True)
+                                      system_generated = True,
+                                      )
                     chainrun = True
                 status = True
 
             elif atable and entity_type == "deploy_alert":
                 # Re-queue the message for each HR in the group
-                aquery = (atable.pe_id == pe_id)
-                recipients = db(aquery).select(ptable.pe_id, left=aleft)
+                recipients = db(atable.pe_id == pe_id).select(ptable.pe_id,
+                                                              left = aleft,
+                                                              )
                 pe_ids = set(r.pe_id for r in recipients)
                 pe_ids.discard(None)
                 if pe_ids:
@@ -871,7 +892,8 @@ class S3Msg(object):
                         outbox.insert(message_id = message_id,
                                       pe_id = pe_id,
                                       contact_method = contact_method,
-                                      system_generated = True)
+                                      system_generated = True,
+                                      )
                     chainrun = True
                 status = True
 
@@ -897,7 +919,13 @@ class S3Msg(object):
     # -------------------------------------------------------------------------
     # Google Cloud Messaging Push
     # -------------------------------------------------------------------------
-    def gcm_push(self, title=None, uri=None, message=None, registration_ids=None, channel_id=None):
+    def gcm_push(self,
+                 title = None,
+                 uri = None,
+                 message = None,
+                 registration_ids = None,
+                 channel_id = None,
+                 ):
         """
             Push the message relating to google cloud messaging server
 
@@ -912,6 +940,7 @@ class S3Msg(object):
             return
 
         from gcm import GCM
+
         gcmtable = current.s3db.msg_gcm_channel
         if channel_id:
             query = (gcmtable.channel_id == channel_id)
@@ -1059,7 +1088,8 @@ class S3Msg(object):
                                   message,
                                   "EMAIL",
                                   from_address,
-                                  system_generated)
+                                  system_generated,
+                                  )
 
     # =========================================================================
     # SMS
@@ -1096,7 +1126,8 @@ class S3Msg(object):
                                     table.lon,
                                     #table.path,
                                     #table.parent,
-                                    limitby=(0, 1)).first()
+                                    limitby = (0, 1)
+                                    ).first()
         if not location:
             return text
         lat = location.lat
@@ -1201,9 +1232,9 @@ class S3Msg(object):
         # To be however able to send messages with at least special
         # European characters like á or ø,  we convert the UTF-8 to
         # the default ISO-8859-1 (latin-1) here:
-        text_latin1 = s3_unicode(text).encode("utf-8") \
-                                      .decode("utf-8") \
-                                      .encode("iso-8859-1")
+        text_latin1 = s3_str(text).encode("utf-8") \
+                                  .decode("utf-8") \
+                                  .encode("iso-8859-1")
 
         post_data[sms_api.message_variable] = text_latin1
         post_data[sms_api.to_variable] = str(mobile)
@@ -1221,7 +1252,7 @@ class S3Msg(object):
                 post_data["concat"] = 2
 
         request = urllib2.Request(url)
-        query = urlencode(post_data)
+        query = urlencode(post_data).encode("iso-8859-1") # POST data needs to be bytes
         if sms_api.username and sms_api.password:
             # e.g. Mobile Commons
             base64string = base64.encodestring("%s:%s" % (sms_api.username, sms_api.password)).replace("\n", "")
@@ -1300,7 +1331,8 @@ class S3Msg(object):
         try:
             result = self.send_email(to = to,
                                      subject = "",
-                                     message = text)
+                                     message = text,
+                                     )
             return result
         except:
             return False
@@ -1346,7 +1378,8 @@ class S3Msg(object):
                                           message_id = message_id,
                                           recipient = recipient,
                                           message = message,
-                                          network = network)
+                                          network = network,
+                                          )
             params = urlencode([("action", action),
                                 ("token", tropo_token_messaging),
                                 ("outgoing", "1"),
@@ -1371,9 +1404,10 @@ class S3Msg(object):
     # -------------------------------------------------------------------------
     def send_sms_by_pe_id(self,
                           pe_id,
-                          message="",
-                          from_address=None,
-                          system_generated=False):
+                          message = "",
+                          from_address = None,
+                          system_generated = False,
+                          ):
         """
             API wrapper over send_by_pe_id
         """
@@ -1403,7 +1437,8 @@ class S3Msg(object):
     def _break_to_chunks(text,
                          chunk_size=TWITTER_MAX_CHARS,
                          suffix = TWITTER_HAS_NEXT_SUFFIX,
-                         prefix = TWITTER_HAS_PREV_PREFIX):
+                         prefix = TWITTER_HAS_PREV_PREFIX,
+                         ):
         """
             Breaks text to <=chunk_size long chunks. Tries to do this at a space.
             All chunks, except for last, end with suffix.
@@ -1453,7 +1488,7 @@ class S3Msg(object):
                                         table.consumer_secret,
                                         table.access_token,
                                         table.access_token_secret,
-                                        limitby = limitby
+                                        limitby = limitby,
                                         )
         if len(rows) == 1:
             c = rows.first()
@@ -1796,7 +1831,7 @@ class S3Msg(object):
                 # Linux ext2/3 max filename length = 255
                 # b16encode doubles length & need to leave room for doc_document.file.16charsuuid.
                 # store doesn't support unicode, so need an ascii string
-                filename = s3_unicode(a[0][:92]).encode("ascii", "ignore")
+                filename = s3_str(a[0][:92]).encode("ascii", "ignore")
                 fp = StringIO()
                 fp.write(a[1])
                 fp.seek(0)
@@ -2041,7 +2076,7 @@ class S3Msg(object):
             # Store status in the DB
             S3Msg.update_channel_status(channel_id,
                                         status = error,
-                                        period = (300, 3600)
+                                        period = (300, 3600),
                                         )
             return error
         else:
@@ -2706,7 +2741,8 @@ class S3Compose(S3CRUD):
         if auth.is_logged_in() or auth.basic():
             pass
         else:
-            redirect(URL(c="default", f="user", args="login",
+            redirect(URL(c="default", f="user",
+                         args = "login",
                          vars = {"_next": url},
                          ))
 

@@ -818,10 +818,10 @@ def s3_qrcode_represent(value, row=None, show_value=True):
                        error_correction = qrcode.constants.ERROR_CORRECT_L,
                        box_size = 10,
                        border = 4,
-                       image_factory=qrcode.image.svg.SvgImage,
+                       image_factory = qrcode.image.svg.SvgImage,
                        )
     qr.add_data(s3_str(value))
-    qr.make(fit=True)
+    qr.make(fit = True)
 
     # Write the SVG into a buffer
     qr_svg = qr.make_image()
@@ -834,11 +834,15 @@ def s3_qrcode_represent(value, row=None, show_value=True):
     stream.seek(0)
     svgxml = XML(stream.read())
 
-    output = DIV(DIV(svgxml, _class="s3-qrcode-svg"),
-                 _class="s3-qrcode-display",
+    output = DIV(DIV(svgxml,
+                     _class = "s3-qrcode-svg",
+                     ),
+                 _class = "s3-qrcode-display",
                  )
     if show_value:
-        output.append(DIV(s3_str(value), _class="s3-qrcode-val"))
+        output.append(DIV(s3_str(value),
+                          _class = "s3-qrcode-val",
+                          ))
 
     return output
 
