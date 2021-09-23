@@ -1501,14 +1501,9 @@ class IS_PROCESSED_IMAGE(Validator):
         if uploaded_image not in (b"", None): # Py 3.x it's b"", which is equivalent to "" in Py 2.x
             return uploaded_image
 
-        cropped_image = post_vars.get("imagecrop-data")
-        uploaded_image = self.file_cb()
-
-        if not (cropped_image or uploaded_image):
-            raise ValidationError(translate(self.error_message))
-
         # Decode the base64-encoded image from the client side image crop
         # process, if that worked
+        cropped_image = post_vars.get("imagecrop-data")
         if cropped_image:
             import base64
 
@@ -1522,9 +1517,14 @@ class IS_PROCESSED_IMAGE(Validator):
 
             return f
 
+        uploaded_image = self.file_cb()
+
+        if not uploaded_image:
+            raise ValidationError(translate(self.error_message))
+
         # Crop the image, if we've got the crop points
         points = post_vars.get("imagecrop-points")
-        if points and uploaded_image:
+        if points:
             import os
             points = [float(p) for p in points.split(",")]
 
@@ -1540,7 +1540,8 @@ class IS_PROCESSED_IMAGE(Validator):
                                     )
 
             current.s3task.run_async("crop_image",
-                            args = [path] + points + [self.image_bounds[0]])
+                                     args = [path] + points + [self.image_bounds[0]],
+                                     )
 
         return uploaded_image
 

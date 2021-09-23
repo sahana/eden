@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from datetime import datetime, timedelta
+import json
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
+from datetime import datetime, timedelta
 
 from gluon import current
 from gluon.html import *
@@ -43,7 +37,7 @@ class index(S3CustomController):
         query = (ftable.controller == "cap") & \
                 (ftable.function == fn)
         layer = current.db(query).select(ftable.layer_id,
-                                         limitby=(0, 1)
+                                         limitby = (0, 1)
                                          ).first()
         try:
             layer_id = layer.layer_id
@@ -65,13 +59,13 @@ class index(S3CustomController):
                                   "active"    : False,
                                   }]
 
-            _map = current.gis.show_map(callback='''S3.search.s3map()''',
-                                        catalogue_layers=True,
-                                        collapsed=True,
-                                        feature_resources=feature_resources,
-                                        save=False,
-                                        search=True,
-                                        toolbar=True,
+            _map = current.gis.show_map(callback = '''S3.search.s3map()''',
+                                        catalogue_layers = True,
+                                        collapsed = True,
+                                        feature_resources = feature_resources,
+                                        save = False,
+                                        search = True,
+                                        toolbar = True,
                                         )
             output["_map"] = _map
 
@@ -116,11 +110,13 @@ class index(S3CustomController):
         if numrows == 0:
             current.response.s3.crud_strings["cap_alert"].msg_no_match = T("No Current Alerts match these filters.")
 
-        ajax_url = URL(c="cap", f=fn, args="datalist.dl",
-                       vars={"list_id": list_id,
-                             "info.expires__gt": request.utcnow,
-                             "~.approved_by__ne": None,
-                             "~.external__ne": True})
+        ajax_url = URL(c="cap", f=fn,
+                       args = "datalist.dl",
+                       vars = {"list_id": list_id,
+                               "info.expires__gt": request.utcnow,
+                               "~.approved_by__ne": None,
+                               "~.external__ne": True,
+                               })
         #@ToDo: Implement pagination properly
         output[list_id] = datalist.html(ajaxurl = ajax_url,
                                         pagesize = 0,
@@ -128,29 +124,29 @@ class index(S3CustomController):
 
         # @ToDo: Options are currently built from the full-set rather than the filtered set
         filter_widgets = [#S3LocationFilter("location.location_id",
-                          #                 label=T("Location"),
-                          #                 levels=("L0",),
-                          #                 widget="multiselect",
+                          #                 label = T("Location"),
+                          #                 levels = ("L0",),
+                          #                 widget = "multiselect",
                           #                 ),
                           S3OptionsFilter("info.priority",
-                                          #label=T("Priority"),
+                                          #label = T("Priority"),
                                           ),
                           S3OptionsFilter("info.event_type_id",
-                                          #label=T("Event Type"),
+                                          #label = T("Event Type"),
                                           ),
                           S3OptionsFilter("scope",
-                                          #label=T("Scope"),
+                                          #label = T("Scope"),
                                           ),
                           S3DateFilter("info.expires",
                                        label = "",
-                                       #label=T("Expiry Date"),
-                                       hide_time=True,
+                                       #label = T("Expiry Date"),
+                                       hide_time = True,
                                        ),
                           ]
         filter_form = S3FilterForm(filter_widgets,
-                                   ajax=True,
-                                   submit=True,
-                                   url=ajax_url,
+                                   ajax = True,
+                                   submit = True,
+                                   url = ajax_url,
                                    )
         output["alert_filter_form"] = filter_form.html(resource, request.get_vars, list_id)
 
@@ -178,26 +174,29 @@ class index(S3CustomController):
                                               # @ToDo: Custom layout with more button to expand content block
                                               layout = s3db.cms_post_list_layout
                                               )
-        ajax_url = URL(c="cms", f="post", args="datalist.dl", vars={"list_id": list_id})
+        ajax_url = URL(c="cms", f="post",
+                       args = "datalist.dl",
+                       vars = {"list_id": list_id},
+                       )
         output[list_id] = datalist.html(ajaxurl = ajax_url,
                                         pagesize = 5
                                         )
         # Truncate body
         #from s3 import s3_trunk8
-        #s3_trunk8(lines=8)
+        #s3_trunk8(lines = 8)
 
         #filter_widgets = [#S3LocationFilter("location_id",
-        #                  #                 label="",
-        #                  #                 levels=("L0",),
-        #                  #                 widget="multiselect",
+        #                  #                 label = "",
+        #                  #                 levels = ("L0",),
+        #                  #                 widget = "multiselect",
         #                  #                 ),
         #                  # @ToDo: Source (Series? Tag?)
         #                  #S3OptionsFilter(),
         #                  ]
         #filter_form = S3FilterForm(filter_widgets,
-        #                           ajax=True,
-        #                           submit=True,
-        #                           url=ajax_url,
+        #                           ajax = True,
+        #                           submit = True,
+        #                           url = ajax_url,
         #                           )
         #output["news_filter_form"] = filter_form.html(resource, request.get_vars, list_id)
 
@@ -231,9 +230,10 @@ class subscriptions(S3CustomController):
 
         has_role = auth.s3_has_role
         # Available resources
-        resources = [dict(resource="cap_alert",
-                          url="cap/alert",
-                          label=T("Updates")),
+        resources = [{"resource": "cap_alert",
+                      "url": "cap/alert",
+                      "label": T("Updates"),
+                      }
                      ]
 
         # Filter widgets
@@ -277,25 +277,27 @@ class subscriptions(S3CustomController):
            has_role("ADMIN"):
             from s3 import S3Represent
             recipient_filters = [S3OptionsFilter("id",
-                                       label = T("People"),
-                                       represent = S3Represent(lookup="auth_user",
-                                            fields = ["first_name", "last_name"],
-                                            field_sep = " ",
-                                            ),
-                                       widget = "multiselect",
-                                       resource = "auth_user",
-                                       _name = "person-filter",
-                                       ),
+                                                 label = T("People"),
+                                                 represent = S3Represent(lookup = "auth_user",
+                                                                         fields = ["first_name",
+                                                                                   "last_name",
+                                                                                   ],
+                                                                         field_sep = " ",
+                                                                         ),
+                                                 widget = "multiselect",
+                                                 resource = "auth_user",
+                                                 _name = "person-filter",
+                                                 ),
                                  ]
             group_filters = [S3OptionsFilter("id",
-                                       label = T("Groups"),
-                                       represent = S3Represent(lookup="pr_group",
-                                                               fields = ["name"],
-                                                               ),
-                                       widget = "multiselect",
-                                       resource = "pr_group",
-                                       _name = "group-filter",
-                                       ),
+                                             label = T("Groups"),
+                                             represent = S3Represent(lookup = "pr_group",
+                                                                     fields = ["name"],
+                                                                     ),
+                                             widget = "multiselect",
+                                             resource = "pr_group",
+                                             _name = "group-filter",
+                                             ),
                              ]
             # Title
             title = T("Manage Recipients")
@@ -305,14 +307,15 @@ class subscriptions(S3CustomController):
             # Title
             title = T("Subscriptions")
 
-        filter_script = '''$.filterOptionsS3({
-                             'trigger':'event-filter',
-                             'target':'priority-filter',
-                             'lookupPrefix': 'cap',
-                             'lookupResource': 'warning_priority',
-                             'lookupKey': 'event_type_id',
-                             'showEmptyField': 'false'
-                             })'''
+        filter_script = \
+'''$.filterOptionsS3({
+ 'trigger':'event-filter',
+ 'target':'priority-filter',
+ 'lookupPrefix': 'cap',
+ 'lookupResource': 'warning_priority',
+ 'lookupKey': 'event_type_id',
+ 'showEmptyField': 'false'
+})'''
         current.response.s3.jquery_ready.append(filter_script)
 
         # View
@@ -321,9 +324,9 @@ class subscriptions(S3CustomController):
         # Form
         form = self._manage_subscriptions(resources, filters, recipient_filters, group_filters)
 
-        return dict(title = title,
-                    form = form,
-                    )
+        return {"title": title,
+                "form": form,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -337,23 +340,26 @@ class subscriptions(S3CustomController):
             T = current.T
             etable = current.s3db.event_event_type
             rows = current.db(etable.deleted == False).select(etable.id,
-                                                              etable.name)
+                                                              etable.name,
+                                                              )
             options = {}
             for row in rows:
                 options[row.id] = T(row.name)
+
         elif fieldname == "priority":
             T = current.T
             wptable = current.s3db.cap_warning_priority
             rows = current.db(wptable.deleted == False).select(wptable.id,
-                                                               wptable.name)
+                                                               wptable.name,
+                                                               )
             options = {}
             for row in rows:
                 options[row.id] = T(row.name)
+
         elif fieldname == "location_id":
             ltable = current.s3db.gis_location
-            query = (ltable.deleted == False)
             # IDs converted inside widget's _options() function
-            rows = current.db(query).select(ltable.id)
+            rows = current.db(ltable.deleted == False).select(ltable.id)
             options = [row.id for row in rows]
 
         return options
@@ -389,25 +395,26 @@ class subscriptions(S3CustomController):
         ftable = s3db.pr_filter
         group_table = s3db.pr_group
 
-        labels = Storage(
-            #RESOURCES = T("Subscribe To"),
-            #NOTIFY_ON = T("Notify On"),
-            #FREQUENCY = T("Frequency"),
-            NOTIFY_BY = T("Notify By"),
-            #MORE = T("More Options"),
-            #LESS = T("Less Options"),
-            ATTACHMENT = T("Receive XML Attachment in EMAIL?"),
-        )
-        messages = Storage(
-            ERROR = T("Error: could not update notification settings"),
-            SUCCESS = T("Notification settings updated"),
-        )
+        labels = Storage(#RESOURCES = T("Subscribe To"),
+                         #NOTIFY_ON = T("Notify On"),
+                         #FREQUENCY = T("Frequency"),
+                         NOTIFY_BY = T("Notify By"),
+                         #MORE = T("More Options"),
+                         #LESS = T("Less Options"),
+                         ATTACHMENT = T("Receive XML Attachment in EMAIL?"),
+                         )
+        messages = Storage(ERROR = T("Error: could not update notification settings"),
+                           SUCCESS = T("Notification settings updated"),
+                           )
         # Initialize form
-        form = FORM(_id="subscription-form",
-                    hidden={"subscription-filters": ""})
+        form = FORM(_id = "subscription-form",
+                    hidden = {"subscription-filters": "",
+                    })
+        form_append = form.append
 
         row = db(gtable.role == "Alert Editor").select(gtable.id,
-                                                       limitby=(0, 1)).first()
+                                                       limitby = (0, 1)
+                                                       ).first()
 
         ae_id = row.id # Alert Editor role as the owned_by_group to distinguish Admin-controlled subscriptions
         if recipient_filters is not None:
@@ -415,95 +422,113 @@ class subscriptions(S3CustomController):
             if subscription_id:
                 # Update form from pr_subscription
                 pr_row = db(stable.id == subscription_id).select(stable.pe_id,
-                                                        limitby=(0, 1)).first()
+                                                                 limitby = (0, 1)
+                                                                 ).first()
                 pe_id = pr_row.pe_id
-                subscription = self._get_admin_subscription(\
-                                                subscription_id=subscription_id,
-                                                pe_id=pe_id,
-                                                )
-                recipient_subscription = self._get_recipients_and_groups(\
-                                                subscription_id=subscription_id,
-                                                pe_id=pe_id,
-                                                caller="recipients",
-                                                )
-                group_subscription = self._get_recipients_and_groups(\
-                                                subscription_id=subscription_id,
-                                                pe_id=pe_id,
-                                                caller="groups",
-                                                )
+                subscription = self._get_admin_subscription(subscription_id = subscription_id,
+                                                            pe_id = pe_id,
+                                                            )
+                recipient_subscription = self._get_recipients_and_groups(subscription_id = subscription_id,
+                                                                         pe_id = pe_id,
+                                                                         caller = "recipients",
+                                                                         )
+                group_subscription = self._get_recipients_and_groups(subscription_id = subscription_id,
+                                                                     pe_id = pe_id,
+                                                                     caller = "groups",
+                                                                     )
             else:
                 # Create form
                 subscription = self._get_admin_subscription()
                 recipient_subscription = self._get_recipients_and_groups()
                 group_subscription = self._get_recipients_and_groups()
-            filter_form = S3FilterForm(filters, clear=False)
+            filter_form = S3FilterForm(filters,
+                                       clear = False,
+                                       )
             fieldset = FIELDSET(filter_form.fields(None,
                                                    subscription["get_vars"]),
-                                _id="subscription-filter-form")
-            recipient_filter_form = S3FilterForm(recipient_filters, clear=False)
+                                _id = "subscription-filter-form",
+                                )
+            recipient_filter_form = S3FilterForm(recipient_filters,
+                                                 clear = False,
+                                                 )
             recipient_fieldset = FIELDSET(recipient_filter_form.fields(None,
-                                            recipient_subscription["get_vars"]),
-                                          _id="recipient-filter-form")
+                                                                       recipient_subscription["get_vars"]),
+                                          _id = "recipient-filter-form",
+                                          )
             group_filter_form = S3FilterForm(group_filters, clear=False)
             group_fieldset = FIELDSET(group_filter_form.fields(None,
-                                                group_subscription["get_vars"]),
-                                      _id="group-filter-form")
-            form.append(recipient_fieldset)
-            form.append(group_fieldset)
-            form.append(fieldset)
+                                                               group_subscription["get_vars"]),
+                                      _id = "group-filter-form",
+                                      )
+            form_append(recipient_fieldset)
+            form_append(group_fieldset)
+            form_append(fieldset)
         else:
             subscription_id = request.get_vars.get("subscription_id")
             if subscription_id:
                 # Get current subscription settings resp. form defaults
                 # Normal User
-                subscription = self._get_subscription(subscription_id=subscription_id)
+                subscription = self._get_subscription(subscription_id = subscription_id)
             else:
                 # Create Form
                 subscription = self._get_subscription()
 
             # Filters
-            filter_form = S3FilterForm(filters, clear=False)
+            filter_form = S3FilterForm(filters,
+                                       clear = False,
+                                       )
             fieldset = FIELDSET(filter_form.fields(None,
                                                    subscription["get_vars"]),
-                                _id="subscription-filter-form")
-            form.append(fieldset)
+                                _id = "subscription-filter-form",
+                                )
+            form_append(fieldset)
 
         # Notification options
         rows = []
 
-        selector = S3GroupedOptionsWidget(cols=1)
+        selector = S3GroupedOptionsWidget(cols = 1)
 
-        methods = [("EMAIL", T("Email")),
+        methods = (("EMAIL", T("Email")),
                    ("SMS", T("SMS")),
                    ("FTP", T("FTP")),
                    ("GCM", T("Mobile App")),
-                   ]
+                   )
 
-        method_options = Storage(name = "method", requires = IS_IN_SET(methods))
+        method_options = Storage(name = "method",
+                                 requires = IS_IN_SET(methods,
+                                                      multiple = True,
+                                                      ),
+                                 )
 
         rows.append(("method_selector__row",
                      "%s:" % labels.NOTIFY_BY,
                      selector(method_options,
                               subscription["method"],
-                              _id="method_selector"),
-                     ""))
+                              _id = "method_selector",
+                              ),
+                     "",
+                     ))
 
         if not (request.get_vars["option"] == "manage_recipient" and \
            has_role("ADMIN")):
-            # managing own subscriptions
-            attachment_filter = S3GroupedOptionsWidget(cols=2, multiple=False)
+            # Managing own subscriptions
+            attachment_filter = S3GroupedOptionsWidget(cols = 2,
+                                                       multiple = False,
+                                                       )
             attachment_options = [(False, T("No")),
                                   (True, T("Yes")),
                                   ]
 
             rows.append(("attachment_filter__row",
                          "%s:" % labels.ATTACHMENT,
-                         attachment_filter(Storage(name="attachment-filter",
-                                                   requires=IS_IN_SET(attachment_options)
+                         attachment_filter(Storage(name = "attachment-filter",
+                                                   requires = IS_IN_SET(attachment_options)
                                                    ),
                                            subscription["attachment"],
-                                           _id="attachment_selector"),
-                         ""))
+                                           _id = "attachment_selector",
+                                           ),
+                         "",
+                         ))
 
             properties = subscription["comments"]
             if properties:
@@ -516,7 +541,8 @@ class subscriptions(S3CustomController):
 
             ftp_rows = db(query).select(synctable.id,
                                         synctable.name,
-                                        orderby = synctable.id)
+                                        orderby = synctable.id,
+                                        )
 
             multiselect = S3MultiSelectWidget(header = False,
                                               multiple = False,
@@ -548,8 +574,10 @@ class subscriptions(S3CustomController):
                              "",
                              multiselect(field,
                                          user_repository_id,
-                                         _id="sync_task_repository_id"),
-                             repository_comment))
+                                         _id = "sync_task_repository_id",
+                                         ),
+                             repository_comment,
+                             ))
             else:
                 if auth.s3_has_permission("create", "sync_repository"):
                     repository_comment = S3PopupLink(c = "sync",
@@ -560,7 +588,8 @@ class subscriptions(S3CustomController):
                 rows.append(("sync_task_repository_id__row",
                              "",
                              "",
-                             repository_comment))
+                             repository_comment,
+                             ))
 
         parent = FIELDSET()
 
@@ -569,51 +598,58 @@ class subscriptions(S3CustomController):
 
         # Deactivated Toggle
         #parent.insert(0,
-        #              DIV(SPAN([I(_class="icon-reorder"), labels.MORE],
-        #                       _class="toggle-text",
-        #                       _style="display:none"),
-        #                  SPAN([I(_class="icon-reorder"), labels.LESS],
-        #                       _class="toggle-text"),
-        #                  _id="notification-options",
-        #                  _class="control-group"))
-        form.append(parent)
+        #              DIV(SPAN([I(_class = "icon-reorder",
+        #                          ),
+        #                        labels.MORE,
+        #                        ],
+        #                       _class = "toggle-text",
+        #                       _style = "display:none",
+        #                       ),
+        #                  SPAN([I(_class = "icon-reorder",
+        #                          ),
+        #                        labels.LESS,
+        #                        ],
+        #                       _class = "toggle-text"
+        #                       ),
+        #                  _id = "notification-options",
+        #                  _class = "control-group",
+        #                  ))
+        form_append(parent)
 
         # Submit button
         submit_fieldset = FIELDSET(DIV("",
-                                       INPUT(_type="submit",
-                                             _value="Update Settings",
-                                             _class="button small"),
-                                       _id = "submit__row"))
+                                       INPUT(_type = "submit",
+                                             _value = "Update Settings",
+                                             _class = "button small",
+                                             ),
+                                       _id = "submit__row",
+                                       ))
 
-        form.append(submit_fieldset)
+        form_append(submit_fieldset)
 
         # Script (to extract filters on submit and toggle options visibility)
-        script = URL(c="static", f="scripts", args=["S3", "s3.subscriptions.js"])
+        script = URL(c="static", f="scripts",
+                     args = ["S3", "s3.subscriptions.js"],
+                     )
         response.s3.scripts.append(script)
 
         # Script to show/hide the ftp repo row for FTP checkbox on/off
-        repository_script = '''
-if($('#method_selector option[value=FTP]').is(':selected')){
-    $('#sync_task_repository_id__row').show();
-} else {
-    $('#sync_task_repository_id__row').hide();
-}
-
-$('#method_selector').change(function(){
-    if($(this).val().indexOf('FTP') != -1){
-        $('#sync_task_repository_id__row').show();
-    } else {
-        $('#sync_task_repository_id__row').hide();
-    }
-})
+        repository_script = \
 '''
+if($('#method_selector option[value=FTP]').is(':selected')){
+ $('#sync_task_repository_id__row').show();
+}else{$('#sync_task_repository_id__row').hide();}
+$('#method_selector').change(function(){
+ if($(this).val().indexOf('FTP')!=-1){
+  $('#sync_task_repository_id__row').show();
+ }else{$('#sync_task_repository_id__row').hide();}})'''
         response.s3.jquery_ready.append(repository_script)
 
         # Accept form
         if form.accepts(request.post_vars,
                         current.session,
-                        formname="subscription",
-                        keepvalues=True):
+                        formname = "subscription",
+                        keepvalues = True):
 
             formvars = form.vars
 
@@ -680,7 +716,8 @@ $('#method_selector').change(function(){
                                                stable.filter_id,
                                                stable.comments,
                                                ftable.query,
-                                               limitby=(0, 1)).first()
+                                               limitby = (0, 1)
+                                               ).first()
                         pr_subscription = row.pr_subscription
                         pe_id = row.pr_subscription.pe_id
                         if group_pe_ids and (pe_id in group_pe_ids.keys()):
@@ -690,14 +727,13 @@ $('#method_selector').change(function(){
                                    Counter(priorities_s) == Counter(priorities):
                                     # Update
                                     comments = json.loads(pr_subscription.comments)
-                                    success_subscription = update_admin_subscription(\
-                                            subscription,
-                                            pe_id,
-                                            ae_id,
-                                            group_id=comments["pr_group.id"],
-                                            filter_id=pr_subscription.filter_id,
-                                            subscription_id=subscription_id,
-                                            )
+                                    success_subscription = update_admin_subscription(subscription,
+                                                                                     pe_id,
+                                                                                     ae_id,
+                                                                                     group_id = comments["pr_group.id"],
+                                                                                     filter_id = pr_subscription.filter_id,
+                                                                                     subscription_id = subscription_id,
+                                                                                     )
                         elif user_pe_ids and (pe_id in user_pe_ids.values()):
                                 event_type_id_s, priorities_s = \
                                     get_event_type_priorities(row.pr_filter.query)
@@ -706,14 +742,13 @@ $('#method_selector').change(function(){
                                     # Update
                                     user_id = [key for key, value in user_pe_ids.items()
                                                if value == pe_id][0]
-                                    success_subscription = update_admin_subscription(\
-                                            subscription,
-                                            pe_id,
-                                            ae_id,
-                                            user_id=int(user_id),
-                                            filter_id=pr_subscription.filter_id,
-                                            subscription_id=subscription_id,
-                                            )
+                                    success_subscription = update_admin_subscription(subscription,
+                                                                                     pe_id,
+                                                                                     ae_id,
+                                                                                     user_id = int(user_id),
+                                                                                     filter_id = pr_subscription.filter_id,
+                                                                                     subscription_id = subscription_id,
+                                                                                     )
                         else:
                             # Removed from subscriptions
                             define_resource("pr_subscription",
@@ -731,15 +766,15 @@ $('#method_selector').change(function(){
                                     (stable.pe_id == pe_id)
                             rows = db(query).select(stable.id,
                                                     stable.filter_id,
-                                                    ftable.query)
+                                                    ftable.query,
+                                                    )
                             if not rows:
                                 # Create
-                                success_subscription = update_admin_subscription(\
-                                                            subscription,
-                                                            pe_id,
-                                                            ae_id,
-                                                            group_id=int(group_id),
-                                                            )
+                                success_subscription = update_admin_subscription(subscription,
+                                                                                 pe_id,
+                                                                                 ae_id,
+                                                                                 group_id = int(group_id),
+                                                                                 )
                             else:
                                 for row in rows:
                                     event_type_id_s, priorities_s = \
@@ -747,23 +782,21 @@ $('#method_selector').change(function(){
                                     if event_type_id_s == event_type_id and \
                                        Counter(priorities_s) == Counter(priorities):
                                         # Update
-                                        success_subscription = update_admin_subscription(\
-                                            subscription,
-                                            pe_id,
-                                            ae_id,
-                                            group_id=int(group_id),
-                                            filter_id=row.pr_subscription.filter_id,
-                                            subscription_id=row.pr_subscription.id,
-                                            )
+                                        success_subscription = update_admin_subscription(subscription,
+                                                                                         pe_id,
+                                                                                         ae_id,
+                                                                                         group_id = int(group_id),
+                                                                                         filter_id = row.pr_subscription.filter_id,
+                                                                                         subscription_id = row.pr_subscription.id,
+                                                                                         )
                                         break
                                 else:
                                     # Create
-                                    success_subscription = update_admin_subscription(\
-                                                            subscription,
-                                                            pe_id,
-                                                            ae_id,
-                                                            group_id=int(group_id),
-                                                            )
+                                    success_subscription = update_admin_subscription(subscription,
+                                                                                     pe_id,
+                                                                                     ae_id,
+                                                                                     group_id = int(group_id),
+                                                                                     )
                     # People
                     if user_pe_ids:
                         for user_id in user_pe_ids:
@@ -772,15 +805,15 @@ $('#method_selector').change(function(){
                                     (stable.pe_id == pe_id)
                             rows = db(query).select(stable.id,
                                                     stable.filter_id,
-                                                    ftable.query)
+                                                    ftable.query,
+                                                    )
                             if not rows:
                                 # Create
-                                success_subscription = update_admin_subscription(\
-                                                                subscription,
-                                                                pe_id,
-                                                                ae_id,
-                                                                user_id=int(user_id),
-                                                                )
+                                success_subscription = update_admin_subscription(subscription,
+                                                                                 pe_id,
+                                                                                 ae_id,
+                                                                                 user_id = int(user_id),
+                                                                                 )
                             else:
                                 for row in rows:
                                     event_type_id_s, priorities_s = \
@@ -788,37 +821,35 @@ $('#method_selector').change(function(){
                                     if event_type_id_s == event_type_id and \
                                        Counter(priorities_s) == Counter(priorities):
                                         # Update
-                                        success_subscription = update_admin_subscription(\
-                                                subscription,
-                                                pe_id,
-                                                ae_id,
-                                                user_id=int(user_id),
-                                                filter_id=row.pr_subscription.filter_id,
-                                                subscription_id=row.pr_subscription.id,
-                                                )
+                                        success_subscription = update_admin_subscription(subscription,
+                                                                                         pe_id,
+                                                                                         ae_id,
+                                                                                         user_id = int(user_id),
+                                                                                         filter_id = row.pr_subscription.filter_id,
+                                                                                         subscription_id = row.pr_subscription.id,
+                                                                                         )
                                         break
                                 else:
                                     # Create
-                                    success_subscription = update_admin_subscription(\
-                                                            subscription,
-                                                            pe_id,
-                                                            ae_id,
-                                                            user_id=int(user_id),
-                                                            )
+                                    success_subscription = update_admin_subscription(subscription,
+                                                                                     pe_id,
+                                                                                     ae_id,
+                                                                                     user_id = int(user_id),
+                                                                                     )
                 else:
                     # Removed from subscription
                     subscription_id = request.get_vars.get("subscription_id")
                     if subscription_id:
-                        row = db(stable.id == subscription_id).select(\
-                                                        stable.filter_id,
-                                                        limitby=(0, 1)).first()
+                        row = db(stable.id == subscription_id).select(stable.filter_id,
+                                                                      limitby = (0, 1)
+                                                                      ).first()
                         define_resource("pr_subscription",
-                                        id=subscription_id).delete()
+                                        id = subscription_id).delete()
                         define_resource("pr_filter",
-                                        id=row.filter_id).delete()
+                                        id = row.filter_id).delete()
                 redirect(URL(c="pr", f="subscription",
-                             vars={"option": "manage_recipient"})
-                         )
+                             vars = {"option": "manage_recipient"},
+                             ))
             else:
                 # managing own subscription
                 # @ToDo: check super-set and/or sub-set for priorities and locations
@@ -835,22 +866,22 @@ $('#method_selector').change(function(){
                             (stable.filter_id == ftable.id)
                     row = db(query).select(stable.filter_id,
                                            ftable.query,
-                                           limitby=(0, 1)).first()
+                                           limitby = (0, 1)
+                                           ).first()
                     if row.pr_filter.query == subscription["filters"]:
                         # Update
-                        success_subscription = update_subscription(\
-                                        subscription,
-                                        pe_id,
-                                        filter_id=row.pr_subscription.filter_id,
-                                        subscription_id=subscription_id,
-                                        attachment=attachment,
-                                        )
+                        success_subscription = update_subscription(subscription,
+                                                                   pe_id,
+                                                                   filter_id = row.pr_subscription.filter_id,
+                                                                   subscription_id = subscription_id,
+                                                                   attachment = attachment,
+                                                                   )
                     else:
                         # Remove
                         define_resource("pr_subscription",
-                                        id=subscription_id).delete()
+                                        id = subscription_id).delete()
                         define_resource("pr_filter",
-                                        id=row.pr_subscription.filter_id).delete()
+                                        id = row.pr_subscription.filter_id).delete()
 
                 query = base_query & \
                         (stable.owned_by_group == None) & \
@@ -859,7 +890,8 @@ $('#method_selector').change(function(){
                         (stable.filter_id == ftable.id)
                 rows = db(query).select(stable.id,
                                         stable.filter_id,
-                                        ftable.query)
+                                        ftable.query,
+                                        )
                 if rows:
                     for row in rows:
                         event_type_id_s, priorities_s = \
@@ -867,44 +899,46 @@ $('#method_selector').change(function(){
                         if event_type_id_s == event_type_id and \
                            Counter(priorities_s) == Counter(priorities):
                             # Update
-                            success_subscription = update_subscription(\
-                                        subscription,
-                                        pe_id,
-                                        filter_id=row.pr_subscription.filter_id,
-                                        subscription_id=row.pr_subscription.id,
-                                        attachment=attachment,
-                                        )
+                            success_subscription = update_subscription(subscription,
+                                                                       pe_id,
+                                                                       filter_id = row.pr_subscription.filter_id,
+                                                                       subscription_id = row.pr_subscription.id,
+                                                                       attachment = attachment,
+                                                                       )
                             break
                     else:
                         # Create
                         success_subscription = update_subscription(subscription,
                                                                    pe_id,
-                                                                   attachment=attachment)
+                                                                   attachment = attachment,
+                                                                   )
                 else:
                     # Create
                     success_subscription = update_subscription(subscription,
                                                                pe_id,
-                                                               attachment=attachment)
+                                                               attachment = attachment,
+                                                               )
 
                 # Process Sync FTP Subscription
                 if "FTP" in subscription["method"] and formvars.repository_id:
                     properties = self._update_sync(subscription["subscribe"][0]['resource'],
                                                    subscription.get("filters"),
                                                    int(formvars.repository_id),
-                                                   properties)
+                                                   properties,
+                                                   )
                     properties = json.dumps(properties)
                     query = base_query & \
                             (stable.pe_id == pe_id) & \
                             (stable.owned_by_group == None) & \
                             (stable.owned_by_user == user_id)
-                    db(query).update(comments=properties)
+                    db(query).update(comments = properties)
                 else:
                     self._remove_sync(properties)
                     query = base_query & \
                             (stable.pe_id == pe_id) & \
                             (stable.owned_by_group == None) & \
                             (stable.owned_by_user == user_id)
-                    db(query).update(comments=None)
+                    db(query).update(comments = None)
 
                 redirect(URL(c="pr", f="subscription"))
 
@@ -943,8 +977,9 @@ $('#method_selector').change(function(){
                                    stable.attachment,
                                    ftable.id,
                                    ftable.query,
-                                   left=left,
-                                   limitby=(0, 1)).first()
+                                   left = left,
+                                   limitby = (0, 1)
+                                   ).first()
         else:
             row = None
 
@@ -977,7 +1012,8 @@ $('#method_selector').change(function(){
                                     rtable.resource,
                                     rtable.url,
                                     rtable.last_check_time,
-                                    rtable.next_check_time)
+                                    rtable.next_check_time,
+                                    )
 
             if f.query:
                 filters = json.loads(f.query)
@@ -1033,8 +1069,9 @@ $('#method_selector').change(function(){
             left = ftable.on(ftable.id == stable.filter_id)
             row = current.db(query).select(stable.method,
                                            ftable.query,
-                                           left=left,
-                                           limitby=(0, 1)).first()
+                                           left = left,
+                                           limitby = (0, 1)
+                                           ).first()
 
             if row:
                 s = getattr(row, "pr_subscription")
@@ -1068,7 +1105,11 @@ $('#method_selector').change(function(){
         return output
 
     # -------------------------------------------------------------------------
-    def _get_recipients_and_groups(self, subscription_id=None, pe_id=None, caller=None):
+    def _get_recipients_and_groups(self,
+                                   subscription_id = None,
+                                   pe_id = None,
+                                   caller = None,
+                                   ):
         """ Get current recipient and the current group settings"""
 
         stable = current.s3db.pr_subscription
@@ -1106,9 +1147,9 @@ $('#method_selector').change(function(){
     def _update_subscription(self,
                              subscription,
                              pe_id,
-                             filter_id=None,
-                             subscription_id=None,
-                             attachment=False,
+                             filter_id = None,
+                             subscription_id = None,
+                             attachment = False,
                              ):
         """ Update subscription settings """
 
@@ -1144,21 +1185,22 @@ $('#method_selector').change(function(){
         stable = s3db.pr_subscription
         frequency = subscription["frequency"]
         if not subscription_id:
-            success = stable.insert(pe_id=pe_id,
-                                    filter_id=filter_id,
-                                    notify_on=subscription["notify_on"],
-                                    frequency=frequency,
-                                    method=subscription["method"],
-                                    attachment=attachment)
+            success = stable.insert(pe_id = pe_id,
+                                    filter_id = filter_id,
+                                    notify_on = subscription["notify_on"],
+                                    frequency = frequency,
+                                    method = subscription["method"],
+                                    attachment = attachment,
+                                    )
             subscription_id = success
         else:
-            success = db(stable.id == subscription_id).update(
-                            pe_id=pe_id,
-                            filter_id=filter_id,
-                            notify_on=subscription["notify_on"],
-                            frequency=frequency,
-                            method=subscription["method"],
-                            attachment=attachment)
+            success = db(stable.id == subscription_id).update(pe_id = pe_id,
+                                                              filter_id = filter_id,
+                                                              notify_on = subscription["notify_on"],
+                                                              frequency = frequency,
+                                                              method = subscription["method"],
+                                                              attachment = attachment,
+                                                              )
         if not success:
             return None
 
@@ -1192,14 +1234,15 @@ $('#method_selector').change(function(){
                                     "resource": resource,
                                     "url": url,
                                     }
-                    rtable.update_or_insert(_key=unsubscribed,
-                                            deleted=False,
-                                            deleted_fk=None,
-                                            subscription_id=subscription_id,
-                                            resource=resource,
-                                            url=url,
-                                            last_check_time=now,
-                                            next_check_time=None)
+                    rtable.update_or_insert(_key = unsubscribed,
+                                            deleted = False,
+                                            deleted_fk = None,
+                                            subscription_id = subscription_id,
+                                            resource = resource,
+                                            url = url,
+                                            last_check_time = now,
+                                            next_check_time = None,
+                                            )
                 else:
                     # Keep it
                     record_id = subscribed[(resource, url)]
@@ -1220,9 +1263,10 @@ $('#method_selector').change(function(){
 
             # Unsubscribe all others
             unsubscribe = set(subscribed.values()) - keep
-            db(rtable.id.belongs(unsubscribe)).update(deleted=True,
-                                                      deleted_fk=fk,
-                                                      subscription_id=None)
+            db(rtable.id.belongs(unsubscribe)).update(deleted = True,
+                                                      deleted_fk = fk,
+                                                      subscription_id = None,
+                                                      )
 
         # Update subscription
         subscription["id"] = subscription_id
@@ -1234,10 +1278,10 @@ $('#method_selector').change(function(){
                                    subscription,
                                    pe_id,
                                    alert_editor_id,
-                                   user_id=None,
-                                   group_id=None,
-                                   filter_id=None,
-                                   subscription_id=None,
+                                   user_id = None,
+                                   group_id = None,
+                                   filter_id = None,
+                                   subscription_id = None,
                                    ):
         """ Update Admin subscription """
 
@@ -1285,42 +1329,42 @@ $('#method_selector').change(function(){
         if subscription_id is None:
             if comment_filter is not None:
                 comment_filter = json.dumps(comment_filter)
-                success = stable.insert(pe_id=pe_id,
-                                        filter_id=filter_id,
-                                        notify_on=subscription["notify_on"],
-                                        frequency=frequency,
-                                        method=subscription["method"],
-                                        comments=comment_filter,
-                                        owned_by_group=alert_editor_id,
+                success = stable.insert(pe_id = pe_id,
+                                        filter_id = filter_id,
+                                        notify_on = subscription["notify_on"],
+                                        frequency = frequency,
+                                        method = subscription["method"],
+                                        comments = comment_filter,
+                                        owned_by_group = alert_editor_id,
                                         )
             else:
-                success = stable.insert(pe_id=pe_id,
-                                        filter_id=filter_id,
-                                        notify_on=subscription["notify_on"],
-                                        frequency=frequency,
-                                        method=subscription["method"],
-                                        owned_by_group=alert_editor_id,
+                success = stable.insert(pe_id = pe_id,
+                                        filter_id = filter_id,
+                                        notify_on = subscription["notify_on"],
+                                        frequency = frequency,
+                                        method = subscription["method"],
+                                        owned_by_group = alert_editor_id,
                                         )
             subscription_id = success
         else:
             if comment_filter is not None:
                 comment_filter = json.dumps(comment_filter)
-                success = db(stable.id == subscription_id).update(pe_id=pe_id,
-                                            filter_id=filter_id,
-                                            notify_on=subscription["notify_on"],
-                                            frequency=frequency,
-                                            method=subscription["method"],
-                                            comments=comment_filter,
-                                            owned_by_group=alert_editor_id,
-                                            )
+                success = db(stable.id == subscription_id).update(pe_id = pe_id,
+                                                                  filter_id = filter_id,
+                                                                  notify_on = subscription["notify_on"],
+                                                                  frequency = frequency,
+                                                                  method = subscription["method"],
+                                                                  comments = comment_filter,
+                                                                  owned_by_group = alert_editor_id,
+                                                                  )
             else:
-                success = db(stable.id == subscription_id).update(pe_id=pe_id,
-                                            filter_id=filter_id,
-                                            notify_on=subscription["notify_on"],
-                                            frequency=frequency,
-                                            method=subscription["method"],
-                                            owned_by_group=alert_editor_id,
-                                            )
+                success = db(stable.id == subscription_id).update(pe_id = pe_id,
+                                                                  filter_id = filter_id,
+                                                                  notify_on = subscription["notify_on"],
+                                                                  frequency = frequency,
+                                                                  method = subscription["method"],
+                                                                  owned_by_group = alert_editor_id,
+                                                                  )
         if not success:
             return None
 
@@ -1333,8 +1377,8 @@ $('#method_selector').change(function(){
             intervals = s3db.pr_subscription_check_intervals
             interval = timedelta(minutes=intervals.get(frequency, 0))
             now = datetime.utcnow()
-            row = db(rtable.subscription_id == subscription_id).select(\
-                                                        limitby=(0,1)).first()
+            row = db(rtable.subscription_id == subscription_id).select(limitby = (0, 1)
+                                                                       ).first()
             if row:
                 subscribed[(row.resource, row.url)] = row.id
                 timestamps[row.id] = (row.last_check_time,
@@ -1352,14 +1396,15 @@ $('#method_selector').change(function(){
                                     "url": url,
                                     }
 
-                    rtable.update_or_insert(_key=unsubscribed,
-                                            deleted=False,
-                                            deleted_fk=None,
-                                            subscription_id=subscription_id,
-                                            resource=resource,
-                                            url=url,
-                                            last_check_time=now,
-                                            next_check_time=None)
+                    rtable.update_or_insert(_key = unsubscribed,
+                                            deleted = False,
+                                            deleted_fk = None,
+                                            subscription_id = subscription_id,
+                                            resource = resource,
+                                            url = url,
+                                            last_check_time = now,
+                                            next_check_time = None,
+                                            )
                 else:
                     # Keep it
                     record_id = subscribed[(resource, url)]
@@ -1421,7 +1466,8 @@ $('#method_selector').change(function(){
 
         row = db(query).select(sync_task_table.id,
                                sync_task_table.repository_id,
-                               limitby=(0, 1)).first()
+                               limitby = (0, 1)
+                               ).first()
         if row:
             old_sync_id = properties["sync_task_id"]
             # Check if update?
@@ -1482,8 +1528,8 @@ $('#method_selector').change(function(){
                                         }
                 resource_filter_id = sync_resource_filter_table. \
                                         insert(**resource_filter_data)
-                row = db(sync_resource_filter_table.id == resource_filter_id).\
-                                                select(limitby=(0, 1)).first()
+                row = db(sync_resource_filter_table.id == resource_filter_id).select(limitby = (0, 1)
+                                                                                     ).first()
                 auth.s3_set_record_owner(sync_resource_filter_table,
                                          resource_filter_id)
                 s3db.onaccept(sync_resource_filter_table, row)
@@ -1496,7 +1542,7 @@ $('#method_selector').change(function(){
 
         if properties:
             current.s3db.resource("sync_repository",
-                                  id=properties["repository_id"]).delete()
+                                  id = properties["repository_id"]).delete()
 
     # -------------------------------------------------------------------------
     def _get_event_type_priorities(self, filters):
@@ -1533,7 +1579,8 @@ $('#method_selector').change(function(){
         if group_ids:
             gtable = current.s3db.pr_group
             rows = current.db(gtable.id.belongs(group_ids)).select(gtable.id,
-                                                                   gtable.pe_id)
+                                                                   gtable.pe_id,
+                                                                   )
             if rows:
                 return {row.pe_id: row.id for row in rows}
         return None
@@ -1603,7 +1650,7 @@ class alert_hub_cop(S3CustomController):
         query = (ftable.controller == "cap") & \
                 (ftable.function == fn)
         layer = current.db(query).select(ftable.layer_id,
-                                         limitby=(0, 1)
+                                         limitby = (0, 1)
                                          ).first()
         try:
             layer_id = layer.layer_id
@@ -1623,13 +1670,13 @@ class alert_hub_cop(S3CustomController):
                               "active"    : False,
                               }]
 
-        _map = current.gis.show_map(callback='''S3.search.s3map()''',
-                                    catalogue_layers=True,
-                                    collapsed=True,
-                                    feature_resources=feature_resources,
-                                    save=False,
-                                    search=True,
-                                    toolbar=True,
+        _map = current.gis.show_map(callback = '''S3.search.s3map()''',
+                                    catalogue_layers = True,
+                                    collapsed = True,
+                                    feature_resources = feature_resources,
+                                    save = False,
+                                    search = True,
+                                    toolbar = True,
                                     )
         output["_map"] = _map
 
@@ -1688,23 +1735,23 @@ class alert_hub_cop(S3CustomController):
 
         # @ToDo: Options are currently built from the full-set rather than the filtered set
         filter_widgets = [#S3LocationFilter("location.location_id",
-                          #                 label=T("Location"),
-                          #                 levels=("L0",),
-                          #                 widget="multiselect",
+                          #                 label = T("Location"),
+                          #                 levels = ("L0",),
+                          #                 widget = "multiselect",
                           #                 ),
                           S3OptionsFilter("info.event_type_id",
-                                          #label=T("Event Type"),
+                                          #label = T("Event Type"),
                                           ),
                           S3DateFilter("info.expires",
                                        label = "",
-                                       #label=T("Expiry Date"),
-                                       hide_time=True,
+                                       #label = T("Expiry Date"),
+                                       hide_time = True,
                                        ),
                           ]
         filter_form = S3FilterForm(filter_widgets,
-                                   ajax=True,
-                                   submit=True,
-                                   url=ajax_url,
+                                   ajax = True,
+                                   submit = True,
+                                   url = ajax_url,
                                    )
         output["alert_filter_form"] = filter_form.html(resource, request.get_vars, list_id)
 
@@ -1713,8 +1760,8 @@ class alert_hub_cop(S3CustomController):
 
         # Button to view datalist from map
         datalist_btn = A(T("View Datalist"),
-                         _href = URL(c="cap",
-                                     f=fn,
+                         _href = URL(c = "cap",
+                                     f = fn,
                                      vars = {"~.external": True}
                                      ),
                          _class = "action-btn button tiny",

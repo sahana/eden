@@ -59,6 +59,7 @@ class DocumentLibrary(S3Model):
         T = current.T
         db = current.db
         s3 = current.response.s3
+        request = current.request
         settings = current.deployment_settings
 
         person_comment = self.pr_person_comment
@@ -73,7 +74,7 @@ class DocumentLibrary(S3Model):
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        folder = current.request.folder
+        folder = request.folder
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
@@ -244,15 +245,15 @@ class DocumentLibrary(S3Model):
                            label = T("File"),
                            length = current.MAX_FILENAME_LENGTH,
                            represent = doc_image_represent,
-                           requires = IS_EMPTY_OR(
-                                        IS_IMAGE(extensions = (s3.IMAGE_EXTENSIONS)),
-                                        # Distinguish from prepop
-                                        null = "",
-                                      ),
+                           requires = IS_EMPTY_OR(IS_IMAGE(extensions = (s3.IMAGE_EXTENSIONS)),
+                                                  # Distinguish from prepop
+                                                  null = "",
+                                                  ),
                            # upload folder needs to be visible to the download() function as well as the upload
                            uploadfolder = os.path.join(folder,
                                                        "uploads",
-                                                       "images"),
+                                                       "images",
+                                                       ),
                            widget = S3ImageCropWidget((600, 600)),
                            ),
                      Field("mime_type",
@@ -274,7 +275,7 @@ class DocumentLibrary(S3Model):
                            label = T("Image Type"),
                            represent = S3Represent(options = doc_image_type_opts),
                            requires = IS_IN_SET(doc_image_type_opts,
-                                                zero=None),
+                                                zero = None),
                            ),
                      person_id(label = T("Author"),
                                ),
@@ -306,8 +307,7 @@ class DocumentLibrary(S3Model):
         # Resource Configuration
         configure(tablename,
                   deduplicate = self.document_duplicate,
-                  onvalidation = lambda form: \
-                            self.document_onvalidation(form, document=False)
+                  onvalidation = self.image_onvalidation,
                   )
 
         # ---------------------------------------------------------------------
@@ -378,8 +378,8 @@ class DocumentLibrary(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def document_onvalidation(form, document=True):
-        """ Form validation for both, documents and images """
+    def document_onvalidation(form):
+        """ Form validation for documents """
 
         form_vars = form.vars
         doc = form_vars.file
@@ -389,20 +389,87 @@ class DocumentLibrary(S3Model):
             # Interactive forms with empty doc has this as "" not None
             return
 
-        if not document:
-            encoded_file = form_vars.get("imagecrop-data", None)
-            if encoded_file:
-                # S3ImageCropWidget
-                import base64
-                metadata, encoded_file = encoded_file.split(",")
-                #filename, datatype, enctype = metadata.split(";")
-                filename = metadata.split(";", 1)[0]
-                f = Storage()
-                f.filename = uuid4().hex + filename
-                f.file = BytesIO(base64.b64decode(encoded_file))
-                doc = form_vars.file = f
-                if not form_vars.name:
-                    form_vars.name = filename
+        if not hasattr(doc, "file"):
+            # Record update without new file upload => keep existing
+            record_id = current.request.post_vars.id
+            if record_id:
+                db = current.db
+                if document:
+                    tablename = "doc_document"
+                else:
+                    tablename = "doc_image"
+                table = db[tablename]
+                record = db(table.id == record_id).select(table.file,
+                                                          limitby = (0, 1),
+                                                          ).first()
+                if record:
+                    doc = record.file
+
+        if not hasattr(doc, "file") and not doc and not form_vars.url:
+            if document:
+                msg = current.T("Either file upload or document URL required.")
+            else:
+                msg = current.T("Either file upload or image URL required.")
+            if "file" in form_vars:
+                form.errors.file = msg
+            if "url" in form_vars:
+                form.errors.url = msg
+
+        if hasattr(doc, "file"):
+            name = form_vars.name
+            if not name:
+                # Use filename as document/image title
+                form_vars.name = doc.filename
+
+        # Do a checksum on the file to see if it's a duplicate
+        #import cgi
+        #if isinstance(doc, cgi.FieldStorage) and doc.filename:
+        #    f = doc.file
+        #    form_vars.checksum = doc_checksum(f.read())
+        #    f.seek(0)
+        #    if not form_vars.name:
+        #        form_vars.name = doc.filename
+
+        #if form_vars.checksum is not None:
+        #    # Duplicate allowed if original version is deleted
+        #    query = ((table.checksum == form_vars.checksum) & \
+        #             (table.deleted == False))
+        #    result = db(query).select(table.name,
+        #                              limitby=(0, 1)).first()
+        #    if result:
+        #        doc_name = result.name
+        #        form.errors["file"] = "%s %s" % \
+        #                              (T("This file already exists on the server as"), doc_name)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def image_onvalidation(form):
+        """ Form validation for images """
+
+        form_vars = form.vars
+        doc = form_vars.file
+
+        if doc is None:
+            # If this is a prepop, then file not in form
+            # Interactive forms with empty doc has this as "" not None
+            return
+
+        cropped_image = form_vars.get("imagecrop-data", None)
+        if cropped_image:
+            # S3ImageCropWidget
+            import base64
+
+            metadata, cropped_image = cropped_image.rsplit(",", 1)
+            #filename, datatype, enctype = metadata.split(";")
+            filename = metadata.rsplit(";", 2)[0]
+
+            f = Storage()
+            f.filename = uuid4().hex + filename
+            f.file = BytesIO(base64.b64decode(cropped_image))
+            form_vars.file = doc =  f
+
+            if not form_vars.name:
+                form_vars.name = filename
 
         if not hasattr(doc, "file"):
             # Record update without new file upload => keep existing
@@ -610,28 +677,31 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
             origname = current.s3db.doc_document.file.retrieve(filename)[0]
         except (IOError, TypeError):
             origname = current.messages["NONE"]
-        doc_url = URL(c="default", f="download", args=[filename])
+        doc_url = URL(c="default", f="download",
+                      args = [filename],
+                      )
         body = P(ICON("attachment"),
                  " ",
                  SPAN(A(origname,
-                        _href=doc_url,
+                        _href = doc_url,
                         )
                       ),
                  " ",
-                 _class="card_1_line",
+                 _class = "card_1_line",
                  )
     elif url:
         body = P(ICON("link"),
                  " ",
                  SPAN(A(url,
-                        _href=url,
+                        _href = url,
                         )),
                  " ",
-                 _class="card_1_line",
+                 _class = "card_1_line",
                  )
     else:
         # Shouldn't happen!
-        body = P(_class="card_1_line")
+        body = P(_class = "card_1_line",
+                 )
 
     # Edit Bar
     permit = current.auth.s3_has_permission
@@ -639,45 +709,47 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
     if permit("update", table, record_id=record_id):
         edit_btn = A(ICON("edit"),
                      _href=URL(c="doc", f="document",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": list_id,
-                                     "record": record_id}),
-                     _class="s3_modal",
-                     _title=current.T("Edit Document"),
+                               args = [record_id, "update.popup"],
+                               vars = {"refresh": list_id,
+                                       "record": record_id,
+                                       }),
+                     _class = "s3_modal",
+                     _title = current.T("Edit Document"),
                      )
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
         delete_btn = A(ICON("delete"),
-                       _class="dl-item-delete",
+                       _class = "dl-item-delete",
                        )
     else:
         delete_btn = ""
     edit_bar = DIV(edit_btn,
                    delete_btn,
-                   _class="edit-bar fright",
+                   _class = "edit-bar fright",
                    )
 
     # Render the item
     item = DIV(DIV(ICON("icon"),
                    SPAN(" %s" % title,
-                        _class="card-title"),
+                        _class = "card-title",
+                        ),
                    edit_bar,
-                   _class="card-header",
+                   _class = "card-header",
                    ),
                DIV(DIV(DIV(body,
                            P(SPAN(comments),
                              " ",
-                             _class="card_manylines",
+                             _class = "card_manylines",
                              ),
-                           _class="media",
+                           _class = "media",
                            ),
-                       _class="media-body",
+                       _class = "media-body",
                        ),
-                   _class="media",
+                   _class = "media",
                    ),
-               _class=item_class,
-               _id=item_id,
+               _class = item_class,
+               _id = item_id,
                )
 
     return item
@@ -738,8 +810,9 @@ class CKEditorModel(S3Model):
                           Field("upload", "upload",
                                 #uploadfs = self.settings.uploadfs,
                                 requires = [IS_NOT_EMPTY(),
-                                            IS_LENGTH(maxsize=10485760, # 10 Mb
-                                                      minsize=0)],
+                                            IS_LENGTH(maxsize = 10485760, # 10 Mb
+                                                      minsize = 0),
+                                            ],
                                 ),
                           *s3_meta_fields())
 

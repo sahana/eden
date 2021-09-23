@@ -4296,18 +4296,21 @@ i18n.upload_image='%s' ''' % (T("Please select a valid image!"),
                                         "_class": "imagecrop-upload"
                                         }, **attributes)
 
-        elements = [INPUT(_type="hidden", _name="imagecrop-points")]
+        elements = [INPUT(_type = "hidden",
+                          _name = "imagecrop-points",
+                          )]
         append = elements.append
 
-        append(DIV(_class="tooltip",
-                   _title="%s|%s" % \
-                 (T("Crop Image"),
-                 T("Select an image to upload. You can crop this later by opening this record."))))
+        append(DIV(_class = "tooltip",
+                   _title = "%s|%s" % (T("Crop Image"),
+                                       T("Select an image to upload. You can crop this later by opening this record."),
+                                       ),
+                   ))
 
         # Set up the canvas
         # Canvas is used to scale and crop the Image on the client side
-        canvas = TAG["canvas"](_class="imagecrop-canvas",
-                               _style="display:none",
+        canvas = TAG["canvas"](_class = "imagecrop-canvas",
+                               _style = "display:none",
                                )
         image_bounds = self.image_bounds
 
@@ -4325,26 +4328,32 @@ i18n.upload_image='%s' ''' % (T("Please select a valid image!"),
             btn_class = "imagecrop-btn"
 
         buttons = [ A(T("Enable Crop"),
-                      _id="select-crop-btn",
-                      _class=btn_class,
-                      _role="button"),
+                      _id = "select-crop-btn",
+                      _class = btn_class,
+                      _role = "button",
+                      ),
                     A(T("Crop Image"),
-                      _id="crop-btn",
-                      _class=btn_class,
-                      _role="button"),
+                      _id = "crop-btn",
+                      _class = btn_class,
+                      _role = "button",
+                      ),
                     A(T("Cancel"),
-                      _id="remove-btn",
-                      _class="imagecrop-btn")
+                      _id = "remove-btn",
+                      _class = "imagecrop-btn",
+                      ),
                     ]
 
         parts = [LEGEND(T("Uploaded Image"))] + buttons + \
-                [HR(_style="display:none"),
-                 IMG(_id="uploaded-image",
-                     _style="display:none")
+                [HR(_style = "display:none",
+                    ),
+                 IMG(_id = "uploaded-image",
+                     _style = "display:none",
+                     )
                  ]
 
         display_div = FIELDSET(parts,
-                               _class="image-container")
+                               _class = "image-container",
+                               )
 
         crop_data_attr = {"_type": "hidden",
                           "_name": "imagecrop-data",
@@ -4359,19 +4368,25 @@ i18n.upload_image='%s' ''' % (T("Please select a valid image!"),
             # Add Image
             crop_data_attr["_value"] = url
             append(FIELDSET(LEGEND(A(T("Upload different Image")),
-                                   _id="upload-title"),
+                                   _id = "upload-title",
+                                   ),
                             DIV(INPUT(**attr),
                                 DIV(T("or Drop here"),
-                                    _class="imagecrop-drag"),
-                                _id="upload-container",
-                                _style="display:none")))
+                                    _class = "imagecrop-drag",
+                                    ),
+                                _id = "upload-container",
+                                _style = "display:none",
+                                )))
         else:
             append(FIELDSET(LEGEND(T("Upload Image"),
-                                   _id="upload-title"),
+                                   _id = "upload-title",
+                                   ),
                             DIV(INPUT(**attr),
                                 DIV(T("or Drop here"),
-                                    _class="imagecrop-drag"),
-                                _id="upload-container")))
+                                    _class = "imagecrop-drag",
+                                    ),
+                                _id = "upload-container",
+                                )))
 
         append(INPUT(**crop_data_attr))
         append(display_div)

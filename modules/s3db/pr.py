@@ -4145,6 +4145,7 @@ class PersonEntityImageModel(S3Model):
         T = current.T
         db = current.db
         request = current.request
+        folder = request.folder
 
         # ---------------------------------------------------------------------
         # Image
@@ -4171,10 +4172,9 @@ class PersonEntityImageModel(S3Model):
                 except ValueError:
                     # Probably a 'create' method
                     return None
-                query = (table.id == record_id)
-                record = db(query).select(table.image,
-                                          limitby = (0, 1)
-                                          ).first()
+                record = db(table.id == record_id).select(table.image,
+                                                          limitby = (0, 1)
+                                                          ).first()
                 return record.image if record else None
 
             return cb
@@ -4193,6 +4193,10 @@ class PersonEntityImageModel(S3Model):
                                 label = T("Image"),
                                 length = current.MAX_FILENAME_LENGTH,
                                 represent = self.pr_image_represent,
+                                # upload folder needs to be visible to the download() function as well as the upload
+                                uploadfolder = os.path.join(folder,
+                                                            "uploads",
+                                                            ),
                                 widget = S3ImageCropWidget((600, 600)),
                                 comment =  DIV(_class = "tooltip",
                                                _title = "%s|%s" % (T("Image"),
@@ -4234,7 +4238,7 @@ class PersonEntityImageModel(S3Model):
                                             requires = IS_PROCESSED_IMAGE(
                                                         "image",
                                                         get_file(table),
-                                                        upload_path = os.path.join(request.folder,
+                                                        upload_path = os.path.join(folder,
                                                                                    "uploads",
                                                                                    ),
                                                         ),
@@ -4257,8 +4261,7 @@ class PersonEntityImageModel(S3Model):
 
         # Resource configuration
         self.configure(tablename,
-                       list_fields = ["id",
-                                      "profile",
+                       list_fields = ["profile",
                                       "type",
                                       "image",
                                       "url",
@@ -6828,6 +6831,9 @@ class SubscriptionModel(S3Model):
     def model(self):
 
         T = current.T
+
+        define_table = self.define_table
+
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         trigger_opts = {
@@ -6863,55 +6869,53 @@ class SubscriptionModel(S3Model):
         # Subscription (Settings)
         #
         tablename = "pr_subscription"
-        self.define_table(tablename,
-                          # Component not Instance
-                          self.super_link("pe_id", "pr_pentity",
-                                          represent = pr_PersonEntityRepresent(),
-                                          ),
-                          self.pr_filter_id(),
-                          Field("notify_on", "list:string",
-                                default = ["new"],
-                                represent = S3Represent(options=trigger_opts,
-                                                        multiple=True,
-                                                        ),
-                                requires = IS_IN_SET(trigger_opts,
-                                                     multiple=True,
-                                                     zero=None,
-                                                     ),
-                                widget = S3MultiSelectWidget(),
-                                ),
-                          Field("frequency",
-                                default = "daily",
-                                represent = lambda opt: \
-                                            FREQUENCY_OPTS.get(opt,
-                                                               UNKNOWN_OPT),
-                                requires = IS_IN_SET(frequency_opts,
-                                                     zero=None),
-                                ),
-                          Field("method", "list:string",
-                                default = ["EMAIL"],
-                                represent = S3Represent(options=MSG_CONTACT_OPTS,
-                                                        multiple=True,
-                                                        ),
-                                requires = IS_IN_SET(MSG_CONTACT_OPTS,
-                                                     multiple=True,
-                                                     zero=None,
-                                                     ),
-                                widget = S3MultiSelectWidget(),
-                                ),
-                          Field("email_format",
-                                represent = S3Represent(options=email_format_opts),
-                                requires = IS_EMPTY_OR(
-                                            IS_IN_SET(email_format_opts,
-                                                      zero=None)),
-                                ),
-                          Field("attachment", "boolean",
-                                default = False,
-                                readable = False,
-                                writable = False,
-                                ),
-                          s3_comments(),
-                          *s3_meta_fields())
+        define_table(tablename,
+                     # Component not Instance
+                     self.super_link("pe_id", "pr_pentity",
+                                     represent = pr_PersonEntityRepresent(),
+                                     ),
+                     self.pr_filter_id(),
+                     Field("notify_on", "list:string",
+                           default = ["new"],
+                           represent = S3Represent(options = trigger_opts,
+                                                   multiple = True,
+                                                   ),
+                           requires = IS_IN_SET(trigger_opts,
+                                                multiple = True,
+                                                zero = None,
+                                                ),
+                           widget = S3MultiSelectWidget(),
+                           ),
+                     Field("frequency",
+                           default = "daily",
+                           represent = S3Represent(options = FREQUENCY_OPTS),
+                           requires = IS_IN_SET(frequency_opts,
+                                                zero = None),
+                           ),
+                     Field("method", "list:string",
+                           default = ["EMAIL"],
+                           represent = S3Represent(options = MSG_CONTACT_OPTS,
+                                                   multiple = True,
+                                                   ),
+                           requires = IS_IN_SET(MSG_CONTACT_OPTS,
+                                                multiple = True,
+                                                zero = None,
+                                                ),
+                           widget = S3MultiSelectWidget(),
+                           ),
+                     Field("email_format",
+                           represent = S3Represent(options = email_format_opts),
+                           requires = IS_EMPTY_OR(
+                                        IS_IN_SET(email_format_opts,
+                                                  zero = None)),
+                           ),
+                     Field("attachment", "boolean",
+                           default = False,
+                           readable = False,
+                           writable = False,
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Create Subscription"),
@@ -6946,32 +6950,32 @@ class SubscriptionModel(S3Model):
         # - these all share a common Filter, which can be a Context if-required
         #
         tablename = "pr_subscription_resource"
-        self.define_table(tablename,
-                          Field("subscription_id", "reference pr_subscription",
-                                ondelete = "CASCADE",
-                                ),
-                          Field("resource"), # tablename
-                          Field("url"), # "%s/%s" % (controller, function)
-                          Field("auth_token", length=40,
-                                readable = False,
-                                writable = False,
-                                ),
-                          Field("locked", "boolean",
-                                default = False,
-                                readable = False,
-                                writable = False,
-                                ),
-                          Field("batch_mode", "boolean",
-                                default = True,
-                                ),
-                          Field("last_check_time", "datetime",
-                                default = current.request.utcnow,
-                                writable = False,
-                                ),
-                          Field("next_check_time", "datetime",
-                                writable = False,
-                                ),
-                          *s3_meta_fields())
+        define_table(tablename,
+                     Field("subscription_id", "reference pr_subscription",
+                           ondelete = "CASCADE",
+                           ),
+                     Field("resource"), # tablename
+                     Field("url"), # "%s/%s" % (controller, function)
+                     Field("auth_token", length=40,
+                           readable = False,
+                           writable = False,
+                           ),
+                     Field("locked", "boolean",
+                           default = False,
+                           readable = False,
+                           writable = False,
+                           ),
+                     Field("batch_mode", "boolean",
+                           default = True,
+                           ),
+                     Field("last_check_time", "datetime",
+                           default = current.request.utcnow,
+                           writable = False,
+                           ),
+                     Field("next_check_time", "datetime",
+                           writable = False,
+                           ),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -6982,14 +6986,15 @@ class SubscriptionModel(S3Model):
 # =============================================================================
 # Representation Methods
 # =============================================================================
-def pr_get_entities(pe_ids=None,
-                    types=None,
-                    represent=True,
-                    show_instance_type=True,
-                    group=False,
-                    as_list=False,
-                    show_label=False,
-                    default_label="[No ID Tag]"):
+def pr_get_entities(pe_ids = None,
+                    types = None,
+                    represent = True,
+                    show_instance_type = True,
+                    group = False,
+                    as_list = False,
+                    show_label = False,
+                    default_label = "[No ID Tag]",
+                    ):
     """
         Get representations of person entities. Depending on the group
         and as_list parameters, this function returns a list or Storage
@@ -7027,7 +7032,8 @@ def pr_get_entities(pe_ids=None,
         query &= (pe_table.pe_id.belongs(pe_ids))
     rows = db(query).select(pe_table.pe_id,
                             pe_table.pe_label,
-                            pe_table.instance_type)
+                            pe_table.instance_type,
+                            )
 
     entities = Storage()
     labels = Storage()
@@ -7075,7 +7081,8 @@ def pr_get_entities(pe_ids=None,
             rows = db(query).select(table.pe_id,
                                     table.first_name,
                                     table.middle_name,
-                                    table.last_name)
+                                    table.last_name,
+                                    )
 
             for row in rows:
                 pe_id = row.pe_id
@@ -7083,10 +7090,12 @@ def pr_get_entities(pe_ids=None,
                     label = labels.get(pe_id, None) or default_label
                     pe_str = "%s %s%s" % (s3_fullname(row),
                                           label,
-                                          instance_type_nice)
+                                          instance_type_nice,
+                                          )
                 else:
                     pe_str = "%s%s" % (s3_fullname(row),
-                                       instance_type_nice)
+                                       instance_type_nice,
+                                       )
                 repr_g[pe_id] = repr_f[pe_id] = pe_str
 
         elif "name" in table.fields:
@@ -7098,17 +7107,20 @@ def pr_get_entities(pe_ids=None,
                     label = labels.get(pe_id, None) or default_label
                     pe_str = "%s %s%s" % (row.name,
                                           label,
-                                          instance_type_nice)
+                                          instance_type_nice,
+                                          )
                 else:
                     pe_str = "%s%s" % (row.name,
-                                       instance_type_nice)
+                                       instance_type_nice,
+                                       )
                 repr_g[pe_id] = repr_f[pe_id] = pe_str
 
         else:
             for pe_id in pe_ids:
                 label = labels.get(pe_id, None) or default_label
                 pe_str = "[%s]%s" % (label,
-                                     instance_type_nice)
+                                     instance_type_nice,
+                                     )
                 repr_g[pe_id] = repr_f[pe_id] = pe_str
 
     if represent:
@@ -7131,9 +7143,10 @@ class pr_RoleRepresent(S3Represent):
     """ Representations of pr_role IDs """
 
     def __init__(self,
-                 show_link=False,
-                 multiple=False,
-                 translate=True):
+                 show_link = False,
+                 multiple = False,
+                 translate = True,
+                 ):
         """
             Constructor
 
@@ -7144,11 +7157,11 @@ class pr_RoleRepresent(S3Represent):
 
         self.fields = ["pe_id", "role"]
 
-        super(pr_RoleRepresent, self).__init__(lookup="pr_role",
-                                               fields=self.fields,
-                                               show_link=show_link,
-                                               translate=translate,
-                                               multiple=multiple)
+        super(pr_RoleRepresent, self).__init__(lookup = "pr_role",
+                                               fields = self.fields,
+                                               show_link = show_link,
+                                               translate = translate,
+                                               multiple = multiple)
 
     # ---------------------------------------------------------------------
     def represent_row(self,row):

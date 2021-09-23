@@ -2358,11 +2358,13 @@ class CAPResourceModel(S3Model):
                            label = T("Image"),
                            length = current.MAX_FILENAME_LENGTH,
                            represent = self.doc_image_represent,
-                           requires = IS_EMPTY_OR(IS_IMAGE(maxsize=(800, 800),
-                                                           error_message=\
-T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
+                           requires = IS_EMPTY_OR(IS_IMAGE(maxsize = (800, 800),
+                                                           error_message = \
+                                                            T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                            uploadfolder = os.path.join(current.request.folder,
-                                                       "uploads", "images"),
+                                                       "uploads",
+                                                       "images",
+                                                       ),
                            widget = S3ImageCropWidget((800, 800)),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Image"),
@@ -2501,38 +2503,86 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
         """
             Resource form validation:
                 - post-process S3ImageCropWidget
+                - Derived from IS_PROCESSED_IMAGE with extras:
                 - Determine MIME type and file size of uploaded image
 
             @param form: the FORM
         """
 
+        if current.response.s3.bulk:
+            # Pointless in imports
+            return
+
+        request = current.request
+
+        if request.env.request_method == "GET":
+            return
+
         form_vars = form.vars
 
-        image = form_vars.image
-        if image is None:
+        # If there's a newly uploaded file, accept it. It'll be processed in
+        # the update form.
+        # NOTE: A FieldStorage with data evaluates as False (odd!)
+        uploaded_image = form_vars.get("image")
+        if uploaded_image not in (b"", None): # Py 3.x it's b"", which is equivalent to "" in Py 2.x
+            form_vars.image = uploaded_image
+            return
 
-            encoded_file = form_vars.get("imagecrop-data")
-            if encoded_file:
-                # Post-process S3ImageCropWidget (see document_onvalidation)
-                # - differs from document_onvalidation in that it also
-                #   determines file size and MIME type
-                metadata, encoded_file = encoded_file.split(",")
-                filename, datatype = metadata.split(";")[:2]
+        # Decode the base64-encoded image from the client side image crop
+        # process, if that worked
+        cropped_image = form_vars.get("imagecrop-data")
+        if cropped_image:
+            import base64
 
-                import base64
+            metadata, cropped_image = cropped_image.rsplit(",", 1)
+            filename, datatype = metadata.split(";")[:2]
 
-                image = Storage(filename = uuid4().hex + filename)
-                image.file = stream = StringIO(base64.decodestring(encoded_file))
+            f = Storage()
+            f.filename = uuid4().hex + filename
+            f.file = stream = BytesIO(base64.b64decode(cropped_image))
 
-                form_vars.image = image
+            form_vars.image = f
 
-                # Determine file size
-                stream.seek(0, os.SEEK_END)
-                form_vars.size = stream.tell()
-                stream.seek(0)
+            # Determine file size
+            stream.seek(0, os.SEEK_END)
+            form_vars.size = stream.tell()
+            stream.seek(0)
 
-                # Determine MIME type
-                form_vars.mime_type = datatype.split(":")[1]
+            # Determine MIME type
+            form_vars.mime_type = datatype.split(":")[1]
+
+            return
+
+        record_id = form_vars.id
+        if not record_id:
+            # Probably a 'create' method
+            return
+
+        table = current.s3db.cap_resource
+        record = current.db(table.id == record_id).select(table.image,
+                                                          limitby = (0, 1)
+                                                          ).first()
+        uploaded_image = record.image if record else None
+
+        if not uploaded_image:
+            # Optional
+            return
+
+        # Crop the image, if we've got the crop points
+        points = form_vars.get("imagecrop-points")
+        if points:
+            points = [float(p) for p in points.split(",")]
+
+            path = os.path.join(request.folder,
+                                "uploads",
+                                "images",
+                                uploaded_image,
+                                )
+
+            current.s3task.run_async("crop_image",
+                                     args = [path] + points + [800],
+                                     )
+            form_vars.image = uploaded_image
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2561,7 +2611,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
 
             if alert_id:
                 # Set alert_id in cap_area record
-                db(db.cap_resource.id == form_vars.id).update(alert_id=alert_id)
+                db(db.cap_resource.id == form_vars.id).update(alert_id = alert_id)
 
 # =============================================================================
 class CAPWarningPriorityModel(S3Model):

@@ -1,5 +1,5 @@
 /**
- * Used by the 'Subscriptions' page (templates/[DRMP,Philippines]/controllers.py)
+ * Used by the 'Subscriptions' page (templates/SAMBRO/controllers.py)
  * This script is in Static to allow caching
  */
 

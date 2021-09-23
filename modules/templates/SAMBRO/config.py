@@ -562,15 +562,15 @@ def config(settings):
                         send_by_pe_id(row.pe_id,
                                       subject,
                                       email_content,
-                                      document_ids=cap_document_id,
-                                      alert_id=alert_id,
+                                      document_ids = cap_document_id,
+                                      alert_id = alert_id,
                                       )
                         try:
                             send_by_pe_id(row.pe_id,
                                           subject,
                                           sms_content,
-                                          contact_method="SMS",
-                                          alert_id=alert_id,
+                                          contact_method = "SMS",
+                                          alert_id = alert_id,
                                           )
                         except ValueError:
                             current.log.error("No SMS Handler defined!")

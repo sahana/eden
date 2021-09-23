@@ -208,7 +208,7 @@ class NeedsModel(S3Model):
                                             # Can redefine as multiple=True in template if-required
                                             "multiple": False,
                                             },
-                            need_demographic = "need_id",
+                            #need_demographic = "need_id",
                             need_item = "need_id",
                             need_line = "need_id",
                             need_tag = "need_id",

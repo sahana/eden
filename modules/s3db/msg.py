@@ -436,7 +436,8 @@ class MessageModel(S3Model):
                                      ondelete = "RESTRICT",
                                      represent = message_represent,
                                      requires = IS_EMPTY_OR(
-                                        IS_ONE_OF_EMPTY(db, "msg_message.message_id")),
+                                        IS_ONE_OF_EMPTY(db, "msg_message.message_id",
+                                                        )),
                                      )
 
         self.add_components(tablename,
@@ -467,11 +468,9 @@ class MessageModel(S3Model):
                                          notnull = True,
                                          default = 1,
                                          label = T("Status"),
+                                         represent = S3Represent(options = MSG_STATUS_OPTS),
                                          requires = IS_IN_SET(MSG_STATUS_OPTS,
                                                               zero = None),
-                                         represent = lambda opt: \
-                                                     MSG_STATUS_OPTS.get(opt,
-                                                                 UNKNOWN_OPT)
                                          )
 
         # Outbox - needs to be separate to Message since a single message
@@ -487,10 +486,9 @@ class MessageModel(S3Model):
                           Field("contact_method", length=32,
                                 default = "EMAIL",
                                 label = T("Contact Method"),
-                                represent = lambda opt: \
-                                            MSG_CONTACT_OPTS.get(opt, UNKNOWN_OPT),
+                                represent = S3Represent(options = MSG_CONTACT_OPTS),
                                 requires = IS_IN_SET(MSG_CONTACT_OPTS,
-                                                     zero=None),
+                                                     zero = None),
                                 ),
                           opt_msg_status(),
                           # Used to loop through a PE to get it's members
@@ -972,7 +970,7 @@ class FacebookModel(ChannelModel):
                 (table.deleted == False)
         c = current.db(query).select(table.app_id,
                                      table.app_secret,
-                                     limitby=(0, 1)
+                                     limitby = (0, 1)
                                      ).first()
         return c
 
@@ -1566,7 +1564,8 @@ class RSSModel(ChannelModel):
                                  represent = rss_represent,
                                  requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(current.db, "msg_rss.id",
-                                                          rss_represent)),
+                                                          rss_represent,
+                                                          )),
                                  )
 
         # ---------------------------------------------------------------------
@@ -1622,8 +1621,10 @@ class SMSModel(S3Model):
                           # Instance
                           self.super_link("message_id", "msg_message"),
                           self.msg_channel_id(),
-                          self.org_organisation_id(default = default),
-                          s3_datetime(default="now"),
+                          self.org_organisation_id(default = default,
+                                                   ),
+                          s3_datetime(default = "now",
+                                      ),
                           Field("body", "text",
                                 # Allow multi-part SMS
                                 #length = 160,

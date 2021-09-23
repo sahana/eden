@@ -125,6 +125,7 @@ class S3Msg(object):
                              #"XMPP":       "XMPP",
                              #"WEB":        T("Website"),
                              "WORK_PHONE":  T("Work Phone"),
+                             #"FTP":         T("FTP"),
                              #"IRC":         T("IRC handle"),
                              #"GITHUB":      T("Github Repo"),
                              #"GCM":         T("Google Cloud Messaging"),
@@ -134,12 +135,13 @@ class S3Msg(object):
                              }
 
         # Those contact options to which we can send notifications
-        # NB Coded into hrm_map_popup & s3.msg.js
-        self.MSG_CONTACT_OPTS = {"EMAIL":   T("Email"),
-                                 "SMS":     MOBILE,
-                                 "TWITTER": T("Twitter"),
-                                 "FACEBOOK": T("Facebook"),
-                                 #"XMPP":   "XMPP",
+        self.MSG_CONTACT_OPTS = {"EMAIL":       T("Email"),
+                                 "SMS":         MOBILE,
+                                 "TWITTER":     T("Twitter"),
+                                 "FACEBOOK":    T("Facebook"),
+                                 #"XMPP":        "XMPP",
+                                 "FTP":         T("FTP"),         # Used by SAMBRO
+                                 "GCM":         T("Mobile App"),  # Used by SAMBRO
                                  }
 
         # SMS Gateways
@@ -546,7 +548,8 @@ class S3Msg(object):
                               from_address = None,
                               outgoing_sms_handler = outgoing_sms_handler,
                               lookup_org = lookup_org,
-                              channels = channels):
+                              channels = channels,
+                              ):
             """
                 Helper method to send messages by pe_id
 
