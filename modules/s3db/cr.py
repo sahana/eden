@@ -1587,7 +1587,7 @@ class ShelterInspectionModel(S3Model):
                 (ftable.id == ltable.inspection_flag_id) & \
                 ((ftable.resolved == False) | (ftable.resolved == None))
         other = db(query).select(ltable.id,
-                                 limitby = (0, 1)
+                                 limitby = (0, 1),
                                  ).first()
         if not other:
             # Set task to completed status
@@ -2906,7 +2906,7 @@ class CRShelterInspection(S3Method):
                     fresource = s3db.resource("cr_shelter_inspection_flag",
                                               filter = query,
                                               )
-                    fresource.delete(cascade=True)
+                    fresource.delete(cascade = True)
 
                 if flag_ids:
 

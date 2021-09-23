@@ -1010,7 +1010,7 @@ class S3MetaFields(object):
                      requires = None,
                      default = cls._current_user(),
                      represent = cls._represent_user(),
-                     ondelete = "RESTRICT",
+                     ondelete = "SET NULL",
                      )
 
     # -------------------------------------------------------------------------
@@ -1028,7 +1028,7 @@ class S3MetaFields(object):
                      default = current_user,
                      update = current_user,
                      represent = cls._represent_user(),
-                     ondelete = "RESTRICT",
+                     ondelete = "SET NULL",
                      )
 
     # -------------------------------------------------------------------------
@@ -1060,6 +1060,8 @@ class S3MetaFields(object):
                      requires = None,
                      default = cls._current_user(),
                      represent = cls._represent_user(),
+                     # If a User Account needs deleting, it is best to Anonymise the account by replacing with dummy values
+                     # - this avoids records becoming unexpectedly public
                      ondelete = "RESTRICT",
                      )
 

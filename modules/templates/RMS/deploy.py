@@ -331,7 +331,7 @@ class DeploymentModel(S3Model):
         # Reusable field
         represent = S3Represent(lookup = tablename,
                                 linkto = URL(f="mission",
-                                             args=["[id]", "profile"]),
+                                             args = ["[id]", "profile"]),
                                 show_link = True,
                                 )
 
@@ -339,9 +339,9 @@ class DeploymentModel(S3Model):
                                      label = T("Mission"),
                                      ondelete = "CASCADE",
                                      represent = represent,
-                                     requires = IS_ONE_OF(db,
-                                                          "deploy_mission.id",
-                                                          represent),
+                                     requires = IS_ONE_OF(db, "deploy_mission.id",
+                                                          represent,
+                                                          ),
                                      comment = S3PopupLink(c = "deploy",
                                                            f = "mission",
                                                            label = label_create,
@@ -387,15 +387,15 @@ class DeploymentModel(S3Model):
                      Field("status", "integer",
                            default = 5,
                            label = T("Category"),
-                           represent = lambda opt: \
-                                       status_opts.get(opt,
-                                                       UNKNOWN_OPT),
+                           represent = S3Represent(options = status_opts),
                            requires = IS_IN_SET(status_opts),
                            ),
                      *s3_meta_fields())
 
         configure(tablename,
-                  delete_next = URL(c="deploy", f="human_resource", args="summary"),
+                  delete_next = URL(c="deploy", f="human_resource",
+                                    args = "summary",
+                                    ),
                   )
 
         # ---------------------------------------------------------------------

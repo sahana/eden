@@ -3604,7 +3604,6 @@ class PersonEntityAddressModel(S3Model):
     """ Addresses for Person Entities: Persons and Organisations """
 
     names = ("pr_address",
-             "pr_address_type_opts"
              )
 
     def model(self):
@@ -3635,11 +3634,9 @@ class PersonEntityAddressModel(S3Model):
                           Field("type", "integer",
                                 default = 1,
                                 label = T("Address Type"),
-                                represent = lambda opt: \
-                                            pr_address_type_opts.get(opt,
-                                                    messages.UNKNOWN_OPT),
+                                represent = S3Represent(options = pr_address_type_opts),
                                 requires = IS_IN_SET(pr_address_type_opts,
-                                                     zero=None),
+                                                     zero = None),
                                 widget = RadioWidget.widget,
                                 ),
                           self.gis_location_id(),
@@ -3697,13 +3694,13 @@ class PersonEntityAddressModel(S3Model):
                        list_fields = list_fields,
                        list_layout = pr_address_list_layout,
                        onaccept = self.pr_address_onaccept,
+                       ondelete = self.pr_address_ondelete,
                        )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {"pr_address_type_opts": pr_address_type_opts,
-                }
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3767,11 +3764,11 @@ class PersonEntityAddressModel(S3Model):
         if new_base_location:
             # Set new base location
             S3Tracker()(db.pr_pentity, pe_id).set_base_location(location_id)
-            row.update_record(is_base_location=True)
+            row.update_record(is_base_location = True)
 
             # Reset is_base_location flag in all other addresses
             query = (atable.pe_id == pe_id) & (atable.id != row.id)
-            db(query).update(is_base_location=False)
+            db(query).update(is_base_location = False)
 
         if not person:
             # Nothing more we can do
@@ -3784,7 +3781,7 @@ class PersonEntityAddressModel(S3Model):
                     (atable.type == 1) & \
                     (atable.deleted != True)
             exists = db(query).select(atable.id,
-                                      limitby=(0, 1)
+                                      limitby = (0, 1)
                                       ).first()
             if exists:
                 # Do nothing: prefer existing current address
@@ -3795,15 +3792,14 @@ class PersonEntityAddressModel(S3Model):
 
         settings = current.deployment_settings
         if settings.has_module("hrm"):
-            # Also check for relevant HRM record(s)
+            # Also check for relevant HR record(s)
             staff_settings = settings.get_hrm_location_staff()
             staff_person = "person_id" in staff_settings
             vol_settings = settings.get_hrm_location_vol()
             vol_person = "person_id" in vol_settings
             if staff_person or vol_person:
                 htable = s3db.hrm_human_resource
-                query = (htable.person_id == person.id) & \
-                        (htable.deleted != True)
+                query = (htable.person_id == person.id)
                 fields = [htable.id]
                 if staff_person and vol_person:
                     # Unfiltered in query, need to separate afterwards
@@ -3835,14 +3831,14 @@ class PersonEntityAddressModel(S3Model):
                             pass
                         else:
                             # Update this HR's location from the Home Address
-                            db(htable.id == hr.id).update(location_id=location_id)
+                            hr.update_record(location_id = location_id)
                     elif vol_person:
                         if vol_site and hr.site_id:
                             # Volunteer who prioritises getting their location from their site
                             pass
                         else:
                             # Update this HR's location from the Home Address
-                            db(htable.id == hr.id).update(location_id=location_id)
+                            hr.update_record(location_id = location_id)
                     else:
                         # Staff-only
                         if staff_site and hr.site_id:
@@ -3850,16 +3846,77 @@ class PersonEntityAddressModel(S3Model):
                             pass
                         else:
                             # Update this HR's location from the Home Address
-                            db(htable.id == hr.id).update(location_id=location_id)
+                            hr.update_record(location_id = location_id)
 
         if settings.has_module("member"):
-            # Also check for any Member record(s)
+            # Also check for relevant Membership record(s)
             mtable = s3db.member_membership
-            query = (mtable.person_id == person.id) & \
-                    (mtable.deleted != True)
-            members = db(query).select(mtable.id)
+            members = db(mtable.person_id == person.id).select(mtable.id)
             for member in members:
-                db(mtable.id == member.id).update(location_id=location_id)
+                member.update_record(location_id = location_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_address_ondelete(form):
+        """
+            Update the Base Location if this was the source
+            Remove the associated location_id (if for a specific location, not just an Lx)
+        """
+
+        record_id = form.id
+
+        db = current.db
+        s3db = current.s3db
+        atable = db.pr_address
+
+        row = db(atable.id == record_id).select(atable.deleted_fk,
+                                                atable.is_base_location,
+                                                limitby = (0, 1),
+                                                ).first()
+        deleted_fk = json.loads(row.deleted_fk)
+        location_id = deleted_fk["location_id"]
+
+        if row.is_base_location:
+            pe_id = deleted_fk["pe_id"]
+            S3Tracker()(db.pr_pentity, pe_id).set_base_location(location_id)
+            ptable = s3db.pr_person
+            person = db(ptable.pe_id == pe_id).select(ptable.id,
+                                                      ptable.location_id,
+                                                      limitby = (0, 1),
+                                                      ).first()
+            if person.location_id == location_id:
+                person.update_record(location_id = None)
+
+            settings = current.deployment_settings
+            if settings.has_module("hrm"):
+                # Also check for relevant HR record(s)
+                htable = s3db.hrm_human_resource
+                hrs = db(htable.person_id == person.id).select(htable.id,
+                                                               htable.location_id,
+                                                               )
+                for hr in hrs:
+                    if hr.location_id == location_id:
+                        hr.update_record(location_id = None)
+
+            if settings.has_module("member"):
+                # Also check for relevant Membership record(s)
+                mtable = s3db.member_membership
+                members = db(mtable.person_id == person.id).select(mtable.id,
+                                                                   mtable.location_id,
+                                                                   )
+                for member in members:
+                    if member.location_id == location_id:
+                        member.update_record(location_id = None)
+
+        # Remove the associated location_id (if for a specific location, not just an Lx)
+        gtable = s3db.gis_location
+        location = db(gtable.id == location_id).select(gtable.level,
+                                                       limitby = (0, 1),
+                                                       ).first()
+        if not location.level:
+            # Delete the Location, if we can
+            resource = s3db.resource("gis_location", id = location_id)
+            resource.delete(cascade = True)
 
 # =============================================================================
 class PersonEntityContactModel(S3Model):

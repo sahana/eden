@@ -4432,7 +4432,8 @@ class HRExperienceModel(S3Model):
 
         tablename = "hrm_experience"
         self.define_table(tablename,
-                          person_id(),
+                          person_id(ondelete = "CASCADE",
+                                    ),
                           # Employment type (staff or volunteer)
                           Field("employment_type", "integer",
                                 default = hr_type.default,

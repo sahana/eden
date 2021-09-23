@@ -4,7 +4,7 @@ from gluon import current
 
 def config(settings):
     """
-        Template settings for Jordan
+        Template settings for Yemen
         - designed to be used in a Cascade with an application template
     """
 
