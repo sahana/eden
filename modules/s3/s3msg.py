@@ -751,9 +751,14 @@ class S3Msg(object):
                 arows = db(query).select(file_field)
                 for arow in arows:
                     file = arow.file
-                    prop = retrieve_file_properties(file)
-                    _file_path = os.path.join(prop["path"], file)
-                    attachments.append(mail_attachment(_file_path))
+                    try:
+                        prop = retrieve_file_properties(file)
+                    except TypeError:
+                        # file is likely None
+                        continue
+                    else:
+                        _file_path = os.path.join(prop["path"], file)
+                        attachments.append(mail_attachment(_file_path))
 
             elif contact_method == "SMS":
                 subject = None

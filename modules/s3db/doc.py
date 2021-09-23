@@ -205,15 +205,16 @@ class DocumentLibrary(S3Model):
         represent = doc_DocumentRepresent(lookup = tablename,
                                           fields = ("name", "file", "url"),
                                           labels = "%(name)s",
-                                          show_link = True)
+                                          show_link = True,
+                                          )
 
         document_id = S3ReusableField("document_id", "reference %s" % tablename,
                                       label = T("Document"),
                                       ondelete = "CASCADE",
                                       represent = represent,
-                                      requires = IS_ONE_OF(db,
-                                                           "doc_document.id",
-                                                           represent),
+                                      requires = IS_ONE_OF(db, "doc_document.id",
+                                                           represent,
+                                                           ),
                                       )
 
         add_components(tablename,
