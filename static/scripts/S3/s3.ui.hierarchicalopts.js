@@ -230,7 +230,7 @@
             tree.jstree({
                 'core': {
                     'themes': {
-                        name: 's3',
+                        //name: 'default', // 'default-dark' available, although not in our sources
                         icons: opts.icons,
                         stripes: opts.stripes
                     },

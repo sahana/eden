@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Script to reset all Monitor Taks on all Enabled Servers
+# Script to reset all Monitor Tasks on all Enabled Servers
 #
 # Run as:
 #   python web2py.py --no-banner -S eden -M -R applications/eden/static/scripts/tools/restart_monitor_tasks.py

@@ -3,11 +3,9 @@ import shutil
 
 import sys
 
-PY2 = sys.version_info[0] == 2
-
 # Open file in text mode, with Py3 to use encoding for unicode I/O
 def openf(fn, mode):
-    return open(fn, mode) if PY2 else open(fn, mode, encoding="utf-8")
+    return open(fn, mode, encoding="utf-8")
 
 def info(msg):
     sys.stderr.write("%s\n" % msg)

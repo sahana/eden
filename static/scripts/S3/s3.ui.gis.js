@@ -431,6 +431,8 @@
          *
          * (unused)
          *
+         * @ToDo: Use this to save a gis_config (WMC)
+         *
          * @returns {JSON} the JSON data
          *
         _serialize: function() {
@@ -445,6 +447,8 @@
          * Parse the JSON from real input into this.data
          *
          * (unused)
+         *
+         * @ToDo: Use this to load a gis_config (WMC)
          *
          * @returns {object} this.data
          */

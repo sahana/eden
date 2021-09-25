@@ -23,11 +23,9 @@ import os
 import shutil
 import sys
 
-PY2 = sys.version_info[0] == 2
-
 # Open file in text mode, with Py3 to use encoding for unicode I/O
 def openf(fn, mode):
-    return open(fn, mode) if PY2 else open(fn, mode, encoding="utf-8")
+    return open(fn, mode, encoding="utf-8")
 
 # For JS
 SCRIPTPATH = os.path.join(request.folder, "static", "scripts", "tools")
@@ -137,7 +135,12 @@ def cleanline(theLine):
     return cleaned
 
 def compressCSS(inputFilename, outputFilename):
-    """ Compress a CSS file """
+    """
+        Compress a CSS file
+        
+        @ToDo: Use cssnano via cssqueeze:
+        cssqueeze --source source.css --destination bundle.[hash].min.css
+    """
 
     with openf(inputFilename, "r") as inFile:
         output = ""
@@ -793,10 +796,7 @@ def main(argv):
 
 if __name__ == "__main__":
 
-    if PY2:
-        sys.exit(main(sys.argv[1:]))
-    else:
-        # Don't end with a SystemExit Exception
-        main(sys.argv[1:])
+    # Py3: Don't end with a SystemExit Exception
+    main(sys.argv[1:])
 
 # END =========================================================================

@@ -7757,7 +7757,7 @@ class MAP2(DIV):
             # No Map Config: Just show error in the DIV
             auth = current.auth
 
-            if auth.s3_has_permission("create", "gis_hierarchy"):
+            if auth.s3_has_permission("create", "gis_config"):
                 error_message = DIV(_class = "mapError")
                 # Deliberately not T() to save unneccessary load on translators
                 error_message.append("Map cannot display without GIS config!")
