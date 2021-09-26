@@ -1,6 +1,6 @@
 Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Site,Points,Trackable,Style,Opacity,Folder,Visible,Enabled,Cluster Threshold,Refresh
 Airports,All Active Airports,transport,airport,airport,Airport,{name} (T('Airport')),name,~.obsolete=False,,True,,,,,False,,,
-Assets,,asset,asset,asset,Flag,{number} (T('Asset')),"number",,,True,True,,,,False,,,
+Assets,,asset,asset,asset,Flag,{number} (T('Asset'))<br />{assigned_to_id},"number,assigned_to_id",,,True,True,,,,False,,,
 Demographics,For summary page,stats,demographic_data,,,{location_id}: {value},"location_id,value",,,,,"[{'prop':'value','fillOpacity':0.5}]",0.5,,False,False,0,0
 Heliports,All Active Heliports,transport,heliport,helicopter,Heliport,{name} (T('Heliport')),name,~.obsolete=False,,True,,,,,False,,,
 Hospitals,All Active Medical Facilities,hms,hospital,hospital,Medical Facility,{name} (T('Hospital')),name,~.obsolete=False,,True,,,,,False,,,
