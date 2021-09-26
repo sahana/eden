@@ -780,14 +780,17 @@ def s3_url_represent(url):
     """
 
     if not url:
-        return ""
+        return current.messages["NONE"]
 
     url_, error = IS_URL(allowed_schemes = ["http", "https", None],
                          prepend_scheme = "http",
                          )(url)
     if error:
         return url
-    return A(url_, _href=url_, _target="_blank")
+    return A(url_,
+             _href = url_,
+             _target = "_blank",
+             )
 
 # =============================================================================
 def s3_qrcode_represent(value, row=None, show_value=True):

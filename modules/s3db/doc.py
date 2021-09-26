@@ -436,7 +436,8 @@ class DocumentLibrary(S3Model):
         #    query = ((table.checksum == form_vars.checksum) & \
         #             (table.deleted == False))
         #    result = db(query).select(table.name,
-        #                              limitby=(0, 1)).first()
+        #                              limitby = (0, 1),
+        #                              ).first()
         #    if result:
         #        doc_name = result.name
         #        form.errors["file"] = "%s %s" % \
@@ -518,7 +519,8 @@ class DocumentLibrary(S3Model):
         #    query = ((table.checksum == form_vars.checksum) & \
         #             (table.deleted == False))
         #    result = db(query).select(table.name,
-        #                              limitby=(0, 1)).first()
+        #                              limitby = (0, 1),
+        #                              ).first()
         #    if result:
         #        doc_name = result.name
         #        form.errors["file"] = "%s %s" % \

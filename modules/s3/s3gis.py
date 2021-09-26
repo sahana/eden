@@ -8314,7 +8314,7 @@ class Layer(object):
                     record["cluster_distance"] = CLUSTER_DISTANCE
                     record["cluster_threshold"] = CLUSTER_THRESHOLD
                     # Default Marker?
-                    record["marker"] = Marker(tablename=tablename)
+                    record["marker"] = Marker(tablename = tablename)
 
             if metadata:
                 post_id = row.get("cms_post_layer.post_id", None)

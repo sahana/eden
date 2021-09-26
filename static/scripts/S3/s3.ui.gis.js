@@ -24,9 +24,8 @@
             //width: 400,         // Map Width (pixels)
             lat: 0,             // Center Lat
             lon: 0,             // Center Lon
-            //projection: 3857,  // EPSG:3857 = Spherical Mercator
-            zoom: 0,            // Map Zoom
-            layers_osm: []      // OpenStreetMap Layers
+            //projection: 3857,   // EPSG:3857 = Spherical Mercator
+            zoom: 0             // Map Zoom
         },
 
         /**
@@ -130,6 +129,7 @@
                 maxZoom,
                 opaque,
                 options,
+                osmLayer,
                 url;
 
             for (var i=0; i < layers_osm.length; i++) {
@@ -165,9 +165,19 @@
                            opaque: opaque,
                            url: url
                            }
-                layers.push(new ol.layer.Tile({
+
+                osmLayer = new ol.layer.Tile({
                                 source: new ol.source.OSM(options)
-                            }));
+                            })
+
+                if (undefined != layer._base) {
+                    osmLayer.setVisible(layer._base);
+                } else {
+                    // defaults to OFF
+                    osmLayer.setVisible(false);
+                }
+
+                layers.push(osmLayer);
             }
         },
 
@@ -188,7 +198,7 @@
                 layers_georss = options.layers_georss || [],
                 layers_shapefile = options.layers_shapefile || [],
                 layers_theme = options.layers_theme || [],
-                s3_popup_format,
+                proxyHost = this.proxyHost,
                 style,
                 url,
                 vectorLayer,
@@ -216,11 +226,14 @@
                 style = this.layerStyle(layer);
 
                 url = layer.url;
-                /* @ToDo: Optimise by not xferring appname
-                if (!url.startsWith('http')) {
+                if (url.startsWith('http')) {
+                    // Layer read from remote server: add proxy to avoid issues with CORS
+                    url = proxyHost.concat(url);
+                }/* else {
                     // Feature Layer read from this server
+                    // @ToDo: Optimise by not xferring appname
                     url = S3.Ap.concat(url);
-                } */
+                */
 
                 vectorSource = new ol.source.Vector({
                     url: url,
@@ -335,7 +348,7 @@
             var map = this.map,
                 id = this.id + '_' + layer.ol_uid + '_' + feature.get('id') + '_popup';
             if (iframe && url) {
-                if (url.indexOf('http://') === 0 ) {
+                if (url.indexOf('http') === 0 ) {
                     // Use Proxy for remote popups
                     url = this.proxyHost + encodeURIComponent(url);
                 }
@@ -379,7 +392,7 @@
          */
         _loadDetails: function(url, id, popup) {
             var self = this;
-            if (url.indexOf('http://') === 0) {
+            if (url.indexOf('http') === 0) {
                 // Use Proxy for remote popups
                 url = this.proxyHost + encodeURIComponent(url);
             }
@@ -481,10 +494,12 @@
                 coordinates,
                 defaults,
                 feature,
+                geometry,
+                geometryType,
                 key,
                 keys,
                 layer,
-                popup_format,
+                popupFormat,
                 results,
                 template;
 
@@ -502,18 +517,28 @@
                 if (results) {
                     feature = results.feature;
                     layer = results.layer;
-                    coordinates = feature.getGeometry().getCoordinates();
+                    geometry = feature.getGeometry();
+                    geometryType = geometry.getType();
+                    if (geometryType == 'Point') {
+                        coordinates = geometry.getCoordinates();
+                    } else if (geometryType == 'Polygon') {
+                        coordinates = geometry.getInteriorPoint().getCoordinates();
+                    } else {
+                        // @ToDo
+                        throw 'No support yet for Popups other than for Points or Polygons!';
+                    }
+
                     self.tooltip_ol.setPosition(coordinates);
 
                     if (undefined != layer.s3_popup_format) {
-                        // GeoJSON Feature Layers
+                        // GeoJSON Feature Layers (can also be used for external GeoJSON layers)
                         _.templateSettings = {interpolate: /\{(.+?)\}/g};
-                        popup_format = layer.s3_popup_format;
-                        template = _.template(popup_format);
+                        popupFormat = layer.s3_popup_format;
+                        template = _.template(popupFormat);
                         // Ensure we have all keys (we don't transmit empty attr)
                         attributes = {};//= feature.getProperties()
                         defaults = {};
-                        keys = popup_format.split('{');
+                        keys = popupFormat.split('{');
                         for (var i = 0; i < keys.length; i++) {
                             key = keys[i].split('}')[0];
                             attributes[key] = feature.get(key);
@@ -521,7 +546,7 @@
                         }
                         _.defaults(attributes, defaults);
                         content = template(attributes);
-                    } else if (undefined != attributes.popup) {
+                    } else if (undefined != feature.get('popup')) {
                         // Feature Queries or Theme Layers
                         content = feature.get('popup');
                     } else if (undefined != feature.get('name')) {
