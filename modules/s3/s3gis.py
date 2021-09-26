@@ -8486,24 +8486,21 @@ class LayerBing(Layer):
             apikey = current.deployment_settings.get_gis_api_bing()
             if not apikey:
                 raise Exception("Cannot display Bing layers unless we have an API key\n")
-            # Mandatory attributes
-            ldict = {"ApiKey": apikey
+            # Global attributes
+            layers = []
+            ldict = {"a": apikey,
+                     "l": layers,
                      }
 
             for sublayer in sublayers:
-                # Attributes which are defaulted client-side if not set
+                layer = {"i": sublayer.layer_id,
+                         "n": sublayer.name,
+                         "t": sublayer.type,
+                         }
                 if sublayer._base:
                     # Set default Base layer
-                    ldict["Base"] = sublayer.type
-                if sublayer.type == "aerial":
-                    ldict["Aerial"] = {"name": sublayer.name or "Bing Satellite",
-                                       "id": sublayer.layer_id}
-                elif sublayer.type == "road":
-                    ldict["Road"] = {"name": sublayer.name or "Bing Roads",
-                                     "id": sublayer.layer_id}
-                elif sublayer.type == "hybrid":
-                    ldict["Hybrid"] = {"name": sublayer.name or "Bing Hybrid",
-                                       "id": sublayer.layer_id}
+                    layer["b"] = 1
+                layers.append(layer)
             if options:
                 # Used by Map._setup()
                 options[self.dictname] = ldict

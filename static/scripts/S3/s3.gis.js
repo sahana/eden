@@ -1894,7 +1894,7 @@ S3.gis.yx = [
 
         // Bing
         if (options.Bing) {
-            addBingLayers(map);
+            addBingLayers(map, options.Bing);
         }
         // TMS
         if (options.layers_tms) {
@@ -2135,52 +2135,26 @@ S3.gis.yx = [
     };
 
     // Bing
-    var addBingLayers = function(map) {
+    var addBingLayers = function(map, Bing) {
 
-        var bing = map.s3.options.Bing,
-            ApiKey = bing.ApiKey,
-            layer;
+        var apiKey = Bing.a,
+            bingLayer,
+            layer,
+            layers_bing = Bing.l;
 
-        if (bing.Aerial) {
-            layer = new OpenLayers.Layer.Bing({
-                key: ApiKey,
-                type: 'Aerial',
-                name: bing.Aerial.name,
+        for (var i=0; i < layers_bing.length; i++) {
+            layer = layers_bing[i];
+            bingLayer = new OpenLayers.Layer.Bing({
+                key: apiKey,
+                type: layer.t,
+                name: layer.n,
                 // This is used to Save State
-                s3_layer_id: bing.Aerial.id,
+                s3_layer_id: layer.i,
                 s3_layer_type: 'bing'
             });
-            map.addLayer(layer);
-            if (bing.Base == 'aerial') {
-                map.setBaseLayer(layer);
-            }
-        }
-        if (bing.Road) {
-            layer = new OpenLayers.Layer.Bing({
-                key: ApiKey,
-                type: 'Road',
-                name: bing.Road.name,
-                // This is used to Save State
-                s3_layer_id: bing.Road.id,
-                s3_layer_type: 'bing'
-            });
-            map.addLayer(layer);
-            if (bing.Base == 'road') {
-                map.setBaseLayer(layer);
-            }
-        }
-        if (bing.Hybrid) {
-            layer = new OpenLayers.Layer.Bing({
-                key: ApiKey,
-                type: 'AerialWithLabels',
-                name: bing.Hybrid.name,
-                // This is used to Save State
-                s3_layer_id: bing.Hybrid.id,
-                s3_layer_type: 'bing'
-            });
-            map.addLayer(layer);
-            if (bing.Base == 'hybrid') {
-                map.setBaseLayer(layer);
+            map.addLayer(bingLayer);
+            if (layer.b) {
+                map.setBaseLayer(bingLayer);
             }
         }
     };

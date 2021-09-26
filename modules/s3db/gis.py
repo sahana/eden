@@ -2676,6 +2676,9 @@ class LayerEntityModel(S3Model):
             )
 
         self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("config_id",
+                                                            "layer_id",
+                                                            )),
                        onaccept = self.gis_layer_config_onaccept,
                        )
 
@@ -3335,7 +3338,18 @@ class LayerMapModel(S3Model):
         # ---------------------------------------------------------------------
         # Bing tiles
         #
-        bing_layer_types = ("aerial", "road", "hybrid")
+        # https://docs.microsoft.com/en-us/bingmaps/rest-services/imagery/get-imagery-metadata
+        bing_layer_types = {"Aerial": T("Aerial"),
+                            "AerialWithLabelsOnDemand": T("Aerial with Labels"),
+                            #"BirdseyeV2": T("Bird's eye (oblique-angle) imagery"),
+                            #"BirdseyeV2WithLabels": T("Bird's eye (oblique-angle) imagery with a road overlay"),
+                            "RoadOnDemand": T("Roads"),
+                            "CanvasDark": T("Roads (Dark)"),
+                            "CanvasLight": T("Roads (Light)"),
+                            "CanvasGray": T("Roads (Gray)"),
+                            "OrdnanceSurvey": T("Ordnance Survey (only visible for the London Area)"),
+                            #"Streetside": T("Street-level Imagery"),
+                            }
 
         tablename = "gis_layer_bing"
         define_table(tablename,
@@ -3344,6 +3358,7 @@ class LayerMapModel(S3Model):
                      desc_field()(),
                      Field("type", length=16,
                            label = TYPE,
+                           represent = S3Represent(options = bing_layer_types),
                            requires = IS_IN_SET(bing_layer_types),
                            ),
                      s3_role_required(),       # Single Role
@@ -3351,7 +3366,8 @@ class LayerMapModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
-                  onaccept = gis_layer_onaccept,
+                  deduplicate = S3Duplicate(primary = ("type",)),
+                  onaccept = self.gis_layer_bing_onaccept,
                   super_entity = "gis_layer_entity",
                   )
 
@@ -4234,6 +4250,28 @@ class LayerMapModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def gis_layer_bing_onaccept(form):
+        """
+            If we don't specify a name then provide a default
+        """
+
+        form_vars = form.vars
+
+        name = form_vars.get("name")
+        if not name:
+            table = current.s3db.gis_layer_bing
+            record = current.db(table.id == form.vars.id).select(table.id,
+                                                                 table.type,
+                                                                 limitby = (0, 1),
+                                                                 ).first()
+
+            record.update_record(name = table.type.represent(record.type))
+
+        # Normal Layer onaccept
+        gis_layer_onaccept(form)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def gis_layer_file_onvalidation(form):
         """
             Check we have either a URL or a file
@@ -4281,13 +4319,11 @@ class LayerMapModel(S3Model):
             If we have a file, then set the URL to point to it
         """
 
-        layer_id = form.vars.id
-
         table = current.s3db.gis_layer_geojson
-        record = current.db(table.id == layer_id).select(table.id,
-                                                         table.file,
-                                                         limitby = (0, 1),
-                                                         ).first()
+        record = current.db(table.id == form.vars.id).select(table.id,
+                                                             table.file,
+                                                             limitby = (0, 1),
+                                                             ).first()
         if record and record.file:
             # Use the filename to build the URL
             record.update_record(url = URL(c = "static",
@@ -4330,13 +4366,11 @@ class LayerMapModel(S3Model):
             If we have a file, then set the URL to point to it
         """
 
-        layer_id = form.vars.id
-
         table = current.s3db.gis_layer_kml
-        record = current.db(table.id == layer_id).select(table.id,
-                                                         table.file,
-                                                         limitby = (0, 1),
-                                                         ).first()
+        record = current.db(table.id == form.vars.id).select(table.id,
+                                                             table.file,
+                                                             limitby = (0, 1),
+                                                             ).first()
         if record and record.file:
             # Use the filename to build the URL
             record.update_record(url = URL(c = "static",

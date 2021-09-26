@@ -107,25 +107,35 @@
          * Add Layers to the Map
          */
         addLayers: function() {
-            var layers = [];
+            var allLayers = [],
+                options = this.options;
 
             // OpenStreetMap
-            this.addLayersOSM(layers);
+            var layers_osm = options.layers_osm
+            if (undefined != layers_osm) {
+                this.addLayersOSM(allLayers, layers_osm);
+            }
+
+            // Bing
+            var Bing = options.Bing
+            if (undefined != Bing) {
+                this.addLayersBing(allLayers, Bing);
+            }
 
             // GeoJSON Layers
-            this.addLayersGeoJSON(layers);
+            this.addLayersGeoJSON(allLayers, options);
 
-            return layers;
+            return allLayers;
         },
 
         /**
          * Add OSM Layers to the Map
          */
-        addLayersOSM: function(layers) {
+        addLayersOSM: function(allLayers, layers_osm) {
+
             var attributions,
                 base,
                 layer,
-                layers_osm = this.options.layers_osm || [],
                 maxZoom,
                 opaque,
                 options,
@@ -177,7 +187,46 @@
                     osmLayer.setVisible(false);
                 }
 
-                layers.push(osmLayer);
+                allLayers.push(osmLayer);
+            }
+        },
+
+        /**
+         * Add Bing Layers to the Map
+         */
+        addLayersBing: function(allLayers, Bing) {
+            var apiKey = Bing.a,
+                bingLayer,
+                layer,
+                layers_bing = Bing.l;
+                
+
+            for (var i=0; i < layers_bing.length; i++) {
+
+                layer = layers_bing[i];
+
+                bingLayer = new ol.layer.Tile({
+                                source: new ol.source.BingMaps({
+                                    key: apiKey,
+                                    imagerySet: layer.t,
+                                    name: layer.n,
+                                    // This is used to Save State
+                                    s3_layer_id: layer.i,
+                                    s3_layer_type: 'bing'
+                                    // use maxZoom 19 to see stretched tiles instead of the BingMaps
+                                    // "no photos at this zoom level" tiles
+                                    // maxZoom: 19
+                                })
+                            })
+
+                if (undefined != layer.b) {
+                    bingLayer.setVisible(true);
+                } else {
+                    // defaults to OFF
+                    bingLayer.setVisible(false);
+                }
+
+                allLayers.push(bingLayer);
             }
         },
 
@@ -186,9 +235,8 @@
          *
          * @ToDo: Combine these 7 layer types server-side to save a little bandwidth
          */
-        addLayersGeoJSON: function(layers) {
-            var options = this.options,
-                feature_queries = options.feature_queries || [],
+        addLayersGeoJSON: function(allLayers, options) {
+            var feature_queries = options.feature_queries || [],
                 feature_resources = options.feature_resources || [],
                 format,
                 layer,
@@ -267,7 +315,7 @@
                     vectorLayer.setVisible(layer.visibility);
                 }
 
-                layers.push(vectorLayer);
+                allLayers.push(vectorLayer);
             }
         },
 
