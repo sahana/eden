@@ -232,6 +232,10 @@
                     style: style
                 });
 
+                if (undefined != layer.dir) {
+                    vectorLayer.dir = layer.dir;
+                }
+
                 // Set the popup_format, even if empty
                 // - leave if not set (e.g. Feature Queries)
                 if (undefined != layer.popup_format) {
@@ -245,6 +249,10 @@
                     layerType = 'feature';
                 }
                 vectorLayer.s3_layer_type = layerType;
+
+                if (undefined != layer.visibility) {
+                    vectorLayer.setVisible(layer.visibility);
+                }
 
                 layers.push(vectorLayer);
             }

@@ -7422,11 +7422,11 @@ class MAP2(DIV):
 
         # Load CSS now as too late in xml()
         stylesheets = current.response.s3.stylesheets
-        stylesheet = "gis/ol6.css"
+        stylesheet = "gis/ol.css"
         if stylesheet not in stylesheets:
             stylesheets.append(stylesheet)
         # @ToDo: Move this to Theme
-        stylesheet = "gis/ol6_popup.css"
+        stylesheet = "gis/ol_popup.css"
         if stylesheet not in stylesheets:
             stylesheets.append(stylesheet)
 

@@ -55,7 +55,7 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
         var ol_files = [
             /* List of files needs syncing with:
                 /static/scripts/gis/openlayers/lib/OpenLayers.js
-                /static/scripts/tools/sahana.js.ol.cfg
+                /static/scripts/tools/sahana.js.ol2.cfg
             */
             'gis/openlayers/lib/OpenLayers/BaseTypes/Class.js',
             'gis/openlayers/lib/OpenLayers/Util.js',

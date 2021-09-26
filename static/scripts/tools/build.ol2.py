@@ -29,7 +29,7 @@ def move_to(filename, path):
     shutil.move(filename, path)
 
 sourceDirectoryOpenLayers = "../gis/openlayers/lib"
-configFilenameOpenLayers = "sahana.js.ol.cfg"
+configFilenameOpenLayers = "sahana.js.ol2.cfg"
 outputFilenameOpenLayers = "OpenLayers.js"
 mergedOpenLayers = mergejs.run(sourceDirectoryOpenLayers,
                                None,

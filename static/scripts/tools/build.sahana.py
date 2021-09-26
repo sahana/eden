@@ -570,7 +570,7 @@ def do_js(minimize,
         sourceDirectoryMGRS = "../gis"
         sourceDirectoryGeoExt = "../gis/GeoExt/lib"
         sourceDirectoryGxp = "../gis/gxp"
-        configFilenameOpenLayers = "sahana.js.ol.cfg"
+        configFilenameOpenLayers = "sahana.js.ol2.cfg"
         configFilenameMGRS = "sahana.js.mgrs.cfg"
         configFilenameGeoExt = "sahana.js.geoext.cfg"
         configFilenameGxpMin = "sahana.js.gxp.cfg"

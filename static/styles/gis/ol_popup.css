@@ -1,0 +1,56 @@
+.s3-gis-tooltip {
+    background-color: white;
+    padding: 5px;
+}
+.s3-gis-popup {
+    display: none;
+    position: absolute;
+    background-color: white;
+    padding: 15px 25px 15px 15px;
+    border: 1px solid #cccccc;
+    bottom: 12px;
+    left: -50px;
+}
+.s3-gis-popup:after,
+.s3-gis-popup:before {
+    top: 100%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+}
+.s3-gis-popup:after {
+    border-top-color: white;
+    border-width: 10px;
+    left: 48px;
+    margin-left: -10px;
+}
+.s3-gis-popup:before {
+    border-top-color: #cccccc;
+    border-width: 11px;
+    left: 48px;
+    margin-left: -11px;
+}
+.s3-gis-popup-content {
+    min-width: 170px;
+    max-height: 200px;
+    overflow-x: auto;
+}
+.s3-gis-popup-close {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 150%;
+    padding: 0 4px;
+    /* Match FontAwesome fa fa close */
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+.s3-gis-popup-close:before {
+    content: "\f00d";
+}
