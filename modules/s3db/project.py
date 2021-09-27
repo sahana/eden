@@ -27,8 +27,6 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from __future__ import division
-
 __all__ = ("ProjectModel",
            "ProjectActivityModel",
            "ProjectActivityDemographicsModel",

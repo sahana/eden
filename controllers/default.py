@@ -1097,8 +1097,8 @@ def person():
                     table.other_details.readable = True
 
                 elif r.component_name == "config":
-                    ctable = s3db.gis_config
-                    s3db.gis_config_form_setup()
+                    from s3db.gis import gis_config_form_setup
+                    gis_config_form_setup()
 
                     # Create forms use this
                     # (update forms are in gis/config())

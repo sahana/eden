@@ -2457,14 +2457,14 @@ class OrganisationServiceModel(S3Model):
                      on_define = lambda table: \
                         [table.parent.set_attributes(
                             represent = service_represent,
-                            requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                                     "org_service.id",
-                                                      service_represent,
-                                                      # If limiting to just 1 level of parent
-                                                      #filterby="parent",
-                                                      #filter_opts=(None,),
-                                                      orderby="org_service.name",
-                                                      )),
+                            requires = IS_EMPTY_OR(
+                                        IS_ONE_OF(db, "org_service.id",
+                                                  service_represent,
+                                                  # If limiting to just 1 level of parent
+                                                  #filterby = "parent",
+                                                  #filter_opts = (None,),
+                                                  orderby = "org_service.name",
+                                                  )),
                             ),
                          table.root_service.set_attributes(
                             represent = service_represent,
@@ -2557,11 +2557,13 @@ class OrganisationServiceModel(S3Model):
         # - normally use org_service_location instead, but can use this simpler
         #   variant if-required
         #
+        org_site_types = current.auth.org_site_types
         tablename = "org_service_site"
         define_table(tablename,
                      service_id(),
                      super_link("site_id", "org_site",
                                 label = SITE,
+                                instance_types = org_site_types,
                                 readable = True,
                                 writable = True,
                                 represent = self.org_site_represent,
@@ -2602,6 +2604,7 @@ class OrganisationServiceModel(S3Model):
                      # (component not instance)
                      super_link("site_id", "org_site",
                                 label = SITE,
+                                instance_types = org_site_types,
                                 readable = True,
                                 writable = True,
                                 represent = self.org_site_represent,
@@ -2635,7 +2638,7 @@ class OrganisationServiceModel(S3Model):
                      Field("status",
                            default = "ACTIVE",
                            label = T("Status"),
-                           represent = S3Represent(options=dict(service_status_opts)),
+                           represent = S3Represent(options = dict(service_status_opts)),
                            requires = IS_IN_SET(service_status_opts,
                                                 sort = False,
                                                 zero = None,
@@ -2744,9 +2747,8 @@ class OrganisationServiceModel(S3Model):
         service_location_id = S3ReusableField("service_location_id",
                                               "reference %s" % tablename,
                                               ondelete = "CASCADE",
-                                              requires = IS_ONE_OF(db,
-                                                            "org_service_location.id",
-                                                            ),
+                                              requires = IS_ONE_OF(db, "org_service_location.id",
+                                                                   ),
                                               )
 
 
@@ -2807,10 +2809,10 @@ class OrganisationServiceModel(S3Model):
                                           label = T("Booking Mode"),
                                           ondelete = "SET NULL",
                                           represent = represent,
-                                          requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                                        "%s.id" % tablename,
-                                                        represent,
-                                                        )),
+                                          requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db, "%s.id" % tablename,
+                                                                  represent,
+                                                                  )),
                                           )
 
         # ---------------------------------------------------------------------
@@ -2853,10 +2855,10 @@ class OrganisationServiceModel(S3Model):
                                           label = T("Service Mode"),
                                           ondelete = "SET NULL",
                                           represent = represent,
-                                          requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                                        "%s.id" % tablename,
-                                                        represent,
-                                                        )),
+                                          requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db, "%s.id" % tablename,
+                                                                  represent,
+                                                                  )),
                                           )
 
         # ---------------------------------------------------------------------
@@ -2903,7 +2905,8 @@ class OrganisationServiceModel(S3Model):
                          (table.location == None)
 
             duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
+                                                 limitby = (0, 1),
+                                                 ).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -2919,6 +2922,7 @@ def org_service_root_service(service_id):
     record = db(table.id == service_id).select(table.id,
                                                table.root_service,
                                                table.parent,
+                                               limitby = (0, 1),
                                                ).first()
 
     try:
@@ -2957,7 +2961,7 @@ def org_service_root_service(service_id):
         # If this node doesn't have the correct root, the children
         # won't have either, so update them all
         nodes = descendants({service_id})
-        db(table.id.belongs(nodes)).update(root_service=new_root)
+        db(table.id.belongs(nodes)).update(root_service = new_root)
 
     return new_root
 
@@ -3413,19 +3417,22 @@ class SiteModel(S3Model):
         # Custom Method for S3SiteAutocompleteWidget
         set_method("org", "site",
                    method = "search_ac",
-                   action = self.site_search_ac)
+                   action = self.site_search_ac,
+                   )
 
         # Custom Method for S3AddPersonWidget
         # @ToDo: One for HRMs
         set_method("org", "site",
                    method = "site_contact_person",
-                   action = self.site_contact_person)
+                   action = self.site_contact_person,
+                   )
 
         # Custom Method to Assign HRs
         # - done in instances
         #set_method("org", "site",
         #           method = "assign",
-        #           action = self.hrm_AssignMethod(component="human_resource_site"))
+        #           action = self.hrm_AssignMethod(component = "human_resource_site"),
+        #           )
 
         list_fields = ["code",
                        "instance_type",
@@ -3607,7 +3614,9 @@ class SiteModel(S3Model):
         query = (stable.code == code) & \
                 (stable.site_id != site_id) & \
                 (stable.deleted == False)
-        duplicate = db(query).select(stable.site_id, limitby=(0, 1)).first()
+        duplicate = db(query).select(stable.site_id,
+                                     limitby = (0, 1),
+                                     ).first()
         if not duplicate:
             return code
 
@@ -3707,7 +3716,7 @@ class SiteModel(S3Model):
                 code = prefix[:-suffix_length] + suffix
                 query = (stable.code == code) & (stable.site_id != site_id)
                 duplicate = db(query).select(stable.site_id,
-                                             limitby = (0, 1)
+                                             limitby = (0, 1),
                                              ).first()
                 if not duplicate:
                     return code
@@ -3751,7 +3760,7 @@ class SiteModel(S3Model):
             # Look up from record
             row = db(table.site_id == site_id).select(table.name,
                                                       table.code,
-                                                      limitby = (0, 1)
+                                                      limitby = (0, 1),
                                                       ).first()
             if not row:
                 # Record doesn't exist
@@ -3933,6 +3942,10 @@ class SiteDetailsModel(S3Model):
         settings = current.deployment_settings
         last_contacted = settings.get_org_site_last_contacted()
 
+        super_link = self.super_link
+
+        org_site_types = current.auth.org_site_types
+
         site_status_opts = {
             1: T("Normal"),
             2: T("Compromised"),
@@ -3954,12 +3967,14 @@ class SiteDetailsModel(S3Model):
         tablename = "org_site_status"
         self.define_table(tablename,
                           # Component not instance
-                          self.super_link("site_id", "org_site"),
+                          super_link("site_id", "org_site",
+                                     instance_types = org_site_types,
+                                     ),
                           Field("facility_status", "integer",
-                                requires = IS_EMPTY_OR(
-                                            IS_IN_SET(site_status_opts)),
                                 label = T("Facility Status"),
                                 represent = S3Represent(options = site_status_opts),
+                                requires = IS_EMPTY_OR(
+                                            IS_IN_SET(site_status_opts)),
                                 ),
                           s3_date("date_reopening",
                                   label = T("Estimated Reopening Date"),
@@ -3968,15 +3983,15 @@ class SiteDetailsModel(S3Model):
                                   ),
                           Field("power_supply_type", "integer",
                                 label = T("Power Supply Type"),
+                                represent = S3Represent(options = power_supply_type_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(power_supply_type_opts,
-                                                      zero=None)),
-                                represent = S3Represent(options = power_supply_type_opts),
+                                                      zero = None)),
                                 ),
                           s3_date("last_contacted",
                                   label = T("Last Contacted"),
                                   readable = last_contacted,
-                                   writable = last_contacted,
+                                  writable = last_contacted,
                                   ),
                           *s3_meta_fields())
 
@@ -4001,7 +4016,9 @@ class SiteDetailsModel(S3Model):
         tablename = "org_site_details"
         self.define_table(tablename,
                           # Component not instance
-                          self.super_link("site_id", "org_site"),
+                          super_link("site_id", "org_site",
+                                     instance_types = org_site_types,
+                                     ),
                           self.org_service_mode_id(
                               readable = False,
                               writable = False,
@@ -4059,17 +4076,19 @@ class SiteEventModel(S3Model):
         tablename = "org_site_event"
         self.define_table(tablename,
                           # Component not instance
-                          self.super_link("site_id", "org_site"),
+                          self.super_link("site_id", "org_site",
+                                          instance_types = current.auth.org_site_types,
+                                          ),
                           s3_datetime(default = "now"),
                           Field("event", "integer",
                                 label = T("Event"),
-                                requires = IS_IN_SET(event_opts),
                                 represent = S3Represent(options = event_opts),
+                                requires = IS_IN_SET(event_opts),
                                 ),
                           Field("status", "integer",
                                 label = T("Status"),
-                                requires = IS_EMPTY_OR(IS_IN_SET(site_status_opts)),
                                 represent = S3Represent(options = site_status_opts),
+                                requires = IS_EMPTY_OR(IS_IN_SET(site_status_opts)),
                                 ),
                           self.pr_person_id(ondelete = "SET NULL"),
                           s3_comments(),
@@ -4105,7 +4124,9 @@ class SiteGroupModel(S3Model):
         tablename = "org_site_org_group"
         self.define_table(tablename,
                           # Component not instance
-                          self.super_link("site_id", "org_site"),
+                          self.super_link("site_id", "org_site",
+                                          instance_types = current.auth.org_site_types,
+                                          ),
                           self.org_group_id(empty = False,
                                             ondelete = "CASCADE",
                                             ),
@@ -4137,7 +4158,9 @@ class SiteLayoutModel(S3Model):
         tablename = "org_site_layout"
         self.define_table(tablename,
                           # Component not instance
-                          self.super_link("site_id", "org_site"),
+                          self.super_link("site_id", "org_site",
+                                          instance_types = current.auth.org_site_types,
+                                          ),
                           Field("name", length=64, notnull=True,
                                label = T("Name"),
                                requires = [IS_NOT_EMPTY(),
@@ -4235,7 +4258,7 @@ class SiteLocationModel(S3Model):
                                           ),
                           self.gis_location_id(
                             #represent = self.gis_LocationRepresent(sep=", "),
-                            represent = S3Represent(lookup="gis_location"),
+                            represent = S3Represent(lookup = "gis_location"),
                             requires = IS_LOCATION(),
                             widget = S3LocationAutocompleteWidget()
                           ),
@@ -4827,7 +4850,8 @@ class FacilityModel(S3Model):
         # Custom Method to Assign HRs
         self.set_method("org", "facility",
                         method = "assign",
-                        action = self.hrm_AssignMethod(component="human_resource_site"))
+                        action = self.hrm_AssignMethod(component = "human_resource_site"),
+                        )
 
         # ---------------------------------------------------------------------
         # Link Table: Sites <> Facility Types
@@ -7157,7 +7181,7 @@ def org_organisation_controller():
                                            gtable.name,
                                            gtable.level,
                                            gtable.path,
-                                           limitby = (0, 1)
+                                           limitby = (0, 1),
                                            ).first()
                     if row and row.level:
                         if row.level != "L0":
@@ -7167,7 +7191,7 @@ def org_organisation_controller():
                             query = (ttable.tag == "ISO2") & \
                                     (ttable.location_id == row.id)
                             tag = db(query).select(ttable.value,
-                                                   limitby = (0, 1)
+                                                   limitby = (0, 1),
                                                    ).first()
                             code = tag.value
                         branch_filter |= (FS("parent.country") != code) | \
@@ -7235,7 +7259,7 @@ def org_organisation_controller():
                             type_table = s3db.org_organisation_type
                             query = (type_table.name == type_filter)
                             row = db(query).select(type_table.id,
-                                                   limitby = (0, 1)
+                                                   limitby = (0, 1),
                                                    ).first()
                             type_id = row and row.id
                             if type_id:
@@ -7271,21 +7295,21 @@ def org_organisation_controller():
 
                     ortable = s3db.org_organisation_region
                     row = db(ortable.organisation_id == organisation_id).select(ortable.region_id,
-                                                                                limitby = (0, 1)
+                                                                                limitby = (0, 1),
                                                                                 ).first()
                     if row:
                         ortable.region_id.default = row.region_id
 
                     ostable = s3db.org_sector_organisation
                     row = db(ostable.organisation_id == organisation_id).select(ostable.sector_id,
-                                                                                limitby = (0, 1)
+                                                                                limitby = (0, 1),
                                                                                 ).first()
                     if row:
                         ostable.sector_id.default = row.sector_id
 
                     ottable = s3db.org_organisation_organisation_type
                     row = db(ottable.organisation_id == organisation_id).select(ottable.organisation_type_id,
-                                                                                limitby = (0, 1)
+                                                                                limitby = (0, 1),
                                                                                 ).first()
                     if row:
                         ottable.organisation_type_id.default = row.organisation_type_id

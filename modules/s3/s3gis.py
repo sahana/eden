@@ -1716,7 +1716,7 @@ class GIS(object):
                     levels[key] = COUNTRY
                 elif key in row and row[key]:
                     # Only include rows with values
-                    levels[key] = str(T(row[key]))
+                    levels[key] = s3_str(T(row[key]))
             if not _location:
                 # Cache the value
                 self.hierarchy_levels = levels
@@ -7663,7 +7663,8 @@ class MAP2(DIV):
                                   left = left,
                                   limitby = limitby,
                                   orderby = orderby,
-                                  *fields)
+                                  *fields
+                                  )
         if not layers:
             # Use Site Default base layer
             # (Base layer doesn't need a style)
@@ -8177,7 +8178,7 @@ def addFeatureResources(feature_resources):
                 # i18n
                 items = regex_translate.findall(popup_format)
                 for item in items:
-                    titem = str(T(item[1:-1]))
+                    titem = s3_str(T(item[1:-1]))
                     popup_format = popup_format.replace("T(%s)" % item,
                                                         titem)
             _layer["popup_format"] = popup_format
@@ -8481,11 +8482,16 @@ class LayerBing(Layer):
     def as_dict(self, options=None):
         sublayers = self.sublayers
         if sublayers:
+
             if Projection().epsg != 900913:
+                # Raising exception prevents Map from loading in debug mode, otherwise just logs error
                 raise Exception("Cannot display Bing layers unless we're using the Spherical Mercator Projection\n")
+
             apikey = current.deployment_settings.get_gis_api_bing()
             if not apikey:
+                # Raising exception prevents Map from loading in debug mode, otherwise just logs error
                 raise Exception("Cannot display Bing layers unless we have an API key\n")
+
             # Global attributes
             layers = []
             ldict = {"a": apikey,
@@ -8501,6 +8507,7 @@ class LayerBing(Layer):
                     # Set default Base layer
                     layer["b"] = 1
                 layers.append(layer)
+
             if options:
                 # Used by Map._setup()
                 options[self.dictname] = ldict
@@ -8642,7 +8649,7 @@ class LayerFeature(Layer):
                     T = current.T
                     items = regex_translate.findall(popup_format)
                     for item in items:
-                        titem = str(T(item[1:-1]))
+                        titem = s3_str(T(item[1:-1]))
                         popup_format = popup_format.replace("T(%s)" % item,
                                                             titem)
                 output["popup_format"] = popup_format
@@ -8716,7 +8723,7 @@ class LayerGeoJSON(Layer):
                     T = current.T
                     items = regex_translate.findall(popup_format)
                     for item in items:
-                        titem = str(T(item[1:-1]))
+                        titem = s3_str(T(item[1:-1]))
                         popup_format = popup_format.replace("T(%s)" % item,
                                                             titem)
                 output["popup_format"] = popup_format
@@ -8833,82 +8840,56 @@ class LayerGoogle(Layer):
     def as_dict(self, options=None):
         sublayers = self.sublayers
         if sublayers:
-            T = current.T
-            spherical_mercator = (Projection().epsg == 900913)
-            settings = current.deployment_settings
-            apikey = settings.get_gis_api_google()
+
+            if Projection().epsg != 900913:
+                # Raising exception prevents Map from loading in debug mode, otherwise just logs error
+                raise Exception("Cannot display Google layers unless we're using the Spherical Mercator Projection\n")
+
+            apikey = current.deployment_settings.get_gis_api_google()
+            if not apikey:
+                # Raising exception prevents Map from loading in debug mode, otherwise just logs error
+                raise Exception("Cannot display Google layers unless we have an API key\n")
+
             s3 = current.response.s3
-            debug = s3.debug
             # Google scripts use document.write so cannot be loaded async via yepnope.js
-            s3_scripts = s3.scripts
+            # v3 API
+            # https://developers.google.com/maps/documentation/javascript/versions
+            script = "//maps.google.com/maps/api/js?v=quarterly&key=%s" % apikey
+            if script not in s3.scripts:
+                s3.scripts.append(script)
+            if self.openlayers > 2:
+                # OL6 only
+                # https://github.com/mapgears/ol3-google-maps
+                #if script not in s3.scripts:
+                #    s3.scripts.append(script)
+                stylesheet = "gis/olgm.css"
+                if stylesheet not in s3.stylesheets:
+                    s3.stylesheets.append(stylesheet)
 
-            ldict = {}
-
-            if spherical_mercator:
-                # Earth was the only layer which can run in non-Spherical Mercator
-                # @ToDo: Warning?
-                for sublayer in sublayers:
-                    # Attributes which are defaulted client-side if not set
-                    #if sublayer.type == "earth":
-                    #    # Deprecated:
-                    #    # https://maps-apis.googleblog.com/2014/12/announcing-deprecation-of-google-earth.html
-                    #    ldict["Earth"] = str(T("Switch to 3D"))
-                    #    #{"modules":[{"name":"earth","version":"1"}]}
-                    #    script = "//www.google.com/jsapi?key=" + apikey + "&autoload=%7B%22modules%22%3A%5B%7B%22name%22%3A%22earth%22%2C%22version%22%3A%221%22%7D%5D%7D"
-                    #    if script not in s3_scripts:
-                    #        s3_scripts.append(script)
-                    #    # Dynamic Loading not supported: https://developers.google.com/loader/#Dynamic
-                    #    #s3.jquery_ready.append('''try{google.load('earth','1')catch(e){}''')
-                    #    if debug:
-                    #        self.scripts.append("gis/gxp/widgets/GoogleEarthPanel.js")
-                    #    else:
-                    #        self.scripts.append("gis/gxp/widgets/GoogleEarthPanel.min.js")
-                    #    s3.js_global.append('''S3.public_url="%s"''' % settings.get_base_public_url())
-                    if sublayer._base:
-                        # Set default Base layer
-                        ldict["Base"] = sublayer.type
-                    if sublayer.type == "satellite":
-                        ldict["Satellite"] = {"name": sublayer.name or "Google Satellite",
-                                              "id": sublayer.layer_id}
-                    elif sublayer.type == "maps":
-                        ldict["Maps"] = {"name": sublayer.name or "Google Maps",
-                                         "id": sublayer.layer_id}
-                    elif sublayer.type == "hybrid":
-                        ldict["Hybrid"] = {"name": sublayer.name or "Google Hybrid",
-                                           "id": sublayer.layer_id}
-                    elif sublayer.type == "streetview":
-                        ldict["StreetviewButton"] = "Click where you want to open Streetview"
-                    elif sublayer.type == "terrain":
-                        ldict["Terrain"] = {"name": sublayer.name or "Google Terrain",
-                                            "id": sublayer.layer_id}
-                    elif sublayer.type == "mapmaker":
-                        ldict["MapMaker"] = {"name": sublayer.name or "Google MapMaker",
-                                             "id": sublayer.layer_id}
-                    elif sublayer.type == "mapmakerhybrid":
-                        ldict["MapMakerHybrid"] = {"name": sublayer.name or "Google MapMaker Hybrid",
-                                                   "id": sublayer.layer_id}
-
-                if "MapMaker" in ldict or "MapMakerHybrid" in ldict:
-                    # Need to use v2 API
-                    # This should be able to be fixed in OpenLayers now since Google have fixed in v3 API:
-                    # http://code.google.com/p/gmaps-api-issues/issues/detail?id=2349#c47
-                    script = "//maps.google.com/maps?file=api&v=2&key=%s" % apikey
-                    if script not in s3_scripts:
-                        s3_scripts.append(script)
-                else:
-                    # v3 API
-                    # https://developers.google.com/maps/documentation/javascript/versions
-                    script = "//maps.google.com/maps/api/js?v=quarterly&key=%s" % apikey
-                    if script not in s3_scripts:
-                        s3_scripts.append(script)
-                    if "StreetviewButton" in ldict:
-                        # Streetview doesn't work with v2 API
-                        ldict["StreetviewButton"] = str(T("Click where you want to open Streetview"))
-                        ldict["StreetviewTitle"] = str(T("Street View"))
-                        if debug:
-                            self.scripts.append("gis/gxp/widgets/GoogleStreetViewPanel.js")
-                        else:
-                            self.scripts.append("gis/gxp/widgets/GoogleStreetViewPanel.min.js")
+            # Global attributes
+            layers = []
+            ldict = {"l": layers,
+                     }
+            for sublayer in sublayers:
+                sublayer_type = sublayer.type
+                if sublayer_type == "streetview":
+                    # Streetview isn't a Layer
+                    T = current.T
+                    ldict["svb"] = s3_str(T("Click where you want to open Streetview"))
+                    ldict["svt"] = s3_str(T("Street View"))
+                    if s3.debug:
+                        self.scripts.append("gis/gxp/widgets/GoogleStreetViewPanel.js")
+                    else:
+                        self.scripts.append("gis/gxp/widgets/GoogleStreetViewPanel.min.js")
+                    continue
+                layer = {"i": sublayer.layer_id,
+                         "n": sublayer.name,
+                         "t": sublayer_type,
+                         }
+                if sublayer._base:
+                    # Set default Base layer
+                    layer["b"] = 1
+                layers.append(layer)
 
             if options:
                 # Used by Map._setup()
@@ -9002,7 +8983,8 @@ class LayerKML(Layer):
         request = current.request
         cachepath = os.path.join(request.folder,
                                  "uploads",
-                                 "gis_cache")
+                                 "gis_cache",
+                                 )
 
         if os.path.exists(cachepath):
             cacheable = os.access(cachepath, os.W_OK)
@@ -9042,7 +9024,8 @@ class LayerKML(Layer):
                 download = True
                 query = (cachetable.name == name)
                 cached = db(query).select(cachetable.modified_on,
-                                          limitby = (0, 1)).first()
+                                          limitby = (0, 1),
+                                          ).first()
                 refresh = self.refresh or 900 # 15 minutes set if we have no data (legacy DB)
                 if cached:
                     modified_on = cached.modified_on
@@ -9062,12 +9045,15 @@ class LayerKML(Layer):
                                                      session_id,
                                                      ])
                     if cached:
-                        db(query).update(modified_on=request.utcnow)
+                        db(query).update(modified_on = request.utcnow)
                     else:
-                        cachetable.insert(name=name, file=filename)
+                        cachetable.insert(name = name,
+                                          file = filename,
+                                          )
 
                 url = URL(c="default", f="download",
-                          args=[filename])
+                          args = [filename],
+                          )
             else:
                 # No caching possible (e.g. GAE), display file direct from remote (using Proxy)
                 # (Requires OpenLayers.Layer.KML to be available)
@@ -9178,11 +9164,9 @@ class LayerOpenWeatherMap(Layer):
         if sublayers:
             apikey = current.deployment_settings.get_gis_api_openweathermap()
             if not apikey:
-                # Raising exception prevents gis/index view from loading
-                # - logging the error should suffice?
-                #raise Exception("Cannot display OpenWeatherMap layers unless we have an API key\n")
-                current.log.error("Cannot display OpenWeatherMap layers unless we have an API key")
-                return {}
+                # Raising exception prevents Map from loading in debug mode, otherwise just logs error
+                raise Exception("Cannot display OpenWeatherMap layers unless we have an API key\n")
+
             current.response.s3.js_global.append("S3.gis.openweathermap='%s'" % apikey)
             ldict = {}
             for sublayer in sublayers:

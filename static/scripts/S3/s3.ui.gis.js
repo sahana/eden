@@ -1,11 +1,13 @@
 /*
  * Map Widget
  */
+import { googleInteractions, GoogleLayer, OLGoogleMaps } from '../gis/olgm.min.js'; // This includes some core OL too, which isn't ideal
+ 
 (function(factory) {
     'use strict';
     // Use window. for Browser globals (not AMD or Node):
-    factory(window.jQuery, window._, window.ol);
-})(function($, _, ol) {
+    factory(window.jQuery, window._, window.ol, googleInteractions, GoogleLayer, OLGoogleMaps);
+})(function($, _, ol, googleInteractions, GoogleLayer, OLGoogleMaps) {
 
     'use strict';
     var mapID = 0;
@@ -62,6 +64,7 @@
          * Redraw widget contents
          */
         refresh: function() {
+
             //this._unbindEvents();
             //this._deserialize();
 
@@ -74,20 +77,28 @@
                 extent: extent
             });*/
 
-            var layers = this.addLayers();
+            var layers = this.addLayers(options);
 
-            var map = new ol.Map({
+            var map_options = {
                 layers: layers,
                 target: options.id,
                 view: new ol.View({
                     center: ol.proj.fromLonLat([options.lon, options.lat]),
                     zoom: options.zoom
                 })
-            });
+            };
+
+            var Google = options.Google;
+            if (undefined != Google) {
+                // If using a Google baselayer then need to limit the interactions
+                map_options.interactions = googleInteractions();
+            }
+
+            var map = new ol.Map(map_options);
             this.map = map;
 
             // Tooltip
-            var tooltip = $('#' + this.options.id + ' .s3-gis-tooltip');
+            var tooltip = $('#' + options.id + ' .s3-gis-tooltip');
             this.tooltip = tooltip;
 
             var tooltip_ol = new ol.Overlay({
@@ -101,25 +112,36 @@
 
             //this._serialize();
             this._bindEvents(map);
+
+            if (undefined != Google) {
+                var olGM = new OLGoogleMaps({map: map});
+                olGM.activate();
+            }
         },
 
         /**
          * Add Layers to the Map
          */
-        addLayers: function() {
-            var allLayers = [],
-                options = this.options;
+        addLayers: function(options) {
+
+            var allLayers = [];
 
             // OpenStreetMap
-            var layers_osm = options.layers_osm
+            var layers_osm = options.layers_osm;
             if (undefined != layers_osm) {
                 this.addLayersOSM(allLayers, layers_osm);
             }
 
             // Bing
-            var Bing = options.Bing
+            var Bing = options.Bing;
             if (undefined != Bing) {
                 this.addLayersBing(allLayers, Bing);
+            }
+
+            // Google
+            var Google = options.Google;
+            if (undefined != Google) {
+                this.addLayersGoogle(allLayers, Google);
             }
 
             // GeoJSON Layers
@@ -174,11 +196,11 @@
                            maxZoom: maxZoom,
                            opaque: opaque,
                            url: url
-                           }
+                           };
 
                 osmLayer = new ol.layer.Tile({
                                 source: new ol.source.OSM(options)
-                            })
+                            });
 
                 if (undefined != layer._base) {
                     osmLayer.setVisible(layer._base);
@@ -195,11 +217,11 @@
          * Add Bing Layers to the Map
          */
         addLayersBing: function(allLayers, Bing) {
+
             var apiKey = Bing.a,
                 bingLayer,
                 layer,
                 layers_bing = Bing.l;
-                
 
             for (var i=0; i < layers_bing.length; i++) {
 
@@ -217,7 +239,7 @@
                                     // "no photos at this zoom level" tiles
                                     // maxZoom: 19
                                 })
-                            })
+                            });
 
                 if (undefined != layer.b) {
                     bingLayer.setVisible(true);
@@ -231,11 +253,45 @@
         },
 
         /**
+         * Add Google Layers to the Map
+         */
+        addLayersGoogle: function(allLayers, Google) {
+
+            var googleLayer,
+                layer,
+                layers_google = Google.l;
+
+            for (var i=0; i < layers_google.length; i++) {
+
+                layer = layers_google[i];
+
+                googleLayer = new GoogleLayer({
+                                mapTypeId: layer.t,
+                                name: layer.n,
+                                // This is used to Save State
+                                s3_layer_id: layer.i,
+                                s3_layer_type: 'google'
+                            });
+
+                if (undefined != layer.b) {
+                    googleLayer.setVisible(true);
+                } else {
+                    // defaults to OFF
+                    googleLayer.setVisible(false);
+                }
+
+                allLayers.push(googleLayer);
+            }
+        },
+
+        /**
          * Add GeoJSON Layers to the Map
          *
          * @ToDo: Combine these 7 layer types server-side to save a little bandwidth
+         * @ToDo: Option to use Tiles (geojson-vt)
          */
         addLayersGeoJSON: function(allLayers, options) {
+
             var feature_queries = options.feature_queries || [],
                 feature_resources = options.feature_resources || [],
                 format,

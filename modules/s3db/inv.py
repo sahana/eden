@@ -338,7 +338,7 @@ class WarehouseModel(S3Model):
                            requires = code_requires,
                            ),
                      organisation_id(
-                        requires = self.org_organisation_requires(updateable=True),
+                        requires = self.org_organisation_requires(updateable = True),
                         ),
                      warehouse_type_id(),
                      self.gis_location_id(),

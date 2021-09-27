@@ -1150,7 +1150,8 @@ def config(settings):
                              filter_opts = filter_opts,
                              updateable = updateable,
                              orderby = "org_organisation.name",
-                             sort = True)
+                             sort = True,
+                             )
         if not required:
             from gluon import IS_EMPTY_OR
             requires = IS_EMPTY_OR(requires)
@@ -1932,7 +1933,8 @@ Thank you"""
                                            not_filter_opts = not_filter_opts,
                                            updateable = True,
                                            orderby = "org_organisation.name",
-                                           sort = True)
+                                           sort = True,
+                                           )
 
                     resource.add_filter(~FS("organisation_id").belongs(not_filter_opts))
 

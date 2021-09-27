@@ -124,8 +124,9 @@ def person():
             if r.component:
                 component_name = r.component_name
                 if component_name == "config":
+                    from s3db.gis import gis_config_form_setup
+                    gis_config_form_setup()
                     ctable = s3db.gis_config
-                    s3db.gis_config_form_setup()
                     # Name will be generated from person's name.
                     field = ctable.name
                     field.readable = field.writable = False

@@ -1888,7 +1888,7 @@ S3.gis.yx = [
             // Only load Google layers if GoogleAPI downloaded ok
             // - allow rest of map to work offline
             if (options.Google) {
-                addGoogleLayers(map);
+                addGoogleLayers(map, options.Google);
             }
         } catch(e) {}
 
@@ -2411,162 +2411,34 @@ S3.gis.yx = [
     };
 
     // Google
-    var addGoogleLayers = function(map) {
+    var addGoogleLayers = function(map, Google) {
 
-        var google = map.s3.options.Google,
-            layer;
+        var googleLayer,
+            layer,
+            layer_options,
+            layer_type,
+            layers_google = Google.l;
 
-        if (google.MapMaker || google.MapMakerHybrid) {
-            // v2 API
-            if (google.Satellite) {
-                layer = new OpenLayers.Layer.Google(
-                    google.Satellite.name, {
-                        type: G_SATELLITE_MAP,
-                        sphericalMercator: true,
-                        // This is used to Save State
-                        s3_layer_id: google.Satellite.id,
-                        s3_layer_type: 'google'
-                    }
-                );
-                map.addLayer(layer);
-                if (google.Base == 'satellite') {
-                    map.setBaseLayer(layer);
-                }
+        for (var i=0; i < layers_google.length; i++) {
+            layer = layers_google[i];
+            layer_type = layer.t;
+            layer_options = {
+                type: layer_type,
+                // This is used to Save State
+                s3_layer_id: layer.i,
+                s3_layer_type: 'google'
             }
-            if (google.Maps) {
-                layer = new OpenLayers.Layer.Google(
-                    google.Maps.name, {
-                        type: G_NORMAL_MAP,
-                        sphericalMercator: true,
-                        // This is used to Save State
-                        s3_layer_id: google.Maps.id,
-                        s3_layer_type: 'google'
-                    }
-                );
-                map.addLayer(layer);
-                if (google.Base == 'maps') {
-                    map.setBaseLayer(layer);
-                }
+            if (layer_type == 'satellite') {
+                layer_options.numZoomLevels = 22;
+            } else if (layer_type == 'terrain') {
+                // pass
+            } else {
+                layer_options.numZoomLevels = 20;
             }
-            if (google.Hybrid) {
-                layer = new OpenLayers.Layer.Google(
-                    google.Hybrid.name, {
-                        type: G_HYBRID_MAP,
-                        sphericalMercator: true,
-                        // This is used to Save State
-                        s3_layer_id: google.Hybrid.id,
-                        s3_layer_type: 'google'
-                    }
-                );
-                map.addLayer(layer);
-                if (google.Base == 'maps') {
-                    map.setBaseLayer(layer);
-                }
-            }
-            if (google.Terrain) {
-                layer = new OpenLayers.Layer.Google(
-                    google.Terrain.name, {
-                        type: G_PHYSICAL_MAP,
-                        sphericalMercator: true,
-                        // This is used to Save State
-                        s3_layer_id: google.Terrain.id,
-                        s3_layer_type: 'google'
-                    }
-                );
-                map.addLayer(layer);
-                if (google.Base == 'terrain') {
-                    map.setBaseLayer(layer);
-                }
-            }
-            if (google.MapMaker) {
-                layer = new OpenLayers.Layer.Google(
-                    google.MapMaker.name, {
-                        type: G_MAPMAKER_NORMAL_MAP,
-                        sphericalMercator: true,
-                        // This is used to Save State
-                        s3_layer_id: layer.id,
-                        s3_layer_type: 'google'
-                    }
-                );
-                map.addLayer(layer);
-                if (google.Base == 'mapmaker') {
-                    map.setBaseLayer(layer);
-                }
-            }
-            if (google.MapMakerHybrid) {
-                layer = new OpenLayers.Layer.Google(
-                    google.MapMakerHybrid.name, {
-                        type: G_MAPMAKER_HYBRID_MAP,
-                        sphericalMercator: true,
-                        // This is used to Save State
-                        s3_layer_id: layer.id,
-                        s3_layer_type: 'google'
-                    }
-                );
-                map.addLayer(layer);
-                if (google.Base == 'mapmakerhybrid') {
-                    map.setBaseLayer(layer);
-                }
-            }
-        } else {
-            // v3 API
-            if (google.Satellite) {
-                layer = new OpenLayers.Layer.Google(
-                    google.Satellite.name, {
-                        type: 'satellite',
-                        numZoomLevels: 22,
-                        // This is used to Save State
-                        s3_layer_id: google.Satellite.id,
-                        s3_layer_type: 'google'
-                    }
-                );
-                map.addLayer(layer);
-                if (google.Base == 'satellite') {
-                    map.setBaseLayer(layer);
-                }
-            }
-            if (google.Maps) {
-                layer = new OpenLayers.Layer.Google(
-                    google.Maps.name, {
-                        numZoomLevels: 20,
-                        // This is used to Save State
-                        s3_layer_id: google.Maps.id,
-                        s3_layer_type: 'google'
-                    }
-                );
-                map.addLayer(layer);
-                if (google.Base == 'maps') {
-                    map.setBaseLayer(layer);
-                }
-            }
-            if (google.Hybrid) {
-                layer = new OpenLayers.Layer.Google(
-                    google.Hybrid.name, {
-                        type: 'hybrid',
-                        numZoomLevels: 20,
-                        // This is used to Save State
-                        s3_layer_id: google.Hybrid.id,
-                        s3_layer_type: 'google'
-                    }
-                );
-                map.addLayer(layer);
-                if (google.Base == 'hybrid') {
-                    map.setBaseLayer(layer);
-                }
-            }
-            if (google.Terrain) {
-                layer = new OpenLayers.Layer.Google(
-                    google.Terrain.name, {
-                        type: 'terrain',
-                        // This is used to Save State
-                        s3_layer_id: google.Terrain.id,
-                        s3_layer_type: 'google'
-                    }
-                );
-                map.addLayer(layer);
-                if (google.Base == 'terrain') {
-                    map.setBaseLayer(layer);
-                }
+            googleLayer = new OpenLayers.Layer.Google(layer.n, layer_options);
+            map.addLayer(googleLayer);
+            if (layer.b) {
+                map.setBaseLayer(googleLayer);
             }
         }
     };
@@ -4624,7 +4496,7 @@ S3.gis.yx = [
         }
 
         // Google Streetview
-        if (options.Google && options.Google.StreetviewButton) {
+        if (options.Google && options.Google.svb) {
             addGoogleStreetviewControl(toolbar);
         }
 
@@ -4868,7 +4740,7 @@ S3.gis.yx = [
         // Toolbar Button
         var googleStreetviewButton = new Ext.Button({
             iconCls: 'streetview',
-            tooltip: map.s3.options.Google.StreetviewButton,
+            tooltip: map.s3.options.Google.svb,
             allowDepress: true,
             enableToggle: true,
             toggleGroup: 'controls',
@@ -4897,7 +4769,7 @@ S3.gis.yx = [
             map.s3.sv_popup.close();
         }
         map.s3.sv_popup = new GeoExt.Popup({
-            title: map.s3.options.Google.StreetviewTitle,
+            title: map.s3.options.Google.svt,
             location: location,
             width: 300,
             height: 300,

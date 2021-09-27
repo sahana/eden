@@ -752,8 +752,8 @@ class S3Model(object):
             for link in ll:
 
                 if isinstance(link, str):
-                    alias = name
 
+                    alias = name
                     pkey = None
                     fkey = link
                     linktable = None
@@ -771,13 +771,16 @@ class S3Model(object):
                     plural = None
 
                 elif isinstance(link, dict):
-                    alias = link.get("name", name)
 
-                    joinby = link.get("joinby")
+                    link_get = link.get
+
+                    joinby = link_get("joinby")
                     if not joinby:
                         continue
 
-                    linktable = link.get("link")
+                    alias = link_get("name", name)
+
+                    linktable = link_get("link")
                     linktable = linktable._tablename \
                                 if type(linktable) is Table else linktable
 
@@ -805,26 +808,26 @@ class S3Model(object):
                             raise SyntaxError("Ambiguous master/component alias (%s.%s)" %
                                               (master, alias))
 
-                    pkey = link.get("pkey")
+                    pkey = link_get("pkey")
                     if linktable is None:
                         lkey = None
                         rkey = None
                         fkey = joinby
                     else:
                         lkey = joinby
-                        rkey = link.get("key")
+                        rkey = link_get("key")
                         if not rkey:
                             continue
-                        fkey = link.get("fkey")
+                        fkey = link_get("fkey")
 
-                    actuate = link.get("actuate")
-                    autodelete = link.get("autodelete", False)
-                    autocomplete = link.get("autocomplete")
-                    defaults = link.get("defaults")
-                    multiple = link.get("multiple", True)
-                    filterby = link.get("filterby")
-                    label = link.get("label")
-                    plural = link.get("plural")
+                    actuate = link_get("actuate")
+                    autodelete = link_get("autodelete", False)
+                    autocomplete = link_get("autocomplete")
+                    defaults = link_get("defaults")
+                    multiple = link_get("multiple", True)
+                    filterby = link_get("filterby")
+                    label = link_get("label")
+                    plural = link_get("plural")
 
                 else:
                     continue

@@ -1273,7 +1273,7 @@
             // Submit to Server
             $.ajaxS3({
                 //async: false,
-                url: S3.Ap.concat('/gis/postcode_to_address'),
+                url: S3.Ap.concat('/gis/postcode_to_address.json'),
                 type: 'POST',
                 data: {postcode: postcode,
                        k: self.postcodeToAddress
