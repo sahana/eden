@@ -3040,7 +3040,7 @@ class LayerMapModel(S3Model):
                      layer_id(),
                      name_field()(),
                      desc_field()(),
-                     Field("type", length=16,
+                     Field("type", length=32,
                            label = TYPE,
                            represent = S3Represent(options = bing_layer_types),
                            requires = IS_IN_SET(bing_layer_types),

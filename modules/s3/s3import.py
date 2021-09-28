@@ -4132,7 +4132,7 @@ class S3Duplicate(object):
 
         # Find a match
         duplicate = current.db(query).select(table._id,
-                                             limitby = (0, 1)
+                                             limitby = (0, 1),
                                              ).first()
 
         if duplicate:

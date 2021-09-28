@@ -18,16 +18,17 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # L10n (Localization) settings
-    settings.L10n.languages["nso"] = "Sepedi"
-    settings.L10n.languages["st"] = "Sesotho"
-    settings.L10n.languages["tn"] = "Setswana"
-    settings.L10n.languages["ss"] = "siSwati"
-    settings.L10n.languages["ve"] = "Tshivenda"
-    settings.L10n.languages["ts"] = "Xitsonga"
-    settings.L10n.languages["af"] = "Afrikaans"
-    settings.L10n.languages["nr"] = "isiNdebele"
-    settings.L10n.languages["xh"] = "isiXhosa"
-    settings.L10n.languages["zu"] = "isiZulu"
+    languages = settings.L10n.languages
+    languages["nso"] = "Sepedi"     # Northern Sotho
+    languages["st"] = "Sesotho"     # Southern Sotho
+    languages["tn"] = "Setswana"
+    languages["ss"] = "siSwati"
+    languages["ve"] = "Tshivenda"
+    languages["ts"] = "Xitsonga"
+    languages["af"] = "Afrikaans"
+    languages["nr"] = "isiNdebele"  # Southern Ndebele
+    languages["xh"] = "isiXhosa"
+    languages["zu"] = "isiZulu"
     # Default timezone for users
     settings.L10n.timezone = "Africa/Johannesburg"
     # Default Country Code for telephone numbers
