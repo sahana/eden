@@ -1317,7 +1317,7 @@ class S3SliderFilter(S3RangeFilter):
         maximum = row[field.max()]
 
         empty = db(query & (field == None)).select(resource.table.id,
-                                                   limitby = (0, 1)
+                                                   limitby = (0, 1),
                                                    ).first()
 
         return minimum, maximum, empty
@@ -2281,7 +2281,7 @@ class S3MapFilter(S3FilterWidget):
                 (ltable.deleted == False)
         layer = current.db(query).select(ltable.layer_id,
                                          ltable.name,
-                                         limitby=(0, 1)
+                                         limitby = (0, 1),
                                          ).first()
         try:
             layer_id = layer.layer_id
@@ -2518,14 +2518,13 @@ class S3OptionsFilter(S3FilterWidget):
             cols = opts.get("cols", None)
             if cols:
                 # Use the widget method to group and sort the options
-                widget = S3GroupedOptionsWidget(
-                                options = options,
-                                multiple = True,
-                                cols = cols,
-                                size = opts["size"] or 12,
-                                help_field = opts["help_field"],
-                                sort = opts.get("sort", True),
-                                )
+                widget = S3GroupedOptionsWidget(options = options,
+                                                multiple = True,
+                                                cols = cols,
+                                                size = opts.get("size", 12),
+                                                help_field = opts.get("help_field"),
+                                                sort = opts.get("sort", True),
+                                                )
                 options = {attr["_id"]:
                            widget._options({"type": ftype}, [])}
             else:
@@ -2753,8 +2752,9 @@ class S3OptionsFilter(S3FilterWidget):
             if hasattr(represent, "bulk"):
                 # S3Represent => use bulk option
                 opt_dict = represent.bulk(opt_keys,
-                                          list_type=False,
-                                          show_link=False)
+                                          list_type = False,
+                                          show_link = False,
+                                          )
                 if None in opt_keys:
                     opt_dict[None] = EMPTY
                 elif None in opt_dict:
@@ -2794,7 +2794,7 @@ class S3OptionsFilter(S3FilterWidget):
             query = (ktable.id.belongs([k for k in opt_keys
                                               if str(k).isdigit()])) & \
                     (ktable.deleted == False)
-            rows = db(query).select(*represent_fields).as_dict(key=k_id)
+            rows = db(query).select(*represent_fields).as_dict(key = k_id)
 
             # Run all referenced records against the format string
             opt_list = []
@@ -3766,7 +3766,7 @@ class S3Filter(S3Method):
             query = (table.id == record_id) & \
                     (table.pe_id == pe_id)
             record = db(query).select(table.id,
-                                      limitby = (0, 1)
+                                      limitby = (0, 1),
                                       ).first()
         if not record:
             r.error(404, current.ERROR.BAD_RECORD)
@@ -3818,7 +3818,7 @@ class S3Filter(S3Method):
             query = (table.id == record_id) & \
                     (table.pe_id == pe_id)
             record = db(query).select(table.id,
-                                      limitby = (0, 1)
+                                      limitby = (0, 1),
                                       ).first()
             if not record:
                 r.error(404, current.ERROR.BAD_RECORD)

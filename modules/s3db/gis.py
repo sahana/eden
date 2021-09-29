@@ -5207,7 +5207,6 @@ def gis_layer_config_onaccept(form):
     db(query).update(base = False,
                      layer_id = ltable.layer_id, # Otherwise is being defaulted by CRUD
                      )
-    return
 
 # =============================================================================
 def gis_location_filter(r):

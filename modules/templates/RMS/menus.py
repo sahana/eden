@@ -289,16 +289,18 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Stock Management",link=False)(
                             M("Stock Adjustments", f="adj"),
                             M("Kitting", f="kitting"),
-                            M("Receive a new shipment", f="recv", m="create"),
+                            #M("Receive a new shipment", f="recv", m="create"),
+                            M("Receive a new shipment", f="recv",
+                                                        vars = {"incoming": 1}),
                             M("Send a new shipment", f="send", m="create"),
                         ),
                         M("Purchases", f="order_item",
                           restrict=["ORG_ADMIN",
                                     "logs_manager"]),
                         M("Requests", f="req")(
-                            M("My Requests",
-                              vars = {"mine": 1},
-                              ),
+                            #M("My Requests",
+                            #  vars = {"mine": 1},
+                            #  ),
                         ),
                         M("Import Inventory", f="inv_item", m="import",
                           restrict=["ADMIN"]),
@@ -327,10 +329,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         else:
             # Normal users see their own Requests & Inventory Reports
             return M(c="inv")(
-                        M("Requests", link=False)(
-                            M("My Requests", f="req",
-                              vars = {"mine": 1},
-                              ),
+                        M("My Requests", f="req",
+                                         vars = {"mine": 1})(
                         ),
                         M("Reports", link=False)(
                             M("Inventory", f="inv_item", m="summary"),

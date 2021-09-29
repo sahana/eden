@@ -320,7 +320,7 @@ def warehouse():
                 recvtable = s3db.inv_recv
                 if r.component_id:
                     record = db(recvtable.id == r.component_id).select(recvtable.status,
-                                                                       limitby = (0, 1)
+                                                                       limitby = (0, 1),
                                                                        ).first()
                     set_recv_attr(record.status)
                 else:
@@ -467,7 +467,7 @@ def inv_item():
     #    if tn == "inv_track_item":
     #        table = s3db.inv_track_item
     #        record = db(table.id == record_id).select(table.item_id,
-    #                                                  limitby = (0, 1)
+    #                                                  limitby = (0, 1),
     #                                                  ).first()
     #        redirect(URL(c = "inv",
     #                     f = "track_movement",
@@ -687,7 +687,8 @@ def recv():
         error_msg = T("You do not have permission for any facility to add an order.")
     else:
         error_msg = T("You do not have permission for any facility to receive a shipment.")
-    auth.permitted_facilities(table=recvtable, error_msg=error_msg)
+    auth.permitted_facilities(table = recvtable,
+                              error_msg = error_msg)
 
     def prep(r):
 
@@ -732,7 +733,7 @@ def recv():
                 TRACK_STATUS_ARRIVED    = inv_tracking_status["RECEIVED"]
                 #TRACK_STATUS_CANCELED   = inv_tracking_status["CANCEL"]
 
-                def set_track_attr(status):
+                def set_track_attr(track_status):
                     # By default Make all fields writable False
                     for field in tracktable.fields:
                         tracktable[field].writable = False
@@ -745,12 +746,16 @@ def recv():
                         tracktable.bin.readable = False
                     tracktable.adj_item_id.readable = False
                     tracktable.recv_quantity.readable = True
-                    if status == TRACK_STATUS_PREPARING:
+
+                    if track_status == TRACK_STATUS_PREPARING:
+                        # External Shipment
                         # Show some fields
                         tracktable.item_source_no.writable = True
                         tracktable.item_id.writable = True
                         tracktable.item_pack_id.writable = True
                         tracktable.quantity.writable = True
+                        tracktable.recv_quantity.writable = True
+                        tracktable.recv_quantity.comment = T("Can leave this blank if all Items received OK")
                         if track_pack_values:
                             tracktable.currency.writable = True
                             tracktable.pack_value.writable = True
@@ -760,7 +765,6 @@ def recv():
                         tracktable.inv_item_status.writable = True
                         tracktable.comments.writable = True
                         # Hide some fields
-                        tracktable.recv_quantity.readable = False
                         tracktable.send_inv_item_id.readable = False
                         # Change some labels - NO - use consistent labels
                         #tracktable.quantity.label = T("Quantity Delivered")
@@ -779,7 +783,9 @@ def recv():
                             tracktable.recv_bin.readable = True
                             tracktable.recv_bin.writable = True
                             tracktable.recv_bin.label = T("Bin")
-                    elif status == TRACK_STATUS_TRANSIT:
+
+                    elif track_status == TRACK_STATUS_TRANSIT:
+                        # Internal Shipment auto-generated from inv_send_process
                         # Hide the values that will be copied from the inv_inv_item record
                         tracktable.send_inv_item_id.readable = False
                         tracktable.send_inv_item_id.writable = False
@@ -803,7 +809,9 @@ def recv():
                         tracktable.comments.writable = True
                         # This is a received purchase so change the label to reflect this - NO - use consistent labels
                         #tracktable.quantity.label =  T("Quantity Delivered")
-                    elif status == TRACK_STATUS_ARRIVED:
+
+                    elif track_status == TRACK_STATUS_ARRIVED:
+                        # Received Shipment
                         tracktable.item_source_no.readable = True
                         tracktable.item_source_no.writable = False
                         tracktable.item_id.writable = False
@@ -817,23 +825,23 @@ def recv():
                         tracktable.supply_org_id.writable = False
                         if bin_site_layout:
                             tracktable.recv_bin_id.readable = True
-                            tracktable.recv_bin_id.writable = True
+                            #tracktable.recv_bin_id.writable = True
                             # Limit to Bins from this site
-                            site_id = record.site_id
-                            f = tracktable.recv_bin_id
-                            f.requires.other.set_filter(filterby = "site_id",
-                                                        filter_opts = [site_id],
-                                                        )
-                            f.widget.filter = (current.s3db.org_site_layout.site_id == site_id)
+                            #site_id = record.site_id
+                            #f = tracktable.recv_bin_id
+                            #f.requires.other.set_filter(filterby = "site_id",
+                            #                            filter_opts = [site_id],
+                            #                            )
+                            #f.widget.filter = (current.s3db.org_site_layout.site_id == site_id)
                         else:
                             tracktable.recv_bin.readable = True
-                            tracktable.recv_bin.writable = True
+                            #tracktable.recv_bin.writable = True
 
                 # Configure which fields in track_item are readable/writable
-                # depending on status:
+                # depending on track_item.status:
                 if r.component_id:
                     track_record = db(tracktable.id == r.component_id).select(tracktable.status,
-                                                                              limitby = (0, 1)
+                                                                              limitby = (0, 1),
                                                                               ).first()
                     set_track_attr(track_record.status)
                 else:
@@ -858,7 +866,7 @@ def recv():
                     list_fields.insert(4, "currency")
                 if status == SHIP_STATUS_SENT:
                     # Lock the record so it can't be fiddled with
-                    # - other than being able to edit Bin & Quantity Received
+                    # - other than being able to edit Quantity Received & Bin
                     deletable = False
                     editable = True
                     insertable = False
@@ -898,7 +906,7 @@ def recv():
                     if settings.get_inv_document_filing():
                         dtable = s3db.doc_document
                         filed = db(dtable.doc_id == record.doc_id).select(dtable.id,
-                                                                          limitby = (0, 1)
+                                                                          limitby = (0, 1),
                                                                           )
                         if filed:
                             # Still allow access to filing_status
@@ -1208,7 +1216,7 @@ def req_controller(template = False):
                 iitable = s3db.inv_inv_item
                 inv_item = db(iitable.id == inv_item_id).select(iitable.site_id,
                                                                 iitable.item_id,
-                                                                limitby = (0, 1)
+                                                                limitby = (0, 1),
                                                                 ).first()
                 site_id = inv_item.site_id
                 # @ToDo: Avoid DB updates in GETs
@@ -1262,7 +1270,8 @@ def req_controller(template = False):
                     #    query = (stable.id == r.record.site_id)
                     #    site = db(query).select(stable.location_id,
                     #                            stable.organisation_id,
-                    #                            limitby=(0, 1)).first()
+                    #                            limitby = (0, 1),
+                    #                            ).first()
                     #    if site:
                     #        table.location_id.default = site.location_id
                     #        table.organisation_id.default = site.organisation_id
@@ -1758,13 +1767,13 @@ def req_item():
 
     def order_item(r, **attr):
         """
-            Create a req_order_item from a inv_req_item
+            Create an inv_order_item from a inv_req_item
         """
 
         record = r.record
         req_id = record.req_id
 
-        s3db.req_order_item.insert(req_item_id = record.id,
+        s3db.inv_order_item.insert(req_item_id = record.id,
                                    req_id = req_id,
                                    item_id = record.item_id,
                                    item_pack_id = record.item_pack_id,
@@ -1847,7 +1856,7 @@ def req_item_inv_item():
                                                     ritable.quantity_commit,
                                                     ritable.quantity_transit,
                                                     ritable.quantity_fulfil,
-                                                    limitby = (0, 1)
+                                                    limitby = (0, 1),
                                                     ).first()
     req_id = req_item.req_id
     rtable = s3db.inv_req
@@ -1856,7 +1865,7 @@ def req_item_inv_item():
                                          rtable.date,
                                          rtable.date_required,
                                          rtable.priority,
-                                         limitby = (0, 1)
+                                         limitby = (0, 1),
                                          ).first()
     site_id = req.site_id
 
@@ -2160,7 +2169,7 @@ def adj():
                         if adj_status == 0:
                             aitable.reason.writable = True
                         record = db(aitable.id == r.component_id).select(aitable.inv_item_id,
-                                                                         limitby = (0, 1)
+                                                                         limitby = (0, 1),
                                                                          ).first()
                         if record.inv_item_id:
                             aitable.item_id.writable = False
@@ -2212,7 +2221,7 @@ def adj():
                                                                                  inv_item_table.bin,
                                                                                  inv_item_table.layout_id,
                                                                                  inv_item_table.owner_org_id,
-                                                                                 limitby = (0, 1)
+                                                                                 limitby = (0, 1),
                                                                                  ).first()
                         item_id = inv_item.item_id
                         adj_id = table.insert(adjuster_id = auth.s3_logged_in_person(),
@@ -2292,7 +2301,7 @@ def stock_card():
                                                       table.item_id,
                                                       table.item_source_no,
                                                       table.expiry_date,
-                                                      limitby = (0, 1)
+                                                      limitby = (0, 1),
                                                       ).first()
         if inv_item:
             item_source_no = inv_item.item_source_no
@@ -2302,7 +2311,7 @@ def stock_card():
                     (table.item_source_no == item_source_no) & \
                     (table.expiry_date == inv_item.expiry_date)
             exists = db(query).select(table.id,
-                                      limitby = (0, 1)
+                                      limitby = (0, 1),
                                       ).first()
             if exists:
                 request.args = [str(exists.id), "stock_log"]
@@ -2564,7 +2573,7 @@ def send_req():
     r_req = db(table.id == req_id).select(table.req_ref,
                                           table.requester_id,
                                           table.site_id,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
 
     # User must have permissions over facility which is sending
@@ -2794,7 +2803,7 @@ def send_returns():
         session.error = T("You do not have permission to return this sent shipment.")
 
     send_record = db(stable.id == send_id).select(stable.status,
-                                                  limitby = (0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
     inv_ship_status = s3db.inv_ship_status
     if send_record.status == inv_ship_status["IN_PROCESS"]:
@@ -2815,7 +2824,7 @@ def send_returns():
                                     #owned_by_group = ADMIN,
                                     )
     recv_row = db(tracktable.send_id == send_id).select(tracktable.recv_id,
-                                                        limitby = (0, 1)
+                                                        limitby = (0, 1),
                                                         ).first()
     if recv_row:
         recv_id = recv_row.recv_id
@@ -2852,7 +2861,7 @@ def return_process():
 
     send_record = db(stable.id == send_id).select(stable.status,
                                                   stable.site_id,
-                                                  limitby = (0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
     from s3db.inv import inv_ship_status
     if send_record.status != inv_ship_status["RETURNING"]:
@@ -2891,7 +2900,7 @@ def return_process():
                                     #owned_by_group = ADMIN,
                                     )
     recv_row = db(tracktable.send_id == send_id).select(tracktable.recv_id,
-                                                        limitby = (0, 1)
+                                                        limitby = (0, 1),
                                                         ).first()
     if recv_row:
         recv_id = recv_row.recv_id
@@ -2934,7 +2943,7 @@ def send_cancel():
 
     send_record = db(stable.id == send_id).select(stable.status,
                                                   stable.site_id,
-                                                  limitby = (0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
 
     inv_ship_status = s3db.inv_ship_status
@@ -2957,7 +2966,7 @@ def send_cancel():
                                     #owned_by_group = ADMIN,
                                     )
     recv_row = db(tracktable.send_id == send_id).select(tracktable.recv_id,
-                                                        limitby = (0, 1)
+                                                        limitby = (0, 1),
                                                         ).first()
     if recv_row:
         recv_id = recv_row.recv_id
@@ -3012,7 +3021,7 @@ def recv_cancel():
 
     recv_record = db(rtable.id == recv_id).select(rtable.status,
                                                   rtable.site_id,
-                                                  limitby = (0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
 
     from s3db.inv import inv_ship_status
@@ -3059,15 +3068,15 @@ def recv_cancel():
             req_id = track_item.req_item_id
             req_item = db(ritable.id == req_id).select(ritable.quantity_fulfil,
                                                        ritable.item_pack_id,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
             req_quantity = req_item.quantity_fulfil
             # @ToDo: Optimise by reading these 2 in a single DB query
             req_pack_quantity = db(siptable.id == req_item.item_pack_id).select(siptable.quantity,
-                                                                                limitby = (0, 1)
+                                                                                limitby = (0, 1),
                                                                                 ).first().quantity
             track_pack_quantity = db(siptable.id == track_item.item_pack_id).select(siptable.quantity,
-                                                                                    limitby = (0, 1)
+                                                                                    limitby = (0, 1),
                                                                                     ).first().quantity
             quantity_fulfil = s3db.supply_item_add(req_quantity,
                                                    req_pack_quantity,
@@ -3198,7 +3207,7 @@ def inv_item_quantity():
             (table.item_pack_id == ptable.id)
     inv_item = db(query).select(table.quantity,
                                 ptable.quantity,
-                                limitby = (0, 1)
+                                limitby = (0, 1),
                                 ).first()
 
     query = inv_query & \

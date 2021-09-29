@@ -4861,8 +4861,8 @@ class S3Config(Storage):
         """
             Get the name of Shipments
             - currently supported options are:
-            * shipment
-            * order
+            * shipment (default)
+            * order (currently unused)
         """
         return self.inv.get("shipment_name", "shipment")
 
@@ -4870,10 +4870,9 @@ class S3Config(Storage):
         """
             Shipment types which are common to both Send & Receive
         """
-        return self.inv.get("shipment_types", {
-                                0 : current.messages["NONE"],
-                                11: current.T("Internal Shipment"),
-                                })
+        return self.inv.get("shipment_types", {0 : current.messages["NONE"],
+                                               11: current.T("Internal Shipment"),
+                                               })
 
     def get_inv_send_types(self):
         """

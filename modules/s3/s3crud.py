@@ -554,10 +554,11 @@ class S3CRUD(S3Method):
                     if form_postp:
                         form_postp(form)
                     output["form"] = form
-                    output["showadd_btn"] = self.crud_button(tablename=tablename,
-                                                             name="label_create",
-                                                             icon="add",
-                                                             _id="show-add-btn")
+                    output["showadd_btn"] = self.crud_button(tablename = tablename,
+                                                             name = "label_create",
+                                                             icon = "add",
+                                                             _id = "show-add-btn",
+                                                             )
                     addtitle = self.crud_string(tablename, "label_create")
                     output["addtitle"] = addtitle
                     if r.http == "POST":
@@ -572,11 +573,11 @@ class S3CRUD(S3Method):
 
             elif addbtn:
                 # No form, just Add-button linked to create-view
-                add_btn = self.crud_button(
-                                    tablename=tablename,
-                                    name="label_create",
-                                    icon="add",
-                                    _id="add-btn")
+                add_btn = self.crud_button(tablename = tablename,
+                                           name = "label_create",
+                                           icon = "add",
+                                           _id = "add-btn",
+                                           )
                 output["buttons"] = {"add_btn": add_btn}
 
         view = self._view(r, "listadd.html")

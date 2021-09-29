@@ -135,7 +135,7 @@ def config(settings):
             if tablename == "inv_send":
                 realm_name = "WB_%s" % record_id
                 to_site_id = db(table.id == record_id).select(table.to_site_id,
-                                                              limitby = (0, 1)
+                                                              limitby = (0, 1),
                                                               ).first().to_site_id
                 site_ids = (row["site_id"],
                             to_site_id,
@@ -143,7 +143,7 @@ def config(settings):
             elif tablename == "inv_recv":
                 realm_name = "GRN_%s" % record_id
                 from_site_id = db(table.id == record_id).select(table.from_site_id,
-                                                                limitby = (0, 1)
+                                                                limitby = (0, 1),
                                                                 ).first().from_site_id
                 site_ids = (row["site_id"],
                             from_site_id
@@ -159,7 +159,7 @@ def config(settings):
             # Find/create the Realm
             rtable = s3db.pr_realm
             realm = db(rtable.name == realm_name).select(rtable.pe_id,
-                                                         limitby = (0, 1)
+                                                         limitby = (0, 1),
                                                          ).first()
             if not realm:
                 realm_id = rtable.insert(name = realm_name)
@@ -220,13 +220,13 @@ def config(settings):
             # Inherit from inv_send (if-present) or inv_recv
             record = db(table.id == row["id"]).select(table.send_id,
                                                       table.recv_id,
-                                                      limitby = (0, 1)
+                                                      limitby = (0, 1),
                                                       ).first()
             send_id = record.send_id
             if send_id:
                 stable = s3db.inv_send
                 send = db(stable.id == send_id).select(stable.realm_entity,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
                 return send.realm_entity
 
@@ -234,7 +234,7 @@ def config(settings):
             if recv_id:
                 rtable = s3db.inv_recv
                 recv = db(rtable.id == recv_id).select(rtable.realm_entity,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
                 return recv.realm_entity
 
@@ -245,7 +245,7 @@ def config(settings):
             query = (ltable.organisation_id == row["id"]) & \
                     (ltable.organisation_type_id == ottable.id)
             otype = db(query).select(ottable.name,
-                                     limitby = (0, 1)
+                                     limitby = (0, 1),
                                      ).first()
             if not otype or otype.name != RED_CROSS:
                 use_user_organisation = True
@@ -273,7 +273,7 @@ def config(settings):
                         (ctable.id == table.course_id) & \
                         (otable.id == ctable.organisation_id)
                 org = db(query).select(otable.pe_id,
-                                       limitby = (0, 1)
+                                       limitby = (0, 1),
                                        ).first()
                 if org:
                     return org.pe_id
@@ -333,7 +333,7 @@ def config(settings):
             #    link_table = realm_entity_link_table[tablename]
             #    table = s3db[link_table.tablename]
             #    rows = db(table[link_table.link_key] == row.id).select(table.id,
-            #                                                           limitby = (0, 1)
+            #                                                           limitby = (0, 1),
             #                                                           )
             #    if rows:
             #        # Update not Create
@@ -376,7 +376,7 @@ def config(settings):
                     query = (table.id == row["id"]) & \
                             (table[fk] == ftable.id)
                 record = db(query).select(ftable.realm_entity,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
                 if record:
                     return record.realm_entity
@@ -401,7 +401,7 @@ def config(settings):
                     query = (ltable.organisation_id == row["id"]) & \
                             (ltable.parent_id == otable.id)
                     parent = db(query).select(otable.realm_entity,
-                                              limitby = (0, 1)
+                                              limitby = (0, 1),
                                               ).first()
                     if parent:
                         return parent.realm_entity
@@ -1071,8 +1071,8 @@ def config(settings):
         ttable = s3db.org_organisation_type
         try:
             type_id = db(ttable.name == RED_CROSS).select(ttable.id,
-                                                          limitby = (0, 1),
                                                           cache = s3db.cache,
+                                                          limitby = (0, 1),
                                                           ).first().id
         except AttributeError:
             # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
@@ -1229,7 +1229,7 @@ def config(settings):
     #        s3db = current.s3db
     #        otable = s3db.org_organisation
     #        org = db(otable.id == user_org_id).select(otable.pe_id,
-    #                                                  limitby = (0, 1)
+    #                                                  limitby = (0, 1),
     #                                                  ).first()
     #        if org:
     #            from s3db.pr import pr_get_descendants
@@ -1316,7 +1316,7 @@ def config(settings):
                     (table.human_resource_id == htable.id)
 
         hr = db(query).select(htable.person_id,
-                              limitby = (0, 1)
+                              limitby = (0, 1),
                               ).first()
         person_id = hr.person_id
 
@@ -1325,7 +1325,7 @@ def config(settings):
         query = (ptable.id == person_id) & \
                 (ltable.pe_id == ptable.pe_id)
         link = db(query).select(ltable.user_id,
-                                limitby = (0, 1)
+                                limitby = (0, 1),
                                 ).first()
         if link:
             # Add them to the RIT role
@@ -1818,7 +1818,7 @@ Thank you"""
         organisation_id = form_vars_get("organisation_id")
         otable = s3db.org_organisation
         root_org = db(otable.id == organisation_id).select(otable.root_organisation,
-                                                           limitby = (0, 1)
+                                                           limitby = (0, 1),
                                                            ).first()
         root_organisation = root_org.root_organisation
 
@@ -1832,7 +1832,7 @@ Thank you"""
             # Update Form: Skip our own record
             query &= (htable.id != human_resource_id)
         match = db(query).select(htable.id,
-                                 limitby = (0, 1)
+                                 limitby = (0, 1),
                                  ).first()
         if match:
             # Error
@@ -1970,7 +1970,7 @@ Thank you"""
                     organisation_id = auth.user.organisation_id
                     if organisation_id:
                         org = db(otable.id == organisation_id).select(otable.root_organisation,
-                                                                      limitby = (0, 1)
+                                                                      limitby = (0, 1),
                                                                       ).first()
                         root_organisation_id = org.root_organisation
                         f = table.code
@@ -1978,7 +1978,7 @@ Thank you"""
                                 (otable.id == table.organisation_id)
                         last_code = db(query).select(f,
                                                      limitby = (0, 1),
-                                                     orderby = ~f
+                                                     orderby = ~f,
                                                      ).first()
                         last_code = last_code.code
                         if last_code:
@@ -2340,7 +2340,7 @@ Thank you"""
                                                      table.person_id,
                                                      table.course_id,
                                                      table.grade,
-                                                     limitby = (0, 1)
+                                                     limitby = (0, 1),
                                                      ).first()
         try:
             course_id = record.course_id
@@ -2351,8 +2351,8 @@ Thank you"""
         # Lookup the RIT Course ID
         ctable = db.hrm_course
         row = db(ctable.name == "Regional Intervention Teams").select(ctable.id,
+                                                                      cache = s3db.cache,
                                                                       limitby = (0, 1),
-                                                                      cache = s3db.cache
                                                                       ).first()
         try:
             rit_course_id = row.id
@@ -2372,7 +2372,7 @@ Thank you"""
         person_id = record.person_id
         htable = s3db.hrm_human_resource
         hr = db(htable.person_id == person_id).select(htable.id,
-                                                      limitby = (0, 1)
+                                                      limitby = (0, 1),
                                                       ).first()
         try:
             human_resource_id = hr.id
@@ -2382,7 +2382,7 @@ Thank you"""
 
         dtable = s3db.deploy_application
         exists = db(dtable.human_resource_id == human_resource_id).select(dtable.id,
-                                                                          limitby = (0, 1)
+                                                                          limitby = (0, 1),
                                                                           ).first()
         if not exists:
             # Add them to the list
@@ -2394,7 +2394,7 @@ Thank you"""
         query = (ptable.id == person_id) & \
                 (ltable.pe_id == ptable.pe_id)
         link = db(query).select(ltable.user_id,
-                                limitby = (0, 1)
+                                limitby = (0, 1),
                                 ).first()
         if link:
             current.auth.s3_assign_role(link.user_id, "RIT_MEMBER")
@@ -3312,7 +3312,7 @@ Thank you"""
     # -------------------------------------------------------------------------
     def on_inv_recv_process(row):
         """
-            Update any req_order_item records
+            Update any inv_order_item records
         """
 
         db = current.db
@@ -3323,7 +3323,7 @@ Thank you"""
         # Lookup the PO for this receive
         rtable = s3db.inv_recv
         record = db(rtable.id == recv_id).select(rtable.purchase_ref,
-                                                 limitby = (0, 1)
+                                                 limitby = (0, 1),
                                                  ).first()
 
         purchase_ref = record.purchase_ref
@@ -3336,7 +3336,7 @@ Thank you"""
         req_ids = [row.req_id for row in reqs]
 
         # Lookup the Order Items which match these REQs and PO
-        otable = s3db.req_order_item
+        otable = s3db.inv_order_item
         if len(req_ids) > 1:
             query = (otable.req_id.belongs(req_ids))
         else:
@@ -3423,7 +3423,9 @@ Thank you"""
                                     )
 
         s3db.configure(tablename,
+                       addbtn = True,
                        crud_form = crud_form,
+                       listadd = False,
                        list_fields = ["recv_ref",
                                       (T("Request Number"), "recv_req.req_id"),
                                       "send_ref",
@@ -3462,25 +3464,122 @@ Thank you"""
                 result = True
 
             record = r.record
-            if record:
-                if r.component_name == "document":
-                    s3.crud_strings["doc_document"].label_create = T("File Signed Document")
-                    field = current.s3db.doc_document.name
-                    field.label = T("Type")
-                    document_type_opts = {"REQ": T("Requisition"),
-                                          "GRN": T("GRN"),
-                                          "WB": T("Waybill"),
-                                          }
-                    #from s3 import S3Represent
-                    field.requires = IS_IN_SET(document_type_opts)
-                    field.represent = S3Represent(options = document_type_opts)
+            if r.component_name == "track_item":
+                from s3db.inv import SHIP_STATUS_IN_PROCESS
+                if record.status == SHIP_STATUS_IN_PROCESS:
+                    db = current.db
+                    s3db = current.s3db
+                    rrtable = s3db.inv_recv_req
+                    reqs = db(rrtable.recv_id == r.id).select(rrtable.req_id)
+                    if reqs:
+                        table = s3db.inv_track_item
+                        # Allow populating req_item_id
+                        f = table.req_item_id
+                        f.writable = True
+                        f.comment = None
+                        f.label = T("Request")
+                        # Items use dropdown, not Autocomplete
+                        f = table.item_id
+                        f.comment = None # Cannot create new Items here
+                        f.widget = None
+                        # We replace filterOptionsS3
+                        table.item_pack_id.comment = None
+                        # Filter to Items in the Request(s) which have not yet been received
+                        rtable = s3db.inv_req
+                        ritable = s3db.inv_req_item
+                        iptable = s3db.supply_item_pack
+                        req_ids = [row.req_id for row in reqs]
+                        if len(req_ids) == 1:
+                            query = (rtable.id == req_ids[0])
+                        else:
+                            query = (rtable.id.belongs(req_ids))
+                        query &= (ritable.req_id == rtable.id) & \
+                                 (ritable.quantity_fulfil < ritable.quantity) & \
+                                 (ritable.item_pack_id == iptable.id)
+                        items = db(query).select(rtable.req_ref,
+                                                 ritable.id,
+                                                 ritable.item_id,
+                                                 ritable.quantity,
+                                                 iptable.quantity,
+                                                 )
+                        item_ids = [row["inv_req_item.item_id"] for row in items]
+                        f.requires.set_filter(filterby = "id",
+                                              filter_opts = item_ids,
+                                              )
+                        # Add JS
+                        s3.scripts.append("/%s/static/themes/RMS/js/inv_recv_item.js" % r.application)
+                        item_data = {}
+                        for row in items:
+                            req_pack_quantity = row["supply_item_pack.quantity"]
+                            req_ref = row["inv_req.req_ref"]
+                            req_row = row["inv_req_item"]
+                            item_id = req_row.item_id
+                            if item_id in item_data:
+                                item_data[item_id]["req_items"].append({"req_item_id": req_row.id,
+                                                                        "req_quantity": req_row.quantity * req_pack_quantity,
+                                                                        "req_ref": req_ref,
+                                                                        })
+                            else:
+                                item_data[item_id] = {"req_items": [{"req_item_id": req_row.id,
+                                                                     "req_quantity": req_row.quantity * req_pack_quantity,
+                                                                     "req_ref": req_ref,
+                                                                     }],
+                                                      }
+                        # Remove req_ref when there are no duplicates to distinguish
+                        for item_id in item_data:
+                            req_items = item_data[item_id]["req_items"]
+                            if len(req_items) == 1:
+                                req_items[0].pop("req_ref")
 
-            elif r.method in ("create", "update"):
+                        # Add Packs to replace the filterOptionsS3 lookup
+                        rows = db(iptable.item_id.belongs(item_ids)).select(iptable.id,
+                                                                            iptable.item_id,
+                                                                            iptable.name,
+                                                                            iptable.quantity,
+                                                                            )
+                        for row in rows:
+                            item_id = row.item_id
+                            this_data = item_data[item_id]
+                            packs = this_data.get("packs")
+                            if not packs:
+                                this_data["packs"] = [{"id": row.id,
+                                                       "name": row.name,
+                                                       "quantity": row.quantity,
+                                                       },
+                                                      ]
+                            else:
+                                this_data["packs"].append({"id": row.id,
+                                                           "name": row.name,
+                                                           "quantity": row.quantity,
+                                                           })
+                        # Pass data to inv_recv_item.js
+                        # to Apply req_item_id & quantity when item_id selected
+                        import json
+                        SEPARATORS = (",", ":")
+                        s3.js_global.append('''S3.supply.item_data=%s''' % json.dumps(item_data, separators=SEPARATORS))
+
+            elif r.component_name == "document":
+                s3.crud_strings["doc_document"].label_create = T("File Signed Document")
+                field = current.s3db.doc_document.name
+                field.label = T("Type")
+                document_type_opts = {"REQ": T("Requisition"),
+                                      "GRN": T("GRN"),
+                                      "WB": T("Waybill"),
+                                      }
+                #from s3 import S3Represent
+                field.requires = IS_IN_SET(document_type_opts)
+                field.represent = S3Represent(options = document_type_opts)
+
+            elif r.method == "create" or \
+                 (r.method == "update" and record.status == 0): # SHIP_STATUS_IN_PROCESS
+                s3db = current.s3db
+                table = s3db.inv_recv
+                # Only allow External Shipment Types (Internal Shipments have the recv auto-created)
+                table.type.requires = IS_IN_SET(settings.get_inv_recv_types())
                 # Filter Requests to those which are:
                 # - For Our Sites
                 # - Approved
-                s3db = current.s3db
-                sites = s3db.inv_recv.site_id.requires.options(zero = False)
+                sites = table.site_id.requires.options(zero = False)
                 site_ids = [site[0] for site in sites]
                 rtable = s3db.inv_req
                 ritable = s3db.inv_req_item
@@ -3498,6 +3597,18 @@ Thank you"""
                                        f.represent,
                                        sort = True,
                                        )
+
+            elif r.get_vars.get("incoming"):
+                s3.crud_strings.inv_recv.title_list = T("Incoming Shipments")
+                # Filter to just Unreceived Shipments
+                #    SHIP_STATUS_IN_PROCESS = 0
+                #    SHIP_STATUS_SENT = 2
+                #from s3 import FS
+                #r.resource.add_filter(FS("status").belongs(0, 2))
+                from s3 import s3_set_default_filter
+                s3_set_default_filter("~.status",
+                                      [0, 2],
+                                      tablename = "inv_recv")
 
             return result
         s3.prep = custom_prep
@@ -3623,7 +3734,9 @@ Thank you"""
                                     )
 
         s3db.configure(tablename,
+                       addbtn = True,
                        crud_form = crud_form,
+                       listadd = False,
                        list_fields = ["send_ref",
                                       #"req_ref",
                                       (T("Request Number"), "send_req.req_id"),
@@ -3666,20 +3779,22 @@ Thank you"""
                 result = True
 
             record = r.record
-            if record:
+            if r.component_name == "track_item":
                 from s3db.inv import SHIP_STATUS_IN_PROCESS
-                if record.status == SHIP_STATUS_IN_PROCESS and \
-                   r.component_name == "track_item":
+                if record.status == SHIP_STATUS_IN_PROCESS:
                     db = current.db
                     s3db = current.s3db
                     srtable = s3db.inv_send_req
                     reqs = db(srtable.send_id == r.id).select(srtable.req_id)
                     if reqs:
                         # Allow populating req_item_id
-                        f = s3db.inv_track_item.req_item_id
+                        table = s3db.inv_track_item
+                        f = table.req_item_id
                         f.writable = True
                         f.comment = None
                         f.label = T("Request")
+                        # We replace filterOptionsS3
+                        table.item_pack_id.comment = None
                         # Limit send_inv_item_id to
                         # - Items in the Request
                         # - Items Requested from this site
@@ -3775,19 +3890,20 @@ Thank you"""
                         SEPARATORS = (",", ":")
                         s3.js_global.append('''S3.supply.inv_items=%s''' % json.dumps(inv_data, separators=SEPARATORS))
 
-                elif r.component_name == "document":
-                    s3.crud_strings["doc_document"].label_create = T("File Signed Document")
-                    field = current.s3db.doc_document.name
-                    field.label = T("Type")
-                    document_type_opts = {"REQ": T("Requisition"),
-                                          "WB": T("Waybill"),
-                                          }
-                    #from gluon import IS_IN_SET
-                    #from s3 import S3Represent
-                    field.requires = IS_IN_SET(document_type_opts)
-                    field.represent = S3Represent(options = document_type_opts)
+            elif r.component_name == "document":
+                s3.crud_strings["doc_document"].label_create = T("File Signed Document")
+                field = current.s3db.doc_document.name
+                field.label = T("Type")
+                document_type_opts = {"REQ": T("Requisition"),
+                                      "WB": T("Waybill"),
+                                      }
+                #from gluon import IS_IN_SET
+                #from s3 import S3Represent
+                field.requires = IS_IN_SET(document_type_opts)
+                field.represent = S3Represent(options = document_type_opts)
 
-            elif r.method in ("create", "update"):
+            elif r.method == "create" or \
+                 (r.method == "update" and record.status == 0): # SHIP_STATUS_IN_PROCESS
                 # Filter Requests to those which are:
                 # - Approved
                 # - Have Items Requested From our sites which are not yet in-Transit/Fulfilled
@@ -3875,7 +3991,7 @@ Thank you"""
                 # Add Alert, if there is not one already present
                 query &= (ntable.deleted == False)
                 exists = current.db(query).select(ntable.id,
-                                                  limitby = (0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
                 if not exists:
                     alerts.append((item_id, stock, minimum_id))
@@ -3991,7 +4107,7 @@ Thank you"""
             # Generate Capacity Alert, if there is not one already present
             query = query & (ntable.deleted == False)
             exists = current.db(query).select(ntable.id,
-                                              limitby = (0, 1)
+                                              limitby = (0, 1),
                                               ).first()
             if not exists:
                 #from gluon import URL
@@ -4198,7 +4314,7 @@ Thank you"""
                 # RC Org: ensure a member of RC org_group
                 gtable = s3db.org_group
                 group = db(gtable.name == "RC").select(gtable.id,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
                 try:
                     group_id = group.id
@@ -4209,7 +4325,7 @@ Thank you"""
                 query = (mtable.organisation_id == organisation_id) & \
                         (mtable.group_id == group_id)
                 member = db(query).select(mtable.id,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
                 if not member:
                     membership_id = mtable.insert(group_id = group_id,
@@ -4854,7 +4970,7 @@ Thank you"""
             else:
                 record_id = r.component_id
             record = current.db(table.id == record_id).select(table.value,
-                                                              limitby = (0, 1)
+                                                              limitby = (0, 1),
                                                               ).first()
             if record.value:
                 # Redirect to Read-only mode
@@ -4873,7 +4989,7 @@ Thank you"""
             table = s3db.project_window
             record = current.db(table.deleted == False).select(table.start_date,
                                                                table.end_date,
-                                                               limitby = (0, 1)
+                                                               limitby = (0, 1),
                                                                ).first()
             if record:
                 if record.start_date <= r.utcnow.date() <= record.end_date:
@@ -4919,7 +5035,7 @@ Thank you"""
                                                      ptable.name,
                                                      ptable.start_date,
                                                      ptable.end_date,
-                                                     limitby = (0, 1)
+                                                     limitby = (0, 1),
                                                      ).first()
         if not project:
             return
@@ -4934,7 +5050,7 @@ Thank you"""
                                   btable.currency,
                                   # Assume Monthly
                                   #btable.monitoring_frequency,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if not budget:
             return
@@ -4946,7 +5062,7 @@ Thank you"""
         query = (btable.name == project_name) & \
                 (btable.id != budget.id)
         duplicate = db(query).select(btable.id,
-                                     limitby = (0, 1)
+                                     limitby = (0, 1),
                                      ).first()
 
         if not duplicate:
@@ -4959,7 +5075,7 @@ Thank you"""
 
         mtable = s3db.budget_monitoring
         exists = db(mtable.budget_entity_id == budget_entity_id).select(mtable.id,
-                                                                        limitby = (0, 1)
+                                                                        limitby = (0, 1),
                                                                         )
         if not exists:
             # Create Monitoring Data entries
@@ -5341,7 +5457,7 @@ Thank you"""
                         # No r.component.record :/
                         ctable = s3db.project_organisation
                         crecord = current.db(ctable.id == component_id).select(ctable.role,
-                                                                               limitby = (0, 1)
+                                                                               limitby = (0, 1),
                                                                                ).first()
                         if crecord.role == settings.get_project_organisation_lead_role():
                             ns_only("project_organisation",
@@ -5413,7 +5529,7 @@ Thank you"""
     #            beneficiary_id = form.vars.get("id", None)
     #            table = db.project_beneficiary
     #            row = db(table.id == beneficiary_id).select(table.project_location_id,
-    #                                                        limitby = (0, 1)
+    #                                                        limitby = (0, 1),
     #                                                        ).first()
     #            if not row:
     #                return
@@ -5422,7 +5538,7 @@ Thank you"""
     #                return
     #            ltable = db.project_beneficiary_activity_type
     #            row = db(ltable.beneficiary_id == beneficiary_id).select(ltable.activity_type_id,
-    #                                                                     limitby = (0, 1)
+    #                                                                     limitby = (0, 1),
     #                                                                     ).first()
     #            if not row:
     #                return
@@ -5431,7 +5547,7 @@ Thank you"""
     #            query = (ltable.project_location_id == project_location_id) & \
     #                    (ltable.activity_type_id == activity_type_id)
     #            exists = db(query).select(ltable.id,
-    #                                      limitby = (0, 1)
+    #                                      limitby = (0, 1),
     #                                      ).first()
     #            if not exists:
     #                ltable.insert(project_location_id = project_location_id,
@@ -5511,7 +5627,7 @@ Thank you"""
             else:
                 record_id = r.component_id
             record = current.db(table.id == record_id).select(table.value,
-                                                              limitby = (0, 1)
+                                                              limitby = (0, 1),
                                                               ).first()
             if record.value:
                 # Redirect to Read-only mode
@@ -5649,7 +5765,7 @@ Thank you"""
         query = (ptable.id == person_id) & \
                 (ptable.pe_id == ltable.pe_id)
         user = db(query).select(ltable.user_id,
-                                limitby = (0, 1)
+                                limitby = (0, 1),
                                 )
         if not user:
             return
@@ -5664,7 +5780,7 @@ Thank you"""
         # Lookup the req_approver group_id
         gtable = db.auth_group
         role = db(gtable.uuid == "req_approver").select(gtable.id,
-                                                        limitby = (0, 1)
+                                                        limitby = (0, 1),
                                                         ).first()
         group_id = role.id
 
@@ -5718,8 +5834,8 @@ Thank you"""
             ttable = s3db.org_organisation_type
             try:
                 type_id = db(ttable.name == RED_CROSS).select(ttable.id,
-                                                              limitby = (0, 1),
                                                               cache = s3db.cache,
+                                                              limitby = (0, 1),
                                                               ).first().id
             except AttributeError:
                 # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
@@ -5779,7 +5895,7 @@ Thank you"""
             # Default to NS (most-common use-case)
             otable = s3db.org_organisation
             org = db(otable.id == auth.root_org()).select(otable.pe_id,
-                                                          limitby = (0, 1)
+                                                          limitby = (0, 1),
                                                           ).first()
             org_pe_id = org.pe_id
             if org_pe_id in entities:
@@ -5851,7 +5967,7 @@ Thank you"""
             if site_id not in record:
                 record = db(table.id == req_id).select(table.id,
                                                        table.site_id,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
             if record.site_id != form.record.site_id:
                 realm_entity = current.auth.get_realm_entity(table, record)
@@ -6210,7 +6326,7 @@ Thank you"""
                 # Never opens in Component Tab, always breaks out
                 atable = s3db.inv_req_approver_req
                 approved = db(atable.req_id == req_id).select(atable.id,
-                                                              limitby = (0, 1)
+                                                              limitby = (0, 1),
                                                               )
                 if approved:
                     crud_fields.insert(-1, S3SQLInlineComponent("approver",
@@ -6361,7 +6477,7 @@ Thank you"""
                         query = (atable.req_id == r.id) & \
                                 (atable.person_id == person_id)
                         approved = current.db(query).select(atable.id,
-                                                            limitby = (0, 1)
+                                                            limitby = (0, 1),
                                                             )
                         if not approved:
                             # Allow User to Match
@@ -6376,8 +6492,8 @@ Thank you"""
                     r.component.table.site_id.readable = True
 
                     # Show in list_fields
-                    oitable = s3db.req_order_item
-                    def req_order_item_represent(record_id):
+                    oitable = s3db.inv_order_item
+                    def inv_order_item_represent(record_id):
                         """
                             Probably few enough Request Items not to need an S3Represent sub-class
                         """
@@ -6385,11 +6501,11 @@ Thank you"""
                             return T("Not being Purchased")
                         else:
                             order_item = current.db(oitable.id == record_id).select(oitable.purchase_ref,
-                                                                                    limitby = (0, 1)
+                                                                                    limitby = (0, 1),
                                                                                     ).first()
                             return order_item.purchase_ref or T("Not yet entered")
 
-                    oitable.id.represent = req_order_item_represent
+                    oitable.id.represent = inv_order_item_represent
                     order_label = T("%(PO)s Number") % \
                                     {"PO": settings.get_proc_shortname()}
 

@@ -609,7 +609,7 @@ $.filterOptionsS3({
                        # Procurement Plan Items
                        proc_plan_item = "item_id",
                        # Order Items
-                       req_order_item = "item_id",
+                       inv_order_item = "item_id",
                        # Request Items
                        inv_req_item = "item_id",
                        # Supply Kit Items

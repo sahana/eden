@@ -895,7 +895,7 @@ $.filterOptionsS3({
             if not site_id:
                 table = current.s3db.inv_inv_item
                 record = current.db(table.id == inv_item_id).select(table.site_id,
-                                                                    limitby = (0, 1)
+                                                                    limitby = (0, 1),
                                                                     ).first()
                 site_id = record.site_id
 
@@ -937,7 +937,7 @@ $.filterOptionsS3({
 
         duplicate = current.db(query).select(table.id,
                                              table.quantity,
-                                             limitby = (0, 1)
+                                             limitby = (0, 1),
                                              ).first()
         if duplicate:
             item.id = duplicate.id
@@ -1151,7 +1151,7 @@ def inv_rheader(r):
         # Get site data
         table = s3db.inv_inv_item
         irecord = current.db(table.id == record.send_inv_item_id).select(table.site_id,
-                                                                         limitby = (0, 1)
+                                                                         limitby = (0, 1),
                                                                          ).first()
         # Header
         if irecord:
@@ -1194,7 +1194,7 @@ def inv_rheader(r):
         itable = s3db.supply_item
         item = db(itable.id == item_id).select(itable.name,
                                                itable.code,
-                                               limitby = (0, 1)
+                                               limitby = (0, 1),
                                                ).first()
 
         # Lookup Stock Minimum
@@ -1202,7 +1202,7 @@ def inv_rheader(r):
         query = (mtable.item_id == item_id) & \
                 (mtable.site_id == site_id)
         minimum = db(query).select(mtable.quantity,
-                                   limitby = (0, 1)
+                                   limitby = (0, 1),
                                    ).first()
         if minimum:
             stock_minimum = minimum.quantity
@@ -1336,7 +1336,7 @@ def inv_req_rheader(r, check_page=False):
             user_site_id = user.site_id if user else None
             ritable = s3db.inv_req_item
             possibly_complete = db(ritable.req_id == req_id).select(ritable.id,
-                                                                    limitby = (0, 1)
+                                                                    limitby = (0, 1),
                                                                     )
             if possibly_complete:
                 if use_commit:
@@ -1364,7 +1364,7 @@ def inv_req_rheader(r, check_page=False):
                             query = (atable.req_id == req_id) & \
                                     (atable.person_id == auth.s3_logged_in_person())
                             approved = db(query).select(atable.id,
-                                                        limitby = (0, 1)
+                                                        limitby = (0, 1),
                                                         )
                             if not approved:
                                 approve_btn = A(T("Approve"),
@@ -1424,13 +1424,13 @@ def inv_req_rheader(r, check_page=False):
             #   record.fulfil_status in [None, REQ_STATUS_NONE, REQ_STATUS_PARTIAL]:
             #   site_record = db(stable.site_id == site_id).select(stable.uuid,
             #                                                      stable.instance_type,
-            #                                                      limitby = (0, 1)
+            #                                                      limitby = (0, 1),
             #                                                      ).first()
             #   instance_type = site_record.instance_type
             #   table = s3db[instance_type]
             #   query = (table.uuid == site_record.uuid)
             #   instance_id = db(query).select(table.id,
-            #                                  limitby = (0, 1)
+            #                                  limitby = (0, 1),
             #                                  ).first().id
             #   transit_status = SPAN(transit_status,
             #                         A(T("Incoming Shipments"),
@@ -1459,7 +1459,7 @@ def inv_req_rheader(r, check_page=False):
                           )
         if site_id:
             org_id = db(stable.site_id == site_id).select(stable.organisation_id,
-                                                          limitby = (0, 1)
+                                                          limitby = (0, 1),
                                                           ).first().organisation_id
             logo = s3db.org_organisation_logo(org_id)
             if logo:
@@ -1545,8 +1545,8 @@ def inv_recv_crud_strings():
             msg_record_created = T("Order Created"),
             msg_record_modified = T("Order updated"),
             msg_record_deleted = T("Order canceled"),
-            msg_list_empty = T("No Orders registered")
-        )
+            msg_list_empty = T("No Orders registered"),
+            )
     else:
         #recv_id_label = T("Receive Shipment")
         ADD_RECV = T("Receive New Shipment")
@@ -1560,9 +1560,8 @@ def inv_recv_crud_strings():
             msg_record_created = T("Shipment Created"),
             msg_record_modified = T("Received Shipment updated"),
             msg_record_deleted = T("Received Shipment canceled"),
-            msg_list_empty = T("No Received Shipments")
-        )
-    return
+            msg_list_empty = T("No Received Shipments"),
+            )
 
 # =============================================================================
 def inv_send_rheader(r):
@@ -1594,7 +1593,7 @@ def inv_send_rheader(r):
             if site_id:
                 site = db(stable.site_id == site_id).select(stable.organisation_id,
                                                             stable.instance_type,
-                                                            limitby = (0, 1)
+                                                            limitby = (0, 1),
                                                             ).first()
                 org_id = site.organisation_id
                 logo = s3db.org_organisation_logo(org_id) or ""
@@ -1602,7 +1601,7 @@ def inv_send_rheader(r):
                 if "phone1" in instance_table.fields:
                     site = db(instance_table.site_id == site_id).select(instance_table.phone1,
                                                                         instance_table.phone2,
-                                                                        limitby = (0, 1)
+                                                                        limitby = (0, 1),
                                                                         ).first()
                     phone1 = site.phone1
                     phone2 = site.phone2
@@ -1617,7 +1616,7 @@ def inv_send_rheader(r):
             to_site_id = record.to_site_id
             if to_site_id:
                 site = db(stable.site_id == to_site_id).select(stable.location_id,
-                                                               limitby = (0, 1)
+                                                               limitby = (0, 1),
                                                                ).first()
                 address = s3db.gis_LocationRepresent(address_only = True)(site.location_id)
             else:
@@ -1700,7 +1699,7 @@ def inv_send_rheader(r):
                     (tracktable.deleted == False)
             #cnt = db(query).count()
             cnt = db(query).select(tracktable.id,
-                                   limitby = (0, 1)
+                                   limitby = (0, 1),
                                    ).first()
             if cnt:
                 cnt = 1
@@ -1901,7 +1900,7 @@ def inv_recv_rheader(r):
             site_id = record.site_id
             stable = s3db.org_site
             site = current.db(stable.site_id == site_id).select(stable.organisation_id,
-                                                                limitby = (0, 1)
+                                                                limitby = (0, 1),
                                                                 ).first()
             try:
                 org_id = site.organisation_id
@@ -2372,7 +2371,7 @@ class InventoryAdjustModel(S3Model):
         atable = s3db.inv_adj
         adj_record = db(atable.id == adj_id).select(atable.status,
                                                     atable.site_id,
-                                                    limitby = (0, 1)
+                                                    limitby = (0, 1),
                                                     ).first()
         if adj_record.status != 0:
             r.error(409, current.T("This adjustment has already been closed."))
@@ -2750,7 +2749,7 @@ class InventoryCommitModel(S3Model):
             # Set location_id to location of site
             stable = s3db.org_site
             site = db(stable.site_id == site_id).select(stable.location_id,
-                                                        limitby = (0, 1)
+                                                        limitby = (0, 1),
                                                         ).first()
             if site and site.location_id:
                 cdata["location_id"] = site.location_id
@@ -2766,7 +2765,7 @@ class InventoryCommitModel(S3Model):
         req = db(query).select(rtable.id,
                                rtable.req_status,
                                rtable.commit_status,
-                               limitby = (0, 1)
+                               limitby = (0, 1),
                                ).first()
         if not req:
             return
@@ -2788,13 +2787,13 @@ class InventoryCommitModel(S3Model):
         # Find the request
         ctable = s3db.inv_commit
         fks = db(ctable.id == commit_id).select(ctable.deleted_fk,
-                                                limitby = (0, 1)
+                                                limitby = (0, 1),
                                                 ).first().deleted_fk
         req_id = json.loads(fks)["req_id"]
         rtable = s3db.inv_req
         req = db(rtable.id == req_id).select(rtable.id,
                                              rtable.commit_status,
-                                             limitby = (0, 1)
+                                             limitby = (0, 1),
                                              ).first()
         if not req:
             return
@@ -2888,7 +2887,7 @@ class InventoryCommitItemModel(S3Model):
         req = db(query).select(rtable.id,
                                rtable.req_status,
                                rtable.commit_status,
-                               limitby = (0, 1)
+                               limitby = (0, 1),
                                ).first()
         if not req:
             return
@@ -2909,7 +2908,7 @@ class InventoryCommitItemModel(S3Model):
         # Get the commit_id
         table = s3db.inv_commit_item
         row = db(table.id == row.id).select(table.deleted_fk,
-                                            limitby = (0, 1)
+                                            limitby = (0, 1),
                                             ).first()
         try:
             deleted_fk = json.loads(row.deleted_fk)
@@ -2925,7 +2924,7 @@ class InventoryCommitItemModel(S3Model):
             req = db(query).select(rtable.id,
                                    rtable.req_status,
                                    rtable.commit_status,
-                                   limitby = (0, 1)
+                                   limitby = (0, 1),
                                    ).first()
             if req:
                 req_update_commit_quantities_and_status(req)
@@ -3151,7 +3150,7 @@ class InventoryKittingModel(S3Model):
         p_id_field = ptable.id
         p_qty_field = ptable.quantity
         pack_qty = db(p_id_field == item_pack_id).select(p_qty_field,
-                                                         limitby = (0, 1)
+                                                         limitby = (0, 1),
                                                          ).first().quantity
         quantity = quantity * pack_qty
 
@@ -3172,7 +3171,7 @@ class InventoryKittingModel(S3Model):
         for record in rows:
             # How much of this supply_item is required per kit?
             pack_qty = db(p_id_field == record.item_pack_id).select(p_qty_field,
-                                                                    limitby = (0, 1)
+                                                                    limitby = (0, 1),
                                                                     ).first().quantity
             one_kit = record.quantity * pack_qty
 
@@ -3185,7 +3184,7 @@ class InventoryKittingModel(S3Model):
                                         )
             for wh_item in wh_items:
                 pack_qty = db(p_id_field == wh_item.item_pack_id).select(p_qty_field,
-                                                                         limitby = (0, 1)
+                                                                         limitby = (0, 1),
                                                                          ).first().quantity
                 amount = wh_item.quantity * pack_qty
                 stock_amount += amount
@@ -3247,7 +3246,7 @@ class InventoryKittingModel(S3Model):
         p_id_field = ptable.id
         p_qty_field = ptable.quantity
         pack_qty = db(p_id_field == item_pack_id).select(p_qty_field,
-                                                         limitby = (0, 1)
+                                                         limitby = (0, 1),
                                                          ).first().quantity
         quantity = quantity * pack_qty
 
@@ -3279,7 +3278,7 @@ class InventoryKittingModel(S3Model):
         for record in rows:
             # How much of this supply_item is required per kit?
             pack_qty = db(p_id_field == record.item_pack_id).select(p_qty_field,
-                                                                    limitby = (0, 1)
+                                                                    limitby = (0, 1),
                                                                     ).first().quantity
             one_kit = record.quantity * pack_qty
 
@@ -3302,7 +3301,7 @@ class InventoryKittingModel(S3Model):
             for wh_item in wh_items:
                 # Get the pack_qty
                 pack_qty = db(p_id_field == wh_item.item_pack_id).select(p_qty_field,
-                                                                         limitby = (0, 1)
+                                                                         limitby = (0, 1),
                                                                          ).first().quantity
                 # How many of this item can we use for these kits?
                 amount = wh_item.quantity * pack_qty
@@ -4084,7 +4083,7 @@ class InventoryRequisitionModel(S3Model):
         query = (table.req_id == req_id) & \
                 (table.deleted == False)
         exists = db(query).select(table.id,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if exists:
             # Browse existing commitments
@@ -4294,12 +4293,12 @@ class InventoryRequisitionModel(S3Model):
         site_id = record.site_id
         stable = s3db.org_site
         site_entity = db(stable.site_id == site_id).select(stable.instance_type,
-                                                           limitby = (0, 1)
+                                                           limitby = (0, 1),
                                                            ).first()
         itable = s3db.table(site_entity.instance_type)
         site = db(itable.site_id == site_id).select(itable.name, # Needed later for Message construction
                                                     itable.pe_id,
-                                                    limitby = (0, 1)
+                                                    limitby = (0, 1),
                                                     ).first()
         pe_id = site.pe_id
         ancestors = s3db.pr_get_ancestors(pe_id)
@@ -4424,7 +4423,7 @@ class InventoryRequisitionModel(S3Model):
             if None in site_ids:
                 # Check for Purchases
                 unmatched_items = [row.id for row in request_items if row.site_id == None]
-                oitable = s3db.req_order_item
+                oitable = s3db.inv_order_item
                 orders = db(oitable.req_item_id.belongs(unmatched_items)).select(oitable.id)
                 if len(unmatched_items) != len(orders):
                     current.session.warning = current.T("You need to Match Items in this Request")
@@ -4486,7 +4485,7 @@ class InventoryRequisitionModel(S3Model):
                                                table.commit_status,
                                                table.fulfil_status,
                                                table.cancel,
-                                               limitby = (0, 1)
+                                               limitby = (0, 1),
                                                ).first()
         if record.is_template:
             is_template = True
@@ -4555,14 +4554,14 @@ class InventoryRequisitionModel(S3Model):
                                           hrtable.organisation_id,
                                           hrtable.site_id,
                                           hrtable.site_contact,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
                 if exists:
                     if site_id and not exists.site_id:
                         # Check that the Request site belongs to this Org
                         stable = s3db.org_site
                         site = db(stable.site_id == site_id).select(stable.organisation_id,
-                                                                    limitby = (0, 1)
+                                                                    limitby = (0, 1),
                                                                     ).first()
                         # @ToDo: Think about branches
                         if site and site.organisation_id == exists.organisation_id:
@@ -4573,14 +4572,14 @@ class InventoryRequisitionModel(S3Model):
                     # Lookup the Org for the site
                     stable = s3db.org_site
                     site = db(stable.site_id == site_id).select(stable.organisation_id,
-                                                                limitby = (0, 1)
+                                                                limitby = (0, 1),
                                                                 ).first()
                     # Is there already a site_contact for this site?
                     ltable = s3db.hrm_human_resource_site
                     query = (ltable.site_id == site_id) & \
                             (ltable.site_contact == True)
                     already = db(query).select(ltable.id,
-                                               limitby = (0, 1)
+                                               limitby = (0, 1),
                                                ).first()
                     if already:
                         site_contact = False
@@ -4766,7 +4765,8 @@ class InventoryRequisitionItemModel(S3Model):
                            ),
                      # @ToDo: Move this into a Currency Widget for the pack_value field
                      s3_currency(readable = track_pack_values,
-                                 writable = track_pack_values),
+                                 writable = track_pack_values,
+                                 ),
                      # Requested from:
                      self.org_site_id(),
                      Field("quantity_commit", "double",
@@ -4778,6 +4778,7 @@ class InventoryRequisitionItemModel(S3Model):
                            writable = use_commit and quantities_writable,
                            ),
                      Field("quantity_transit", "double",
+                           default = 0,
                            # FB: I think this is Qty Shipped not remaining in transit
                            # @ToDo: Distinguish between:
                            #        items lost in transit (shipped but not recvd and unlikely to ever be, so still required)
@@ -4785,7 +4786,6 @@ class InventoryRequisitionItemModel(S3Model):
                            #label = T("Quantity Shipped"),
                            label = T("Quantity in Transit"),
                            represent = self.req_qnty_transit_represent,
-                           default = 0,
                            requires = IS_FLOAT_AMOUNT(minimum = 0.0),
                            readable = show_qty_transit,
                            writable = show_qty_transit and quantities_writable,
@@ -4954,7 +4954,7 @@ $.filterOptionsS3({
             record_id = form_vars.get("id")
             table = current.s3db.inv_req_item
             record = db(table.id == record_id).select(table.req_id,
-                                                      limitby = (0, 1)
+                                                      limitby = (0, 1),
                                                       ).first()
             if record:
                 req_id = record.req_id
@@ -4977,7 +4977,7 @@ $.filterOptionsS3({
                     (rictable.req_id == req_id) & \
                     (rictable.item_category_id == item_category_id)
             exists = db(query).select(rictable.id,
-                                      limitby = (0, 1)
+                                      limitby = (0, 1),
                                       )
             if not exists:
                 rictable.insert(req_id = req_id,
@@ -5000,7 +5000,7 @@ $.filterOptionsS3({
         sitable = db.supply_item
         ritable = db.inv_req_item
         item = db(ritable.id == row.id).select(ritable.deleted_fk,
-                                               limitby = (0, 1)
+                                               limitby = (0, 1),
                                                ).first()
         fks = json.loads(item.deleted_fk)
         req_id = fks["req_id"]
@@ -5015,7 +5015,7 @@ $.filterOptionsS3({
                     (ritable.item_id == sitable.id) & \
                     (sitable.item_category_id == item_category_id)
             others = db(query).select(ritable.id,
-                                      limitby = (0, 1)
+                                      limitby = (0, 1),
                                       ).first()
             if not others:
                 # Delete req_item_category link table
@@ -5112,7 +5112,7 @@ $.filterOptionsS3({
             return
 
         duplicate = db(query).select(itable.id,
-                                     limitby = (0, 1)
+                                     limitby = (0, 1),
                                      ).first()
         if duplicate:
             item.id = duplicate.id
@@ -5616,11 +5616,10 @@ class InventoryTrackingModel(S3Model):
                                                   not_filter_opts = (True,),
                                                   )),
                            ),
-                     organisation_id(
-                        label = T("To Organization"),
-                        readable = show_org,
-                        writable = show_org,
-                        ),
+                     organisation_id(label = T("To Organization"),
+                                     readable = show_org,
+                                     writable = show_org,
+                                     ),
                      person_id("sender_id",
                                default = auth.s3_logged_in_person(),
                                label = T("Sent By"),
@@ -5652,14 +5651,14 @@ class InventoryTrackingModel(S3Model):
                            ),
                      Field("transport_ref",
                            label = T("Transport Reference"),
-                           readable = show_transport,
-                           writable = show_transport,
                            represent = string_represent,
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" % (T("Transport Reference"),
                                                              T("Consignment Number, Tracking Number, etc"),
                                                              ),
                                          ),
+                           readable = show_transport,
+                           writable = show_transport,
                            ),
                      Field("driver_name",
                            label = T("Name of Driver"),
@@ -5705,13 +5704,13 @@ class InventoryTrackingModel(S3Model):
                            writable = False,
                            ),
                      Field("filing_status", "integer",
+                           default = SHIP_DOC_PENDING,
+                           label = T("Filing Status"),
+                           represent = S3Represent(options = ship_doc_status),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(ship_doc_status)
                                        ),
-                           represent = S3Represent(options = ship_doc_status),
-                           default = SHIP_DOC_PENDING,
                            widget = radio_widget,
-                           label = T("Filing Status"),
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s|%s" % (T("Filing Status"),
                                                                 T("Have all the signed documents for this shipment been filed?"),
@@ -5905,10 +5904,10 @@ class InventoryTrackingModel(S3Model):
                                 #widget = S3SiteAutocompleteWidget(),
                                 ),
                      Field("type", "integer",
-                           requires = IS_IN_SET(recv_type_opts),
-                           represent = S3Represent(options = recv_type_opts),
-                           label = T("Shipment Type"),
                            default = 0,
+                           label = T("Shipment Type"),
+                           represent = S3Represent(options = recv_type_opts),
+                           requires = IS_IN_SET(recv_type_opts),
                            ),
                      organisation_id(label = T("Organization/Supplier"), # From Organization/Supplier
                                      ),
@@ -5917,6 +5916,7 @@ class InventoryTrackingModel(S3Model):
                            label = T("From %(site)s") % {"site": SITE_LABEL},
                            ondelete = "SET NULL",
                            #widget = S3SiteAutocompleteWidget(),
+                           represent = org_site_represent,
                            requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_site.site_id",
                                                   org_site_represent,
@@ -5925,7 +5925,6 @@ class InventoryTrackingModel(S3Model):
                                                   not_filter_opts = (True,),
                                                   sort = True,
                                                   )),
-                           represent = org_site_represent
                            ),
                      s3_date("eta",
                              label = T("Date Expected"),
@@ -5949,13 +5948,13 @@ class InventoryTrackingModel(S3Model):
                      person_id(name = "sender_id",
                                label = T("Sent By Person"),
                                ondelete = "SET NULL",
-                               comment = self.pr_person_comment(child="sender_id"),
+                               comment = self.pr_person_comment(child = "sender_id"),
                                ),
                      person_id(name = "recipient_id",
                                label = T("Received By"),
                                ondelete = "SET NULL",
                                default = auth.s3_logged_in_person(),
-                               comment = self.pr_person_comment(child="recipient_id")),
+                               comment = self.pr_person_comment(child = "recipient_id")),
                      Field("transport_type",
                            label = T("Type of Transport"),
                            # Enable in template as-required
@@ -5964,22 +5963,22 @@ class InventoryTrackingModel(S3Model):
                            represent = string_represent,
                            ),
                      Field("status", "integer",
+                           default = SHIP_STATUS_IN_PROCESS,
+                           label = T("Status"),
+                           represent = S3Represent(options = shipment_status),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(shipment_status)
                                         ),
-                           represent = S3Represent(options = shipment_status),
-                           default = SHIP_STATUS_IN_PROCESS,
-                           label = T("Status"),
                            writable = False,
                            ),
                      Field("grn_status", "integer",
+                           default = SHIP_DOC_PENDING,
+                           label = T("%(GRN)s Status") % {"GRN": recv_shortname},
+                           represent = S3Represent(options = ship_doc_status),
                            requires = IS_EMPTY_OR(
                                        IS_IN_SET(ship_doc_status)
                                        ),
-                           represent = S3Represent(options = ship_doc_status),
-                           default = SHIP_DOC_PENDING,
                            widget = radio_widget,
-                           label = T("%(GRN)s Status") % {"GRN": recv_shortname},
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" % (T("%(GRN)s Status") % {"GRN": recv_shortname},
                                                              T("Has the %(GRN)s (%(GRN_name)s) form been completed?") % \
@@ -5990,13 +5989,13 @@ class InventoryTrackingModel(S3Model):
                                          ),
                            ),
                      Field("cert_status", "integer",
+                           default = SHIP_DOC_PENDING,
+                           label = T("Certificate Status"),
+                           represent = S3Represent(options = ship_doc_status),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(ship_doc_status)
                                        ),
-                           represent = S3Represent(options = ship_doc_status),
-                           default = SHIP_DOC_PENDING,
                            widget = radio_widget,
-                           label = T("Certificate Status"),
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" % (T("Certificate Status"),
                                                              T("Has the Certificate for receipt of the shipment been given to the sender?"),
@@ -6004,13 +6003,13 @@ class InventoryTrackingModel(S3Model):
                                          ),
                            ),
                      Field("filing_status", "integer",
+                           default = SHIP_DOC_PENDING,
+                           label = T("Filing Status"),
+                           represent = S3Represent(options = ship_doc_status),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(ship_doc_status)
                                        ),
-                           represent = S3Represent(options = ship_doc_status),
-                           default = SHIP_DOC_PENDING,
                            widget = radio_widget,
-                           label = T("Filing Status"),
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s|%s" % (T("Filing Status"),
                                                                 T("Have all the signed documents for this shipment been filed?"),
@@ -6074,33 +6073,35 @@ class InventoryTrackingModel(S3Model):
                          ],
                          label = T("Search"),
                          comment = recv_search_comment,
-                        ),
+                         ),
             S3DateFilter(recv_search_date_field,
-                         # This will be the default
-                         #label = table[recv_search_date_field].label,
                          comment = recv_search_date_comment,
                          hidden = True,
-                        ),
+                         ),
+            S3OptionsFilter("status",
+                            label = T("Status"),
+                            cols = 3,
+                            #options = shipment_status,
+                            # Needs to be visible for default_filter to work
+                            #hidden = True,
+                            ),
             S3OptionsFilter("site_id",
                             label = SITE_LABEL,
                             cols = 2,
                             hidden = True,
-                           ),
-            S3OptionsFilter("status",
-                            label = T("Status"),
-                            cols = 2,
-                            hidden = True,
-                           ),
+                            ),
             #S3OptionsFilter("grn_status",
-                            #label = T("GRN Status"),
-                            #cols = 2,
-                            #hidden = True,
-                           #),
+            #                label = T("GRN Status"),
+            #                options = ship_doc_status,
+            #                cols = 2,
+            #                hidden = True,
+            #                ),
             #S3OptionsFilter("cert_status",
-                            #label = T("Certificate Status"),
-                            #cols = 2,
-                            #hidden = True,
-                           #),
+            #                label = T("Certificate Status"),
+            #                options = ship_doc_status,
+            #                cols = 2,
+            #                hidden = True,
+            #                ),
         ]
 
         # Redirect to the Items tabs after creation
@@ -6308,7 +6309,7 @@ $.filterOptionsS3({
                                         ),
                            ),
                      Field("status", "integer",
-                           default = 1,
+                           default = TRACK_STATUS_PREPARING, # 1
                            label = T("Item Tracking Status"),
                            represent = S3Represent(options = tracking_status),
                            required = True,
@@ -6623,7 +6624,7 @@ $.filterOptionsS3({
         tracktable.recv_inv_item_id.readable = False
 
         record = db(table.id == r.id).select(table.send_ref,
-                                             limitby = (0, 1)
+                                             limitby = (0, 1),
                                              ).first()
         send_ref = record.send_ref
 
@@ -6684,7 +6685,7 @@ $.filterOptionsS3({
         record = db(rtable.id == record_id).select(rtable.id,
                                                    rtable.recv_ref,
                                                    rtable.site_id,
-                                                   limitby = (0, 1)
+                                                   limitby = (0, 1),
                                                    ).first()
         if not record.recv_ref:
             # AR Number
@@ -6753,7 +6754,7 @@ $.filterOptionsS3({
         table.site_id.represent = current.s3db.org_site_represent
 
         record = db(table.id == r.id).select(table.recv_ref,
-                                             limitby = (0, 1)
+                                             limitby = (0, 1),
                                              ).first()
         recv_ref = record.recv_ref
 
@@ -6850,7 +6851,7 @@ $.filterOptionsS3({
                 db = current.db
                 table = db.inv_send
                 row = db(table.send_ref == value).select(table.id,
-                                                         limitby = (0, 1)
+                                                         limitby = (0, 1),
                                                          ).first()
                 if row:
                     return A(value,
@@ -6880,7 +6881,7 @@ $.filterOptionsS3({
                 db = current.db
                 table = db.inv_recv
                 recv_row = db(table.recv_ref == value).select(table.id,
-                                                              limitby = (0, 1)
+                                                              limitby = (0, 1),
                                                               ).first()
                 return A(value,
                          _href = URL(c = "inv",
@@ -6926,7 +6927,7 @@ $.filterOptionsS3({
                                       itable.pack_value,
                                       itable.currency,
                                       itable.status,
-                                      limitby = (0, 1)
+                                      limitby = (0, 1),
                                       ).first()
             form_vars.item_id = record.item_id
             form_vars.item_source_no = record.item_source_no
@@ -6943,7 +6944,7 @@ $.filterOptionsS3({
             stable = current.s3db.org_site
             query = query & (itable.site_id == stable.id)
             record = db(query).select(stable.organisation_id,
-                                      limitby = (0, 1)
+                                      limitby = (0, 1),
                                       ).first()
             form_vars.track_org_id = record.organisation_id
 
@@ -7300,7 +7301,7 @@ def inv_prep(r):
             # Ensure that the current item CAN be selected
             if r.method == "update":
                 item = db(table.id == r.args[2]).select(table.item_id,
-                                                        limitby = (0, 1)
+                                                        limitby = (0, 1),
                                                         ).first()
                 item_ids.remove(item.item_id)
             table.item_id.requires.set_filter(not_filterby = "id",
@@ -7344,7 +7345,7 @@ def inv_remove(inv_rec,
     inv_item_table = db.inv_inv_item
     siptable = db.supply_item_pack
     inv_p_qnty = db(siptable.id == inv_rec.item_pack_id).select(siptable.quantity,
-                                                                limitby = (0, 1)
+                                                                limitby = (0, 1),
                                                                 ).first().quantity
     inv_qnty = inv_rec.quantity * inv_p_qnty
     cur_qnty = current_track_total * inv_p_qnty
@@ -7635,7 +7636,8 @@ def inv_send_controller():
 
     # Limit site_id to sites the user has permissions for
     error_msg = T("You do not have permission for any facility to send a shipment.")
-    current.auth.permitted_facilities(table=sendtable, error_msg=error_msg)
+    current.auth.permitted_facilities(table = sendtable,
+                                      error_msg = error_msg)
 
     response = current.response
     s3 = response.s3
@@ -7655,7 +7657,7 @@ def inv_send_controller():
                 else:
                     rtable = s3db.inv_req
                     req = db(rtable.id == req_id).select(rtable.req_ref,
-                                                         limitby = (0, 1)
+                                                         limitby = (0, 1),
                                                          ).first()
                     sendtable.req_ref.default = req.req_ref
 
@@ -7689,7 +7691,7 @@ def inv_send_controller():
                 if send_inv_item_id:
                     if not req_vars.item_pack_id:
                         req_vars.item_pack_id = db(iitable.id == send_inv_item_id).select(iitable.item_pack_id,
-                                                                                          limitby = (0, 1)
+                                                                                          limitby = (0, 1),
                                                                                           ).first().item_pack_id
                     tracktable.quantity.requires = IS_AVAILABLE_QUANTITY(send_inv_item_id,
                                                                          req_vars.item_pack_id,
@@ -7844,7 +7846,7 @@ def inv_send_controller():
                                                                               tracktable.item_pack_id,
                                                                               tracktable.status,
                                                                               tracktable.quantity,
-                                                                              limitby = (0, 1)
+                                                                              limitby = (0, 1),
                                                                               ).first()
                     set_track_attr(track_record.status)
                     # If the track record is linked to a request item then
@@ -7854,10 +7856,9 @@ def inv_send_controller():
                         tracktable.item_pack_id.writable = False
                         stock_qnty = track_record.quantity
                         tracktable.quantity.comment = T("%(quantity)s in stock") % {"quantity": stock_qnty}
-                        tracktable.quantity.requires = IS_AVAILABLE_QUANTITY(
-                                                            track_record.send_inv_item_id,
-                                                            track_record.item_pack_id,
-                                                            )
+                        tracktable.quantity.requires = IS_AVAILABLE_QUANTITY(track_record.send_inv_item_id,
+                                                                             track_record.item_pack_id,
+                                                                             )
                     # Hide the item id
                     tracktable.item_id.readable = False
                 else:
@@ -7897,7 +7898,7 @@ def inv_send_controller():
                     if settings.get_inv_document_filing():
                         dtable = s3db.doc_document
                         filed = db(dtable.doc_id == record.doc_id).select(dtable.id,
-                                                                          limitby = (0, 1)
+                                                                          limitby = (0, 1),
                                                                           )
                         if filed:
                             # Still allow access to filing_status
@@ -7986,7 +7987,7 @@ def inv_send_onaccept(form):
     record = db(stable.id == record_id).select(stable.id,
                                                stable.send_ref,
                                                stable.site_id,
-                                               limitby = (0, 1)
+                                               limitby = (0, 1),
                                                ).first()
     if not record.send_ref:
         code = current.s3db.supply_get_shipping_code(
@@ -8034,7 +8035,7 @@ def inv_send_process(r, **attr):
                                                   stable.to_site_id,
                                                   stable.transport_type,
                                                   stable.comments,
-                                                  limitby = (0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
 
     if send_record.status != SHIP_STATUS_IN_PROCESS:
@@ -8106,7 +8107,7 @@ def inv_send_process(r, **attr):
     elif req_ref:
         rrtable = s3db.inv_req
         req_record = db(rrtable.req_ref == req_ref).select(rrtable.id,
-                                                           limitby = (0, 1)
+                                                           limitby = (0, 1),
                                                            ).first()
         if req_record:
             ritable = s3db.inv_req_item
@@ -8135,25 +8136,25 @@ def inv_send_process(r, **attr):
 
     # Create a Receive record
     rtable = s3db.inv_recv
-    recv_item = {"sender_id": send_record.sender_id,
-                 "send_ref": send_record.send_ref,
-                 "req_ref": req_ref,
-                 "from_site_id": send_record.site_id,
-                 "eta": send_record.delivery_date,
-                 "recipient_id": send_record.recipient_id,
-                 "site_id": send_record.to_site_id,
-                 "transport_type": send_record.transport_type,
-                 "comments": send_record.comments,
-                 "status": SHIP_STATUS_SENT,
-                 "type": 1, # "Another Inventory"
-                 }
-    recv_id = rtable.insert(**recv_item)
-    recv_item["id"] = recv_id
+    recv = {"sender_id": send_record.sender_id,
+            "send_ref": send_record.send_ref,
+            "req_ref": req_ref,
+            "from_site_id": send_record.site_id,
+            "eta": send_record.delivery_date,
+            "recipient_id": send_record.recipient_id,
+            "site_id": send_record.to_site_id,
+            "transport_type": send_record.transport_type,
+            "comments": send_record.comments,
+            "status": SHIP_STATUS_SENT,
+            "type": 1, # "Another Inventory"
+            }
+    recv_id = rtable.insert(**recv)
+    recv["id"] = recv_id
     auth.set_realm_entity(rtable, recv_id)
 
     # Change the status for all track items in this shipment to 'In Transit'
     # and link to the receive record
-    db(tracktable.send_id == send_id).update(status = 2,
+    db(tracktable.send_id == send_id).update(status = TRACK_STATUS_TRANSIT, # 2
                                              recv_id = recv_id,
                                              )
 
@@ -8225,7 +8226,7 @@ def inv_send_received(r, **attr):
             # Update the Request Status
             rtable = s3db.inv_req
             req = db(rtable.req_ref == req_ref).select(rtable.id,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
             req_ids = [req.req_id]
 
@@ -8316,7 +8317,7 @@ def inv_recv_process(r, **attr):
                                                   rtable.status,
                                                   rtable.site_id,
                                                   rtable.recv_ref,
-                                                  limitby = (0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
 
     # Check status
@@ -8369,11 +8370,11 @@ def inv_recv_process(r, **attr):
 
     # Lookup the send_id from a track item of this recv
     tracktable = s3db.inv_track_item
-    item = db(tracktable.recv_id == recv_id).select(tracktable.send_id,
-                                                    limitby = (0, 1),
-                                                    ).first()
-    if item:
-        send_id = item.send_id
+    track_item = db(tracktable.recv_id == recv_id).select(tracktable.send_id,
+                                                          limitby = (0, 1),
+                                                          ).first()
+    if track_item:
+        send_id = track_item.send_id
         # Update the Send record & lock for editing
         stable = db.inv_send
         db(stable.id == send_id).update(status = inv_ship_status["RECEIVED"],
@@ -8497,8 +8498,8 @@ def inv_req_add_from_template(req_id):
     fields = [table[field] for field in fieldnames]
 
     # Load Template
-    template = db(table.id == req_id).select(limitby = (0, 1),
-                                             *fields
+    template = db(table.id == req_id).select(*fields,
+                                             limitby = (0, 1)
                                              ).first()
     data = {"is_template": False}
     try:
@@ -8742,7 +8743,7 @@ def inv_req_match(rheader = None):
 
     table = s3db[tablename]
     row = current.db(table.id == record_id).select(table.site_id,
-                                                   limitby = (0, 1)
+                                                   limitby = (0, 1),
                                                    ).first()
     if row:
         site_id = row.site_id
@@ -8849,11 +8850,11 @@ def inv_req_is_approver(site_id):
 
     stable = s3db.org_site
     site_entity = db(stable.site_id == site_id).select(stable.instance_type,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
     itable = s3db.table(site_entity.instance_type)
     site = db(itable.site_id == site_id).select(itable.pe_id,
-                                                limitby = (0, 1)
+                                                limitby = (0, 1),
                                                 ).first()
 
     pe_id = site.pe_id
@@ -8881,11 +8882,11 @@ def inv_req_approvers(site_id):
 
     stable = s3db.org_site
     site_entity = db(stable.site_id == site_id).select(stable.instance_type,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
     itable = s3db.table(site_entity.instance_type)
     site = db(itable.site_id == site_id).select(itable.pe_id,
-                                                limitby = (0, 1)
+                                                limitby = (0, 1),
                                                 ).first()
 
     pe_id = site.pe_id
@@ -9125,7 +9126,7 @@ def inv_send_commit():
                               req_table.requester_id,
                               req_table.site_id,
                               req_table.req_ref,
-                              limitby = (0, 1)
+                              limitby = (0, 1),
                               ).first()
 
     # @ToDo: Identify if we have stock items which match the commit items
@@ -9344,7 +9345,7 @@ def inv_stock_card_update(inv_item_ids,
                 (sctable.expiry_date == expiry_date)
 
         exists = db(query).select(sctable.id,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if exists:
             card_id = exists.id
@@ -9353,7 +9354,7 @@ def inv_stock_card_update(inv_item_ids,
             log = db(sltable.card_id == card_id).select(sltable.date,
                                                         sltable.balance,
                                                         orderby = ~sltable.date,
-                                                        limitby = (0, 1)
+                                                        limitby = (0, 1),
                                                         ).first()
             if not log:
                 quantity_in = quantity
@@ -9417,7 +9418,7 @@ def inv_track_item_deleting(record_id):
                                                    tracktable.item_pack_id,
                                                    tracktable.quantity,
                                                    tracktable.send_inv_item_id,
-                                                   limitby = (0, 1)
+                                                   limitby = (0, 1),
                                                    ).first()
     if record.status != 1:
         # Not 'Preparing': Do not allow
@@ -9431,15 +9432,15 @@ def inv_track_item_deleting(record_id):
         req_item = db(ritable.id == req_id).select(ritable.id,
                                                    ritable.quantity_transit,
                                                    ritable.item_pack_id,
-                                                   limitby = (0, 1)
+                                                   limitby = (0, 1),
                                                    ).first()
         req_quantity = req_item.quantity_transit
         siptable = db.supply_item_pack
         req_pack_quantity = db(siptable.id == req_item.item_pack_id).select(siptable.quantity,
-                                                                            limitby = (0, 1)
+                                                                            limitby = (0, 1),
                                                                             ).first().quantity
         track_pack_quantity = db(siptable.id == record.item_pack_id).select(siptable.quantity,
-                                                                            limitby = (0, 1)
+                                                                            limitby = (0, 1),
                                                                             ).first().quantity
         from .supply import supply_item_add
         quantity_transit = supply_item_add(req_quantity,
@@ -9469,7 +9470,7 @@ def inv_track_item_onaccept(form):
     """
        When a track item record is created
        - if it is linked to an inv_item then that quantity will be updated
-       - if it is linked to a req_item then that status will be updates
+       - if it is linked to a req_item then that status will be updated
     """
 
     from .supply import supply_item_add
@@ -9494,14 +9495,14 @@ def inv_track_item_onaccept(form):
                                                                       inv_item_table.quantity,
                                                                       inv_item_table.item_pack_id,
                                                                       inv_item_table.source_type,
-                                                                      limitby = (0, 1)
+                                                                      limitby = (0, 1),
                                                                       ).first()
     elif record:
         stock_item = db(inv_item_table.id == record.send_inv_item_id).select(inv_item_table.id,
                                                                              inv_item_table.quantity,
                                                                              inv_item_table.item_pack_id,
                                                                              inv_item_table.source_type,
-                                                                             limitby = (0, 1)
+                                                                             limitby = (0, 1),
                                                                              ).first()
     else:
         # will get here for a recv from external donor / local supplier
@@ -9514,7 +9515,7 @@ def inv_track_item_onaccept(form):
     if form_vars.quantity and stock_item:
         stock_quantity = stock_item.quantity
         stock_pack = db(siptable.id == stock_item.item_pack_id).select(siptable.quantity,
-                                                                       limitby = (0, 1)
+                                                                       limitby = (0, 1),
                                                                        ).first().quantity
         if record:
             if record.send_inv_item_id != None:
@@ -9528,7 +9529,7 @@ def inv_track_item_onaccept(form):
                                                  old_track_pack_quantity
                                                  )
         new_track_pack_quantity = db(siptable.id == form_vars.item_pack_id).select(siptable.quantity,
-                                                                                   limitby = (0, 1)
+                                                                                   limitby = (0, 1),
                                                                                    ).first().quantity
         new_total = supply_item_add(stock_quantity,
                                     stock_pack,
@@ -9541,31 +9542,27 @@ def inv_track_item_onaccept(form):
     recv_id = form_vars_get("recv_id")
     if send_id and recv_id:
         send_ref = db(stable.id == send_id).select(stable.send_ref,
-                                                   limitby = (0, 1)
+                                                   limitby = (0, 1),
                                                    ).first().send_ref
         db(rtable.id == recv_id).update(send_ref = send_ref)
 
     if record:
         settings = current.deployment_settings
 
-        # If this item is linked to a Request, then copy the req_ref to the Send &/or Recv
-        rrtable = s3db.table("inv_req")
-        if rrtable:
-            req_item_id = record.req_item_id
-        else:
-            # Req module deactivated
-            req_item_id = None
-
+        # Check if this item is linked to a Request
+        req_item_id = record.req_item_id
         if req_item_id:
+            rrtable = s3db.inv_req
             ritable = s3db.inv_req_item
             req_id = db(ritable.id == req_item_id).select(ritable.req_id,
-                                                          limitby = (0, 1)
+                                                          limitby = (0, 1),
                                                           ).first().req_id
             send_req_multi = settings.get_inv_send_req_multi()
             recv_req_multi = settings.get_inv_recv_req_multi()
             if not send_req_multi or not recv_req_multi:
+                # Copy the req_ref to the Send &/or Recv
                 req_ref = db(rrtable.id == req_id).select(rrtable.req_ref,
-                                                          limitby = (0, 1)
+                                                          limitby = (0, 1),
                                                           ).first().req_ref
                 if send_id:
                     db(stable.id == send_id).update(req_ref = req_ref)
@@ -9582,7 +9579,7 @@ def inv_track_item_onaccept(form):
             # Look for the item in the site already
             recv_rec = db(rtable.id == recv_id).select(rtable.site_id,
                                                        rtable.type,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
             recv_site_id = recv_rec.site_id
             if settings.get_inv_bin_site_layout():
@@ -9602,7 +9599,7 @@ def inv_track_item_onaccept(form):
                     (inv_item_table.status == record.inv_item_status) & \
                     (inv_item_table.supply_org_id == record.supply_org_id)
             inv_item_row = db(query).select(inv_item_table.id,
-                                            limitby = (0, 1)
+                                            limitby = (0, 1),
                                             ).first()
             if inv_item_row:
                 # Update the existing item
@@ -9643,14 +9640,14 @@ def inv_track_item_onaccept(form):
                 req_item = db(ritable.id == req_item_id).select(ritable.id,
                                                                 ritable.quantity_fulfil,
                                                                 ritable.item_pack_id,
-                                                                limitby = (0, 1)
+                                                                limitby = (0, 1),
                                                                 ).first()
                 req_quantity = req_item.quantity_fulfil
                 req_pack_quantity = db(siptable.id == req_item.item_pack_id).select(siptable.quantity,
-                                                                                    limitby = (0, 1)
+                                                                                    limitby = (0, 1),
                                                                                     ).first().quantity
                 track_pack_quantity = db(siptable.id == record.item_pack_id).select(siptable.quantity,
-                                                                                    limitby = (0, 1)
+                                                                                    limitby = (0, 1),
                                                                                     ).first().quantity
                 quantity_fulfil = supply_item_add(req_quantity,
                                                   req_pack_quantity,
@@ -9672,12 +9669,12 @@ def inv_track_item_onaccept(form):
                 query = (tracktable.recv_id == recv_id) & \
                         (tracktable.adj_item_id != None)
                 adj_rec = db(query).select(tracktable.adj_item_id,
-                                           limitby = (0, 1)
+                                           limitby = (0, 1),
                                            ).first()
                 adjitemtable = s3db.inv_adj_item
                 if adj_rec:
                     adj_id = db(adjitemtable.id == adj_rec.adj_item_id).select(adjitemtable.adj_id,
-                                                                               limitby = (0, 1)
+                                                                               limitby = (0, 1),
                                                                                ).first().adj_id
                 # If we don't yet have an adj record then create it
                 else:
@@ -9686,7 +9683,7 @@ def inv_track_item_onaccept(form):
                     recv_rec = db(irtable.id == recv_id).select(irtable.recipient_id,
                                                                 irtable.site_id,
                                                                 irtable.comments,
-                                                                limitby = (0, 1)
+                                                                limitby = (0, 1),
                                                                 ).first()
                     adj_id = adjtable.insert(adjuster_id = recv_rec.recipient_id,
                                              site_id = recv_rec.site_id,
@@ -9730,7 +9727,7 @@ def inv_warehouse_free_capacity(site_id):
                                                     table.site_id, # For on_free_capacity_update hook
                                                     table.capacity,
                                                     table.name,    # For on_free_capacity_update hook
-                                                    limitby = (0, 1)
+                                                    limitby = (0, 1),
                                                     ).first()
     if not warehouse or not warehouse.capacity:
         # Not a Warehouse, or Capacity not defined
@@ -9811,9 +9808,10 @@ def inv_adj_rheader(r):
                                                   record_id = record.id):
                     # aitable = current.s3db.inv_adj_item
                     # query = (aitable.adj_id == record.id) & \
-                            # (aitable.new_quantity == None)
+                    #         (aitable.new_quantity == None)
                     # row = current.db(query).select(aitable.id,
-                                                   # limitby=(0, 1)).first()
+                    #                                limitby = (0, 1),
+                    #                                ).first()
                     # if row == None:
                     close_btn = A(T("Complete Adjustment"),
                                   _href = URL(c = "inv",
@@ -9911,13 +9909,13 @@ class inv_ReqCheckMethod(S3Method):
                         (stable.location_id == ltable.id)
                 location_r = db(query).select(ltable.lat,
                                               ltable.lon,
-                                              limitby = (0, 1)
+                                              limitby = (0, 1),
                                               ).first()
                 query = (stable.id == r.record.site_id ) & \
                         (stable.location_id == ltable.id)
                 req_location_r = db(query).select(ltable.lat,
                                                   ltable.lon,
-                                                  limitby = (0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
 
                 try:
