@@ -45,7 +45,7 @@ __all__ = ("EventModel",
            "EventMapModel",
            "EventOrganisationModel",
            "EventProjectModel",
-           "EventRequestModel",
+           #"EventRequestModel",
            "EventSiteModel",
            "EventShelterModel",
            "EventSitRepModel",
@@ -544,12 +544,12 @@ class EventModel(S3Model):
                                          "actuate": "hide",
                                          "autodelete": False,
                                          },
-                            inv_req = {"link": "event_request",
-                                       "joinby": "event_id",
-                                       "key": "req_id",
-                                       "actuate": "hide",
-                                       "autodelete": False,
-                                       },
+                            #inv_req = {"link": "event_request",
+                            #           "joinby": "event_id",
+                            #           "key": "req_id",
+                            #           "actuate": "hide",
+                            #           "autodelete": False,
+                            #           },
                             stats_impact = {"link": "event_event_impact",
                                             "joinby": "event_id",
                                             "key": "impact_id",
@@ -1106,6 +1106,8 @@ class EventActivityModel(S3Model):
 class EventRequestModel(S3Model):
     """
         Link Requests to Incidents &/or Events
+
+        Unused / disabled
     """
 
     names = ("event_request",
@@ -3972,7 +3974,7 @@ class IncidentModel(S3Model):
                               "event_target",
                               "event_organisation",
                               "event_post",
-                              "event_request",
+                              #"event_request",
                               "event_sitrep",
                               "event_task",
                               "event_team",

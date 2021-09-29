@@ -4801,37 +4801,35 @@ class S3Config(Storage):
         """
         return self.inv.get("org_dependent_warehouse_types", False)
 
-    def get_inv_send_req_multi(self):
+    def get_inv_send_req(self):
         """
-            Whether Outbound Shipments can link to multiple Requests
-            - and hence use inv_send_req link table
+            Whether Outbound Shipments link to Inventory Requisitions
         """
-        return self.inv.get("send_req_multi", False)
+        return self.inv.get("send_req", True)
 
-    def get_inv_recv_req_multi(self):
+    def get_inv_send_req_ref(self):
         """
-            Whether Incoming Shipments can link to multiple Requests
-            - and hence use inv_recv_req link table
+            Whether Outbound Shipments show a freetext Req Ref field for Requests from external systems
         """
-        return self.inv.get("recv_req_multi", False)
+        return self.inv.get("send_req_ref", False)
+    
+    def get_inv_recv_req(self):
+        """
+            Whether Incoming Shipments link to Inventory Requisitions
+        """
+        return self.inv.get("recv_req", True)
 
-    def get_inv_send_show_mode_of_transport(self):
+    def get_inv_recv_req_ref(self):
         """
-            Show mode of transport on Sent Shipments
+            Whether Inbound Shipments show a freetext Req Ref field for Requests from external systems
         """
-        return self.inv.get("show_mode_of_transport", False)
-
+        return self.inv.get("recv_req_ref", False)
+    
     def get_inv_send_show_org(self):
         """
             Show Organisation on Sent Shipments
         """
         return self.inv.get("send_show_org", True)
-
-    def get_inv_send_show_time_in(self):
-        """
-            Show Time In on Sent Shipments
-        """
-        return self.inv.get("send_show_time_in", False)
 
     def get_inv_stock_count(self):
         """
@@ -5013,7 +5011,7 @@ class S3Config(Storage):
         """
             Whether there is a Commit step in Inventory Requisitions Management
         """
-        return self.inv.get("use_commit", True)
+        return self.inv.get("use_commit", False)
 
     def get_inv_commit_value(self):
         """
@@ -5050,9 +5048,15 @@ class S3Config(Storage):
         return self.inv.get("req_ask_purpose", True)
 
     def get_inv_use_req_number(self):
+        """
+            Do Inventory Requisitions use a Requisition Number
+        """
         return self.inv.get("use_req_number", True)
 
     def get_inv_generate_req_number(self):
+        """
+            Do Inventory Requisitions generate their Requisition Number automatically?
+        """
         return self.inv.get("generate_req_number", True)
 
     def get_inv_req_form_name(self):

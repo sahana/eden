@@ -322,10 +322,11 @@ def warehouse():
                     record = db(recvtable.id == r.component_id).select(recvtable.status,
                                                                        limitby = (0, 1),
                                                                        ).first()
-                    set_recv_attr(record.status)
+                    from s3db.inv import inv_recv_attr
+                    inv_recv_attr(record.status)
                 else:
-                    from s3db.inv import inv_ship_status
-                    set_recv_attr(inv_ship_status["IN_PROCESS"])
+                    from s3db.inv import inv_recv_attr, inv_ship_status
+                    inv_recv_attr(inv_ship_status["IN_PROCESS"])
                     recvtable.recv_ref.readable = False
                     if r.method and r.method != "read":
                         # Don't want to see in Create forms
@@ -432,20 +433,19 @@ def warehouse():
         native = False
 
     from s3db.inv import inv_rheader
-    output = s3_rest_controller(#hide_filter = {"inv_item": False,
-                                #               "_default": True,
-                                #               },
-                                # Extra fields for CSV uploads:
-                                #csv_extra_fields = [
-                                #         dict(label="Organisation",
-                                #         field=s3db.org_organisation_id(comment=None))
-                                #]
-                                csv_stylesheet = csv_stylesheet,
-                                csv_template = resourcename,
-                                native = native,
-                                rheader = inv_rheader,
-                                )
-    return output
+    return s3_rest_controller(#hide_filter = {"inv_item": False,
+                              #               "_default": True,
+                              #               },
+                              # Extra fields for CSV uploads:
+                              #csv_extra_fields = [
+                              #         dict(label="Organisation",
+                              #         field=s3db.org_organisation_id(comment=None))
+                              #]
+                              csv_stylesheet = csv_stylesheet,
+                              csv_template = resourcename,
+                              native = native,
+                              rheader = inv_rheader,
+                              )
 
 # -----------------------------------------------------------------------------
 def warehouse_type():
@@ -507,7 +507,10 @@ def inv_item():
             if settings.get_inv_direct_stock_edits() and \
                settings.get_inv_bin_site_layout():
                 # Limit to Bins from this site
-                s3.scripts.append("/%s/static/scripts/S3/s3.inv_item.js" % r.application)
+                if s3.debug:
+                    s3.scripts.append("/%s/static/scripts/S3/s3.inv_item.js" % r.application)
+                else:
+                    s3.scripts.append("/%s/static/scripts/S3/s3.inv_item.min.js" % r.application)
                 if r.record:
                     site_id = r.record.site_id
                     f = r.table.layout_id
@@ -619,328 +622,31 @@ def inv_item():
     s3.postp = postp
 
     from s3db.inv import inv_rheader
-    output = s3_rest_controller(#csv_extra_fields = [{"label": "Organisation",
-                                #                     "field": s3db.org_organisation_id(comment = None)
-                                #                     },
-                                #                    ],
-                                pdf_orientation = "Landscape",
-                                pdf_table_autogrow = "B",
-                                pdf_groupby = "site_id, item_id",
-                                pdf_orderby = "expiry_date, supply_org_id",
-                                replace_option = T("Remove existing data before import"),
-                                rheader = inv_rheader,
-                                )
-
-    return output
+    return s3_rest_controller(#csv_extra_fields = [{"label": "Organisation",
+                              #                     "field": s3db.org_organisation_id(comment = None)
+                              #                     },
+                              #                    ],
+                              pdf_orientation = "Landscape",
+                              pdf_table_autogrow = "B",
+                              pdf_groupby = "site_id, item_id",
+                              pdf_orderby = "expiry_date, supply_org_id",
+                              replace_option = T("Remove existing data before import"),
+                              rheader = inv_rheader,
+                              )
 
 # =============================================================================
+def recv():
+    """ RESTful CRUD controller """
+
+    from s3db.inv import inv_recv_controller
+    return inv_recv_controller()
+
+# -----------------------------------------------------------------------------
 def send():
     """ RESTful CRUD controller """
 
     from s3db.inv import inv_send_controller
     return inv_send_controller()
-
-# -----------------------------------------------------------------------------
-def set_recv_attr(status):
-    """
-        Set field attributes for inv_recv table
-    """
-
-    recvtable = s3db.inv_recv
-    recvtable.sender_id.readable = recvtable.sender_id.writable = False
-    recvtable.grn_status.readable = recvtable.grn_status.writable = False
-    recvtable.cert_status.readable = recvtable.cert_status.writable = False
-    recvtable.eta.readable = False
-    recvtable.req_ref.writable = True
-    from s3db.inv import inv_ship_status
-    if status == inv_ship_status["IN_PROCESS"]:
-        if settings.get_inv_recv_ref_writable():
-            from gluon.sqlhtml import StringWidget
-            f = recvtable.recv_ref
-            f.writable = True
-            f.widget = lambda f, v: \
-                StringWidget.widget(f, v, _placeholder = T("Leave blank to have this autogenerated"))
-                              
-        else:
-            recvtable.recv_ref.readable = False
-        recvtable.send_ref.writable = True
-        recvtable.sender_id.readable = False
-    else:
-        # Make all fields writable False
-        for field in recvtable.fields:
-            recvtable[field].writable = False
-        if settings.get_inv_recv_req_multi():
-            s3db.inv_recv_req.req_id.writable = False
-    if status == inv_ship_status["SENT"]:
-        recvtable.date.writable = True
-        recvtable.recipient_id.readable = recvtable.recipient_id.writable = True
-        recvtable.comments.writable = True
-
-# -----------------------------------------------------------------------------
-def recv():
-    """ RESTful CRUD controller """
-
-    recvtable = s3db.inv_recv
-
-    # Limit site_id to sites the user has permissions for
-    if settings.get_inv_shipment_name() == "order":
-        error_msg = T("You do not have permission for any facility to add an order.")
-    else:
-        error_msg = T("You do not have permission for any facility to receive a shipment.")
-    auth.permitted_facilities(table = recvtable,
-                              error_msg = error_msg)
-
-    def prep(r):
-
-        from s3db.inv import inv_ship_status
-        SHIP_STATUS_IN_PROCESS = inv_ship_status["IN_PROCESS"]
-        SHIP_STATUS_SENT = inv_ship_status["SENT"]
-        #SHIP_STATUS_RECEIVED = inv_ship_status["RECEIVED"]
-        #SHIP_STATUS_CANCEL = inv_ship_status["CANCEL"]
-
-        record = r.record
-        if record:
-            status = record.status
-
-        if r.component:
-            if r.component_name == "document":
-                # Simplify a little
-                table = s3db.doc_document
-                table.file.required = True
-                table.url.readable = table.url.writable = False
-                table.date.readable = table.date.writable = False
-
-            elif r.component_name == "track_item":
-
-                # Security-wise, we are already covered by configure()
-                # Performance-wise, we should optimise for UI-acessible flows
-                #if r.method == "create" or r.method == "delete":
-                #    # Can only create or delete track items for a recv record
-                #    # if the status is preparing:
-                #    if status != SHIP_STATUS_IN_PROCESS:
-                #        return False
-
-                tracktable = s3db.inv_track_item
-
-                bin_site_layout = settings.get_inv_bin_site_layout()
-                track_pack_values = settings.get_inv_track_pack_values()
-
-                from s3db.inv import inv_tracking_status
-                #TRACK_STATUS_UNKNOWN    = inv_tracking_status["UNKNOWN"]
-                TRACK_STATUS_PREPARING  = inv_tracking_status["IN_PROCESS"]
-                TRACK_STATUS_TRANSIT    = inv_tracking_status["SENT"]
-                #TRACK_STATUS_UNLOADING  = inv_tracking_status["UNLOADING"]
-                TRACK_STATUS_ARRIVED    = inv_tracking_status["RECEIVED"]
-                #TRACK_STATUS_CANCELED   = inv_tracking_status["CANCEL"]
-
-                def set_track_attr(track_status):
-                    # By default Make all fields writable False
-                    for field in tracktable.fields:
-                        tracktable[field].writable = False
-                    # Hide some fields
-                    tracktable.send_id.readable = False
-                    tracktable.recv_id.readable = False
-                    if bin_site_layout:
-                        tracktable.layout_id.readable = False
-                    else:
-                        tracktable.bin.readable = False
-                    tracktable.adj_item_id.readable = False
-                    tracktable.recv_quantity.readable = True
-
-                    if track_status == TRACK_STATUS_PREPARING:
-                        # External Shipment
-                        # Show some fields
-                        tracktable.item_source_no.writable = True
-                        tracktable.item_id.writable = True
-                        tracktable.item_pack_id.writable = True
-                        tracktable.quantity.writable = True
-                        tracktable.recv_quantity.writable = True
-                        tracktable.recv_quantity.comment = T("Can leave this blank if all Items received OK")
-                        if track_pack_values:
-                            tracktable.currency.writable = True
-                            tracktable.pack_value.writable = True
-                        tracktable.expiry_date.writable = True
-                        tracktable.owner_org_id.writable = True
-                        tracktable.supply_org_id.writable = True
-                        tracktable.inv_item_status.writable = True
-                        tracktable.comments.writable = True
-                        # Hide some fields
-                        tracktable.send_inv_item_id.readable = False
-                        # Change some labels - NO - use consistent labels
-                        #tracktable.quantity.label = T("Quantity Delivered")
-                        if bin_site_layout:
-                            tracktable.recv_bin_id.readable = True
-                            tracktable.recv_bin_id.writable = True
-                            tracktable.recv_bin_id.label = T("Bin")
-                            # Limit to Bins from this site
-                            site_id = record.site_id
-                            f = tracktable.recv_bin_id
-                            f.requires.other.set_filter(filterby = "site_id",
-                                                        filter_opts = [site_id],
-                                                        )
-                            f.widget.filter = (current.s3db.org_site_layout.site_id == site_id)
-                        else:
-                            tracktable.recv_bin.readable = True
-                            tracktable.recv_bin.writable = True
-                            tracktable.recv_bin.label = T("Bin")
-
-                    elif track_status == TRACK_STATUS_TRANSIT:
-                        # Internal Shipment auto-generated from inv_send_process
-                        # Hide the values that will be copied from the inv_inv_item record
-                        tracktable.send_inv_item_id.readable = False
-                        tracktable.send_inv_item_id.writable = False
-                        tracktable.item_source_no.readable = True
-                        tracktable.item_source_no.writable = False
-                        # Display the values that can only be entered on create
-                        tracktable.recv_quantity.writable = True
-                        if bin_site_layout:
-                            tracktable.recv_bin_id.readable = True
-                            tracktable.recv_bin_id.writable = True
-                            # Limit to Bins from this site
-                            site_id = record.site_id
-                            f = tracktable.recv_bin_id
-                            f.requires.other.set_filter(filterby = "site_id",
-                                                        filter_opts = [site_id],
-                                                        )
-                            f.widget.filter = (current.s3db.org_site_layout.site_id == site_id)
-                        else:
-                            tracktable.recv_bin.readable = True
-                            tracktable.recv_bin.writable = True
-                        tracktable.comments.writable = True
-                        # This is a received purchase so change the label to reflect this - NO - use consistent labels
-                        #tracktable.quantity.label =  T("Quantity Delivered")
-
-                    elif track_status == TRACK_STATUS_ARRIVED:
-                        # Received Shipment
-                        tracktable.item_source_no.readable = True
-                        tracktable.item_source_no.writable = False
-                        tracktable.item_id.writable = False
-                        tracktable.send_inv_item_id.writable = False
-                        tracktable.item_pack_id.writable = False
-                        tracktable.quantity.writable = False
-                        tracktable.currency.writable = False
-                        tracktable.pack_value.writable = False
-                        tracktable.expiry_date.writable = False
-                        tracktable.owner_org_id.writable = False
-                        tracktable.supply_org_id.writable = False
-                        if bin_site_layout:
-                            tracktable.recv_bin_id.readable = True
-                            #tracktable.recv_bin_id.writable = True
-                            # Limit to Bins from this site
-                            #site_id = record.site_id
-                            #f = tracktable.recv_bin_id
-                            #f.requires.other.set_filter(filterby = "site_id",
-                            #                            filter_opts = [site_id],
-                            #                            )
-                            #f.widget.filter = (current.s3db.org_site_layout.site_id == site_id)
-                        else:
-                            tracktable.recv_bin.readable = True
-                            #tracktable.recv_bin.writable = True
-
-                # Configure which fields in track_item are readable/writable
-                # depending on track_item.status:
-                if r.component_id:
-                    track_record = db(tracktable.id == r.component_id).select(tracktable.status,
-                                                                              limitby = (0, 1),
-                                                                              ).first()
-                    set_track_attr(track_record.status)
-                else:
-                    set_track_attr(TRACK_STATUS_PREPARING)
-                    tracktable.status.readable = False
-
-                if bin_site_layout:
-                    recv_bin_field = "recv_bin_id"
-                else:
-                    recv_bin_field = "recv_bin"
-                list_fields = [#"status",
-                               "item_id",
-                               "item_pack_id",
-                               "quantity",
-                               "recv_quantity",
-                               recv_bin_field,
-                               "owner_org_id",
-                               "supply_org_id",
-                               ]
-                if track_pack_values:
-                    list_fields.insert(4, "pack_value")
-                    list_fields.insert(4, "currency")
-                if status == SHIP_STATUS_SENT:
-                    # Lock the record so it can't be fiddled with
-                    # - other than being able to edit Quantity Received & Bin
-                    deletable = False
-                    editable = True
-                    insertable = False
-                elif status:
-                    # Lock the record so it can't be fiddled with
-                    deletable = False
-                    editable = False
-                    insertable = False
-                else:
-                    # status == SHIP_STATUS_IN_PROCESS
-                    deletable = True
-                    editable = True
-                    insertable = True
-
-                s3db.configure("inv_track_item",
-                               deletable = deletable,
-                               editable = editable,
-                               insertable = insertable,
-                               list_fields = list_fields,
-                               )
-
-                # Adjust CRUD strings
-                if status == SHIP_STATUS_IN_PROCESS:
-                    s3.crud_strings.inv_recv.title_update = \
-                    s3.crud_strings.inv_recv.title_display = T("Process Received Shipment")
-
-                # Default the Supplier/Donor to the Org sending the shipment
-                tracktable.supply_org_id.default = record.organisation_id
-        else:
-            # No Component
-            # Configure which fields in inv_recv are readable/writable
-            # depending on status
-            if record:
-                if status not in (SHIP_STATUS_IN_PROCESS, SHIP_STATUS_SENT):
-                    # Now that the shipment has been sent
-                    # lock the record so that it can't be meddled with
-                    if settings.get_inv_document_filing():
-                        dtable = s3db.doc_document
-                        filed = db(dtable.doc_id == record.doc_id).select(dtable.id,
-                                                                          limitby = (0, 1),
-                                                                          )
-                        if filed:
-                            # Still allow access to filing_status
-                            set_recv_attr(status)
-                            recvtable.filing_status.writable = True
-                            s3db.configure("inv_recv",
-                                           deletable = False,
-                                           )
-                        else:
-                            s3db.configure("inv_recv",
-                                           deletable = False,
-                                           editable = False,
-                                           )
-                    else:
-                        s3db.configure("inv_recv",
-                                       deletable = False,
-                                       editable = False,
-                                       )
-                else:
-                    set_recv_attr(status)
-            else:
-                set_recv_attr(SHIP_STATUS_IN_PROCESS)
-                recvtable.recv_ref.readable = False
-                if r.method and r.method != "read":
-                    # Don't want to see in Create forms
-                    recvtable.status.readable = False
-
-        return True
-    s3.prep = prep
-       
-    from s3db.inv import inv_recv_rheader
-    output = s3_rest_controller(rheader = inv_recv_rheader,
-                                )
-    return output
 
 # -----------------------------------------------------------------------------
 def track_item():
@@ -960,23 +666,28 @@ def track_item():
         s3.crud_strings["inv_track_item"] = Storage(title_list = T("Summary of Releases"),
                                                     subtitle_list = T("Summary Details"),
                                                     )
+        list_fields = [#"send_id",
+                       #"req_item_id",
+                       (T("Date Released"), "send_id$date"),
+                       (T("Beneficiary"), "send_id$site_id"),
+                       (settings.get_inv_send_shortname(), "send_id$send_ref"),
+                       (T("Items/Description"), "item_id"),
+                       (T("Source"), "supply_org_id"),
+                       (T("Unit"), "item_pack_id"),
+                       (T("Quantity"), "quantity"),
+                       (T("Unit Cost"), "pack_value"),
+                       (T("Total Cost"), "total_value"),
+                       ]
+        if settings.get_inv_send_req():
+            list_fields.insert(3, (settings.get_inv_req_shortname(), "send_id$req.req_ref"))
+        elif settings.get_inv_send_req_ref():
+            list_fields.insert(3, (settings.get_inv_req_shortname(), "send_id$req_ref"))
+
         s3db.configure("inv_track_item",
-                       list_fields = [#"send_id",
-                                      #"req_item_id",
-                                      (T("Date Released"), "send_id$date"),
-                                      (T("Beneficiary"), "send_id$site_id"),
-                                      (settings.get_inv_send_shortname(), "send_id$send_ref"),
-                                      (settings.get_inv_req_shortname(), "send_id$req_ref"),
-                                      (T("Items/Description"), "item_id"),
-                                      (T("Source"), "supply_org_id"),
-                                      (T("Unit"), "item_pack_id"),
-                                      (T("Quantity"), "quantity"),
-                                      (T("Unit Cost"), "pack_value"),
-                                      (T("Total Cost"), "total_value"),
-                                     ],
+                       list_fields = list_fields,
                        orderby = "inv_send.site_id",
                        sort = True
-                      )
+                       )
         s3.filter = (FS("send_id") != None)
 
     elif report == "inc":
@@ -1001,6 +712,7 @@ def track_item():
                                       ],
                         orderby = "inv_recv.recipient_id",
                         )
+
         s3.filter = (FS("recv_id") != None)
 
     elif report == "util":
@@ -1009,18 +721,23 @@ def track_item():
                                                     subtitle_list = T("Utilization Details"),
                                                     )
 
+        list_fields = [(T("Item/Description"), "item_id$name"),
+                       (T("Beneficiary"), "send_id$site_id"),
+                       (settings.get_inv_send_shortname(), "send_id$send_ref"),
+                       (T("Items/Description"), "item_id"),
+                       (T("Source"), "supply_org_id"),
+                       (T("Unit"), "item_pack_id"),
+                       (T("Quantity"), "quantity"),
+                       (T("Unit Cost"), "pack_value"),
+                       (T("Total Cost"), "total_value"),
+                       ]
+        if settings.get_inv_send_req():
+            list_fields.insert(3, (settings.get_inv_req_shortname(), "send_id$req.req_ref"))
+        elif settings.get_inv_send_req_ref():
+            list_fields.insert(3, (settings.get_inv_req_shortname(), "send_id$req_ref"))
+
         s3db.configure("inv_track_item",
-                       list_fields = [(T("Item/Description"), "item_id$name"),
-                                      (T("Beneficiary"), "send_id$site_id"),
-                                      (settings.get_inv_send_shortname(), "send_id$send_ref"),
-                                      (settings.get_inv_req_shortname(), "send_id$req_ref"),
-                                      (T("Items/Description"), "item_id"),
-                                      (T("Source"), "supply_org_id"),
-                                      (T("Unit"), "item_pack_id"),
-                                      (T("Quantity"), "quantity"),
-                                      (T("Unit Cost"), "pack_value"),
-                                      (T("Total Cost"), "total_value"),
-                                      ]
+                       list_fields = list_fields,
                        )
 
         s3.filter = (FS("item_id") != None)
@@ -1040,14 +757,13 @@ def track_item():
                                       (T("Quantity"), "quantity"),
                                       (T("Unit Cost"), "pack_value"),
                                       (T("Total Cost"), "total_value"),
-                                      ]
+                                      ],
                        )
+
         s3.filter = (FS("expiry_date") != None)
 
     from s3db.inv import inv_rheader
-    output = s3_rest_controller(rheader = inv_rheader,
-                                )
-    return output
+    return s3_rest_controller(rheader = inv_rheader)
 
 # -----------------------------------------------------------------------------
 def track_movement():
@@ -1073,22 +789,29 @@ def track_movement():
     s3.prep = prep
 
     from s3db.inv import inv_rheader
-    output = s3_rest_controller("inv", "track_item",
-                                rheader = inv_rheader,
-                                )
-
-    return output
+    return s3_rest_controller("inv", "track_item",
+                              rheader = inv_rheader,
+                              )
 
 # =============================================================================
 def req():
     """
-        REST Controller for Inventory Requisition Instances
+        REST Controller for Inventory Requisitions
     """
 
-    s3.filter = (s3db.inv_req.is_template == False)
+    # Don't show Templates
+    from s3 import FS
+    s3.filter = (FS("is_template") == False)
 
-    output = req_controller()
-    return output
+    # Hide completed Requisitions by default
+    # REQ_STATUS_NONE     = 0
+    # REQ_STATUS_PARTIAL  = 1
+    from s3 import s3_set_default_filter
+    s3_set_default_filter("~.fulfil_status",
+                          [0, 1],
+                          tablename = "inv_req")
+
+    return req_controller()
 
 # -----------------------------------------------------------------------------
 def req_template():
@@ -1156,8 +879,7 @@ def req_template():
             msg_record_deleted = T("Request Template Deleted"),
             msg_list_empty = T("No Request Templates"))
 
-    output = req_controller(template = True)
-    return output
+    return req_controller(template = True)
 
 # -----------------------------------------------------------------------------
 def marker_fn(record):
@@ -1414,6 +1136,10 @@ def req_controller(template = False):
             if r.component_name == "req_item":
                 record = r.record
                 if record: # Check as options.s3json checks the component without a record
+                    if s3.debug:
+                        s3.scripts.append("/%s/static/scripts/S3/s3.inv_req_item.js" % r.application)
+                    else:
+                        s3.scripts.append("/%s/static/scripts/S3/s3.inv_req_item.min.js" % r.application)
                     # Prevent Adding/Deleting Items from Requests which are complete, closed or cancelled
                     # @ToDo: deployment_setting to determine which exact rule to apply?
                     if record.fulfil_status == REQ_STATUS_COMPLETE or \
@@ -2272,9 +1998,7 @@ def adj():
     s3.postp = postp
 
     from s3db.inv import inv_adj_rheader
-    output = s3_rest_controller(rheader = inv_adj_rheader,
-                                )
-    return output
+    return s3_rest_controller(rheader = inv_adj_rheader)
 
 # -----------------------------------------------------------------------------
 def kitting():
@@ -2283,8 +2007,7 @@ def kitting():
     """
 
     from s3db.inv import inv_rheader
-    return s3_rest_controller(rheader = inv_rheader,
-                              )
+    return s3_rest_controller(rheader = inv_rheader)
 
 # -----------------------------------------------------------------------------
 def stock_card():
@@ -2325,8 +2048,7 @@ def stock_card():
 
 
     from s3db.inv import inv_rheader
-    return s3_rest_controller(rheader = inv_rheader,
-                              )
+    return s3_rest_controller(rheader = inv_rheader)
 
 # -----------------------------------------------------------------------------
 def minimum():
@@ -2564,13 +2286,12 @@ def send_req():
         - deemed better to force users through Check process
 
         @ToDo: Rewrite as Method
-        @ToDo: Support for inv_send_req_multi (not needed for RMS)
     """
 
     req_id = request.args[0]
     site_id = request.vars.get("site_id", None)
     table = s3db.inv_req
-    r_req = db(table.id == req_id).select(table.req_ref,
+    r_req = db(table.id == req_id).select(#table.req_ref, # req_ref is for external Request systems
                                           table.requester_id,
                                           table.site_id,
                                           limitby = (0, 1),
@@ -2622,19 +2343,24 @@ def send_req():
                  )
 
     # Create a new send record
-    code = s3db.supply_get_shipping_code("WB",
-                                         site_id,
-                                         s3db.inv_send.send_ref
-                                         )
+    from s3db.supply import supply_get_shipping_code as get_shipping_code
+    code = get_shipping_code(settings.get_inv_send_shortname(),
+                             site_id,
+                             sendtable.send_ref
+                             )
+    from s3db.inv import inv_ship_status
     send_id = sendtable.insert(send_ref = code,
-                               req_ref = r_req.req_ref,
+                               #req_ref = r_req.req_ref,
                                sender_id = auth.s3_logged_in_person(),
                                site_id = site_id,
                                date = request.utcnow,
                                recipient_id = r_req.requester_id,
                                to_site_id = r_req.site_id,
-                               status = s3db.inv_ship_status["IN_PROCESS"],
+                               status = inv_ship_status["IN_PROCESS"],
                                )
+    s3db.inv_send_req.insert(send_id = send_id,
+                             req_id = req_id,
+                             )
 
     # Loop through each request item and find matches in the site inventory
     # - don't match items which are expired or in bad condition
@@ -2752,7 +2478,7 @@ def send_req():
             iitem = item.inv_inv_item
             if iitem.id in iids:
                 continue
-            # We have no way to know which stock we should take 1st so show all with quantity 0 & let the user decide
+            # We have no way to know which stock we should take 1st, so show all with quantity 0 & let the user decide
             send_item_quantity = 0
             insert(send_id = send_id,
                    send_inv_item_id = iitem.id,

@@ -674,8 +674,6 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Inventory Management
-    settings.inv.show_mode_of_transport = True
-    settings.inv.send_show_time_in = True
     #settings.inv.collapse_tabs = True
     # Uncomment if you need a simpler (but less accountable) process for managing stock levels
     settings.inv.direct_stock_edits = True

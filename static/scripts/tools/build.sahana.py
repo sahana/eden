@@ -302,7 +302,8 @@ def minify_from_cfg(minimize,
                     source_dir,
                     cfg_name,
                     out_filename,
-                    extra_params = None):
+                    extra_params = None,
+                    ):
     """
         Merge+minify JS files from a JS config file (DRY helper for do_js)
     """
@@ -464,6 +465,12 @@ def do_js(minimize,
                      "gis.latlon",
                      "gis.loader",
                      "gis.pois",
+                     "inv_item",
+                     "inv_recv",
+                     "inv_recv_item",
+                     "inv_recv_multisite",
+                     "inv_req_item",
+                     "inv_send",
                      "msg",
                      "popup",
                      "register_validation",

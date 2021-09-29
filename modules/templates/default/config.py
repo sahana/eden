@@ -990,9 +990,7 @@ def config(settings):
     #settings.inv.warehouse_code_unique = True
     # Uncomment to not track pack values
     #settings.inv.track_pack_values = False
-    #settings.inv.show_mode_of_transport = True
     #settings.inv.send_show_org = False
-    #settings.inv.send_show_time_in = True
     #settings.inv.send_form_name = "Tally Out Sheet"
     #settings.inv.send_short_name = "TO"
     #settings.inv.send_ref_field_name = "Tally Out Number"
