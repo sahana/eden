@@ -10371,7 +10371,7 @@ def inv_warehouse_free_capacity(site_id):
             (table.quantity != 0) & \
             (table.item_id == itable.id) & \
             (itable.volume != None) & \
-            (table.item_pack_id == itable.id)
+            (table.item_pack_id == ptable.id)
 
     items = db(query).select(table.quantity,
                              itable.volume,
