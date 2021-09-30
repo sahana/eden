@@ -901,7 +901,8 @@ class ProjectModel(S3Model):
                 return
 
         duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
+                                             limitby = (0, 1),
+                                             ).first()
         if duplicate:
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
@@ -1611,8 +1612,8 @@ class ProjectActivityModel(S3Model):
             table = s3db.project_activity
             activity = current.db(table.id == activity_id).select(table.date,
                                                                   table.end_date,
-                                                                  cache=s3db.cache,
-                                                                  limitby=(0, 1)
+                                                                  cache = s3db.cache,
+                                                                  limitby = (0, 1),
                                                                   ).first()
             if activity:
                 start_date = activity.date
@@ -1647,7 +1648,7 @@ class ProjectActivityModel(S3Model):
         atable = db.project_activity
         activity = db(atable.id == activity_id).select(atable.project_id,
                                                        atable.location_id,
-                                                       limitby=(0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
         try:
             project_id = activity.project_id
@@ -1666,7 +1667,7 @@ class ProjectActivityModel(S3Model):
         query = (ltable.project_id == project_id) &\
                 (ltable.location_id == location_id)
         location = db(query).select(ltable.id,
-                                    limitby=(0, 1)
+                                    limitby = (0, 1),
                                     ).first()
 
         if location:
@@ -1683,7 +1684,7 @@ class ProjectActivityModel(S3Model):
         query = (latable.project_location_id == pl_id) &\
                 (latable.activity_type_id == activity_type_id)
         exists = db(query).select(latable.id,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if not exists:
             # Create it
@@ -1703,7 +1704,8 @@ class ProjectActivityModel(S3Model):
         query = (table.id == activity_id) & \
                 (table.project_id == ptable.id)
         project = db(query).select(ptable.realm_entity,
-                                   limitby=(0, 1)).first()
+                                   limitby = (0, 1),
+                                   ).first()
         try:
             return project.realm_entity
         except AttributeError:
@@ -2742,7 +2744,8 @@ class ProjectBeneficiaryModel(S3Model):
                 (ltable.id == btable.project_location_id)
         project_location = db(query).select(ltable.project_id,
                                             ltable.location_id,
-                                            limitby=(0, 1)).first()
+                                            limitby = (0, 1),
+                                            ).first()
         if project_location:
             db(btable.id == record_id).update(
                     project_id = project_location.project_id,
@@ -3368,7 +3371,8 @@ class ProjectHRModel(S3Model):
                 (hr.project_id == form_vars.project_id) & \
                 (hr.id != form_vars.id)
         row = current.db(query).select(hr.id,
-                                       limitby=(0, 1)).first()
+                                       limitby = (0, 1),
+                                       ).first()
 
         if row:
             # We have a duplicate. Return an error to the user.
@@ -4076,7 +4080,7 @@ class ProjectLocationModel(S3Model):
             table = db.project_location_contact
             record = db(table.id == form_vars.get("id")).select(table.person_id,
                                                                 table.realm_entity,
-                                                                limitby=(0, 1),
+                                                                limitby = (0, 1),
                                                                 ).first()
             if not record:
                 return
@@ -4087,7 +4091,7 @@ class ProjectLocationModel(S3Model):
             ptable = db.pr_person
             person = db(ptable.id == person_id).select(ptable.id,
                                                        ptable.realm_entity,
-                                                       limitby=(0, 1),
+                                                       limitby = (0, 1),
                                                        ).first()
             if person and not person.realm_entity:
                 person.update_record(realm_entity = realm_entity)
@@ -4259,7 +4263,8 @@ class ProjectOrganisationModel(S3Model):
                     (otable.role == lead_role) & \
                     (otable.organisation_id != organisation_id)
             row = db(query).select(otable.id,
-                                   limitby=(0, 1)).first()
+                                   limitby = (0, 1),
+                                   ).first()
             if row:
                 form.errors.role = \
                     current.T("Lead Implementer for this project is already set, please choose another role.")
@@ -4323,7 +4328,8 @@ class ProjectOrganisationModel(S3Model):
         query = (potable.id == row.get("id"))
         deleted_row = db(query).select(potable.deleted_fk,
                                        potable.role,
-                                       limitby=(0, 1)).first()
+                                       limitby = (0, 1),
+                                       ).first()
 
         if str(deleted_row.role) == \
            str(current.deployment_settings.get_project_organisation_lead_role()):
@@ -4332,7 +4338,7 @@ class ProjectOrganisationModel(S3Model):
             project_id = deleted_fk["project_id"]
 
             # Set the project organisation_id to NULL (using None)
-            db(ptable.id == project_id).update(organisation_id=None)
+            db(ptable.id == project_id).update(organisation_id = None)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4346,7 +4352,8 @@ class ProjectOrganisationModel(S3Model):
         query = (table.id == po_id) & \
                 (table.project_id == ptable.id)
         project = db(query).select(ptable.realm_entity,
-                                   limitby=(0, 1)).first()
+                                   limitby = (0, 1),
+                                   ).first()
         try:
             return project.realm_entity
         except AttributeError:
@@ -5346,7 +5353,8 @@ class ProjectPlanningModel(S3Model):
                           (table.project_id == None))
 
             duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
+                                                 limitby = (0, 1),
+                                                 ).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -5363,7 +5371,7 @@ class ProjectPlanningModel(S3Model):
         # Find the project_id
         table = current.s3db.project_goal
         record = db(table.id == record_id).select(table.project_id,
-                                                  limitby=(0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
         try:
             project_id = record.project_id
@@ -5399,7 +5407,7 @@ class ProjectPlanningModel(S3Model):
         # Find the project_id
         table = current.s3db.project_goal
         record = db(table.id == record_id).select(table.project_id,
-                                                  limitby=(0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
         try:
             project_id = record.project_id
@@ -5442,7 +5450,8 @@ class ProjectPlanningModel(S3Model):
                           (table.project_id == None))
 
             duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
+                                                 limitby = (0, 1),
+                                                 ).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -5461,7 +5470,7 @@ class ProjectPlanningModel(S3Model):
         # Find the goal_id
         table = current.s3db.project_outcome
         record = db(table.id == record_id).select(table.goal_id,
-                                                  limitby=(0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
         try:
             goal_id = record.goal_id
@@ -5500,7 +5509,7 @@ class ProjectPlanningModel(S3Model):
         table = current.s3db.project_outcome
         record = db(table.id == record_id).select(table.goal_id,
                                                   table.project_id,
-                                                  limitby=(0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
         try:
             project_id = record.project_id
@@ -5545,7 +5554,8 @@ class ProjectPlanningModel(S3Model):
                           (table.project_id == None))
 
             duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
+                                                 limitby = (0, 1),
+                                                 ).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -5564,7 +5574,7 @@ class ProjectPlanningModel(S3Model):
         # Find the outcome_id
         table = current.s3db.project_output
         record = db(table.id == record_id).select(table.outcome_id,
-                                                  limitby=(0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
         try:
             outcome_id = record.outcome_id
@@ -5611,7 +5621,7 @@ class ProjectPlanningModel(S3Model):
                 # Populate the Goal from the Outcome
                 otable = s3db.project_outcome
                 outcome = db(otable.id == outcome_id).select(otable.goal_id,
-                                                             limitby=(0, 1)
+                                                             limitby = (0, 1),
                                                              ).first()
                 if outcome:
                     db(table.id == record_id).update(goal_id = outcome.goal_id)
@@ -5634,7 +5644,7 @@ class ProjectPlanningModel(S3Model):
 
         # Update Statuses
         row = db(table.id == record_id).select(table.project_id,
-                                               limitby = (0, 1)
+                                               limitby = (0, 1),
                                                ).first()
         try:
             project_id = row.project_id
@@ -5662,7 +5672,7 @@ class ProjectPlanningModel(S3Model):
                           (table.project_id == None))
 
             duplicate = current.db(query).select(table.id,
-                                                 limitby = (0, 1)
+                                                 limitby = (0, 1),
                                                  ).first()
             if duplicate:
                 item.id = duplicate.id
@@ -5682,7 +5692,7 @@ class ProjectPlanningModel(S3Model):
         # Find the output_id
         table = current.s3db.project_indicator
         record = db(table.id == record_id).select(table.output_id,
-                                                  limitby=(0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
         try:
             output_id = record.output_id
@@ -5731,7 +5741,7 @@ class ProjectPlanningModel(S3Model):
                 otable = s3db.project_output
                 output = db(otable.id == output_id).select(otable.goal_id,
                                                            otable.outcome_id,
-                                                           limitby=(0, 1)
+                                                           limitby = (0, 1),
                                                            ).first()
                 if output:
                     db(table.id == record_id).update(goal_id = output.goal_id,
@@ -5761,14 +5771,14 @@ class ProjectPlanningModel(S3Model):
                 # Populate the Goal from the Outcome
                 otable = s3db.project_outcome
                 outcome = db(otable.id == outcome_id).select(otable.goal_id,
-                                                             limitby=(0, 1)
+                                                             limitby = (0, 1),
                                                              ).first()
                 if outcome:
                     db(table.id == record_id).update(goal_id = outcome.goal_id)
 
         # Update Statuses
         row = db(table.id == record_id).select(table.project_id,
-                                               limitby=(0, 1)
+                                               limitby = (0, 1),
                                                ).first()
         try:
             project_id = row.project_id
@@ -5795,7 +5805,7 @@ class ProjectPlanningModel(S3Model):
         record = db(table.id == record_id).select(table.deleted_fk,
                                                   table.start_date,
                                                   table.end_date,
-                                                  limitby = (0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
         try:
             fks = json.loads(record.deleted_fk)
@@ -5837,7 +5847,7 @@ class ProjectPlanningModel(S3Model):
         # Update Statuses
         table = s3db.project_indicator
         row = db(table.id == indicator_id).select(table.project_id,
-                                                  limitby = (0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
         try:
             project_id = row.project_id
@@ -5862,7 +5872,8 @@ class ProjectPlanningModel(S3Model):
                           (table.project_id == None))
 
             duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
+                                                 limitby = (0, 1),
+                                                 ).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -5886,7 +5897,7 @@ class ProjectPlanningModel(S3Model):
             indicator = db(itable.id == indicator_id).select(itable.goal_id,
                                                              itable.outcome_id,
                                                              itable.output_id,
-                                                             limitby=(0, 1)
+                                                             limitby = (0, 1),
                                                              ).first()
             if indicator:
                 db(table.id == record_id).update(goal_id = indicator.goal_id,
@@ -5906,7 +5917,7 @@ class ProjectPlanningModel(S3Model):
         # Find the indicator_id
         table = current.s3db.project_indicator_activity
         record = db(table.id == record_id).select(table.indicator_id,
-                                                  limitby=(0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
         try:
             indicator_id = record.indicator_id
@@ -5950,7 +5961,7 @@ class ProjectPlanningModel(S3Model):
                                                              itable.goal_id,
                                                              itable.outcome_id,
                                                              itable.output_id,
-                                                             limitby = (0, 1)
+                                                             limitby = (0, 1),
                                                              ).first()
             if indicator:
                 db(table.id == record_id).update(goal_id = indicator.goal_id,
@@ -5977,7 +5988,7 @@ class ProjectPlanningModel(S3Model):
         if current.deployment_settings.get_project_status_from_activities():
             # Update Statuses
             row = db(table.id == record_id).select(table.project_id,
-                                                   limitby = (0, 1)
+                                                   limitby = (0, 1),
                                                    ).first()
             try:
                 project_id = row.project_id
@@ -6000,14 +6011,14 @@ class ProjectPlanningModel(S3Model):
         indicator_id = vars_get("indicator_id")
         itable = s3db.project_indicator
         indicator = db(itable.id == indicator_id).select(itable.project_id,
-                                                         limitby=(0, 1)
+                                                         limitby = (0, 1),
                                                          ).first()
         if indicator:
             indicator_activity_id = vars_get("id")
 
             ltable = s3db.project_indicator_activity_activity
             link = db(ltable.indicator_activity_id == indicator_activity_id).select(ltable.activity_id,
-                                                                                    limitby=(0, 1)
+                                                                                    limitby = (0, 1),
                                                                                     ).first()
             if link:
                 project_id = indicator.project_id
@@ -6038,7 +6049,7 @@ class ProjectPlanningModel(S3Model):
                                                   table.indicator_activity_id,
                                                   table.start_date,
                                                   table.end_date,
-                                                  limitby = (0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
         try:
             indicator_activity_id = record.indicator_activity_id
@@ -6054,7 +6065,7 @@ class ProjectPlanningModel(S3Model):
         # Populate the Indicator from the Activity
         atable = s3db.project_indicator_activity
         activity = db(atable.id == indicator_activity_id).select(atable.indicator_id,
-                                                                 limitby = (0, 1)
+                                                                 limitby = (0, 1),
                                                                  ).first()
 
         record.update_record(indicator_id = activity.indicator_id)
@@ -6091,7 +6102,7 @@ class ProjectPlanningModel(S3Model):
         # Update Statuses
         table = s3db.project_indicator_activity
         row = db(table.id == indicator_activity_id).select(table.project_id,
-                                                           limitby = (0, 1)
+                                                           limitby = (0, 1),
                                                            ).first()
         try:
             project_id = row.project_id
@@ -6120,7 +6131,7 @@ class ProjectPlanningModel(S3Model):
         record = db(table.id == record_id).select(table.deleted_fk,
                                                   table.start_date,
                                                   table.end_date,
-                                                  limitby = (0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
         try:
             fks = json.loads(record.deleted_fk)
@@ -6167,7 +6178,7 @@ class ProjectPlanningModel(S3Model):
         # Update Statuses
         table = s3db.project_indicator_activity
         row = db(table.id == indicator_activity_id).select(table.project_id,
-                                                           limitby = (0, 1)
+                                                           limitby = (0, 1),
                                                            ).first()
         try:
             project_id = row.project_id
@@ -6207,7 +6218,7 @@ class ProjectPlanningModel(S3Model):
             table = current.s3db.project_indicator_data
             r = current.db(table.id == row.id).select(table.target_value,
                                                       table.value,
-                                                      limitby = (0, 1)
+                                                      limitby = (0, 1),
                                                       ).first()
             if r:
                 planned = r.target_value
@@ -6259,7 +6270,7 @@ class ProjectPlanningModel(S3Model):
             table = current.s3db.project_activity_data
             r = current.db(table.id == row.id).select(table.target_value,
                                                       table.value,
-                                                      limitby = (0, 1)
+                                                      limitby = (0, 1),
                                                       ).first()
             if r:
                 planned = r.target_value
@@ -6297,7 +6308,7 @@ def project_indicator_data_onaccept(form, status=True):
     record = db(table.id == record_id).select(table.indicator_id,
                                               table.start_date,
                                               table.end_date,
-                                              limitby = (0, 1)
+                                              limitby = (0, 1),
                                               ).first()
     try:
         indicator_id = record.indicator_id
@@ -6342,7 +6353,7 @@ def project_indicator_data_onaccept(form, status=True):
     # Update Statuses
     table = s3db.project_indicator
     row = db(table.id == indicator_id).select(table.project_id,
-                                              limitby = (0, 1)
+                                              limitby = (0, 1),
                                               ).first()
     try:
         project_id = row.project_id
@@ -8386,7 +8397,8 @@ class project_SummaryReport(S3Method):
         query = (ltable.project_id == project_id) & \
                 (ltable.programme_id == ptable.id)
         program = db(query).select(ptable.name,
-                                   limitby=(0, 1)).first()
+                                   limitby = (0, 1),
+                                   ).first()
         if program:
             program = program.name
         else:
@@ -8394,7 +8406,7 @@ class project_SummaryReport(S3Method):
 
         stable = s3db.project_status
         status = db(stable.id == record.status_id).select(stable.name,
-                                                          limitby=(0, 1)
+                                                          limitby = (0, 1),
                                                           ).first()
         if status:
             status = status.name
@@ -8404,7 +8416,7 @@ class project_SummaryReport(S3Method):
         btable = s3db.budget_budget
         budget = db(btable.budget_entity_id == record.budget_entity_id).select(btable.total_budget,
                                                                                btable.currency,
-                                                                               limitby=(0, 1)
+                                                                               limitby = (0, 1),
                                                                                ).first()
         if budget:
             if hasattr(btable.currency, "represent"):
@@ -8421,7 +8433,7 @@ class project_SummaryReport(S3Method):
                 (ltable.hazard_id == htable.id)
         hazards = db(query).select(htable.name)
         if hazards:
-            hazards = ", ".join([s3_unicode(T(h.name)) for h in hazards])
+            hazards = ", ".join([s3_str(T(h.name)) for h in hazards])
         else:
             hazards = NONE
 
@@ -8431,7 +8443,7 @@ class project_SummaryReport(S3Method):
                 (ltable.sector_id == stable.id)
         sectors = db(query).select(stable.name)
         if sectors:
-            sectors = ", ".join([s3_unicode(T(s.name)) for s in sectors])
+            sectors = ", ".join([s3_str(T(s.name)) for s in sectors])
         else:
             sectors = NONE
 
@@ -8441,7 +8453,7 @@ class project_SummaryReport(S3Method):
                 (ltable.theme_id == ttable.id)
         themes = db(query).select(ttable.name)
         if themes:
-            themes = ", ".join([s3_unicode(T(t.name)) for t in themes])
+            themes = ", ".join([s3_str(T(t.name)) for t in themes])
         else:
             themes = NONE
 
@@ -9135,9 +9147,9 @@ class project_IndicatorSummaryReport(S3Method):
 
         date_represent = s3db.project_indicator_data.end_date.represent
 
-        labels11 = [s3_unicode(T("Number")),
-                    s3_unicode(T("Indicators")),
-                    s3_unicode(T("Total Target")),
+        labels11 = [s3_str(T("Number")),
+                    s3_str(T("Indicators")),
+                    s3_str(T("Total Target")),
                     ]
         labels12 = []
         lappend = labels12.append
@@ -9150,16 +9162,16 @@ class project_IndicatorSummaryReport(S3Method):
                 year = years[y]
             lappend(date_represent(d))
         lappend(str(year))
-        labels13 = [s3_unicode(T("Actual Total")),
-                    s3_unicode(T("% Achieved")),
+        labels13 = [s3_str(T("Actual Total")),
+                    s3_str(T("% Achieved")),
                     ]
 
         labels22 = []
         lappend = labels22.append
         y = 0
         year = years[y]
-        TARGET = s3_unicode(T("Target"))
-        ACTUAL = s3_unicode(T("Actual"))
+        TARGET = s3_str(T("Target"))
+        ACTUAL = s3_str(T("Actual"))
         for d in dates:
             if d.year != year:
                 lappend(TARGET)
@@ -9183,10 +9195,10 @@ class project_IndicatorSummaryReport(S3Method):
         notes_style = styles["notes"]
 
         # Create the workbook
-        book = xlwt.Workbook(encoding="utf-8")
+        book = xlwt.Workbook(encoding = "utf-8")
 
         # Add sheet
-        sheet = book.add_sheet(s3_unicode(T("Report")))
+        sheet = book.add_sheet(s3_str(T("Report")))
 
         # Set column Widths
         col_index = 0
@@ -9199,7 +9211,7 @@ class project_IndicatorSummaryReport(S3Method):
             col_index += 1
 
         # 1st row => Report Title
-        title = s3_unicode(T("Summary of Progress Indicators for Outcomes and Indicators"))
+        title = s3_str(T("Summary of Progress Indicators for Outcomes and Indicators"))
         current_row = sheet.row(0)
         current_row.height = 500
         current_row.write(0, title, large_header_style)
@@ -9212,8 +9224,9 @@ class project_IndicatorSummaryReport(S3Method):
         current_row.write(0, label, large_header_style)
         current_row.write(1, project_represent, large_header_style)
         # Fix the size of the first column to display the label
-        if len(label) * COL_WIDTH_MULTIPLIER * 2 > sheet.col(0).width:
-            sheet.col(0).width = len(label) * COL_WIDTH_MULTIPLIER * 2
+        width = len(label) * COL_WIDTH_MULTIPLIER * 2
+        if width > sheet.col(0).width:
+            sheet.col(0).width = width
 
         # 3rd row => Export date/time
         current_row = sheet.row(2)
@@ -9376,7 +9389,7 @@ class project_IndicatorSummaryReport(S3Method):
                         row_index += 1
 
         current_row = sheet.row(row_index)
-        label = s3_unicode(T(self.project_status_label))
+        label = s3_str(T(self.project_status_label))
         # Fix the size of the column to display the label
         if len(label) * COL_WIDTH_MULTIPLIER > sheet.col(colspan).width:
             sheet.col(colspan).width = len(label) * COL_WIDTH_MULTIPLIER
@@ -9395,7 +9408,7 @@ class project_IndicatorSummaryReport(S3Method):
         output.seek(0)
 
         # Response headers
-        filename = "%s.xls" % title.encode("utf8")
+        filename = "%s.xls" % title
         response = current.response
         from gluon.contenttype import contenttype
         response.headers["Content-Type"] = contenttype(".xls")
@@ -10760,7 +10773,7 @@ class ProjectDRRPPModel(S3Model):
 
         table = db.project_project
         hr_id = db(table.id == project_id).select(table.human_resource_id,
-                                                  limitby=(0, 1)
+                                                  limitby = (0, 1),
                                                   ).first().human_resource_id
         if hr_id:
             s3db = current.s3db
@@ -10777,15 +10790,15 @@ class ProjectDRRPPModel(S3Model):
                                    ptable.last_name,
                                    ctable.value,
                                    left = left,
-                                   limitby = (0, 1)).first()
+                                   limitby = (0, 1),
+                                   ).first()
             focal_person = s3_fullname(row[ptable])
             organisation_id = row[htable].organisation_id
             email = row[ctable].value
-            db(dtable.id == record_id).update(
-                                        focal_person = focal_person,
-                                        organisation_id = organisation_id,
-                                        email = email,
-                                        )
+            db(dtable.id == record_id).update(focal_person = focal_person,
+                                              organisation_id = organisation_id,
+                                              email = email,
+                                              )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -11747,7 +11760,8 @@ class ProjectTaskModel(S3Model):
         query = (ltable.task_id == task_id) & \
                 (ltable.project_id == ptable.id)
         project = db(query).select(ptable.realm_entity,
-                                   limitby=(0, 1)).first()
+                                   limitby = (0, 1),
+                                   ).first()
         if project:
             return project.realm_entity
         else:
@@ -11826,7 +11840,7 @@ class ProjectTaskModel(S3Model):
             query = (lta.task_id == task_id) & \
                     (lta.activity_id == ta.id)
             row = db(query).select(ta.project_id,
-                                   limitby = (0, 1)
+                                   limitby = (0, 1),
                                    ).first()
             if row and row.project_id:
                 ltp.insert(task_id = task_id,
@@ -11899,13 +11913,14 @@ class ProjectTaskModel(S3Model):
                 #ptable = db.project_project
                 #master = s3db.resource("project_task", id=task_id)
                 #record = db(ptable.id == project).select(ptable.id,
-                #                                         limitby=(0, 1)).first()
+                #                                         limitby = (0, 1),
+                #                                         ).first()
                 #link = s3db.resource("project_task_project")
                 #link_id = link.update_link(master, record)
                 query = (ltable.task_id == task_id) & \
                         (ltable.project_id == project)
                 record = db(query).select(ltable.id,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
                 if record:
                     link_id = record.id
@@ -11927,13 +11942,14 @@ class ProjectTaskModel(S3Model):
                 #atable = db.project_activity
                 #master = s3db.resource("project_task", id=task_id)
                 #record = db(atable.id == activity).select(atable.id,
-                #                                          limitby=(0, 1)).first()
+                #                                          limitby = (0, 1),
+                #                                          ).first()
                 #link = s3db.resource("project_task_activity")
                 #link_id = link.update_link(master, record)
                 query = (ltable.task_id == task_id) & \
                         (ltable.activity_id == activity)
                 record = db(query).select(ltable.id,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
                 if record:
                     link_id = record.id
@@ -11955,13 +11971,14 @@ class ProjectTaskModel(S3Model):
                 #mtable = db.project_milestone
                 #master = s3db.resource("project_task", id=task_id)
                 #record = db(mtable.id == milestone).select(mtable.id,
-                #                                           limitby=(0, 1)).first()
+                #                                           limitby = (0, 1),
+                #                                           ).first()
                 #link = s3db.resource("project_task_milestone")
                 #link_id = link.update_link(master, record)
                 query = (ltable.task_id == task_id) & \
                         (ltable.milestone_id == milestone)
                 record = db(query).select(ltable.id,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
                 if record:
                     link_id = record.id
@@ -11971,7 +11988,9 @@ class ProjectTaskModel(S3Model):
                                             )
                 filter_ = filter_ & (ltable.id != link_id)
             # Remove any other links
-            links = s3db.resource("project_task_milestone", filter=filter_)
+            links = s3db.resource("project_task_milestone",
+                                  filter = filter_,
+                                  )
             links.delete()
 
         # Notify Assignee
@@ -12007,7 +12026,7 @@ class ProjectTaskModel(S3Model):
             query = (ptable.pe_id == auth.user.pe_id) & \
                     (mtable.person_id == ptable.id)
             member = db(query).select(mtable.id,
-                                      limitby = (0, 1)
+                                      limitby = (0, 1),
                                       ).first()
             if not member:
                 output = current.xml.json_message(False, 403, current.T("Cannot Share to a Forum unless you are a Member"))
@@ -12018,7 +12037,7 @@ class ProjectTaskModel(S3Model):
         query = (ltable.task_id == task_id) & \
                 (ltable.forum_id == forum_id)
         exists = db(query).select(ltable.id,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if not exists:
             ltable.insert(task_id = task_id,
@@ -12054,7 +12073,7 @@ class ProjectTaskModel(S3Model):
                 (ltable.forum_id == forum_id)
         exists = db(query).select(ltable.id,
                                   ltable.created_by,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if exists:
             auth = current.auth
@@ -12139,7 +12158,7 @@ class ProjectTaskModel(S3Model):
             # Component Form
             query = (titable.id == form.vars.id)
             record = db(query).select(titable.task_id,
-                                      limitby = (0, 1)
+                                      limitby = (0, 1),
                                       ).first()
             if record:
                 task_id = record.task_id
@@ -12161,7 +12180,7 @@ class ProjectTaskModel(S3Model):
         query = (tatable.deleted == False) & \
                 (tatable.task_id == task_id)
         activity = db(query).select(tatable.activity_id,
-                                    limitby = (0, 1)
+                                    limitby = (0, 1),
                                     ).first()
         if activity:
             activity_id = activity.activity_id
@@ -12807,8 +12826,8 @@ def project_activity_year_options():
     query = (table.deleted == False)
     min_field = table.date.min()
     start_date_min = db(query).select(min_field,
+                                      limitby = (0, 1),
                                       orderby = min_field,
-                                      limitby = (0, 1)
                                       ).first()[min_field]
     if start_date_min:
         start_year = start_date_min.year
@@ -12817,8 +12836,8 @@ def project_activity_year_options():
 
     max_field = table.end_date.max()
     end_date_max = db(query).select(max_field,
+                                    limitby = (0, 1),
                                     orderby = max_field,
-                                    limitby = (0, 1)
                                     ).first()[max_field]
     if end_date_max:
         end_year = end_date_max.year
@@ -13073,30 +13092,30 @@ def project_rheader(r):
             rfooter = DIV(A(ICON("print"),
                             " ",
                             T("Project Summary Report"),
-                            _href=URL(args=[r.id, "summary_report"]),#, extension="pdf"),
-                            _class="action-btn",
+                            _href = URL(args = [r.id, "summary_report"]),#, extension="pdf"),
+                            _class = "action-btn",
                             ),
                           A(T("Summary of Progress by Indicator"),
-                            _href=URL(args=[r.id, "indicator_summary_report"]),
-                            _class="action-btn",
+                            _href = URL(args = [r.id, "indicator_summary_report"]),
+                            _class = "action-btn",
                             ),
                           A(ICON("table"),
                             " ",
                             T("Summary of Progress by Indicator"),
-                            _href=URL(args=[r.id, "indicator_summary_report"], extension="xls"),
-                            _class="action-btn",
+                            _href = URL(args = [r.id, "indicator_summary_report"], extension="xls"),
+                            _class = "action-btn",
                             ),
                           A(T("Total Project Progress"),
-                            _href=URL(args=[r.id, "project_progress_report"]),
-                            _class="action-btn",
+                            _href = URL(args = [r.id, "project_progress_report"]),
+                            _class = "action-btn",
                             ),
                           #A(T("Total Budget Progress"),
-                          #  _href=URL(args=[r.id, "budget_progress_report"]),
-                          #  _class="action-btn",
+                          #  _href = URL(args = [r.id, "budget_progress_report"]),
+                          #  _class = "action-btn",
                           #  ),
                           #A(T("Monthly Progress by Indicator"),
-                          #  _href=URL(args=[r.id, "indicator_progress_report"]),
-                          #  _class="action-btn",
+                          #  _href = URL(args = [r.id, "indicator_progress_report"]),
+                          #  _class = "action-btn",
                           #  ),
                           )
             current.response.s3.rfooter = rfooter
@@ -13169,7 +13188,8 @@ def project_rheader(r):
         row = db(query).select(ptable.id,
                                ptable.code,
                                ptable.name,
-                               limitby=(0, 1)).first()
+                               limitby = (0, 1),
+                               ).first()
         if row:
             project = s3db.project_project_represent(None, row)
             project = TR(TH("%s: " % T("Project")),
@@ -13184,7 +13204,8 @@ def project_rheader(r):
                 (ltable.task_id == r.id) & \
                 (ltable.activity_id == atable.id)
         activity = db(query).select(atable.name,
-                                    limitby=(0, 1)).first()
+                                    limitby = (0, 1),
+                                    ).first()
         if activity:
             activity = TR(TH("%s: " % T("Activity")),
                           activity.name
@@ -13432,7 +13453,7 @@ def project_task_controller():
             ptable = s3db.project_project
             try:
                 name = current.db(ptable.id == project).select(ptable.name,
-                                                               limitby = (0, 1)
+                                                               limitby = (0, 1),
                                                                ).first().name
             except AttributeError:
                 current.session.error = T("Project not Found")
@@ -13771,10 +13792,14 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record,
     organisation_id = raw["project_project.organisation_id"]
     location = record["project_location.location_id"]
 
-    org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+    org_url = URL(c="org", f="organisation",
+                  args = [organisation_id, "profile"],
+                  )
     org_logo = raw["org_organisation.logo"]
     if org_logo:
-        org_logo = A(IMG(_src = URL(c="default", f="download", args=[org_logo]),
+        org_logo = A(IMG(_src = URL(c="default", f="download",
+                                    args = [org_logo],
+                                    ),
                          _class = "media-object",
                          ),
                      _href = org_url,
@@ -13819,9 +13844,9 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record,
     # Render the item
     item = DIV(DIV(ICON(icon),
                    SPAN(A(name,
-                          _href =  URL(c="project", f="project",
-                                       args = [record_id, "profile"]),
-                                       ),
+                          _href = URL(c="project", f="project",
+                                      args = [record_id, "profile"]),
+                                      ),
                         _class = "card-title",
                         ),
                    SPAN(location,
@@ -13885,10 +13910,14 @@ def project_activity_list_layout(list_id, item_id, resource, rfields, record,
     organisation_id = raw["project_activity_organisation.organisation_id"]
     if organisation_id:
         organisation = record["project_activity_organisation.organisation_id"]
-        org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+        org_url = URL(c="org", f="organisation",
+                      args = [organisation_id, "profile"],
+                      )
         org_logo = raw["org_organisation.logo"]
         if org_logo:
-            org_logo = A(IMG(_src = URL(c="default", f="download", args=[org_logo]),
+            org_logo = A(IMG(_src = URL(c="default", f="download",
+                                        args = [org_logo],
+                                        ),
                              _class = "media-object",
                              ),
                          _href = org_url,

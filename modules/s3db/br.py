@@ -827,7 +827,7 @@ class BRCaseActivityModel(S3Model):
                                                                   orderby = orderby,
                                                                   sort = sort,
                                                                   )),
-                                                        )
+                                           )
 
         # ---------------------------------------------------------------------
         # Activity Update Type:
@@ -1101,8 +1101,8 @@ class BRAppointmentModel(S3Model):
                                          ),
                      s3_date(),
                      # Activate in template as needed:
-                     self.hrm_human_resource_id(readable=False,
-                                                writable=False,
+                     self.hrm_human_resource_id(readable = False,
+                                                writable = False,
                                                 ),
                      Field("status", "integer",
                            default = 1, # Planning
@@ -1362,8 +1362,7 @@ class BRAssistanceModel(S3Model):
                                     represent = themes_represent,
                                     requires = IS_EMPTY_OR(requires),
                                     sortby = "name",
-                                    widget = S3MultiSelectWidget(header = False,
-                                                                 ),
+                                    widget = S3MultiSelectWidget(header = False),
                                     )
 
         # ---------------------------------------------------------------------
@@ -1397,18 +1396,19 @@ class BRAssistanceModel(S3Model):
             )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename, translate=True)
-        assistance_type_id = S3ReusableField(
-                                "assistance_type_id",
-                                "reference %s" % tablename,
-                                label = T("Type of Assistance"),
-                                represent = represent,
-                                requires = IS_EMPTY_OR(
-                                            IS_ONE_OF(db, "%s.id" % tablename,
-                                                      represent,
-                                                      )),
-                                sortby = "name",
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
                                 )
+        assistance_type_id = S3ReusableField("assistance_type_id",
+                                             "reference %s" % tablename,
+                                             label = T("Type of Assistance"),
+                                             represent = represent,
+                                             requires = IS_EMPTY_OR(
+                                                            IS_ONE_OF(db, "%s.id" % tablename,
+                                                                      represent,
+                                                                      )),
+                                             sortby = "name",
+                                             )
 
         # ---------------------------------------------------------------------
         # Status of Assistance
@@ -1463,20 +1463,21 @@ class BRAssistanceModel(S3Model):
         )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename, translate=True)
-        assistance_status_id = S3ReusableField(
-                                "status_id",
-                                "reference %s" % tablename,
-                                label = T("Status"),
-                                represent = represent,
-                                requires = IS_ONE_OF(db, "%s.id" % tablename,
-                                                     represent,
-                                                     orderby = "workflow_position",
-                                                     sort = False,
-                                                     zero = None,
-                                                     ),
-                                sortby = "workflow_position",
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
                                 )
+        assistance_status_id = S3ReusableField("status_id",
+                                               "reference %s" % tablename,
+                                               label = T("Status"),
+                                               represent = represent,
+                                               requires = IS_ONE_OF(db, "%s.id" % tablename,
+                                                                    represent,
+                                                                    orderby = "workflow_position",
+                                                                    sort = False,
+                                                                    zero = None,
+                                                                    ),
+                                               sortby = "workflow_position",
+                                               )
 
         # ---------------------------------------------------------------------
         # Measures of Assistance
@@ -1492,16 +1493,14 @@ class BRAssistanceModel(S3Model):
         tablename = "br_assistance_measure"
         define_table(tablename,
                      # Beneficiary
-                     self.pr_person_id(
-                         comment = None,
-                         empty = False,
-                         label = labels.CASE,
-                         widget = S3PersonAutocompleteWidget(controller="br"),
-                         ),
-                     case_activity_id(
-                         readable = use_activities,
-                         writable = use_activities,
-                         ),
+                     self.pr_person_id(comment = None,
+                                       empty = False,
+                                       label = labels.CASE,
+                                       widget = S3PersonAutocompleteWidget(controller = "br"),
+                                       ),
+                     case_activity_id(readable = use_activities,
+                                      writable = use_activities,
+                                      ),
                      s3_datetime("start_date",
                                  label = T("Date"),
                                  default = "now",
@@ -1520,13 +1519,12 @@ class BRAssistanceModel(S3Model):
                                writable = use_themes,
                                ),
                      assistance_status_id(),
-                     self.hrm_human_resource_id(
-                        comment = None,
-                        represent = self.hrm_HumanResourceRepresent(show_link=False),
-                        widget = None,
-                        readable = assistance_manager,
-                        writable = assistance_manager,
-                        ),
+                     self.hrm_human_resource_id(comment = None,
+                                                represent = self.hrm_HumanResourceRepresent(show_link = False),
+                                                widget = None,
+                                                readable = assistance_manager,
+                                                writable = assistance_manager,
+                                                ),
                      Field("hours", "double",
                            label = T("Effort (Hours)"),
                            requires = IS_EMPTY_OR(

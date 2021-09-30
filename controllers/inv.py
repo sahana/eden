@@ -23,7 +23,9 @@ def index_alt():
     """
 
     # Just redirect to the Warehouse Summary View
-    s3_redirect_default(URL(f="warehouse", args="summary"))
+    s3_redirect_default(URL(f="warehouse",
+                            args = "summary",
+                            ))
 
 # -----------------------------------------------------------------------------
 def index2():

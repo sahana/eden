@@ -72,44 +72,10 @@ def config(settings):
 
     # Settings suitable for Housing Units
     # - move into customise fn if also supporting other polygons
-    settings.gis.precision = 5
-    settings.gis.simplify_tolerance = 0
-    settings.gis.bbox_min_size = 0.001
+    #settings.gis.precision = 5
+    #settings.gis.simplify_tolerance = 0
+    #settings.gis.bbox_min_size = 0.001
     #settings.gis.bbox_offset = 0.007
-
-    # L10n settings
-    # Languages used in the deployment (used for Language Toolbar & GIS Locations)
-    # http://www.loc.gov/standards/iso639-2/php/code_list.php
-    settings.L10n.languages = OrderedDict([
-       ("en", "English"),
-       ("de", "German"),
-    ])
-    # Default language for Language Toolbar (& GIS Locations in future)
-    settings.L10n.default_language = "en"
-    # Uncomment to Hide the language toolbar
-    #settings.L10n.display_toolbar = False
-    # Default timezone for users
-    #settings.L10n.timezone = "Europe/Berlin"
-    # Number formats (defaults to ISO 31-0)
-    # Decimal separator for numbers (defaults to ,)
-    settings.L10n.decimal_separator = "."
-    # Thousands separator for numbers (defaults to space)
-    settings.L10n.thousands_separator = ","
-    # First day of the week
-    settings.L10n.firstDOW = 1
-    # Uncomment this to Translate Layer Names
-    #settings.L10n.translate_gis_layer = True
-    # Uncomment this to Translate Location Names
-    #settings.L10n.translate_gis_location = True
-    # Uncomment this to Translate Organisation Names/Acronyms
-    #settings.L10n.translate_org_organisation = True
-    # Finance settings
-    settings.fin.currencies = {
-        "EUR" : "Euros",
-        "GBP" : "Great British Pounds",
-        "USD" : "United States Dollars",
-    }
-    settings.fin.currency_default = "USD"
 
     # Do not require international phone number format
     settings.msg.require_international_phone_numbers = False
@@ -499,12 +465,6 @@ def config(settings):
             restricted = True,
             module_type = 10,
         )),
-        #("dvr", Storage(
-        #    name_nice = T("Case Management"),
-        #    #description = "Allow affected individuals & households to register to receive compensation and distributions",
-        #    restricted = True,
-        #    module_type = 10,
-        #)),
         ("event", Storage(
             name_nice = T("Events"),
             #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",

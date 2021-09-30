@@ -9710,7 +9710,7 @@ class ICON(I):
             "facility": "fa-home",
             "file": "fa-file",
             "file-alt": "fa-file-o",
-            "file-excel": "fa-excel-o",
+            "file-excel": "fa-file-excel-o",
             "file-text": "fa-file-text",
             "file-text-alt": "fa-file-text-o",
             "flag": "fa-flag",

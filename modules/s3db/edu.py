@@ -61,6 +61,8 @@ class SchoolModel(S3Model):
 
         organisation_id = self.org_organisation_id
 
+        string_represent = lambda v: v if v else NONE
+
         #ADMIN = current.session.s3.system_roles.ADMIN
         #is_admin = auth.s3_has_role(ADMIN)
 
@@ -104,29 +106,32 @@ class SchoolModel(S3Model):
            msg_record_created = T("School Type added"),
            msg_record_modified = T("School Type updated"),
            msg_record_deleted = T("School Type deleted"),
-           msg_list_empty = T("No School Types currently registered"))
+           msg_list_empty = T("No School Types currently registered"),
+           )
 
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
 
         school_type_id = S3ReusableField("school_type_id", "reference %s" % tablename,
-                               label = T("School Type"),
-                               ondelete = "SET NULL",
-                               represent = represent,
-                               requires = IS_EMPTY_OR(
-                                           IS_ONE_OF(db, "edu_school_type.id",
-                                                     represent,
-                                                     #filterby="organisation_id",
-                                                     #filter_opts=filter_opts,
-                                                     sort=True
-                                                     )),
-                               sortby = "name",
-                               comment = S3PopupLink(c = "edu",
-                                                     f = "school_type",
-                                                     label = ADD_SCHOOL_TYPE,
-                                                     title = T("School Type"),
-                                                     tooltip = T("If you don't see the Type in the list, you can add a new one by clicking link 'Create School Type'."),
-                                                     ),
-                               )
+                                         label = T("School Type"),
+                                         ondelete = "SET NULL",
+                                         represent = represent,
+                                         requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db, "edu_school_type.id",
+                                                                  represent,
+                                                                  #filterby = "organisation_id",
+                                                                  #filter_opts = filter_opts,
+                                                                  sort = True
+                                                                  )),
+                                         sortby = "name",
+                                         comment = S3PopupLink(c = "edu",
+                                                               f = "school_type",
+                                                               label = ADD_SCHOOL_TYPE,
+                                                               title = T("School Type"),
+                                                               tooltip = T("If you don't see the Type in the list, you can add a new one by clicking link 'Create School Type'."),
+                                                               ),
+                                         )
 
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("name",),
@@ -166,33 +171,32 @@ class SchoolModel(S3Model):
                            ),
                      Field("code", length=10, # Mayon compatibility
                            label = T("Code"),
-                           represent = lambda v: v or NONE,
+                           represent = string_represent,
                            requires = code_requires,
                            ),
-                     organisation_id(
-                        requires = self.org_organisation_requires(updateable=True),
-                        ),
+                     organisation_id(requires = self.org_organisation_requires(updateable = True),
+                                     ),
                      school_type_id(),
                      self.gis_location_id(),
                      Field("capacity", "integer",
                            label = T("Capacity"),
-                           represent = lambda v: v or NONE,
+                           represent = string_represent,
                            requires = IS_EMPTY_OR(
                                           IS_INT_IN_RANGE(0, None)
                                           ),
                            ),
                      Field("contact",
                            label = T("Contact"),
-                           represent = lambda v: v or NONE,
+                           represent = string_represent,
                            ),
                      Field("phone",
                            label = T("Phone"),
-                           represent = lambda v: v or NONE,
+                           represent = string_represent,
                            requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI())
                            ),
                      Field("email",
                            label = T("Email"),
-                           represent = lambda v: v or NONE,
+                           represent = string_represent,
                            requires = IS_EMPTY_OR(IS_EMAIL())
                            ),
                      Field("website",
@@ -223,7 +227,8 @@ class SchoolModel(S3Model):
             msg_record_created = T("School added"),
             msg_record_modified = T("School updated"),
             msg_record_deleted = T("School deleted"),
-            msg_list_empty = T("No Schools currently registered"))
+            msg_list_empty = T("No Schools currently registered"),
+            )
 
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
@@ -259,18 +264,18 @@ class SchoolModel(S3Model):
         filter_widgets = [
             S3TextFilter(text_fields,
                          label = T("Search"),
-                         #_class="filter-search",
+                         #_class = "filter-search",
                          ),
             #S3OptionsFilter("organisation_id",
-            #                #hidden=True,
-            #                #label=T("Organization"),
+            #                #label = T("Organization"),
             #                # Doesn't support l10n
-            #                #represent="%(name)s",
+            #                #represent = "%(name)s",
+            #                #hidden = True,
             #                ),
             S3LocationFilter("location_id",
-                             #hidden=True,
-                             #label=T("Location"),
-                             levels=levels,
+                             #label = T("Location"),
+                             levels = levels,
+                             #hidden = True,
                              ),
             ]
 

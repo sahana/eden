@@ -43,31 +43,31 @@ __all__ = ("HRModel",
            "HRShiftModel",
            "HRDelegationModel",
            "hrm_AssignMethod",
-           "hrm_HumanResourceRepresent",
-           "hrm_TrainingEventRepresent",
-           #"hrm_position_represent",
-           "hrm_compose",
-           "hrm_map_popup",
-           "hrm_rheader",
            "hrm_competency_controller",
+           "hrm_compose",
+           "hrm_configure_pr_group_membership",
            "hrm_credential_controller",
+           "hrm_CV",
            "hrm_experience_controller",
            "hrm_group_controller",
            "hrm_human_resource_controller",
+           "hrm_human_resource_filters",
+           "hrm_HumanResourceRepresent",
+           "hrm_human_resource_onaccept",
+           "hrm_map_popup",
+           #"hrm_Medical",
            "hrm_person_controller",
+           #"hrm_position_represent",
+           "hrm_Record",
+           "hrm_rheader",
            "hrm_training_controller",
            "hrm_training_event_controller",
+           "hrm_TrainingEventRepresent",
            "hrm_xls_list_fields",
-           "hrm_CV",
-           #"hrm_Medical",
-           "hrm_Record",
-           "hrm_configure_pr_group_membership",
-           "hrm_human_resource_onaccept",
            #"hrm_competency_list_layout",
            #"hrm_credential_list_layout",
            #"hrm_experience_list_layout",
            #"hrm_training_list_layout",
-           "hrm_human_resource_filters",
            )
 
 import datetime
@@ -1068,7 +1068,7 @@ class HRModel(S3Model):
         if role_type:
             query  = query & (table.type == role_type)
         duplicate = current.db(query).select(table.id,
-                                             limitby = (0, 1)
+                                             limitby = (0, 1),
                                              ).first()
         if duplicate:
             item.id = duplicate.id
@@ -1103,7 +1103,7 @@ class HRModel(S3Model):
             ltable = db.hrm_job_title_human_resource
             record = db(ltable.id == formvars.id).select(ltable.human_resource_id,
                                                          ltable.job_title_id,
-                                                         limitby = (0, 1)
+                                                         limitby = (0, 1),
                                                          ).first()
 
             # Set the HR's job_title_id to the new job title
@@ -3671,7 +3671,7 @@ class HRSkillModel(S3Model):
             db = current.db
             table = db.hrm_skill_type
             skill_type = db(table.deleted == False).select(table.id,
-                                                           limitby = (0, 1)
+                                                           limitby = (0, 1),
                                                            ).first()
             try:
                 default = skill_type.id
@@ -3736,7 +3736,7 @@ class HRSkillModel(S3Model):
         s3db = current.s3db
         ltable = s3db.hrm_course_certificate
         exists = db(ltable.course_id == course_id).select(ltable.id,
-                                                          limitby = (0, 1)
+                                                          limitby = (0, 1),
                                                           )
         if not exists:
             name = form_vars.get("name")
@@ -3745,13 +3745,13 @@ class HRSkillModel(S3Model):
                 table = s3db.hrm_course
                 course = db(table.id == course_id).select(table.name,
                                                           table.organisation_id,
-                                                          limitby = (0, 1)
+                                                          limitby = (0, 1),
                                                           ).first()
                 name = course.name
                 organisation_id = course.organisation_id
             ctable = s3db.hrm_certificate
             certificate = db(ctable.name == name).select(ctable.id,
-                                                         limitby = (0, 1)
+                                                         limitby = (0, 1),
                                                          ).first()
             if certificate:
                 certificate_id = certificate.id
@@ -3790,7 +3790,7 @@ class HRSkillModel(S3Model):
         record = db(table.id == record_id).select(table.person_id,
                                                   table.training_id,
                                                   table.number,
-                                                  limitby = (0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
         if delete:
             person_id = form.person_id
@@ -3806,7 +3806,7 @@ class HRSkillModel(S3Model):
             query = (table.training_id == training_id) & \
                     (table.id != record_id)
             original = db(query).select(table.id,
-                                        limitby = (0, 1)
+                                        limitby = (0, 1),
                                         ).first()
             if original:
                 # Update it with the number
@@ -3897,7 +3897,7 @@ class HRSkillModel(S3Model):
                 (table.skill_type_id == stable.id) & \
                 (stable.value.lower() == s3_unicode(skill).lower())
         duplicate = current.db(query).select(table.id,
-                                             limitby = (0, 1)
+                                             limitby = (0, 1),
                                              ).first()
         if duplicate:
             item.id = duplicate.id
@@ -3935,7 +3935,7 @@ class HRSkillModel(S3Model):
         query = (stable.site_id == record.site_id)
         if current.deployment_settings.get_org_branches():
             site = db(query).select(stable.organisation_id,
-                                    limitby = (0, 1)
+                                    limitby = (0, 1),
                                     ).first()
             if site:
                 org_id = site.organisation_id
@@ -3947,7 +3947,7 @@ class HRSkillModel(S3Model):
                     )
                 otable = db.org_organisation
                 org = db(otable.id == root_org).select(otable.realm_entity,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
                 if org:
                     return org.realm_entity
@@ -3955,7 +3955,7 @@ class HRSkillModel(S3Model):
             otable = db.org_organisation
             query &= (stable.organisation_id == otable.id)
             org = db(query).select(otable.realm_entity,
-                                   limitby = (0, 1)
+                                   limitby = (0, 1),
                                    ).first()
             if org:
                 return org.realm_entity
@@ -3982,7 +3982,7 @@ def hrm_training_onvalidation(form):
                                                       table.end_date,
                                                       table.hours,
                                                       cache = current.s3db.cache,
-                                                      limitby = (0, 1)
+                                                      limitby = (0, 1),
                                                       ).first()
     try:
         form_vars.course_id = record.course_id
@@ -4019,7 +4019,7 @@ def hrm_training_onaccept(form):
                                                 table.hours,
                                                 table.grade,
                                                 table.grade_details,
-                                                limitby = (0, 1)
+                                                limitby = (0, 1),
                                                 ).first()
 
     if delete:
@@ -4038,7 +4038,7 @@ def hrm_training_onaccept(form):
         if course_pass_marks and not record.grade and record.grade_details:
             # Provide a Pass/Fail rating based on the Course's Pass Mark
             course = db(course_table.id == course_id).select(course_table.pass_mark,
-                                                             limitby = (0, 1)
+                                                             limitby = (0, 1),
                                                              ).first()
             if course:
                 if record.grade_details >= course.pass_mark:
@@ -4055,7 +4055,7 @@ def hrm_training_onaccept(form):
         query = (hrtable.person_id == person_id) & \
                 (hrtable.deleted == False)
         vol = db(query).select(hrtable.type,
-                               limitby = (0, 1)
+                               limitby = (0, 1),
                                ).first()
 
         if vol and vol.type == 2:
@@ -4073,7 +4073,7 @@ def hrm_training_onaccept(form):
                 exists = db(query).select(ptable.id,
                                           ptable.date,
                                           ptable.hours,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
 
                 if exists:
@@ -4110,7 +4110,7 @@ def hrm_training_onaccept(form):
                                )
     courses = [c.course_id for c in courses if c.course_id is not None]
     exists = db(ltable.person_id == person_id).select(ltable.id,
-                                                      limitby = (0, 1)
+                                                      limitby = (0, 1),
                                                       ).first()
     if exists:
         exists.update_record(course_id = courses)
@@ -4141,8 +4141,8 @@ def hrm_training_onaccept(form):
                     (table.deleted == False)
             trainings = db(query).select(table.id,
                                          table.date,
+                                         limitby = (0, 1),
                                          orderby = "date desc",
-                                         limitby = (0, 1)
                                          )
             if trainings:
                 # Update the training_id
@@ -4165,7 +4165,7 @@ def hrm_training_onaccept(form):
             query = (ptable.id == person_id) & \
                     (putable.pe_id == ptable.pe_id)
             user = db(query).select(putable.user_id,
-                                    limitby = (0, 1)
+                                    limitby = (0, 1),
                                     ).first()
             if user:
                 user_id = user.user_id
@@ -4340,7 +4340,7 @@ class HRAppraisalModel(S3Model):
                 (atable.human_resource_id == hrtable.id) & \
                 (atable.mission_id == mission_id)
         assignment = db(query).select(atable.id,
-                                      limitby = (0, 1)
+                                      limitby = (0, 1),
                                       ).first()
         if not assignment:
             return
@@ -4366,7 +4366,7 @@ class HRAppraisalModel(S3Model):
                 (htable.deleted != False)
         row = db(query).select(htable.doc_id,
                                ltable.document_id,
-                               limitby = (0, 1)
+                               limitby = (0, 1),
                                ).first()
         if row:
             document_id = row["hrm_appraisal_document.document_id"]
@@ -5186,7 +5186,7 @@ class HRShiftModel(S3Model):
             query = (ltable.shift_id == r.id) & \
                     (ltable.site_id == ftable.site_id)
             facility = current.db(query).select(ftable.id,
-                                                limitby = (0, 1)
+                                                limitby = (0, 1),
                                                 ).first()
             redirect(URL(c = "org",
                          f = "facility",
@@ -5550,7 +5550,7 @@ def hrm_programme_hours_onaccept(form):
         # Get the full record
         table = db.hrm_programme_hours
         record = db(table.id == record_id).select(table.person_id,
-                                                  limitby = (0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
         person_id = record.person_id
 
@@ -5565,7 +5565,7 @@ def hrm_programme_hours_onaccept(form):
             (dtable.human_resource_id == htable.id)
     row = db(query).select(dtable.id,
                            dtable.active,
-                           limitby = (0, 1)
+                           limitby = (0, 1),
                            ).first()
     if row:
         if row.active != active:
@@ -5574,7 +5574,7 @@ def hrm_programme_hours_onaccept(form):
     else:
         # Create record
         row = db(htable.person_id == person_id).select(htable.id,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
         if row:
             dtable.insert(human_resource_id = row.id,
@@ -5722,7 +5722,7 @@ class hrm_AssignMethod(S3Method):
                 else:
                     human_resource_id = selected[0]
                     exists = db(table[fkey] == record_id).select(table.id,
-                                                                 limitby = (0, 1)
+                                                                 limitby = (0, 1),
                                                                  ).first()
                     if exists:
                         onaccept = component.get_config("update_onaccept",
@@ -6294,7 +6294,8 @@ class hrm_TrainingEventRepresent(S3Represent):
 #            (table.organisation_id == otable.id)
 #    position = db(query).select(jtable.name,
 #                                otable.name,
-#                                limitby=(0, 1)).first()
+#                                limitby = (0, 1),
+#                                ).first()
 #    try:
 #        represent = position.hrm_job_title.name
 #        if position.org_organisation:
@@ -6344,7 +6345,7 @@ def hrm_human_resource_onaccept(form):
                                                htable.status,
                                                htable.deleted,
                                                htable.deleted_fk,
-                                               limitby = (0, 1)
+                                               limitby = (0, 1),
                                                ).first()
 
     job_title_id = record.job_title_id
@@ -6355,7 +6356,7 @@ def hrm_human_resource_onaccept(form):
                 (ltable.job_title_id == job_title_id)
         exists = db(query).select(ltable.id, # needed for update_record
                                   ltable.main,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if exists:
             if not exists.main:
@@ -6417,7 +6418,7 @@ def hrm_human_resource_onaccept(form):
         else:
             query = (ltable.human_resource_id == record_id)
         exists = db(query).select(ltable.id,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if not exists:
             # Is there a Deployable Team for this user_org?
@@ -6471,7 +6472,7 @@ def hrm_human_resource_onaccept(form):
                     (atable.deleted == False)
             address = db(query).select(atable.id,
                                        atable.location_id,
-                                       limitby = (0, 1)
+                                       limitby = (0, 1),
                                        ).first()
             if not address:
                 update_location_from_site = True
@@ -6512,7 +6513,7 @@ def hrm_human_resource_onaccept(form):
         # Use the site location as base location of the HR
         stable = db.org_site
         site = db(stable.site_id == site_id).select(stable.location_id,
-                                                    limitby = (0, 1)
+                                                    limitby = (0, 1),
                                                     ).first()
         try:
             data.location_id = location_id = site.location_id
@@ -6534,7 +6535,7 @@ def hrm_human_resource_onaccept(form):
             # Add a new Address for the person from the HR location
             location_id = record.location_id
             pe = db(ptable.id == person_id).select(ptable.pe_id,
-                                                   limitby = (0, 1)
+                                                   limitby = (0, 1),
                                                    ).first()
             try:
                 pe_id = pe.pe_id
@@ -6600,7 +6601,7 @@ def hrm_human_resource_onaccept(form):
     user = db(query).select(utable.id,
                             utable.organisation_id,
                             utable.site_id,
-                            limitby = (0, 1)
+                            limitby = (0, 1),
                             ).first()
     if user:
         user_id = user.id
@@ -6681,7 +6682,7 @@ def hrm_compose():
     if not pe_id:
         db = current.db
         pe = db(query).select(table.pe_id,
-                              limitby = (0, 1)
+                              limitby = (0, 1),
                               ).first()
         if not pe:
             current.session.error = current.T("Record not found")
@@ -6693,8 +6694,8 @@ def hrm_compose():
         # Get the individual's communications options & preference
         ctable = s3db.pr_contact
         contact = db(ctable.pe_id == pe_id).select(ctable.contact_method,
+                                                   limitby = (0, 1),
                                                    orderby = "priority",
-                                                   limitby = (0, 1)
                                                    ).first()
         if contact:
             s3db.msg_outbox.contact_method.default = contact.contact_method
@@ -6758,7 +6759,8 @@ def hrm_map_popup(r):
     #table = s3db.org_organisation
     #query = (table.id == record.organisation_id)
     #name = db(query).select(table.name,
-    #                        limitby=(0, 1)).first().name
+    #                        limitby = (0, 1),
+    #                        ).first().name
     #append(TR(TD(B("%s:" % r.table.organisation_id.label)),
     #          TD(name)))
 
@@ -6818,7 +6820,7 @@ def hrm_map_popup(r):
         query = (table.id == record.location_id)
         location = db(query).select(table.path,
                                     table.addr_street,
-                                    limitby = (0, 1)
+                                    limitby = (0, 1),
                                     ).first()
         # City
         # Street address
@@ -6848,7 +6850,7 @@ def hrm_map_popup(r):
         table = s3db.org_office
         query = (table.site_id == record.site_id)
         office = db(query).select(table.phone1,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if office and office.phone1:
             append(TR(TD(B("%s:" % T("Office Phone"))),
@@ -6996,7 +6998,7 @@ def hrm_rheader(r, tabs=None, profile=False):
             query = (htable.person_id == record_id) & \
                     (htable.deleted == False)
             hr = db(query).select(htable.id,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
             if hr:
                 hr = hr.id
@@ -7122,7 +7124,7 @@ def hrm_rheader(r, tabs=None, profile=False):
                     if hr:
                         dtable = s3db.vol_details
                         row = db(dtable.human_resource_id == hr).select(dtable.active,
-                                                                        limitby = (0, 1)
+                                                                        limitby = (0, 1),
                                                                         ).first()
                         if row and row.active:
                             active = TD(DIV(T("Yes"),
@@ -7617,7 +7619,7 @@ def hrm_rheader(r, tabs=None, profile=False):
         # Look up Site
         stable = s3db.org_site_shift
         link = db(stable.shift_id == record_id).select(stable.site_id,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
         if link:
             site_id = link.site_id
@@ -7626,7 +7628,7 @@ def hrm_rheader(r, tabs=None, profile=False):
         # Look up Assigned
         htable = s3db.hrm_human_resource_shift
         link = db(htable.shift_id == record_id).select(htable.human_resource_id,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
         if link:
             human_resource_id = link.human_resource_id
@@ -8108,7 +8110,7 @@ def hrm_human_resource_controller(extra_filter = None):
                                                        ptable.middle_name,
                                                        ptable.last_name,
                                                        ptable.pe_id,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
             name = s3_fullname(person)
             pe_id = person.pe_id
@@ -8410,7 +8412,7 @@ def hrm_human_resource_controller(extra_filter = None):
                     # Delete the Application, not the HR
                     atable = s3db.deploy_application
                     app = db(atable.human_resource_id == r.id).select(atable.id,
-                                                                      limitby = (0, 1)
+                                                                      limitby = (0, 1),
                                                                       ).first()
                     if not app:
                         current.session.error = "Cannot find Application to delete!"
@@ -8573,7 +8575,7 @@ def hrm_person_controller(**attr):
     get_vars["xsltmode"] = "staff"
     if hr_id:
         hr = db(table.id == hr_id).select(table.type,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
         if hr:
             group = "volunteer" if hr.type == 2 else "staff"
@@ -8761,7 +8763,7 @@ def hrm_person_controller(**attr):
                         # Lookup Code
                         mtable = s3db.deploy_mission
                         mission = db(mtable.id == mission_id).select(mtable.code,
-                                                                     limitby = (0, 1)
+                                                                     limitby = (0, 1),
                                                                      ).first()
                         if mission:
                             hatable.code.default = mission.code
@@ -8772,7 +8774,7 @@ def hrm_person_controller(**attr):
                                 (atable.human_resource_id == htable.id) & \
                                 (htable.person_id == r.id)
                         assignment = db(query).select(atable.job_title_id,
-                                                      limitby = (0, 1)
+                                                      limitby = (0, 1),
                                                       ).first()
                         if assignment:
                             hatable.job_title_id.default = assignment.job_title_id

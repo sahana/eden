@@ -3272,7 +3272,7 @@ class S3Config(Storage):
             query = ((table.organisation_id == auth.user.organisation_id) & \
                      (table.tag == "cap_oid"))
             record = current.db(query).select(table.value,
-                                              limitby=(0, 1)
+                                              limitby = (0, 1),
                                               ).first()
             if record and record.value:
                 return record.value
@@ -5164,7 +5164,7 @@ class S3Config(Storage):
                     # Convert Name to ID
                     table = current.s3db.org_organisation
                     org = current.db(table.name == default_organisation).select(table.id,
-                                                                                limitby=(0, 1),
+                                                                                limitby = (0, 1),
                                                                                 ).first()
                     try:
                         default_organisation = org.id
