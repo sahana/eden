@@ -1,5 +1,5 @@
 Organisation,Type,Parent
-AQUASSISTANCE,Supplier,PIRAC
-VEOLIA,Supplier,PIRAC
-CDCS,Donor,PIRAC
-Ready,Donor,PIRAC
+AQUASSISTANCE,Supplier,French Red Cross
+VEOLIA,Supplier,French Red Cross
+CDCS,Bilateral,French Red Cross
+Ready,Intergovernmental,French Red Cross

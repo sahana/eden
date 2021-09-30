@@ -14,7 +14,7 @@ $(document).ready(function() {
                 $('[id^="inv_recv_from_site_id__row"]').show();
                 $('[id^="inv_recv_organisation_id__row"]').hide();
             } else if ( RecvType >= 32) { // @ToDo: pass this value instead of hardcoding it - base on s3cfg.py 
-                // External Shipment: Donation, Purchase, Consignment, In-Transit
+                // External Shipment: Donation, Purchase, Loan, In-Transit
                 $('[id^="inv_recv_from_site_id__row"]').hide();
                 $('[id^="inv_recv_organisation_id__row"]').show();
             } else {

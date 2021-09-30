@@ -312,6 +312,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             M("Catalogs", c="supply", f="catalog"),
                             M("Item Categories", c="supply", f="item_category"),
                             M("Items", c="supply", f="item"),
+                            M("Donors", f="donor"),
                             M("Suppliers", f="supplier"),
                             M("Facilities", f="facility"),
                             M("Stock limit", f="minimum"),

@@ -2147,6 +2147,45 @@ def project_req():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def donor():
+    """
+        Filtered version of the organisation() REST controller
+    """
+
+    # @ToDo: This should be a deployment setting
+    get_vars["organisation_type.name"] = \
+        "Academic,Bilateral,Government,Intergovernmental,NGO,UN agency"
+
+    # Load model (including normal CRUD strings)
+    table = s3db.org_organisation
+
+    # Modify CRUD Strings
+    s3.crud_strings.org_organisation = Storage(
+        label_create = T("Create Donor"),
+        title_display = T("Donor Details"),
+        title_list = T("Donors"),
+        title_update = T("Edit Donor"),
+        title_upload = T("Import Donors"),
+        label_list_button = T("List Donors"),
+        label_delete_button = T("Delete Donor"),
+        msg_record_created = T("Donor added"),
+        msg_record_modified = T("Donor updated"),
+        msg_record_deleted = T("Donor deleted"),
+        msg_list_empty = T("No Donors currently registered")
+        )
+
+    # Open record in this controller after creation
+    s3db.configure("org_organisation",
+                   create_next = URL(c="inv", f="donor",
+                                     args = ["[id]", "read"]),
+                   )
+
+    # NB Type gets defaulted in the Custom CRUD form
+    # - user needs create permissions for org_organisation_organisation_type
+    from s3db.org import org_organisation_controller
+    return org_organisation_controller()
+
+# -----------------------------------------------------------------------------
 def supplier():
     """
         Filtered version of the organisation() REST controller

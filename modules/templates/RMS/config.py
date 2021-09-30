@@ -126,35 +126,72 @@ def config(settings):
 
         realm_entity = 0
         use_user_organisation = False
+        use_user_root_organisation = False
 
-        if tablename in ("inv_req", "inv_send", "inv_recv"):
-            # Ensure that we set the realm_entity to a pr_realm for this record,
-            # with the correct affiliations
-            record_id = row["id"]
-
-            if tablename == "inv_send":
-                realm_name = "WB_%s" % record_id
-                to_site_id = db(table.id == record_id).select(table.to_site_id,
-                                                              limitby = (0, 1),
-                                                              ).first().to_site_id
-                site_ids = (row["site_id"],
-                            to_site_id,
-                            )
-            elif tablename == "inv_recv":
-                realm_name = "GRN_%s" % record_id
-                from_site_id = db(table.id == record_id).select(table.from_site_id,
-                                                                limitby = (0, 1),
-                                                                ).first().from_site_id
-                site_ids = (row["site_id"],
-                            from_site_id
-                            )
-            elif tablename == "inv_req":
+        if tablename in ("inv_req",
+                         "inv_track_item",
+                         #"inv_send", # Only need to have site_id, to_site_id will manage via Recv, if-necessary
+                         #"inv_recv", # Only need to have site_id, from_site_id will manage via Send, if-necessary
+                         ):
+            if tablename == "inv_req":
+                # Need a pr_realm with multiple inheritance
+                record_id = row["id"]
                 realm_name = "REQ_%s" % record_id
                 ritable = s3db.inv_req_item
                 query = (ritable.req_id == record_id) & \
                         (ritable.deleted == False)
                 request_items = db(query).select(ritable.site_id)
                 site_ids = set([ri.site_id for ri in request_items] + [row["site_id"]])
+            elif tablename == "inv_track_item":
+                # Inherit from inv_send &/or inv_recv
+                record = db(table.id == row["id"]).select(table.send_id,
+                                                          table.recv_id,
+                                                          limitby = (0, 1),
+                                                          ).first()
+                send_id = record.send_id
+                recv_id = record.recv_id
+                if send_id and recv_id:
+                    # Need a pr_realm with dual inheritance
+                    realm_name = "WB_%s" % send_id
+                    send = db(stable.id == send_id).select(stable.site_id,
+                                                           stable.to_site_id,
+                                                           limitby = (0, 1),
+                                                           ).first()
+                    site_ids = (send,site_id,
+                                send.to_site_id,
+                                )
+                elif send_id:
+                    # Inherit from the Send
+                    stable = s3db.inv_send
+                    send = db(stable.id == send_id).select(stable.realm_entity,
+                                                           limitby = (0, 1),
+                                                           ).first()
+                    return send.realm_entity
+                elif recv_id:
+                    # Inherit from the Recv
+                    rtable = s3db.inv_recv
+                    recv = db(rtable.id == recv_id).select(rtable.realm_entity,
+                                                           limitby = (0, 1),
+                                                           ).first()
+                    return recv.realm_entity
+            #elif tablename == "inv_send":
+            #    record_id = row["id"]
+            #    realm_name = "WB_%s" % record_id
+            #    to_site_id = db(table.id == record_id).select(table.to_site_id,
+            #                                                  limitby = (0, 1),
+            #                                                  ).first().to_site_id
+            #    site_ids = (row["site_id"],
+            #                to_site_id,
+            #                )
+            #elif tablename == "inv_recv":
+            #    record_id = row["id"]
+            #    realm_name = "GRN_%s" % record_id
+            #    from_site_id = db(table.id == record_id).select(table.from_site_id,
+            #                                                    limitby = (0, 1),
+            #                                                    ).first().from_site_id
+            #    site_ids = (row["site_id"],
+            #                from_site_id
+            #                )
 
             # Find/create the Realm
             rtable = s3db.pr_realm
@@ -216,30 +253,8 @@ def config(settings):
 
             return realm_entity
 
-        elif tablename == "inv_track_item":
-            # Inherit from inv_send (if-present) or inv_recv
-            record = db(table.id == row["id"]).select(table.send_id,
-                                                      table.recv_id,
-                                                      limitby = (0, 1),
-                                                      ).first()
-            send_id = record.send_id
-            if send_id:
-                stable = s3db.inv_send
-                send = db(stable.id == send_id).select(stable.realm_entity,
-                                                       limitby = (0, 1),
-                                                       ).first()
-                return send.realm_entity
-
-            recv_id = record.recv_id
-            if recv_id:
-                rtable = s3db.inv_recv
-                recv = db(rtable.id == recv_id).select(rtable.realm_entity,
-                                                       limitby = (0, 1),
-                                                       ).first()
-                return recv.realm_entity
-
         elif tablename == "org_organisation":
-            # Suppliers & Partners should be in the realm of the user's organisation
+            # Suppliers & Partners should be in the realm of the user's root organisation
             ottable = s3db.org_organisation_type
             ltable = db.org_organisation_organisation_type
             query = (ltable.organisation_id == row["id"]) & \
@@ -249,6 +264,7 @@ def config(settings):
                                      ).first()
             if not otype or otype.name != RED_CROSS:
                 use_user_organisation = True
+                use_user_root_organisation = True
 
         elif tablename in ("org_facility", "pr_forum", "pr_group"):
             # Facilities, Forums and Groups should be in the realm of the user's organisation
@@ -306,8 +322,8 @@ def config(settings):
                                 "inv_adj": SID,
                                 "inv_adj_item": "adj_id",
                                 "inv_inv_item": SID,
-                                #"inv_recv": SID,
-                                #"inv_send": SID,
+                                "inv_recv": SID,
+                                "inv_send": SID,
                                 #"inv_track_item": "track_org_id",
                                 #"inv_req": "site_id",
                                 "inv_req_item": "req_id",
@@ -385,13 +401,18 @@ def config(settings):
                 # Fall back to default get_realm_entity function
 
         if use_user_organisation:
-            user = current.auth.user
+            auth = current.auth
+            user = auth.user
             if user:
                 # @ToDo - this might cause issues if the user's org is different
                 #         from the realm that gave them permissions to create the record
+                if use_user_root_organisation:
+                    organisation_id = auth.root_org()
+                else:
+                    organisation_id = user.organisation_id
                 from s3db.pr import pr_get_pe_id
                 realm_entity = pr_get_pe_id("org_organisation",
-                                            user.organisation_id)
+                                            organisation_id)
             else:
                 # Prepop data - need to handle this separately
                 if tablename == "org_organisation":
@@ -3366,15 +3387,46 @@ Thank you"""
 
     # -------------------------------------------------------------------------
     def customise_inv_recv_resource(r, tablename):
-    
-        #from gluon import IS_IN_SET
 
+        if not r.interactive and r.representation != "aadata":
+            return
+
+        db = current.db
         s3db = current.s3db
         table = s3db.inv_recv
 
         # Use Custom Represent for Sites to send to
         from .controllers import org_SiteRepresent
         table.from_site_id.requires.other.label = org_SiteRepresent()
+
+        # Filter list of Orgs
+        # - all root NS
+        # - our Branches
+        # - our Donors/Suppliers (& their branches, if-any)
+        ttable = s3db.org_organisation_type
+        try:
+            type_id = db(ttable.name == RED_CROSS).select(ttable.id,
+                                                          cache = s3db.cache,
+                                                          limitby = (0, 1),
+                                                          ).first().id
+        except AttributeError:
+            # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+            pass
+        else:
+            root_org_id = current.auth.root_org()
+            otable = s3db.org_organisation
+            root_org = db(otable.id == root_org_id).select(otable.pe_id,
+                                                           limitby = (0, 1),
+                                                           ).first()
+            ltable = db.org_organisation_organisation_type
+            query = ((ltable.organisation_type_id == type_id) & (ltable.organisation_id == otable.id) & (otable.id == otable.root_organisation)) | \
+                    (otable.root_organisation == root_org_id) | \
+                    ((ltable.organisation_type_id != type_id) & (ltable.organisation_id == otable.id) & (otable.realm_entity == root_org.pe_id))
+            orgs = db(query).select(otable.id)
+            org_ids = [row.id for row in orgs]
+            table.organisation_id.requires.other.set_filter(filterby = "id",
+                                                            filter_opts = org_ids,
+                                                            )
 
         f = table.transport_type
         f.requires = IS_IN_SET(transport_opts)

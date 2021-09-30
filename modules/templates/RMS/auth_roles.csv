@@ -519,7 +519,6 @@ wh_operator,Warehouse Operator,StockKeeper,inv,,,,READ|CREATE|UPDATE|DELETE,,,,,
 wh_operator,Warehouse Operator,StockKeeper,inv,facility,,,READ|CREATE|UPDATE,,,,,
 wh_operator,Warehouse Operator,StockKeeper,inv,inv_item,,,READ|CREATE|UPDATE|DELETE,,,,,
 wh_operator,Warehouse Operator,StockKeeper,inv,kitting,,,READ|CREATE|UPDATE|DELETE,,,,,
-wh_operator,Warehouse Operator,StockKeeper,inv,supplier,,,READ|CREATE|UPDATE,,,,,
 wh_operator,Warehouse Operator,StockKeeper,inv,warehouse,,,READ|CREATE|UPDATE,,,,,
 wh_operator,Warehouse Operator,StockKeeper,,,inv_adj,,READ|CREATE|UPDATE,,,,,
 wh_operator,Warehouse Operator,StockKeeper,,,inv_inv_item,,READ|CREATE|UPDATE,,,,,
@@ -536,6 +535,7 @@ wh_operator_national,Warehouse Operator National Rights,secondary role applied a
 wh_operator_national,Warehouse Operator National Rights,secondary role applied at NS level,inv,facility,,,READ,,,,,
 wh_operator_national,Warehouse Operator National Rights,secondary role applied at NS level,inv,project,,,READ,,,,,
 wh_operator_national,Warehouse Operator National Rights,secondary role applied at NS level,inv,req,,,READ,,,,,"Need to have access to NS-filtered Projects"
+wh_operator_national,Warehouse Operator National Rights,secondary role applied at NS level,inv,donor,,,READ,,,,,
 wh_operator_national,Warehouse Operator National Rights,secondary role applied at NS level,inv,supplier,,,READ,,,,,
 wh_operator_national,Warehouse Operator National Rights,secondary role applied at NS level,,,inv_warehouse,,READ,,,,,Allow WH Manager to send/recv from other WH in country
 wh_operator_national,Warehouse Operator National Rights,secondary role applied at NS level,,,org_facility,,READ,,,,,
@@ -551,6 +551,7 @@ logs_manager,Logistics Manager,Manages all Warehouses in NS,inv,kitting,,,READ|C
 logs_manager,Logistics Manager,Manages all Warehouses in NS,inv,project,,,READ|CREATE|UPDATE|DELETE,,,,,
 logs_manager,Logistics Manager,Manages all Warehouses in NS,inv,req,,,READ|CREATE|UPDATE|DELETE,,,,,
 logs_manager,Logistics Manager,Manages all Warehouses in NS,inv,req_match,,,READ|CREATE|UPDATE|DELETE,,,,,
+logs_manager,Logistics Manager,Manages all Warehouses in NS,inv,donor,,,READ|CREATE|UPDATE|DELETE,,,,,
 logs_manager,Logistics Manager,Manages all Warehouses in NS,inv,supplier,,,READ|CREATE|UPDATE|DELETE,,,,,
 logs_manager,Logistics Manager,Manages all Warehouses in NS,inv,warehouse,,,READ|CREATE|UPDATE|DELETE,,,,,
 logs_manager,Logistics Manager,Manages all Warehouses in NS,,,inv_adj,,CREATE|READ|UPDATE,,,,,
@@ -574,6 +575,8 @@ logs_manager,Logistics Manager,Manages all Warehouses in NS,,,supply_catalog,,RE
 logs_manager,Logistics Manager,Manages all Warehouses in NS,,,supply_item_category,,READ|CREATE|UPDATE|DELETE,,,,,
 logs_manager,Logistics Manager,Manages all Warehouses in NS,vol,,,,NONE,,,,,
 logs_manager_national,Logistics Manager National Rights,For e.g. PIRAC where there is a Logistics Manager at branch level who needs to be able to manage Project Codes,inv,project,,,READ|CREATE|UPDATE|DELETE,,,,,
+logs_manager_national,Logistics Manager National Rights,For e.g. PIRAC where there is a Logistics Manager at branch level who needs to be able to manage Project Codes,inv,donor,,,READ|CREATE|UPDATE|DELETE,,,,,
+logs_manager_national,Logistics Manager National Rights,For e.g. PIRAC where there is a Logistics Manager at branch level who needs to be able to manage Project Codes,inv,supplier,,,READ|CREATE|UPDATE|DELETE,,,,,
 logs_manager_national,Logistics Manager National Rights,For e.g. PIRAC where there is a Logistics Manager at branch level who needs to be able to manage Project Codes,inv,req,,,READ,,,,,"Need to have access to NS-filtered Projects"
 logs_manager_national,Logistics Manager National Rights,For e.g. PIRAC where there is a Logistics Manager at branch level who needs to be able to manage Project Codes,,,project_project,,READ|CREATE,READ|UPDATE,,,,
 logs_manager_national,Logistics Manager National Rights,For e.g. PIRAC where there is a Logistics Manager at branch level who needs to be able to manage Project Codes,,,org_organisation,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
@@ -600,6 +603,7 @@ hn_user,Honduras User,All HN users applied at NS level,,,pr_person,,READ|CREATE,
 rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,inv,,,,READ,,,,,"Allow access to other RC orgs as Item Donors/Owners and other RC warehouses for shipments"
 rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,inv,facility,,,NONE,,,,,
 rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,inv,kitting,,,NONE,,,,,
+rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,inv,donor,,,NONE,,,,,
 rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,inv,supplier,,,NONE,,,,,
 rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,inv,warehouse,,,NONE,,,,,
 rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,,,org_organisation,,READ,,,,,
