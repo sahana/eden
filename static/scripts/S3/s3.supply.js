@@ -14,7 +14,7 @@ S3.supply.fncPrepItem = function(data) {
         }
     }
     return '';
-}
+};
 
 S3.supply.fncRepresentItem = function(record, PrepResult) {
     if (record.quantity == 1) {
@@ -22,6 +22,6 @@ S3.supply.fncRepresentItem = function(record, PrepResult) {
     } else {
         return record.name + ' (' + record.quantity + ' x ' + PrepResult + ')';
     }
-}
+};
 
 // END ========================================================================

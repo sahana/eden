@@ -804,12 +804,21 @@ def req():
     s3.filter = (FS("is_template") == False)
 
     # Hide completed Requisitions by default
-    # REQ_STATUS_NONE     = 0
-    # REQ_STATUS_PARTIAL  = 1
     from s3 import s3_set_default_filter
-    s3_set_default_filter("~.fulfil_status",
-                          [0, 1],
-                          tablename = "inv_req")
+    if settings.get_inv_req_workflow():
+        # 1: Draft
+        # 2: Submitted
+        # 3: Approved
+        s3_set_default_filter("~.workflow_status",
+                              [1, 2, 3],
+                              tablename = "inv_req")
+    else:
+        # REQ_STATUS_NONE     = 0
+        # REQ_STATUS_PARTIAL  = 1
+        s3_set_default_filter("~.fulfil_status",
+                              [0, 1],
+                              tablename = "inv_req")
+                          
 
     return req_controller()
 

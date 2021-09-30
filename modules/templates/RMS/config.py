@@ -6028,15 +6028,6 @@ Thank you"""
     # -------------------------------------------------------------------------
     def customise_inv_req_controller(**attr):
 
-        # Hide completed Requisitions by default
-        # 1: Draft
-        # 2: Submitted
-        # 3: Approved
-        from s3 import s3_set_default_filter
-        s3_set_default_filter("~.workflow_status",
-                              [1, 2, 3],
-                              tablename = "inv_req")
-
         s3 = current.response.s3
 
         # Custom prep
