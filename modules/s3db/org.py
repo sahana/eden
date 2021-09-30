@@ -240,18 +240,17 @@ class OrganisationModel(S3Model):
 
         crud_fields = ["name",
                        "acronym",
-                       S3SQLInlineLink(
-                            "organisation_type",
-                            field = "organisation_type_id",
-                            # Disable "Search"-field in multi-select widget:
-                            # - default "auto" shows Search field at 10 or more options,
-                            #   which adds unnecessary complexity to a commonly and
-                            #   often early used form (e.g. create Org when registering)
-                            search = False,
-                            label = T("Type"),
-                            multiple = multiple_organisation_types,
-                            widget = type_widget,
-                            ),
+                       S3SQLInlineLink("organisation_type",
+                                       field = "organisation_type_id",
+                                       # Disable "Search"-field in multi-select widget:
+                                       # - default "auto" shows Search field at 10 or more options,
+                                       #   which adds unnecessary complexity to a commonly and
+                                       #   often early used form (e.g. create Org when registering)
+                                       search = False,
+                                       label = T("Type"),
+                                       multiple = multiple_organisation_types,
+                                       widget = type_widget,
+                                       ),
                        "country" if use_country else None,
                        "phone",
                        "website",
@@ -515,7 +514,10 @@ class OrganisationModel(S3Model):
                        # Catalogs
                        supply_catalog = "organisation_id",
                        # Regions
-                       org_organisation_region = "organisation_id",
+                       org_organisation_region = {"joinby": "organisation_id",
+                                                  # Needed for simple CRUD form usage
+                                                  "multiple": False,
+                                                  },
                        # Resources
                        org_resource = "organisation_id",
                        # Religion
@@ -618,18 +620,18 @@ class OrganisationModel(S3Model):
                        )
 
         # Beneficiary/Case Management
-        if settings.has_module("br"):
-            # Use BR for org-specific categories in case management
-            add_components(tablename,
-                           br_need = "organisation_id",
-                           br_assistance_theme = "organisation_id",
-                           )
-        else:
-            # Use DVR for org-specific categories in case management
-            add_components(tablename,
-                           dvr_need = "organisation_id",
-                           dvr_response_theme = "organisation_id",
-                           )
+        #if settings.has_module("br"):
+        # Use BR for org-specific categories in case management
+        add_components(tablename,
+                       br_need = "organisation_id",
+                       br_assistance_theme = "organisation_id",
+                       )
+        #else:
+        #    # Use DVR for org-specific categories in case management
+        #    add_components(tablename,
+        #                   dvr_need = "organisation_id",
+        #                   dvr_response_theme = "organisation_id",
+        #                   )
 
         # Projects
         if settings.get_project_multiple_organisations():
@@ -1874,8 +1876,12 @@ class OrganisationRegionModel(S3Model):
         #
         tablename = "org_region_country"
         define_table(tablename,
-                     region_id(),
-                     self.gis_country_id(),
+                     region_id(empty = False,
+                               ondelete = "CASCADE",
+                               ),
+                     self.gis_country_id(empty = False,
+                                         ondelete = "CASCADE",
+                                         ),
                      s3_comments(),
                      *s3_meta_fields()
                      )
@@ -1885,8 +1891,12 @@ class OrganisationRegionModel(S3Model):
         #
         tablename = "org_organisation_region"
         define_table(tablename,
-                     self.org_organisation_id(),
-                     region_id(),
+                     self.org_organisation_id(empty = False,
+                                              ondelete = "CASCADE",
+                                              ),
+                     region_id(empty = False,
+                               ondelete = "CASCADE",
+                               ),
                      s3_comments(),
                      *s3_meta_fields()
                      )
@@ -7127,7 +7137,7 @@ def org_organisation_controller():
             list_fields = s3db.get_config(r.tablename,
                                           "list_fields") or []
             s3db.configure(r.tablename,
-                           list_fields=list_fields + ["pe_id"]
+                           list_fields = list_fields + ["pe_id"],
                            )
 
         elif r.representation == "xls" and r.component_name == "branch":
@@ -7346,11 +7356,10 @@ def org_organisation_controller():
 
                 elif cname == "project" and r.link:
                     # Hide/show host role after project selection in embed-widget
-                    tn = r.link.tablename
-                    s3db.configure(tn,
-                                   post_process='''S3.hide_host_role($('#%s').val())''')
-                    s3.scripts.append("/%s/static/scripts/S3/s3.hide_host_role.js" % \
-                        r.application)
+                    s3db.configure(r.link.tablename,
+                                   post_process = '''S3.hide_host_role($('#%s').val())''',
+                                   )
+                    s3.scripts.append("/%s/static/scripts/S3/s3.hide_host_role.js" % r.application)
 
                     s3db.configure("project_project",
                                    create_next = None,
