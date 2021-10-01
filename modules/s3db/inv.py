@@ -89,6 +89,8 @@ __all__ = ("WarehouseModel",
 import datetime
 import json
 
+from copy import deepcopy
+
 from gluon import *
 from gluon.sqlhtml import RadioWidget, StringWidget
 from gluon.storage import Storage
@@ -6343,13 +6345,24 @@ def inv_pick_list(r, **attr):
         In order to order this list for optimal picking, we assume that the Bins are
         strctured as Aisle/Site/Shelf with the Aisle being the gap between Racks as per Figure 2 in:
         http://www.appriseconsulting.co.uk/warehouse-layout-and-pick-sequence/
-        We assume that Racks are numbered the same way on each Aisle (not like the above Figures)
+        We assume that Racks are numbered to match Figure 2, so we can do a simple sort on the Bin
 
         Currently this is exported in XLS format
 
         @ToDo: Provide an on-screen version
         @ToDo: Optimise Picking Route (as per Figure 3 in the above link)
     """
+
+    send_id = r.id
+    record = r.record
+
+    if record.status != SHIP_STATUS_IN_PROCESS:
+        r.error(405, T("Picking List can only be generated for Shipments being prepared"),
+                next = URL(c = "inv",
+                           f = "send",
+                           args = [send_id],
+                           ),
+                )
 
     from s3.codecs.xls import S3XLS
 
@@ -6359,37 +6372,64 @@ def inv_pick_list(r, **attr):
         r.error(503, S3XLS.ERROR.XLWT_ERROR)
 
     # Extract the Data
-    record = r.record
     send_ref = record.send_ref
 
     db = current.db
     s3db = current.s3db
+    settings = current.deployment_settings
+
+    table = s3db.inv_track_item
+    itable = s3db.supply_item
+    ptable = s3db.supply_item_pack
+
+    bin_site_layout = settings.get_inv_bin_site_layout()
+    if bin_site_layout:
+        bin_field = "layout_id"
+        bin_represent = table.layout_id.represent
+    else:
+        bin_field = "bin"
+
+    fields = [table[bin_field],
+              table.quantity,
+              itable.code,
+              itable.name,
+              itable.volume,
+              itable.weight,
+              ptable.name,
+              ptable.quantity,
+              ]
+
+    query = (table.send_id == send_id) & \
+            (table.item_id == itable.id) & \
+            (table.item_pack_id == ptable.id)
+    items = db(query).select(*fields)
+
+    if bin_site_layout:
+        # Bulk Represent the Bins
+        # - values stored in class instance
+        bins = bin_represent.bulk([row["inv_track_item.layout_id"] for row in items])
+        # Sort the Data
+        def sort_function(row):
+            return bin_represent(row["inv_track_item.layout_id"])
+        items = items.sort(sort_function)
 
     # Represent the Data
-    T = current.T
+    from .org import org_SiteRepresent
+    destination = org_SiteRepresent(show_type = False)(record.to_site_id)
 
-    
+    T = current.T
 
     labels = [s3_str(T("Location")),
               s3_str(T("Code")),
               s3_str(T("Item Name")),
-              s3_str(T("Unit of Measure")),
-              s3_str(T("Unit Weight")),
-              s3_str(T("Unit Volume")),
+              s3_str(T("UoM")),
+              s3_str(T("Unit")),
+              s3_str(T("Total")),
+              s3_str(T("Unit")),
+              s3_str(T("Total")),
               s3_str(T("Qty to Pick")),
               s3_str(T("Picked Qty")),
               ]
-
-    # Get styles
-    COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
-    styles = S3XLS._styles(use_colour = True,
-                           evenodd = False,
-                           )
-    large_header_style = styles["large_header"]
-    large_header_style.alignment.horz = large_header_style.alignment.HORZ_LEFT
-    NO_PATTERN = large_header_style.pattern.NO_PATTERN
-    large_header_style.pattern.pattern = NO_PATTERN
-    #notes_style = styles["notes"]
 
     # Create the workbook
     book = xlwt.Workbook(encoding = "utf-8")
@@ -6399,6 +6439,7 @@ def inv_pick_list(r, **attr):
     sheet = book.add_sheet(title)
 
     # Set column Widths
+    COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
     col_index = 0
     column_widths = []
     for label in labels:
@@ -6408,34 +6449,110 @@ def inv_pick_list(r, **attr):
         sheet.col(col_index).width = width
         col_index += 1
 
-    # 1st row => Report Title
+    # Get styles
+    styles = S3XLS._styles() # use_colour = False
+    large_header_style = styles["large_header"]
+    large_header_style.alignment.horz = large_header_style.alignment.HORZ_LEFT
+    NO_PATTERN = large_header_style.pattern.NO_PATTERN
+    large_header_style.pattern.pattern = NO_PATTERN
+    header_style = styles["header"]
+    header_style.alignment.horz = header_style.alignment.HORZ_CENTER
+    header_style.pattern.pattern = NO_PATTERN
+
+    # 1st row => Report Title & Waybill
     current_row = sheet.row(0)
     current_row.height = 500
-    current_row.write(0, title, large_header_style)
+    #current_row.write(0, title, large_header_style)
+    sheet.write_merge(0, 0, 0, 1, title, large_header_style)
+    current_row.write(2, send_ref, large_header_style)
 
-    # 2nd row => Waybill
+    # 2nd row => Destination
     current_row = sheet.row(1)
     current_row.height = 500
-    label = send_ref
-    from .org import org_SiteRepresent
-    site_represent = org_SiteRepresent(show_type = False)(record.to_site_id)
-    current_row.write(0, label, large_header_style)
-    current_row.write(1, site_represent, large_header_style)
-    # Fix the size of the first column to display the label
-    width = len(label) * COL_WIDTH_MULTIPLIER * 2
-    if width > sheet.col(0).width:
-        sheet.col(0).width = width
+    #current_row.write(0, "%s:" % s3_str(T("Destination")), large_header_style)
+    sheet.write_merge(1, 1, 0, 1, "%s:" % s3_str(T("Destination")), large_header_style)
+    current_row.write(2, destination, large_header_style)
+    sheet.write_merge(1, 1, 4, 5, s3_str(T("Weight (kg)")), header_style)
+    sheet.write_merge(1, 1, 6, 7, s3_str(T("Volume (m3)")), header_style)
 
     # 3rd row => Column Headers
+    #header_style.alignment.horz = header_style.alignment.HORZ_CENTER
     current_row = sheet.row(2)
-    header_style = styles["header"]
-    HORZ_CENTER = header_style.alignment.HORZ_CENTER
-    header_style.alignment.horz = HORZ_CENTER
-    header_style.pattern.pattern = NO_PATTERN
     col_index = 0
     for label in labels:
         current_row.write(col_index, label, header_style)
         col_index += 1
+
+    # Data rows
+    translate = settings.get_L10n_translate_supply_item()
+    left_style = styles["odd"]
+    right_style = styles["even"]
+    center_style = deepcopy(right_style)
+    left_style.alignment.horz = left_style.alignment.HORZ_LEFT
+    right_style.alignment.horz = right_style.alignment.HORZ_RIGHT
+    center_style.alignment.horz = center_style.alignment.HORZ_CENTER
+    row_index = 3
+    for row in items:
+        current_row = sheet.row(row_index)
+        #style = even_style if row_index % 2 == 0 else odd_style
+        track_row = row["inv_track_item"]
+        item_row = row["supply_item"]
+        pack_row = row["supply_item_pack"]
+        bin = track_row[bin_field]
+        if bin_site_layout:
+            bin = bin_represent(bin)
+        elif not bin:
+            bin = ""
+        item_name = item_row.name or ""
+        if translate and item_name:
+            item_name = s3_str(T(item_name))
+        pack_name = pack_row.name
+        if translate:
+            pack_name = s3_str(T(pack_name))
+        quantity = track_row.quantity
+        item_weight = item_row.weight
+        if item_weight:
+            total_weight = "{:.2f}".format(round(quantity * pack_row.quantity * item_weight, 2))
+        else:
+            total_weight = ""
+        item_volume = item_row.volume
+        if item_volume:
+            total_volume = "{:.2f}".format(round(quantity * pack_row.quantity * item_volume, 2))
+        else:
+            total_volume = ""
+        values = [bin,
+                  item_row.code or "",
+                  item_name,
+                  pack_name,
+                  "{:.2f}".format(item_weight),
+                  total_weight,
+                  "{:.2f}".format(item_volume),
+                  total_volume,
+                  str(int(quantity)),
+                  #"", # Included for colouring
+                  ]
+        col_index = 0
+        for value in values:
+            if col_index in (0, 1, 2, 3):
+                style = left_style
+            elif col_index == 8:
+                # Qty to Pick
+                style = center_style
+            else:
+                style = right_style
+            current_row.write(col_index, value, style)
+            if col_index == 1:
+                # Code
+                width = round(len(value) * COL_WIDTH_MULTIPLIER * 1.1)
+                if width > sheet.col(col_index).width:
+                    sheet.col(col_index).width = width
+            elif col_index == 2:
+                # Item Name
+                width = round(len(value) * COL_WIDTH_MULTIPLIER * 0.75)
+                if width > sheet.col(col_index).width:
+                    sheet.col(col_index).width = width
+            col_index += 1
+        row_index += 1
 
     # Export to File
     output = BytesIO()

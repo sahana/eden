@@ -156,27 +156,29 @@ class SupplyModel(S3Model):
             msg_record_created = T("Brand added"),
             msg_record_modified = T("Brand updated"),
             msg_record_deleted = T("Brand deleted"),
-            msg_list_empty = T("No Brands currently registered"))
+            msg_list_empty = T("No Brands currently registered"),
+            )
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         brand_id = S3ReusableField("brand_id", "reference %s" % tablename,
-            label = T("Brand"),
-            ondelete = "RESTRICT",
-            represent = represent,
-            requires = IS_EMPTY_OR(
-                        IS_ONE_OF(db, "supply_brand.id",
-                                  represent,
-                                  sort=True)
-                        ),
-            sortby = "name",
-            comment = S3PopupLink(c = "supply",
-                                  f = "brand",
-                                  label = ADD_BRAND,
-                                  title = T("Brand"),
-                                  tooltip = T("The list of Brands are maintained by the Administrators."),
-                                  ),
-            )
+                                   label = T("Brand"),
+                                   ondelete = "RESTRICT",
+                                   represent = represent,
+                                   requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "supply_brand.id",
+                                                          represent,
+                                                          sort = True,
+                                                          )
+                                                ),
+                                   sortby = "name",
+                                   comment = S3PopupLink(c = "supply",
+                                                         f = "brand",
+                                                         label = ADD_BRAND,
+                                                         title = T("Brand"),
+                                                         tooltip = T("The list of Brands are maintained by the Administrators."),
+                                                         ),
+                                   )
 
         # =====================================================================
         # Catalog (of Items)
@@ -209,7 +211,8 @@ class SupplyModel(S3Model):
             msg_record_created = T("Catalog added"),
             msg_record_modified = T("Catalog updated"),
             msg_record_deleted = T("Catalog deleted"),
-            msg_list_empty = T("No Catalogs currently registered"))
+            msg_list_empty = T("No Catalogs currently registered"),
+            )
 
         # Reusable Field
         catalog_multi = settings.get_supply_catalog_multi()
@@ -223,24 +226,26 @@ class SupplyModel(S3Model):
         else:
             comment = None
 
-        represent = S3Represent(lookup=tablename, translate=translate)
+        represent = S3Represent(lookup = tablename,
+                                translate = translate,
+                                )
         catalog_id = S3ReusableField("catalog_id", "reference %s" % tablename,
-            default = 1,
-            label = T("Catalog"),
-            ondelete = "RESTRICT",
-            represent = represent,
-            requires = IS_EMPTY_OR(
-                        IS_ONE_OF(db, "supply_catalog.id",
-                                  represent,
-                                  sort = True,
-                                  # Restrict to catalogs the user can update
-                                  updateable = True,
-                                  )),
-            sortby = "name",
-            readable = catalog_multi,
-            writable = catalog_multi,
-            comment = comment,
-            )
+                                     default = 1,
+                                     label = T("Catalog"),
+                                     ondelete = "RESTRICT",
+                                     represent = represent,
+                                     requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "supply_catalog.id",
+                                                              represent,
+                                                              sort = True,
+                                                              # Restrict to catalogs the user can update
+                                                              updateable = True,
+                                                              )),
+                                     sortby = "name",
+                                     readable = catalog_multi,
+                                     writable = catalog_multi,
+                                     comment = comment,
+                                     )
 
         # Components
         add_components(tablename,
@@ -334,7 +339,8 @@ class SupplyModel(S3Model):
             msg_record_created = T("Item Category added"),
             msg_record_modified = T("Item Category updated"),
             msg_record_deleted = T("Item Category deleted"),
-            msg_list_empty = T("No Item Categories currently registered"))
+            msg_list_empty = T("No Item Categories currently registered"),
+            )
 
         # Reusable Field
         item_category_comment = S3PopupLink(c = "supply",
@@ -345,11 +351,11 @@ class SupplyModel(S3Model):
                                             )
 
         item_category_id = S3ReusableField("item_category_id", "reference %s" % tablename,
-                                           comment = item_category_comment,
                                            label = T("Category"),
                                            ondelete = "RESTRICT",
                                            represent = item_category_represent,
                                            requires = item_category_requires,
+                                           comment = item_category_comment,
                                            sortby = "name",
                                            )
         item_category_script = '''
@@ -506,11 +512,12 @@ $.filterOptionsS3({
             msg_record_deleted = T("Item deleted"),
             msg_list_empty = T("No Items currently registered"),
             msg_match = T("Matching Items"),
-            msg_no_match = T("No Matching Items")
+            msg_no_match = T("No Matching Items"),
             )
 
         supply_item_represent = supply_ItemRepresent(show_link = True,
-                                                     translate = translate)
+                                                     translate = translate,
+                                                     )
 
         # Reusable Field
         supply_item_tooltip = T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog.")
@@ -659,7 +666,7 @@ $.filterOptionsS3({
             msg_record_deleted = T("Catalog Item deleted"),
             msg_list_empty = T("No Catalog Items currently registered"),
             msg_match = T("Matching Catalog Items"),
-            msg_no_match = T("No Matching Catalog Items")
+            msg_no_match = T("No Matching Catalog Items"),
             )
 
         # Filter Widgets
@@ -754,27 +761,29 @@ $.filterOptionsS3({
             msg_record_created = T("Item Pack added"),
             msg_record_modified = T("Item Pack updated"),
             msg_record_deleted = T("Item Pack deleted"),
-            msg_list_empty = T("No Item Packs currently registered"))
+            msg_list_empty = T("No Item Packs currently registered"),
+            )
 
         # ---------------------------------------------------------------------
         # Reusable Field
         item_pack_represent = supply_ItemPackRepresent(lookup = "supply_item_pack",
-                                                       translate = translate)
+                                                       translate = translate,
+                                                       )
         item_pack_id = S3ReusableField("item_pack_id", "reference %s" % tablename,
-                    label = T("Pack"),
-                    ondelete = "RESTRICT",
-                    represent = item_pack_represent,
-                    # Do not display any packs initially
-                    # will be populated by filterOptionsS3
-                    requires = IS_ONE_OF_EMPTY_SELECT(db, "supply_item_pack.id",
-                                                      item_pack_represent,
-                                                      sort = True,
-                                                      # @ToDo: Enforce "Required" for imports
-                                                      # @ToDo: Populate based on item_id in controller instead of IS_ONE_OF_EMPTY_SELECT
-                                                      # filterby = "item_id",
-                                                      # filter_opts = (....),
-                                                      ),
-                    script = '''
+                                       label = T("Pack"),
+                                       ondelete = "RESTRICT",
+                                       represent = item_pack_represent,
+                                       # Do not display any packs initially
+                                       # will be populated by filterOptionsS3
+                                       requires = IS_ONE_OF_EMPTY_SELECT(db, "supply_item_pack.id",
+                                                                         item_pack_represent,
+                                                                         sort = True,
+                                                                         # @ToDo: Enforce "Required" for imports
+                                                                         # @ToDo: Populate based on item_id in controller instead of IS_ONE_OF_EMPTY_SELECT
+                                                                         # filterby = "item_id",
+                                                                         # filter_opts = (....),
+                                                                         ),
+                                       script = '''
 $.filterOptionsS3({
  'trigger':'item_id',
  'target':'item_pack_id',
@@ -784,14 +793,14 @@ $.filterOptionsS3({
  'fncPrep':S3.supply.fncPrepItem,
  'fncRepresent':S3.supply.fncRepresentItem
 })''',
-                    sortby = "name",
-                    #comment=S3PopupLink(c = "supply",
-                    #                    f = "item_pack",
-                    #                    label = ADD_ITEM_PACK,
-                    #                    title = T("Item Packs"),
-                    #                    tooltip = T("The way in which an item is normally distributed"),
-                    #                    ),
-                    )
+                                       sortby = "name",
+                                       #comment=S3PopupLink(c = "supply",
+                                       #                    f = "item_pack",
+                                       #                    label = ADD_ITEM_PACK,
+                                       #                    title = T("Item Packs"),
+                                       #                    tooltip = T("The way in which an item is normally distributed"),
+                                       #                    ),
+                                       )
 
         configure(tablename,
                   deduplicate = self.supply_item_pack_duplicate,
@@ -836,7 +845,8 @@ $.filterOptionsS3({
             msg_record_created = T("Item added to Kit"),
             msg_record_modified = T("Kit Item updated"),
             msg_record_deleted = T("Item removed from Kit"),
-            msg_list_empty = T("No Items currently in this Kit"))
+            msg_list_empty = T("No Items currently in this Kit"),
+            )
 
         # =====================================================================
         # Alternative Items
@@ -858,8 +868,7 @@ $.filterOptionsS3({
                                                    )
                                          ),
                            ),
-                     supply_item_id("alt_item_id",
-                                    notnull=True,
+                     supply_item_id("alt_item_id", notnull=True,
                                     comment = S3PopupLink(c = "supply",
                                                           f = "item",
                                                           label = ADD_ITEM,
@@ -883,7 +892,8 @@ $.filterOptionsS3({
             msg_record_created = T("Alternative Item added"),
             msg_record_modified = T("Alternative Item updated"),
             msg_record_deleted = T("Alternative Item deleted"),
-            msg_list_empty = T("No Alternative Items currently registered"))
+            msg_list_empty = T("No Alternative Items currently registered"),
+            )
 
         # =====================================================================
         # Item Super-Entity
@@ -891,12 +901,12 @@ $.filterOptionsS3({
         # This super entity provides a common way to provide a foreign key to supply_item
         # - it allows searching/reporting across Item types easily.
         #
-        item_types = Storage(asset_asset = T("Asset"),
-                             asset_item = T("Asset Item"),
-                             inv_inv_item = T("Warehouse Stock"),
-                             inv_track_item = T("Order Item"),
-                             proc_plan_item = T("Planned Procurement Item"),
-                             )
+        item_types = {"asset_asset": T("Asset"),
+                      "asset_item": T("Asset Item"),
+                      "inv_inv_item": T("Warehouse Stock"),
+                      "inv_track_item": T("Order Item"),
+                      "proc_plan_item": T("Planned Procurement Item"),
+                      }
 
         tablename = "supply_item_entity"
         self.super_entity(tablename, "item_entity_id", item_types,
@@ -919,9 +929,11 @@ $.filterOptionsS3({
                                      #represent = item_represent,
                                      # Comment these to use a Dropdown & not an Autocomplete
                                      #widget = S3ItemAutocompleteWidget(),
-                                     #comment = DIV(_class="tooltip",
-                                     #              _title="%s|%s" % (T("Item"),
-                                     #                                current.messages.AUTOCOMPLETE_HELP))
+                                     #comment = DIV(_class = "tooltip",
+                                     #              _title = "%s|%s" % (T("Item"),
+                                     #                                  current.messages.AUTOCOMPLETE_HELP,
+                                     #                                  ),
+                                     #              )
                                      )
 
         # Filter Widgets
@@ -1010,10 +1022,9 @@ $.filterOptionsS3({
             instance_type = item.instance_type
         else:
             item_table = db.supply_item_entity
-            item = db(item_table._id == record_id).select(
-                                            item_table.instance_type,
-                                            limitby = (0, 1),
-                                            ).first()
+            item = db(item_table._id == record_id).select(item_table.instance_type,
+                                                          limitby = (0, 1),
+                                                          ).first()
             try:
                 instance_type = item.instance_type
             except AttributeError:
@@ -1029,8 +1040,9 @@ $.filterOptionsS3({
             query = (itable.item_entity_id == record_id) & \
                     (rtable.id == itable.recv_id)
             eta = db(query).select(rtable.eta,
-                                   limitby=(0, 1)).first().eta
-            item_str = T("Due %(date)s") % dict(date=eta)
+                                   limitby = (0, 1),
+                                   ).first().eta
+            item_str = T("Due %(date)s") % {"date": eta}
         else:
             return current.messages.UNKNOWN_OPT
 
@@ -1054,7 +1066,7 @@ $.filterOptionsS3({
             query = (table.deleted != True) & \
                     (table.code.lower() == code.lower())
             duplicate = current.db(query).select(table.id,
-                                                 limitby = (0, 1)
+                                                 limitby = (0, 1),
                                                  ).first()
             if duplicate:
                 item.id = duplicate.id
@@ -1079,7 +1091,7 @@ $.filterOptionsS3({
                 query &= (table.catalog_id == catalog_id)
 
             duplicate = current.db(query).select(table.id,
-                                                 limitby = (0, 1)
+                                                 limitby = (0, 1),
                                                  ).first()
             if duplicate:
                 item.id = duplicate.id
@@ -1111,7 +1123,8 @@ $.filterOptionsS3({
         if parent_category_id:
             query &= (table.parent_category_id == parent_category_id)
         duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
+                                             limitby = (0, 1),
+                                             ).first()
         if duplicate:
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
@@ -1139,7 +1152,8 @@ $.filterOptionsS3({
         if item_category_id:
             query &= (table.item_category_id == item_category_id)
         duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
+                                             limitby = (0, 1),
+                                             ).first()
         if duplicate:
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
@@ -1167,7 +1181,7 @@ $.filterOptionsS3({
         if quantity:
             query &= (table.quantity == quantity)
         duplicate = current.db(query).select(table.id,
-                                             limitby = (0, 1)
+                                             limitby = (0, 1),
                                              ).first()
         if duplicate:
             item.id = duplicate.id
@@ -1345,8 +1359,8 @@ class SupplyDistributionModel(S3Model):
             msg_record_created = T("Distribution Item Added"),
             msg_record_modified = T("Distribution Item Updated"),
             msg_record_deleted = T("Distribution Item Deleted"),
-            msg_list_empty = T("No Distribution Items Found")
-        )
+            msg_list_empty = T("No Distribution Items Found"),
+            )
 
         # Resource Configuration
         configure(tablename,
@@ -1418,8 +1432,8 @@ class SupplyDistributionModel(S3Model):
             msg_record_created = T("Distribution Added"),
             msg_record_modified = T("Distribution Updated"),
             msg_record_deleted = T("Distribution Deleted"),
-            msg_list_empty = T("No Distributions Found")
-        )
+            msg_list_empty = T("No Distributions Found"),
+            )
 
         # Reusable Field
         #represent = S3Represent(lookup=tablename,
@@ -1430,10 +1444,9 @@ class SupplyDistributionModel(S3Model):
                                           ondelete = "CASCADE",
                                           #represent = represent,
                                           requires = IS_EMPTY_OR(
-                                                        IS_ONE_OF(db,
-                                                            "%s.id" % tablename,
-                                                            #represent,
-                                                            )),
+                                                        IS_ONE_OF(db, "%s.id" % tablename,
+                                                                  #represent,
+                                                                  )),
                                           )
 
         # ---------------------------------------------------------------------
@@ -1449,22 +1462,22 @@ class SupplyDistributionModel(S3Model):
             query = (table.deleted == False)
             min_field = table.date.min()
             date_min = db(query).select(min_field,
+                                        limitby = (0, 1),
                                         orderby = min_field,
-                                        limitby = (0, 1)
                                         ).first()
             start_year = date_min and date_min[min_field].year
 
             max_field = table.date.max()
             date_max = db(query).select(max_field,
-                                        orderby=max_field,
-                                        limitby = (0, 1)
+                                        limitby = (0, 1),
+                                        orderby = max_field,
                                         ).first()
             last_start_year = date_max and date_max[max_field].year
 
             max_field = table.end_date.max()
             date_max = db(query).select(max_field,
-                                        orderby=max_field,
-                                        limitby = (0, 1)
+                                        limitby = (0, 1),
+                                        orderby = max_field,
                                         ).first()
             last_end_year = date_max and date_max[max_field].year
 
@@ -1670,11 +1683,11 @@ class SupplyDistributionModel(S3Model):
                 (ltable.id == dtable.item_id)
         item = db(query).select(dtable.name,
                                 ltable.name,
-                                limitby=(0, 1)).first()
+                                limitby = (0, 1),
+                                ).first()
 
         if item and not item[dtable.name]:
             db(dtable.id == record_id).update(name = item[ltable.name])
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1696,7 +1709,7 @@ class SupplyDistributionModel(S3Model):
                                                    dtable.location_id,
                                                    dtable.date,
                                                    dtable.end_date,
-                                                   limitby=(0, 1)
+                                                   limitby = (0, 1),
                                                    ).first()
         try:
             location_id = record.location_id
@@ -1717,7 +1730,7 @@ class SupplyDistributionModel(S3Model):
         activity = db(atable.id == activity_id).select(atable.location_id,
                                                        atable.date,
                                                        atable.end_date,
-                                                       limitby=(0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
         try:
             a_location_id = activity.location_id
@@ -1808,8 +1821,8 @@ class SupplyPersonModel(S3Model):
             msg_record_created = T("Status added"),
             msg_record_modified = T("Status updated"),
             msg_record_deleted = T("Status removed"),
-            msg_list_empty = T("No Statuses currently defined")
-        )
+            msg_list_empty = T("No Statuses currently defined"),
+            )
 
         # Reusable Field
         represent = S3Represent(lookup = tablename)
@@ -1997,7 +2010,7 @@ class supply_ItemPackRepresent(S3Represent):
                                 table.quantity,
                                 itable.um,
                                 left = left,
-                                limitby = (0, qty)
+                                limitby = (0, qty),
                                 )
         self.queries += 1
 
@@ -2403,7 +2416,7 @@ def supply_item_entity_category(row):
     query = (table.id == item_id)
 
     record = current.db(query).select(table.item_category_id,
-                                      limitby = (0, 1)
+                                      limitby = (0, 1),
                                       ).first()
     if record:
         return table.item_category_id.represent(record.item_category_id)
@@ -2443,7 +2456,7 @@ def supply_item_entity_country(row):
                 (stable.site_id == itable.site_id) & \
                 (ltable.id == stable.location_id)
         record = current.db(query).select(ltable.L0,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
 
     elif instance_type == "inv_track_item":
@@ -2455,7 +2468,7 @@ def supply_item_entity_country(row):
                 (stable.site_id == rtable.site_id) & \
                 (ltable.id == stable.location_id)
         record = current.db(query).select(ltable.L0,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
 
     elif instance_type == "proc_plan_item":
@@ -2467,7 +2480,7 @@ def supply_item_entity_country(row):
                 (stable.site_id == ptable.site_id) & \
                 (ltable.id == stable.location_id)
         record = current.db(query).select(ltable.L0,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
 
     else:
@@ -2511,7 +2524,7 @@ def supply_item_entity_organisation(row):
         query = (itable[ekey] == entity_id) & \
                 (stable.site_id == itable.site_id)
         record = current.db(query).select(stable.organisation_id,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
 
     elif instance_type == "proc_plan_item":
@@ -2522,7 +2535,7 @@ def supply_item_entity_organisation(row):
                 (rtable.id == itable.plan_id) & \
                 (stable.site_id == rtable.site_id)
         record = current.db(query).select(stable.organisation_id,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
 
     elif instance_type == "inv_track_item":
@@ -2533,7 +2546,7 @@ def supply_item_entity_organisation(row):
                 (rtable.id == itable.recv_id) & \
                 (stable.site_id == rtable.site_id)
         record = current.db(query).select(stable.organisation_id,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
 
     else:
@@ -2575,7 +2588,7 @@ def supply_item_entity_contacts(row):
 
         query = (itable[ekey] == entity_id)
         record = db(query).select(itable.site_id,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
 
     elif instance_type == "inv_track_item":
@@ -2584,7 +2597,7 @@ def supply_item_entity_contacts(row):
         query = (itable[ekey] == entity_id) & \
                 (rtable.id == itable.recv_id)
         record = db(query).select(rtable.site_id,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
 
     elif instance_type == "proc_plan_item":
@@ -2593,7 +2606,7 @@ def supply_item_entity_contacts(row):
         query = (itable[ekey] == entity_id) & \
                 (ptable.id == itable.plan_id)
         record = db(query).select(ptable.site_id,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
     else:
         # @ToDo: Assets and req_items
@@ -2608,7 +2621,7 @@ def supply_item_entity_contacts(row):
     query = (otable.site_id == record.site_id)
     office = db(query).select(otable.id,
                               otable.comments,
-                              limitby = (0, 1)
+                              limitby = (0, 1),
                               ).first()
 
     if office:
@@ -2664,7 +2677,7 @@ def supply_item_entity_status(row):
 
         query = (itable[ekey] == entity_id)
         record = current.db(query).select(itable.expiry_date,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
         if record:
             T = current.T
@@ -2681,7 +2694,7 @@ def supply_item_entity_status(row):
         query = (itable[ekey] == entity_id) & \
                 (rtable.id == itable.plan_id)
         record = current.db(query).select(rtable.eta,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
         if record:
             T = current.T
@@ -2696,7 +2709,7 @@ def supply_item_entity_status(row):
         query = (itable[ekey] == entity_id) & \
                 (rtable.id == itable.send_inv_item_id)
         record = current.db(query).select(rtable.eta,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
         if record:
             T = current.T
@@ -2838,7 +2851,8 @@ def supply_item_entity_controller():
         msg_record_created = T("Item added"),
         msg_record_modified = T("Item updated"),
         msg_record_deleted = T("Item deleted"),
-        msg_list_empty = T("No Items currently registered"))
+        msg_list_empty = T("No Items currently registered"),
+        )
 
     table.category = Field.Method("category",
                                   supply_item_entity_category)
@@ -2886,10 +2900,15 @@ def supply_item_entity_controller():
                     (itable.item_category_id == table.id)
             categories = db(query).select(table.id,
                                           table.name,
-                                          distinct=True)
-            select = SELECT(_multiple="multiple", _id="category_dropdown")
+                                          distinct = True,
+                                          )
+            select = SELECT(_multiple = "multiple",
+                            _id = "category_dropdown",
+                            )
             for category in categories:
-                select.append(OPTION(category.name, _name=category.id))
+                select.append(OPTION(category.name,
+                                     _name = category.id,
+                                     ))
             rheader.append(DIV(B("%s:" % T("Filter by Category")),
                                BR(),
                                select,
@@ -2897,7 +2916,9 @@ def supply_item_entity_controller():
                                ))
 
             # Filter by Status
-            select = SELECT(_multiple="multiple", _id="status_dropdown")
+            select = SELECT(_multiple = "multiple",
+                            _id = "status_dropdown",
+                            )
             if settings.has_module("inv"):
                 select.append(OPTION(T("In Stock")))
                 select.append(OPTION(T("On Order")))
@@ -2954,7 +2975,9 @@ def supply_item_entity_controller():
                     sites.append(site)
 
             # Filter by Country
-            select = SELECT(_multiple="multiple", _id="country_dropdown")
+            select = SELECT(_multiple = "multiple",
+                            _id = "country_dropdown",
+                            )
             countries = []
             for site in sites:
                 country = site.org_office.L0
@@ -2968,7 +2991,9 @@ def supply_item_entity_controller():
                                ))
 
             # Filter by Organisation
-            select = SELECT(_multiple="multiple", _id="organisation_dropdown")
+            select = SELECT(_multiple = "multiple",
+                            _id = "organisation_dropdown",
+                            )
             orgs = []
             for site in sites:
                 org = site.org_organisation.name
@@ -3063,10 +3088,9 @@ $('#organisation_dropdown').change(function(){
         return output
     s3.postp = postp
 
-    output = current.rest_controller("supply", "item_entity",
-                                     hide_filter = True,
-                                    )
-    return output
+    return current.rest_controller("supply", "item_entity",
+                                   hide_filter = True,
+                                   )
 
 # -----------------------------------------------------------------------------
 def supply_get_shipping_code(doctype, site_id, field):
@@ -3088,7 +3112,7 @@ def supply_get_shipping_code(doctype, site_id, field):
     if site_id:
         table = current.s3db.org_site
         site = db(table.site_id == site_id).select(table.code,
-                                                   limitby = (0, 1)
+                                                   limitby = (0, 1),
                                                    ).first()
         if site:
             scode = site.code
@@ -3096,13 +3120,13 @@ def supply_get_shipping_code(doctype, site_id, field):
             scode = "###"
         code = "%s-%s-" % (doctype, scode)
     else:
-        code = "%s-###-" % (doctype)
+        code = "%s-###-" % doctype
     number = 0
     if field:
         query = (field.like("%s%%" % code))
         ref_row = db(query).select(field,
                                    limitby = (0, 1),
-                                   orderby = ~field
+                                   orderby = ~field,
                                    ).first()
         if ref_row:
             ref = ref_row(field)

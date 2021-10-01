@@ -38,7 +38,7 @@ from gluon.contenttype import contenttype
 from gluon.storage import Storage
 
 from ..s3codec import S3Codec
-from ..s3utils import s3_str, s3_strip_markup, s3_unicode, s3_get_foreign_key
+from ..s3utils import s3_str, s3_strip_markup, s3_get_foreign_key
 
 # =============================================================================
 class S3XLS(S3Codec):
@@ -65,7 +65,7 @@ class S3XLS(S3Codec):
     ERROR = Storage(
         XLRD_ERROR = "XLS export requires python-xlrd module to be installed on server",
         XLWT_ERROR = "XLS export requires python-xlwt module to be installed on server",
-    )
+        )
 
     # -------------------------------------------------------------------------
     def extract(self, resource, list_fields):
@@ -370,7 +370,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
 
             # Group headers
             if report_groupby:
-                represent = s3_strip_markup(s3_unicode(row[report_groupby]))
+                represent = s3_strip_markup(s3_str(row[report_groupby]))
                 if subheading != represent:
                     # Start of new group - write group header
                     subheading = represent
@@ -399,7 +399,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                 label = group_info.get("label")
                 totals = group_info.get("totals")
                 if label:
-                    label = s3_strip_markup(s3_unicode(label))
+                    label = s3_strip_markup(s3_str(label))
                     style = row_style or subheader_style
                     span = group_info.get("span")
                     if span == 0:
@@ -440,7 +440,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                 if field not in row:
                     represent = ""
                 else:
-                    represent = s3_strip_markup(s3_unicode(row[field]))
+                    represent = s3_strip_markup(s3_str(row[field]))
 
                 coltype = types[col_index]
                 if coltype == "sort":
@@ -656,9 +656,9 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
     # -------------------------------------------------------------------------
     @classmethod
     def _styles(cls,
-                use_colour=False,
-                evenodd=True,
-                datetime_format=None,
+                use_colour = False,
+                evenodd = True,
+                datetime_format = None,
                 ):
         """
             XLS encoder standard cell styles
@@ -781,7 +781,7 @@ class S3PivotTableXLS(object):
 
         T = current.T
 
-        TOTAL = s3_str(s3_unicode(T("Total")).upper())
+        TOTAL = s3_str(s3_str(T("Total")).upper())
 
         pt = self.pt
 
@@ -853,7 +853,10 @@ class S3PivotTableXLS(object):
             # Current date/time (in local timezone)
             from ..s3datetime import S3DateTime
             dt = S3DateTime.to_local(current.request.utcnow)
-            write(sheet, 1, 0, dt, style = "subheader", numfmt = "datetime")
+            write(sheet, 1, 0, dt,
+                  style = "subheader",
+                  numfmt = "datetime",
+                  )
 
         else:
             # No header
@@ -863,7 +866,9 @@ class S3PivotTableXLS(object):
 
         # Fact label
         if rows_dim and cols_dim:
-            write(sheet, rowindex, 0, fact_label, style="fact_label")
+            write(sheet, rowindex, 0, fact_label,
+                  style = "fact_label",
+                  )
 
         # Columns axis title
         if cols_dim:
@@ -874,7 +879,9 @@ class S3PivotTableXLS(object):
             rowindex += 1
 
         # Row axis title
-        write(sheet, rowindex, 0, rows_label, style="axis_title")
+        write(sheet, rowindex, 0, rows_label,
+              style = "axis_title",
+              )
 
         # Column labels
         if cols_dim:
@@ -944,7 +951,9 @@ class S3PivotTableXLS(object):
             total_label = fact_label
 
         # Column totals label
-        write(sheet, rowindex, 0, total_label, style="total_left")
+        write(sheet, rowindex, 0, total_label,
+              style = "total_left",
+              )
 
         # Column totals
         if cols_dim:
@@ -969,11 +978,11 @@ class S3PivotTableXLS(object):
               rowindex,
               colindex,
               value,
-              style=None,
-              numfmt=None,
-              rowspan=None,
-              colspan=None,
-              adjust=True
+              style = None,
+              numfmt = None,
+              rowspan = None,
+              colspan = None,
+              adjust = True,
               ):
         """
             Write a value to a spreadsheet cell
@@ -1131,20 +1140,51 @@ class S3PivotTableXLS(object):
                     style.alignment = align
                 return style
 
-            self._styles = styles = {
-                "default": style(align=topleft),
-                "numeric": style(align=bottomright),
-                "title": style(fontsize=14, bold=True, align=bottomleft),
-                "subheader": style(fontsize=8, italic=True, align=bottomleft),
-                "row_label": style(bold=True, align=topleft),
-                "col_label": style(bold=True, align=bottomcentered),
-                "fact_label": style(fontsize=13, bold=True, align=centerleft),
-                "axis_title": style(fontsize=11, bold=True, align=center),
-                "total": style(fontsize=11, bold=True, italic=True, align=topright),
-                "total_left": style(fontsize=11, bold=True, italic=True, align=topleft),
-                "total_right": style(fontsize=11, bold=True, italic=True, align=center),
-                "grand_total": style(fontsize=12, bold=True, italic=True, align=topright),
-                }
+            self._styles = styles = {"default": style(align = topleft),
+                                     "numeric": style(align = bottomright),
+                                     "title": style(fontsize = 14,
+                                                    bold = True,
+                                                    align = bottomleft,
+                                                    ),
+                                     "subheader": style(fontsize = 8,
+                                                        italic = True,
+                                                        align = bottomleft,
+                                                        ),
+                                     "row_label": style(bold = True,
+                                                        align = topleft,
+                                                        ),
+                                     "col_label": style(bold = True,
+                                                        align = bottomcentered,
+                                                        ),
+                                     "fact_label": style(fontsize = 13,
+                                                         bold = True,
+                                                         align = centerleft,
+                                                         ),
+                                     "axis_title": style(fontsize = 11,
+                                                         bold = True,
+                                                         align = center,
+                                                         ),
+                                     "total": style(fontsize = 11,
+                                                    bold = True,
+                                                    italic = True,
+                                                    align = topright,
+                                                    ),
+                                     "total_left": style(fontsize = 11,
+                                                         bold = True,
+                                                         italic = True,
+                                                         align = topleft,
+                                                         ),
+                                     "total_right": style(fontsize = 11,
+                                                          bold = True,
+                                                          italic = True,
+                                                          align = center,
+                                                          ),
+                                     "grand_total": style(fontsize = 12,
+                                                          bold = True,
+                                                          italic = True,
+                                                          align = topright,
+                                                          ),
+                                     }
 
         return styles
 
@@ -1168,13 +1208,12 @@ class S3PivotTableXLS(object):
             datetime_format = translate(settings.get_L10n_datetime_format())
             time_format = translate(settings.get_L10n_time_format())
 
-            formats = {
-                "date": date_format,
-                "datetime": datetime_format,
-                "time": time_format,
-                "integer": "0",
-                "double": "0.00"
-            }
+            formats = {"date": date_format,
+                       "datetime": datetime_format,
+                       "time": time_format,
+                       "integer": "0",
+                       "double": "0.00"
+                       }
 
             self._formats = formats
 
@@ -1335,7 +1374,7 @@ class S3PivotTableXLS(object):
                         if prev_id not in keys:
                             keys.append(prev_id)
 
-        keys.sort(key=lambda i: lookup[i])
+        keys.sort(key = lambda i: lookup[i])
         items = [s3_str(lookup[key]) for key in keys if key in lookup]
 
         return items

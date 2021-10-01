@@ -204,7 +204,7 @@ class OrganisationModel(S3Model):
                                 comment = DIV(_class = "tooltip",
                                               _title = "%s|%s" % (T("Year"),
                                                                   T("Year that the organization was founded")
-                                                                  )
+                                                                  ),
                                               ),
                                 ),
                           Field("logo", "upload",
