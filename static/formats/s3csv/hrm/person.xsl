@@ -110,6 +110,7 @@
          Disciplinary Body..............optional.....hrm_disciplinary_action.disciplinary_body
          Active.........................optional.....volunteer_details.active
          Volunteer Type.................optional.....volunteer_details.volunteer_type
+         Programme......................optional.....hrm_programme_hours.programme_id
          Availability...................optional.....Availability dropdown
          Availability Comments..........optional.....Availability Comments
          Slot:XXXX......................optional.....Availability for Slot XXXX
@@ -120,21 +121,7 @@
          Deployable Roles...............optional.....credentials (job_titles for which person is deployable)
          Deployments....................optional.....comma-separated list of Missions for which the person was deployed
 
-         Turkey-specific:
-         Identity Card City
-         Identity Card Town
-         Identity Card District
-         Identity Card Volume No
-         Identity Card Family Order No
-         Identity Card Order No
-
-         PHRC-specific:
-         Volunteer Cluster Type.........optional.....volunteer_cluster cluster_type name
-         Volunteer Cluster..............optional.....volunteer_cluster cluster name
-         Volunteer Cluster Position.....optional.....volunteer_cluster cluster_position name
-
          Column headers looked up in labels.xml:
-
          HomeAddress....................optional.....Home Street Address
          JobTitle.......................optional.....HR Job Title/Volunteer Role/Position
          HRMType........................optional.....
@@ -215,6 +202,12 @@
         </xsl:call-template>
     </xsl:variable>
 
+    <xsl:variable name="Programme">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">Programme</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
     <xsl:variable name="StaffID">
         <xsl:call-template name="ResolveColumnHeader">
             <xsl:with-param name="colname">StaffID</xsl:with-param>
@@ -252,21 +245,15 @@
              use="col[contains(document('../labels.xml')/labels/column[@name='OrgGroup']/match/text(),
                                concat('|', @field, '|'))]"/>
 
+    <xsl:key name="programmes" match="row"
+             use="col[contains(document('../labels.xml')/labels/column[@name='Programme']/match/text(),
+                               concat('|', @field, '|'))]"/>
+
     <xsl:key name="salarygrades" match="row"
              use="col[@field='Salary Grade']"/>
 
     <xsl:key name="stafflevels" match="row"
              use="col[@field='Staff Level']"/>
-
-    <xsl:key name="volunteerclustertypes" match="row"
-             use="col[@field='Volunteer Cluster Type']"/>
-
-    <xsl:key name="volunteerclusters" match="row"
-             use="concat(col[@field='Volunteer Cluster Type'],
-                         col[@field='Volunteer Cluster'])"/>
-
-    <xsl:key name="volunteerclusterpositions" match="row"
-             use="col[@field='Volunteer Cluster Position']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -360,6 +347,14 @@
                 </xsl:call-template>
             </xsl:for-each>
 
+            <!-- Programmes -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('programmes',
+                                            col[contains(document('../labels.xml')/labels/column[@name='Programme']/match/text(),
+                                                         concat('|', @field, '|'))])[1])]">
+                <xsl:call-template name="Programme"/>
+            </xsl:for-each>
+
             <!-- Salary Grades -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('salarygrades',
                                                                        col[@field='Salary Grade'])[1])]">
@@ -374,25 +369,6 @@
                 <xsl:call-template name="StaffLevel">
                     <xsl:with-param name="Field">Staff Level</xsl:with-param>
                 </xsl:call-template>
-            </xsl:for-each>
-
-            <!-- Volunteer Clusters -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('volunteerclusters',
-                                                                       concat(col[@field='Volunteer Cluster Type'],
-                                                                              col[@field='Volunteer Cluster']))[1])]">
-                <xsl:call-template name="VolunteerCluster"/>
-            </xsl:for-each>
-
-            <!-- Volunteer Cluster Types -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('volunteerclustertypes',
-                                                                       col[@field='Volunteer Cluster Type'])[1])]">
-                <xsl:call-template name="VolunteerClusterType"/>
-            </xsl:for-each>
-
-            <!-- Volunteer Cluster Positions -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('volunteerclusterpositions',
-                                                                       col[@field='Volunteer Cluster Position'])[1])]">
-                <xsl:call-template name="VolunteerClusterPosition"/>
             </xsl:for-each>
 
             <!-- Process all table rows for person records -->
@@ -611,6 +587,12 @@
             </xsl:call-template>
         </xsl:variable>
 
+        <xsl:variable name="programme">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Programme"/>
+            </xsl:call-template>
+        </xsl:variable>
+
         <xsl:variable name="staffID">
             <xsl:call-template name="GetColumnValue">
                 <xsl:with-param name="colhdrs" select="$StaffID"/>
@@ -731,29 +713,6 @@
                 </xsl:if>
             </resource>
 
-            <!-- Turkish Identity -->
-            <resource name="tr_identity">
-                <xsl:variable name="id_l3">
-                    <xsl:value-of select="col[@field='Identity Card District']"/>
-                </xsl:variable>
-                <xsl:if test="$id_l3!=''">
-                    <reference field="location_id" resource="gis_location">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat('Location L3: ', $id_l3)"/>
-                        </xsl:attribute>
-                    </reference>
-                   </xsl:if>
-                <xsl:if test="col[@field='Identity Card Volume No']!=''">
-                    <data field="volume_no"><xsl:value-of select="col[@field='Identity Card Volume No']"/></data>
-                </xsl:if>
-                <xsl:if test="col[@field='Identity Card Family Order No']!=''">
-                    <data field="family_order_no"><xsl:value-of select="col[@field='Identity Card Family Order No']"/></data>
-                </xsl:if>
-                <xsl:if test="col[@field='Identity Card Order No']!=''">
-                    <data field="order_no"><xsl:value-of select="col[@field='Identity Card Order No']"/></data>
-                </xsl:if>
-            </resource>
-
             <xsl:if test="$BloodType!='' or $Ethnicity!=''">
                 <resource name="pr_physical_description">
                     <xsl:if test="$Ethnicity!=''">
@@ -823,6 +782,17 @@
             <xsl:call-template name="OrgGroupPerson">
                 <xsl:with-param name="Field" select="$OrgGroupHeaders"/>
             </xsl:call-template>
+
+            <!-- Link to Programme -->
+            <xsl:if test="$programme!=''">
+                <resource name="hrm_programme_hours">
+                    <reference field="programme_id" resource="hrm_programme">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('Programme:',$programme)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
 
             <!-- Education -->
             <xsl:call-template name="Education">
@@ -962,13 +932,6 @@
                 <xsl:with-param name="l5" select="col[@field='Permanent L5']/text()"/>
                 <xsl:with-param name="lat" select="col[@field='Permanent Lat']/text()"/>
                 <xsl:with-param name="lon" select="col[@field='Permanent Lon']/text()"/>
-            </xsl:call-template>
-        </xsl:if>
-        <xsl:if test="col[@field='Identity Card District']!=''">
-            <xsl:call-template name="TR_ID_Locations">
-                <xsl:with-param name="l1" select="col[@field='Identity Card City']/text()"/>
-                <xsl:with-param name="l2" select="col[@field='Identity Card Town']/text()"/>
-                <xsl:with-param name="l3" select="col[@field='Identity Card District']/text()"/>
             </xsl:call-template>
         </xsl:if>
     </xsl:template>
@@ -1158,33 +1121,6 @@
                         </data>
                     </xsl:if>
                 </resource>
-            </xsl:if>
-
-            <!-- Volunteer Cluster -->
-            <xsl:if test="col[@field='Volunteer Cluster Type'] != '' or col[@field='Volunteer Cluster'] != '' or col[@field='Volunteer Cluster Position'] != ''">
-              <resource name="vol_volunteer_cluster">
-                <xsl:if test="col[@field='Volunteer Cluster Type'] != ''">
-                    <reference field="vol_cluster_type_id" resource="vol_cluster_type">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="col[@field='Volunteer Cluster Type']"/>
-                        </xsl:attribute>
-                    </reference>
-                </xsl:if>
-                <xsl:if test="col[@field='Volunteer Cluster']!=''">
-                    <reference field="vol_cluster_id" resource="vol_cluster">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat(col[@field='Volunteer Cluster Type'],col[@field='Volunteer Cluster'])"/>
-                        </xsl:attribute>
-                    </reference>
-                </xsl:if>
-                <xsl:if test="col[@field='Volunteer Cluster Position'] != ''">
-                    <reference field="vol_cluster_position_id" resource="vol_cluster_position">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="col[@field='Volunteer Cluster Position']"/>
-                        </xsl:attribute>
-                    </reference>
-                 </xsl:if>
-               </resource>
             </xsl:if>
 
         </resource>
@@ -1989,6 +1925,24 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="Programme">
+        <xsl:variable name="programme">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Programme"/>
+            </xsl:call-template>
+        </xsl:variable>
+
+        <xsl:if test="$programme!=''">
+            <resource name="hrm_programme">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Programme:',$programme)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$programme"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="Slot">
         <xsl:variable name="SlotName" select="normalize-space(substring-after(@field, ':'))"/>
         <xsl:variable name="Value" select="text()"/>
@@ -2090,51 +2044,6 @@
                     </resource>
                 </xsl:otherwise>
             </xsl:choose>
-        </xsl:if>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="VolunteerClusterType">
-        <xsl:variable name="volunteerclustertype" select="col[@field='Volunteer Cluster Type']"/>
-        <xsl:if test="$volunteerclustertype!=''">
-            <resource name="vol_cluster_type">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$volunteerclustertype"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$volunteerclustertype"/></data>
-            </resource>
-        </xsl:if>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="VolunteerCluster">
-        <xsl:variable name="volunteercluster" select="col[@field='Volunteer Cluster']"/>
-        <xsl:variable name="volunteerclustertype" select="col[@field='Volunteer Cluster Type']"/>
-        <xsl:if test="$volunteercluster!=''">
-            <resource name="vol_cluster">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat($volunteerclustertype,$volunteercluster)"/>
-                </xsl:attribute>
-                <reference field="vol_cluster_type_id" resource="vol_cluster_type">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$volunteerclustertype"/>
-                    </xsl:attribute>
-                </reference>
-                <data field="name"><xsl:value-of select="$volunteercluster"/></data>
-            </resource>
-        </xsl:if>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="VolunteerClusterPosition">
-        <xsl:variable name="volunteerclusterposition" select="col[@field='Volunteer Cluster Position']"/>
-        <xsl:if test="$volunteerclusterposition!=''">
-            <resource name="vol_cluster_position">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$volunteerclusterposition"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$volunteerclusterposition"/></data>
-            </resource>
         </xsl:if>
     </xsl:template>
 

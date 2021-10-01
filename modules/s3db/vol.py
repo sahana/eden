@@ -31,7 +31,7 @@
 __all__ = ("VolunteerModel",
            "VolunteerActivityModel",
            "VolunteerAwardModel",
-           "VolunteerClusterModel",
+           #"VolunteerClusterModel",
            "vol_service_record",
            "vol_person_controller",
            "vol_volunteer_controller",
@@ -954,7 +954,7 @@ def vol_service_record(r, **attr):
                                                ptable.middle_name,
                                                ptable.last_name,
                                                ptable.comments,
-                                               limitby=(0, 1),
+                                               limitby = (0, 1),
                                                ).first()
     vol_name = s3_fullname(person)
 
@@ -967,11 +967,11 @@ def vol_service_record(r, **attr):
         org = db(otable.id == org_id).select(otable.name,
                                              otable.acronym, # Present for consistent cache key
                                              otable.logo,
-                                             limitby=(0, 1),
+                                             limitby = (0, 1),
                                              ).first()
         if settings.get_L10n_translate_org_organisation():
-            org_name = s3db.org_OrganisationRepresent(parent=False,
-                                                      acronym=False)(org_id)
+            org_name = s3db.org_OrganisationRepresent(parent = False,
+                                                      acronym = False)(org_id)
         else:
             org_name = org.name
 
@@ -1006,7 +1006,8 @@ def vol_service_record(r, **attr):
         query = (itable.pe_id == pe_id) & \
                 (itable.profile == True)
         image = db(query).select(itable.image,
-                                 limitby=(0, 1)).first()
+                                 limitby = (0, 1),
+                                 ).first()
         if image:
             image = image.image
             size = (160, None)
@@ -1014,10 +1015,11 @@ def vol_service_record(r, **attr):
             size = s3db.pr_image_size(image, size)
             url = URL(c="default",
                       f="download",
-                      args=image)
-            avatar = IMG(_src=url,
-                         _width=size[0],
-                         _height=size[1],
+                      args = image,
+                      )
+            avatar = IMG(_src = url,
+                         _width = size[0],
+                         _height = size[1],
                          )
             person_details[0].append(TD(avatar))
 
@@ -1032,7 +1034,8 @@ def vol_service_record(r, **attr):
                                      ltable.L2,
                                      ltable.L1,
                                      orderby = addrtable.type,
-                                     limitby=(0, 2))
+                                     limitby = (0, 2),
+                                     )
         address_list = []
         for address in addresses:
             _location = address["gis_location"]
@@ -1049,7 +1052,8 @@ def vol_service_record(r, **attr):
         contacts = db(ctable.pe_id == pe_id).select(ctable.contact_method,
                                                     ctable.value,
                                                     orderby = ctable.priority,
-                                                    limitby=(0, 3))
+                                                    limitby = (0, 3),
+                                                    )
         contact_list = TABLE()
         contact_represent = ctable.contact_method.represent
         for contact in contacts:
@@ -1084,7 +1088,8 @@ def vol_service_record(r, **attr):
                 (idtable.deleted == False)
         rows = db(query).select(idtable.type,
                                 idtable.value,
-                                idtable.valid_until)
+                                idtable.valid_until,
+                                )
         id_row = TR()
         for identity in rows:
             id_row.append(TABLE(TR(TH(idtable.type.represent(identity.type))),
@@ -1161,8 +1166,9 @@ def vol_service_record(r, **attr):
                                     hrstable.hours,
                                     jtable.name,
                                     attable.name,
-                                    left=left,
-                                    orderby = ~hrstable.date)
+                                    left = left,
+                                    orderby = ~hrstable.date,
+                                    )
             NONE = current.messages["NONE"]
             for row in rows:
                 _row = row["vol_activity_hours"]
@@ -1222,8 +1228,9 @@ def vol_service_record(r, **attr):
                                     jtable.name,
                                     ptable.name,
                                     ptable.name_long,
-                                    left=left,
-                                    orderby = ~hrstable.date)
+                                    left = left,
+                                    orderby = ~hrstable.date,
+                                    )
             NONE = current.messages["NONE"]
             for row in rows:
                 _row = row["hrm_programme_hours"]
@@ -1414,13 +1421,17 @@ def vol_volunteer_controller():
                         args = [r.method]
                     else:
                         args = []
-                    redirect(URL(f="person", vars=req_vars, args=args))
+                    redirect(URL(f = "person",
+                                 args = args,
+                                 vars = req_vars,
+                                 ))
             else:
                 if r.method == "import":
                     # Redirect to person controller
-                    redirect(URL(f="person",
-                                 args="import",
-                                 vars={"group": "volunteer"}))
+                    redirect(URL(f = "person",
+                                 args = "import",
+                                 vars = {"group": "volunteer"},
+                                 ))
 
                 elif not r.component and r.method != "delete":
                     # Use vol controller for person_id widget
@@ -1466,12 +1477,12 @@ def vol_volunteer_controller():
                settings.get_hrm_compose_button() and \
                current.auth.permission.has_permission("update", c="hrm", f="compose"):
                 # @ToDo: Remove this now that we have it in Events?
-                s3.actions.append({
-                        "url": URL(f="compose",
-                                    vars = {"human_resource.id": "[id]"}),
-                        "_class": "action-btn send",
-                        "label": str(T("Send Message"))
-                    })
+                s3.actions.append({"url": URL(f = "compose",
+                                              vars = {"human_resource.id": "[id]"},
+                                              ),
+                                   "_class": "action-btn send",
+                                   "label": str(T("Send Message")),
+                                   })
 
         elif r.representation == "plain":
             # Map Popups
@@ -1539,7 +1550,8 @@ def vol_person_controller():
     get_vars["xsltmode"] = "volunteer"
     if hr_id:
         hr = db(table.id == hr_id).select(table.type,
-                                          limitby=(0, 1)).first()
+                                          limitby = (0, 1),
+                                          ).first()
         if hr:
             group = hr.type == 2 and "volunteer" or "staff"
             # Also inform the back-end of this finding
@@ -1732,8 +1744,8 @@ def vol_person_controller():
                         field = s3db.hrm_training.course_id
                         field.requires = IS_ONE_OF(db, "hrm_course.id",
                                                    field.represent,
-                                                   filterby="id",
-                                                   filter_opts=filter_opts,
+                                                   filterby = "id",
+                                                   filter_opts = filter_opts,
                                                    )
 
             if method == "record" or r.component_name == "human_resource":
@@ -1826,7 +1838,8 @@ def vol_person_controller():
                     if r.id:
                         query = (table.person_id == r.id)
                         default = db(query).select(table.programme_id,
-                                                   orderby=table.date).last()
+                                                   orderby = table.date,
+                                                   ).last()
                         if default:
                             default = default.programme_id
                     else:
@@ -1854,9 +1867,10 @@ def vol_person_controller():
                 # Provide a link to assign a new Asset
                 # @ToDo: Proper Widget to do this inline
                 output["add_btn"] = A(T("Assign Asset"),
-                                      _href=URL(c="asset", f="asset"),
-                                      _id="add-btn",
-                                      _class="action-btn")
+                                      _href = URL(c="asset", f="asset"),
+                                      _id = "add-btn",
+                                      _class = "action-btn",
+                                      )
         return output
     s3.postp = postp
 

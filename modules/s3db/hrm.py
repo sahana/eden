@@ -4802,7 +4802,8 @@ class HRProgrammeModel(S3Model):
             msg_record_created = T("Program added"),
             msg_record_modified = T("Program updated"),
             msg_record_deleted = T("Program deleted"),
-            msg_list_empty = T("Currently no programs registered"))
+            msg_list_empty = T("Currently no programs registered"),
+            )
 
         label_create = crud_strings[tablename].label_create
         if is_admin:
@@ -4812,7 +4813,9 @@ class HRProgrammeModel(S3Model):
         else:
             filter_opts = (None,)
 
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         programme_id = S3ReusableField("programme_id", "reference %s" % tablename,
                                        label = T("Program"),
                                        ondelete = "SET NULL",
@@ -4858,10 +4861,9 @@ class HRProgrammeModel(S3Model):
 
         tablename = "hrm_programme_hours"
         define_table(tablename,
-                     self.pr_person_id(
-                        ondelete = "CASCADE",
-                        represent = self.pr_PersonRepresent(show_link = True)
-                        ),
+                     self.pr_person_id(ondelete = "CASCADE",
+                                       represent = self.pr_PersonRepresent(show_link = True)
+                                       ),
                      programme_id(),
                      self.hrm_job_title_id(readable = vol_roles,
                                            writable = vol_roles,
@@ -4884,7 +4886,9 @@ class HRProgrammeModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
-                     s3_date(future = 0),
+                     s3_date(default = "now",
+                             future = 0,
+                             ),
                      s3_date("end_date",
                              label = T("End Date"),
                              ),
@@ -4919,7 +4923,8 @@ class HRProgrammeModel(S3Model):
             msg_record_created = T("Hours added"),
             msg_record_modified = T("Hours updated"),
             msg_record_deleted = T("Hours deleted"),
-            msg_list_empty = T("Currently no hours recorded for this volunteer"))
+            msg_list_empty = T("Currently no hours recorded for this volunteer"),
+            )
 
         filter_widgets = [
             S3OptionsFilter("person_id$human_resource.organisation_id",
@@ -5028,8 +5033,8 @@ class HRShiftModel(S3Model):
                      job_title_id(),
                      skill_id(),
                      Field("day_of_week", "integer",
-                           requires = IS_IN_SET(DAYS_OF_WEEK),
                            represent = S3Represent(options = DAYS_OF_WEEK),
+                           requires = IS_IN_SET(DAYS_OF_WEEK),
                            ),
                      s3_time("start_time",
                              empty = False,
@@ -6581,13 +6586,14 @@ def hrm_human_resource_onaccept(form):
             query = (table.deleted == False) & \
                     (table.person_id == person_id)
             existing = db(query).select(table.programme_id,
-                                        orderby=table.date).last()
+                                        orderby = table.date,
+                                        ).last()
             if existing and existing.programme_id == programme_id:
                 # No action required
                 pass
             else:
                 # Insert new record
-                table.insert(person_id=person_id,
+                table.insert(person_id = person_id,
                              date = request.utcnow,
                              programme_id = programme_id,
                              )
@@ -6624,7 +6630,7 @@ def hrm_human_resource_onaccept(form):
                     (htable.status == 1) & \
                     (htable.person_id == person_id)
             rows = db(query).select(htable.id,
-                                    limitby = (0, 2)
+                                    limitby = (0, 2),
                                     )
             if len(rows) == 1:
                 # We can safely update
@@ -7055,7 +7061,7 @@ def hrm_rheader(r, tabs=None, profile=False):
                     query &= bquery
                     row = db(query).select(ptable.name,
                                            phtable.date,
-                                           orderby = phtable.date
+                                           orderby = phtable.date,
                                            ).last()
                     if row:
                         programme = row.hrm_programme.name

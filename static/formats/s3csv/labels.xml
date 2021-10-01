@@ -238,10 +238,17 @@
 
     <column name="OrgGroup">
         <!-- Special Element match for key generation -->
-        <match>|Coalition|Network|OrgGroup</match>
+        <match>|Coalition|Network|OrgGroup|</match>
         <label>Coalition</label>
         <label>Network</label>
         <label>OrgGroup</label>
+    </column>
+
+    <column name="Programme">
+        <!-- Special Element match for key generation -->
+        <match>|Programme|Program|</match>
+        <label>Programme</label>
+        <label>Program</label>
     </column>
 
     <!-- For Inventory -->

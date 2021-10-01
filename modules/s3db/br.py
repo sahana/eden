@@ -153,13 +153,12 @@ class BRCaseModel(S3Model):
                                                            ),
                                          ),
                            ),
-                     s3_comments(
-                           comment = DIV(_class = "tooltip",
-                                         _title = "%s|%s" % (T("Comments"),
-                                                             T("Describe the meaning, reasons and potential consequences of this status"),
-                                                             ),
-                                         ),
-                           ),
+                     s3_comments(comment = DIV(_class = "tooltip",
+                                               _title = "%s|%s" % (T("Comments"),
+                                                                   T("Describe the meaning, reasons and potential consequences of this status"),
+                                                                   ),
+                                               ),
+                                 ),
                      *s3_meta_fields())
 
         # CRUD Strings
@@ -187,7 +186,9 @@ class BRCaseModel(S3Model):
                   )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         status_id = S3ReusableField("status_id", "reference %s" % tablename,
                                     label = T("Case Status"),
                                     ondelete = "RESTRICT",
@@ -222,23 +223,21 @@ class BRCaseModel(S3Model):
                      self.super_link("doc_id", "doc_entity"),
 
                      # Case assignment
-                     self.org_organisation_id(
-                            default = default_organisation,
-                            readable = not default_organisation,
-                            writable = not default_organisation,
-                            ),
-                     self.hrm_human_resource_id(
-                            label = T("Staff Member in Charge"),
-                            comment = DIV(_class = "tooltip",
-                                          _title = "%s|%s" % (T("Staff Member in Charge"),
-                                                              T("The staff member managing this case"),
+                     self.org_organisation_id(default = default_organisation,
+                                              readable = not default_organisation,
+                                              writable = not default_organisation,
+                                              ),
+                     self.hrm_human_resource_id(label = T("Staff Member in Charge"),
+                                                represent = self.hrm_HumanResourceRepresent(show_link=False),
+                                                widget = None,
+                                                comment = DIV(_class = "tooltip",
+                                                              _title = "%s|%s" % (T("Staff Member in Charge"),
+                                                                                  T("The staff member managing this case"),
+                                                                                  ),
                                                               ),
-                                          ),
-                            represent = self.hrm_HumanResourceRepresent(show_link=False),
-                            widget = None,
-                            readable = case_manager,
-                            writable = case_manager,
-                            ),
+                                                readable = case_manager,
+                                                writable = case_manager,
+                                                ),
 
                      # The beneficiary
                      self.pr_person_id(ondelete = "CASCADE",
@@ -260,10 +259,10 @@ class BRCaseModel(S3Model):
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(1, None)),
                            readable = household_size,
                            writable = household_size_writable,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Household Size"),
-                                                           T("Number of persons belonging to the same household"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Household Size"),
+                                                             T("Number of persons belonging to the same household"),
+                                                             ),
                                          ),
                            ),
 
@@ -494,7 +493,7 @@ class BRCaseActivityModel(S3Model):
 
         labels = br_terminology()
 
-        hr_represent = self.hrm_HumanResourceRepresent(show_link=False)
+        hr_represent = self.hrm_HumanResourceRepresent(show_link = False)
 
         # ---------------------------------------------------------------------
         # Activity Status
@@ -548,7 +547,7 @@ class BRCaseActivityModel(S3Model):
             msg_record_modified = T("Activity Status updated"),
             msg_record_deleted = T("Activity Status deleted"),
             msg_list_empty = T("No Activity Statuses currently defined"),
-        )
+            )
 
         # Reusable field
         represent = S3Represent(lookup=tablename, translate=True)
@@ -591,26 +590,25 @@ class BRCaseActivityModel(S3Model):
                      self.super_link("doc_id", "doc_entity"),
 
                      # Beneficiary
-                     self.pr_person_id(comment = None,
-                                       empty = False,
-                                       label = labels.CASE,
+                     self.pr_person_id(empty = False,
                                        ondelete = "CASCADE",
+                                       label = labels.CASE,
+                                       comment = None,
                                        writable = False,
                                        ),
 
                      # Case Manager
-                     self.hrm_human_resource_id(
-                            label = T("Staff Member in Charge"),
-                            comment = DIV(_class = "tooltip",
-                                          _title = "%s|%s" % (T("Staff Member in Charge"),
-                                                              T("The staff member managing this activity"),
+                     self.hrm_human_resource_id(label = T("Staff Member in Charge"),
+                                                represent = hr_represent,
+                                                widget = None,
+                                                comment = DIV(_class = "tooltip",
+                                                              _title = "%s|%s" % (T("Staff Member in Charge"),
+                                                                                  T("The staff member managing this activity"),
+                                                                                  ),
                                                               ),
-                                          ),
-                            represent = hr_represent,
-                            widget = None,
-                            readable = case_activity_manager,
-                            writable = case_activity_manager,
-                            ),
+                                                readable = case_activity_manager,
+                                                writable = case_activity_manager,
+                                                ),
 
                      # Priority
                      Field("priority", "integer",
@@ -621,22 +619,23 @@ class BRCaseActivityModel(S3Model):
                                                             2: "lightblue",
                                                             3: "grey",
                                                             }).represent,
-                           requires = IS_IN_SET(priority_opts, sort=False, zero=None),
+                           requires = IS_IN_SET(priority_opts,
+                                                sort = False,
+                                                zero = None,
+                                                ),
                            default = 2, # normal
                            ),
 
                      # Subject and Details
-                     self.br_need_id(
-                            readable = case_activity_need,
-                            writable = case_activity_need,
-                            ),
-                     self.gis_location_id(
-                            # Location of the activity,
-                            # - usually the current tracking location of the beneficiary
-                            # - enable in template if/as necessary
-                            readable = False,
-                            writable = False,
-                            ),
+                     self.br_need_id(readable = case_activity_need,
+                                     writable = case_activity_need,
+                                     ),
+                     self.gis_location_id(# Location of the activity,
+                                          # - usually the current tracking location of the beneficiary
+                                          # - enable in template if/as necessary
+                                          readable = False,
+                                          writable = False,
+                                          ),
                      Field("subject",
                            label = T("Subject / Occasion"),
                            readable = case_activity_subject,
@@ -867,7 +866,9 @@ class BRCaseActivityModel(S3Model):
             )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         update_type_id = S3ReusableField("update_type_id",
                                          "reference %s" % tablename,
                                          label = T("Occasion"),
@@ -888,11 +889,10 @@ class BRCaseActivityModel(S3Model):
                      s3_date(default = "now",
                              ),
                      update_type_id(),
-                     self.hrm_human_resource_id(
-                            comment = None,
-                            represent = hr_represent,
-                            widget = None,
-                            ),
+                     self.hrm_human_resource_id(represent = hr_represent,
+                                                widget = None,
+                                                comment = None,
+                                                ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -1106,11 +1106,10 @@ class BRAppointmentModel(S3Model):
                                                 ),
                      Field("status", "integer",
                            default = 1, # Planning
+                           represent = S3Represent(options = appointment_status_opts),
                            requires = IS_IN_SET(appointment_status_opts,
                                                 zero = None,
                                                 ),
-                           represent = S3Represent(options = appointment_status_opts,
-                                                   ),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -1193,12 +1192,12 @@ class BRNeedsModel(S3Model):
                           Field("protection", "boolean",
                                 default = False,
                                 label = T("Protection Need"),
+                                represent = s3_yes_no_represent,
                                 comment = DIV(_class = "tooltip",
                                               _title = "%s|%s" % (T("Protection Need"),
                                                                   T("This need type indicates a particular need for protection"),
                                                                   ),
                                               ),
-                                represent = s3_yes_no_represent,
                                 readable = False,
                                 writable = False,
                                 ),
@@ -1314,11 +1313,10 @@ class BRAssistanceModel(S3Model):
 
         tablename = "br_assistance_theme"
         define_table(tablename,
-                     self.org_organisation_id(
-                         comment = None,
-                         readable = org_specific_themes,
-                         writable = org_specific_themes,
-                         ),
+                     self.org_organisation_id(comment = None,
+                                              readable = org_specific_themes,
+                                              writable = org_specific_themes,
+                                              ),
                      Field("name",
                            label = T("Theme"),
                            requires = IS_NOT_EMPTY(),
@@ -1460,7 +1458,7 @@ class BRAssistanceModel(S3Model):
             msg_record_modified = T("Status updated"),
             msg_record_deleted = T("Status deleted"),
             msg_list_empty = T("No Assistance Statuses currently defined"),
-        )
+            )
 
         # Reusable field
         represent = S3Represent(lookup = tablename,
@@ -1536,8 +1534,8 @@ class BRAssistanceModel(S3Model):
                            writable = track_effort,
                            ),
                      s3_comments(label = T("Details"),
-                                 comment = None,
                                  represent = lambda v: s3_text_represent(v, lines=8),
+                                 comment = None,
                                  ),
                      *s3_meta_fields())
 
@@ -1682,8 +1680,9 @@ class BRAssistanceModel(S3Model):
         # ---------------------------------------------------------------------
         # Measure <=> Theme link table
         #
-        theme_represent = br_AssistanceThemeRepresent(multiple=False)
+        theme_represent = br_AssistanceThemeRepresent(multiple = False)
         measure_represent = br_AssistanceMeasureRepresent()
+
         tablename = "br_assistance_measure_theme"
         define_table(tablename,
                      Field("measure_id", "reference br_assistance_measure",
@@ -1890,8 +1889,8 @@ class BRAssistanceModel(S3Model):
             query &= (table.need_id == need_id)
         query &= (table.deleted == False)
         activity = current.db(query).select(table.id,
-                                            orderby = ~table.date,
                                             limitby = (0, 1),
+                                            orderby = ~table.date,
                                             ).first()
         if activity:
             activity_id = activity.id
@@ -1995,14 +1994,15 @@ class BRAssistanceModel(S3Model):
                 # Look up the theme's need_id
                 ttable = s3db.br_assistance_theme
                 query = (ttable.id == record.theme_id)
-                theme = db(query).select(ttable.need_id, limitby=(0, 1)).first()
+                theme = db(query).select(ttable.need_id,
+                                         limitby = (0, 1),
+                                         ).first()
                 if theme:
-                    activity_id = cls.get_case_activity_by_need(
-                                            measure.person_id,
-                                            theme.need_id,
-                                            hr_id = measure.human_resource_id,
-                                            )
-                    record.update_record(case_activity_id=activity_id)
+                    activity_id = cls.get_case_activity_by_need(measure.person_id,
+                                                                theme.need_id,
+                                                                hr_id = measure.human_resource_id,
+                                                                )
+                    record.update_record(case_activity_id = activity_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2020,7 +2020,9 @@ class BRAssistanceModel(S3Model):
         if measure_id:
             mtable = s3db.br_assistance_measure
             query = (mtable.id == measure_id)
-            measure = db(query).select(mtable.id, limitby = (0, 1)).first()
+            measure = db(query).select(mtable.id,
+                                       limitby = (0, 1),
+                                       ).first()
         else:
             measure = None
 
@@ -2105,17 +2107,18 @@ class BRAssistanceOfferModel(S3Model):
     def model(self):
 
         T = current.T
-
         db = current.db
-        s3 = current.response.s3
-        crud_strings = s3.crud_strings
-
         settings = current.deployment_settings
 
+        configure = self.configure
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
         # Whether and how to use reference numbers in offers
         refno = settings.get_br_assistance_offer_refno()
+
+        NONE = current.messages["NONE"]
+        string_represent = lambda v: v if v else NONE
 
         # ---------------------------------------------------------------------
         # Offers of assistance
@@ -2142,20 +2145,19 @@ class BRAssistanceOfferModel(S3Model):
                            represent = pe_represent,
                            requires = IS_EMPTY_OR(IS_ONE_OF(db, "pr_pentity.pe_id",
                                                             pe_represent,
-                                                            instance_types = ["pr_person",
+                                                            instance_types = ("pr_person",
                                                                               "org_organisation",
-                                                                              ],
+                                                                              ),
                                                             )),
                            ),
                      self.br_need_id(),
-                     self.br_assistance_type_id(
-                         # Enable in template if/as required
-                         readable = False,
-                         writable = False,
-                         ),
+                     self.br_assistance_type_id(# Enable in template if/as required
+                                                readable = False,
+                                                writable = False,
+                                                ),
                      Field("refno", length=16,
-                           requires = IS_EMPTY_OR(IS_LENGTH(16)),
                            label = T("Ref.No."),
+                           requires = IS_EMPTY_OR(IS_LENGTH(16)),
                            readable = refno,
                            writable = refno and refno != "auto",
                            ),
@@ -2170,7 +2172,7 @@ class BRAssistanceOfferModel(S3Model):
                            ),
                      Field("capacity",
                            label = T("Quantity / Size / Capacity"),
-                           represent = lambda v, row=None: v if v else "-",
+                           represent = string_represent,
                            ),
                      Field("chargeable", "boolean",
                            default = False,
@@ -2180,24 +2182,26 @@ class BRAssistanceOfferModel(S3Model):
                      self.gis_location_id(), # Location of the offer (if housing)
                      Field("contact_name",
                            label = T("Contact Name"),
-                           represent = lambda v, row=None: v if v else "-",
+                           represent = string_represent,
                            ),
                      Field("contact_email",
                            label = T("Email"),
+                           represent = string_represent,
                            requires = IS_EMPTY_OR(IS_EMAIL()),
-                           represent = lambda v, row=None: v if v else "-",
                            ),
                      Field("contact_phone",
                            label = T("Contact Phone"),
+                           represent = string_represent,
                            requires = IS_EMPTY_OR(IS_PHONE_NUMBER_SINGLE()),
-                           represent = lambda v, row=None: v if v else "-",
                            ),
                      Field("availability",
                            default = "AVL",
                            label = T("Availability"),
-                           requires = IS_IN_SET(offer_availability, zero=None, sort=False),
-                           represent = S3Represent(options=dict(offer_availability),
-                                                   ),
+                           represent = S3Represent(options = dict(offer_availability)),
+                           requires = IS_IN_SET(offer_availability,
+                                                zero = None,
+                                                sort = False,
+                                                ),
                            ),
                      s3_date(label = T("Available from"),
                              default = "now",
@@ -2210,9 +2214,11 @@ class BRAssistanceOfferModel(S3Model):
                      Field("status",
                            default = "NEW",
                            label = T("Status"),
-                           requires = IS_IN_SET(offer_status, zero=None, sort=False),
-                           represent = S3Represent(options=dict(offer_status),
-                                                   ),
+                           represent = S3Represent(options = dict(offer_status)),
+                           requires = IS_IN_SET(offer_status,
+                                                zero = None,
+                                                sort = False,
+                                                ),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -2247,11 +2253,11 @@ class BRAssistanceOfferModel(S3Model):
                                            ),
                           ]
 
-        self.configure(tablename,
-                       filter_widgets = filter_widgets,
-                       list_fields = list_fields,
-                       onaccept = self.assistance_offer_onaccept,
-                       )
+        configure(tablename,
+                  filter_widgets = filter_widgets,
+                  list_fields = list_fields,
+                  onaccept = self.assistance_offer_onaccept,
+                  )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -2269,14 +2275,16 @@ class BRAssistanceOfferModel(S3Model):
 
         # Reusable field
         if refno:
-            represent = S3Represent(lookup=tablename,
+            represent = S3Represent(lookup = tablename,
                                     fields = ["refno", "name"],
                                     labels = "[%(refno)s] %(name)s",
                                     show_link = True,
-                                    linkto = URL(c="br", f="offers", args=["[id]"]),
+                                    linkto = URL(c="br", f="offers",
+                                                 args = ["[id]"],
+                                                 ),
                                     )
         else:
-            represent = S3Represent(lookup=tablename)
+            represent = S3Represent(lookup = tablename)
         offer_id = S3ReusableField("offer_id",
                                    "reference %s" % tablename,
                                    label = T("Offer"),
@@ -2293,24 +2301,22 @@ class BRAssistanceOfferModel(S3Model):
         #
         tablename = "br_direct_offer"
         define_table(tablename,
-                     self.br_case_activity_id(
-                         empty = False,
-                         label = T("Activity"),
-                         ondelete = "CASCADE",
-                         ),
-                     offer_id(
-                         empty = False,
-                         ondelete = "CASCADE",
-                         ),
+                     self.br_case_activity_id(empty = False,
+                                              ondelete = "CASCADE",
+                                              label = T("Activity"),
+                                              ),
+                     offer_id(empty = False,
+                              ondelete = "CASCADE",
+                              ),
                      Field("notify", "boolean",
-                           label = T("Notify case manager"),
                            default = True,
+                           label = T("Notify case manager"),
                            readable = False,
                            writable = False,
                            ),
                      s3_datetime("notified_on",
-                                 label = T("Case manager notified on"),
                                  default = None,
+                                 label = T("Case manager notified on"),
                                  readable = False,
                                  writable = False,
                                  ),
@@ -2321,10 +2327,10 @@ class BRAssistanceOfferModel(S3Model):
                        "case_activity_id",
                        ]
 
-        self.configure(tablename,
-                       list_fields = list_fields,
-                       create_onvalidation = self.direct_offer_create_onvalidation
-                       )
+        configure(tablename,
+                  list_fields = list_fields,
+                  create_onvalidation = self.direct_offer_create_onvalidation
+                  )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -2429,7 +2435,9 @@ class BRAssistanceOfferModel(S3Model):
         query = (table.offer_id == offer_id) & \
                 (table.case_activity_id == case_activity_id) & \
                 (table.deleted == False)
-        duplicate = db(query).select(table.id, limitby=(0, 1)).first()
+        duplicate = db(query).select(table.id,
+                                     limitby = (0, 1),
+                                     ).first()
         if duplicate:
             error = T("This direct offer already exists")
 
@@ -2512,7 +2520,7 @@ class BRLanguageModel(S3Model):
                           Field("quality",
                                 default = "N",
                                 label = T("Quality/Mode"),
-                                represent = S3Represent(options=dict(lang_quality_opts)),
+                                represent = S3Represent(options = dict(lang_quality_opts)),
                                 requires = IS_IN_SET(lang_quality_opts,
                                                      sort = False,
                                                      zero = None,
@@ -2594,7 +2602,9 @@ class BRServiceContactModel(S3Model):
             )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         contact_type_id = S3ReusableField("contact_type_id", "reference %s" % tablename,
                                           label = T("Contact Type"),
                                           ondelete = "RESTRICT",
@@ -2673,13 +2683,6 @@ class BRServiceContactModel(S3Model):
         #
         return {}
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def defaults():
-        """ Safe defaults for names in case the module is disabled """
-
-        return {}
-
 # =============================================================================
 class BRNotesModel(S3Model):
     """ Simple Journal for Case Files """
@@ -2694,7 +2697,6 @@ class BRNotesModel(S3Model):
         db = current.db
 
         crud_strings = current.response.s3.crud_strings
-
         define_table = self.define_table
 
         # ---------------------------------------------------------------------
@@ -2941,7 +2943,8 @@ class br_AssistanceMeasureRepresent(S3Represent):
         if show_hr:
             fields.append(table.human_resource_id)
 
-        rows = current.db(query).select(limitby=(0, count), *fields)
+        rows = current.db(query).select(limitby = (0, count),
+                                        *fields)
         self.queries += 1
 
         # Bulk-represent human_resource_ids
@@ -3036,7 +3039,8 @@ class br_AssistanceMeasureThemeRepresent(S3Represent):
         if self.details:
             fields.append(table.comments)
 
-        rows = current.db(query).select(limitby=(0, count), *fields)
+        rows = current.db(query).select(limitby = (0, count),
+                                        *fields)
         self.queries += 1
 
         # Bulk-represent themes
@@ -3062,9 +3066,14 @@ class br_AssistanceMeasureThemeRepresent(S3Represent):
             css = "br-assistance-measure-theme"
             if self.details:
                 comments = table.comments.represent(row.comments)
-                reprstr = DIV(H6(theme), comments, _class=css)
+                reprstr = DIV(H6(theme),
+                              comments,
+                              _class = css,
+                              )
             else:
-                reprstr = P(theme, _class=css)
+                reprstr = P(theme,
+                            _class = css,
+                            )
         else:
             reprstr = theme
 
@@ -3095,11 +3104,11 @@ class br_CaseActivityRepresent(S3Represent):
     """ Representation of case activity IDs """
 
     def __init__(self,
-                 show_as=None,
-                 fmt=None,
-                 show_date=False,
-                 show_link=False,
-                 linkto=None,
+                 show_as = None,
+                 fmt = None,
+                 show_date = False,
+                 show_link = False,
+                 linkto = None,
                  ):
         """
             Constructor
@@ -3257,12 +3266,12 @@ class br_DocEntityRepresent(S3Represent):
     """ Module context-specific representation of doc-entities """
 
     def __init__(self,
-                 case_label=None,
-                 case_group_label=None,
-                 activity_label=None,
-                 use_sector=True,
-                 use_need=False,
-                 show_link=False,
+                 case_label = None,
+                 case_group_label = None,
+                 activity_label = None,
+                 use_sector = True,
+                 use_need = False,
+                 show_link = False,
                  ):
         """
             Constructor
@@ -3377,7 +3386,8 @@ class br_DocEntityRepresent(S3Represent):
                 fields.extend((itable.name,
                                itable.group_type,
                                ))
-            irows = db(query).select(left=left, *fields)
+            irows = db(query).select(left = left,
+                                     *fields)
             self.queries += 1
 
             # Add the person+instance data to the entity rows
@@ -3645,7 +3655,9 @@ def br_case_default_status():
         stable = s3db.br_case_status
         query = (stable.is_default == True) & \
                 (stable.deleted != True)
-        row = current.db(query).select(stable.id, limitby=(0, 1)).first()
+        row = current.db(query).select(stable.id,
+                                       limitby = (0, 1),
+                                       ).first()
 
         if row:
             # Set as field default in case table
@@ -3945,7 +3957,9 @@ def br_group_membership_onaccept(membership, group, group_id, person_id):
                     (table.deleted != True) & \
                     (gtable.id == table.group_id) & \
                     (gtable.group_type == CASE_GROUP)
-            row = db(query).select(table.group_id, limitby=(0, 1)).first()
+            row = db(query).select(table.group_id,
+                                   limitby = (0, 1),
+                                   ).first()
             if row:
                 # Person still belongs to other case groups, count properly:
                 recount(row.group_id)
@@ -3959,7 +3973,9 @@ def br_group_membership_onaccept(membership, group, group_id, person_id):
             # Get number of (remaining) members in this group
             query = (table.group_id == group_id) & \
                     (table.deleted != True)
-            rows = db(query).select(table.id, limitby = (0, 2))
+            rows = db(query).select(table.id,
+                                    limitby = (0, 2),
+                                    )
 
             if len(rows) < 2:
                 # Update the household size for current group members
@@ -3977,7 +3993,9 @@ def br_group_membership_onaccept(membership, group, group_id, person_id):
                 # ...unless we already have one
                 query = (ctable.person_id == person_id) & \
                         (ctable.deleted != True)
-                row = db(query).select(ctable.id, limitby=(0, 1)).first()
+                row = db(query).select(ctable.id,
+                                       limitby = (0, 1),
+                                       ).first()
                 if not row:
                     # Customise case resource
                     r = S3Request("br", "case", current.request)
@@ -3992,7 +4010,7 @@ def br_group_membership_onaccept(membership, group, group_id, person_id):
                         # Using resource.insert for proper authorization
                         # and post-processing (=audit, ownership, realm,
                         # onaccept)
-                        cresource.insert(person_id=person_id)
+                        cresource.insert(person_id = person_id)
                     except S3PermissionError:
                         # Unlikely (but possible) that this situation
                         # is deliberate => issue a warning
