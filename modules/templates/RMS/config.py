@@ -804,10 +804,9 @@ def config(settings):
     settings.inv.facility_manage_staff = False
     settings.inv.document_filing = True
     settings.inv.minimums = True
-    #settings.inv.collapse_tabs = True
+    settings.inv.send_gift_certificate = True
     # Uncomment if you need a simpler (but less accountable) process for managing stock levels
     #settings.inv.direct_stock_edits = True
-    # Settings for HNRC:
     settings.inv.stock_count = False
     settings.inv.item_status = {#0: current.messages["NONE"], # Not defined yet
                                 0: T("Good"),

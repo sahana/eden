@@ -150,6 +150,13 @@ class S3Config(Storage):
              "zh-tw": ["unifont", "unifont"],
              }
 
+    # Can be over-ridden in the template as settings.L10n.languages_by_country
+    languages_by_country = {"France": ["fr"],
+                            "Guadeloupe": ["fr"],
+                            "Haiti": ["fr", "ht"],
+                            "Martinique": ["fr"],
+                            }
+
     def __init__(self):
 
         super(S3Config, self).__init__()
@@ -1844,7 +1851,25 @@ class S3Config(Storage):
         return self.L10n.get("default_language", "en")
 
     def get_L10n_display_toolbar(self):
+        """
+            Whether to display a Menu to select the User Language
+            - this may not be available in custom Themes
+            - other options include just having this defined in the user profile
+        """
         return self.L10n.get("display_toolbar", True)
+
+    def get_L10n_languages(self):
+        """
+            List of Languages to show in the User Profile & the Language Menu (if-configured) 
+        """
+        return self.L10n.get("languages")
+
+    def get_L10n_languages_readonly(self):
+        """
+            Whether the languages/*.py files are editable
+            - improves performance to have this off
+        """
+        return self.L10n.get("languages_readonly", True)
 
     def get_L10n_extra_codes(self):
         """
@@ -1853,11 +1878,23 @@ class S3Config(Storage):
         """
         return self.L10n.get("extra_codes", None)
 
-    def get_L10n_languages(self):
-        return self.L10n.get("languages")
+    def get_L10n_languages_by_country(self, countryname):
+        """
+            List of Official Languages for a Country
+            Used by the inv_gift_certificate
+        """
+        languages_by_country = self.L10n.get("languages_by_country", self.languages_by_country)
+        return languages_by_country.get(countryname, [])
 
-    def get_L10n_languages_readonly(self):
-        return self.L10n.get("languages_readonly", True)
+    def get_L10n_date_format(self):
+        """
+            Lookup the Date Format - either by locale or by global setting
+        """
+        language = current.session.s3.language
+        if language in self.date_formats:
+            return self.date_formats.get(language)
+        else:
+            return self.L10n.get("date_format", "%Y-%m-%d")
 
     def get_L10n_religions(self):
         """
@@ -4755,6 +4792,9 @@ class S3Config(Storage):
             Manage Minimum Stock Levels
         """
         return self.inv.get("minimums", False)
+
+    def get_inv_send_gift_certificate(self):
+        return self.inv.get("send_gift_certificate", False)
 
     def get_inv_stock_cards(self):
         """

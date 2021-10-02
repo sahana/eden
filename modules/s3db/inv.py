@@ -45,6 +45,7 @@ __all__ = ("WarehouseModel",
            "InventoryStockCardModel",
            "InventoryTrackingModel",
            "inv_adj_rheader",
+           #"inv_gift_certificate",
            "inv_item_total_weight",
            "inv_item_total_volume",
            #"inv_pick_list",
@@ -88,8 +89,6 @@ __all__ = ("WarehouseModel",
 
 import datetime
 import json
-
-from copy import deepcopy
 
 from gluon import *
 from gluon.sqlhtml import RadioWidget, StringWidget
@@ -4744,6 +4743,12 @@ class InventoryTrackingModel(S3Model):
                    action = self.inv_send_form,
                    )
 
+        # Generate Gift Certificate
+        set_method("inv", "send",
+                   method = "gift_certificate",
+                   action = inv_gift_certificate,
+                   )
+
         # Generate Picking List
         set_method("inv", "send",
                    method = "pick_list",
@@ -5744,7 +5749,9 @@ $.filterOptionsS3({
             {"site": T(current.deployment_settings.get_inv_facility_label())}
         field.represent = current.s3db.org_site_represent
 
-        record = table[r.id]
+        record = db(table.id == r.id).select(table.site_id,
+                                             limitby = (0, 1),
+                                             ).first()
         site_id = record.site_id
         site = field.represent(site_id, False)
 
@@ -6218,6 +6225,379 @@ def inv_adj_rheader(r):
     return None
 
 # =============================================================================
+def inv_gift_certificate(r, **attr):
+    """
+        Generate a Gift Certificate for an Outbound Shipment.
+        This is part of Humanitarian Logistics when sending goods across borders
+        so as not to incur import duties.
+
+        Gift Certificate should be readable to the Country of Destination
+        - we default to English, with an option for a 2nd language to be added.
+
+        This is exported in XLS format to allow modification before use.
+    """
+
+    from s3.codecs.xls import S3XLS
+
+    try:
+        import xlwt
+    except ImportError:
+        r.error(503, S3XLS.ERROR.XLWT_ERROR)
+
+    # Extract the Data
+    send_id = r.id
+    record = r.record
+    send_ref = record.send_ref
+    to_site_id = record.to_site_id
+
+    db = current.db
+    s3db = current.s3db
+
+    # Items
+    table = s3db.inv_track_item
+    itable = s3db.supply_item
+    ptable = s3db.supply_item_pack
+
+    query = (table.send_id == send_id) & \
+            (table.item_id == itable.id) & \
+            (table.item_pack_id == ptable.id)
+    items = db(query).select(table.quantity,
+                             table.pack_value,
+                             table.currency,
+                             #itable.code,
+                             itable.name,
+                             ptable.name,
+                             )
+
+    # Destination
+    stable = s3db.org_site
+    gtable = s3db.gis_location
+    query = (stable.site_id == to_site_id) & \
+            (stable.location_id == gtable.id)
+    location = db(query).select(gtable.L0,
+                                limitby = (0, 1),
+                                ).first()
+    country = location.L0
+    fr = "fr" in current.deployment_settings.get_L10n_languages_by_country(country)
+
+    # Organisation
+    otable = s3db.org_organisation
+
+    query = (stable.site_id == record.site_id) & \
+            (stable.organisation_id == otable.id)
+
+    fields = [otable.id,
+              otable.root_organisation,
+              otable.name,
+              otable.logo,
+              ]
+
+    if fr:
+        ontable = s3db.org_organisation_name
+        fields.append(ontable.name_l10n)
+        left = ontable.on((ontable.organisation_id == otable.id) & \
+                          (ontable.language == "fr"))
+    else:
+        left = None
+
+    org = db(query).select(*fields,
+                           left = left,
+                           limitby = (0, 1)
+                           ).first()
+    if fr:
+        org_name = org["org_organisation_name.name_l10n"]
+        org = org["org_organisation"]
+        if not org_name:
+            org_name = org.name
+    else:
+        org_name = org.name
+
+    if org.id == org.root_organisation:
+        branch = None
+    else:
+        branch = org.name
+        # Lookup Root Org
+        fields = [otable.name,
+                  otable.logo,
+                  ]
+        if fr:
+            fields.append(ontable.name_l10n)
+        org = db(otable.id == org.root_organisation).select(*fields,
+                                                            left = left,
+                                                            limitby = (0, 1)
+                                                            ).first()
+        if fr:
+            org_name = org["org_organisation_name.name_l10n"]
+            org = org["org_organisation"]
+            if not org_name:
+                org_name = org.name
+        else:
+            org_name = org.name
+
+    # Represent the Data
+    from .org import org_SiteRepresent
+    destination = org_SiteRepresent(show_type = False)(to_site_id)
+
+    T = current.T
+
+    if fr:
+        VALUE = "VALUE / VALEUR"
+    else:
+        VALUE = "VALUE"
+
+    labels = ["Description",
+              "Quantity",
+              "Unit",
+              "Unit VALUE",
+              VALUE,
+              ]
+
+    # Create the workbook
+    book = xlwt.Workbook(encoding = "utf-8")
+
+    # Add sheet
+    title = "Gift Certificate"
+    sheet = book.add_sheet(title)
+
+    # Set column Widths
+    sheet.col(0).width = 1500
+    sheet.col(6).width = 500
+    COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
+    col_index = 1
+    column_widths = [0]
+    for label in labels:
+        if col_index in (4, 5):
+            width = max(int(len(label) * COL_WIDTH_MULTIPLIER * 1.1), 2000)
+        else:
+            width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
+        width = min(width, 65535) # USHRT_MAX
+        column_widths.append(width)
+        sheet.col(col_index).width = width
+        col_index += 1
+
+    # Define styles
+    POINT_12 = 240 # 240 Twips = 12 point
+    ROW_HEIGHT = 320 # Realised through trial & error
+
+    style = xlwt.XFStyle()
+    style.font.height = POINT_12
+
+    if fr:
+        italic_style = xlwt.XFStyle()
+        italic_style.font.italic = True
+        italic_style.font.height = POINT_12
+
+        italic_wrap_style = xlwt.XFStyle()
+        italic_wrap_style.font.italic = True
+        italic_wrap_style.font.height = POINT_12
+        italic_wrap_style.alignment.wrap = 1
+
+    bold_italic_style = xlwt.XFStyle()
+    bold_italic_style.font.italic = True
+    bold_italic_style.font.bold = True
+    bold_italic_style.font.height = POINT_12
+
+    bold_italic_right_style = xlwt.XFStyle()
+    bold_italic_right_style.font.italic = True
+    bold_italic_right_style.font.bold = True
+    bold_italic_right_style.font.height = POINT_12
+    bold_italic_right_style.alignment.horz = style.alignment.HORZ_RIGHT
+
+    right_style = xlwt.XFStyle()
+    right_style.font.height = POINT_12
+    right_style.alignment.horz = style.alignment.HORZ_RIGHT
+
+    wrap_style = xlwt.XFStyle()
+    wrap_style.font.height = POINT_12
+    wrap_style.alignment.wrap = 1
+
+    header_style = xlwt.XFStyle()
+    header_style.font.bold = True
+    header_style.font.height = POINT_12
+    header_style.alignment.horz = style.alignment.HORZ_CENTER
+    header_style.alignment.vert = style.alignment.VERT_CENTER
+
+    left_header_style = xlwt.XFStyle()
+    left_header_style.font.bold = True
+    left_header_style.font.height = POINT_12
+
+    box_style = xlwt.XFStyle()
+    box_style.font.bold = True
+    box_style.font.height = 360 # 360 Twips = 18 point
+    box_style.alignment.horz = style.alignment.HORZ_CENTER
+    box_style.alignment.vert = style.alignment.VERT_CENTER
+    box_style.borders.top = style.borders.THICK
+    box_style.borders.left = style.borders.THICK
+    box_style.borders.right = style.borders.THICK
+    box_style.borders.bottom = style.borders.THICK
+
+    # 1st row => Org Name and Logo
+    current_row = sheet.row(0)
+    # current_row.set_style() not giving the correct height
+    current_row.height = ROW_HEIGHT
+    sheet.write_merge(0, 0, 0, 1, org_name, left_header_style)
+    logo = org.logo
+    if logo:
+        # We need to convert to 24-bit BMP
+        try:
+            from PIL import Image
+        except:
+            current.log.error("PIL not installed: Cannot insert logo")
+        else:
+            filename, extension = os.path.splitext(logo)
+            logo_path = os.path.join(r.folder, "uploads", logo)
+            if extension == ".png":
+                # Remove Transparency
+                png = Image.open(logo_path).convert("RGBA")
+                size = png.size
+                background = Image.new("RGBA", size, (255,255,255))
+                img = Image.alpha_composite(background, png)
+            else:
+                img = Image.open(logo_path)
+                size = img.size
+            width = size[0]
+            height = int(200/width * size[1])
+            img = img.convert("RGB").resize((200, height))
+            from io import BytesIO
+            bmpfile = BytesIO()
+            img.save(bmpfile, "BMP")
+            bmpfile.seek(0)
+            bmpdata = bmpfile.read()
+            sheet.insert_bitmap_data(bmpdata, 0, 4)
+
+    if branch: 
+        # 2nd row => Branch
+        current_row = sheet.row(1)
+        current_row.height = ROW_HEIGHT
+        current_row.write(0, "Branch: %s" % branch, style)
+
+    # 3rd row => Department
+    current_row = sheet.row(2)
+    current_row.height = ROW_HEIGHT
+    current_row.write(0, "Logistics Department", style)
+
+    if fr:
+        # 4th row => Department (Translated)
+        current_row = sheet.row(3)
+        current_row.height = ROW_HEIGHT
+        current_row.write(0, "Service Logistique", italic_style)
+
+    # 7th row => Gift Certificate
+    current_row = sheet.row(6)
+    current_row.height = int(2.8 * 360 * 1.2) # 2 rows * twips * bold
+    label = "GIFT CERTIFICATE"
+    if fr:
+        label = "%s\nCERTIFICAT DE DON" % label
+    sheet.write_merge(6, 6, 0, 6, label, box_style)
+
+    # 9th row => Reference
+    current_row = sheet.row(8)
+    current_row.height = ROW_HEIGHT
+    current_row.write(0, "Ref:", bold_italic_right_style)
+    current_row.write(1, send_ref, style)
+
+    # 11th row => Statement
+    current_row = sheet.row(10)
+    current_row.height = int(2.8 * POINT_12) # 2 rows * twips
+    msg = "We, %s, non-profit organisation, hereby certify that the following goods here under declared aren't destined for a commercial act but represent a donation to:" % org_name
+    sheet.write_merge(10, 10, 0, 6, msg, wrap_style)
+
+    if fr:
+        # 13th row => Statement (Translated)
+        current_row = sheet.row(12)
+        current_row.height = int(2.8 * POINT_12) # 2 rows * twips
+        msg = "Nous, %s, association reconnue d'utilité publique, certifions que les marchandises ci-dessous décrites ne sont pas destinées à un acte commercial mais représentent un don à:" % org_name
+        sheet.write_merge(12, 12, 0, 6, msg, italic_wrap_style)
+
+    # 15th row => Beneficiary
+    current_row = sheet.row(14)
+    current_row.height = ROW_HEIGHT
+    if fr:
+        label = "Beneficiary / bénéficiaire:"
+    else:
+        label = "Beneficiary:"
+    current_row.write(0, label, bold_italic_style)
+    label = "%s,\n%s" % (destination, country)
+    sheet.write_merge(14, 18, 2, 6, label, header_style)
+
+    # 20th row => Goods
+    current_row = sheet.row(19)
+    current_row.height = ROW_HEIGHT
+    if fr:
+        label = "Goods / Biens:"
+    else:
+        label = "Goods:"
+    current_row.write(0, label, bold_italic_style)
+
+    # 21st row => Column Headers
+    current_row = sheet.row(20)
+    current_row.height = ROW_HEIGHT
+    col_index = 1
+    for label in labels:
+        current_row.write(col_index, label, header_style)
+        col_index += 1
+
+    # Data rows
+    row_index = 21
+    for row in items:
+        current_row = sheet.row(row_index)
+        current_row.height = ROW_HEIGHT
+        track_row = row["inv_track_item"]
+        item_row = row["supply_item"]
+        pack_row = row["supply_item_pack"]
+        quantity = track_row.quantity
+        item_value = track_row.pack_value
+        if item_value:
+            currency = track_row.currency
+            total_value = "%s %s" % ("{:.2f}".format(round(quantity * item_value, 2)),
+                                     currency,
+                                     )
+            item_value = "%s %s" % ("{:.2f}".format(item_value),
+                                     currency,
+                                     )
+        else:
+            item_value = ""
+            total_value = ""
+        values = [item_row.name,
+                  str(int(quantity)),
+                  pack_row.name,
+                  item_value,
+                  total_value,
+                  ]
+        col_index = 1
+        for value in values:
+            current_row.write(col_index, value, right_style)
+            if col_index in (1, 4, 5):
+                # Item Name, Values
+                width = round(len(value) * COL_WIDTH_MULTIPLIER)
+                if width > column_widths[col_index]:
+                    column_widths[col_index] = width
+                    sheet.col(col_index).width = width
+            col_index += 1
+        row_index += 1
+
+    # Export to File
+    output = BytesIO()
+    try:
+        book.save(output)
+    except:
+        import sys
+        error = sys.exc_info()[1]
+        current.log.error(error)
+    output.seek(0)
+
+    # Response headers
+    title = "Gift Certificate for %(waybill)s" % {"waybill": send_ref}
+    filename = "%s.xls" % title
+    response = current.response
+    from gluon.contenttype import contenttype
+    response.headers["Content-Type"] = contenttype(".xls")
+    disposition = "attachment; filename=\"%s\"" % filename
+    response.headers["Content-disposition"] = disposition
+
+    return output.read()
+
+# =============================================================================
 def inv_item_total_volume(row):
     """
         Compute the total volume of an inventory item (Field.Method)
@@ -6374,7 +6754,6 @@ def inv_pick_list(r, **attr):
     # Extract the Data
     send_ref = record.send_ref
 
-    db = current.db
     s3db = current.s3db
     settings = current.deployment_settings
 
@@ -6402,7 +6781,7 @@ def inv_pick_list(r, **attr):
     query = (table.send_id == send_id) & \
             (table.item_id == itable.id) & \
             (table.item_pack_id == ptable.id)
-    items = db(query).select(*fields)
+    items = current.db(query).select(*fields)
 
     if bin_site_layout:
         # Bulk Represent the Bins
@@ -6449,15 +6828,22 @@ def inv_pick_list(r, **attr):
         sheet.col(col_index).width = width
         col_index += 1
 
-    # Get styles
-    styles = S3XLS._styles() # use_colour = False
-    large_header_style = styles["large_header"]
-    large_header_style.alignment.horz = large_header_style.alignment.HORZ_LEFT
-    NO_PATTERN = large_header_style.pattern.NO_PATTERN
-    large_header_style.pattern.pattern = NO_PATTERN
-    header_style = styles["header"]
+    # Define styles
+    left_style = xlwt.XFStyle()
+
+    right_style = xlwt.XFStyle()
+    right_style.alignment.horz = right_style.alignment.HORZ_RIGHT
+
+    center_style = xlwt.XFStyle()
+    center_style.alignment.horz = center_style.alignment.HORZ_CENTER
+
+    large_header_style = xlwt.XFStyle()
+    large_header_style.font.bold = True
+    large_header_style.font.height = 400
+
+    header_style = xlwt.XFStyle()
+    header_style.font.bold = True
     header_style.alignment.horz = header_style.alignment.HORZ_CENTER
-    header_style.pattern.pattern = NO_PATTERN
 
     # 1st row => Report Title & Waybill
     current_row = sheet.row(0)
@@ -6476,7 +6862,6 @@ def inv_pick_list(r, **attr):
     sheet.write_merge(1, 1, 6, 7, s3_str(T("Volume (m3)")), header_style)
 
     # 3rd row => Column Headers
-    #header_style.alignment.horz = header_style.alignment.HORZ_CENTER
     current_row = sheet.row(2)
     col_index = 0
     for label in labels:
@@ -6485,12 +6870,6 @@ def inv_pick_list(r, **attr):
 
     # Data rows
     translate = settings.get_L10n_translate_supply_item()
-    left_style = styles["odd"]
-    right_style = styles["even"]
-    center_style = deepcopy(right_style)
-    left_style.alignment.horz = left_style.alignment.HORZ_LEFT
-    right_style.alignment.horz = right_style.alignment.HORZ_RIGHT
-    center_style.alignment.horz = center_style.alignment.HORZ_CENTER
     row_index = 3
     for row in items:
         current_row = sheet.row(row_index)
@@ -6544,13 +6923,13 @@ def inv_pick_list(r, **attr):
             if col_index == 1:
                 # Code
                 width = round(len(value) * COL_WIDTH_MULTIPLIER * 1.1)
-                if width > sheet.col(col_index).width:
-                    sheet.col(col_index).width = width
+                if width > column_widths[col_index]:
+                    column_widths[col_index] = width
             elif col_index == 2:
                 # Item Name
-                width = round(len(value) * COL_WIDTH_MULTIPLIER * 0.75)
-                if width > sheet.col(col_index).width:
-                    sheet.col(col_index).width = width
+                width = round(len(value) * COL_WIDTH_MULTIPLIER * 0.9)
+                if width > column_widths[col_index]:
+                    column_widths[col_index] = width
             col_index += 1
         row_index += 1
 
@@ -9542,7 +9921,7 @@ def inv_send_rheader(r):
                 address = s3db.gis_LocationRepresent(address_only = True)(site.location_id)
             else:
                 address = current.messages["NONE"]
-            if settings.get_inv_send_req:
+            if settings.get_inv_send_req():
                 req_ref_label = TH("%s: " % table.req_ref.label)
                 ltable = s3db.inv_send_req
                 rtable = s3db.inv_req
@@ -9631,7 +10010,7 @@ def inv_send_rheader(r):
             else:
                 cnt = 0
 
-            action = DIV()
+            actions = DIV()
             #rSubdata = TABLE()
             rfooter = TAG[""]()
 
@@ -9641,22 +10020,22 @@ def inv_send_rheader(r):
                                                       record_id = record.id):
 
                         if cnt > 0:
-                            action.append(A(ICON("print"),
-                                            " ",
-                                            T("Picking List"),
-                                            _href = URL(args = [record.id, "pick_list.xls"]
-                                                        ),
-                                            _class = "action-btn",
-                                            )
-                                          )
+                            actions.append(A(ICON("print"),
+                                             " ",
+                                             T("Picking List"),
+                                             _href = URL(args = [record.id, "pick_list.xls"]
+                                                         ),
+                                             _class = "action-btn",
+                                             )
+                                           )
 
-                            action.append(A(T("Send Shipment"),
-                                            _href = URL(args = [record.id, "process"]
-                                                        ),
-                                            _id = "send_process",
-                                            _class = "action-btn",
-                                            )
-                                          )
+                            actions.append(A(T("Send Shipment"),
+                                             _href = URL(args = [record.id, "process"]
+                                                         ),
+                                             _id = "send_process",
+                                             _class = "action-btn",
+                                             )
+                                           )
 
                             s3.jquery_ready.append('''S3.confirmClick("#send_process","%s")''' \
                                                     % T("Do you want to send this shipment?"))
@@ -9677,19 +10056,19 @@ def inv_send_rheader(r):
 
                 elif status == SHIP_STATUS_RETURNING:
                     if cnt > 0:
-                        action.append(A(T("Complete Returns"),
-                                        _href = URL(c = "inv",
-                                                    f = "return_process",
-                                                    args = [record.id]
-                                                    ),
-                                        _id = "return_process",
-                                        _class = "action-btn"
-                                        )
-                                      )
+                        actions.append(A(T("Complete Returns"),
+                                         _href = URL(c = "inv",
+                                                     f = "return_process",
+                                                     args = [record.id]
+                                                     ),
+                                         _id = "return_process",
+                                         _class = "action-btn"
+                                         )
+                                       )
                         s3.jquery_ready.append('''S3.confirmClick("#return_process","%s")''' \
-                                        % T("Do you want to complete the return process?") )
+                                        % T("Do you want to complete the return process?"))
                     else:
-                        msg = T("You need to check all item quantities before you can complete the return process")
+                        msg = T("You need to check all item quantities before you can complete the return process.")
                         rfooter.append(SPAN(msg))
                 elif status != SHIP_STATUS_CANCEL:
                     if status == SHIP_STATUS_SENT:
@@ -9697,56 +10076,70 @@ def inv_send_rheader(r):
                         s3_has_permission = current.auth.s3_has_permission
                         if s3_has_permission("update", "inv_send",
                                              record_id = record.id):
-                            action.append(A(T("Manage Returns"),
-                                            _href = URL(c = "inv",
-                                                        f = "send_returns",
-                                                        args = [record.id],
-                                                        vars = None,
-                                                        ),
-                                            _id = "send-return",
-                                            _class = "action-btn",
-                                            _title = T("Only use this button to accept back into stock some items that were returned from a delivery to beneficiaries who do not record the shipment details directly into the system")
-                                            )
-                                          )
-
+                            actions.append(A(T("Manage Returns"),
+                                             _href = URL(c = "inv",
+                                                         f = "send_returns",
+                                                         args = [record.id],
+                                                         vars = None,
+                                                         ),
+                                             _id = "send-return",
+                                             _class = "action-btn",
+                                             _title = T("Only use this button to accept back into stock some items that were returned from a delivery.")
+                                             )
+                                           )
                             jappend('''S3.confirmClick("#send-return","%s")''' % \
-                                T("Confirm that some items were returned from a delivery to beneficiaries and they will be accepted back into stock."))
-                            action.append(A(T("Confirm Shipment Received"),
-                                            _href = URL(f = "send",
-                                                        args = [record.id,
-                                                                "received",
-                                                                ],
-                                                        ),
-                                            _id = "send-receive",
-                                            _class = "action-btn",
-                                            _title = T("Only use this button to confirm that the shipment has been received by a destination which will not record the shipment directly into the system")
-                                            )
-                                          )
+                                T("Confirm that some items were returned from a delivery and they will be accepted back into stock."))
 
+                            actions.append(A(T("Confirm Shipment Received"),
+                                             _href = URL(f = "send",
+                                                         args = [record.id,
+                                                                 "received",
+                                                                 ],
+                                                         ),
+                                             _id = "send-receive",
+                                             _class = "action-btn",
+                                             _title = T("Only use this button to confirm that the shipment has been received by a destination which will not record the shipment directly into the system.")
+                                             )
+                                           )
                             jappend('''S3.confirmClick("#send-receive","%s")''' % \
-                                T("Confirm that the shipment has been received by a destination which will not record the shipment directly into the system and confirmed as received.") )
+                                T("Confirm that the shipment has been received by a destination which will not record the shipment directly into the system."))
+
                         if s3_has_permission("update", "inv_send",
                                              record_id = record.id):
-                            action.append(A(T("Cancel Shipment"),
-                                            _href = URL(c = "inv",
-                                                        f = "send_cancel",
-                                                        args = [record.id]
-                                                        ),
-                                            _id = "send-cancel",
-                                            _class = "action-btn"
-                                            )
-                                          )
+                            actions.append(A(T("Cancel Shipment"),
+                                             _href = URL(c = "inv",
+                                                         f = "send_cancel",
+                                                         args = [record.id]
+                                                         ),
+                                             _id = "send-cancel",
+                                             _class = "action-btn"
+                                             )
+                                           )
 
                             jappend('''S3.confirmClick("#send-cancel","%s")''' \
-                                % T("Do you want to cancel this sent shipment? The items will be returned to the Warehouse. This action CANNOT be undone!") )
-            
+                                % T("Do you want to cancel this sent shipment? The items will be returned to the Warehouse. This action CANNOT be undone!"))
+
+                if settings.get_inv_send_gift_certificate():
+                    actions.append(A(ICON("print"),
+                                     " ",
+                                     T("Gift Certificate"),
+                                     _href = URL(c = "inv",
+                                                 f = "send",
+                                                 args = [record.id,
+                                                         "gift_certificate",
+                                                         ]
+                                                 ),
+                                     _class = "action-btn"
+                                     )
+                                   )
+
             #    msg = ""
             #    if cnt == 1:
             #       msg = T("One item is attached to this shipment")
             #    elif cnt > 1:
             #        msg = T("%s items are attached to this shipment") % cnt
-            #    shipment_details.append(TR(TH(action, _colspan=2), TD(msg)))
-                shipment_details.append(TR(TH(action,
+            #    shipment_details.append(TR(TH(actions, _colspan=2), TD(msg)))
+                shipment_details.append(TR(TH(actions,
                                               _colspan = 2,
                                               )))
 

@@ -227,6 +227,7 @@ class BRCaseModel(S3Model):
                                               readable = not default_organisation,
                                               writable = not default_organisation,
                                               ),
+                     # @ToDo: Switch to person_id with optional filtering to Staff of User's Org
                      self.hrm_human_resource_id(label = T("Staff Member in Charge"),
                                                 represent = self.hrm_HumanResourceRepresent(show_link=False),
                                                 widget = None,
@@ -598,6 +599,7 @@ class BRCaseActivityModel(S3Model):
                                        ),
 
                      # Case Manager
+                     # @ToDo: Switch to person_id with optional filtering to Staff of Org of User or Case
                      self.hrm_human_resource_id(label = T("Staff Member in Charge"),
                                                 represent = hr_represent,
                                                 widget = None,
@@ -889,6 +891,7 @@ class BRCaseActivityModel(S3Model):
                      s3_date(default = "now",
                              ),
                      update_type_id(),
+                     # @ToDo: Switch to person_id with optional filtering to Staff of User's Org
                      self.hrm_human_resource_id(represent = hr_represent,
                                                 widget = None,
                                                 comment = None,
@@ -1101,6 +1104,7 @@ class BRAppointmentModel(S3Model):
                                          ),
                      s3_date(),
                      # Activate in template as needed:
+                     # @ToDo: Switch to person_id with optional filtering to Staff of User's Org
                      self.hrm_human_resource_id(readable = False,
                                                 writable = False,
                                                 ),
@@ -1517,6 +1521,7 @@ class BRAssistanceModel(S3Model):
                                writable = use_themes,
                                ),
                      assistance_status_id(),
+                     # @ToDo: Switch to person_id with optional filtering to Staff of User's Org
                      self.hrm_human_resource_id(comment = None,
                                                 represent = self.hrm_HumanResourceRepresent(show_link = False),
                                                 widget = None,

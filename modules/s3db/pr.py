@@ -10178,7 +10178,7 @@ def pr_image_modify(image_file,
                     to_format = None,
                     ):
     """
-        Resize the image passed in and store on the table
+        Resize the image passed in and store in the table
 
         @param image_file:    the image stored in a file object
         @param image_name:    the name of the original image

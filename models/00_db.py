@@ -105,9 +105,13 @@ if not session.s3:
 #auth.settings.login_userfield = "username"
 
 auth.settings.hmac_key = settings.get_auth_hmac_key()
-auth.define_tables(migrate=migrate, fake_migrate=fake_migrate)
+auth.define_tables(migrate = migrate,
+                   fake_migrate = fake_migrate,
+                   )
 
-current.audit = audit = s3base.S3Audit(migrate=migrate, fake_migrate=fake_migrate)
+current.audit = audit = s3base.S3Audit(migrate = migrate,
+                                       fake_migrate = fake_migrate,
+                                       )
 
 # Shortcuts for models/controllers/views
 # - removed to reduce per-request overheads & harmonise the environment in

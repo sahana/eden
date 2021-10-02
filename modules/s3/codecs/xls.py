@@ -829,7 +829,7 @@ class S3PivotTableXLS(object):
         rows, cols = self.sortrepr()
 
         # Create workbook and sheet
-        book = xlwt.Workbook(encoding="utf-8")
+        book = xlwt.Workbook(encoding = "utf-8")
         sheet = book.add_sheet(s3_str(title))
 
         write = self.write

@@ -200,7 +200,8 @@ def config(settings):
                 query = (table.id == row["id"]) & \
                         (table[fk] == ftable.id)
             record = db(query).select(ftable.realm_entity,
-                                      limitby=(0, 1)).first()
+                                      limitby = (0, 1),
+                                      ).first()
             if record:
                 realm_entity = record.realm_entity
                 break
@@ -233,7 +234,9 @@ def config(settings):
                     query = (ltable.organisation_id == row["id"]) & \
                             (ottable.id == ltable.organisation_type_id) & \
                             (ottable.name == "Red Cross / Red Crescent")
-                    rclink = db(query).select(ltable.id, limitby=(0, 1)).first()
+                    rclink = db(query).select(ltable.id,
+                                              limitby = (0, 1),
+                                              ).first()
                     if not rclink:
                         use_user_organisation = True
 
@@ -243,7 +246,9 @@ def config(settings):
                 query = (table.id == row["id"]) & \
                         (htable.person_id == table.person_id) & \
                         (htable.deleted != True)
-                rows = db(query).select(htable.realm_entity, limitby=(0, 2))
+                rows = db(query).select(htable.realm_entity,
+                                        limitby = (0, 2),
+                                        )
                 if len(rows) == 1:
                     realm_entity = rows.first().realm_entity
                 else:
@@ -254,7 +259,7 @@ def config(settings):
                             (ctable.id == table.course_id) & \
                             (otable.id == ctable.organisation_id)
                     org = db(query).select(otable.pe_id,
-                                           limitby = (0, 1)
+                                           limitby = (0, 1),
                                            ).first()
                     if org:
                         realm_entity = org.pe_id
