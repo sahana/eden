@@ -252,7 +252,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                               )
 
         # Create the workbook
-        book = xlwt.Workbook(encoding="utf-8")
+        book = xlwt.Workbook(encoding = "utf-8")
 
         # Add sheets
         sheets = []

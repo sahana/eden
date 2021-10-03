@@ -6256,17 +6256,17 @@ def inv_gift_certificate(r, **attr):
     # Items
     table = s3db.inv_track_item
     itable = s3db.supply_item
-    ptable = s3db.supply_item_pack
+    #ptable = s3db.supply_item_pack
 
     query = (table.send_id == send_id) & \
-            (table.item_id == itable.id) & \
-            (table.item_pack_id == ptable.id)
+            (table.item_id == itable.id)# & \
+            #(table.item_pack_id == ptable.id)
     items = db(query).select(table.quantity,
                              table.pack_value,
                              table.currency,
                              #itable.code,
                              itable.name,
-                             ptable.name,
+                             #ptable.name,
                              )
 
     # Destination
@@ -6347,7 +6347,7 @@ def inv_gift_certificate(r, **attr):
 
     labels = ["Description",
               "Quantity",
-              "Unit",
+              #"Unit",
               "Unit VALUE",
               VALUE,
               ]
@@ -6358,22 +6358,31 @@ def inv_gift_certificate(r, **attr):
     # Add sheet
     title = "Gift Certificate"
     sheet = book.add_sheet(title)
+    sheet.set_print_scaling(65)
 
     # Set column Widths
-    sheet.col(0).width = 1500
-    sheet.col(6).width = 500
-    COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
-    col_index = 1
-    column_widths = [0]
-    for label in labels:
-        if col_index in (4, 5):
-            width = max(int(len(label) * COL_WIDTH_MULTIPLIER * 1.1), 2000)
-        else:
-            width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
-        width = min(width, 65535) # USHRT_MAX
-        column_widths.append(width)
-        sheet.col(col_index).width = width
-        col_index += 1
+    sheet.col(0).width = 2750  # 2.10 cm
+    sheet.col(1).width = 10180 # 7.78 cm
+    sheet.col(2).width = 5940  # 4.54 cm
+    sheet.col(3).width = 2785  # 2.13 cm
+    sheet.col(4).width = 4110  # 3.14 cm
+    sheet.col(5).width = 4985  # 3.81 cm
+    sheet.col(6).width = 3400  # 2.60 cm
+    #COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
+    #col_index = 3
+    #column_widths = [None, # Empty Column
+    #                 None, # Merged Column
+    #                 None, # Merged Column
+    #                 ]
+    #for label in labels[1:]:
+    #    if col_index in (5, 6):
+    #        width = max(int(len(label) * COL_WIDTH_MULTIPLIER * 1.1), 2000)
+    #    else:
+    #        width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
+    #    width = min(width, 65535) # USHRT_MAX
+    #    column_widths.append(width)
+    #    sheet.col(col_index).width = width
+    #    col_index += 1
 
     # Define styles
     POINT_12 = 240 # 240 Twips = 12 point
@@ -6381,6 +6390,12 @@ def inv_gift_certificate(r, **attr):
 
     style = xlwt.XFStyle()
     style.font.height = POINT_12
+
+    THICK = style.borders.THICK
+    THIN = style.borders.THIN
+    HORZ_CENTER = style.alignment.HORZ_CENTER
+    HORZ_RIGHT = style.alignment.HORZ_RIGHT
+    VERT_CENTER = style.alignment.VERT_CENTER
 
     if fr:
         italic_style = xlwt.XFStyle()
@@ -6392,6 +6407,10 @@ def inv_gift_certificate(r, **attr):
         italic_wrap_style.font.height = POINT_12
         italic_wrap_style.alignment.wrap = 1
 
+    bold_style = xlwt.XFStyle()
+    bold_style.font.bold = True
+    bold_style.font.height = POINT_12
+
     bold_italic_style = xlwt.XFStyle()
     bold_italic_style.font.italic = True
     bold_italic_style.font.bold = True
@@ -6401,11 +6420,19 @@ def inv_gift_certificate(r, **attr):
     bold_italic_right_style.font.italic = True
     bold_italic_right_style.font.bold = True
     bold_italic_right_style.font.height = POINT_12
-    bold_italic_right_style.alignment.horz = style.alignment.HORZ_RIGHT
+    bold_italic_right_style.alignment.horz = HORZ_RIGHT
+
+    center_style = xlwt.XFStyle()
+    center_style.font.height = POINT_12
+    center_style.alignment.horz = HORZ_CENTER
 
     right_style = xlwt.XFStyle()
     right_style.font.height = POINT_12
-    right_style.alignment.horz = style.alignment.HORZ_RIGHT
+    right_style.alignment.horz = HORZ_RIGHT
+    right_style.borders.top = THIN
+    right_style.borders.left = THIN
+    right_style.borders.right = THIN
+    right_style.borders.bottom = THIN
 
     wrap_style = xlwt.XFStyle()
     wrap_style.font.height = POINT_12
@@ -6414,8 +6441,20 @@ def inv_gift_certificate(r, **attr):
     header_style = xlwt.XFStyle()
     header_style.font.bold = True
     header_style.font.height = POINT_12
-    header_style.alignment.horz = style.alignment.HORZ_CENTER
-    header_style.alignment.vert = style.alignment.VERT_CENTER
+    header_style.alignment.horz = HORZ_CENTER
+    header_style.alignment.vert = VERT_CENTER
+    header_style.borders.top = THIN
+    header_style.borders.left = THIN
+    header_style.borders.right = THIN
+    header_style.borders.bottom = THIN
+    header_style.pattern.pattern = xlwt.Style.pattern_map["fine_dots"]
+    header_style.pattern.pattern_fore_colour = xlwt.Style.colour_map["gray25"]
+
+    dest_style = xlwt.XFStyle()
+    dest_style.font.bold = True
+    dest_style.font.height = POINT_12
+    dest_style.alignment.horz = HORZ_CENTER
+    dest_style.alignment.vert = VERT_CENTER
 
     left_header_style = xlwt.XFStyle()
     left_header_style.font.bold = True
@@ -6424,12 +6463,17 @@ def inv_gift_certificate(r, **attr):
     box_style = xlwt.XFStyle()
     box_style.font.bold = True
     box_style.font.height = 360 # 360 Twips = 18 point
-    box_style.alignment.horz = style.alignment.HORZ_CENTER
-    box_style.alignment.vert = style.alignment.VERT_CENTER
-    box_style.borders.top = style.borders.THICK
-    box_style.borders.left = style.borders.THICK
-    box_style.borders.right = style.borders.THICK
-    box_style.borders.bottom = style.borders.THICK
+    box_style.alignment.horz = HORZ_CENTER
+    box_style.alignment.vert = VERT_CENTER
+    box_style.borders.top = THICK
+    box_style.borders.left = THICK
+    box_style.borders.right = THICK
+    box_style.borders.bottom = THICK
+
+    large_italic_font = xlwt.Font()
+    large_italic_font.bold = True
+    large_italic_font.height = 360 # 360 Twips = 18 point
+    large_italic_font.italic = True
 
     # 1st row => Org Name and Logo
     current_row = sheet.row(0)
@@ -6444,6 +6488,7 @@ def inv_gift_certificate(r, **attr):
         except:
             current.log.error("PIL not installed: Cannot insert logo")
         else:
+            IMG_WIDTH = 230
             filename, extension = os.path.splitext(logo)
             logo_path = os.path.join(r.folder, "uploads", logo)
             if extension == ".png":
@@ -6456,14 +6501,14 @@ def inv_gift_certificate(r, **attr):
                 img = Image.open(logo_path)
                 size = img.size
             width = size[0]
-            height = int(200/width * size[1])
-            img = img.convert("RGB").resize((200, height))
+            height = int(IMG_WIDTH/width * size[1])
+            img = img.convert("RGB").resize((IMG_WIDTH, height))
             from io import BytesIO
             bmpfile = BytesIO()
             img.save(bmpfile, "BMP")
             bmpfile.seek(0)
             bmpdata = bmpfile.read()
-            sheet.insert_bitmap_data(bmpdata, 0, 4)
+            sheet.insert_bitmap_data(bmpdata, 0, 5)
 
     if branch: 
         # 2nd row => Branch
@@ -6483,12 +6528,19 @@ def inv_gift_certificate(r, **attr):
         current_row.write(0, "Service Logistique", italic_style)
 
     # 7th row => Gift Certificate
-    current_row = sheet.row(6)
+    row_index = 6
+    current_row = sheet.row(row_index)
     current_row.height = int(2.8 * 360 * 1.2) # 2 rows * twips * bold
     label = "GIFT CERTIFICATE"
     if fr:
-        label = "%s\nCERTIFICAT DE DON" % label
-    sheet.write_merge(6, 6, 0, 6, label, box_style)
+        sheet.merge(row_index, row_index, 0, 6, box_style)
+        rich_text = ((label, box_style.font),
+                     ("\nCERTIFICAT DE DON", large_italic_font),
+                     )
+        sheet.write_rich_text(row_index, 0, rich_text, box_style)
+    else:
+        sheet.write_merge(row_index, row_index, 0, 6, label, box_style)
+    
 
     # 9th row => Reference
     current_row = sheet.row(8)
@@ -6510,46 +6562,63 @@ def inv_gift_certificate(r, **attr):
         sheet.write_merge(12, 12, 0, 6, msg, italic_wrap_style)
 
     # 15th row => Beneficiary
-    current_row = sheet.row(14)
+    row_index = 14
+    current_row = sheet.row(row_index)
     current_row.height = ROW_HEIGHT
     if fr:
-        label = "Beneficiary / bénéficiaire:"
+        rich_text = (("Beneficiary / ", bold_style.font),
+                     ("bénéficiaire:", bold_italic_style.font),
+                     )
+        sheet.write_rich_text(row_index, 0, rich_text, bold_style)
     else:
-        label = "Beneficiary:"
-    current_row.write(0, label, bold_italic_style)
+        current_row.write(0, "Beneficiary:", bold_style)
     label = "%s,\n%s" % (destination, country)
-    sheet.write_merge(14, 18, 2, 6, label, header_style)
+    sheet.write_merge(row_index, 18, 2, 5, label, dest_style)
 
     # 20th row => Goods
-    current_row = sheet.row(19)
+    row_index = 19
+    current_row = sheet.row(row_index)
     current_row.height = ROW_HEIGHT
     if fr:
-        label = "Goods / Biens:"
+        rich_text = (("Goods / ", bold_style.font),
+                     ("Biens:", bold_italic_style.font),
+                     )
+        sheet.write_rich_text(row_index, 0, rich_text, bold_style)
     else:
-        label = "Goods:"
-    current_row.write(0, label, bold_italic_style)
+        current_row.write(0, "Goods:", bold_style)
 
     # 21st row => Column Headers
-    current_row = sheet.row(20)
+    row_index = 20
+    current_row = sheet.row(row_index)
     current_row.height = ROW_HEIGHT
-    col_index = 1
-    for label in labels:
+    sheet.write_merge(row_index, row_index, 0, 2, labels[0], header_style)
+    col_index = 3
+    for label in labels[1:]:
         current_row.write(col_index, label, header_style)
         col_index += 1
 
     # Data rows
+    one_currency = True
+    grand_total = 0
     row_index = 21
     for row in items:
         current_row = sheet.row(row_index)
         current_row.height = ROW_HEIGHT
         track_row = row["inv_track_item"]
         item_row = row["supply_item"]
-        pack_row = row["supply_item_pack"]
+        #pack_row = row["supply_item_pack"]
         quantity = track_row.quantity
         item_value = track_row.pack_value
         if item_value:
             currency = track_row.currency
-            total_value = "%s %s" % ("{:.2f}".format(round(quantity * item_value, 2)),
+            if one_currency is True:
+                one_currency = currency
+            elif one_currency:
+                if one_currency != currency:
+                    one_currency = False
+            total_value = quantity * item_value
+            grand_total += total_value
+            total_value = "%s %s" % ("{:.2f}".format(round(total_value, 2)),
                                      currency,
                                      )
             item_value = "%s %s" % ("{:.2f}".format(item_value),
@@ -6558,23 +6627,108 @@ def inv_gift_certificate(r, **attr):
         else:
             item_value = ""
             total_value = ""
-        values = [item_row.name,
-                  str(int(quantity)),
-                  pack_row.name,
+        sheet.write_merge(row_index, row_index, 0, 2, item_row.name, right_style)
+        col_index = 3
+        values = [str(int(quantity)),
+                  #pack_row.name,
                   item_value,
                   total_value,
                   ]
-        col_index = 1
         for value in values:
             current_row.write(col_index, value, right_style)
-            if col_index in (1, 4, 5):
-                # Item Name, Values
-                width = round(len(value) * COL_WIDTH_MULTIPLIER)
-                if width > column_widths[col_index]:
-                    column_widths[col_index] = width
-                    sheet.col(col_index).width = width
+            #if col_index in (5, 6):
+            #    # Values
+            #    width = round(len(value) * COL_WIDTH_MULTIPLIER)
+            #    if width > column_widths[col_index]:
+            #        column_widths[col_index] = width
+            #        sheet.col(col_index).width = width
             col_index += 1
         row_index += 1
+
+    # Totals
+    current_row = sheet.row(row_index)
+    current_row.height = ROW_HEIGHT
+    sheet.write_merge(row_index, row_index, 0, 2, "Total", header_style)
+    current_row.write(3, "", header_style) # Cell Pattern
+    current_row.write(4, "", header_style) # Cell Pattern
+    if one_currency:
+        grand_total = "%s %s" % ("{:.2f}".format(round(grand_total, 2)),
+                                 currency,
+                                 )
+        current_row.write(5, grand_total, header_style)
+    else:
+        current_row.write(5, "", header_style)
+
+    # Without Commercial Value
+    row_index += 2
+    current_row = sheet.row(row_index)
+    current_row.height = ROW_HEIGHT
+    label = "WITHOUT COMMERCIAL VALUE - VALUE FOR CUSTOMS PURPOSES ONLY"
+    current_row.write(0, label, style)
+
+    row_index += 2
+    if fr:
+        # Without Commercial Value (Translated)
+        current_row = sheet.row(row_index)
+        current_row.height = ROW_HEIGHT
+        label = "SANS VALEUR COMMERCIALE - A USAGE EXCLUSIVEMENT DOUANIER"
+        current_row.write(0, label, italic_style)
+
+    # Humanitarian Aid
+    row_index += 2
+    current_row = sheet.row(row_index)
+    current_row.height = int(2.8 * POINT_12 * 1.2) # 2 rows * twips * bold
+    label = "HUMANITARIAN AID - NOT FOR SALE - RELIEF GOODS"
+    if fr:
+        sheet.merge(row_index, row_index, 1, 5, box_style)
+        rich_text = ((label, box_style.font),
+                     ("\nAIDE HUMANITAIRE - NE PEUT ETRE VENDU -", large_italic_font),
+                     )
+        sheet.write_rich_text(row_index, 1, rich_text, box_style)
+    else:
+        sheet.write_merge(row_index, row_index, 1, 5, label, box_style)
+
+    # Transported under GMA
+    row_index += 2
+    current_row = sheet.row(row_index)
+    current_row.height = ROW_HEIGHT
+    if fr:
+        label = "Marchandise transportée sous régime GMA"
+    else:
+        label = "Goods transported under GMA regime"
+    sheet.write_merge(row_index, row_index, 1, 5, label, center_style)
+
+    # Place/Date
+    row_index += 1
+    current_row = sheet.row(row_index)
+    current_row.height = ROW_HEIGHT
+    label = "Place, date:"
+    current_row.write(1, label, style)
+    if fr:
+        rich_text = (("Logistics Department / ", center_style.font),
+                     ("Service Logistique", italic_style.font),
+                     )
+        sheet.write_rich_text(row_index, 5, rich_text, center_style)
+    else:
+        current_row.write(5, "Logistics Department", center_style)
+
+    # Org
+    row_index += 1
+    current_row = sheet.row(row_index)
+    current_row.height = ROW_HEIGHT
+    current_row.write(5, org_name, center_style)
+
+    # Received By
+    row_index += 1
+    current_row = sheet.row(row_index)
+    current_row.height = ROW_HEIGHT
+    if fr:
+        rich_text = (("Received by / ", style.font),
+                     ("reçu par:", italic_style.font),
+                     )
+        sheet.write_rich_text(row_index, 0, rich_text, style)
+    else:
+        current_row.write(0, "Received by:", italic_style)
 
     # Export to File
     output = BytesIO()
