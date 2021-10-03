@@ -35,6 +35,8 @@ __all__ = ("WarehouseModel",
            "InventoryKittingModel",
            "InventoryMinimumModel",
            "InventoryOrderItemModel",
+           "InventoryPalletModel",
+           "InventoryPalletShipmentModel",
            "InventoryRequisitionModel",
            "InventoryRequisitionApproverModel",
            "InventoryRequisitionItemModel",
@@ -2342,7 +2344,8 @@ class InventoryMinimumModel(S3Model):
            msg_record_created = T("Minimum Stock Level added"),
            msg_record_modified = T("Minimum Stock Level updated"),
            msg_record_deleted = T("Minimum Stock Level deleted"),
-           msg_list_empty = T("No Minimum Stock Levels currently registered"))
+           msg_list_empty = T("No Minimum Stock Levels currently registered"),
+           )
 
         return {}
 
@@ -2410,12 +2413,175 @@ class InventoryOrderItemModel(S3Model):
             #msg_record_created = T("Purchase Item Added"),
             msg_record_modified = T("Purchase Item Updated"),
             msg_record_deleted = T("Purchase Item Deleted"),
-            msg_list_empty = T("No Purchase Items"))
+            msg_list_empty = T("No Purchase Items"),
+            )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
         return {}
+
+# =============================================================================
+class InventoryPalletModel(S3Model):
+    """
+        Pallets model
+        https://en.wikipedia.org/wiki/Pallet
+    """
+
+    names = ("inv_pallet",
+             "inv_pallet_id",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=3)
+
+        # -----------------------------------------------------------------
+        # Pallets
+        #
+        tablename = "inv_pallet"
+        self.define_table(tablename,
+                          Field("name", length=64, notnull=True,
+                                label = T("Name"),
+                                requires = [IS_NOT_EMPTY(),
+                                            IS_LENGTH(64),
+                                            ]
+                                ),
+                          Field("width", "double",
+                                default = 0.0,
+                                label = T("Width"),
+                                represent = float_represent,
+                                comment = "m",
+                                ),
+                          Field("length", "double",
+                                default = 0.0,
+                                label = T("Length"),
+                                represent = float_represent,
+                                comment = "m",
+                                ),
+                          Field("depth", "double",
+                                default = 0.0,
+                                label = T("Depth"),
+                                represent = float_represent,
+                                comment = "m",
+                                ),
+                          Field("weight", "double",
+                                default = 0.0,
+                                label = T("Weight"),
+                                represent = float_represent,
+                                comment = "kg",
+                                ),
+                          Field("capacity", "double",
+                                default = 0.0,
+                                label = T("Load"),
+                                represent = float_represent,
+                                comment = "kg",
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # CRUD strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Pallet"),
+            title_display = T("Pallet Details"),
+            title_list = T("Pallets"),
+            title_update = T("Edit Pallet"),
+            label_list_button = T("List Pallets"),
+            label_delete_button = T("Delete Pallet"),
+            msg_record_created = T("Pallet Added"),
+            msg_record_modified = T("Pallet Updated"),
+            msg_record_deleted = T("Pallet Deleted"),
+            msg_list_empty = T("No Pallets defined"),
+            )
+
+        # Reusable Field
+        represent = S3Represent(lookup = tablename)
+        pallet_id = S3ReusableField("pallet_id", "reference %s" % tablename,
+                                    label = T("Pallet Type"),
+                                    ondelete = "RESTRICT",
+                                    represent = represent,
+                                    requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "inv_pallet.id",
+                                                          represent,
+                                                          orderby = "inv_pallet.name",
+                                                          sort = True,
+                                                          )
+                                                ),
+                                    sortby = "name",
+                                    )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"inv_pallet_id": pallet_id,
+                }
+
+# =============================================================================
+class InventoryPalletShipmentModel(S3Model):
+    """
+        Pallets <> Shipments model
+    """
+
+    names = ("inv_send_pallet",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # -----------------------------------------------------------------
+        # Pallets <> Outbound Shipments
+        #
+        tablename = "inv_send_pallet"
+        self.define_table(tablename,
+                          Field("number", "integer",
+                                label = T("Number"),
+                                ),
+                          self.inv_send_id(empty = False,
+                                           ondelete = "CASCADE",
+                                           ),
+                          self.inv_pallet_id(empty = False,
+                                             ondelete = "SET NULL",
+                                             ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       onvalidation = self.send_pallet_onvalidation,
+                       )
+
+        # CRUD strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Pallet"),
+            title_display = T("Pallet Details"),
+            title_list = T("Pallets"),
+            title_update = T("Edit Pallet"),
+            label_list_button = T("List Pallets"),
+            label_delete_button = T("Delete Pallet"),
+            msg_record_created = T("Pallet Added"),
+            msg_record_modified = T("Pallet Updated"),
+            msg_record_deleted = T("Pallet Deleted"),
+            msg_list_empty = T("No Pallets defined"),
+            )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def send_pallet_onvalidation(form):
+        """
+            Number must be Unique per Shipment
+        """
+
+        # @ToDo
+        pass
 
 # =============================================================================
 class InventoryRequisitionModel(S3Model):
@@ -2823,6 +2989,7 @@ class InventoryRequisitionModel(S3Model):
                                                         ),
                                          sortby = "date",
                                          )
+
         list_fields = ["date",
                        "date_required",
                        "site_id",
@@ -4702,7 +4869,8 @@ class InventoryTrackingModel(S3Model):
             msg_record_created = T("Shipment Created"),
             msg_record_modified = T("Sent Shipment updated"),
             msg_record_deleted = T("Sent Shipment canceled"),
-            msg_list_empty = T("No Sent Shipments"))
+            msg_list_empty = T("No Sent Shipments"),
+            )
 
         # Reusable Field
         send_represent = inv_SendRepresent(show_link = True,
@@ -4726,6 +4894,8 @@ class InventoryTrackingModel(S3Model):
         add_components(tablename,
 
                        inv_track_item = "send_id",
+
+                       inv_send_pallet = "send_id",
 
                        # Requisitions
                        inv_send_req = "send_id",
@@ -5295,7 +5465,8 @@ $.filterOptionsS3({
             msg_record_created = T("Item Added to Shipment"),
             msg_record_modified = T("Shipment Item updated"),
             msg_record_deleted = T("Shipment Item deleted"),
-            msg_list_empty = T("No Shipment Items"))
+            msg_list_empty = T("No Shipment Items"),
+            )
 
         # Filter Widgets
         filter_widgets = [
@@ -10060,6 +10231,8 @@ def inv_send_rheader(r):
             tabs = [(T("Edit Details"), None),
                     (T("Items"), "track_item"),
                     ]
+            if settings.get_inv_send_pallets():
+                tabs.append((T("Pallets"), "send_pallet"))
             if settings.get_inv_document_filing():
                 tabs.append((T("Documents"), "document"))
 

@@ -315,6 +315,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             M("Donors", f="donor"),
                             M("Suppliers", f="supplier"),
                             M("Facilities", f="facility"),
+                            M("Pallets", f="pallet"),
                             M("Stock limit", f="minimum"),
                         ),
                         M("Reports", link=False)(

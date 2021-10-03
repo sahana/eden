@@ -72,7 +72,8 @@ class SupplyModel(S3Model):
         across multiple modules.
 
         @ToDo: Break this class up where possible
-               - is this just supply_item_alt?
+               - is this just supply_item_alt and supply_kit_item?
+               Make Brand a freetext field?
     """
 
     names = ("supply_brand",
@@ -376,7 +377,7 @@ $.filterOptionsS3({
                   deduplicate = self.supply_item_category_duplicate,
                   #hierarchy = "parent_item_category_id",
                   #hierarchy_link = "parent",
-                  onvalidation = self.supply_item_category_onvalidate,
+                  onvalidation = self.supply_item_category_onvalidation,
                   )
 
         # =====================================================================
@@ -992,7 +993,7 @@ $.filterOptionsS3({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def supply_item_category_onvalidate(form):
+    def supply_item_category_onvalidation(form):
         """
             Checks that either a Code OR a Name are entered
         """

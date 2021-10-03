@@ -2078,6 +2078,14 @@ def order_item():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def pallet():
+    """
+        RESTful CRUD Controller for Pallets
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def req_approver():
     """
         RESTful CRUD Controller for Requisition Approvers

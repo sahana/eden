@@ -4794,7 +4794,16 @@ class S3Config(Storage):
         return self.inv.get("minimums", False)
 
     def get_inv_send_gift_certificate(self):
+        """
+            Whether to show a button to generate a Gift Certificate for Outbound Shipments
+        """
         return self.inv.get("send_gift_certificate", False)
+
+    def get_inv_send_pallets(self):
+        """
+            Whether to show a tab to manage Palletisation for Outbound Shipments
+        """
+        return self.inv.get("send_pallets", False)
 
     def get_inv_stock_cards(self):
         """
