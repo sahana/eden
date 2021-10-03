@@ -1759,7 +1759,7 @@ class EventAssetModel(S3Model):
         incident_id = form_vars_get("incident_id")
         if not incident_id:
             link = current.db(table.id == form_vars_get("id")).select(table.incident_id,
-                                                                      limitby = (0, 1)
+                                                                      limitby = (0, 1),
                                                                       ).first()
             incident_id = link.incident_id
 
@@ -2291,7 +2291,7 @@ class EventHRModel(S3Model):
         incident_id = form_vars_get("incident_id")
         if not incident_id:
             link = current.db(table.id == form_vars_get("id")).select(table.incident_id,
-                                                                      limitby = (0, 1)
+                                                                      limitby = (0, 1),
                                                                       ).first()
             incident_id = link.incident_id
 
@@ -3773,7 +3773,7 @@ class IncidentModel(S3Model):
                     }
             jtable = s3db.hrm_job_title
             job_title = current.db(jtable.name == "Incident Commander").select(jtable.id,
-                                                                               limitby = (0, 1)
+                                                                               limitby = (0, 1),
                                                                                ).first()
             if job_title:
                 data["job_title_id"] = job_title.id
@@ -3916,7 +3916,7 @@ class IncidentModel(S3Model):
 
         jtable = s3db.hrm_job_title
         job_title = db(jtable.name == "Incident Commander").select(jtable.id,
-                                                                   limitby = (0, 1)
+                                                                   limitby = (0, 1),
                                                                    ).first()
 
         if job_title:
@@ -3930,7 +3930,7 @@ class IncidentModel(S3Model):
                         (htable.end_date == None)
                 hr = db(query).select(htable.id,
                                       htable.person_id,
-                                      limitby=(0, 1)
+                                      limitby = (0, 1),
                                       ).first()
                 if hr:
                     if hr.person_id == person_id:
@@ -3957,7 +3957,7 @@ class IncidentModel(S3Model):
                         (htable.person_id != None) & \
                         (htable.end_date == None)
                 hr = db(query).select(htable.id,
-                                      limitby=(0, 1)
+                                      limitby = (0, 1),
                                       ).first()
                 if hr:
                     hr.update_record(end_date = current.request.utcnow)
@@ -4071,7 +4071,7 @@ class IncidentModel(S3Model):
         exists = db(query).select(ltable.id,
                                   ltable.deleted,
                                   ltable.deleted_fk,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if exists:
             link_id = exists.id
@@ -4112,7 +4112,7 @@ class IncidentModel(S3Model):
                 (ltable.user_id == user_id)
         exists = current.db(query).select(ltable.id,
                                           ltable.deleted,
-                                          limitby=(0, 1)
+                                          limitby = (0, 1),
                                           ).first()
         if exists and not exists.deleted:
             resource = s3db.resource("event_bookmark", id=exists.id)
@@ -4144,7 +4144,7 @@ class IncidentModel(S3Model):
         exists = db(ttable.name == tag).select(ttable.id,
                                                ttable.deleted,
                                                ttable.deleted_fk,
-                                               limitby=(0, 1)
+                                               limitby = (0, 1),
                                                ).first()
         if exists:
             tag_id = exists.id
@@ -4162,7 +4162,7 @@ class IncidentModel(S3Model):
         exists = db(query).select(ltable.id,
                                   ltable.deleted,
                                   ltable.deleted_fk,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if exists:
             if exists.deleted:
@@ -4201,7 +4201,7 @@ class IncidentModel(S3Model):
         ttable = s3db.cms_tag
         exists = db(ttable.name == tag).select(ttable.id,
                                                ttable.deleted,
-                                               limitby=(0, 1)
+                                               limitby = (0, 1),
                                                ).first()
         if exists:
             tag_id = exists.id
@@ -4210,7 +4210,7 @@ class IncidentModel(S3Model):
                     (ltable.incident_id == incident_id)
             exists = db(query).select(ltable.id,
                                       ltable.deleted,
-                                      limitby=(0, 1)
+                                      limitby = (0, 1),
                                       ).first()
             if exists and not exists.deleted:
                 resource = s3db.resource("event_tag", id=exists.id)
@@ -4246,7 +4246,7 @@ class IncidentModel(S3Model):
             query = (ptable.pe_id == auth.user.pe_id) & \
                     (mtable.person_id == ptable.id)
             member = db(query).select(mtable.id,
-                                      limitby = (0, 1)
+                                      limitby = (0, 1),
                                       ).first()
             if not member:
                 output = current.xml.json_message(False, 403, current.T("Cannot Share to a Forum unless you are a Member"))
@@ -4257,7 +4257,7 @@ class IncidentModel(S3Model):
         query = (ltable.incident_id == incident_id) & \
                 (ltable.forum_id == forum_id)
         exists = db(query).select(ltable.id,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if not exists:
             ltable.insert(incident_id = incident_id,
@@ -4293,7 +4293,7 @@ class IncidentModel(S3Model):
                 (ltable.forum_id == forum_id)
         exists = db(query).select(ltable.id,
                                   ltable.created_by,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if exists:
             auth = current.auth
@@ -4471,7 +4471,9 @@ class IncidentReportModel(S3Model):
         self.set_method("event", "incident_report",
                         method = "assign",
                         action = event_IncidentAssignMethod(component = "incident_report_incident",
-                                                            next_tab = "incident_report"))
+                                                            next_tab = "incident_report",
+                                                            ),
+                        )
 
         # Components
         self.add_components(tablename,
@@ -4968,7 +4970,7 @@ def set_event_from_incident(form, tablename):
     if "incident_id" not in form_vars:
         record = db(table.id == record_id).select(table.id,
                                                   table.incident_id,
-                                                  limitby=(0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
         if not record:
             return
@@ -4979,7 +4981,7 @@ def set_event_from_incident(form, tablename):
     if record.incident_id:
         itable = s3db.event_incident
         incident = db(itable.id == record.incident_id).select(itable.event_id,
-                                                              limitby=(0, 1)
+                                                              limitby = (0, 1),
                                                               ).first()
         if incident:
             db(table.id == record_id).update(event_id = incident.event_id)
@@ -5878,11 +5880,13 @@ class event_EventAssignMethod(S3Method):
                                   f = "event",
                                   # @ToDo: Popup (add class="s3_modal"
                                   #args = ["[id]", "profile.popup"])
-                                  args = ["[id]", "profile"])
+                                  args = ["[id]", "profile"],
+                                  )
                 S3CRUD.action_buttons(r,
                                       deletable = False,
                                       read_url = profile_url,
-                                      update_url = profile_url)
+                                      update_url = profile_url,
+                                      )
                 response.s3.no_formats = True
 
                 # Filter form
@@ -5901,51 +5905,54 @@ class event_EventAssignMethod(S3Method):
                     # Where to retrieve updated filter options from:
                     filter_ajax_url = URL(c = "event",
                                           f = "event",
-                                          args=["filter.options"],
-                                          vars={})
+                                          args = ["filter.options"],
+                                          vars = {},
+                                          )
 
                     get_config = resource.get_config
                     filter_clear = get_config("filter_clear", True)
                     filter_formstyle = get_config("filter_formstyle", None)
                     filter_submit = get_config("filter_submit", True)
                     filter_form = S3FilterForm(filter_widgets,
-                                               clear=filter_clear,
-                                               formstyle=filter_formstyle,
-                                               submit=filter_submit,
-                                               ajax=True,
-                                               url=filter_submit_url,
-                                               ajaxurl=filter_ajax_url,
-                                               _class="filter-form",
-                                               _id="datatable-filter-form",
+                                               clear = filter_clear,
+                                               formstyle = filter_formstyle,
+                                               submit = filter_submit,
+                                               ajax = True,
+                                               url = filter_submit_url,
+                                               ajaxurl = filter_ajax_url,
+                                               _class = "filter-form",
+                                               _id = "datatable-filter-form",
                                                )
                     fresource = current.s3db.resource(resource.tablename)
                     alias = r.component.alias if r.component else None
                     ff = filter_form.html(fresource,
                                           r.get_vars,
-                                          target="datatable",
-                                          alias=alias)
+                                          target = "datatable",
+                                          alias = alias,
+                                          )
                 else:
                     ff = ""
 
                 # Data table (items)
                 data = resource.select(list_fields,
-                                       start=0,
-                                       limit=limit,
-                                       orderby=orderby,
-                                       left=left,
-                                       count=True,
-                                       represent=True)
+                                       start = 0,
+                                       limit = limit,
+                                       orderby = orderby,
+                                       left = left,
+                                       count = True,
+                                       represent = True,
+                                       )
                 filteredrows = data["numrows"]
                 dt = S3DataTable(data["rfields"], data["rows"])
 
                 items = dt.html(totalrows,
                                 filteredrows,
                                 dt_id,
-                                dt_ajax_url=r.url(representation="aadata"),
-                                dt_bulk_actions=dt_bulk_actions,
-                                dt_pageLength=display_length,
-                                dt_pagination="true",
-                                dt_searching="false",
+                                dt_ajax_url = r.url(representation = "aadata"),
+                                dt_bulk_actions = dt_bulk_actions,
+                                dt_pageLength = display_length,
+                                dt_pagination = "true",
+                                dt_searching = "false",
                                 )
 
                 response.view = "list_filter.html"
@@ -5963,12 +5970,13 @@ class event_EventAssignMethod(S3Method):
                     echo = None
 
                 data = resource.select(list_fields,
-                                       start=0,
-                                       limit=limit,
-                                       orderby=orderby,
-                                       left=left,
-                                       count=True,
-                                       represent=True)
+                                       start = 0,
+                                       limit = limit,
+                                       orderby = orderby,
+                                       left = left,
+                                       count = True,
+                                       represent = True,
+                                       )
                 filteredrows = data["numrows"]
                 dt = S3DataTable(data["rfields"], data["rows"])
 
@@ -6072,7 +6080,9 @@ class event_IncidentAssignMethod(S3Method):
                     query = ~(FS("id").belongs(selected))
                     iresource = s3db.resource("event_incident",
                                               alias = self.component,
-                                              filter=query, vars=filters)
+                                              filter = query,
+                                              vars = filters,
+                                              )
                     rows = iresource.select(["id"], as_rows=True)
                     selected = [str(row.id) for row in rows]
 
@@ -6080,7 +6090,7 @@ class event_IncidentAssignMethod(S3Method):
                 query = (table.incident_id.belongs(selected)) & \
                         (table[fkey] == record_id) & \
                         (table.deleted == False)
-                rows = db(query).select(table.incident_id).as_dict(key="incident_id")
+                rows = db(query).select(table.incident_id).as_dict(key = "incident_id")
 
                 onaccept = s3db.onaccept
                 set_record_owner = current.auth.s3_set_record_owner
@@ -6318,7 +6328,8 @@ class event_IncidentAssignMethod(S3Method):
                                        orderby = orderby,
                                        left = left,
                                        count = True,
-                                       represent = True)
+                                       represent = True,
+                                       )
                 filteredrows = data["numrows"]
                 dt = S3DataTable(data["rfields"], data["rows"])
 
@@ -6357,7 +6368,8 @@ class event_IncidentAssignMethod(S3Method):
                                        orderby = orderby,
                                        left = left,
                                        count = True,
-                                       represent = True)
+                                       represent = True,
+                                       )
                 filteredrows = data["numrows"]
                 dt = S3DataTable(data["rfields"], data["rows"])
 
@@ -6613,7 +6625,9 @@ def event_incident_list_layout(list_id, item_id, resource, rfields, record,
     organisation_id = raw["event_incident.organisation_id"]
     location = record["event_incident.location_id"]
 
-    org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+    org_url = URL(c="org", f="organisation",
+                  args = [organisation_id, "profile"],
+                  )
     org_logo = raw["org_organisation.logo"]
     if org_logo:
         org_logo = A(IMG(_src = URL(c="default", f="download",

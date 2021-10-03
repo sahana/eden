@@ -7129,7 +7129,8 @@ def org_organisation_controller():
     # Pre-process
     def prep(r):
         # Location Filter
-        s3db.gis_location_filter(r)
+        from .gis import gis_location_filter
+        gis_location_filter(r)
 
         if r.representation == "json":
             r.table.pe_id.readable = True
@@ -7658,7 +7659,8 @@ def org_office_controller():
     # Pre-processor
     def prep(r):
         # Location Filter
-        s3db.gis_location_filter(r)
+        from .gis import gis_location_filter
+        gis_location_filter(r)
 
         table = r.table
         if organisation_id:
@@ -7768,7 +7770,8 @@ def org_facility_controller():
     # Pre-processor
     def prep(r):
         # Location Filter
-        s3db.gis_location_filter(r)
+        from .gis import gis_location_filter
+        gis_location_filter(r)
 
         if r.interactive:
             if not r.component:

@@ -189,7 +189,7 @@ function s3_popup_refresh_caller(popupData) {
         parentWindow.S3.popup_remove();
         return;
     } else {
-        s3_debug('Caller: ', caller);
+        s3_debug('Caller', caller);
     }
 
     var personID = $_GET.person_id;
@@ -201,11 +201,17 @@ function s3_popup_refresh_caller(popupData) {
         return;
     }
 
-    var re = new RegExp('.*\\' + S3.Ap + '\\/'),
+    var args,
         child = $_GET.child,
-        relativeURL,
-        args,
-        childResource;
+        childResource,
+        lookupPrefix = $_GET.prefix,
+        optionsVar = $_GET.optionsVar,
+        optionsValue = $_GET.optionsValue,
+        parent = $_GET.parent,
+        parentURL = '' + parentWindow.location,
+        parentResource,
+        re = new RegExp('.*\\' + S3.Ap + '\\/'),
+        relativeURL;
 
     if (typeof child === 'undefined') {
         // Use default
@@ -219,11 +225,6 @@ function s3_popup_refresh_caller(popupData) {
         childResource = child;
     }
     s3_debug('childResource', childResource);
-
-    var parent = $_GET.parent,
-        parentURL = '' + parentWindow.location,
-        parentResource,
-        lookupPrefix = $_GET.prefix;
 
     relativeURL = parentURL.replace(re, '');
 
@@ -266,9 +267,14 @@ function s3_popup_refresh_caller(popupData) {
     }
     s3_debug('parentResource', parentResource);
     s3_debug('lookupPrefix', lookupPrefix);
+    s3_debug('optionsVar', optionsVar);
+    s3_debug('optionsValue', optionsValue);
 
     // URL to retrieve the Options list for the field of the master resource
-    var optionsURL = S3.Ap.concat('/' + lookupPrefix + '/' + parentResource + '/options.s3json?field=' + childResource);
+    var optionsURL = S3.Ap.concat('/' + lookupPrefix + '/' + parentResource + '/options.s3json?field=' + childResource)
+    if (typeof optionsVar !== 'undefined' && typeof optionsValue !== 'undefined') {
+        optionsURL += '&' + optionsVar + '=' + optionsValue;
+    }
 
     // Identify the widget type (Dropdown, Checkboxes, Hierarchy or Autocomplete)
     callerWidget = parentWindow.$('#' + caller);

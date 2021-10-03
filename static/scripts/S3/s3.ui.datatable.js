@@ -1916,14 +1916,18 @@
      */
     $.fn.dataTableExt.oApi.fnReloadAjax = function(oSettings, sNewSource) {
 
-        if ( sNewSource != 'undefined' && sNewSource != null ) {
+        if (oSettings == null) {
+            return;
+        }
+
+        if (sNewSource != 'undefined' && sNewSource != null) {
             // sNewSource is a string containing the new Ajax-URL for
             // this instance, so override the previous setting
             oSettings.sAjaxSource = sNewSource;
         }
 
         // Show the "Processing..." box
-        this.oApi._fnProcessingDisplay( oSettings, true );
+        this.oApi._fnProcessingDisplay(oSettings, true);
 
         // Call ajax with empty request to trigger the pipeline
         // script, clear the table cache and run the following

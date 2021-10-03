@@ -62,15 +62,15 @@ def building_marker_fn(record):
         marker = db(mtable.name == marker).select(mtable.image,
                                                   mtable.height,
                                                   mtable.width,
-                                                  cache=s3db.cache,
-                                                  limitby=(0, 1)
+                                                  cache = s3db.cache,
+                                                  limitby = (0, 1),
                                                   ).first()
     except:
         marker = db(mtable.name == "residence").select(mtable.image,
                                                        mtable.height,
                                                        mtable.width,
-                                                       cache=s3db.cache,
-                                                       limitby=(0, 1)
+                                                       cache = s3db.cache,
+                                                       limitby = (0, 1),
                                                        ).first()
     return marker
 
@@ -81,24 +81,30 @@ def building():
     # @ToDo: deployment_setting
     ctable = s3db.gis_config
     config = db(ctable.name == "Queens").select(ctable.id,
-                                                limitby=(0, 1)).first()
+                                                limitby = (0, 1),
+                                                ).first()
     if config:
         gis.set_config(config.id)
 
     # Pre-processor
     def prep(r):
         # Location Filter
-        #s3db.gis_location_filter(r)
+        #from s3db.gis import gis_location_filter
+        #gis_location_filter(r)
 
         if r.interactive:
             if r.method == "map":
                 # Tell the client to request per-feature markers
-                s3db.configure("assess_building", marker_fn=building_marker_fn)
+                s3db.configure("assess_building",
+                               marker_fn = building_marker_fn,
+                               )
 
         elif r.representation == "geojson":
             # Load these models now as they'll be needed when we encode
             mtable = s3db.gis_marker
-            s3db.configure("assess_building", marker_fn=building_marker_fn)
+            s3db.configure("assess_building",
+                           marker_fn = building_marker_fn,
+                           )
 
         return True
     s3.prep = prep

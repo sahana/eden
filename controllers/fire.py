@@ -20,7 +20,7 @@ def index():
 
     row = db(query).select(stable.id,
                            stable.name,
-                           limitby = (0, 1)
+                           limitby = (0, 1),
                            ).first()
     if row:
         station_id = row.id
@@ -83,7 +83,8 @@ def station():
     # Pre-processor
     def prep(r):
         # Location Filter
-        s3db.gis_location_filter(r)
+        from s3db.gis import gis_location_filter
+        gis_location_filter(r)
 
         if r.interactive:
             if r.component:

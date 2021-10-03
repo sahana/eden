@@ -1,12 +1,13 @@
 {{if s3.debug:}}{{# Running in Debug mode, so we want each script to download separately & to use the uncompressed versions }}
-<script src="/{{=appname}}/static/scripts/ba-debug.min.js"></script>
 <script>//<![CDATA[
 function s3_debug(message, value) {
-    if (undefined == value) {
-        debug.debug('s3_debug: ' + message);
-    } else {
-        debug.debug('s3_debug: ' + message + ': ' + value);
-    }
+ if (window.console && console.log) {
+  if (undefined == value) {
+   console.log('s3_debug: ' + message);
+  } else {
+   console.log('s3_debug: ' + message + ': ' + value);
+  }
+ }
 }
 //]]></script>
 {{if s3.cdn:}}

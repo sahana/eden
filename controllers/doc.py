@@ -22,7 +22,8 @@ def document():
     # Pre-processor
     def prep(r):
         # Location Filter
-        s3db.gis_location_filter(r)
+        from s3db.gis import gis_location_filter
+        gis_location_filter(r)
 
         if r.method in ("create", "create.popup"):
             doc_id = get_vars.get("~.doc_id", None)
@@ -118,7 +119,8 @@ def image():
     # Pre-processor
     def prep(r):
         # Location Filter
-        s3db.gis_location_filter(r)
+        from s3db.gis import gis_location_filter
+        gis_location_filter(r)
 
         if r.method in ("create", "create.popup"):
             doc_id = get_vars.get("~.doc_id", None)

@@ -53,7 +53,8 @@ def project():
     def prep(r):
 
         # Location Filter
-        s3db.gis_location_filter(r)
+        from s3db.gis import gis_location_filter
+        gis_location_filter(r)
 
         component = r.component
         component_name = component.name if component else None

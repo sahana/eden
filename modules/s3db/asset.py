@@ -44,6 +44,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
+from s3layouts import S3PopupLink
 
 # Dependency list for translate-module
 depends = ["supply"]
@@ -262,8 +263,9 @@ class AssetModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
+        ADD_ASSET = T("Create Asset")
         crud_strings[tablename] = Storage(
-            label_create = T("Create Asset"),
+            label_create = ADD_ASSET,
             title_display = T("Asset Details"),
             title_list =  T("Assets"),
             title_update = T("Edit Asset"),
@@ -273,7 +275,8 @@ class AssetModel(S3Model):
             msg_record_created = T("Asset added"),
             msg_record_modified = T("Asset updated"),
             msg_record_deleted = T("Asset deleted"),
-            msg_list_empty = T("No Assets currently registered"))
+            msg_list_empty = T("No Assets currently registered"),
+            )
 
         asset_represent = asset_AssetRepresent(show_link = True)
 
@@ -288,6 +291,11 @@ class AssetModel(S3Model):
                                                           sort = True,
                                                           )),
                                    sortby = "number",
+                                   comment = S3PopupLink(c = "asset",
+                                                         f = "asset",
+                                                         label = ADD_ASSET,
+                                                         title = T("Asset"),
+                                                         ),
                                    )
 
         # Which levels of Hierarchy are we using?
@@ -1252,10 +1260,19 @@ def asset_controller():
     # Pre-process
     def prep(r):
         # Location Filter
-        current.s3db.gis_location_filter(r)
+        from .gis import gis_location_filter
+        gis_location_filter(r)
 
         if r.component_name == "log":
             asset_log_prep(r)
+        else:
+            item_id = r.get_vars.get("item_id")
+            if item_id:
+                # e.g. coming from Incident Action Plan
+                f  = r.table.item_id
+                f.default = item_id
+                f.writable = False
+                f.comment = False
 
         return True
     s3.prep = prep
@@ -1300,7 +1317,8 @@ class asset_AssetRepresent(S3Represent):
                              fields = fields,
                              show_link = show_link,
                              translate = translate,
-                             multiple = multiple)
+                             multiple = multiple,
+                             )
 
     # -------------------------------------------------------------------------
     def lookup_rows(self, key, values, fields=None):
