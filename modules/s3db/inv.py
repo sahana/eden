@@ -6956,12 +6956,12 @@ def inv_pick_list(r, **attr):
               s3_str(T("Code")),
               s3_str(T("Item Name")),
               s3_str(T("UoM")),
-              s3_str(T("Unit")),
-              s3_str(T("Total")),
-              s3_str(T("Unit")),
-              s3_str(T("Total")),
               s3_str(T("Qty to Pick")),
               s3_str(T("Picked Qty")),
+              s3_str(T("Unit")),
+              s3_str(T("Total")),
+              s3_str(T("Unit")),
+              s3_str(T("Total")),
               ]
 
     # Create the workbook
@@ -6970,6 +6970,8 @@ def inv_pick_list(r, **attr):
     # Add sheet
     title = s3_str(T("Picking List"))
     sheet = book.add_sheet(title)
+    sheet.set_portrait(0) # Landscape
+    sheet.set_print_scaling(90)
 
     # Set column Widths
     COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
@@ -6985,11 +6987,28 @@ def inv_pick_list(r, **attr):
     # Define styles
     left_style = xlwt.XFStyle()
 
+    THIN = left_style.borders.THIN
+    HORZ_CENTER = left_style.alignment.HORZ_CENTER
+    HORZ_RIGHT = left_style.alignment.HORZ_RIGHT
+
+    left_style.borders.top = THIN
+    left_style.borders.left = THIN
+    left_style.borders.right = THIN
+    left_style.borders.bottom = THIN
+
     right_style = xlwt.XFStyle()
-    right_style.alignment.horz = right_style.alignment.HORZ_RIGHT
+    right_style.alignment.horz = HORZ_RIGHT
+    right_style.borders.top = THIN
+    right_style.borders.left = THIN
+    right_style.borders.right = THIN
+    right_style.borders.bottom = THIN
 
     center_style = xlwt.XFStyle()
-    center_style.alignment.horz = center_style.alignment.HORZ_CENTER
+    center_style.alignment.horz = HORZ_CENTER
+    center_style.borders.top = THIN
+    center_style.borders.left = THIN
+    center_style.borders.right = THIN
+    center_style.borders.bottom = THIN
 
     large_header_style = xlwt.XFStyle()
     large_header_style.font.bold = True
@@ -6997,7 +7016,13 @@ def inv_pick_list(r, **attr):
 
     header_style = xlwt.XFStyle()
     header_style.font.bold = True
-    header_style.alignment.horz = header_style.alignment.HORZ_CENTER
+    header_style.alignment.horz = HORZ_CENTER
+    header_style.borders.top = THIN
+    header_style.borders.left = THIN
+    header_style.borders.right = THIN
+    header_style.borders.bottom = THIN
+    header_style.pattern.pattern = xlwt.Style.pattern_map["fine_dots"]
+    header_style.pattern.pattern_fore_colour = xlwt.Style.colour_map["gray25"]
 
     # 1st row => Report Title & Waybill
     current_row = sheet.row(0)
@@ -7012,8 +7037,8 @@ def inv_pick_list(r, **attr):
     #current_row.write(0, "%s:" % s3_str(T("Destination")), large_header_style)
     sheet.write_merge(1, 1, 0, 1, "%s:" % s3_str(T("Destination")), large_header_style)
     current_row.write(2, destination, large_header_style)
-    sheet.write_merge(1, 1, 4, 5, s3_str(T("Weight (kg)")), header_style)
-    sheet.write_merge(1, 1, 6, 7, s3_str(T("Volume (m3)")), header_style)
+    sheet.write_merge(1, 1, 6, 7, s3_str(T("Weight (kg)")), header_style)
+    sheet.write_merge(1, 1, 8, 9, s3_str(T("Volume (m3)")), header_style)
 
     # 3rd row => Column Headers
     current_row = sheet.row(2)
@@ -7057,18 +7082,18 @@ def inv_pick_list(r, **attr):
                   item_row.code or "",
                   item_name,
                   pack_name,
+                  str(int(quantity)),
+                  "", # Included for styling
                   "{:.2f}".format(item_weight),
                   total_weight,
                   "{:.2f}".format(item_volume),
                   total_volume,
-                  str(int(quantity)),
-                  #"", # Included for colouring
                   ]
         col_index = 0
         for value in values:
             if col_index in (0, 1, 2, 3):
                 style = left_style
-            elif col_index == 8:
+            elif col_index == 4:
                 # Qty to Pick
                 style = center_style
             else:
@@ -7079,11 +7104,13 @@ def inv_pick_list(r, **attr):
                 width = round(len(value) * COL_WIDTH_MULTIPLIER * 1.1)
                 if width > column_widths[col_index]:
                     column_widths[col_index] = width
+                    sheet.col(col_index).width = width
             elif col_index == 2:
                 # Item Name
                 width = round(len(value) * COL_WIDTH_MULTIPLIER * 0.9)
                 if width > column_widths[col_index]:
                     column_widths[col_index] = width
+                    sheet.col(col_index).width = width
             col_index += 1
         row_index += 1
 
