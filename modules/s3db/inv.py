@@ -2476,11 +2476,24 @@ class InventoryPalletModel(S3Model):
                                 represent = float_represent,
                                 comment = "kg",
                                 ),
-                          Field("capacity", "double",
+                          Field("load_capacity", "double",
                                 default = 0.0,
-                                label = T("Load"),
+                                label = T("Load Capacity"),
                                 represent = float_represent,
                                 comment = "kg",
+                                ),
+                          Field("max_height", "double",
+                                default = 0.0,
+                                label = T("Maximum Height (m)"),
+                                represent = float_represent,
+                                comment = T("Not including the Palette"),
+                                ),
+                          Field("max_volume", "double",
+                                default = 0.0,
+                                label = T("Maximum Volume"),
+                                represent = float_represent,
+                                comment = "m3",
+                                writable = False,
                                 ),
                           s3_comments(),
                           *s3_meta_fields())
@@ -2498,6 +2511,10 @@ class InventoryPalletModel(S3Model):
             msg_record_deleted = T("Pallet Deleted"),
             msg_list_empty = T("No Pallets defined"),
             )
+
+        self.configure(tablename,
+                       onaccept = self.inv_pallet_onaccept,
+                       )
 
         # Reusable Field
         represent = S3Represent(lookup = tablename)
@@ -2521,6 +2538,20 @@ class InventoryPalletModel(S3Model):
         return {"inv_pallet_id": pallet_id,
                 }
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_pallet_onaccept(form):
+        """
+            Calculate the Max Volume
+        """
+
+        form_vars = form.vars
+        form_vars_get = form_vars.get
+
+        max_volume = form_vars_get("width") * form_vars_get("length") * form_vars_get("max_height")
+
+        current.db(current.s3db.inv_pallet.id == form_vars.id).update(max_volume = max_volume)
+
 # =============================================================================
 class InventoryPalletShipmentModel(S3Model):
     """
@@ -2538,8 +2569,8 @@ class InventoryPalletShipmentModel(S3Model):
         configure = self.configure
         define_table = self.define_table
 
-        is_float_represent = IS_FLOAT_AMOUNT.represent
-        float_represent = lambda v: is_float_represent(v, precision=3)
+        #is_float_represent = IS_FLOAT_AMOUNT.represent
+        #float_represent = lambda v: is_float_represent(v, precision=3)
 
         # -----------------------------------------------------------------
         # Shipment Pallets
@@ -2566,15 +2597,18 @@ class InventoryPalletShipmentModel(S3Model):
                            ),
                      Field("volume", "double",
                            default = 0.0,
-                           label = T("Volume"),
-                           represent = float_represent,
-                           comment = "m3",
-                           #readable = False,
+                           #label = T("Volume"),
+                           #represent = float_represent,
+                           #comment = "m3",
+                           readable = False,
                            writable = False,
                            ),
                      s3_comments(),
-                     Field.Method("weight_rep",
+                     Field.Method("weight_max",
                                   self.send_pallet_weight,
+                                  ),
+                     Field.Method("volume_max",
+                                  self.send_pallet_volume,
                                   ),
                      *s3_meta_fields())
 
@@ -2591,15 +2625,17 @@ class InventoryPalletShipmentModel(S3Model):
         list_fields = ["number",
                        "pallet_id",
                        (T("Items"), "send_pallet_item.track_item_id$item_id$code"),
-                       (T("Weight (kg)"), "weight_rep"),
-                       "volume",
+                       (T("Weight (kg)"), "weight_max"),
+                       (T("Volume (m3)"), "volume_max"),
                        "comments",
                        ]
 
         configure(tablename,
                   crud_form = crud_form,
                   extra_fields = ["weight",
-                                  "pallet_id$capacity",
+                                  "volume",
+                                  "pallet_id$load_capacity",
+                                  "pallet_id$max_volume",
                                   ],
                   list_fields = list_fields,
                   onvalidation = self.send_pallet_onvalidation,
@@ -2688,6 +2724,70 @@ class InventoryPalletShipmentModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def send_pallet_volume(row):
+        """
+            Display the Volume of the Shipment's Pallet
+            - with capacity
+            - in red if over capacity
+        """
+
+        try:
+            inv_send_pallet = getattr(row, "inv_send_pallet")
+        except AttributeError:
+            inv_send_pallet = row
+
+        try:
+            volume = inv_send_pallet.volume
+        except AttributeError:
+            # Need to reload the inv_send_pallet
+            # Avoid this by adding to extra_fields
+            table = current.s3db.inv_send_pallet
+            query = (table.id == inv_send_pallet.id)
+            inv_send_pallet = current.db(query).select(table.id,
+                                                       table.volume,
+                                                       limitby = (0, 1),
+                                                       ).first()
+            volume = inv_send_pallet.volume if inv_send_pallet else None
+
+        if volume is None:
+            return current.messages["NONE"]
+
+        volume = round(volume, 3)
+
+        try:
+            inv_pallet = getattr(row, "inv_pallet")
+            max_volume = inv_pallet.max_volume
+        except KeyError:
+            # Need to load the inv_pallet
+            # Avoid this by adding to extra_fields
+            s3db = current.s3db
+            ttable = s3db.inv_send_pallet
+            ptable = s3db.inv_pallet
+            query = (table.id == inv_send_pallet.id) & \
+                    (table.pallet_id == ptable.id)
+            inv_pallet = current.db(query).select(ptable.max_volume,
+                                                  limitby = (0, 1),
+                                                  ).first()
+            max_volume = inv_pallet.max_volume
+
+        if not max_volume:
+            return volume
+
+        max_volume = round(max_volume, 3)
+        
+        if volume > max_volume:
+            return SPAN(SPAN(volume,
+                             _class = "expired",
+                             ),
+                        " / %s" % max_volume,
+                        )
+        else:
+            return "%s / %s" % (volume,
+                                max_volume,
+                                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def send_pallet_weight(row):
         """
             Display the Weight of the Shipment's Pallet
@@ -2720,7 +2820,7 @@ class InventoryPalletShipmentModel(S3Model):
 
         try:
             inv_pallet = getattr(row, "inv_pallet")
-            capacity = inv_pallet.capacity
+            load_capacity = inv_pallet.load_capacity
         except KeyError:
             # Need to load the inv_pallet
             # Avoid this by adding to extra_fields
@@ -2729,25 +2829,25 @@ class InventoryPalletShipmentModel(S3Model):
             ptable = s3db.inv_pallet
             query = (table.id == inv_send_pallet.id) & \
                     (table.pallet_id == ptable.id)
-            inv_pallet = current.db(query).select(ptable.capacity,
+            inv_pallet = current.db(query).select(ptable.load_capacity,
                                                   limitby = (0, 1),
                                                   ).first()
-            capacity = inv_pallet.capacity
+            load_capacity = inv_pallet.load_capacity
 
-        if not capacity:
+        if not load_capacity:
             return weight
 
-        capacity = round(capacity, 3)
+        load_capacity = round(load_capacity, 3)
         
-        if weight > capacity:
+        if weight > load_capacity:
             return SPAN(SPAN(weight,
                              _class = "expired",
                              ),
-                        " / %s" % capacity,
+                        " / %s" % load_capacity,
                         )
         else:
             return "%s / %s" % (weight,
-                                capacity,
+                                load_capacity,
                                 )
 
 # =============================================================================
@@ -9683,11 +9783,24 @@ def inv_send_controller():
                 table.date.readable = table.date.writable = False
 
             elif cname == "send_pallet":
-                # Filter out Items which are already palletised
+                send_id = r.id
+                # Number the Pallet automatically
                 sptable = s3db.inv_send_pallet
+                query = (sptable.send_id == send_id)
+                field = sptable.number
+                max_field = field.max()
+                current_number = db(query).select(max_field,
+                                                  orderby = max_field,
+                                                  limitby = (0, 1)
+                                                  ).first()[max_field]
+                if current_number:
+                    next_number = current_number + 1
+                else:
+                    next_number = 1
+                field.default = next_number
+                # Filter out Items which are already palletised
                 spitable = s3db.inv_send_pallet_item
-                query = (sptable.send_id == r.id) & \
-                        (sptable.id == spitable.send_pallet_id)
+                query &= (sptable.id == spitable.send_pallet_id)
                 rows = db(query).select(spitable.track_item_id)
                 track_item_ids = [row.track_item_id for row in rows]
                 spitable.track_item_id.requires.set_filter(not_filterby = "id",

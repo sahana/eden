@@ -12,7 +12,8 @@
          Length...............float...........Length (m)
          Depth................float...........Depth (m)
          Weight...............float...........Weight (kg)
-         Load.................float...........Load (kg)
+         Load Capacity........float...........Load Capacity (kg)
+         Max Height...........float...........Max Height (m)
          Comments.............string..........Comments
 
     *********************************************************************** -->
@@ -34,7 +35,8 @@
             <data field="length"><xsl:value-of select="col[@field='Length']"/></data>
             <data field="depth"><xsl:value-of select="col[@field='Depth']"/></data>
             <data field="weight"><xsl:value-of select="col[@field='Weight']"/></data>
-            <data field="capacity"><xsl:value-of select="col[@field='Load']"/></data>
+            <data field="load_capacity"><xsl:value-of select="col[@field='Load Capacity']"/></data>
+            <data field="max_height"><xsl:value-of select="col[@field='Max Height']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
         </resource>
     </xsl:template>
