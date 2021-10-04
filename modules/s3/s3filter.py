@@ -205,6 +205,8 @@ class S3FilterWidget(object):
         # Extract the URL values to populate the widget
         variable = self.variable(resource, get_vars)
 
+        # This gets done in S3FilterForm.apply_filter_defaults()
+        #defaults = self.opts.get("default", {})
         defaults = {}
         for k, v in self.values.items():
             selector = self._prefix(k)
@@ -2394,7 +2396,9 @@ class S3OptionsFilter(S3FilterWidget):
         name = attr["_name"]
 
         # Get the options
-        ftype, options, noopt = self._options(resource, values=values)
+        ftype, options, noopt = self._options(resource,
+                                              values = values,
+                                              )
         if options is None:
             options = []
             hide_widget = True
@@ -2445,7 +2449,7 @@ class S3OptionsFilter(S3FilterWidget):
                                     T("All##filter_options"),
                                     _for = "%s_filter_all" % name,
                                     ),
-                              _class="s3-options-filter-anyall",
+                              _class = "s3-options-filter-anyall",
                               )
         else:
             any_all = ""
@@ -2812,9 +2816,9 @@ class S3OptionsFilter(S3FilterWidget):
 
         if opts.get("sort", True):
             try:
-                opt_list.sort(key=lambda item: item[1])
+                opt_list.sort(key = lambda item: item[1])
             except:
-                opt_list.sort(key=lambda item: s3_unicode(item[1]))
+                opt_list.sort(key = lambda item: s3_unicode(item[1]))
         options = []
         empty = False
         none = opts["none"]
@@ -3279,9 +3283,9 @@ class S3FilterForm(object):
 
         T = current.T
         controls = []
-        opts = self.opts
+        opts_get = self.opts.get
 
-        advanced = opts.get("advanced", False)
+        advanced = opts_get("advanced", False)
         if advanced:
             _class = "filter-advanced"
             if advanced is True:
@@ -3302,11 +3306,11 @@ class S3FilterForm(object):
                               ),
                          ICON("down"),
                          ICON("up", _style = "display:none"),
-                         _class=_class
+                         _class = _class
                          )
             controls.append(advanced)
 
-        clear = opts.get("clear", True)
+        clear = opts_get("clear", True)
         if clear:
             _class = "filter-clear"
             if clear is True:
@@ -3316,7 +3320,9 @@ class S3FilterForm(object):
                 _class = "%s %s" % (clear[1], _class)
             else:
                 label = clear
-            clear = A(label, _class=_class)
+            clear = A(label,
+                      _class = _class,
+                      )
             clear.add_class("action-lnk")
             controls.append(clear)
 
@@ -3326,14 +3332,17 @@ class S3FilterForm(object):
                         )
             controls.append(show_fm)
 
-        return DIV(controls, _class="filter-controls") if controls else None
+        return DIV(controls,
+                   _class = "filter-controls",
+                   ) if controls else None
 
     # -------------------------------------------------------------------------
     def _render_widgets(self,
                         resource,
-                        get_vars=None,
-                        alias=None,
-                        formstyle=None):
+                        get_vars = None,
+                        alias = None,
+                        formstyle = None,
+                        ):
         """
             Render the filter widgets
 
@@ -3367,7 +3376,10 @@ class S3FilterForm(object):
                 row_id = None
                 label_id = None
             if label:
-                label = LABEL("%s:" % label, _id=label_id, _for=widget_id)
+                label = LABEL("%s:" % label,
+                              _id = label_id,
+                              _for = widget_id,
+                              )
             elif label is not False:
                 label = ""
             if not comment:
@@ -3400,7 +3412,7 @@ class S3FilterForm(object):
 
         SELECT_FILTER = current.T("Saved Filters")
 
-        ajaxurl = self.opts.get("saveurl", URL(args=["filter.json"], vars={}))
+        ajaxurl = self.opts.get("saveurl", URL(args = ["filter.json"], vars={}))
 
         # Current user
         auth = current.auth
@@ -3420,7 +3432,7 @@ class S3FilterForm(object):
         rows = current.db(query).select(table._id,
                                         table.title,
                                         table.query,
-                                        orderby = table.title
+                                        orderby = table.title,
                                         )
 
         options = [OPTION(SELECT_FILTER,
@@ -3432,7 +3444,9 @@ class S3FilterForm(object):
         filters = {}
         for row in rows:
             filter_id = row[table._id]
-            add_option(OPTION(row.title, _value=filter_id))
+            add_option(OPTION(row.title,
+                              _value = filter_id,
+                              ))
             query = row.query
             if query:
                 query = json.loads(query)

@@ -3686,7 +3686,7 @@ class S3GroupedOptionsWidget(FormWidget):
 
         fieldname = field.name
 
-        default = dict(value=value)
+        default = {"value": value}
         attr = self._attributes(field, default, **attributes)
 
         if "_id" in attr:
@@ -3725,8 +3725,9 @@ class S3GroupedOptionsWidget(FormWidget):
             widget_opts["comment"] = self.option_comment
             s3_include_underscore()
 
-        script = '''$('#%s').groupedopts(%s)''' % \
-                 (_id, json.dumps(widget_opts, separators=SEPARATORS))
+        script = '''$('#%s').groupedopts(%s)''' % (_id,
+                                                   json.dumps(widget_opts, separators=SEPARATORS),
+                                                   )
         jquery_ready = current.response.s3.jquery_ready
         if script not in jquery_ready:
             jquery_ready.append(script)
@@ -3747,7 +3748,9 @@ class S3GroupedOptionsWidget(FormWidget):
             render_item = self._render_item
             options = [render_item(i) for i in items]
             if label:
-                return [OPTGROUP(options, _label=label)]
+                return [OPTGROUP(options,
+                                 _label = label,
+                                 )]
             else:
                 return options
         else:
@@ -3831,7 +3834,8 @@ class S3GroupedOptionsWidget(FormWidget):
                         keys = [k for k, v in options if k.isdigit()]
                         query = ktable[pkey].belongs(keys)
                         rows = current.db(query).select(ktable[pkey],
-                                                        ktable[help_field])
+                                                        ktable[help_field],
+                                                        )
                         for row in rows:
                             helptext[s3_unicode(row[pkey])] = row[help_field]
 
@@ -3849,7 +3853,9 @@ class S3GroupedOptionsWidget(FormWidget):
         # Sort letters
         if letter_options:
             import locale
-            all_letters = sorted(letter_options.keys(), key=locale.strxfrm)
+            all_letters = sorted(letter_options.keys(),
+                                 key = locale.strxfrm,
+                                 )
             first_letter = min(u"A", all_letters[0])
             last_letter = max(u"Z", all_letters[-1])
         else:
@@ -3922,7 +3928,8 @@ class S3GroupedOptionsWidget(FormWidget):
         if group_letters:
             if len(group_letters) > 1:
                 group["label"] = "%s - %s" % (group_letters[0],
-                                              group_letters[-1])
+                                              group_letters[-1],
+                                              )
             else:
                 group["label"] = group_letters[0]
         else:

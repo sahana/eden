@@ -260,7 +260,7 @@ def incident_report():
                         form_vars = Storage(lat = float(lat),
                                             lon = float(lon),
                                             )
-                        form = Storage(vars=form_vars)
+                        form = Storage(vars = form_vars)
                         s3db.gis_location_onvalidation(form)
                         location_id = s3db.gis_location.insert(**form_vars)
                         field.default = location_id

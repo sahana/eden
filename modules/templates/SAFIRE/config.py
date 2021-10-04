@@ -262,6 +262,19 @@ def config(settings):
 
             name = r.name
             if name == "incident":
+                if r.method == "event":
+                    # event_EventAssignMethod
+                    if settings.get_event_label(): # == "Disaster"
+                        label = T("New Disaster")
+                    else:
+                        label = T("New Event")
+                    return A(label,
+                             _class = "action-btn",
+                             _href = URL(c="event", f="event",
+                                         args = ["create"],
+                                         vars = {"incident_id": r.id},
+                                         ),
+                             )
                 if settings.get_incident_label(): # == "Ticket"
                     label = T("Ticket Details")
                 else:
@@ -279,6 +292,7 @@ def config(settings):
 
                 rheader_tabs = s3_rheader_tabs(r, tabs)
 
+                table = r.table
                 record_id = r.id
                 incident_type_id = record.incident_type_id
 
@@ -296,12 +310,14 @@ def config(settings):
                                                          )
                     if len(scenarios) and r.method != "event":
                         from gluon import SELECT, OPTION
-                        dropdown = SELECT(_id="scenarios")
+                        dropdown = SELECT(_id = "scenarios")
                         dropdown["_data-incident_id"] = record_id
                         dappend = dropdown.append
                         dappend(OPTION(T("Select Scenario")))
                         for s in scenarios:
-                            dappend(OPTION(s.name, _value=s.id))
+                            dappend(OPTION(s.name,
+                                           _value = s.id,
+                                           ))
                         scenarios = TR(TH("%s: " % T("Apply Scenario")),
                                        dropdown,
                                        )
@@ -324,7 +340,13 @@ def config(settings):
                 else:
                     closed = TH()
 
-                if record.event_id or r.method == "event" or not editable:
+                if record.event_id:
+                    event = TR(TH("%s: " % table.event_id.label),
+                               table.event_id.represent(record.event_id,
+                                                        show_link = True,
+                                                        ),
+                               )
+                elif r.method == "event" or not editable:
                     event = ""
                 else:
                     if settings.get_event_label(): # == "Disaster"
@@ -339,7 +361,6 @@ def config(settings):
                               _class = "action-btn"
                               )
 
-                table = r.table
                 rheader = DIV(TABLE(TR(exercise),
                                     TR(TH("%s: " % table.name.label),
                                        record.name,
@@ -371,14 +392,29 @@ def config(settings):
                                        ),
                                     TR(closed),
                                     event,
-                                    ), rheader_tabs)
+                                    ),
+                              rheader_tabs,
+                              )
 
             elif name == "incident_report":
+                if r.method == "assign":
+                    # event_IncidentAssignMethod
+                    if settings.get_incident_label(): # == "Ticket"
+                        label = T("New Ticket")
+                    else:
+                        label = T("New Incident")
+                    return A(label,
+                             _class = "action-btn",
+                             _href = URL(c="event", f="incident",
+                                         args = ["create"],
+                                         vars = {"incident_report_id": r.id},
+                                         ),
+                             )
                 record_id = r.id
                 ltable = current.s3db.event_incident_report_incident
                 query = (ltable.incident_report_id == record_id)
                 link = current.db(query).select(ltable.incident_id,
-                                                limitby = (0, 1)
+                                                limitby = (0, 1),
                                                 ).first()
                 if link:
                     from s3 import S3Represent
@@ -435,7 +471,9 @@ def config(settings):
                                     TR(TH("%s: " % table.comments.label),
                                        record.comments,
                                        ),
-                                    ), rheader_tabs)
+                                    ),
+                              rheader_tabs,
+                              )
 
             elif name == "scenario":
                 tabs = [(T("Scenario Details"), None),
@@ -464,7 +502,9 @@ def config(settings):
                                     TR(TH("%s: " % table.comments.label),
                                        record.comments,
                                        ),
-                                    ), rheader_tabs)
+                                    ),
+                              rheader_tabs,
+                              )
 
         return rheader
 
@@ -515,10 +555,53 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_event_event_controller(**attr):
 
-        #s3 = current.response.s3
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard postp
+            if callable(standard_prep):
+                result = standard_prep(r)
+                if not result:
+                    return False
+        
+            if r.method == "create":
+                incident_id = r.get_vars.get("incident_id")
+                if incident_id:
+                    # Got here from incident assign => "New Event"
+                    # - prepopulate event name from incident title
+                    # - copy location from incident
+                    # @ToDo: default event_type from incident_type
+                    # - onaccept: link the incident to the event
+                    s3db = current.s3db
+                    if r.http == "GET":
+                        itable = s3db.event_incident
+                        incident = current.db(itable.id == incident_id).select(itable.name,
+                                                                               #itable.incident_type_id,
+                                                                               itable.location_id,
+                                                                               limitby = (0, 1),
+                                                                               ).first()
+                        table = r.table
+                        table.name.default = incident.name
+                        #table.event_type_id.default = incident.incident_type_id
+                        s3db.event_event_location.location_id.default = incident.location_id
+
+                    elif r.http == "POST":
+                        def create_onaccept(form):
+                            current.db(s3db.event_incident.id == incident_id).update(event_id = form.vars.id)
+
+                        s3db.add_custom_callback("event_event",
+                                                 "create_onaccept",
+                                                 create_onaccept,
+                                                 )
+
+            return True
+        s3.prep = custom_prep
 
         # No sidebar menu
         #current.menu.options = None
+
         attr["rheader"] = event_rheader
 
         return attr
@@ -578,7 +661,7 @@ def config(settings):
                                             (T("Explain the Situation?"), "description"),
                                             (T("What are your immediate needs?"), "needs"),
                                             )
-                r.resource.configure(create_next = URL(args=["[id]", "assign"]),
+                r.resource.configure(create_next = URL(args = ["[id]", "assign"]),
                                      crud_form = crud_form,
                                      )
 
@@ -587,21 +670,9 @@ def config(settings):
 
         # No sidebar menu
         current.menu.options = None
-        req_args = current.request.args
-        if len(req_args) > 1 and req_args[1] == "assign":
-            if settings.get_incident_label(): # == "Ticket"
-                label = T("New Ticket")
-            else:
-                label = T("New Incident")
-            attr["rheader"] = A(label,
-                                _class = "action-btn",
-                                _href = URL(c="event", f="incident",
-                                            args = ["create"],
-                                            vars = {"incident_report_id": req_args[0]},
-                                            ),
-                                )
-        else:
-            attr["rheader"] = event_rheader
+
+        # RHeader
+        attr["rheader"] = event_rheader
 
         return attr
 
@@ -620,7 +691,7 @@ def config(settings):
             query = (otable.organisation_id == organisation_id) & \
                     (otable.tag == "duty")
             duty = current.db(query).select(otable.value,
-                                            limitby = (0, 1)
+                                            limitby = (0, 1),
                                             ).first()
             if duty:
                 incident_id = form.vars.get("id")
@@ -678,7 +749,7 @@ def config(settings):
 
             # Redirect to action plan after create
             resource.configure(create_next = URL(c="event", f="incident",
-                                                 args = ["[id]", "plan"]
+                                                 args = ["[id]", "plan"],
                                                  ),
                                )
 
@@ -726,6 +797,8 @@ def config(settings):
 
         # No sidebar menu
         current.menu.options = None
+
+        # RHeader
         attr["rheader"] = event_rheader
 
         return attr
@@ -750,7 +823,8 @@ def config(settings):
                 msg_record_created = T("Equipment added"),
                 msg_record_modified = T("Equipment updated"),
                 msg_record_deleted = T("Equipment removed"),
-                msg_list_empty = T("No Equipment currently registered for this ticket"))
+                msg_list_empty = T("No Equipment currently registered for this ticket"),
+                )
         else:
             current.response.s3.crud_strings[tablename] = Storage(
                 label_create = T("Add Equipment"),
@@ -762,7 +836,8 @@ def config(settings):
                 msg_record_created = T("Equipment added"),
                 msg_record_modified = T("Equipment updated"),
                 msg_record_deleted = T("Equipment removed"),
-                msg_list_empty = T("No Equipment currently registered for this incident"))
+                msg_list_empty = T("No Equipment currently registered for this incident"),
+                )
 
     settings.customise_event_asset_resource = customise_event_asset_resource
 
@@ -789,7 +864,7 @@ def config(settings):
         incident_id = form_vars_get("incident_id")
         if not incident_id:
             link = db(table.id == link_id).select(table.incident_id,
-                                                  limitby = (0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
             incident_id = link.incident_id
 
@@ -799,7 +874,7 @@ def config(settings):
             if person_id:
                 ptable = s3db.pr_person
                 person = db(ptable.id == person_id).select(ptable.pe_id,
-                                                           limitby = (0, 1)
+                                                           limitby = (0, 1),
                                                            ).first()
                 pe_id = person.pe_id
 
@@ -899,7 +974,8 @@ def config(settings):
                 msg_record_created = T("Person added"),
                 msg_record_modified = T("Person updated"),
                 msg_record_deleted = T("Person removed"),
-                msg_list_empty = T("No Persons currently registered for this ticket"))
+                msg_list_empty = T("No Persons currently registered for this ticket"),
+                )
         else:
             current.response.s3.crud_strings[tablename] = Storage(
                 label_create = T("Add Person"),
@@ -911,7 +987,8 @@ def config(settings):
                 msg_record_created = T("Person added"),
                 msg_record_modified = T("Person updated"),
                 msg_record_deleted = T("Person removed"),
-                msg_list_empty = T("No Persons currently registered for this incident"))
+                msg_list_empty = T("No Persons currently registered for this incident"),
+                )
 
         s3db.configure(tablename,
                        # Deliberately over-rides
@@ -975,7 +1052,8 @@ def config(settings):
                 msg_record_created = T("Equipment added"),
                 msg_record_modified = T("Equipment updated"),
                 msg_record_deleted = T("Equipment removed"),
-                msg_list_empty = T("No Equipment currently registered for this ticket"))
+                msg_list_empty = T("No Equipment currently registered for this ticket"),
+                )
         else:
             current.response.s3.crud_strings[tablename] = Storage(
                 label_create = T("Add Equipment"),
@@ -987,7 +1065,8 @@ def config(settings):
                 msg_record_created = T("Equipment added"),
                 msg_record_modified = T("Equipment updated"),
                 msg_record_deleted = T("Equipment removed"),
-                msg_list_empty = T("No Equipment currently registered for this incident"))
+                msg_list_empty = T("No Equipment currently registered for this incident"),
+                )
 
     settings.customise_event_scenario_asset_resource = customise_event_scenario_asset_resource
 
@@ -1005,7 +1084,8 @@ def config(settings):
                 msg_record_created = T("Person added"),
                 msg_record_modified = T("Person updated"),
                 msg_record_deleted = T("Person removed"),
-                msg_list_empty = T("No Persons currently registered for this ticket"))
+                msg_list_empty = T("No Persons currently registered for this ticket"),
+                )
         else:
             current.response.s3.crud_strings[tablename] = Storage(
                 label_create = T("Add Person"),
@@ -1017,7 +1097,8 @@ def config(settings):
                 msg_record_created = T("Person added"),
                 msg_record_modified = T("Person updated"),
                 msg_record_deleted = T("Person removed"),
-                msg_list_empty = T("No Persons currently registered for this incident"))
+                msg_list_empty = T("No Persons currently registered for this incident"),
+                )
 
     settings.customise_event_scenario_human_resource_resource = customise_event_scenario_human_resource_resource
 
@@ -1113,7 +1194,7 @@ def config(settings):
         form_vars_get = form_vars.get
         task_id = form_vars_get("id")
         link = db(ltable.task_id == task_id).select(ltable.incident_id,
-                                                    limitby = (0, 1)
+                                                    limitby = (0, 1),
                                                     ).first()
         if not link:
             # Not attached to an Incident
@@ -1200,18 +1281,20 @@ def config(settings):
                         (ottable.organisation_id == otable.id) & \
                         (ottable.tag == "duty")
                 duty = db(query).select(ottable.value,
-                                        limitby = (0, 1)
+                                        limitby = (0, 1),
                                         ).first()
                 if duty:
                     current.msg.send_sms_via_api(duty.value,
-                                                 message)
+                                                 message,
+                                                 )
             else:
                 task_notification = settings.get_event_task_notification()
                 if task_notification:
                     current.msg.send_by_pe_id(pe_id,
                                               subject = "%s: Task assigned to you" % settings.get_system_name_short(),
                                               message = message,
-                                              contact_method = task_notification)
+                                              contact_method = task_notification,
+                                              )
 
     # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):

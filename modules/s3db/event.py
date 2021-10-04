@@ -298,7 +298,8 @@ class EventModel(S3Model):
                 msg_record_created = T("Disaster added"),
                 msg_record_modified = T("Disaster updated"),
                 msg_record_deleted = T("Disaster deleted"),
-                msg_list_empty = T("No Disasters currently registered"))
+                msg_list_empty = T("No Disasters currently registered"),
+                )
         else:
             label = T("Event")
             ADD_EVENT = T("New Event")
@@ -312,11 +313,11 @@ class EventModel(S3Model):
                 msg_record_created = T("Event added"),
                 msg_record_modified = T("Event updated"),
                 msg_record_deleted = T("Event deleted"),
-                msg_list_empty = T("No Events currently registered"))
+                msg_list_empty = T("No Events currently registered"),
+                )
 
         represent = S3Represent(lookup = tablename)
         event_id = S3ReusableField("event_id", "reference %s" % tablename,
-                                   sortby="name",
                                    requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "event_event.id",
                                                           represent,
@@ -328,6 +329,7 @@ class EventModel(S3Model):
                                    represent = represent,
                                    label = label,
                                    ondelete = "CASCADE",
+                                   sortby = "name",
                                    # Uncomment these to use an Autocomplete & not a Dropdown
                                    #widget = S3AutocompleteWidget()
                                    #comment = DIV(_class = "tooltip",
@@ -635,7 +637,7 @@ class EventModel(S3Model):
         exists = db(query).select(ltable.id,
                                   ltable.deleted,
                                   ltable.deleted_fk,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if exists:
             link_id = exists.id
@@ -676,10 +678,12 @@ class EventModel(S3Model):
                 (ltable.user_id == user_id)
         exists = current.db(query).select(ltable.id,
                                           ltable.deleted,
-                                          limitby=(0, 1)
+                                          limitby = (0, 1),
                                           ).first()
         if exists and not exists.deleted:
-            resource = s3db.resource("event_bookmark", id=exists.id)
+            resource = s3db.resource("event_bookmark",
+                                     id = exists.id,
+                                     )
             resource.delete()
 
         output = current.xml.json_message(True, 200, current.T("Bookmark Removed"))
@@ -709,7 +713,7 @@ class EventModel(S3Model):
         exists = db(ttable.name == tag).select(ttable.id,
                                                ttable.deleted,
                                                ttable.deleted_fk,
-                                               limitby=(0, 1)
+                                               limitby = (0, 1),
                                                ).first()
         if exists:
             tag_id = exists.id
@@ -727,7 +731,7 @@ class EventModel(S3Model):
         exists = db(query).select(ltable.id,
                                   ltable.deleted,
                                   ltable.deleted_fk,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if exists:
             if exists.deleted:
@@ -767,7 +771,7 @@ class EventModel(S3Model):
         ttable = s3db.cms_tag
         exists = db(ttable.name == tag).select(ttable.id,
                                                ttable.deleted,
-                                               limitby=(0, 1)
+                                               limitby = (0, 1),
                                                ).first()
         if exists:
             tag_id = exists.id
@@ -776,10 +780,12 @@ class EventModel(S3Model):
                     (ltable.event_id == event_id)
             exists = db(query).select(ltable.id,
                                       ltable.deleted,
-                                      limitby=(0, 1)
+                                      limitby = (0, 1),
                                       ).first()
             if exists and not exists.deleted:
-                resource = s3db.resource("event_tag", id=exists.id)
+                resource = s3db.resource("event_tag",
+                                         id = exists.id,
+                                         )
                 resource.delete()
 
         output = current.xml.json_message(True, 200, current.T("Tag Removed"))
@@ -812,7 +818,7 @@ class EventModel(S3Model):
             query = (ptable.pe_id == auth.user.pe_id) & \
                     (mtable.person_id == ptable.id)
             member = db(query).select(mtable.id,
-                                      limitby = (0, 1)
+                                      limitby = (0, 1),
                                       ).first()
             if not member:
                 output = current.xml.json_message(False, 403, current.T("Cannot Share to a Forum unless you are a Member"))
@@ -823,7 +829,7 @@ class EventModel(S3Model):
         query = (ltable.event_id == event_id) & \
                 (ltable.forum_id == forum_id)
         exists = db(query).select(ltable.id,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if not exists:
             ltable.insert(event_id = event_id,
@@ -859,7 +865,7 @@ class EventModel(S3Model):
                 (ltable.forum_id == forum_id)
         exists = db(query).select(ltable.id,
                                   ltable.created_by,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if exists:
             auth = current.auth
@@ -870,7 +876,9 @@ class EventModel(S3Model):
                     current.response.headers["Content-Type"] = "application/json"
                     return output
 
-            resource = s3db.resource("event_forum", id=exists.id)
+            resource = s3db.resource("event_forum",
+                                     id = exists.id,
+                                     )
             resource.delete()
 
         output = current.xml.json_message(True, 200, current.T("Stopped Sharing Event"))
@@ -3457,7 +3465,8 @@ class IncidentModel(S3Model):
                 msg_record_created = T("Ticket added"),
                 msg_record_modified = T("Ticket updated"),
                 msg_record_deleted = T("Ticket removed"),
-                msg_list_empty = T("No Tickets currently registered"))
+                msg_list_empty = T("No Tickets currently registered"),
+                )
         else:
             label = T("Incident")
             fact = T("Number of Incidents")
@@ -3471,7 +3480,8 @@ class IncidentModel(S3Model):
                 msg_record_created = T("Incident added"),
                 msg_record_modified = T("Incident updated"),
                 msg_record_deleted = T("Incident removed"),
-                msg_list_empty = T("No Incidents currently registered"))
+                msg_list_empty = T("No Incidents currently registered"),
+                )
 
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
@@ -3693,47 +3703,58 @@ class IncidentModel(S3Model):
         # Custom Methods
         set_method("event", "incident",
                    method = "add_bookmark",
-                   action = self.incident_add_bookmark)
+                   action = self.incident_add_bookmark,
+                   )
 
         set_method("event", "incident",
                    method = "remove_bookmark",
-                   action = self.incident_remove_bookmark)
+                   action = self.incident_remove_bookmark,
+                   )
 
         set_method("event", "incident",
                    method = "add_tag",
-                   action = self.incident_add_tag)
+                   action = self.incident_add_tag,
+                   )
 
         set_method("event", "incident",
                    method = "remove_tag",
-                   action = self.incident_remove_tag)
+                   action = self.incident_remove_tag,
+                   )
 
         set_method("event", "incident",
                    method = "share",
-                   action = self.incident_share)
+                   action = self.incident_share,
+                   )
 
         set_method("event", "incident",
                    method = "unshare",
-                   action = self.incident_unshare)
+                   action = self.incident_unshare,
+                   )
 
         set_method("event", "incident",
                    method = "plan",
-                   action = event_ActionPlan)
+                   action = event_ActionPlan,
+                   )
 
         set_method("event", "incident",
                    method = "scenario",
-                   action = event_ApplyScenario)
+                   action = event_ApplyScenario,
+                   )
 
         set_method("event", "incident",
                    method = "assign",
-                   action = self.pr_AssignMethod(component = "human_resource"))
+                   action = self.pr_AssignMethod(component = "human_resource"),
+                   )
 
         set_method("event", "incident",
                    method = "event",
-                   action = event_EventAssignMethod())
+                   action = event_EventAssignMethod(),
+                   )
 
         set_method("event", "incident",
                    method = "dispatch",
-                   action = event_notification_dispatcher)
+                   action = event_notification_dispatcher,
+                   )
 
         # Pass names back to global scope (s3.*)
         return {"event_incident_id": incident_id,
@@ -4213,7 +4234,9 @@ class IncidentModel(S3Model):
                                       limitby = (0, 1),
                                       ).first()
             if exists and not exists.deleted:
-                resource = s3db.resource("event_tag", id=exists.id)
+                resource = s3db.resource("event_tag",
+                                         id = exists.id,
+                                         )
                 resource.delete()
 
         output = current.xml.json_message(True, 200, current.T("Tag Removed"))
@@ -4304,7 +4327,9 @@ class IncidentModel(S3Model):
                     current.response.headers["Content-Type"] = "application/json"
                     return output
 
-            resource = s3db.resource("event_forum", id=exists.id)
+            resource = s3db.resource("event_forum",
+                                     id = exists.id,
+                                     )
             resource.delete()
 
         output = current.xml.json_message(True, 200, current.T("Stopped Sharing Incident"))
@@ -5600,7 +5625,9 @@ class event_EventAssignMethod(S3Method):
         e.g. Incident
     """
 
-    def __init__(self, component=None, next_tab=None
+    def __init__(self,
+                 component = None,
+                 next_tab = None,
                  ):
         """
             @param component: the Component in which to create records
@@ -5687,7 +5714,9 @@ class event_EventAssignMethod(S3Method):
                     query = ~(FS("id").belongs(selected))
                     eresource = s3db.resource("event_event",
                                               alias = self.component,
-                                              filter=query, vars=filters)
+                                              filter = query,
+                                              vars = filters,
+                                              )
                     rows = eresource.select(["id"], as_rows=True)
                     selected = [str(row.id) for row in rows]
 
@@ -5734,13 +5763,19 @@ class event_EventAssignMethod(S3Method):
                     # No component
                     response.confirmation = T("Assigned")
                     redirect(URL(r.controller, r.function,
-                                 args=r.id, vars={}))
+                                 args = r.id,
+                                 vars = {},
+                                 ))
                 current.session.confirmation = T("%(number)s assigned") % \
                                                     {"number": added}
                 if added > 0:
-                    redirect(URL(args=[r.id, self.next_tab], vars={}))
+                    redirect(URL(args = [r.id, self.next_tab],
+                                 vars = {},
+                                 ))
                 else:
-                    redirect(URL(args=r.args, vars={}))
+                    redirect(URL(args = r.args,
+                                 vars = {},
+                                 ))
 
         elif r.http == "GET":
 
@@ -5833,8 +5868,9 @@ class event_EventAssignMethod(S3Method):
 
             # Data table
             resource = s3db.resource("event_event",
-                                     alias=r.component.alias if r.component else None,
-                                     vars=get_vars)
+                                     alias = r.component.alias if r.component else None,
+                                     vars = get_vars,
+                                     )
             totalrows = resource.count()
             if "pageLength" in get_vars:
                 display_length = get_vars["pageLength"]
@@ -5892,15 +5928,13 @@ class event_EventAssignMethod(S3Method):
                 # Filter form
                 if filter_widgets:
 
+                    # Default Filters (before selecting data!)
+                    resource.configure(filter_widgets = filter_widgets)
+                    S3FilterForm.apply_filter_defaults(r, resource)
+
                     # Where to retrieve filtered data from:
                     submit_url_vars = resource.crud._remove_filters(r.get_vars)
-                    filter_submit_url = r.url(vars=submit_url_vars)
-
-                    # Default Filters (before selecting data!)
-                    resource.configure(filter_widgets=filter_widgets)
-                    # @ToDo: This is currently not working
-                    # - filter shows this option, but the resource isn't filtered
-                    #S3FilterForm.apply_filter_defaults(r, resource)
+                    filter_submit_url = r.url(vars = submit_url_vars)
 
                     # Where to retrieve updated filter options from:
                     filter_ajax_url = URL(c = "event",
@@ -5969,6 +6003,11 @@ class event_EventAssignMethod(S3Method):
                 else:
                     echo = None
 
+                if filter_widgets:
+                    # Default Filters (before selecting data!)
+                    resource.configure(filter_widgets = filter_widgets)
+                    S3FilterForm.apply_filter_defaults(r, resource)
+
                 data = resource.select(list_fields,
                                        start = 0,
                                        limit = limit,
@@ -5984,7 +6023,8 @@ class event_EventAssignMethod(S3Method):
                                 filteredrows,
                                 dt_id,
                                 echo,
-                                dt_bulk_actions=dt_bulk_actions)
+                                dt_bulk_actions = dt_bulk_actions,
+                                )
                 response.headers["Content-Type"] = "application/json"
                 return items
 
@@ -6285,10 +6325,10 @@ class event_IncidentAssignMethod(S3Method):
 
                     # Where to retrieve filtered data from:
                     submit_url_vars = resource.crud._remove_filters(r.get_vars)
-                    filter_submit_url = r.url(vars=submit_url_vars)
+                    filter_submit_url = r.url(vars = submit_url_vars)
 
                     # Default Filters (before selecting data!)
-                    resource.configure(filter_widgets=filter_widgets)
+                    resource.configure(filter_widgets = filter_widgets)
                     S3FilterForm.apply_filter_defaults(r, resource)
 
                     # Where to retrieve updated filter options from:
@@ -6361,6 +6401,10 @@ class event_IncidentAssignMethod(S3Method):
                     echo = int(get_vars.draw)
                 else:
                     echo = None
+
+                # Default Filters (before selecting data!)
+                resource.configure(filter_widgets = filter_widgets)
+                S3FilterForm.apply_filter_defaults(r, resource)
 
                 data = resource.select(list_fields,
                                        start = 0,
@@ -6916,7 +6960,7 @@ def event_rheader(r):
                                 ), rheader_tabs)
 
         elif name == "incident":
-            # Incident Controller
+            # Incident `
             tabs = [(T("Incident Details"), None)]
             append = tabs.append
 
