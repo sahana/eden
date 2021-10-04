@@ -2701,8 +2701,19 @@ class InventoryPalletShipmentModel(S3Model):
             Number must be Unique per Shipment
         """
 
-        # @ToDo
-        pass
+        send_id = current.request.args(0)
+        if not send_id:
+            # Must be running from a script
+            return
+
+        number = form.vars.get("number")
+
+        db = current.db
+        table = db.inv_send_pallet
+        rows = db(table.send_id == send_id).select(table.number)
+        numbers = [row.number for row in rows]
+        if number in numbers:
+            form.errors.number = current.T("There is already a Pallet with this Number in this Shipment.")
 
     # -------------------------------------------------------------------------
     @staticmethod
