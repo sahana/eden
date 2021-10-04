@@ -4917,10 +4917,10 @@ def gis_config_form_setup():
     # - may have to add rules in the template's customise_pr_pentity_controller to filter the options appropriately
     # - permission sets (inc realms) should only be applied to the instances, not the super-entity
     # Consider using a widget to separate the types into separate dropdowns for better UX
-    field.widget = S3PentityAutocompleteWidget(types = ("pr_person",
-                                                        "pr_group",
-                                                        "org_organisation",
-                                                        ))
+    field.widget = S3PentityAutocompleteWidget(instance_types = ("pr_person",
+                                                                 "pr_group",
+                                                                 "org_organisation",
+                                                                 ))
     label = T("Default?")
     table.pe_default.label = label
     table.pe_default.comment = DIV(_class = "tooltip",

@@ -557,7 +557,7 @@
         var url = S3.Ap.concat('/', controller, '/', fn, '/search_ac.json');
 
         if (ajax_filter) {
-            url += "?" + ajax_filter;
+            url += "?" + ajax_filter; // ajax_filter can also be used to change the return field from id to pe_id
         }
 
         var real_input = $('#' + input);

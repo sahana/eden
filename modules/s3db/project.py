@@ -10881,8 +10881,8 @@ class ProjectTaskModel(S3Model):
 
     def model(self):
 
-        db = current.db
         T = current.T
+        db = current.db
         auth = current.auth
         request = current.request
         s3 = current.response.s3
@@ -10929,7 +10929,7 @@ class ProjectTaskModel(S3Model):
             msg_record_created = T("Milestone Added"),
             msg_record_modified = T("Milestone Updated"),
             msg_record_deleted = T("Milestone Deleted"),
-            msg_list_empty = T("No Milestones Found")
+            msg_list_empty = T("No Milestones Found"),
         )
 
         # Reusable Field
@@ -10973,7 +10973,8 @@ class ProjectTaskModel(S3Model):
         project_task_priority_opts = settings.get_project_task_priority_opts()
         project_task_status_opts = settings.get_project_task_status_opts()
         assignee_represent = self.pr_PersonEntityRepresent(show_label = False,
-                                                           show_type = False)
+                                                           show_type = False,
+                                                           )
 
         #staff = auth.s3_has_role("STAFF")
         staff = auth.is_logged_in()
@@ -10994,9 +10995,11 @@ class ProjectTaskModel(S3Model):
                            ),
                      Field("description", "text",
                            label = T("Detailed Description"),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Detailed Description"),
-                                                           T("Please provide as much detail as you can, including any URL(s) for more information."))),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Detailed Description"),
+                                                             T("Please provide as much detail as you can, including any URL(s) for more information."),
+                                                             ),
+                                         ),
                            ),
                      self.org_site_id(),
                      self.gis_location_id(
@@ -11008,14 +11011,15 @@ class ProjectTaskModel(S3Model):
                      Field("source",
                            label = T("Source"),
                            ),
-                     Field("source_url",
-                           label = T("Source Link"),
-                           represent = s3_url_represent,
-                           requires = IS_EMPTY_OR(IS_URL()),
-                           # Can be enabled & labelled within a Template as-required
-                           readable = False,
-                           writable = False
-                           ),
+                     # Was used for Wrike integration in MCOP
+                     #Field("source_url",
+                     #      label = T("Source Link"),
+                     #      represent = s3_url_represent,
+                     #      requires = IS_EMPTY_OR(IS_URL()),
+                     #      # Can be enabled & labelled within a Template as-required
+                     #      readable = False,
+                     #      writable = False
+                     #      ),
                      Field("priority", "integer",
                            default = 3,
                            label = T("Priority"),
@@ -11023,22 +11027,34 @@ class ProjectTaskModel(S3Model):
                            requires = IS_IN_SET(project_task_priority_opts,
                                                 zero = None),
                            ),
+                     # FK, not Instance or Component
                      # Could be a Person, Team or Organisation
                      # - may have to add rules in the template's customise_project_task_resource to filter the options appropriately
                      # - permission sets (inc realms) should only be applied to the instances, not the super-entity
-                     super_link("pe_id", "pr_pentity",
-                                readable = staff,
-                                writable = staff,
-                                label = T("Assigned to"),
-                                filterby = "instance_type", # Not using instance_types as not a Super-Entity
-                                filter_opts = ("pr_person", "pr_group", "org_organisation"),
-                                represent = assignee_represent,
-                                # @ToDo: Widget
-                                #widget = S3PentityWidget(),
-                                #comment = DIV(_class = "tooltip",
-                                #              _title = "%s|%s" % (T("Assigned to"),
-                                #                                  messages.AUTOCOMPLETE_HELP))
-                                ),
+                     Field("pe_id", "reference pr_pentity",
+                           label = T("Assigned to"),
+                           represent = assignee_represent,
+                           requires = IS_EMPTY_OR(
+                                        IS_ONE_OF(db, "pr_pentity.pe_id",
+                                                  assignee_represent,
+                                                  filterby = "instance_type",
+                                                  filter_opts = ("pr_person", "pr_group", "org_organisation"),
+                                                  sort = True,
+                                                  )),
+                           ondelete = "SET NULL",
+                           readable = staff,
+                           writable = staff,
+                           #widget = S3PentityAutocompleteWidget(instance_types = ("pr_person",
+                           #                                                       "pr_group",
+                           #                                                       "org_organisation",
+                           #                                                       ))
+                           #widget = S3PersonAutocompleteWidget(field = "pe_id"),
+                           #comment = DIV(_class = "tooltip",
+                           #              _title = "%s|%s" % (T("Assigned to"),
+                           #                                  messages.AUTOCOMPLETE_HELP,
+                           #                                  ),
+                           #              ),
+                           ),
                      s3_datetime("date_due",
                                  label = T("Date Due"),
                                  represent = "date",
@@ -11098,7 +11114,8 @@ class ProjectTaskModel(S3Model):
             msg_record_created = T("Task added"),
             msg_record_modified = T("Task updated"),
             msg_record_deleted = T("Task deleted"),
-            msg_list_empty = T("No tasks currently registered"))
+            msg_list_empty = T("No tasks currently registered"),
+            )
 
         # Basic list fields, filter widgets and CRUD fields for tasks
         list_fields = ["id",
@@ -11335,15 +11352,18 @@ class ProjectTaskModel(S3Model):
         # Custom Methods
         set_method("project", "task",
                    method = "share",
-                   action = self.project_task_share)
+                   action = self.project_task_share,
+                   )
 
         set_method("project", "task",
                    method = "unshare",
-                   action = self.project_task_unshare)
+                   action = self.project_task_unshare,
+                   )
 
         set_method("project", "task",
                    method = "dispatch",
-                   action = self.project_task_dispatch)
+                   action = self.project_task_dispatch,
+                   )
 
         # Components
         add_components(tablename,
@@ -11441,7 +11461,7 @@ class ProjectTaskModel(S3Model):
                         ondelete = "CASCADE",
                         # Override requires so that update access to the projects isn't required
                         requires = IS_ONE_OF(db, "project_project.id",
-                                             self.project_project_represent
+                                             self.project_project_represent,
                                              )
                         ),
                       *s3_meta_fields())
@@ -11538,7 +11558,8 @@ class ProjectTaskModel(S3Model):
             msg_record_created = T("Role added"),
             msg_record_modified = T("Role updated"),
             msg_record_deleted = T("Role deleted"),
-            msg_list_empty = T("No such Role exists"))
+            msg_list_empty = T("No such Role exists"),
+            )
 
         represent = S3Represent(lookup = tablename,
                                 fields = ["role"],
@@ -11548,7 +11569,8 @@ class ProjectTaskModel(S3Model):
                                   ondelete = "CASCADE",
                                   requires = IS_EMPTY_OR(IS_ONE_OF(db,
                                                                    "project_role.id",
-                                                                   represent)),
+                                                                   represent,
+                                                                   )),
                                   represent = represent,
                                   )
 
@@ -11562,10 +11584,12 @@ class ProjectTaskModel(S3Model):
         define_table(tablename,
                      person_id(label = T("Member"),
                                default = auth.s3_logged_in_person(),
-                               widget = SQLFORM.widgets.options.widget),
-                     role_id(label=T("Role")),
+                               widget = SQLFORM.widgets.options.widget,
+                               ),
+                     role_id(label = T("Role")),
                      task_id(empty = False,
-                             ondelete = "CASCADE"),
+                             ondelete = "CASCADE",
+                             ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -11579,7 +11603,7 @@ class ProjectTaskModel(S3Model):
                                             project_task_represent_w_project,
                                             ),
                      ),
-                     self.pr_person_id(default=auth.s3_logged_in_person(),
+                     self.pr_person_id(default = auth.s3_logged_in_person(),
                                        widget = SQLFORM.widgets.options.widget
                                        ),
                      s3_datetime(default="now",
@@ -11613,13 +11637,12 @@ class ProjectTaskModel(S3Model):
             msg_record_created = T("Time Logged"),
             msg_record_modified = T("Time Log Updated"),
             msg_record_deleted = T("Time Log Deleted"),
-            msg_list_empty = T("No Time Logged")
+            msg_list_empty = T("No Time Logged"),
         )
         if "rows" in request.get_vars and request.get_vars.rows == "project":
             crud_strings[tablename].title_report = T("Project Time Report")
 
-        list_fields = ["id",
-                       (T("Project"), "task_id$task_project.project_id"),
+        list_fields = [(T("Project"), "task_id$task_project.project_id"),
                        (T("Activity"), "task_id$task_activity.activity_id"),
                        "task_id",
                        "person_id",
@@ -11650,7 +11673,7 @@ class ProjectTaskModel(S3Model):
 
         if settings.get_project_milestones():
             # Use the field in this format to get the custom represent
-            list_fields.insert(3, (T("Milestone"), "task_id$task_milestone.milestone_id"))
+            list_fields.insert(2, (T("Milestone"), "task_id$task_milestone.milestone_id"))
             filter_widgets.insert(3, S3OptionsFilter("task_id$task_milestone.milestone_id",
                                                      #label = T("Milestone"),
                                                      hidden = True,
@@ -12781,8 +12804,9 @@ class project_ActivityRepresent(S3Represent):
         rows = current.db(query).select(atable.id,
                                         atable.name,
                                         ptable.code,
-                                        left=left,
-                                        limitby=limitby)
+                                        left = left,
+                                        limitby = limitby,
+                                        )
         self.queries += 1
         return rows
 
@@ -14027,7 +14051,7 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
     assigned_to = record["project_task.pe_id"] or ""
     description = record["project_task.description"]
     date_due = record["project_task.date_due"]
-    source_url = raw["project_task.source_url"]
+    #source_url = raw["project_task.source_url"]
     status = raw["project_task.status"]
     priority = raw["project_task.priority"]
 
@@ -14036,10 +14060,11 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
         project = record["project_task_project.project_id"]
         project = SPAN(A(project,
                          _href = URL(c="project", f="project",
-                                     args=[project_id, "profile"])
+                                     args = [project_id, "profile"],
+                                     )
                          ),
                        " > ",
-                       _class = "task_project_title"
+                       _class = "task_project_title",
                        )
     else:
         project = ""
@@ -14112,14 +14137,14 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
     else:
         delete_btn = ""
 
-    if source_url:
-        source_btn =  A(ICON("link"),
-                       _title = source_url,
-                       _href = source_url,
-                       _target = "_blank"
-                       )
-    else:
-        source_btn = ""
+    #if source_url:
+    #    source_btn =  A(ICON("link"),
+    #                   _title = source_url,
+    #                   _href = source_url,
+    #                   _target = "_blank"
+    #                   )
+    #else:
+    #    source_btn = ""
 
     edit_bar = DIV(edit_btn,
                    delete_btn,

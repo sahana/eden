@@ -8179,14 +8179,16 @@ class S3PersonAutocompleteWidget(FormWidget):
     def __init__(self,
                  controller = "pr",
                  function = "person_search",
+                 ajax_filter = "",
+                 field = "id",      # Can also support "pe_id"
                  post_process = "",
                  hideerror = False,
-                 ajax_filter = "",
                  ):
 
         self.post_process = post_process
         self.c = controller
         self.f = function
+        self.return_field = field
         self.hideerror = hideerror
         self.ajax_filter = ajax_filter
 
@@ -8226,30 +8228,42 @@ class S3PersonAutocompleteWidget(FormWidget):
              "input": real_input,
              }
         options = ""
-        post_process = self.post_process
 
+        ajax_filter = self.ajax_filter
+        if self.return_field == "pe_id":
+            if ajax_filter:
+                ajax_filter = "pe_id=1&%s" % ajax_filter
+            else:
+                ajax_filter = "pe_id=1"
+        post_process = self.post_process
         settings = current.deployment_settings
         delay = settings.get_ui_autocomplete_delay()
         min_length = settings.get_ui_autocomplete_min_chars()
 
-        if self.ajax_filter:
-            options = ''',"%(ajax_filter)s"''' % \
-                {"ajax_filter": self.ajax_filter}
-
-        if min_length != 2:
-            options += ''',"%(postprocess)s",%(delay)s,%(min_length)s''' % \
-                {"postprocess": post_process,
+        if min_length != 2: # default in s3.autocomplete.js
+            options = ''',"%(ajax_filter)s","%(postprocess)s",%(delay)s,%(min_length)s''' % \
+                {"ajax_filter": ajax_filter,
+                 "postprocess": post_process,
                  "delay": delay,
                  "min_length": min_length,
                  }
-        elif delay != 800:
-            options += ''',"%(postprocess)s",%(delay)s''' % \
-                {"postprocess": post_process,
+        elif delay != 800: # default in s3.autocomplete.js
+            options = ''',"%(ajax_filter)s","%(postprocess)s",%(delay)s''' % \
+                {"ajax_filter": ajax_filter,
+                 "postprocess": post_process,
                  "delay": delay,
                  }
         elif post_process:
-            options += ''',"%(postprocess)s"''' % \
-                {"postprocess": post_process}
+            options = ''',"%(ajax_filter)s","%(postprocess)s"''' % \
+                {"ajax_filter": ajax_filter,
+                 "postprocess": post_process,
+                 }
+        elif ajax_filter:
+            options = ''',"%(ajax_filter)s"''' % \
+                {"ajax_filter": ajax_filter,
+                 }
+        else:
+            options = ""
 
         script = '''%s%s)''' % (script, options)
         current.response.s3.jquery_ready.append(script)
@@ -8280,7 +8294,7 @@ class S3PentityAutocompleteWidget(FormWidget):
     def __init__(self,
                  controller = "pr",
                  function = "pentity",
-                 types = None,
+                 instance_types = None,
                  post_process = "",
                  hideerror = False,
                  ):
@@ -8288,7 +8302,7 @@ class S3PentityAutocompleteWidget(FormWidget):
         self.post_process = post_process
         self.c = controller
         self.f = function
-        self.types = types
+        self.instance_types = instance_types
         self.hideerror = hideerror
 
     def __call__(self, field, value, **attributes):
@@ -8328,11 +8342,11 @@ class S3PentityAutocompleteWidget(FormWidget):
             (T("Person"), T("Group"), T("None of the above"))
         s3.js_global.append(script)
 
-        if self.types:
+        if self.instance_types:
             # Something other than default: ("pr_person", "pr_group")
-            types = json.dumps(self.types, separators=SEPARATORS)
+            instance_types = json.dumps(self.instance_types, separators=SEPARATORS)
         else:
-            types = ""
+            instance_types = ""
 
         script = '''S3.autocomplete.pentity('%(controller)s','%(fn)s',"%(input)s"''' % \
             {"controller": self.c,
@@ -8347,12 +8361,12 @@ class S3PentityAutocompleteWidget(FormWidget):
         delay = settings.get_ui_autocomplete_delay()
         min_length = settings.get_ui_autocomplete_min_chars()
 
-        if types:
+        if instance_types:
             options = ''',"%(postprocess)s",%(delay)s,%(min_length)s,%(types)s''' % \
                 {"postprocess": post_process,
                  "delay": delay,
                  "min_length": min_length,
-                 "types": types,
+                 "types": instance_types,
                  }
         elif min_length != 2:
             options = ''',"%(postprocess)s",%(delay)s,%(min_length)s''' % \

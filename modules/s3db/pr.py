@@ -343,7 +343,8 @@ class PersonEntityModel(S3Model):
         # Custom Method for S3AutocompleteWidget
         self.set_method("pr", "pentity",
                         method = "search_ac",
-                        action = self.pe_search_ac)
+                        action = self.pe_search_ac,
+                        )
 
         # ---------------------------------------------------------------------
         # Person <-> User
@@ -488,7 +489,8 @@ class PersonEntityModel(S3Model):
         """
             JSON search method for S3AutocompleteWidget
 
-            NB If you need differential permissions for different entity types
+            NB If you need differential permissions for different entity types,
+               then this shouldn't be used.
 
             @param r: the S3Request
             @param attr: request attributes
@@ -557,7 +559,7 @@ class PersonEntityModel(S3Model):
             resource.add_filter(default_filter)
             resource.add_filter(query)
 
-            data = resource.select(fields=["pe_id"],
+            data = resource.select(fields = ["pe_id"],
                                    limit = limit,
                                    raw_data = True,
                                    represent = True,
@@ -599,7 +601,7 @@ class PersonEntityModel(S3Model):
             resource.add_filter(default_filter)
             resource.add_filter(query)
 
-            data = resource.select(fields=["pe_id"],
+            data = resource.select(fields = ["pe_id"],
                                    limit = limit,
                                    raw_data = True,
                                    represent = True,
@@ -634,7 +636,7 @@ class PersonEntityModel(S3Model):
         table = db.pr_role
         role = db(table.id == role_id).select(table.role,
                                               table.pe_id,
-                                              limitby = (0, 1)
+                                              limitby = (0, 1),
                                               ).first()
         try:
             entity = current.s3db.pr_pentity_represent(role.pe_id)
@@ -663,7 +665,7 @@ class PersonEntityModel(S3Model):
             db = current.db
             rtable = db.pr_role
             role = db(rtable.id == role_id).select(rtable.role_type,
-                                                   limitby = (0, 1)
+                                                   limitby = (0, 1),
                                                    ).first()
             if role and str(role.role_type) != str(role_type):
                 # If role type has changed, then clear paths
@@ -685,7 +687,7 @@ class PersonEntityModel(S3Model):
 
         pe_id = form.vars.pe_id
         pe = db(ptable.pe_id == pe_id).select(ptable.instance_type,
-                                              limitby = (0, 1)
+                                              limitby = (0, 1),
                                               ).first()
         if pe:
             itable = s3db.table(pe.instance_type, None)
@@ -694,7 +696,7 @@ class PersonEntityModel(S3Model):
                "organisation_id" in itable.fields:
                 instance = db(itable.pe_id == pe_id).select(itable.pe_id,
                                                             itable.organisation_id,
-                                                            limitby = (0, 1)
+                                                            limitby = (0, 1),
                                                             ).first()
                 if instance:
                     s3db.org_update_affiliations("org_site", instance)
@@ -749,7 +751,7 @@ class PersonEntityModel(S3Model):
             db = current.db
             atable = db.pr_affiliation
             record = db(atable.id == row.id).select(atable.deleted_fk,
-                                                    limitby = (0, 1)
+                                                    limitby = (0, 1),
                                                     ).first()
         else:
             return
@@ -992,20 +994,24 @@ class PersonModel(S3Model):
 
         set_method("pr", "person",
                    method = "lookup",
-                   action = self.pr_person_lookup)
+                   action = self.pr_person_lookup,
+                   )
 
         set_method("pr", "person",
                    method = "check_duplicates",
-                   action = self.pr_person_check_duplicates)
+                   action = self.pr_person_check_duplicates,
+                   )
 
         # Enable in templates as-required
         #set_method("pr", "person",
         #           method = "templates",
-        #           action = pr_Templates())
+        #           action = pr_Templates(),
+        #           )
 
         #set_method("pr", "person",
         #           method = "template",
-        #           action = pr_Template())
+        #           action = pr_Template(),
+        #           )
 
         # Components
         add_components(tablename,
@@ -1305,9 +1311,9 @@ class PersonModel(S3Model):
         elif hasattr(row, "id"):
             # date_of_birth not in row: reload the record
             table = current.s3db.pr_person
-            person = current.db(table.id == row.id).select(
-                                                     table.date_of_birth,
-                                                     limitby=(0, 1)).first()
+            person = current.db(table.id == row.id).select(table.date_of_birth,
+                                                           limitby = (0, 1),
+                                                           ).first()
             dob = person.date_of_birth if person else None
         else:
             dob = None
@@ -1342,7 +1348,7 @@ class PersonModel(S3Model):
         user = db(query).select(utable.id,
                                 utable.first_name,
                                 utable.last_name,
-                                limitby = (0, 1)
+                                limitby = (0, 1),
                                 ).first()
 
         if user:
@@ -1386,7 +1392,7 @@ class PersonModel(S3Model):
             # Just look at this
             table = item.table
             duplicate = db(table.pe_label == pe_label).select(table.id,
-                                                              limitby = (0, 1)
+                                                              limitby = (0, 1),
                                                               ).first()
             if duplicate:
                 item.id = duplicate.id
@@ -1591,7 +1597,7 @@ class PersonModel(S3Model):
         # Respect response.s3.filter
         resource.add_filter(response.s3.filter)
 
-        get_vars = current.request.get_vars
+        get_vars = r.get_vars
 
         # JQueryUI Autocomplete uses "term"
         # old JQuery Autocomplete uses "q"
@@ -1708,7 +1714,12 @@ class PersonModel(S3Model):
             msg = current.T("There are more than %(max)s results, please input more characters.")
             output = [{"label": s3_str(msg % {"max": MAX_SEARCH_RESULTS})}]
         else:
-            fields = ["id",
+            pe_id = get_vars.get("pe_id")
+            if pe_id:
+                id_field = "pe_id"
+            else:
+                id_field = "id"
+            fields = [id_field,
                       "first_name",
                       "middle_name",
                       "last_name",
@@ -1733,17 +1744,6 @@ class PersonModel(S3Model):
                 orderby = "pr_person.%s" % match.group("fname")
             else:
                 orderby = "pr_person.first_name"
-            #test = name_format % dict(first_name=1,
-                                      #middle_name=2,
-                                      #last_name=3,
-                                      #)
-            #test = "".join(ch for ch in test if ch in ("1", "2", "3"))
-            #if test[:1] == "1":
-                #orderby = "pr_person.first_name"
-            #elif test[:1] == "2":
-                #orderby = "pr_person.middle_name"
-            #else:
-                #orderby = "pr_person.last_name"
             rows = resource.select(fields = fields,
                                    start = 0,
                                    limit = limit,
@@ -1758,7 +1758,7 @@ class PersonModel(S3Model):
                                last_name = row["pr_person.last_name"],
                                )
 
-                item = {"id": row["pr_person.id"],
+                item = {"id": row["pr_person.%s" % id_field],
                         "name": s3_fullname(name),
                         }
 
@@ -1793,7 +1793,9 @@ class PersonModel(S3Model):
             # Coming from site_contact_person
             site_contact_person = True
             record_id = attr.get("person_id")
-            resource = current.s3db.resource("pr_person", id=record_id)
+            resource = current.s3db.resource("pr_person",
+                                             id = record_id,
+                                             )
         else:
             site_contact_person = False
             record_id = r.id
@@ -2900,7 +2902,7 @@ class PersonGroupModel(S3Model):
                     (table.deleted != True)
             record = db(query).select(table.person_id,
                                       table.group_id,
-                                      limitby = (0, 1)
+                                      limitby = (0, 1),
                                       ).first()
             if not record:
                 # Nothing we can check
@@ -2924,7 +2926,7 @@ class PersonGroupModel(S3Model):
             gtable = s3db.pr_group
             gquery = (gtable.id == group_id)
             group = db(gquery).select(gtable.group_type,
-                                      limitby = (0, 1)
+                                      limitby = (0, 1),
                                       ).first()
             if group:
                 group_type = group.group_type
@@ -2940,7 +2942,7 @@ class PersonGroupModel(S3Model):
             query = (table.id != record_id) & query
 
         duplicate = db(query).select(table.group_id,
-                                     limitby = (0, 1)
+                                     limitby = (0, 1),
                                      ).first()
 
         # Reject form if duplicate exists
@@ -3405,7 +3407,7 @@ class ForumModel(S3Model):
         s3db = current.s3db
         ptable = s3db.pr_person
         person_id = db(ptable.pe_id == user.pe_id).select(ptable.id,
-                                                          limitby = (0, 1)
+                                                          limitby = (0, 1),
                                                           ).first().id
 
         ltable = s3db.pr_forum_membership
@@ -3414,7 +3416,7 @@ class ForumModel(S3Model):
         exists = db(query).select(ltable.id,
                                   ltable.deleted,
                                   ltable.deleted_fk,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if exists:
             link_id = exists.id
@@ -3460,15 +3462,17 @@ class ForumModel(S3Model):
                 (ptable.pe_id == user.pe_id)
         exists = current.db(query).select(ltable.id,
                                           ltable.deleted,
-                                          limitby=(0, 1)
+                                          limitby = (0, 1),
                                           ).first()
 
         if exists and not exists.deleted:
-            resource = s3db.resource("pr_forum_membership", id=exists.id)
+            resource = s3db.resource("pr_forum_membership",
+                                     id = exists.id,
+                                     )
             success = resource.delete()
             if not success:
                 current.session.error = resource.error
-                redirect(URL(args=None))
+                redirect(URL(args = None))
 
         message = current.T("Forum Left")
         if r.representation == "json":
@@ -3500,14 +3504,14 @@ class ForumModel(S3Model):
         s3db = current.s3db
         ptable = s3db.pr_person
         person_id = db(ptable.pe_id == user.pe_id).select(ptable.id,
-                                                          limitby = (0, 1)
+                                                          limitby = (0, 1),
                                                           ).first().id
 
         mtable = s3db.pr_forum_membership
         query = (mtable.forum_id == forum_id) & \
                 (mtable.person_id == person_id)
         exists = db(query).select(mtable.id,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if exists:
             #output = current.xml.json_message(True, 200, current.T("Already a Member"))
@@ -3540,8 +3544,8 @@ class ForumModel(S3Model):
             translations = {}
             languages = list({a["auth_user.language"] for a in admins})
             for l in languages:
-                translations[l] = {"s": s3_str(T(subject, language = l)) % dict(forum_name = forum_name),
-                                   "b": s3_str(T(body, language = l)) % dict(url = url),
+                translations[l] = {"s": s3_str(T(subject, language = l)) % {"forum_name": forum_name},
+                                   "b": s3_str(T(body, language = l)) % {"url": url},
                                    }
             send_email = current.msg.send_by_pe_id
             for a in admins:
@@ -3781,7 +3785,7 @@ class PersonEntityAddressModel(S3Model):
                     (atable.type == 1) & \
                     (atable.deleted != True)
             exists = db(query).select(atable.id,
-                                      limitby = (0, 1)
+                                      limitby = (0, 1),
                                       ).first()
             if exists:
                 # Do nothing: prefer existing current address
@@ -4165,9 +4169,9 @@ class PersonEntityContactModel(S3Model):
         contact_method = form_vars.contact_method
         if not contact_method and "id" in form_vars:
             ctable = current.s3db.pr_contact
-            record = current.db(ctable._id == form_vars.id).select(
-                                ctable.contact_method,
-                                limitby=(0, 1)).first()
+            record = current.db(ctable._id == form_vars.id).select(ctable.contact_method,
+                                                                   limitby = (0, 1),
+                                                                   ).first()
             if record:
                 contact_method = record.contact_method
 
@@ -4230,7 +4234,7 @@ class PersonEntityImageModel(S3Model):
                     # Probably a 'create' method
                     return None
                 record = db(table.id == record_id).select(table.image,
-                                                          limitby = (0, 1)
+                                                          limitby = (0, 1),
                                                           ).first()
                 return record.image if record else None
 
@@ -4398,7 +4402,7 @@ class PersonEntityImageModel(S3Model):
             db = current.db
             table = db.pr_image
             pe = db(table.id == record_id).select(table.pe_id,
-                                                  limitby = (0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
             if pe:
                 pe_id = pe.pe_id
@@ -4422,7 +4426,7 @@ class PersonEntityImageModel(S3Model):
                 db = current.db
                 table = db.pr_image
                 record = db(table.id == record_id).select(table.image,
-                                                          limitby = (0, 1)
+                                                          limitby = (0, 1),
                                                           ).first()
                 if record:
                     image = record.image
@@ -4441,7 +4445,7 @@ class PersonEntityImageModel(S3Model):
         db = current.db
         table = db.pr_image
         row = db(table.id == row.id).select(table.image,
-                                            limitby = (0, 1)
+                                            limitby = (0, 1),
                                             ).first()
         current.s3db.pr_image_delete_all(row.image)
 
@@ -4559,20 +4563,20 @@ class PersonEntityNoteModel(S3Model):
         fq = query & ntable.status.belongs((2, 3))
         mr = db(mq).select(ntable.id,
                            ntable.timestmp,
+                           limitby = (0, 1),
                            orderby = ~ntable.timestmp,
-                           limitby = (0, 1)
                            ).first()
         fr = db(fq).select(ntable.id,
                            ntable.timestmp,
+                           limitby = (0, 1),
                            orderby = ~ntable.timestmp,
-                           limitby = (0, 1)
                            ).first()
         missing = False
         if mr and not fr or fr.timestmp < mr.timestmp:
             missing = True
         query = (ptable.pe_id == note.pe_id)
         person = db(query).select(ptable.id,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         db(s3db.pr_person_details.person_id == person.id).update(missing = missing)
         if note.deleted:
@@ -4877,7 +4881,7 @@ class PersonEntityPresenceModel(S3Model):
             record_id = form.id
 
         presence = db(table.id == record_id).select(table.ALL,
-                                                    limitby = (0, 1)
+                                                    limitby = (0, 1),
                                                     ).first()
         if not presence:
             return
@@ -4927,8 +4931,8 @@ class PersonEntityPresenceModel(S3Model):
             # Re-open the last persistent presence if no closing event
             query = this_entity & is_present
             presence = db(query).select(table.ALL,
+                                        limitby = (0, 1),
                                         orderby = ~table.datetime,
-                                        limitby = (0, 1)
                                         ).first()
             if presence and presence.closed:
                 later = (table.datetime > presence.datetime)
@@ -4939,8 +4943,8 @@ class PersonEntityPresenceModel(S3Model):
             # Re-open the last missing if no later persistent presence
             query = this_entity & is_missing
             presence = db(query).select(table.ALL,
+                                        limitby = (0, 1),
                                         orderby = ~table.datetime,
-                                        limitby = (0, 1)
                                         ).first()
             if presence and presence.closed:
                 later = (table.datetime > presence.datetime)
@@ -4949,15 +4953,15 @@ class PersonEntityPresenceModel(S3Model):
                     db(table.id == presence.id).update(closed = False)
 
         pentity = db(db.pr_pentity.pe_id == pe_id).select(db.pr_pentity.instance_type,
-                                                          limitby = (0, 1)
+                                                          limitby = (0, 1),
                                                           ).first()
         if pentity and pentity.instance_type == "pr_person":
             person = db(db.pr_person.pe_id == pe_id).select(ptable.id,
-                                                            limitby = (0, 1)
+                                                            limitby = (0, 1),
                                                             ).first()
             query = this_entity & is_missing & (table.closed == False)
             if db(query).select(table.id,
-                                limitby = (0, 1)
+                                limitby = (0, 1),
                                 ):
                 db(s3db.pr_person_details.person_id == person.id).update(missing = True)
             else:
@@ -5336,7 +5340,7 @@ class PersonAvailabilityModel(S3Model):
                     missing.append(fn)
             if missing and record_id:
                 row = db(table.id == record_id).select(*missing,
-                                                       limitby=(0, 1),
+                                                       limitby = (0, 1),
                                                        ).first()
                 if row:
                     for fn in missing:
@@ -5455,7 +5459,8 @@ class PersonUnavailabilityModel(S3Model):
             msg_record_created = T("Unavailability added"),
             msg_record_modified = T("Unavailability updated"),
             msg_record_deleted = T("Unavailability deleted"),
-            msg_list_empty = T("No Unavailability currently registered"))
+            msg_list_empty = T("No Unavailability currently registered"),
+            )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -6628,7 +6633,7 @@ class ImageLibraryModel(S3Model):
         table = db.pr_image_library
         image = db(table.new_name == image_name).select(table.actual_height,
                                                         table.actual_width,
-                                                        limitby = (0, 1)
+                                                        limitby = (0, 1),
                                                         ).first()
         if image:
             return (image.actual_width, image.actual_height)
@@ -7324,7 +7329,7 @@ class pr_PersonEntityRepresent(S3Represent):
             db = current.db
             petable = db.pr_pentity
             pe_record = db(petable._id == k).select(petable.instance_type,
-                                                    limitby = (0, 1)
+                                                    limitby = (0, 1),
                                                     ).first()
             if not pe_record:
                 return v
@@ -7870,7 +7875,7 @@ def pr_image_library_represent(image_name, format=None, size=None):
         query &= (table.width == size[0]) & \
                  (table.height == size[1])
     image = current.db(query).select(table.new_name,
-                                     limitby = (0, 1)
+                                     limitby = (0, 1),
                                      ).first()
     if image:
         return image.new_name
@@ -7939,7 +7944,7 @@ def pr_rheader(r, tabs=None):
                 pdtable = s3db.pr_person_details
                 query = (pdtable.person_id == record_id)
                 details = db(query).select(pdtable.nationality,
-                                           limitby = (0, 1)
+                                           limitby = (0, 1),
                                            ).first()
                 if details:
                     nationality = details.nationality
@@ -7983,7 +7988,7 @@ def pr_rheader(r, tabs=None):
                 query = (table.group_id == record.id) & \
                         (table.group_head == True)
                 leader = db(query).select(table.person_id,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
                 if leader:
                     leader = s3_fullname(leader.person_id)
@@ -8499,7 +8504,8 @@ def pr_compose():
     #if not pe_id:
     #    db = current.db
     #    pe = db(query).select(table.pe_id,
-    #                          limitby=(0, 1)).first()
+    #                          limitby = (0, 1),
+    #                          ).first()
     #    try:
     #        pe_id = pe.pe_id
     #    except:
@@ -8508,7 +8514,8 @@ def pr_compose():
 
     # Create the form
     output = current.msg.compose(recipient = pe_id,
-                                 url = url)
+                                 url = url,
+                                 )
 
     output["title"] = title
 
@@ -9002,7 +9009,7 @@ class pr_Template(S3Method):
                 table = current.s3db.doc_document
                 template = current.db(table.id == document_id).select(table.file,
                                                                       table.name,
-                                                                      limitby = (0, 1)
+                                                                      limitby = (0, 1),
                                                                       ).first()
 
                 template_path = os.path.join(r.folder, "uploads", template.file)
@@ -9095,7 +9102,7 @@ def pr_update_affiliations(table, record):
         if not isinstance(record, Row):
             record = current.db(htable.id == record).select(htable.deleted_fk,
                                                             htable.person_id,
-                                                            limitby = (0, 1)
+                                                            limitby = (0, 1),
                                                             ).first()
         if not record:
             return
@@ -9123,7 +9130,7 @@ def pr_update_affiliations(table, record):
             record = current.db(mtable.id == record).select(mtable.deleted,
                                                             mtable.deleted_fk,
                                                             mtable.person_id,
-                                                            limitby=(0, 1)
+                                                            limitby = (0, 1),
                                                             ).first()
         if not record:
             return
@@ -9143,7 +9150,7 @@ def pr_update_affiliations(table, record):
     #    mtable = current.s3db.member_membership
     #    if not isinstance(record, Row):
     #        record = current.db(mtable.id == record).select(mtable.ALL,
-    #                                                        limitby=(0, 1)
+    #                                                        limitby = (0, 1),
     #                                                        ).first()
     #    if not record:
     #        return
@@ -9275,7 +9282,7 @@ def pr_human_resource_update_affiliations(person_id):
                 itable = s3db.table(row[s].instance_type, None)
                 if itable and "pe_id" in itable.fields:
                     site = db(itable.site_id == site_id).select(itable.pe_id,
-                                                                limitby = (0, 1)
+                                                                limitby = (0, 1),
                                                                 ).first()
                     if site:
                         site_pe_id = sites[site_id] = site.pe_id
@@ -9357,7 +9364,7 @@ def pr_add_affiliation(master, affiliate, role=None, role_type=OU):
                 (rtable.role == role) & \
                 (rtable.deleted != True)
         row = current.db(query).select(rtable.id,
-                                       limitby = (0, 1)
+                                       limitby = (0, 1),
                                        ).first()
         if not row:
             data = {"pe_id": master_pe,
@@ -9446,7 +9453,7 @@ def pr_get_pe_id(entity, record_id=None):
         db = current.db
         if "pe_id" in table.fields and _id:
             record = db(table._id == _id).select(table.pe_id,
-                                                 limitby = (0, 1)
+                                                 limitby = (0, 1),
                                                  ).first()
         elif _id:
             key = table._id.name
@@ -9455,7 +9462,7 @@ def pr_get_pe_id(entity, record_id=None):
             if key != "id" and "instance_type" in table.fields:
                 # PE ID is in the instance, not the super entity
                 s = db(table._id == _id).select(table.instance_type,
-                                                limitby = (0, 1)
+                                                limitby = (0, 1),
                                                 ).first()
             else:
                 return None
@@ -9464,7 +9471,7 @@ def pr_get_pe_id(entity, record_id=None):
             table = s3db.table(s.instance_type, None)
             if table and "pe_id" in table.fields:
                 record = db(table[key] == _id).select(table.pe_id,
-                                                      limitby = (0, 1)
+                                                      limitby = (0, 1),
                                                       ).first()
             else:
                 return None
@@ -9513,7 +9520,8 @@ def pr_define_role(pe_id,
                 (rtable.role == role)
         duplicate = current.db(query).select(rtable.id,
                                              rtable.role_type,
-                                             limitby=(0, 1)).first()
+                                             limitby = (0, 1),
+                                             ).first()
     else:
         duplicate = None
     if duplicate:
@@ -9555,10 +9563,13 @@ def pr_add_to_role(role_id, pe_id):
     query = (atable.role_id == role_id) & \
             (atable.pe_id == pe_id)
     affiliation = current.db(query).select(atable.id,
-                                           limitby=(0, 1)).first()
+                                           limitby = (0, 1),
+                                           ).first()
     if affiliation is None:
         # Insert affiliation record
-        atable.insert(role_id=role_id, pe_id=pe_id)
+        atable.insert(role_id = role_id,
+                      pe_id = pe_id,
+                      )
         # Clear descendant paths (triggers lazy rebuild)
         pr_rebuild_path(pe_id, clear=True)
     return
@@ -9578,10 +9589,13 @@ def pr_remove_from_role(role_id, pe_id):
     query = (atable.role_id == role_id) & \
             (atable.pe_id == pe_id)
     affiliation = current.db(query).select(atable.id,
-                                           limitby=(0, 1)).first()
+                                           limitby = (0, 1),
+                                           ).first()
     if affiliation is not None:
         # Soft-delete the record, clear foreign keys
-        deleted_fk = {"role_id": role_id, "pe_id": pe_id}
+        deleted_fk = {"role_id": role_id,
+                      "pe_id": pe_id,
+                      }
         data = {"deleted": True,
                 "role_id": None,
                 "pe_id": None,
@@ -9796,7 +9810,7 @@ def pr_instance_type(pe_id):
     if pe_id:
         etable = current.s3db.pr_pentity
         row = current.db(etable.pe_id == pe_id).select(etable.instance_type,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
         if row:
             return row.instance_type
@@ -10126,7 +10140,8 @@ def pr_role_rebuild_path(role_id, skip=None, clear=False):
     else:
         query = (rtable.deleted != True) & \
                 (rtable.id == role_id)
-        role = db(query).select(limitby=(0, 1)).first()
+        role = db(query).select(limitby = (0, 1),
+                                ).first()
     if not role:
         return None
     pe_id = role.pe_id
@@ -10147,7 +10162,8 @@ def pr_role_rebuild_path(role_id, skip=None, clear=False):
         parent_roles = db(query).select(rtable.id,
                                         rtable.pe_id,
                                         rtable.path,
-                                        rtable.role_type)
+                                        rtable.role_type,
+                                        )
 
         # Update ancestor path
         path = S3MultiPath()
@@ -10414,7 +10430,7 @@ def pr_import_prep(data):
             continue
 
         record = db(table.name == org).select(table.pe_id,
-                                              limitby = (0, 1)
+                                              limitby = (0, 1),
                                               ).first()
         if not record:
             # Add a new record
@@ -10422,7 +10438,7 @@ def pr_import_prep(data):
             update_super(table, Storage(id = record_id))
             set_record_owner(table, record_id)
             record = db(table.id == record_id).select(table.pe_id,
-                                                      limitby = (0, 1)
+                                                      limitby = (0, 1),
                                                       ).first()
         pe_id = record.pe_id
         # Replace string with pe_id

@@ -443,6 +443,162 @@ def config(settings):
     settings.customise_project_project_resource = customise_project_project_resource
 
     # -------------------------------------------------------------------------
+    def project_task_onaccept(form, create=True):
+        """
+            Send Person a Notification when they are assigned to a Task
+            Log changes in Incident Log
+
+            COPY of one in SAFIRE (referenced by customise_project_task_resource)
+        """
+
+        if current.request.function == "scenario":
+            # Must be a Scenario
+            # - don't Log
+            # - don't send Notification
+            return
+
+        db = current.db
+        s3db = current.s3db
+        ltable = s3db.event_task
+
+        form_vars = form.vars
+        form_vars_get = form_vars.get
+        task_id = form_vars_get("id")
+        link = db(ltable.task_id == task_id).select(ltable.incident_id,
+                                                    limitby = (0, 1),
+                                                    ).first()
+        if not link:
+            # Not attached to an Incident
+            # - don't Log
+            # - don't send Notification
+            return
+
+        incident_id = link.incident_id
+
+        if create:
+            pe_id = form_vars_get("pe_id")
+            # Log
+            name = form_vars_get("name")
+            if name:
+                s3db.event_incident_log.insert(incident_id = incident_id,
+                                               name = "Task Created",
+                                               comments = name,
+                                               )
+
+        else:
+            # Update
+            pe_id = None
+            record = form.record
+            if record: # Not True for a record merger
+                from s3dal import Field
+                table = s3db.project_task
+                changed = {}
+                for var in form_vars:
+                    vvar = form_vars[var]
+                    if isinstance(vvar, Field):
+                        # modified_by/modified_on
+                        continue
+                    if var == "pe_id":
+                        pe_id = vvar
+                    rvar = record.get(var, "NOT_PRESENT")
+                    if rvar != "NOT_PRESENT" and vvar != rvar:
+                        f = table[var]
+                        type_ = f.type
+                        if type_ == "integer" or \
+                           type_.startswith("reference"):
+                            if vvar:
+                                vvar = int(vvar)
+                            if vvar == rvar:
+                                continue
+                        represent = table[var].represent
+                        if represent:
+                            if hasattr(represent, "show_link"):
+                                represent.show_link = False
+                        else:
+                            represent = lambda o: o
+                        if rvar:
+                            changed[var] = "%s changed from %s to %s" % \
+                                (f.label, represent(rvar), represent(vvar))
+                        else:
+                            changed[var] = "%s changed to %s" % \
+                                (f.label, represent(vvar))
+
+                if changed:
+                    table = s3db.event_incident_log
+                    text = []
+                    for var in changed:
+                        text.append(changed[var])
+                    text = "\n".join(text)
+                    table.insert(incident_id = incident_id,
+                                 name = "Task Updated",
+                                 comments = text,
+                                 )
+
+        if pe_id:
+            # Notify Assignee
+            # @ToDo: i18n
+            from gluon import URL
+            message = "You have been assigned a Task: %s%s" % \
+                        (settings.get_base_public_url(),
+                         URL(c="event", f= "incident",
+                             args = [incident_id, "task", task_id]),
+                             )
+            from s3db.pr import pr_instance_type
+            instance_type = pr_instance_type(pe_id)
+            if instance_type == "org_organisation":
+                # Notify the Duty Number for the Organisation, not everyone in the Organisation!
+                otable = s3db.org_organisation
+                ottable = s3db.org_organisation_tag
+                query = (otable.pe_id == pe_id) & \
+                        (ottable.organisation_id == otable.id) & \
+                        (ottable.tag == "duty")
+                duty = db(query).select(ottable.value,
+                                        limitby = (0, 1),
+                                        ).first()
+                if duty:
+                    current.msg.send_sms_via_api(duty.value,
+                                                 message,
+                                                 )
+            else:
+                task_notification = settings.get_event_task_notification()
+                if task_notification:
+                    current.msg.send_by_pe_id(pe_id,
+                                              subject = "%s: Task assigned to you" % settings.get_system_name_short(),
+                                              message = message,
+                                              contact_method = task_notification,
+                                              )
+
+    # -------------------------------------------------------------------------
+    def customise_project_task_resource(r, tablename):
+
+        s3db = current.s3db
+
+        table = s3db.project_task
+        table.source.readable = table.writable = False
+
+        # Search Persons for assignments, with the extra data that pr_search_ac returns
+        from s3 import S3PersonAutocompleteWidget
+        table.pe_id.widget = S3PersonAutocompleteWidget(field = "pe_id")
+
+        s3db.configure(tablename,
+                       # No need to see time log: KISS
+                       crud_form = None,
+                       # NB We deliberatly over-ride the default one
+                       create_onaccept = project_task_onaccept,
+                       # In event_ActionPlan()
+                       #list_fields = ["priority",
+                       #               "name",
+                       #               "pe_id",
+                       #               "status_id",
+                       #               "date_due",
+                       #               ],
+                       update_onaccept = lambda form:
+                                            project_task_onaccept(form, create=False),
+                       )
+
+    settings.customise_project_task_resource = customise_project_task_resource
+
+    # -------------------------------------------------------------------------
     def customise_supply_catalog_item_resource(r, tablename):
 
         from s3 import S3Represent

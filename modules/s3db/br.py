@@ -228,8 +228,9 @@ class BRCaseModel(S3Model):
                                               writable = not default_organisation,
                                               ),
                      # @ToDo: Switch to person_id with optional filtering to Staff of User's Org
+                     # e.g. with S3PersonAutocompleteWidget(ajax_filter = "human_resource.id__ne=None")
                      self.hrm_human_resource_id(label = T("Staff Member in Charge"),
-                                                represent = self.hrm_HumanResourceRepresent(show_link=False),
+                                                represent = self.hrm_HumanResourceRepresent(show_link = False),
                                                 widget = None,
                                                 comment = DIV(_class = "tooltip",
                                                               _title = "%s|%s" % (T("Staff Member in Charge"),

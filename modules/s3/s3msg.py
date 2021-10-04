@@ -3005,7 +3005,7 @@ class S3Compose(S3CRUD):
                                               filterby = "instance_type",
                                               filter_opts = (recipient_type,),
                                               )
-                pe_field.widget = S3PentityAutocompleteWidget(types = (recipient_type,))
+                pe_field.widget = S3PentityAutocompleteWidget(instance_types = (recipient_type,))
             else:
                 # @ToDo A new widget (tree?) required to handle multiple persons and groups
                 # - may have to add rules in the template's customise_pr_pentity_controller to filter the options appropriately

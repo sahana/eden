@@ -1525,9 +1525,11 @@ class S3Model(object):
         # Add the script into the comment
         if script:
             if comment:
-                comment = TAG[""](comment, S3ScriptItem(script=script))
+                comment = TAG[""](comment,
+                                  S3ScriptItem(script = script),
+                                  )
             else:
-                comment = S3ScriptItem(script=script)
+                comment = S3ScriptItem(script = script)
 
         return Field(key,
                      supertable,
