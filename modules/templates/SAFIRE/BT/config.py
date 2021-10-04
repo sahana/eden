@@ -613,7 +613,7 @@ def config(settings):
                        (T("Item Category"), "item_category_id$parent_item_category_id"),
                        (T("Item Sub-category"), "item_category_id"),
                        (T("Base UoM"), "item_id$um"),
-                       (T("Brand"), "item_id$brand_id"),
+                       (T("Brand"), "item_id$brand"),
                        ]
 
         s3db.configure(tablename,

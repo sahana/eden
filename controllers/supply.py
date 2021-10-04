@@ -21,16 +21,11 @@ def index():
             }
 
 # -----------------------------------------------------------------------------
-def brand():
-    """ RESTful CRUD controller """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
 def catalog():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(rheader=s3db.supply_catalog_rheader)
+    from s3db.supply import supply_catalog_rheader
+    return s3_rest_controller(rheader = supply_catalog_rheader)
 
 # -----------------------------------------------------------------------------
 def catalog_item():

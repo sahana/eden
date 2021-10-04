@@ -6210,7 +6210,7 @@ Thank you"""
         s3db = current.s3db
 
         table = s3db.supply_item
-        table.brand_id.readable = table.brand_id.writable = False
+        table.brand.readable = table.brand.writable = False
         table.model.readable = table.model.writable = False
         table.year.readable = table.year.writable = False
         table.length.readable = table.length.writable = False

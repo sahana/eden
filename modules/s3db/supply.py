@@ -28,6 +28,8 @@
 """
 
 __all__ = ("SupplyModel",
+           "SupplyAltItemModel",
+           "SupplyKitItemModel",
            "SupplyDistributionModel",
            "SupplyPersonModel",
            "supply_item_add",
@@ -70,25 +72,18 @@ class SupplyModel(S3Model):
     """
         Generic Supply functionality such as catalogs and items that is used
         across multiple modules.
-
-        @ToDo: Break this class up where possible
-               - is this just supply_item_alt and supply_kit_item?
-               Make Brand a freetext field?
     """
 
-    names = ("supply_brand",
-             "supply_catalog",
+    names = ("supply_catalog",
              "supply_item_category",
              "supply_item_category_id",
              "supply_item",
              "supply_item_entity",
              "supply_catalog_item",
              "supply_item_pack",
-             "supply_item_alt",
              "supply_item_id",
              "supply_item_entity_id",
              "supply_item_pack_id",
-             "supply_kit_item",
              "supply_item_represent",
              "supply_item_category_represent",
              )
@@ -108,17 +103,19 @@ class SupplyModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
+        NONE = current.messages["NONE"]
+        YES = T("Yes")
+
         is_float_represent = IS_FLOAT_AMOUNT.represent
         float_represent = lambda v: is_float_represent(v, precision=2)
+
+        string_represent = lambda v: v or NONE
 
         translate = settings.get_L10n_translate_supply_item()
         if translate:
             translate_represent = T
         else:
             translate_represent = None
-
-        NONE = current.messages["NONE"]
-        YES = T("Yes")
 
         reqformat = auth.permission.format
         if reqformat == "html":
@@ -127,59 +124,6 @@ class SupplyModel(S3Model):
                     }
             s3.js_global.append('''i18n.in_inv="%s"''' % i18n["in_inv"])
             s3.js_global.append('''i18n.no_packs="%s"''' % i18n["no_packs"])
-
-        # =====================================================================
-        # Brand
-        #
-        tablename = "supply_brand"
-        define_table(tablename,
-                     Field("name", length=128, notnull=True, unique=True,
-                           label = T("Name"),
-                           requires = [IS_NOT_EMPTY(),
-                                       IS_LENGTH(128),
-                                       IS_NOT_ONE_OF(db,
-                                                     "%s.name" % tablename,
-                                                     ),
-                                       ],
-                           ),
-                     s3_comments(),
-                     *s3_meta_fields())
-
-        # CRUD strings
-        ADD_BRAND = T("Create Brand")
-        crud_strings[tablename] = Storage(
-            label_create = ADD_BRAND,
-            title_display = T("Brand Details"),
-            title_list = T("Brands"),
-            title_update = T("Edit Brand"),
-            label_list_button = T("List Brands"),
-            label_delete_button = T("Delete Brand"),
-            msg_record_created = T("Brand added"),
-            msg_record_modified = T("Brand updated"),
-            msg_record_deleted = T("Brand deleted"),
-            msg_list_empty = T("No Brands currently registered"),
-            )
-
-        # Reusable Field
-        represent = S3Represent(lookup = tablename)
-        brand_id = S3ReusableField("brand_id", "reference %s" % tablename,
-                                   label = T("Brand"),
-                                   ondelete = "RESTRICT",
-                                   represent = represent,
-                                   requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(db, "supply_brand.id",
-                                                          represent,
-                                                          sort = True,
-                                                          )
-                                                ),
-                                   sortby = "name",
-                                   comment = S3PopupLink(c = "supply",
-                                                         f = "brand",
-                                                         label = ADD_BRAND,
-                                                         title = T("Brand"),
-                                                         tooltip = T("The list of Brands are maintained by the Administrators."),
-                                                         ),
-                                   )
 
         # =====================================================================
         # Catalog (of Items)
@@ -405,7 +349,7 @@ $.filterOptionsS3({
                            ),
                      Field("code", length=16,
                            label = T("Code"),
-                           represent = lambda v: v or NONE,
+                           represent = string_represent,
                            requires = IS_LENGTH(16),
                            ),
                      Field("um", length=128, notnull=True,
@@ -426,7 +370,10 @@ $.filterOptionsS3({
                      s3_currency(readable = track_pack_values,
                                  writable = track_pack_values,
                                  ),
-                     brand_id(),
+                     Field("brand",
+                           label = T("Brand"),
+                           represent = string_represent,
+                           ),
                      Field("kit", "boolean",
                            default = False,
                            label = T("Kit?"),
@@ -434,12 +381,12 @@ $.filterOptionsS3({
                            ),
                      Field("model", length=128,
                            label = T("Model/Type"),
-                           represent = lambda v: v or NONE,
+                           represent = string_represent,
                            requires = IS_LENGTH(128),
                            ),
                      Field("year", "integer",
                            label = T("Year of Manufacture"),
-                           represent = lambda v: v or NONE,
+                           represent = string_represent,
                            requires = IS_EMPTY_OR(
                                         IS_INT_IN_RANGE(1900, current.request.now.year + 1)
                                         ),
@@ -521,7 +468,6 @@ $.filterOptionsS3({
                                                      )
 
         # Reusable Field
-        supply_item_tooltip = T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog.")
         supply_item_id = S3ReusableField("item_id", "reference %s" % tablename, # 'item_id' for backwards-compatibility
                                          label = T("Item"),
                                          ondelete = "RESTRICT",
@@ -536,7 +482,7 @@ $.filterOptionsS3({
                                                                f = "item",
                                                                label = ADD_ITEM,
                                                                title = T("Item"),
-                                                               tooltip = supply_item_tooltip,
+                                                               tooltip = T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog."),
                                                                ),
                                          )
 
@@ -544,6 +490,7 @@ $.filterOptionsS3({
         filter_widgets = [
             S3TextFilter(["code",
                           "name",
+                          "brand",
                           "model",
                           #"item_category_id$name",
                           "comments",
@@ -552,13 +499,6 @@ $.filterOptionsS3({
                          comment = T("Search for an item by its code, name, model and/or comment."),
                          #_class = "filter-search",
                          ),
-            S3OptionsFilter("brand_id",
-                            # @ToDo: Introspect need for header based on # records
-                            #header = True,
-                            #label = T("Brand"),
-                            represent = "%(name)s",
-                            widget = "multiselect",
-                            ),
             S3OptionsFilter("year",
                             comment = T("Search for an item by Year of Manufacture."),
                             # @ToDo: Introspect need for header based on # records
@@ -570,7 +510,7 @@ $.filterOptionsS3({
 
         report_options = Storage(defaults = Storage(rows = "name",
                                                     cols = "item_category_id",
-                                                    fact = "count(brand_id)",
+                                                    fact = "count(id)",
                                                     ),
                                  )
 
@@ -676,7 +616,7 @@ $.filterOptionsS3({
                           #"comments",
                           #"item_category_id$code",
                           #"item_category_id$name",
-                          #"item_id$brand_id$name",
+                          #"item_id$brand",
                           #"item_category_id$parent_item_category_id$code"
                           #"item_category_id$parent_item_category_id$name"
                           "item_id$code",
@@ -701,14 +641,14 @@ $.filterOptionsS3({
                             cols = 3,
                             hidden = True,
                            ),
-            S3OptionsFilter("item_id$brand_id",
-                            label = T("Brand"),
-                            comment = T("Search for an item by brand."),
-                            #represent ="%(name)s",
-                            cols = 3,
-                            hidden = True,
-                           ),
-        ]
+            #S3OptionsFilter("item_id$brand",
+            #                label = T("Brand"),
+            #                comment = T("Search for an item by brand."),
+            #                #represent ="%(name)s",
+            #                cols = 3,
+            #                hidden = True,
+            #               ),
+            ]
 
         configure(tablename,
                   deduplicate = self.supply_catalog_item_duplicate,
@@ -812,89 +752,6 @@ $.filterOptionsS3({
                        # Inventory Items
                        inv_inv_item = "item_pack_id",
                        )
-
-        # =====================================================================
-        # Supply Kit Item Table
-        #
-        # For defining what items are in a kit
-
-        tablename = "supply_kit_item"
-        define_table(tablename,
-                     supply_item_id("parent_item_id",
-                                    label = T("Parent Item"),
-                                    comment = None,
-                                    ),
-                     supply_item_id("item_id",
-                                    label = T("Kit Item"),
-                                    ),
-                     Field("quantity", "double",
-                           label = T("Quantity"),
-                           represent = float_represent,
-                           ),
-                     item_pack_id(),
-                     s3_comments(),
-                     *s3_meta_fields())
-
-        # CRUD strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Add Item to Kit"),
-            title_display = T("Kit Item Details"),
-            title_list = T("Kit Items"),
-            title_update = T("Edit Kit Item"),
-            label_list_button = T("List Kit Items"),
-            label_delete_button = T("Remove Item from Kit"),
-            msg_record_created = T("Item added to Kit"),
-            msg_record_modified = T("Kit Item updated"),
-            msg_record_deleted = T("Item removed from Kit"),
-            msg_list_empty = T("No Items currently in this Kit"),
-            )
-
-        # =====================================================================
-        # Alternative Items
-        #
-        #  If the desired item isn't found, then these are designated as
-        #  suitable alternatives
-        #
-        tablename = "supply_item_alt"
-        define_table(tablename,
-                     supply_item_id(notnull=True),
-                     Field("quantity", "double", notnull=True,
-                           default = 1,
-                           label = T("Quantity"),
-                           represent = float_represent,
-                           comment = DIV(_class = "tooltip",
-                                         _title = "%s|%s" %
-                                                  (T("Quantity"),
-                                                   T("The number of Units of Measure of the Alternative Items which is equal to One Unit of Measure of the Item")
-                                                   )
-                                         ),
-                           ),
-                     supply_item_id("alt_item_id", notnull=True,
-                                    comment = S3PopupLink(c = "supply",
-                                                          f = "item",
-                                                          label = ADD_ITEM,
-                                                          title = T("Item"),
-                                                          tooltip = supply_item_tooltip,
-                                                          vars = {"child": "alt_item_id"
-                                                                  },
-                                                          ),
-                                    ),
-                     s3_comments(),
-                     *s3_meta_fields())
-
-        # CRUD strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Create Alternative Item"),
-            title_display = T("Alternative Item Details"),
-            title_list = T("Alternative Items"),
-            title_update = T("Edit Alternative Item"),
-            label_list_button = T("List Alternative Items"),
-            label_delete_button = T("Delete Alternative Item"),
-            msg_record_created = T("Alternative Item added"),
-            msg_record_modified = T("Alternative Item updated"),
-            msg_record_deleted = T("Alternative Item deleted"),
-            msg_list_empty = T("No Alternative Items currently registered"),
-            )
 
         # =====================================================================
         # Item Super-Entity
@@ -1290,6 +1147,131 @@ $.filterOptionsS3({
             f.filename = uuid4().hex + filename
             f.file = BytesIO(base64.b64decode(encoded_file))
             form_vars.file = f
+
+# =============================================================================
+class SupplyAltItemModel(S3Model):
+    """
+        Alternative Items
+    """
+
+    names = ("supply_item_alt",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        supply_item_id = self.supply_item_id
+
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=2)
+
+        # ---------------------------------------------------------------------
+        # Alternative Items
+        #
+        #  If the desired item isn't found, then these are designated as
+        #  suitable alternatives
+        #
+        tablename = "supply_item_alt"
+        self.define_table(tablename,
+                          supply_item_id(notnull = True),
+                          Field("quantity", "double", notnull=True,
+                                default = 1,
+                                label = T("Quantity"),
+                                represent = float_represent,
+                                comment = DIV(_class = "tooltip",
+                                              _title = "%s|%s" %
+                                                   (T("Quantity"),
+                                                    T("The number of Units of Measure of the Alternative Items which is equal to One Unit of Measure of the Item"),
+                                                    )
+                                              ),
+                                ),
+                          supply_item_id("alt_item_id", notnull=True,
+                                         comment = S3PopupLink(c = "supply",
+                                                               f = "item",
+                                                               label = T("Create Item"),
+                                                               title = T("Item"),
+                                                               tooltip = T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog."),
+                                                               vars = {"child": "alt_item_id"
+                                                                       },
+                                                               ),
+                                         ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # CRUD strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Alternative Item"),
+            title_display = T("Alternative Item Details"),
+            title_list = T("Alternative Items"),
+            title_update = T("Edit Alternative Item"),
+            label_list_button = T("List Alternative Items"),
+            label_delete_button = T("Delete Alternative Item"),
+            msg_record_created = T("Alternative Item added"),
+            msg_record_modified = T("Alternative Item updated"),
+            msg_record_deleted = T("Alternative Item deleted"),
+            msg_list_empty = T("No Alternative Items currently registered"),
+            )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class SupplyKitItemModel(S3Model):
+    """
+        Kit Items
+    """
+
+    names = ("supply_kit_item",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        supply_item_id = self.supply_item_id
+
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=2)
+
+        # ---------------------------------------------------------------------
+        # Supply Kit Item Table
+        #
+        # For defining what items are in a kit
+
+        tablename = "supply_kit_item"
+        self.define_table(tablename,
+                          supply_item_id("parent_item_id",
+                                         label = T("Parent Item"),
+                                         comment = None,
+                                         ),
+                          supply_item_id("item_id",
+                                         label = T("Kit Item"),
+                                         ),
+                          Field("quantity", "double",
+                                label = T("Quantity"),
+                                represent = float_represent,
+                                ),
+                          self.supply_item_pack_id(),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # CRUD strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Item to Kit"),
+            title_display = T("Kit Item Details"),
+            title_list = T("Kit Items"),
+            title_update = T("Edit Kit Item"),
+            label_list_button = T("List Kit Items"),
+            label_delete_button = T("Remove Item from Kit"),
+            msg_record_created = T("Item added to Kit"),
+            msg_record_modified = T("Kit Item updated"),
+            msg_record_deleted = T("Item removed from Kit"),
+            msg_list_empty = T("No Items currently in this Kit"),
+            )
+
+        # Pass names back to global scope (s3.*)
+        return {}
 
 # =============================================================================
 class SupplyDistributionModel(S3Model):
@@ -1904,7 +1886,6 @@ class supply_ItemRepresent(S3Represent):
         fields = ["supply_item.id",
                   "supply_item.name",
                   "supply_item.model",
-                  "supply_brand.name",
                   ]
         if show_um:
             fields.append("supply_item.um")
@@ -1914,7 +1895,8 @@ class supply_ItemRepresent(S3Represent):
                              fields = fields,
                              show_link = show_link,
                              translate = translate,
-                             multiple = multiple)
+                             multiple = multiple,
+                             )
 
     # -------------------------------------------------------------------------
     def lookup_rows(self, key, values, fields=None):
@@ -1929,9 +1911,6 @@ class supply_ItemRepresent(S3Represent):
 
         db = current.db
         itable = current.s3db.supply_item
-        btable = db.supply_brand
-
-        left = btable.on(btable.id == itable.brand_id)
 
         qty = len(values)
         if qty == 1:
@@ -1941,8 +1920,7 @@ class supply_ItemRepresent(S3Represent):
             query = (itable.id.belongs(values))
             limitby = (0, qty)
 
-        rows = db(query).select(left = left,
-                                limitby = limitby,
+        rows = db(query).select(limitby = limitby,
                                 *self.fields)
         self.queries += 1
         return rows
@@ -1957,15 +1935,12 @@ class supply_ItemRepresent(S3Represent):
 
         name = row["supply_item.name"]
         model = row["supply_item.model"]
-        brand = row["supply_brand.name"]
 
         fields = []
         if name:
             fields.append(name)
         if model:
             fields.append(model)
-        if brand:
-            fields.append(brand)
         name = " - ".join(fields)
 
         if self.show_um:
@@ -2331,10 +2306,10 @@ def supply_item_rheader(r):
 
             table = r.table
 
-            brand_field = table.brand_id
+            brand_field = table.brand
             if brand_field.readable:
                 brand_row = TR(TH("%s: " % brand_field.label),
-                               brand_field.represent(item.brand_id),
+                               brand_field.represent(item.brand),
                                )
             else:
                 brand_row = ""

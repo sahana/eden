@@ -14,7 +14,7 @@
          Catalog................supply_catalog.name
          Item Code..............supply_item.code
          Item Name..............supply_item.name
-         Brand..................supply_brand.name
+         Brand..................supply_item.brand
          Model..................supply_item.model
          Year...................supply_item.year
          Units..................supply_item.um
@@ -82,7 +82,6 @@
                                                  col[@field='Warehouse']/text(), '|',
                                                  col[@field='Facility Type']/text(), '|',
                                                  col[@field='Bin']/text())"/>
-    <xsl:key name="brand" match="row" use="col[@field='Brand']"/>
     <xsl:key name="owner_organisation" match="row"
              use="col[@field='Owned By (Organisation/Branch)']"/>
     <xsl:key name="supplier_organisation" match="row"
@@ -103,12 +102,6 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('item_category',
                                                                        col[@field='Category'])[1])]">
                 <xsl:call-template name="ItemCategory"/>
-            </xsl:for-each>
-
-            <!-- Brands -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('brand',
-                                                                       col[@field='Brand'])[1])]">
-                <xsl:call-template name="Brand"/>
             </xsl:for-each>
 
             <!-- Items -->
@@ -475,17 +468,6 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <xsl:template name="Brand">
-        <xsl:variable name="brand" select="col[@field='Brand']/text()"/>
-        <resource name="supply_brand">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$brand"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$brand"/></data>
-        </resource>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
     <xsl:template name="Catalog">
         <xsl:variable name="catalog" select="col[@field='Catalog']/text()"/>
         <!--
@@ -545,12 +527,12 @@
                 <xsl:with-param name="colhdrs" select="$Units"/>
             </xsl:call-template>
         </xsl:variable>
+        <xsl:variable name="brand" select="col[@field='Brand']/text()"/>
         <xsl:variable name="model" select="col[@field='Model']/text()"/>
         <xsl:variable name="pack" select="col[@field='Pack']"/>
         <xsl:variable name="pack_quantity" select="col[@field='Pack Quantity']"/>
         <xsl:variable name="item_tuid" select="concat('supply_item/', $item, '/', $um, '/', $model)"/>
         <xsl:variable name="pack_tuid" select="concat('supply_item_pack/', $item, '/', $um, '/', $model)"/>
-        <xsl:variable name="brand" select="col[@field='Brand']/text()"/>
         <xsl:variable name="year" select="col[@field='Year']/text()"/>
         <xsl:variable name="weight" select="col[@field='Weight']/text()"/>
         <xsl:variable name="length" select="col[@field='Length']/text()"/>
@@ -570,6 +552,9 @@
                 <data field="name"><xsl:value-of select="$ItemName"/></data>
             </xsl:if>
             <data field="um"><xsl:value-of select="$um"/></data>
+            <xsl:if test="$brand!=''">
+                <data field="brand"><xsl:value-of select="$brand"/></data>
+            </xsl:if>
             <xsl:if test="$model!=''">
                 <data field="model"><xsl:value-of select="$model"/></data>
             </xsl:if>
@@ -593,14 +578,6 @@
             </xsl:if>
             <xsl:if test="$comments!=''">
                 <data field="comments"><xsl:value-of select="$comments"/></data>
-            </xsl:if>
-            <!-- Link to Brand -->
-            <xsl:if test="$brand!=''">
-                <reference field="brand_id" resource="supply_brand">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$brand"/>
-                    </xsl:attribute>
-                </reference>
             </xsl:if>
             <!-- Link to Supply Item Category -->
             <xsl:if test="$category!=''">

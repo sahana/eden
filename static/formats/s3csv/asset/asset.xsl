@@ -21,7 +21,7 @@
          Category........................supply_catalog_item.item_category_id
          Item Code.......................supply_item.code (useful to ensure explicit matching to existing Catalog items)
          Item Name.......................supply_item.name (alternative to code useful for adding new items on-the-fly)
-         Brand...........................supply_brand.name
+         Brand...........................supply_item.brand
          Model...........................supply_item.model
          SN..............................sn
          Supplier........................supplier
@@ -30,7 +30,6 @@
          Comments........................comments
 
         creates:
-            supply_brand.................
             org_office...................
             org_organisation.............
             gis_location.................
@@ -60,7 +59,6 @@
                                                   col[@field='Facility Type']/text(), '|',
                                                   col[@field='Room']/text())"/>
     <xsl:key name="persons" match="row" use="col[@field='Assigned To']/text()"/>
-    <xsl:key name="brands" match="row" use="col[@field='Brand']/text()"/>
     <xsl:key name="catalogs" match="row" use="col[@field='Catalog']/text()"/>
     <xsl:key name="categories" match="row" use="concat(col[@field='Catalog']/text(), '|',
                                                        col[@field='Category']/text())"/>
@@ -117,13 +115,6 @@
                                         generate-id(key('persons',
                                                         col[@field='Assigned To']/text())[1])]">
                 <xsl:call-template name="Person"/>
-            </xsl:for-each>
-
-            <!-- Brands -->
-            <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('brands',
-                                                        col[@field='Brand']/text())[1])]">
-                <xsl:call-template name="Brand"/>
             </xsl:for-each>
 
             <!-- SupplyCatalogs -->
@@ -658,6 +649,9 @@
             <xsl:if test="$ItemName!=''">
                 <data field="name"><xsl:value-of select="$ItemName"/></data>
             </xsl:if>
+            <xsl:if test="$BrandName!=''">
+                <data field="brand"><xsl:value-of select="$Brand"/></data>
+            </xsl:if>
             <xsl:if test="$Model!=''">
                 <data field="model"><xsl:value-of select="$Model"/></data>
             </xsl:if>
@@ -668,13 +662,6 @@
                     <xsl:value-of select="$CatalogName"/>
                 </xsl:attribute>
             </reference>
-            <xsl:if test="$BrandName!=''">
-                <reference field="brand_id" resource="supply_brand">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$BrandName"/>
-                    </xsl:attribute>
-                </reference>
-            </xsl:if>
             <xsl:if test="$CategoryName!=''">
                 <!-- Link to Supply Item Category -->
                 <reference field="item_category_id" resource="supply_item_category">
@@ -701,19 +688,6 @@
                     </reference>
                 </resource>
             </xsl:if>
-        </resource>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="Brand">
-        <xsl:variable name="BrandName" select="col[@field='Brand']/text()"/>
-
-        <resource name="supply_brand">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$BrandName"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$BrandName"/></data>
         </resource>
 
     </xsl:template>

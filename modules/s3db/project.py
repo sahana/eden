@@ -11044,10 +11044,12 @@ class ProjectTaskModel(S3Model):
                            ondelete = "SET NULL",
                            readable = staff,
                            writable = staff,
+                           # To use an Autocomplete instead of a dropdown:
                            #widget = S3PentityAutocompleteWidget(instance_types = ("pr_person",
                            #                                                       "pr_group",
                            #                                                       "org_organisation",
                            #                                                       ))
+                           # If just needing Persons:
                            #widget = S3PersonAutocompleteWidget(field = "pe_id"),
                            #comment = DIV(_class = "tooltip",
                            #              _title = "%s|%s" % (T("Assigned to"),

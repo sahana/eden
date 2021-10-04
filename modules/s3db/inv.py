@@ -702,7 +702,7 @@ $.filterOptionsS3({
         filter_widgets = [
             S3TextFilter(["item_id$name",
                           "item_id$code",
-                          "item_id$brand_id",
+                          "item_id$brand",
                           "item_id$model",
                           "item_id$comments",
                           "item_pack_id$name",

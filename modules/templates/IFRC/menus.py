@@ -900,10 +900,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #M("Catalog Items", c="supply", f="catalog_item")(
                     #   M("Create", m="create"),
                     #),
-                    #M("Brands", c="supply", f="brand",
-                    #  restrict=[ADMIN])(
-                    #    M("Create", m="create"),
-                    #),
                     #M("Catalogs", c="supply", f="catalog", check=basic_warehouse)(
                     M("Catalogs", c="supply", f="catalog")(
                         M("Create", m="create"),

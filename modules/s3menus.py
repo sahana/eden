@@ -578,10 +578,6 @@ class S3OptionsMenu(object):
                         #M("Map", m="map"),
                         M("Import", m="import", p="create"),
                     ),
-                    #M("Brands", f="brand",
-                    #  restrict=[ADMIN])(
-                    #    M("Create", m="create"),
-                    #),
                     M("Items", f="item", m="summary")(
                         M("Create", m="create"),
                         M("Import", f="catalog_item", m="import", p="create"),
@@ -1311,10 +1307,6 @@ class S3OptionsMenu(object):
                     # Catalog Items moved to be next to the Item Categories
                     #M("Catalog Items", c="supply", f="catalog_item")(
                        #M("Create", m="create"),
-                    #),
-                    #M("Brands", c="supply", f="brand",
-                    #  restrict=[ADMIN])(
-                    #    M("Create", m="create"),
                     #),
                     M("Catalogs", c="supply", f="catalog")(
                         M("Create", m="create"),
