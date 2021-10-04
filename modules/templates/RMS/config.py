@@ -3419,9 +3419,15 @@ Thank you"""
                                                            limitby = (0, 1),
                                                            ).first()
             ltable = db.org_organisation_organisation_type
-            query = ((ltable.organisation_type_id == type_id) & (ltable.organisation_id == otable.id) & (otable.id == otable.root_organisation)) | \
-                    (otable.root_organisation == root_org_id) | \
-                    ((ltable.organisation_type_id != type_id) & (ltable.organisation_id == otable.id) & (otable.realm_entity == root_org.pe_id))
+            try:
+                query = ((ltable.organisation_type_id == type_id) & (ltable.organisation_id == otable.id) & (otable.id == otable.root_organisation)) | \
+                        (otable.root_organisation == root_org_id) | \
+                        ((ltable.organisation_type_id != type_id) & (ltable.organisation_id == otable.id) & (otable.realm_entity == root_org.pe_id))
+            except:
+                # No root_org: we must be testing as Admin
+                query = (ltable.organisation_type_id == type_id) & \
+                        (ltable.organisation_id == otable.id) & \
+                        (otable.id == otable.root_organisation)
             orgs = db(query).select(otable.id)
             org_ids = [row.id for row in orgs]
             table.organisation_id.requires.other.set_filter(filterby = "id",
