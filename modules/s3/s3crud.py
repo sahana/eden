@@ -2421,9 +2421,16 @@ class S3CRUD(S3Method):
 
         # Show icon on button?
         if icon and settings.get_ui_use_button_icons():
-            button = A(ICON(icon), labelstr, _id=_id, _class=_class)
+            button = A(ICON(icon),
+                       labelstr,
+                       _id = _id,
+                       _class = _class,
+                       )
         else:
-            button = A(labelstr, _id=_id, _class=_class)
+            button = A(labelstr,
+                       _id = _id,
+                       _class = _class,
+                       )
 
         # Button attributes
         if _href:
@@ -2624,7 +2631,7 @@ class S3CRUD(S3Method):
 
             @param label: the link label
             @param url: the target URL
-            @param attr: attributes for the link (default: {"_class":"action-btn"})
+            @param attr: attributes for the link (default: {"_class": "action-btn"})
         """
 
         link = dict(attr)

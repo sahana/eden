@@ -84,9 +84,12 @@ __all__ = ("WarehouseModel",
            "inv_tracking_status",
            "inv_warehouse_free_capacity",
            "inv_InvItemRepresent",
+           #"inv_RecvRepresent",
            #"inv_ReqCheckMethod",
            "inv_ReqItemRepresent",
            "inv_ReqRefRepresent",
+           #"inv_SendRepresent",
+           #"inv_TrackItemRepresent",
            )
 
 import datetime
@@ -514,7 +517,6 @@ class InventoryModel(S3Model):
 
     names = ("inv_inv_item",
              "inv_item_id",
-             "inv_item_represent",
              )
 
     def model(self):
@@ -857,7 +859,6 @@ $.filterOptionsS3({
         # Pass names back to global scope (s3.*)
         #
         return {"inv_item_id": inv_item_id,
-                "inv_item_represent": inv_item_represent,
                 }
 
     # -------------------------------------------------------------------------
@@ -2532,27 +2533,77 @@ class InventoryPalletShipmentModel(S3Model):
     def model(self):
 
         T = current.T
+        db = current.db
+
+        configure = self.configure
+        define_table = self.define_table
+
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=3)
 
         # -----------------------------------------------------------------
-        # Pallets <> Outbound Shipments
+        # Shipment Pallets
+        # i.e. Pallets <> Outbound Shipments
         #
         tablename = "inv_send_pallet"
-        self.define_table(tablename,
-                          Field("number", "integer",
-                                label = T("Number"),
-                                ),
-                          self.inv_send_id(empty = False,
-                                           ondelete = "CASCADE",
-                                           ),
-                          self.inv_pallet_id(empty = False,
-                                             ondelete = "SET NULL",
-                                             ),
-                          s3_comments(),
-                          *s3_meta_fields())
+        define_table(tablename,
+                     Field("number", "integer",
+                           label = T("Number"),
+                           ),
+                     self.inv_send_id(empty = False,
+                                      ondelete = "CASCADE",
+                                      ),
+                     self.inv_pallet_id(empty = False,
+                                        ondelete = "SET NULL",
+                                        ),
+                     Field("weight", "double",
+                           default = 0.0,
+                           #label = T("Weight"),
+                           #represent = float_represent,
+                           #comment = "kg",
+                           readable = False,
+                           writable = False,
+                           ),
+                     Field("volume", "double",
+                           default = 0.0,
+                           label = T("Volume"),
+                           represent = float_represent,
+                           comment = "m3",
+                           #readable = False,
+                           writable = False,
+                           ),
+                     s3_comments(),
+                     Field.Method("weight_rep",
+                                  self.send_pallet_weight,
+                                  ),
+                     *s3_meta_fields())
 
-        self.configure(tablename,
-                       onvalidation = self.send_pallet_onvalidation,
-                       )
+        crud_form = S3SQLCustomForm("send_id",
+                                    "number",
+                                    "pallet_id",
+                                    S3SQLInlineComponent("send_pallet_item",
+                                                         label = T("Items"),
+                                                         fields = [("", "track_item_id")],
+                                                         ),
+                                    "comments",
+                                    )
+
+        list_fields = ["number",
+                       "pallet_id",
+                       (T("Items"), "send_pallet_item.track_item_id$item_id$code"),
+                       (T("Weight (kg)"), "weight_rep"),
+                       "volume",
+                       "comments",
+                       ]
+
+        configure(tablename,
+                  crud_form = crud_form,
+                  extra_fields = ["weight",
+                                  "pallet_id$capacity",
+                                  ],
+                  list_fields = list_fields,
+                  onvalidation = self.send_pallet_onvalidation,
+                  )
 
         # CRUD strings
         current.response.s3.crud_strings[tablename] = Storage(
@@ -2568,6 +2619,40 @@ class InventoryPalletShipmentModel(S3Model):
             msg_list_empty = T("No Pallets defined"),
             )
 
+        self.add_components(tablename,
+                            inv_send_pallet_item = "send_pallet_id",
+                            )
+
+        # -----------------------------------------------------------------
+        # Shipment Pallets <> Shipment Items
+        #
+        track_item_represent = inv_TrackItemRepresent()
+
+        tablename = "inv_send_pallet_item"
+        define_table(tablename,
+                     Field("send_pallet_id", "reference inv_send_pallet",
+                           ondelete = "CASCADE",
+                           requires = IS_ONE_OF(db, "inv_send_pallet.id",
+                                                "%(number)s",
+                                                orderby = "inv_send_pallet.number",
+                                                sort = True,
+                                                ),
+                           ),
+                     Field("track_item_id", "reference inv_track_item",
+                           label = T("Item"),
+                           ondelete = "CASCADE",
+                           represent = track_item_represent,
+                           requires = IS_ONE_OF(db, "inv_track_item.id",
+                                                track_item_represent,
+                                                ),
+                           ),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  onaccept = self.send_pallet_item_onaccept,
+                  ondelete = self.send_pallet_item_ondelete,
+                  )
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
@@ -2582,6 +2667,88 @@ class InventoryPalletShipmentModel(S3Model):
 
         # @ToDo
         pass
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def send_pallet_item_onaccept(form):
+        """
+            Update the Weight & Volume of the Shipment's Pallet
+        """
+
+        inv_send_pallet_update(form.vars.get("send_pallet_id"))
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def send_pallet_item_ondelete(row):
+        """
+            Update the Weight & Volume of the Shipment's Pallet
+        """
+
+        inv_send_pallet_update(row.send_pallet_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def send_pallet_weight(row):
+        """
+            Display the Weight of the Shipment's Pallet
+            - with capacity
+            - in red if over capacity
+        """
+
+        try:
+            inv_send_pallet = getattr(row, "inv_send_pallet")
+        except AttributeError:
+            inv_send_pallet = row
+
+        try:
+            weight = inv_send_pallet.weight
+        except AttributeError:
+            # Need to reload the inv_send_pallet
+            # Avoid this by adding to extra_fields
+            table = current.s3db.inv_send_pallet
+            query = (table.id == inv_send_pallet.id)
+            inv_send_pallet = current.db(query).select(table.id,
+                                                       table.weight,
+                                                       limitby = (0, 1),
+                                                       ).first()
+            weight = inv_send_pallet.weight if inv_send_pallet else None
+
+        if weight is None:
+            return current.messages["NONE"]
+
+        weight = round(weight, 3)
+
+        try:
+            inv_pallet = getattr(row, "inv_pallet")
+            capacity = inv_pallet.capacity
+        except KeyError:
+            # Need to load the inv_pallet
+            # Avoid this by adding to extra_fields
+            s3db = current.s3db
+            ttable = s3db.inv_send_pallet
+            ptable = s3db.inv_pallet
+            query = (table.id == inv_send_pallet.id) & \
+                    (table.pallet_id == ptable.id)
+            inv_pallet = current.db(query).select(ptable.capacity,
+                                                  limitby = (0, 1),
+                                                  ).first()
+            capacity = inv_pallet.capacity
+
+        if not capacity:
+            return weight
+
+        capacity = round(capacity, 3)
+        
+        if weight > capacity:
+            return SPAN(SPAN(weight,
+                             _class = "expired",
+                             ),
+                        " / %s" % capacity,
+                        )
+        else:
+            return "%s / %s" % (weight,
+                                capacity,
+                                )
 
 # =============================================================================
 class InventoryRequisitionModel(S3Model):
@@ -5288,6 +5455,7 @@ class InventoryTrackingModel(S3Model):
         # ---------------------------------------------------------------------
         # Tracking Items
         #
+        inv_item_represent = inv_InvItemRepresent()
         inv_item_status_opts = settings.get_inv_item_status()
 
         tablename = "inv_track_item"
@@ -5298,12 +5466,13 @@ class InventoryTrackingModel(S3Model):
                                      readable = False,
                                      writable = False
                                      ),
+                     # Local Purchases don't have this available
                      inv_item_id("send_inv_item_id",
                                  ondelete = "RESTRICT",
-                                 # Local Purchases don't have this available
+                                 represent = inv_item_represent,
                                  requires = IS_EMPTY_OR(
                                               IS_ONE_OF(db, "inv_inv_item.id",
-                                                        self.inv_item_represent,
+                                                        inv_item_represent,
                                                         orderby = "inv_inv_item.id",
                                                         sort = True,
                                                         )),
@@ -5365,6 +5534,7 @@ $.filterOptionsS3({
                      inv_item_id("recv_inv_item_id",
                                  label = T("Receiving Inventory"),
                                  ondelete = "RESTRICT",
+                                 #represent = inv_item_represent,
                                  required = False,
                                  readable = False,
                                  writable = False,
@@ -9504,14 +9674,27 @@ def inv_send_controller():
                     sendtable.req_ref.default = req.req_ref
 
         if r.component:
-            if r.component_name == "document":
+            cname = r.component_name
+            if cname == "document":
                 # Simplify a little
                 table = s3db.doc_document
                 table.file.required = True
                 table.url.readable = table.url.writable = False
                 table.date.readable = table.date.writable = False
 
-            elif r.component_name == "track_item":
+            elif cname == "send_pallet":
+                # Filter out Items which are already palletised
+                sptable = s3db.inv_send_pallet
+                spitable = s3db.inv_send_pallet_item
+                query = (sptable.send_id == r.id) & \
+                        (sptable.id == spitable.send_pallet_id)
+                rows = db(query).select(spitable.track_item_id)
+                track_item_ids = [row.track_item_id for row in rows]
+                spitable.track_item_id.requires.set_filter(not_filterby = "id",
+                                                           not_filter_opts = track_item_ids,
+                                                           )
+
+            elif cname == "track_item":
 
                 # Security-wise, we are already covered by configure()
                 # Performance-wise, we should optimise for UI-acessible flows
@@ -9973,6 +10156,44 @@ def inv_send_onaccept(form):
                                  stable.send_ref,
                                  )
         record.update_record(send_ref = code)
+
+# =============================================================================
+def inv_send_pallet_update(send_pallet_id):
+    """
+        Updfate a Shipment Pallet's Total Weight & Volume
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    table = s3db.inv_send_pallet_item
+    itable = s3db.supply_item
+    ptable = s3db.supply_item_pack
+    ttable = s3db.inv_track_item
+    query = (table.send_pallet_id == send_pallet_id) & \
+            (table.track_item_id == ttable.id) & \
+            (ttable.item_id == itable.id) & \
+            (ttable.item_pack_id == ptable.id)
+    items = db(query).select(itable.weight,
+                             itable.volume,
+                             ttable.quantity,
+                             ptable.quantity,
+                             )
+    total_volume = 0
+    total_weight = 0
+    for row in items:
+        quantity = row["inv_track_item.quantity"] * row["supply_item_pack.quantity"]
+        row = row.supply_item
+        volume = row.volume
+        if volume:
+            total_volume += (volume * quantity)
+        weight = row.weight
+        if weight:
+            total_weight += (weight * quantity)
+
+    db(s3db.inv_send_pallet.id == send_pallet_id).update(volume = total_volume,
+                                                         weight = total_weight,
+                                                         )
 
 # =============================================================================
 def inv_send_process(r, **attr):
@@ -11676,14 +11897,22 @@ class inv_ReqCheckMethod(S3Method):
                             if inv_quantity != 0:
                                 no_match = False
                                 if inv_quantity < req_quantity:
-                                    status = SPAN(T("Partial"), _class="req_status_partial")
+                                    status = SPAN(T("Partial"),
+                                                  _class = "req_status_partial",
+                                                  )
                                 else:
-                                    status = SPAN(T("YES"), _class="req_status_complete")
+                                    status = SPAN(T("YES"),
+                                                  _class = "req_status_complete",
+                                                  )
                             else:
-                                status = SPAN(T("NO"), _class="req_status_none")
+                                status = SPAN(T("NO"),
+                                              _class = "req_status_none",
+                                              )
                         else:
                             inv_quantity = T("N/A")
-                            status = SPAN(T("N/A"), _class="req_status_none")
+                            status = SPAN(T("N/A"),
+                                          _class = "req_status_none",
+                                          )
 
                         items.append(TR(#A(req_item.id),
                                         supply_item_represent(req_item.item_id),
@@ -11796,13 +12025,12 @@ class inv_AdjRepresent(S3Represent):
         return rows
 
     # -------------------------------------------------------------------------
-    def represent_row(self, row, prefix=None):
+    def represent_row(self, row):
         """
             Represent the referenced row.
             (in foreign key representations)
 
             @param row: the row
-            @param prefix: prefix for hierarchical representation
 
             @return: the representation of the Row, or None if there
                      is an error in the Row
@@ -11873,13 +12101,12 @@ class inv_AdjItemRepresent(S3Represent):
         return rows
 
     # -------------------------------------------------------------------------
-    def represent_row(self, row, prefix=None):
+    def represent_row(self, row):
         """
             Represent the referenced row.
             (in foreign key representations)
 
             @param row: the row
-            @param prefix: prefix for hierarchical representation
 
             @return: the representation of the Row, or None if there
                      is an error in the Row
@@ -11933,7 +12160,7 @@ class inv_CommitRepresent(S3Represent):
         rows = current.db(query).select(table.id,
                                         table.date,
                                         table.site_id,
-                                        limitby = (0, count)
+                                        limitby = (0, count),
                                         )
         self.queries += 1
 
@@ -12293,7 +12520,7 @@ class inv_ReqItemRepresent(S3Represent):
         rows = current.db(query).select(ritable.id,
                                         sitable.name,
                                         left = left,
-                                        limitby = (0, count)
+                                        limitby = (0, count),
                                         )
         self.queries += 1
         return rows
@@ -12481,5 +12708,63 @@ class inv_SendRepresent(S3Represent):
             v = "%s)" % v 
 
         return v
+
+# =============================================================================
+class inv_TrackItemRepresent(S3Represent):
+
+    def __init__(self):
+        """
+            Constructor
+        """
+
+        super(inv_TrackItemRepresent, self).__init__(lookup = "inv_track_item",
+                                                     fields = ["send_inv_item_id"],
+                                                     )
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom look-up of rows
+
+            @param key: the key field
+            @param values: the values to look up
+            @param fields: unused (retained for API compatibility)
+        """
+
+        fields = self.fields
+        fields.append(key)
+
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = current.db(query).select(*fields)
+        self.queries += 1
+
+        # Bulk-represent inv_item_ids
+        inv_item_ids = [row.send_inv_item_id for row in rows]
+        if inv_item_ids:
+            # Results cached in the represent class
+            current.db.inv_track_item.send_inv_item_id.represent.bulk(inv_item_ids,
+                                                                      show_link = False,
+                                                                      )
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        send_inv_item_id = row.send_inv_item_id
+        if not send_inv_item_id:
+            return str(row.id)
+
+        return current.db.inv_track_item.send_inv_item_id.represent(send_inv_item_id,
+                                                                    show_link = False,
+                                                                    )
 
 # END =========================================================================

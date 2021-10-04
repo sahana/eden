@@ -723,7 +723,7 @@ class OrganisationModel(S3Model):
         db = current.db
         table = db.org_organisation
         deleted_row = db(table.id == row.id).select(table.logo,
-                                                    limitby = (0, 1)
+                                                    limitby = (0, 1),
                                                     ).first()
         if deleted_row and deleted_row.logo:
             current.s3db.pr_image_delete_all(deleted_row.logo)
@@ -956,7 +956,7 @@ class OrganisationBranchModel(S3Model):
                                                  ltable.deleted_fk,
                                                  *ifields,
                                                  left = left,
-                                                 limitby = (0, 1)
+                                                 limitby = (0, 1),
                                                  ).first()
 
         if record:
@@ -1081,7 +1081,7 @@ class OrganisationBranchModel(S3Model):
         record = db(table.id == row.id).select(table.branch_id,
                                                table.deleted,
                                                table.deleted_fk,
-                                               limitby = (0, 1)
+                                               limitby = (0, 1),
                                                ).first()
         if record:
             org_update_affiliations("org_organisation_branch", record)
@@ -1417,7 +1417,7 @@ class OrganisationGroupModel(S3Model):
                                                  mtable.organisation_id,
                                                  mtable.deleted,
                                                  mtable.deleted_fk,
-                                                 limitby = (0, 1)
+                                                 limitby = (0, 1),
                                                  ).first()
         else:
             return
@@ -1580,7 +1580,7 @@ class OrganisationGroupPersonGroupModel(S3Model):
 
         record = db(table.id == _id).select(table.group_id,
                                             table.org_group_id,
-                                            limitby = (0, 1)
+                                            limitby = (0, 1),
                                             ).first()
         if record:
             from .pr import OU
@@ -1801,7 +1801,9 @@ class OrganisationRegionModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        region_represent = S3Represent(lookup=tablename, translate=True)
+        region_represent = S3Represent(lookup = tablename,
+                                       translate = True,
+                                       )
 
         if hierarchical_regions:
             hierarchy = "parent"
@@ -1834,7 +1836,8 @@ class OrganisationRegionModel(S3Model):
             msg_record_created = T("Region added"),
             msg_record_modified = T("Region updated"),
             msg_record_deleted = T("Region deleted"),
-            msg_list_empty = T("No Regions currently registered"))
+            msg_list_empty = T("No Regions currently registered"),
+            )
 
         region_id = S3ReusableField("region_id", "reference %s" % tablename,
                                     label = T("Region"),
@@ -1962,7 +1965,8 @@ class OrganisationResourceModel(S3Model):
             msg_record_created = T("Resource Type added"),
             msg_record_modified = T("Resource Type updated"),
             msg_record_deleted = T("Resource Type deleted"),
-            msg_list_empty = T("No Resource Types defined"))
+            msg_list_empty = T("No Resource Types defined"),
+            )
 
         # Resource Configuration
         configure(tablename,
@@ -2027,7 +2031,8 @@ class OrganisationResourceModel(S3Model):
             msg_record_created = T("Resource added"),
             msg_record_modified = T("Resource updated"),
             msg_record_deleted = T("Resource deleted"),
-            msg_list_empty = T("No Resources in Inventory"))
+            msg_list_empty = T("No Resources in Inventory"),
+            )
 
         # Filter Widgets
         filter_widgets = [S3TextFilter(["organisation_id$name",
@@ -2145,7 +2150,8 @@ class OrganisationSectorModel(S3Model):
                 msg_record_created = T("Cluster added"),
                 msg_record_modified = T("Cluster updated"),
                 msg_record_deleted = T("Cluster deleted"),
-                msg_list_empty = T("No Clusters currently registered"))
+                msg_list_empty = T("No Clusters currently registered"),
+                )
         else:
             SECTOR = T("Sector")
             ADD_SECTOR = T("Create Sector")
@@ -2160,7 +2166,8 @@ class OrganisationSectorModel(S3Model):
                 msg_record_created = T("Sector added"),
                 msg_record_modified = T("Sector updated"),
                 msg_record_deleted = T("Sector deleted"),
-                msg_list_empty = T("No Sectors currently registered"))
+                msg_list_empty = T("No Sectors currently registered"),
+                )
 
         configure("org_sector",
                   deduplicate = self.org_sector_duplicate,
@@ -2309,7 +2316,8 @@ class OrganisationSectorModel(S3Model):
             msg_record_created = T("Sector added to Organization"),
             msg_record_modified = T("Sector updated"),
             msg_record_deleted = T("Sector removed from Organization"),
-            msg_list_empty = T("No Sectors found for this Organization"))
+            msg_list_empty = T("No Sectors found for this Organization"),
+            )
 
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("organisation_id",
@@ -2339,7 +2347,8 @@ class OrganisationSectorModel(S3Model):
             return
         duplicate = current.db(query).select(table.id,
                                              table.name,
-                                             limitby=(0, 1)).first()
+                                             limitby = (0, 1),
+                                             ).first()
         if duplicate:
             if not name:
                 # Reference imports use abbreviation only,
@@ -2367,7 +2376,8 @@ class OrganisationSectorModel(S3Model):
         table = db.org_sector
         record = db(table.id == _id).select(table.abrv,
                                             table.name,
-                                            limitby=(0, 1)).first()
+                                            limitby = (0, 1),
+                                            ).first()
         if not record.abrv:
             db(table.id == _id).update(abrv = record.name[:64])
 
@@ -2385,11 +2395,11 @@ class OrganisationSectorModel(S3Model):
     #    table = db.org_subsector
     #    r = db(table.id == id).select(table.name,
     #                                  table.sector_id,
-    #                                  limitby=(0, 1)
+    #                                  limitby = (0, 1),
     #                                  ).first()
     #    try:
     #        sector = db(table.id == r.sector_id).select(table.abrv,
-    #                                                    limitby=(0, 1)
+    #                                                    limitby = (0, 1),
     #                                                    ).first()
     #        if sector:
     #            return "%s: %s" % (sector.abrv, current.T(r.name))
@@ -3245,18 +3255,18 @@ class OrganisationTypeModel(S3Model):
             if org_type_default == "Donor":
                 row = db(table.name == "Bilateral").select(table.id,
                                                            cache = current.s3db.cache,
-                                                           limitby = (0, 1)
+                                                           limitby = (0, 1),
                                                            ).first()
             elif org_type_default == "Partner":
                 row = db(table.name == "NGO").select(table.id,
                                                      cache = current.s3db.cache,
-                                                     limitby = (0, 1)
+                                                     limitby = (0, 1),
                                                      ).first()
             elif org_type_default in ("Host National Society",
                                       "Partner National Society"):
                 row = db(table.name == "Red Cross / Red Crescent").select(table.id,
                                                                           cache = current.s3db.cache,
-                                                                          limitby = (0, 1)
+                                                                          limitby = (0, 1),
                                                                           ).first()
             if row:
                 # Note this sets only the default, so won't override existing or explicit values
@@ -3822,7 +3832,8 @@ class SiteModel(S3Model):
                 (ltable.site_contact == True) & \
                 (ltable.human_resource_id == htable.id)
         person = db(query).select(htable.person_id,
-                                  limitby=(0, 1)).first()
+                                  limitby = (0, 1),
+                                  ).first()
 
         if person:
             attr = dict(attr)
@@ -4907,7 +4918,8 @@ class FacilityModel(S3Model):
                 if not organisation_id:
                     query = table.id == record_id
                     row = db(query).select(table.organisation_id,
-                                           limitby=(0, 1)).first()
+                                           limitby = (0, 1),
+                                           ).first()
                     if row:
                         organisation_id = row.organisation_id
                 if organisation_id:
@@ -4936,15 +4948,17 @@ class FacilityModel(S3Model):
         #if address:
         #    query = query & (table.address == address)
         duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
+                                             limitby = (0, 1),
+                                             ).first()
         if duplicate:
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
 
     # -----------------------------------------------------------------------------
     @staticmethod
-    def org_facility_geojson(jsonp=True,
-                             decimals=4):
+    def org_facility_geojson(jsonp = True,
+                             decimals = 4,
+                             ):
         """
             Produce a static GeoJSON[P] feed of Facility data
             Designed to be run on a schedule to serve a high-volume website
@@ -5489,7 +5503,7 @@ def org_organisation_address(row):
             (otable.organisation_id == organisation_id) & \
             (otable.location_id == gtable.id)
     row = db(query).select(gtable.addr_street,
-                           limitby = (0, 1)
+                           limitby = (0, 1),
                            ).first()
 
     return row.addr_street if row else current.messages["NONE"]
@@ -5519,7 +5533,7 @@ def org_organisation_logo(org,
         record = current.db(table.id == org).select(table.name,
                                                     table.acronym,
                                                     table.logo,
-                                                    limitby = (0, 1)
+                                                    limitby = (0, 1),
                                                     ).first()
 
     if record and record.logo:
@@ -5570,7 +5584,7 @@ def org_parents(organisation_id, path=None):
            (btable.id == ltable.branch_id) & \
            (otable.id == ltable.organisation_id)
     row = db(query & join).select(otable.id,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
 
     if row is not None:
@@ -5609,7 +5623,7 @@ def org_root_organisation(organisation_id):
            (btable.id == ltable.branch_id) & \
            (otable.id == ltable.organisation_id)
     row = db(query & join).select(otable.id,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
 
     if row is not None:
@@ -5646,7 +5660,7 @@ def org_root_organisation_name(organisation_id):
            (btable.id == ltable.branch_id) & \
            (otable.id == ltable.organisation_id)
     row = db(query & join).select(otable.id,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
 
     if row is not None:
@@ -5655,7 +5669,7 @@ def org_root_organisation_name(organisation_id):
     else:
         # This is the root org
         row = db(otable.id == organisation_id).select(otable.name,
-                                                      limitby = (0, 1)
+                                                      limitby = (0, 1),
                                                       ).first()
         return row.name if row else None
 
@@ -6613,7 +6627,7 @@ class org_SiteCheckInMethod(S3Method):
                 (table.profile == True) & \
                 (table.deleted != True)
         row = current.db(query).select(table.image,
-                                       limitby = (0, 1)
+                                       limitby = (0, 1),
                                        ).first()
 
         if row:
@@ -6743,7 +6757,8 @@ def org_site_has_assets(row, tablename="org_facility"):
             (atable.site_id == stable.site_id)
 
     asset = current.db(query).select(atable.id,
-                                     limitby=(0, 1)).first()
+                                     limitby = (0, 1),
+                                     ).first()
 
     if asset:
         return True
@@ -6774,7 +6789,8 @@ def org_site_has_inv(row, tablename="org_facility"):
             (itable.quantity > 0)
 
     inv = current.db(query).select(itable.id,
-                                   limitby=(0, 1)).first()
+                                   limitby = (0, 1),
+                                   ).first()
 
     if inv:
         return True
@@ -6812,8 +6828,9 @@ def org_site_top_req_priority(row, tablename="org_facility"):
 
     req = current.db(query).select(rtable.id,
                                    rtable.priority,
-                                   orderby=~rtable.priority,
-                                   limitby=(0, 1)).first()
+                                   limitby = (0, 1),
+                                   orderby = ~rtable.priority,
+                                   ).first()
 
     if req:
         return req.priority
@@ -6954,7 +6971,7 @@ def org_rheader(r, tabs=None):
                     (btable.organisation_id == table.id)
             row = db(query).select(table.id,
                                    table.name,
-                                   limitby = (0, 1)
+                                   limitby = (0, 1),
                                    ).first()
             if row:
                 record_data.append(TR(TH("%s: " % T("Branch of")),
@@ -7797,7 +7814,8 @@ def org_facility_controller():
                             type_table = s3db.org_facility_type
                             query = (type_table.name == type_filter)
                             row = db(query).select(type_table.id,
-                                                   limitby=(0, 1)).first()
+                                                   limitby = (0, 1),
+                                                   ).first()
                             type_id = row and row.id
                             if type_id:
                                 field.default = type_id
@@ -7943,7 +7961,7 @@ def org_facility_controller():
             #        their staff so this is a meaningless field for them
             table = db.org_organisation
             org = db(table.id == record.organisation_id).select(table.name,
-                                                                limitby = (0, 1)
+                                                                limitby = (0, 1),
                                                                 ).first()
             if org:
                 append(TR(TD(B("%s:" % ftable.organisation_id.label)),
@@ -7974,7 +7992,7 @@ def org_facility_controller():
             query = (gtable.id == stable.location_id) & \
                     (stable.id == site_id)
             location = db(query).select(gtable.addr_street,
-                                        limitby = (0, 1)
+                                        limitby = (0, 1),
                                         ).first()
             if location.addr_street:
                 append(TR(TD(B("%s:" % gtable.addr_street.label)),
@@ -8072,7 +8090,7 @@ def org_update_affiliations(table, record):
                 return
             record = current.db(query).select(rtable.organisation_id,
                                               rtable.pe_id,
-                                              limitby = (0, 1)
+                                              limitby = (0, 1),
                                               ).first()
 
         org_site_update_affiliations(record)
@@ -8248,7 +8266,7 @@ def org_site_update_affiliations(record):
     organisation_id = record.get("organisation_id")
     if organisation_id:
         org = db(otable.id == organisation_id).select(otable.pe_id,
-                                                      limitby = (0, 1)
+                                                      limitby = (0, 1),
                                                       ).first()
         if org:
             o_pe_id = org.pe_id
@@ -8378,7 +8396,7 @@ def org_update_root_organisation(organisation_id, root_org=None):
                 (ltable.organisation_id == otable.id)
         parent_org = db(query).select(otable.id,
                                       otable.root_organisation,
-                                      limitby = (0, 1)
+                                      limitby = (0, 1),
                                       ).first()
         if not parent_org:
             # No parent organisation? => this is the root organisation
@@ -8459,7 +8477,8 @@ class org_OrganisationDuplicate(object):
             # Try to find the record for this UUID
             table = item.table if item else current.s3db.org_organisation
             row = current.db(table.uuid == uid).select(table.id,
-                                                       limitby=(0, 1)).first()
+                                                       limitby = (0, 1),
+                                                       ).first()
             if row:
                 return row.id
 
@@ -9164,9 +9183,9 @@ def org_logo_represent(org = None,
                        #ltable.acronym_l10n,
                        ]
 
-        record = db(query).select(left = left,
+        record = db(query).select(cache = s3db.cache,
+                                  left = left,
                                   limitby = (0, 1),
-                                  cache = s3db.cache,
                                   *fields).first()
 
         if record:
