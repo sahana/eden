@@ -18,7 +18,7 @@ $(document).ready(function() {
             ReqItemRow.hide();
         }
 
-        var InvItemIDChange = function() {
+        var InvItemChange = function() {
             // Update the available packs for this item
             // Display the number of these items available in this site's inventory
 
@@ -265,11 +265,11 @@ $(document).ready(function() {
             }
         };
 
-        invItemField.change(InvItemIDChange);
+        invItemField.change(InvItemChange);
 
         if (invItemField.val()) {
             // Update form
-            InvItemIDChange();
+            InvItemChange();
         }
     }
 

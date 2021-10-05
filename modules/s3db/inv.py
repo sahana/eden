@@ -50,6 +50,8 @@ __all__ = ("WarehouseModel",
            #"inv_gift_certificate",
            "inv_item_total_weight",
            "inv_item_total_volume",
+           #"inv_packing_list",
+           #"inv_pallet_label",
            #"inv_pick_list",
            "inv_prep",
            "inv_recv_attr",
@@ -2619,7 +2621,7 @@ class InventoryPalletShipmentModel(S3Model):
                                     "number",
                                     "pallet_id",
                                     S3SQLInlineComponent("send_pallet_item",
-                                                         #label = T("Items"),
+                                                         label = "",
                                                          fields = [(T("Item"), "track_item_id"),
                                                                    (T("Quantity"), "quantity"),
                                                                    ],
@@ -2693,9 +2695,10 @@ class InventoryPalletShipmentModel(S3Model):
                                                 ),
                            ),
                      Field("quantity", "double",
-                           default = 0.0,
+                           default = 1.0,
                            label = T("Quantity"),
                            represent = float_represent,
+                           requires = IS_FLOAT_IN_RANGE(1),
                            ),
                      *s3_meta_fields())
 
@@ -2772,7 +2775,9 @@ class InventoryPalletShipmentModel(S3Model):
         rows = current.db(query).select(itable.name)
 
         len_items = len(rows)
-        if len_items == 1:
+        if len_items == 0:
+            return current.messages["NONE"]
+        elif len_items == 1:
             return rows.first().name
         else:
             len_item = 48 / len_items
@@ -5255,10 +5260,23 @@ class InventoryTrackingModel(S3Model):
                    action = inv_gift_certificate,
                    )
 
+        # Generate Pallet Label
+        set_method("inv", "send",
+                   component_name = "send_pallet",
+                   method = "label",
+                   action = inv_pallet_label,
+                   )
+
         # Generate Picking List
         set_method("inv", "send",
                    method = "pick_list",
                    action = inv_pick_list,
+                   )
+
+        # Generate Packing List
+        set_method("inv", "send",
+                   method = "packing_list",
+                   action = inv_packing_list,
                    )
 
         # Process Shipment
@@ -6878,24 +6896,9 @@ def inv_gift_certificate(r, **attr):
     sheet.col(4).width = 4110  # 3.14 cm
     sheet.col(5).width = 4985  # 3.81 cm
     sheet.col(6).width = 3400  # 2.60 cm
-    #COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
-    #col_index = 3
-    #column_widths = [None, # Empty Column
-    #                 None, # Merged Column
-    #                 None, # Merged Column
-    #                 ]
-    #for label in labels[1:]:
-    #    if col_index in (5, 6):
-    #        width = max(int(len(label) * COL_WIDTH_MULTIPLIER * 1.1), 2000)
-    #    else:
-    #        width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
-    #    width = min(width, 65535) # USHRT_MAX
-    #    column_widths.append(width)
-    #    sheet.col(col_index).width = width
-    #    col_index += 1
 
     # Define styles
-    POINT_12 = 240 # 240 Twips = 12 point
+    POINT_12 = 240 # Twips = Points * 20
     ROW_HEIGHT = 320 # Realised through trial & error
 
     style = xlwt.XFStyle()
@@ -7050,7 +7053,6 @@ def inv_gift_certificate(r, **attr):
         sheet.write_rich_text(row_index, 0, rich_text, box_style)
     else:
         sheet.write_merge(row_index, row_index, 0, 6, label, box_style)
-    
 
     # 9th row => Reference
     current_row = sheet.row(8)
@@ -7382,9 +7384,751 @@ def inv_item_total_weight(row):
     return round(quantity * pack_quantity * weight, 3)
 
 # =============================================================================
+def inv_packing_list(r, **attr):
+    """
+        Generate a Packing List for an Outbound Shipment
+
+        This is exported in XLS format
+    """
+
+    send_id = r.id
+    record = r.record
+
+    if record.status != SHIP_STATUS_IN_PROCESS:
+        r.error(405, T("Packing List can only be generated for Shipments being prepared"),
+                next = URL(c = "inv",
+                           f = "send",
+                           args = [send_id],
+                           ),
+                )
+
+    from s3.codecs.xls import S3XLS
+
+    try:
+        import xlwt
+    except ImportError:
+        r.error(503, S3XLS.ERROR.XLWT_ERROR)
+
+    # Extract the Data
+    send_id = r.id
+    record = r.record
+    send_ref = record.send_ref
+    site_id = record.site_id
+    to_site_id = record.to_site_id
+    sites = [site_id, to_site_id]
+
+    db = current.db
+    s3db = current.s3db
+
+    # Items
+    sptable = s3db.inv_send_pallet
+    spitable = s3db.inv_send_pallet_item
+    ttable = s3db.inv_track_item
+    itable = s3db.supply_item
+    query = (sptable.send_id == send_id) & \
+            (spitable.send_pallet_id == sptable.id) & \
+            (spitable.track_item_id == ttable.id) & \
+            (ttable.item_id == itable.id)
+    items = db(query).select(sptable.number,
+                             itable.name,
+                             spitable.quantity,
+                             sptable.weight,
+                             sptable.volume,
+                             orderby = sptable.number,
+                             )
+
+    # Countries of both Source & Destination
+    stable = s3db.org_site
+    gtable = s3db.gis_location
+    query = (stable.site_id.belongs(sites)) & \
+            (stable.location_id == gtable.id)
+    location = db(query).select(gtable.L0,
+                                limitby = (0, 2),
+                                )
+    fr = False
+    settings = current.deployment_settings
+    for row in location:
+        if "fr" in settings.get_L10n_languages_by_country(row.L0):
+            fr = True
+            break
+
+    # Organisation
+    otable = s3db.org_organisation
+
+    query = (stable.site_id == site_id) & \
+            (stable.organisation_id == otable.id)
+
+    fields = [otable.id,
+              otable.root_organisation,
+              otable.name,
+              otable.logo,
+              ]
+
+    if fr:
+        ontable = s3db.org_organisation_name
+        fields.append(ontable.name_l10n)
+        left = ontable.on((ontable.organisation_id == otable.id) & \
+                          (ontable.language == "fr"))
+    else:
+        left = None
+
+    org = db(query).select(*fields,
+                           left = left,
+                           limitby = (0, 1)
+                           ).first()
+    if fr:
+        org_name = org["org_organisation_name.name_l10n"]
+        org = org["org_organisation"]
+        if not org_name:
+            org_name = org.name
+    else:
+        org_name = org.name
+
+    if org.id == org.root_organisation:
+        branch = None
+    else:
+        branch = org.name
+        # Lookup Root Org
+        fields = [otable.name,
+                  otable.logo,
+                  ]
+        if fr:
+            fields.append(ontable.name_l10n)
+        org = db(otable.id == org.root_organisation).select(*fields,
+                                                            left = left,
+                                                            limitby = (0, 1)
+                                                            ).first()
+        if fr:
+            org_name = org["org_organisation_name.name_l10n"]
+            org = org["org_organisation"]
+            if not org_name:
+                org_name = org.name
+        else:
+            org_name = org.name
+
+    # Represent the Data
+    from .org import org_SiteRepresent
+    site_represent = org_SiteRepresent(show_type = False)
+    site_represent.bulk(sites) # Bulk lookup, with results cached in class instance
+    source = site_represent(site_id)
+    destination = site_represent(to_site_id)
+
+    T = current.T
+
+    if fr:
+        BOX = "N° Box /\nColis "
+        WEIGHT = "Weight / Poids\nKg"
+    else:
+        BOX = "N° Box"
+        WEIGHT = "Weight\nKg"
+
+    labels = [BOX,
+              "Description",
+              "Quantity",
+              WEIGHT,
+              "Volume\nm3",
+              ]
+
+    # Create the workbook
+    book = xlwt.Workbook(encoding = "utf-8")
+
+    # Add sheet
+    title = "Packing List"
+    sheet = book.add_sheet(title)
+    sheet.set_print_scaling(69)
+
+    # Set column Widths
+    sheet.col(0).width = 3300  # 2.52 cm
+    sheet.col(1).width = 13595 # 10.39 cm
+    sheet.col(2).width = 4291  # 3.28 cm
+    sheet.col(3).width = 4432  # 3.39 cm
+    sheet.col(4).width = 4031  # 3.08 cm
+
+    # Define styles
+    POINT_12 = 240 # Twips = Points * 20
+    POINT_10 = 200 # Twips = Points * 20
+    POINT_9 = 180 # Twips = Points * 20
+    ROW_HEIGHT = 320 # Realised through trial & error
+
+    style = xlwt.XFStyle()
+    style.font.height = POINT_12
+
+    THICK = style.borders.THICK
+    THIN = style.borders.THIN
+    HORZ_CENTER = style.alignment.HORZ_CENTER
+    HORZ_RIGHT = style.alignment.HORZ_RIGHT
+    VERT_CENTER = style.alignment.VERT_CENTER
+
+    if fr:
+        italic_style = xlwt.XFStyle()
+        italic_style.font.italic = True
+        italic_style.font.height = POINT_12
+
+        italic_wrap_style = xlwt.XFStyle()
+        italic_wrap_style.font.italic = True
+        italic_wrap_style.font.height = POINT_12
+        italic_wrap_style.alignment.wrap = 1
+
+    bold_style = xlwt.XFStyle()
+    bold_style.font.bold = True
+    bold_style.font.height = POINT_12
+
+    bold_italic_style = xlwt.XFStyle()
+    bold_italic_style.font.italic = True
+    bold_italic_style.font.bold = True
+    bold_italic_style.font.height = POINT_12
+
+    bold_italic_right_style = xlwt.XFStyle()
+    bold_italic_right_style.font.italic = True
+    bold_italic_right_style.font.bold = True
+    bold_italic_right_style.font.height = POINT_12
+    bold_italic_right_style.alignment.horz = HORZ_RIGHT
+
+    center_style = xlwt.XFStyle()
+    center_style.font.height = POINT_12
+    center_style.alignment.horz = HORZ_CENTER
+
+    right_style = xlwt.XFStyle()
+    right_style.font.height = POINT_12
+    right_style.alignment.horz = HORZ_RIGHT
+    right_style.borders.top = THIN
+    right_style.borders.left = THIN
+    right_style.borders.right = THIN
+    right_style.borders.bottom = THIN
+
+    wrap_style = xlwt.XFStyle()
+    wrap_style.font.height = POINT_12
+    wrap_style.alignment.wrap = 1
+
+    header_style = xlwt.XFStyle()
+    header_style.font.bold = True
+    header_style.font.height = POINT_12
+    header_style.alignment.horz = HORZ_CENTER
+    header_style.alignment.vert = VERT_CENTER
+    header_style.borders.top = THIN
+    header_style.borders.left = THIN
+    header_style.borders.right = THIN
+    header_style.borders.bottom = THIN
+    header_style.pattern.pattern = xlwt.Style.pattern_map["fine_dots"]
+    header_style.pattern.pattern_fore_colour = xlwt.Style.colour_map["gray25"]
+
+    dest_style = xlwt.XFStyle()
+    dest_style.font.bold = True
+    dest_style.font.height = POINT_12
+    dest_style.alignment.horz = HORZ_CENTER
+    dest_style.alignment.vert = VERT_CENTER
+
+    left_header_style = xlwt.XFStyle()
+    left_header_style.font.bold = True
+    left_header_style.font.height = POINT_12
+
+    box_style = xlwt.XFStyle()
+    box_style.font.bold = True
+    box_style.font.height = 360 # 360 Twips = 18 point
+    box_style.alignment.horz = HORZ_CENTER
+    box_style.alignment.vert = VERT_CENTER
+    box_style.borders.top = THICK
+    box_style.borders.left = THICK
+    box_style.borders.right = THICK
+    box_style.borders.bottom = THICK
+
+    large_italic_font = xlwt.Font()
+    large_italic_font.bold = True
+    large_italic_font.height = 360 # 360 Twips = 18 point
+    large_italic_font.italic = True
+
+    # 1st row => Org Logo
+    current_row = sheet.row(0)
+    # current_row.set_style() not giving the correct height
+    current_row.height = ROW_HEIGHT
+    #sheet.write_merge(0, 0, 0, 1, org_name, left_header_style)
+    logo = org.logo
+    if logo:
+        # We need to convert to 24-bit BMP
+        try:
+            from PIL import Image
+        except:
+            current.log.error("PIL not installed: Cannot insert logo")
+        else:
+            IMG_WIDTH = 230
+            filename, extension = os.path.splitext(logo)
+            logo_path = os.path.join(r.folder, "uploads", logo)
+            if extension == ".png":
+                # Remove Transparency
+                png = Image.open(logo_path).convert("RGBA")
+                size = png.size
+                background = Image.new("RGBA", size, (255,255,255))
+                img = Image.alpha_composite(background, png)
+            else:
+                img = Image.open(logo_path)
+                size = img.size
+            width = size[0]
+            height = int(IMG_WIDTH/width * size[1])
+            img = img.convert("RGB").resize((IMG_WIDTH, height))
+            from io import BytesIO
+            bmpfile = BytesIO()
+            img.save(bmpfile, "BMP")
+            bmpfile.seek(0)
+            bmpdata = bmpfile.read()
+            sheet.insert_bitmap_data(bmpdata, 0, 3)
+
+    # 5th row => Packing List
+    row_index = 4
+    current_row = sheet.row(row_index)
+    current_row.height = int(2.8 * 240 * 1.2) # 2 rows * twips * bold
+    label = "PACKING LIST"
+    if fr:
+        sheet.merge(row_index, row_index, 0, 4, box_style)
+        rich_text = ((label, box_style.font),
+                     ("\nListe de colisage", large_italic_font),
+                     )
+        sheet.write_rich_text(row_index, 0, rich_text, box_style)
+    else:
+        sheet.write_merge(row_index, row_index, 0, 4, label, box_style)
+
+    # 7th row => Reference
+    row_index = 6
+    current_row = sheet.row(row_index)
+    current_row.height = ROW_HEIGHT
+    label = "Ref: %s" % send_ref
+    sheet.write_merge(row_index, row_index, 0, 4, label, bold_italic_right_style)
+
+    # 9th row => Source
+    current_row = sheet.row(8)
+    if fr:
+        label = "Location / Lieu:"
+    else:
+        label = "Location:"
+    current_row.height = ROW_HEIGHT
+    current_row.write(0, label, header_style)
+    current_row.write(1, source, header_style)
+    current_row.write(3, "Date:", header_style)
+    current_row.write(4, str(r.now.date()), header_style)
+
+    # 12th row => Destination
+    # @ToDo:
+
+    # 22nd row => Column Headers
+    row_index = 21
+    current_row = sheet.row(row_index)
+    current_row.height = int(2.8 * 320 * 1.2) # 2 rows * twips * bold
+    col_index = 0
+    for label in labels:
+        current_row.write(col_index, label, header_style)
+        col_index += 1
+
+    # Data rows
+    total_weight = 0
+    total_volume = 0
+    row_index = 22
+    for row in items:
+        current_row = sheet.row(row_index)
+        current_row.height = ROW_HEIGHT
+        item_name = row["supply_item.name"]
+        quantity = row["inv_send_pallet_item.quantity"]
+        row = row["inv_send_pallet"]
+        weight = row.weight
+        if weight:
+            total_weight += weight
+            weight = str(round(weight, 0))
+        else:
+            weight = ""
+        volume = row.volume
+        if volume:
+            total_volume += volume
+            volume = "{:.3f}".format(round(volume, 3))
+        else:
+            volume = ""
+        col_index = 0
+        values = ["Pallet %s" % row.number,
+                  item_name,
+                  quantity,
+                  weight,
+                  volume,
+                  ]
+        for value in values:
+            if col_index in (0, 1):
+                current_row.write(col_index, value, style)
+            else:
+                current_row.write(col_index, value, center_style)
+            col_index += 1
+        row_index += 1
+
+    # Totals
+    current_row = sheet.row(row_index)
+    current_row.height = ROW_HEIGHT
+    current_row.write(0, "Total", header_style)
+    current_row.write(1, "", header_style) # Cell Pattern
+    current_row.write(2, "", header_style) # Cell Pattern
+    total_weight = str(round(total_weight, 0))
+    total_volume = "{:.2f}".format(round(total_volume, 2))
+    current_row.write(3, total_weight, header_style)
+    current_row.write(4, total_volume, header_style)
+
+    # Footer
+    row_index += 2
+    current_row = sheet.row(row_index)
+    current_row.height = ROW_HEIGHT
+    if fr:
+        rich_text = (("Function /", style.font),
+                     ("\nFonction", italic_style.font),
+                     )
+        sheet.write_rich_text(row_index, 0, rich_text, style)
+        rich_text = (("Name / ", style.font),
+                     ("Nom:", italic_style.font),
+                     )
+        sheet.write_rich_text(row_index, 1, rich_text, style)
+        sheet.write_merge(row_index, row_index, 2, 3, "Signature", style)
+        rich_text = (("Stamp/", style.font),
+                     ("tampon", italic_style.font),
+                     )
+        sheet.write_rich_text(row_index, 4, rich_text, style)
+    else:
+        current_row.write(0, "Function:", style)
+        current_row.write(1, "Name:", style)
+        sheet.write_merge(row_index, row_index, 2, 3, "Signature", style)
+        current_row.write(4, "Stamp", style)
+
+    # Export to File
+    output = BytesIO()
+    try:
+        book.save(output)
+    except:
+        import sys
+        error = sys.exc_info()[1]
+        current.log.error(error)
+    output.seek(0)
+
+    # Response headers
+    title = s3_str(T("Packing List for %(waybill)s")) % {"waybill": send_ref}
+    filename = "%s.xls" % title
+    response = current.response
+    from gluon.contenttype import contenttype
+    response.headers["Content-Type"] = contenttype(".xls")
+    disposition = "attachment; filename=\"%s\"" % filename
+    response.headers["Content-disposition"] = disposition
+
+    return output.read()
+
+# =============================================================================
+def inv_pallet_label(r, **attr):
+    """
+        Generate a Label for an Outbound Shipment's Pallet
+
+        This is exported in XLS format to be user-editable
+        - we don't have the width x length x height
+    """
+
+    send_pallet_id = r.component_id
+
+    if not send_pallet_id:
+        r.error(405, T("Labels can only be generated for individual Pallets"),
+                next = URL(c = "inv",
+                           f = "send",
+                           args = [r.id, "pallet"],
+                           ),
+                )
+
+    from s3.codecs.xls import S3XLS
+
+    try:
+        import xlwt
+    except ImportError:
+        r.error(503, S3XLS.ERROR.XLWT_ERROR)
+
+    # Extract the Data
+    record = r.record
+
+    db = current.db
+    s3db = current.s3db
+
+    # Pallet
+    sptable = s3db.inv_send_pallet
+    pallet = db(sptable.id == send_pallet_id).select(sptable.number,
+                                                     sptable.weight,
+                                                     sptable.volume,
+                                                     limitby = (0, 1),
+                                                     ).first()
+
+    pallet_weight = str(int(pallet.weight))
+    pallet_volume = "{:.2f}".format(round(pallet.volume, 2))
+
+    # Pallet Items
+    spitable = s3db.inv_send_pallet_item
+    ttable = s3db.inv_track_item
+    itable = s3db.supply_item
+    ptable = s3db.supply_item_pack
+    query = (spitable.send_pallet_id == send_pallet_id) & \
+            (spitable.track_item_id == ttable.id) & \
+            (ttable.item_id == itable.id) & \
+            (ttable.item_pack_id == ptable.id)
+    items = db(query).select(spitable.quantity,
+                             ttable.expiry_date,
+                             ttable.supply_org_id,
+                             itable.id,
+                             itable.code,
+                             itable.name,
+                             ptable.name,
+                             ptable.quantity,
+                             )
+
+    # Organisation
+    otable = s3db.org_organisation
+    stable = s3db.org_site
+    query = (stable.site_id == record.site_id) & \
+            (stable.organisation_id == otable.id)
+    org = db(query).select(otable.id,
+                           otable.root_organisation,
+                           otable.logo,
+                           limitby = (0, 1)
+                           ).first()
+
+    if org.id != org.root_organisation:
+        # Lookup Root Org
+        org = db(otable.id == org.root_organisation).select(otable.logo,
+                                                            limitby = (0, 1)
+                                                            ).first()
+
+    # Represent the Data
+    T = current.T
+
+    from .org import org_OrganisationRepresent
+    org_represent = org_OrganisationRepresent(acronym = False,
+                                              parent = False,
+                                              )
+    # Cache results in class instance
+    org_represent.bulk([item["inv_track_item.supply_org_id"] for item in items])
+
+    # Create the workbook
+    book = xlwt.Workbook(encoding = "utf-8")
+
+    # Define styles
+    POINT_36 = 720 # Twips = Points * 20
+    ROW_HEIGHT = 890 # Realised through trial & error
+
+    style = xlwt.XFStyle()
+    style.font.height = POINT_36
+
+    HORZ_CENTER = style.alignment.HORZ_CENTER
+    VERT_CENTER = style.alignment.VERT_CENTER
+
+    bold_style = xlwt.XFStyle()
+    bold_style.font.bold = True
+    bold_style.font.height = POINT_36
+    bold_style.borders.top = style.borders.THICK
+
+    right_style = xlwt.XFStyle()
+    right_style.alignment.horz = style.alignment.HORZ_RIGHT
+    right_style.font.height = POINT_36
+
+    big_box_style = xlwt.XFStyle()
+    big_box_style.font.bold = True
+    big_box_style.font.height = 1120 # 1120 Twips = 56 point
+    big_box_style.alignment.horz = HORZ_CENTER
+    big_box_style.alignment.vert = VERT_CENTER
+
+    box_style = xlwt.XFStyle()
+    box_style.font.height = 960 # 960 Twips = 48 point
+    box_style.alignment.horz = HORZ_CENTER
+    box_style.alignment.vert = VERT_CENTER
+
+    for item in items:
+        # Add sheet
+        title = s3_str(T("Label"))
+        sheet = book.add_sheet(title)
+        sheet.set_print_scaling(90)
+
+        # Set column Widths
+        sheet.col(0).width = 4172   # 3.19 cm
+        sheet.col(1).width = 1505   # 1.15 cm
+        sheet.col(2).width = 4069   # 3.11 cm
+        sheet.col(3).width = 1752   # 1.34 cm
+        sheet.col(4).width = 4069   # 3.11 cm
+        sheet.col(5).width = 1505   # 1.15 cm
+        sheet.col(6).width = 3256   # 2.49 cm
+        sheet.col(7).width = 2341   # 1.79 cm
+        sheet.col(8).width = 2642   # 2.02 cm
+        sheet.col(9).width = 4682   # 3.58 cm
+        sheet.col(10).width = 2341  # 1.79 cm
+        sheet.col(11).width = 5414  # 4.14 cm
+        sheet.col(12).width = 2341  # 1.79 cm
+        sheet.col(13).width = 2341  # 1.79 cm
+
+        # 1st row: Logo
+        current_row = sheet.row(0)
+        # current_row.set_style() not giving the correct height
+        #current_row.height = ROW_HEIGHT
+        logo = org.logo
+        if logo:
+            # We need to convert to 24-bit BMP
+            try:
+                from PIL import Image
+            except:
+                current.log.error("PIL not installed: Cannot insert logo")
+            else:
+                IMG_WIDTH = 230
+                filename, extension = os.path.splitext(logo)
+                logo_path = os.path.join(r.folder, "uploads", logo)
+                if extension == ".png":
+                    # Remove Transparency
+                    png = Image.open(logo_path).convert("RGBA")
+                    size = png.size
+                    background = Image.new("RGBA", size, (255,255,255))
+                    img = Image.alpha_composite(background, png)
+                else:
+                    img = Image.open(logo_path)
+                    size = img.size
+                width = size[0]
+                height = int(IMG_WIDTH/width * size[1])
+                img = img.convert("RGB").resize((IMG_WIDTH, height))
+                from io import BytesIO
+                bmpfile = BytesIO()
+                img.save(bmpfile, "BMP")
+                bmpfile.seek(0)
+                bmpdata = bmpfile.read()
+                sheet.insert_bitmap_data(bmpdata, 0, 11)
+
+        # 7th row: Height
+        current_row = sheet.row(6)
+        current_row.height = ROW_HEIGHT
+
+        # 8th row: Item Name
+        row_index = 7
+        supply_item = item.supply_item
+        sheet.write_merge(row_index, row_index + 5, 0, 13, supply_item.name[:24], big_box_style)
+
+        # 14th row: Height
+        current_row = sheet.row(13)
+        current_row.height = ROW_HEIGHT
+
+        # 16th row: Divider
+        current_row = sheet.row(15)
+        for col_index in range(14):
+            current_row.write(col_index, "", bold_style)
+
+        # 18th row: Item Name
+        row_index = 16
+        sheet.write_merge(row_index, row_index + 5, 0, 13, supply_item.code, box_style)
+
+        # 25th row: Height
+        current_row = sheet.row(24)
+        current_row.height = ROW_HEIGHT
+
+        # 26th row: UoM
+        current_row = sheet.row(25)
+        current_row.height = ROW_HEIGHT
+        current_row.write(4, "measure of unit :", right_style)
+        pack = item.supply_item_pack
+        pack_quantity = pack.quantity
+        if pack_quantity == 1:
+            label = pack.name
+        else:
+            # Lookup the Unit Pack
+            query = (ptable.item_id == supply_item.id) & \
+                    (ptable.quantity == 1)
+            unit_pack = db(query).select(ptable.name,
+                                         limitby = (0, 1),
+                                         ).first()
+            label = "%s %s / %s" % (pack_quantity,
+                                    unit_pack.name,
+                                    pack.name,
+                                    )
+        current_row.write(6, label, style)
+
+        # 27th row: Height
+        current_row = sheet.row(26)
+        current_row.height = ROW_HEIGHT
+
+        # 28th row: Expiry Date
+        current_row = sheet.row(27)
+        current_row.height = ROW_HEIGHT
+        current_row.write(4, "expiry date :", right_style)
+        expiry_date = item["inv_track_item.expiry_date"]
+        if expiry_date:
+            label = str(expiry_date)
+        else:
+            label = "N/A"
+        current_row.write(6, label, style)
+
+        # 29th row: Height
+        current_row = sheet.row(28)
+        current_row.height = ROW_HEIGHT
+
+        # 30th row: Donor
+        current_row = sheet.row(29)
+        current_row.height = ROW_HEIGHT
+        current_row.write(4, "donor :", right_style)
+        donor = item["inv_track_item.supply_org_id"]
+        if donor:
+            label = org_represent(donor)
+        else:
+            label = "N/A"
+        current_row.write(6, label, style)
+
+        # 31st row: Height
+        current_row = sheet.row(30)
+        current_row.height = ROW_HEIGHT
+
+        # 32nd row: Height
+        current_row = sheet.row(31)
+        current_row.height = ROW_HEIGHT
+
+        # 37th row: Size Labels
+        current_row = sheet.row(36)
+        current_row.height = ROW_HEIGHT
+        current_row.write(0, "Dimensions :", bold_style)
+        for col_index in range(1, 8):
+            # Divider
+            current_row.write(col_index, "", bold_style)
+        current_row.write(8, "Weight", bold_style)
+        for col_index in range(9, 11):
+            # Divider
+            current_row.write(col_index, "", bold_style)
+        current_row.write(11, "Volume", bold_style)
+        for col_index in range(12, 14):
+            # Divider
+            current_row.write(col_index, "", bold_style)
+
+        # 38th row: Sizes
+        current_row = sheet.row(37)
+        current_row.height = ROW_HEIGHT
+        #current_row.write(0, width, style) # We don't have this data
+        current_row.write(1, "x", style)
+        #current_row.write(2, length, style) # We don't have this data
+        current_row.write(3, "x", style)
+        #current_row.write(3, height, style) # We don't have this data
+        current_row.write(8, pallet_weight, style)
+        current_row.write(9, "Kgs", style)
+        current_row.write(11, pallet_volume, style)
+        current_row.write(12, "m3", style)
+
+    # Export to File
+    output = BytesIO()
+    try:
+        book.save(output)
+    except:
+        import sys
+        error = sys.exc_info()[1]
+        current.log.error(error)
+    output.seek(0)
+
+    # Response headers
+    title = s3_str(T("Label for Pallet %(pallet)s of %(waybill)s")) % {"pallet": pallet.number,
+                                                                       "waybill": record.send_ref,
+                                                                       }
+    filename = "%s.xls" % title
+    response = current.response
+    from gluon.contenttype import contenttype
+    response.headers["Content-Type"] = contenttype(".xls")
+    disposition = "attachment; filename=\"%s\"" % filename
+    response.headers["Content-disposition"] = disposition
+
+    return output.read()
+
+# =============================================================================
 def inv_pick_list(r, **attr):
     """
-        Generate a Picking List for a Sent Shipment
+        Generate a Picking List for an Outbound Shipment
 
         In order to order this list for optimal picking, we assume that the Bins are
         strctured as Aisle/Site/Shelf with the Aisle being the gap between Racks as per Figure 2 in:
@@ -7495,16 +8239,16 @@ def inv_pick_list(r, **attr):
         col_index += 1
 
     # Define styles
-    left_style = xlwt.XFStyle()
+    style = xlwt.XFStyle()
 
-    THIN = left_style.borders.THIN
-    HORZ_CENTER = left_style.alignment.HORZ_CENTER
-    HORZ_RIGHT = left_style.alignment.HORZ_RIGHT
+    THIN = style.borders.THIN
+    HORZ_CENTER = style.alignment.HORZ_CENTER
+    HORZ_RIGHT = style.alignment.HORZ_RIGHT
 
-    left_style.borders.top = THIN
-    left_style.borders.left = THIN
-    left_style.borders.right = THIN
-    left_style.borders.bottom = THIN
+    style.borders.top = THIN
+    style.borders.left = THIN
+    style.borders.right = THIN
+    style.borders.bottom = THIN
 
     right_style = xlwt.XFStyle()
     right_style.alignment.horz = HORZ_RIGHT
@@ -7562,7 +8306,6 @@ def inv_pick_list(r, **attr):
     row_index = 3
     for row in items:
         current_row = sheet.row(row_index)
-        #style = even_style if row_index % 2 == 0 else odd_style
         track_row = row["inv_track_item"]
         item_row = row["supply_item"]
         pack_row = row["supply_item_pack"]
@@ -7602,13 +8345,12 @@ def inv_pick_list(r, **attr):
         col_index = 0
         for value in values:
             if col_index in (0, 1, 2, 3):
-                style = left_style
+                current_row.write(col_index, value, style)
             elif col_index == 4:
                 # Qty to Pick
-                style = center_style
+                current_row.write(col_index, value, center_style)
             else:
-                style = right_style
-            current_row.write(col_index, value, style)
+                current_row.write(col_index, value, right_style)
             if col_index == 1:
                 # Code
                 width = round(len(value) * COL_WIDTH_MULTIPLIER * 1.1)
@@ -9852,34 +10594,58 @@ def inv_send_controller():
                 table.date.readable = table.date.writable = False
 
             elif cname == "send_pallet":
+
+                # Uncommon workflow, so no need to optimise for this:
+                #if r.method == "read":
+                #    return True
+
                 send_id = r.id
+
                 # Number the Pallet automatically
                 sptable = s3db.inv_send_pallet
                 query = (sptable.send_id == send_id)
                 field = sptable.number
                 max_field = field.max()
                 current_number = db(query).select(max_field,
+                                                  limitby = (0, 1),
                                                   orderby = max_field,
-                                                  limitby = (0, 1)
                                                   ).first()[max_field]
                 if current_number:
                     next_number = current_number + 1
                 else:
                     next_number = 1
                 field.default = next_number
-                # Filter out Items which are already palletised
+
+                # Filter out Items which are already fully palletised
+                ttable = s3db.inv_track_item
+                rows = db(ttable.send_id == send_id).select(ttable.id,
+                                                            ttable.quantity,
+                                                            )
+                track_items = {row.id: row.quantity for row in rows}
                 spitable = s3db.inv_send_pallet_item
                 query &= (sptable.id == spitable.send_pallet_id)
-                rows = db(query).select(spitable.track_item_id)
-                track_item_ids = [row.track_item_id for row in rows]
-                spitable.track_item_id.requires.set_filter(not_filterby = "id",
+                rows = db(query).select(spitable.track_item_id,
+                                        spitable.quantity,
+                                        )
+                for row in rows:
+                    track_items[row.track_item_id] -= row.quantity
+                track_item_ids = [track_item_id for track_item_id in track_items if track_items[track_item_id] <= 0]
+                spitable.track_item_id.requires.set_filter(not_filterby = "id", # Using not_filter_by as filter_opts = [] means 'no filtering' rather than 'no results'
                                                            not_filter_opts = track_item_ids,
                                                            )
                 # Default Quantity
-                if s3.debug:
-                    s3.scripts.append("/%s/static/scripts/S3/s3.inv_pallet_item.js" % r.application)
+                if r.component_id:
+                    # Update form
+                    pass
                 else:
-                    s3.scripts.append("/%s/static/scripts/S3/s3.inv_pallet_item.min.js" % r.application)
+                    # Create form
+                    track_items = {k: v for k, v in track_items.items() if v > 0}
+                if track_items:
+                    s3.js_global.append('''S3.supply.track_items=%s''' % json.dumps(track_items, separators=SEPARATORS))
+                    if s3.debug:
+                        s3.scripts.append("/%s/static/scripts/S3/s3.inv_pallet_item.js" % r.application)
+                    else:
+                        s3.scripts.append("/%s/static/scripts/S3/s3.inv_pallet_item.min.js" % r.application)
                     
             elif cname == "track_item":
 
@@ -10271,8 +11037,28 @@ def inv_send_controller():
                                        )
 
         return True
-
     s3.prep = prep
+
+    def postp(r, output):
+        if r.interactive and \
+           r.component_name == "send_pallet":
+            # Normal Action Buttons
+            S3CRUD.action_buttons(r)
+            # Custom Action Buttons
+            s3.actions += [{"label": s3_str(T("Label")),
+                            "icon": ICON.css_class("print"),
+                            "url": URL(args = [r.id,
+                                               "send_pallet",
+                                               "[id]",
+                                               "label",
+                                               ],
+                                       ),
+                            "_class": "action-btn",
+                            },
+                           ]
+
+        return output
+    s3.postp = postp
 
     return current.rest_controller("inv", "send",
                                    rheader = inv_send_rheader,
@@ -10361,15 +11147,15 @@ def inv_send_pallet_update(send_pallet_id):
             (table.track_item_id == ttable.id) & \
             (ttable.item_id == itable.id) & \
             (ttable.item_pack_id == ptable.id)
-    items = db(query).select(itable.weight,
+    items = db(query).select(table.quantity,
+                             itable.weight,
                              itable.volume,
-                             ttable.quantity,
                              ptable.quantity,
                              )
     total_volume = 0
     total_weight = 0
     for row in items:
-        quantity = row["inv_track_item.quantity"] * row["supply_item_pack.quantity"]
+        quantity = row["inv_send_pallet_item.quantity"] * row["supply_item_pack.quantity"]
         row = row.supply_item
         volume = row.volume
         if volume:
@@ -10790,6 +11576,16 @@ def inv_send_rheader(r):
                                              _class = "action-btn",
                                              )
                                            )
+
+                            if settings.get_inv_send_pallets():
+                                actions.append(A(ICON("print"),
+                                                 " ",
+                                                 T("Packing List"),
+                                                 _href = URL(args = [record.id, "packing_list.xls"]
+                                                             ),
+                                                 _class = "action-btn",
+                                                 )
+                                               )
 
                             actions.append(A(T("Send Shipment"),
                                              _href = URL(args = [record.id, "process"]

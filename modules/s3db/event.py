@@ -563,36 +563,44 @@ class EventModel(S3Model):
         # Custom Methods
         set_method("event", "event",
                    method = "dispatch",
-                   action = event_notification_dispatcher)
+                   action = event_notification_dispatcher,
+                   )
 
         set_method("event", "event",
                    method = "add_bookmark",
-                   action = self.event_add_bookmark)
+                   action = self.event_add_bookmark,
+                   )
 
         set_method("event", "event",
                    method = "remove_bookmark",
-                   action = self.event_remove_bookmark)
+                   action = self.event_remove_bookmark,
+                   )
 
         set_method("event", "event",
                    method = "add_tag",
-                   action = self.event_add_tag)
+                   action = self.event_add_tag,
+                   )
 
         set_method("event", "event",
                    method = "remove_tag",
-                   action = self.event_remove_tag)
+                   action = self.event_remove_tag,
+                   )
 
         set_method("event", "event",
                    method = "share",
-                   action = self.event_share)
+                   action = self.event_share,
+                   )
 
         set_method("event", "event",
                    method = "unshare",
-                   action = self.event_unshare)
+                   action = self.event_unshare,
+                   )
 
         # Custom Method to Assign HRs
         set_method("event", "event",
                    method = "assign",
-                   action = self.pr_AssignMethod(component="human_resource"))
+                   action = self.pr_AssignMethod(component="human_resource"),
+                   )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -1482,21 +1490,24 @@ class EventAlertModel(S3Model):
             msg_record_created = T("Alert added"),
             msg_record_modified = T("Alert Details updated"),
             msg_record_deleted = T("Alert deleted"),
-            msg_list_empty = T("No Alerts currently defined"))
+            msg_list_empty = T("No Alerts currently defined"),
+            )
 
         # Custom method to send alerts
         #self.set_method("event", "alert",
         #                method = "send",
-        #                action = self.event_alert_send)
+        #                action = self.event_alert_send,
+        #                )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         alert_id = S3ReusableField("alert_id", "reference %s" % tablename,
                                    label = T("Alert"),
                                    ondelete = "CASCADE",
                                    represent = represent,
                                    requires = IS_ONE_OF(db, "event_alert.id",
-                                                        represent),
+                                                        represent,
+                                                        ),
                                    )
 
         # ---------------------------------------------------------------------
@@ -1506,7 +1517,8 @@ class EventAlertModel(S3Model):
         define_table(tablename,
                      alert_id(),
                      self.pr_person_id(empty = False,
-                                       label = T("Recipient")),
+                                       label = T("Recipient"),
+                                       ),
                      *s3_meta_fields())
 
         # CRUD Strings
@@ -1521,7 +1533,8 @@ class EventAlertModel(S3Model):
             msg_record_created = T("Recipient added"),
             msg_record_modified = T("Recipient Details updated"),
             msg_record_deleted = T("Recipient removed"),
-            msg_list_empty = T("No Recipients currently defined"))
+            msg_list_empty = T("No Recipients currently defined"),
+            )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -4660,7 +4673,8 @@ class ScenarioModel(S3Model):
 
         self.set_method("event", "scenario",
                         method = "plan",
-                        action = event_ScenarioActionPlan)
+                        action = event_ScenarioActionPlan,
+                        )
 
         # Pass names back to global scope (s3.*)
         return {"event_scenario_id": scenario_id,

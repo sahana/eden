@@ -547,39 +547,48 @@ class ProjectModel(S3Model):
         # Custom Methods
         set_method("project", "project",
                    method = "assign",
-                   action = self.hrm_AssignMethod(component="human_resource"))
+                   action = self.hrm_AssignMethod(component = "human_resource"),
+                   )
 
         set_method("project", "project",
                    method = "details",
-                   action = project_Details)
+                   action = project_Details,
+                   )
 
         set_method("project", "project",
                    method = "map",
-                   action = self.project_map)
+                   action = self.project_map,
+                   )
 
         set_method("project", "project",
                    method = "timeline",
-                   action = self.project_timeline)
+                   action = self.project_timeline,
+                   )
 
         set_method("project", "project",
                    method = "summary_report",
-                   action = project_SummaryReport)
+                   action = project_SummaryReport,
+                   )
 
         set_method("project", "project",
                    method = "indicator_summary_report",
-                   action = project_IndicatorSummaryReport)
+                   action = project_IndicatorSummaryReport,
+                   )
 
         set_method("project", "project",
                    method = "project_progress_report",
-                   action = project_ProgressReport)
+                   action = project_ProgressReport,
+                   )
 
         #set_method("project", "project",
         #           method = "budget_progress_report",
-        #           action = project_BudgetProgressReport)
+        #           action = project_BudgetProgressReport,
+        #           )
 
         #set_method("project", "project",
         #           method = "indicator_progress_report",
-        #           action = project_IndicatorProgressReport)
+        #           action = project_IndicatorProgressReport,
+        #           )
 
         # Components
         add_components(tablename,
@@ -1414,7 +1423,7 @@ class ProjectActivityModel(S3Model):
         #    # Custom Method to Assign Cases
         #    self.set_method("project", "activity",
         #                    method = "assign",
-        #                    action = self.dvr_AssignMethod(component="case_activity"),
+        #                    action = self.dvr_AssignMethod(component = "case_activity"),
         #                    )
 
         # Reusable Field

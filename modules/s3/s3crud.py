@@ -2629,8 +2629,9 @@ class S3CRUD(S3Method):
         """
             Add a link to response.s3.actions
 
-            @param label: the link label
+            @param label: the link Label
             @param url: the target URL
+            @param icon: optional Icon string
             @param attr: attributes for the link (default: {"_class": "action-btn"})
         """
 

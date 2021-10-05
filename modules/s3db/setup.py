@@ -1122,7 +1122,8 @@ class SetupDeploymentModel(S3Model):
 
         set_method("setup", "deployment",
                    method = "wizard",
-                   action = self.setup_server_wizard)
+                   action = self.setup_server_wizard,
+                   )
 
         represent = setup_DeploymentRepresent()
 
@@ -1256,22 +1257,25 @@ class SetupDeploymentModel(S3Model):
                                     requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "setup_server.id",
                                                           represent,
-                                                          sort=True
+                                                          sort = True,
                                                           )),
                                     sortby = "name",
                                     )
 
         set_method("setup", "server",
                    method = "enable",
-                   action = setup_monitor_server_enable_interactive)
+                   action = setup_monitor_server_enable_interactive,
+                   )
 
         set_method("setup", "server",
                    method = "disable",
-                   action = setup_monitor_server_disable_interactive)
+                   action = setup_monitor_server_disable_interactive,
+                   )
 
         set_method("setup", "server",
                    method = "check",
-                   action = setup_monitor_server_check)
+                   action = setup_monitor_server_check,
+                   )
 
         # ---------------------------------------------------------------------
         # Instances

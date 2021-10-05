@@ -452,7 +452,8 @@ class OrganisationModel(S3Model):
         # Custom Method for S3OrganisationAutocompleteWidget
         self.set_method("org", "organisation",
                         method = "search_ac",
-                        action = self.org_search_ac)
+                        action = self.org_search_ac,
+                        )
 
         # Components
         add_components(tablename,
@@ -1179,7 +1180,8 @@ class OrganisationCapacityModel(S3Model):
         # Custom Report Method
         self.set_method("org", "capacity_assessment_data",
                         method = "custom_report",
-                        action = org_CapacityReport())
+                        action = org_CapacityReport(),
+                        )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -1327,7 +1329,8 @@ class OrganisationGroupModel(S3Model):
         # Custom Method to Assign Orgs
         self.set_method("org", "group",
                         method = "assign",
-                        action = org_AssignMethod(component="membership"))
+                        action = org_AssignMethod(component = "membership"),
+                        )
 
         # ---------------------------------------------------------------------
         # Group membership status
@@ -7161,7 +7164,7 @@ def org_organisation_controller():
             # Improve XLS export of Branches
             table = s3db.org_organisation_branch
             table.organisation_id.represent = \
-                org_OrganisationRepresent(acronym=False)
+                org_OrganisationRepresent(acronym = False)
             table.branch_id.represent = org_OrganisationRepresent(parent = False)
             s3db.configure("org_organisation_branch",
                            list_fields = ["organisation_id",
@@ -8928,11 +8931,16 @@ class org_CapacityReport(S3Method):
                     rappend(row)
 
                 orepresent = org_OrganisationRepresent(parent = False,
-                                                       acronym = False)
+                                                       acronym = False,
+                                                       )
                 orgs = [TH(orepresent(o)) for o in orgs]
 
-                items = TABLE(THEAD(TR(TH("TOPICS", _rowspan=2),
-                                       TH("Consolidated Ratings", _colspan=6),
+                items = TABLE(THEAD(TR(TH("TOPICS",
+                                          _rowspan = 2,
+                                          ),
+                                       TH("Consolidated Ratings",
+                                          _colspan = 6,
+                                          ),
                                        ),
                                     TR(TH("A"),
                                        TH("B"),
@@ -9090,7 +9098,8 @@ class org_CapacityReport(S3Method):
         sheet1.row(1).write(5, "E", styleHeader)
         sheet1.row(1).write(6, "F", styleHeader)
         orepresent = org_OrganisationRepresent(parent = False,
-                                               acronym = False)
+                                               acronym = False,
+                                               )
         col = 7
         for o in orgs:
             sheet1.row(1).write(col, orepresent(o), styleHeader)

@@ -504,31 +504,38 @@ class CMSContentModel(S3Model):
         # Custom Methods
         set_method("cms", "post",
                    method = "add_bookmark",
-                   action = self.cms_add_bookmark)
+                   action = self.cms_add_bookmark,
+                   )
 
         set_method("cms", "post",
                    method = "remove_bookmark",
-                   action = self.cms_remove_bookmark)
+                   action = self.cms_remove_bookmark,
+                   )
 
         set_method("cms", "post",
                    method = "add_tag",
-                   action = self.cms_add_tag)
+                   action = self.cms_add_tag,
+                   )
 
         set_method("cms", "post",
                    method = "remove_tag",
-                   action = self.cms_remove_tag)
+                   action = self.cms_remove_tag,
+                   )
 
         set_method("cms", "post",
                    method = "share",
-                   action = self.cms_share)
+                   action = self.cms_share,
+                   )
 
         set_method("cms", "post",
                    method = "unshare",
-                   action = self.cms_unshare)
+                   action = self.cms_unshare,
+                   )
 
         set_method("cms", "post",
                    method = "calendar",
-                   action = cms_Calendar)
+                   action = cms_Calendar,
+                   )
 
         # ---------------------------------------------------------------------
         # Modules/Resources <> Posts link table
@@ -560,7 +567,8 @@ class CMSContentModel(S3Model):
             msg_record_created = T("Post set as Module/Resource homepage"),
             msg_record_modified = T("Post updated"),
             msg_record_deleted = T("Post removed"),
-            msg_list_empty = T("No posts currently set as module/resource homepages"))
+            msg_list_empty = T("No posts currently set as module/resource homepages"),
+            )
 
         # ---------------------------------------------------------------------
         # Tags
@@ -588,17 +596,21 @@ class CMSContentModel(S3Model):
             msg_record_created = T("Tag added"),
             msg_record_modified = T("Tag updated"),
             msg_record_deleted = T("Tag deleted"),
-            msg_list_empty = T("No tags currently defined"))
+            msg_list_empty = T("No tags currently defined"),
+            )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         tag_id = S3ReusableField("tag_id", "reference %s" % tablename,
                                  label = T("Tag"),
                                  ondelete = "CASCADE",
                                  represent = represent,
                                  requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "cms_tag.id",
-                                                          represent)),
+                                                          represent,
+                                                          )),
                                  sortby = "name",
                                  )
 
@@ -627,7 +639,8 @@ class CMSContentModel(S3Model):
             msg_record_created = T("Post Tagged"),
             msg_record_modified = T("Tag updated"),
             msg_record_deleted = T("Tag removed"),
-            msg_list_empty = T("No posts currently tagged"))
+            msg_list_empty = T("No posts currently tagged"),
+            )
 
         # ---------------------------------------------------------------------
         # Comments
@@ -726,7 +739,8 @@ class CMSContentModel(S3Model):
         query = (table.name == name) & \
                 (table.series_id == series_id)
         duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
+                                             limitby = (0, 1),
+                                             ).first()
         if duplicate:
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
@@ -763,29 +777,29 @@ class CMSContentModel(S3Model):
                 record = None
                 query &= ((table.resource == None) | \
                           (table.resource == "index"))
-            result = db(query).update(post_id=post_id)
+            result = db(query).update(post_id = post_id)
             if not result:
-                table.insert(post_id=post_id,
-                             module=module,
-                             resource=resource,
-                             record=record,
+                table.insert(post_id = post_id,
+                             module = module,
+                             resource = resource,
+                             record = record,
                              )
 
         layer_id = get_vars.get("layer_id", None)
         if layer_id:
             table = s3db.cms_post_layer
             query = (table.layer_id == layer_id)
-            result = db(query).update(post_id=post_id)
+            result = db(query).update(post_id = post_id)
             if not result:
-                table.insert(post_id=post_id,
-                             layer_id=layer_id,
+                table.insert(post_id = post_id,
+                             layer_id = layer_id,
                              )
 
         # Read record
         table = db.cms_post
         record = db(table.id == post_id).select(table.person_id,
                                                 table.created_by,
-                                                limitby=(0, 1)
+                                                limitby = (0, 1),
                                                 ).first()
         if record.created_by and not record.person_id:
             # Set from Author
@@ -794,10 +808,10 @@ class CMSContentModel(S3Model):
             query = (putable.user_id == record.created_by) & \
                     (putable.pe_id == ptable.pe_id)
             person = db(query).select(ptable.id,
-                                      limitby=(0, 1)
+                                      limitby = (0, 1),
                                       ).first()
             if person:
-                db(table.id == post_id).update(person_id=person.id)
+                db(table.id == post_id).update(person_id = person.id)
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -821,7 +835,7 @@ class CMSContentModel(S3Model):
         exists = db(query).select(ltable.id,
                                   ltable.deleted,
                                   ltable.deleted_fk,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if exists:
             link_id = exists.id
@@ -862,10 +876,12 @@ class CMSContentModel(S3Model):
                 (ltable.user_id == user_id)
         exists = db(query).select(ltable.id,
                                   ltable.deleted,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if exists and not exists.deleted:
-            resource = current.s3db.resource("cms_post_user", id=exists.id)
+            resource = current.s3db.resource("cms_post_user",
+                                             id = exists.id,
+                                             )
             resource.delete()
 
         output = current.xml.json_message(True, 200, current.T("Bookmark Removed"))
@@ -893,7 +909,7 @@ class CMSContentModel(S3Model):
         exists = db(ttable.name == tag).select(ttable.id,
                                                ttable.deleted,
                                                ttable.deleted_fk,
-                                               limitby=(0, 1)
+                                               limitby = (0, 1),
                                                ).first()
         if exists:
             tag_id = exists.id
@@ -911,7 +927,7 @@ class CMSContentModel(S3Model):
         exists = db(query).select(ltable.id,
                                   ltable.deleted,
                                   ltable.deleted_fk,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if exists:
             if exists.deleted:
@@ -949,7 +965,7 @@ class CMSContentModel(S3Model):
         ttable = db.cms_tag
         exists = db(ttable.name == tag).select(ttable.id,
                                                ttable.deleted,
-                                               limitby=(0, 1)
+                                               limitby = (0, 1),
                                                ).first()
         if exists:
             tag_id = exists.id
@@ -958,10 +974,12 @@ class CMSContentModel(S3Model):
                     (ltable.post_id == post_id)
             exists = db(query).select(ltable.id,
                                       ltable.deleted,
-                                      limitby=(0, 1)
+                                      limitby = (0, 1),
                                       ).first()
             if exists and not exists.deleted:
-                resource = current.s3db.resource("cms_tag_post", id=exists.id)
+                resource = current.s3db.resource("cms_tag_post",
+                                                 id = exists.id,
+                                                 )
                 resource.delete()
 
         output = current.xml.json_message(True, 200, current.T("Tag Removed"))
@@ -994,7 +1012,7 @@ class CMSContentModel(S3Model):
             query = (ptable.pe_id == auth.user.pe_id) & \
                     (mtable.person_id == ptable.id)
             member = db(query).select(mtable.id,
-                                      limitby = (0, 1)
+                                      limitby = (0, 1),
                                       ).first()
             if not member:
                 output = current.xml.json_message(False, 403, current.T("Cannot Share to a Forum unless you are a Member"))
@@ -1005,7 +1023,7 @@ class CMSContentModel(S3Model):
         query = (ltable.post_id == post_id) & \
                 (ltable.forum_id == forum_id)
         exists = db(query).select(ltable.id,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if not exists:
             ltable.insert(post_id = post_id,
@@ -1041,7 +1059,7 @@ class CMSContentModel(S3Model):
                 (ltable.forum_id == forum_id)
         exists = db(query).select(ltable.id,
                                   ltable.created_by,
-                                  limitby=(0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if exists:
             auth = current.auth
@@ -1052,7 +1070,9 @@ class CMSContentModel(S3Model):
                     current.response.headers["Content-Type"] = "application/json"
                     return output
 
-            resource = s3db.resource("cms_post_forum", id=exists.id)
+            resource = s3db.resource("cms_post_forum",
+                                     id = exists.id,
+                                     )
             resource.delete()
 
         output = current.xml.json_message(True, 200, current.T("Stopped Sharing Post"))
@@ -1152,8 +1172,8 @@ class CMSContentOrgGroupModel(S3Model):
         #
         tablename = "cms_post_organisation_group"
         self.define_table(tablename,
-                          self.cms_post_id(empty=False),
-                          self.org_group_id(empty=False),
+                          self.cms_post_id(empty = False),
+                          self.org_group_id(empty = False),
                           *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -1229,7 +1249,9 @@ class CMSContentRoleModel(S3Model):
         db = current.db
 
         gtn = current.auth.settings.table_group_name
-        rrepresent = S3Represent(lookup=gtn, fields=["role"])
+        rrepresent = S3Represent(lookup = gtn,
+                                 fields = ["role"],
+                                 )
 
         # ---------------------------------------------------------------------
         # Post <> Role link table
@@ -1332,7 +1354,8 @@ def cms_index(module,
         _item = db(query).select(table.id,
                                  table.body,
                                  table.title,
-                                 limitby=(0, 1)).first()
+                                 limitby = (0, 1),
+                                 ).first()
         # @ToDo: Replace this crude check with?
         #if current.auth.s3_has_permission("update", table, record_id=_item.id):
         auth = current.auth
@@ -1348,18 +1371,23 @@ def cms_index(module,
                 item = DIV(XML(_item.body),
                            BR(),
                            A(current.T("Edit"),
-                             _href=URL(c="cms", f="post",
-                                       args=[_item.id, "update"],
-                                       vars=get_vars),
-                             _class="action-btn"))
+                             _href = URL(c="cms", f="post",
+                                         args = [_item.id, "update"],
+                                         vars = get_vars,
+                                         ),
+                             _class = "action-btn",
+                             ))
             else:
                 item = XML(_item.body)
         elif ADMIN:
             item = DIV(H2(page_name),
                        A(current.T("Edit"),
-                         _href=URL(c="cms", f="post", args="create",
-                                   vars=get_vars),
-                         _class="action-btn"))
+                         _href = URL(c="cms", f="post",
+                                     args = "create",
+                                     vars = get_vars,
+                                     ),
+                         _class = "action-btn",
+                         ))
 
     if not item:
         if alt_function:
@@ -1431,7 +1459,8 @@ def cms_documentation(r, default_page, default_url):
         row = current.db(query).select(table.id,
                                        table.title,
                                        table.body,
-                                       limitby=(0, 1)).first()
+                                       limitby = (0, 1),
+                                       ).first()
     if not row:
         if name != default_page:
             # Error - CMS page not found
@@ -1498,9 +1527,10 @@ class S3CMS(S3Method):
     @staticmethod
     def resource_content(module,
                          resource,
-                         record=None,
-                         widget_id=None,
-                         hide_if_empty=False):
+                         record = None,
+                         widget_id = None,
+                         hide_if_empty = False,
+                         ):
         """
             Render resource-related CMS contents
 
@@ -1522,7 +1552,8 @@ class S3CMS(S3Method):
                 (table.deleted != True)
         _item = db(query).select(table.id,
                                  table.body,
-                                 limitby=(0, 1)).first()
+                                 limitby = (0, 1),
+                                 ).first()
         # @ToDo: Replace this crude check with?
         #if current.auth.s3_has_permission("update", r.table, record_id=r.id):
         auth = current.auth
@@ -1541,19 +1572,19 @@ class S3CMS(S3Method):
             if _item:
                 item = DIV(XML(_item.body),
                            A(current.T("Edit"),
-                             _href=URL(c="cms", f="post",
-                                       args = [_item.id, "update"],
-                                       vars = url_vars,
-                                       ),
-                             _class="%s cms-edit" % _class,
+                             _href = URL(c="cms", f="post",
+                                         args = [_item.id, "update"],
+                                         vars = url_vars,
+                                         ),
+                             _class = "%s cms-edit" % _class,
                              ))
             else:
                 item = A(current.T("Edit"),
-                         _href=URL(c="cms", f="post",
-                                   args = "create",
-                                   vars = url_vars,
-                                   ),
-                         _class="%s cms-edit" % _class,
+                         _href = URL(c="cms", f="post",
+                                     args = "create",
+                                     vars = url_vars,
+                                     ),
+                         _class = "%s cms-edit" % _class,
                          )
         elif _item:
             item = XML(_item.body)
@@ -1561,7 +1592,10 @@ class S3CMS(S3Method):
             item = ""
 
         if item != "" or not hide_if_empty:
-            output = DIV(item, _id=widget_id, _class="cms_content")
+            output = DIV(item,
+                         _id = widget_id,
+                         _class = "cms_content",
+                         )
         else:
             output = item
         return output
@@ -1596,17 +1630,18 @@ def cms_configure_newsfeed_post_fields():
     contact_field = settings.get_cms_person()
     if contact_field == "created_by":
         table.created_by.represent = s3db.auth_UserRepresent(show_email = False,
-                                                             show_link = False)
+                                                             show_link = False,
+                                                             )
     elif contact_field == "person_id":
         field = table.person_id
         field.readable = True
         field.writable = True
         field.comment = None
-        field.widget = S3AddPersonWidget(controller="pr")
+        field.widget = S3AddPersonWidget(controller = "pr")
 
     field = table.location_id
     field.label = ""
-    field.represent = s3db.gis_LocationRepresent(sep=" | ")
+    field.represent = s3db.gis_LocationRepresent(sep = " | ")
     # Required
     field.requires = IS_LOCATION()
 
@@ -1847,7 +1882,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
             # Try Organisation Logo
             otable = db.org_organisation
             row = db(otable.id == organisation_id).select(otable.logo,
-                                                          limitby = (0, 1)
+                                                          limitby = (0, 1),
                                                           ).first()
             if row and row.logo:
                 logo = URL(c="default", f="download",
@@ -1883,7 +1918,8 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         # Personal Avatar
         avatar = s3_avatar_represent(person_id,
                                      tablename = "pr_person",
-                                     _class = "media-object")
+                                     _class = "media-object",
+                                     )
 
         avatar = A(avatar,
                    _href = person_url,
@@ -1983,7 +2019,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         query = (ltable.post_id == record_id) & \
                 (ltable.user_id == user.id)
         exists = db(query).select(ltable.id,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
         if exists:
             bookmark_btn = A(ICON("bookmark"),

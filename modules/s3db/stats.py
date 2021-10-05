@@ -377,7 +377,8 @@ class StatsDemographicModel(S3Model):
             msg_record_created = T("Demographic Data added"),
             msg_record_modified = T("Demographic Data updated"),
             msg_record_deleted = T("Demographic Data deleted"),
-            msg_list_empty = T("No demographic data currently available"))
+            msg_list_empty = T("No demographic data currently available"),
+            )
 
         levels = current.gis.get_relevant_hierarchy_levels()
 
@@ -960,7 +961,7 @@ class StatsDemographicModel(S3Model):
                 continue
             # The following structures are used in the OPTIMISATION step later
             location = db(gtable.id == location_id).select(gtable.level,
-                                                           limitby=(0, 1)
+                                                           limitby = (0, 1),
                                                            ).first()
             loc_level_list[location_id] = location.level
             if parameter_id not in param_location_dict:
@@ -1142,7 +1143,7 @@ class StatsDemographicModel(S3Model):
                 (atable.date == start_date) & \
                 (atable.end_date == end_date)
         exists = db(query).select(atable.id,
-                                  limitby = (0, 1)
+                                  limitby = (0, 1),
                                   ).first()
 
         attr = {"agg_type": 2, # Location
@@ -1415,7 +1416,7 @@ def stats_year(row, tablename):
                 table = current.s3db.project_project
                 project = current.db(table.id == project_id).select(table.start_date,
                                                                     table.end_date,
-                                                                    limitby = (0, 1)
+                                                                    limitby = (0, 1),
                                                                     ).first()
                 if project:
                     if start_date is NOT_PRESENT:
@@ -1454,13 +1455,13 @@ def stats_year_options(tablename):
     query = (table.deleted == False)
     min_field = table.date.min()
     start_date_min = db(query).select(min_field,
+                                      limitby = (0, 1),
                                       orderby = min_field,
-                                      limitby = (0, 1)
                                       ).first()[min_field]
     max_field = table.end_date.max()
     end_date_max = db(query).select(max_field,
+                                    limitby = (0, 1),
                                     orderby = max_field,
-                                    limitby = (0, 1)
                                     ).first()[max_field]
 
     if tablename == "project_beneficiary":
@@ -1470,12 +1471,12 @@ def stats_year_options(tablename):
         pmin = ptable.start_date.min()
         pmax = ptable.end_date.max()
         p_start_date_min = db(pquery).select(pmin,
+                                             limitby = (0, 1),
                                              orderby = pmin,
-                                             limitby = (0, 1)
                                              ).first()[pmin]
         p_end_date_max = db(pquery).select(pmax,
+                                           limitby = (0, 1),
                                            orderby = pmax,
-                                           limitby = (0, 1)
                                            ).first()[pmax]
         if p_start_date_min and start_date_min:
             start_year = min(p_start_date_min,
@@ -1518,14 +1519,21 @@ class stats_SourceRepresent(S3Represent):
         fields = ["name"]
 
         super(stats_SourceRepresent,
-              self).__init__(lookup="stats_source",
-                             fields=fields,
-                             show_link=show_link,
-                             translate=translate,
-                             multiple=multiple)
+              self).__init__(lookup = "stats_source",
+                             fields = fields,
+                             show_link = show_link,
+                             translate = translate,
+                             multiple = multiple,
+                             )
 
     # -------------------------------------------------------------------------
-    def bulk(self, values, rows=None, list_type=False, show_link=True, include_blank=True):
+    def bulk(self,
+             values,
+             rows = None,
+             list_type = False,
+             show_link = True,
+             include_blank = True,
+             ):
         """
             Represent multiple values as dict {value: representation}
 
@@ -1613,14 +1621,16 @@ class stats_SourceRepresent(S3Represent):
                     fields.append(table.url)
 
             rows = db(query).select(*fields,
-                                    left=left,
-                                    limitby=limitby)
+                                    left = left,
+                                    limitby = limitby,
+                                    )
 
         else:
             # Normal lookup
             rows = db(query).select(stable.source_id,
                                     stable.name,
-                                    limitby=limitby)
+                                    limitby = limitby,
+                                    )
 
         self.queries += 1
         return rows

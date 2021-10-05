@@ -241,7 +241,8 @@ class RequestNeedsModel(S3Model):
         # Custom Methods
         self.set_method("req", "need",
                         method = "assign",
-                        action = self.pr_AssignMethod(component = "need_person"))
+                        action = self.pr_AssignMethod(component = "need_person"),
+                        )
 
         # NB Only instance of this being used (SHARE) over-rides this to show the req_number
         represent = S3Represent(lookup = tablename,

@@ -1121,7 +1121,8 @@ class DataCollectionModel(S3Model):
 
         self.set_method("dc", "target",
                         method = "results",
-                        action = dc_TargetReport())
+                        action = dc_TargetReport(),
+                        )
 
         target_id = S3ReusableField("target_id", "reference %s" % tablename,
                                     requires = IS_EMPTY_OR(
@@ -1191,7 +1192,8 @@ class DataCollectionModel(S3Model):
                 msg_record_created = T("Assessment added"),
                 msg_record_modified = T("Assessment updated"),
                 msg_record_deleted = T("Assessment deleted"),
-                msg_list_empty = T("No Assessments currently registered"))
+                msg_list_empty = T("No Assessments currently registered"),
+                )
         elif label == "Survey":
             label = T("Survey")
             crud_strings[tablename] = Storage(
@@ -1205,7 +1207,8 @@ class DataCollectionModel(S3Model):
                 msg_record_created = T("Survey added"),
                 msg_record_modified = T("Survey updated"),
                 msg_record_deleted = T("Survey deleted"),
-                msg_list_empty = T("No Surveys currently registered"))
+                msg_list_empty = T("No Surveys currently registered"),
+                )
         else:
             label = T("Response")
             crud_strings[tablename] = Storage(
@@ -1219,7 +1222,8 @@ class DataCollectionModel(S3Model):
                 msg_record_created = T("Data Collection added"),
                 msg_record_modified = T("Data Collection updated"),
                 msg_record_deleted = T("Data Collection deleted"),
-                msg_list_empty = T("No Data Collections currently registered"))
+                msg_list_empty = T("No Data Collections currently registered"),
+                )
 
         # @todo: representation including template name, location and date
         #        (not currently required since always hidden)
