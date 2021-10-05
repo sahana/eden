@@ -28,7 +28,7 @@ $(document).ready(function() {
 
             // Remove old Items
             ItemPackField.html('');
-            QuantityField.val('');
+            //QuantityField.val('');
             $('#TotalQuantity').remove();
 
             if (inv_item_id === '') {
@@ -266,6 +266,11 @@ $(document).ready(function() {
         };
 
         invItemField.change(InvItemIDChange);
+
+        if (invItemField.val()) {
+            // Update form
+            InvItemIDChange();
+        }
     }
 
 });

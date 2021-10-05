@@ -126,34 +126,41 @@ meta.foundation-data-attribute-namespace {
   font-size: 0.75rem;
 }
 
-/* Logged-in User Indicators */
+/* Amber indicator */
 /* line 86, ../scss/theme/_page.scss */
+.expiring {
+  color: #f08a24;
+  font-weight: bold;
+}
+
+/* Logged-in User Indicators */
+/* line 92, ../scss/theme/_page.scss */
 .username {
   color: #666666;
   padding: 0.5rem 0;
   padding-right: 0.5rem;
   font-size: 0.7rem;
 }
-/* line 91, ../scss/theme/_page.scss */
+/* line 97, ../scss/theme/_page.scss */
 .username i.icon, .username i.fa {
   padding-left: 0.2rem;
   padding-right: 0;
 }
 
-/* line 97, ../scss/theme/_page.scss */
+/* line 103, ../scss/theme/_page.scss */
 body.rtl .username {
   padding-left: 0.5rem;
   padding-right: 0;
   float: left;
 }
-/* line 100, ../scss/theme/_page.scss */
+/* line 106, ../scss/theme/_page.scss */
 body.rtl .username i.icon, body.rtl .username i.fa {
   padding-left: 0;
   padding-right: 0.2rem;
 }
 
 /* Page Sections */
-/* line 109, ../scss/theme/_page.scss */
+/* line 115, ../scss/theme/_page.scss */
 .item-container form,
 .form-container form,
 #datalist-filter-form,
@@ -164,42 +171,42 @@ body.rtl .username i.icon, body.rtl .username i.fa {
   border: 1px solid #E0E0E0;
 }
 
-/* line 118, ../scss/theme/_page.scss */
+/* line 124, ../scss/theme/_page.scss */
 .widget-container #list-btn-add {
   margin-bottom: 0;
   position: relative;
   top: 1.0rem;
 }
 
-/* line 123, ../scss/theme/_page.scss */
+/* line 129, ../scss/theme/_page.scss */
 #component {
   float: none;
 }
 
-/* line 126, ../scss/theme/_page.scss */
+/* line 132, ../scss/theme/_page.scss */
 .map_home {
   margin: 0;
   margin-top: 0.5rem;
 }
 
 /* Global Main Content Styles */
-/* line 134, ../scss/theme/_page.scss */
+/* line 140, ../scss/theme/_page.scss */
 #content a.help:link {
   color: #fff;
   text-decoration: none;
   margin-right: 10px;
 }
-/* line 139, ../scss/theme/_page.scss */
+/* line 145, ../scss/theme/_page.scss */
 #content a.help:hover {
   background-color: #336699;
   text-decoration: underline;
 }
-/* line 143, ../scss/theme/_page.scss */
+/* line 149, ../scss/theme/_page.scss */
 #content a.help:visited {
   font-weight: normal;
   color: #666;
 }
-/* line 148, ../scss/theme/_page.scss */
+/* line 154, ../scss/theme/_page.scss */
 #content h1,
 #content h2 {
   font-size: 1.3em;
@@ -207,20 +214,20 @@ body.rtl .username i.icon, body.rtl .username i.fa {
   background-color: #F7F8F9;
   padding: 0.35rem;
 }
-/* line 157, ../scss/theme/_page.scss */
+/* line 163, ../scss/theme/_page.scss */
 #content h2 {
   margin-top: 10px;
   font-size: 1.0rem;
   padding-left: 0.7rem;
 }
-/* line 164, ../scss/theme/_page.scss */
+/* line 170, ../scss/theme/_page.scss */
 #content h3 {
   font-size: 1.1em;
   padding-bottom: 5px;
 }
 
 /* Footer */
-/* line 171, ../scss/theme/_page.scss */
+/* line 177, ../scss/theme/_page.scss */
 #footer {
   background: transparent;
   padding-top: 20px;
@@ -229,12 +236,12 @@ body.rtl .username i.icon, body.rtl .username i.fa {
   margin-bottom: 1rem;
 }
 
-/* line 181, ../scss/theme/_page.scss */
+/* line 187, ../scss/theme/_page.scss */
 #poweredby {
   margin-right: 0.5rem;
   text-align: right;
 }
-/* line 184, ../scss/theme/_page.scss */
+/* line 190, ../scss/theme/_page.scss */
 #poweredby a {
   color: #999;
   text-decoration: none;
@@ -242,24 +249,24 @@ body.rtl .username i.icon, body.rtl .username i.fa {
   margin-left: 0.2rem;
 }
 
-/* line 192, ../scss/theme/_page.scss */
+/* line 198, ../scss/theme/_page.scss */
 body.rtl #poweredby {
   text-align: left;
 }
 
-/* line 198, ../scss/theme/_page.scss */
+/* line 204, ../scss/theme/_page.scss */
 .sub-nav.about-menu {
   color: #999;
   text-align: left;
   margin-left: 0;
   margin-right: 0;
 }
-/* line 200, ../scss/theme/_page.scss */
+/* line 206, ../scss/theme/_page.scss */
 .sub-nav.about-menu a {
   color: #999;
 }
 
-/* line 208, ../scss/theme/_page.scss */
+/* line 214, ../scss/theme/_page.scss */
 body.rtl .about-menu {
   text-align: right;
 }

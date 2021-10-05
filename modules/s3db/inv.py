@@ -2604,6 +2604,9 @@ class InventoryPalletShipmentModel(S3Model):
                            writable = False,
                            ),
                      s3_comments(),
+                     Field.Method("items",
+                                  self.send_pallet_items,
+                                  ),
                      Field.Method("weight_max",
                                   self.send_pallet_weight,
                                   ),
@@ -2624,8 +2627,11 @@ class InventoryPalletShipmentModel(S3Model):
 
         list_fields = ["number",
                        "pallet_id",
-                       (T("Items"), "send_pallet_item.track_item_id$item_id$code"),
+                       #(T("Items"), "send_pallet_item.track_item_id$item_id$code"),
+                       (T("Items"), "items"),
+                       #"weight",
                        (T("Weight (kg)"), "weight_max"),
+                       #"volume",
                        (T("Volume (m3)"), "volume_max"),
                        "comments",
                        ]
@@ -2636,6 +2642,8 @@ class InventoryPalletShipmentModel(S3Model):
                                   "volume",
                                   "pallet_id$load_capacity",
                                   "pallet_id$max_volume",
+                                  # Crashes:
+                                  #"send_pallet_item.track_item_id$item_id$name",
                                   ],
                   list_fields = list_fields,
                   onvalidation = self.send_pallet_onvalidation,
@@ -2706,13 +2714,15 @@ class InventoryPalletShipmentModel(S3Model):
             # Must be running from a script
             return
 
-        number = form.vars.get("number")
-
         db = current.db
         table = db.inv_send_pallet
-        rows = db(table.send_id == send_id).select(table.number)
+        query = (table.send_id == send_id) 
+        send_pallet_id = form.record_id
+        if send_pallet_id:
+            query &= (table.id != send_pallet_id)
+        rows = db(query).select(table.number)
         numbers = [row.number for row in rows]
-        if number in numbers:
+        if form.vars.get("number") in numbers:
             form.errors.number = current.T("There is already a Pallet with this Number in this Shipment.")
 
     # -------------------------------------------------------------------------
@@ -2732,6 +2742,35 @@ class InventoryPalletShipmentModel(S3Model):
         """
 
         inv_send_pallet_update(row.send_pallet_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def send_pallet_items(row):
+        """
+            Display the Items on the Shipment's Pallet
+        """
+
+        try:
+            inv_send_pallet = getattr(row, "inv_send_pallet")
+        except AttributeError:
+            inv_send_pallet = row
+
+        s3db = current.s3db
+        table = s3db.inv_send_pallet_item
+        ttable = s3db.inv_track_item
+        itable = s3db.supply_item
+        query = (table.send_pallet_id == inv_send_pallet.id) & \
+                (table.track_item_id == ttable.id) & \
+                (ttable.item_id == itable.id)
+        rows = current.db(query).select(itable.name)
+
+        len_items = len(rows)
+        if len_items == 1:
+            return rows.first().name
+        else:
+            len_item = 48 / len_items
+            items = [row.name[:] for row in rows]
+            return ", ".join(items)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2772,7 +2811,7 @@ class InventoryPalletShipmentModel(S3Model):
             # Need to load the inv_pallet
             # Avoid this by adding to extra_fields
             s3db = current.s3db
-            ttable = s3db.inv_send_pallet
+            table = s3db.inv_send_pallet
             ptable = s3db.inv_pallet
             query = (table.id == inv_send_pallet.id) & \
                     (table.pallet_id == ptable.id)
@@ -2789,6 +2828,12 @@ class InventoryPalletShipmentModel(S3Model):
         if volume > max_volume:
             return SPAN(SPAN(volume,
                              _class = "expired",
+                             ),
+                        " / %s" % max_volume,
+                        )
+        elif volume > (0.8 * max_volume):
+            return SPAN(SPAN(volume,
+                             _class = "expiring",
                              ),
                         " / %s" % max_volume,
                         )
@@ -2853,6 +2898,12 @@ class InventoryPalletShipmentModel(S3Model):
         if weight > load_capacity:
             return SPAN(SPAN(weight,
                              _class = "expired",
+                             ),
+                        " / %s" % load_capacity,
+                        )
+        elif weight > (0.8 * load_capacity):
+            return SPAN(SPAN(weight,
+                             _class = "expiring",
                              ),
                         " / %s" % load_capacity,
                         )

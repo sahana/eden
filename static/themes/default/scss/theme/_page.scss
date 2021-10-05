@@ -82,6 +82,12 @@ $footer_top_margin: 20px !default;
     font-size: 0.75rem;
 }
 
+/* Amber indicator */
+.expiring {
+    color: $warning-color;
+    font-weight: bold;
+}
+
 /* Logged-in User Indicators */
 .username {
     color: #666666;

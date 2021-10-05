@@ -34,6 +34,12 @@
     font-weight: bold;
 }
 
+/* Amber indicator */
+.expiring {
+    color: $warning-color;
+    font-weight: bold;
+}
+
 /* Sections */
 .form-container form,
 #datalist-filter-form,
