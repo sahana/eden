@@ -42,7 +42,7 @@ from gluon.languages import lazyT
 from s3dal import SQLCustomType
 from .s3datetime import S3DateTime
 from .s3navigation import S3ScriptItem
-from .s3utils import s3_unicode, s3_str, S3MarkupStripper
+from .s3utils import s3_str, S3MarkupStripper
 from .s3validators import IS_ISO639_2_LANGUAGE_CODE, IS_ONE_OF, IS_UTC_DATE, IS_UTC_DATETIME
 from .s3widgets import S3CalendarWidget, S3DateWidget
 
@@ -590,7 +590,11 @@ class S3Represent(object):
                     self.table = table
                 if self.linkto is None and self.show_link:
                     c, f = tablename.split("_", 1)
-                    self.linkto = URL(c=c, f=f, args=["[id]"], extension="")
+                    self.linkto = URL(c = c,
+                                      f = f,
+                                      args = ["[id]"],
+                                      extension = "",
+                                      )
 
         # What type of renderer do we use?
         labels = self.labels
@@ -754,8 +758,9 @@ class S3Represent(object):
             elif parent in rows:
                 prefix = self._represent_path(parent,
                                               rows[parent],
-                                              rows=rows,
-                                              hierarchy=hierarchy)
+                                              rows = rows,
+                                              hierarchy = hierarchy,
+                                              )
 
         result = self.represent_row(row, prefix=prefix)
         theset[value] = result
@@ -846,7 +851,7 @@ class S3RepresentLazy(object):
         """
 
         # Render value
-        text = s3_unicode(self.represent())
+        text = s3_str(self.represent())
 
         # Strip markup + XML-escape
         if text and "<" in text:

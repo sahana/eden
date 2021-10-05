@@ -2569,8 +2569,8 @@ class InventoryPalletShipmentModel(S3Model):
         configure = self.configure
         define_table = self.define_table
 
-        #is_float_represent = IS_FLOAT_AMOUNT.represent
-        #float_represent = lambda v: is_float_represent(v, precision=3)
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=3)
 
         # -----------------------------------------------------------------
         # Shipment Pallets
@@ -2619,8 +2619,10 @@ class InventoryPalletShipmentModel(S3Model):
                                     "number",
                                     "pallet_id",
                                     S3SQLInlineComponent("send_pallet_item",
-                                                         label = T("Items"),
-                                                         fields = [("", "track_item_id")],
+                                                         #label = T("Items"),
+                                                         fields = [(T("Item"), "track_item_id"),
+                                                                   (T("Quantity"), "quantity"),
+                                                                   ],
                                                          ),
                                     "comments",
                                     )
@@ -2689,6 +2691,11 @@ class InventoryPalletShipmentModel(S3Model):
                            requires = IS_ONE_OF(db, "inv_track_item.id",
                                                 track_item_represent,
                                                 ),
+                           ),
+                     Field("quantity", "double",
+                           default = 0.0,
+                           label = T("Quantity"),
+                           represent = float_represent,
                            ),
                      *s3_meta_fields())
 
@@ -9868,7 +9875,12 @@ def inv_send_controller():
                 spitable.track_item_id.requires.set_filter(not_filterby = "id",
                                                            not_filter_opts = track_item_ids,
                                                            )
-
+                # Default Quantity
+                if s3.debug:
+                    s3.scripts.append("/%s/static/scripts/S3/s3.inv_pallet_item.js" % r.application)
+                else:
+                    s3.scripts.append("/%s/static/scripts/S3/s3.inv_pallet_item.min.js" % r.application)
+                    
             elif cname == "track_item":
 
                 # Security-wise, we are already covered by configure()

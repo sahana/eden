@@ -151,6 +151,18 @@ def incident():
                     except ValueError:
                         # Already removed
                         pass
+                    # @ToDo: PDF export of Single SitReps
+                    # - UI Button
+                    # - Custom layout
+                    # Remove PDF export of List of SitReps
+                    # - currently crashing when there is significant richtext content & an unlikely usecase
+                    export_formats = settings.ui.export_formats
+                    if not export_formats:
+                        export_formats = settings.get_ui_export_formats()
+                    if "pdf" in export_formats:
+                        export_formats = list(export_formats)
+                        export_formats.remove("pdf")
+                        settings.ui.export_formats = export_formats
 
                 elif cname in ("asset", "human_resource", "event_organisation", "organisation", "site"):
                     atable = s3db.table("budget_allocation")

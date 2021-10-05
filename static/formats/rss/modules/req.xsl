@@ -5,17 +5,15 @@
     <!-- ****************************************************************** -->
     <!-- Req -->
     
-    <!-- req_req -->
-    <xsl:template match="resource[@name='req_req']" mode="contents">
+    <!-- req_need -->
+    <xsl:template match="resource[@name='req_need']" mode="contents">
         <title>
-            <xsl:value-of select="./data[@field='req_ref']/text()"/>
+            <xsl:value-of select="./data[@field='name']/text()"/>
         </title>
         <description>
-            <xsl:value-of select="./reference[@field='site_id']/text()"/>
+            <xsl:value-of select="./data[@field='description']/text()"/>
             <xsl:value-of select="$newline"/>
-            <xsl:value-of select="./data[@field='priority']/text()"/>
-            <xsl:value-of select="$newline"/>
-            <xsl:value-of select="./data[@field='purpose']/text()"/>
+            <xsl:value-of select="./data[@field='status']/text()"/>
             <xsl:value-of select="$newline"/>
             <xsl:value-of select="./data[@field='comments']/text()"/>
         </description>

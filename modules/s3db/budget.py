@@ -1681,7 +1681,9 @@ class budget_CostItemRepresent(S3Represent):
         self.represent = {
             "asset_id": s3db.asset_AssetRepresent(show_link = False),
             "site_id": s3db.org_SiteRepresent(show_link = False),
-            "human_resource_id": s3db.hrm_HumanResourceRepresent(show_link = False),
+            "job_title_id": S3Represent(lookup = "hrm_job_title",
+                                        translate = True,
+                                        ),
         }
 
     # -------------------------------------------------------------------------
