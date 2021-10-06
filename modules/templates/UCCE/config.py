@@ -58,8 +58,6 @@ def config(settings):
     # 5: Apply Controller, Function & Table ACLs
     # 6: Apply Controller, Function, Table ACLs and Entity Realm
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
-    # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
-
     settings.security.policy = 6 # Controller, Function, Table ACLs and Entity Realm
 
     # L10n settings
@@ -283,7 +281,7 @@ def config(settings):
                 query = (ttable.template_id == row.id) & \
                         (ltable.target_id == ttable.id) & \
                         (ltable.project_id == ptable.id)
-                
+
             project = current.db(query).select(ptable.realm_entity,
                                                limitby = (0, 1)
                                                ).first()
@@ -1201,7 +1199,7 @@ def config(settings):
                                                                     ).first()
                 if l10n:
                     s3db.dc_target_l10n.language.default = l10n.language
-            
+
             elif r.method == "datalist":
                 # Over-ride list_fields set in default prep
                 s3db.configure("project_project",

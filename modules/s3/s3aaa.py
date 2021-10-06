@@ -3927,12 +3927,9 @@ Please go to %(url)s to approve this user."""
             if not permission.entity_realm:
                 # Group memberships have no realms (policy 5 and below)
                 self.user["realms"] = Storage([(row.group_id, None) for row in rows])
-                self.user["delegations"] = Storage()
-
             else:
                 # Group memberships are limited to realms (policy 6 and above)
                 realms = {}
-                delegations = {}
 
                 # These roles can't be realm-restricted:
                 unrestrictable = (system_roles.ADMIN,
@@ -3970,57 +3967,16 @@ Please go to %(url)s to approve this user."""
                     # Realms include subsidiaries of the realm entities
 
                     # Get all entities in realms
-                    all_entities = []
-                    append = all_entities.append
+                    entities = []
+                    append = entities.append
                     for realm in realms.values():
                         if realm is not None:
                             for entity in realm:
-                                if entity not in all_entities:
+                                if entity not in entities:
                                     append(entity)
 
-                    # Lookup all delegations to any OU ancestor of the user
-                    if permission.delegations and self.user.pe_id:
-
-                        ancestors = s3db.pr_get_ancestors(self.user.pe_id)
-
-                        dtable = s3db.pr_delegation
-                        rtable = s3db.pr_role
-                        atable = s3db.pr_affiliation
-
-                        dn = dtable._tablename
-                        rn = rtable._tablename
-                        an = atable._tablename
-
-                        query = (dtable.deleted == False) & \
-                                (atable.role_id == dtable.role_id) & \
-                                (atable.pe_id.belongs(ancestors)) & \
-                                (rtable.id == dtable.role_id)
-                        rows = db(query).select(rtable.pe_id,
-                                                dtable.group_id,
-                                                atable.pe_id,
-                                                cacheable=True)
-
-                        extensions = []
-                        partners = []
-                        for row in rows:
-                            extensions.append(row[rn].pe_id)
-                            partners.append(row[an].pe_id)
-                    else:
-                        rows = []
-                        extensions = []
-                        partners = []
-
                     # Lookup the subsidiaries of all realms and extensions
-                    entities = all_entities + extensions + partners
                     descendants = s3db.pr_descendants(entities)
-
-                    pmap = {}
-                    for p in partners:
-                        if p in all_entities:
-                            pmap[p] = [p]
-                        elif p in descendants:
-                            d = descendants[p]
-                            pmap[p] = [e for e in all_entities if e in d] or [p]
 
                     # Add the subsidiaries to the realms
                     for group_id in realms:
@@ -4034,39 +3990,7 @@ Please go to %(url)s to approve this user."""
                                     if subsidiary not in realm:
                                         append(subsidiary)
 
-                    # Process the delegations
-                    if permission.delegations:
-                        for row in rows:
-
-                            # owner == delegates group_id to ==> partner
-                            owner = row[rn].pe_id
-                            partner = row[an].pe_id
-                            group_id = row[dn].group_id
-
-                            if group_id in delegations and \
-                               owner in delegations[group_id]:
-                                # Duplicate
-                                continue
-                            if partner not in pmap:
-                                continue
-
-                            # Find the realm
-                            if group_id not in delegations:
-                                delegations[group_id] = Storage()
-                            groups = delegations[group_id]
-
-                            r = [owner]
-                            if owner in descendants:
-                                r.extend(descendants[owner])
-
-                            for p in pmap[partner]:
-                                if p not in groups:
-                                    groups[p] = []
-                                realm = groups[p]
-                                realm.extend(r)
-
                 self.user["realms"] = realms
-                self.user["delegations"] = delegations
 
             if ANONYMOUS:
                 # Anonymous role has no realm
@@ -4523,289 +4447,6 @@ Please go to %(url)s to approve this user."""
             query &= (mtable.pe_id == for_pe)
         members = current.db(query).select(mtable.user_id)
         return [m.user_id for m in members]
-
-    # -------------------------------------------------------------------------
-    def s3_delegate_role(self,
-                         group_id,
-                         entity,
-                         receiver=None,
-                         role=None,
-                         role_type=None):
-        """
-            Delegate a role (auth_group) from one entity to another
-
-            @param group_id: the role ID or UID (or a list of either)
-            @param entity: the delegating entity
-            @param receiver: the pe_id of the receiving entity (or a list of pe_ids)
-            @param role: the affiliation role
-            @param role_type: the role type for the affiliation role (default=9)
-
-            @note: if role is None, a new role of role_type 0 will be created
-                   for each entity in receiver and used for the delegation
-                   (1:1 delegation)
-            @note: if both receiver and role are specified, the delegation will
-                   add all receivers to this role and create a 1:N delegation to
-                   this role. If the role does not exist, it will be created (using
-                   the given role type)
-        """
-
-        if not self.permission.delegations:
-            return False
-
-        db = current.db
-        s3db = current.s3db
-        dtable = s3db.table("pr_delegation")
-        rtable = s3db.table("pr_role")
-        atable = s3db.table("pr_affiliation")
-        if dtable is None or \
-           rtable is None or \
-           atable is None:
-            return False
-        if not group_id or not entity or not receiver and not role:
-            return False
-
-        # Find the group IDs
-        gtable = self.settings.table_group
-        query = None
-        uuids = None
-        if isinstance(group_id, (list, tuple)):
-            if isinstance(group_id[0], str):
-                uuids = group_id
-                query = (gtable.uuid.belongs(group_id))
-            else:
-                group_ids = group_id
-        elif isinstance(group_id, str) and not group_id.isdigit():
-            uuids = [group_id]
-            query = (gtable.uuid == group_id)
-        else:
-            group_ids = [group_id]
-        if query is not None:
-            query = (gtable.deleted == False) & query
-            groups = db(query).select(gtable.id, gtable.uuid)
-            group_ids = [g.id for g in groups]
-            missing = [u for u in uuids if u not in [g.uuid for g in groups]]
-            for m in missing:
-                group_id = self.s3_create_role(m, uid=m)
-                if group_id:
-                    group_ids.append(group_id)
-        if not group_ids:
-            return False
-
-        if receiver is not None:
-            if not isinstance(receiver, (list, tuple)):
-                receiver = [receiver]
-            query = (dtable.deleted == False) & \
-                    (dtable.group_id.belongs(group_ids)) & \
-                    (dtable.role_id == rtable.id) & \
-                    (rtable.deleted == False) & \
-                    (atable.role_id == rtable.id) & \
-                    (atable.deleted == False) & \
-                    (atable.pe_id.belongs(receiver))
-            rows = db(query).select(atable.pe_id)
-            assigned = [row.pe_id for row in rows]
-            receivers = [r for r in receiver if r not in assigned]
-        else:
-            receivers = None
-
-        if role_type is None:
-            role_type = 9 # Other
-
-        roles = []
-        if role is None:
-            if receivers is None:
-                return False
-            for pe_id in receivers:
-                role_name = "__DELEGATION__%s__%s__" % (entity, pe_id)
-                query = (rtable.role == role_name)
-                role = db(query).select(limitby=(0, 1)).first()
-                if role is not None:
-                    if role.deleted:
-                        role.update_record(deleted=False,
-                                           role_type=0)
-                    role_id = role.id
-                else:
-                    role_id = s3db.pr_add_affiliation(entity, pe_id,
-                                                      role=role_name,
-                                                      role_type=0)
-                if role_id:
-                    roles.append(role_id)
-        else:
-            query = (rtable.deleted == False) & \
-                    (rtable.pe_id == entity) & \
-                    (rtable.role == role)
-            row = db(query).select(rtable.id, limitby=(0, 1)).first()
-            if row is None:
-                role_id = rtable.insert(pe_id = entity,
-                                        role = role,
-                                        role_type = role_type)
-            else:
-                role_id = row.id
-            if role_id:
-                if receivers is not None:
-                    pr_rebuild_path = s3db.pr_rebuild_path
-                    for pe_id in receivers:
-                        atable.insert(role_id = role_id,
-                                      pe_id = pe_id)
-                        pr_rebuild_path(pe_id, clear=True)
-                roles.append(role_id)
-
-        for rid in roles:
-            for gid in group_ids:
-                dtable.insert(role_id=rid, group_id=gid)
-
-        # Update roles for current user if required
-        self.s3_set_roles()
-
-        return True
-
-    # -------------------------------------------------------------------------
-    def s3_remove_delegation(self,
-                             group_id,
-                             entity,
-                             receiver=None,
-                             role=None):
-        """
-            Remove a delegation.
-
-            @param group_id: the auth_group ID or UID (or a list of either)
-            @param entity: the delegating entity
-            @param receiver: the receiving entity
-            @param role: the affiliation role
-
-            @note: if receiver is specified, only 1:1 delegations (to role_type 0)
-                   will be removed, but not 1:N delegations => to remove for 1:N
-                   you must specify the role instead of the receiver
-            @note: if both receiver and role are None, all delegations with this
-                   group_id will be removed for the entity
-        """
-
-        if not self.permission.delegations:
-            return False
-
-        db = current.db
-        s3db = current.s3db
-        dtable = s3db.table("pr_delegation")
-        rtable = s3db.table("pr_role")
-        atable = s3db.table("pr_affiliation")
-        if dtable is None or \
-           rtable is None or \
-           atable is None:
-            return False
-        if not group_id or not entity or not receiver and not role:
-            return False
-
-        # Find the group IDs
-        gtable = self.settings.table_group
-        query = None
-        #uuids = None
-        if isinstance(group_id, (list, tuple)):
-            if isinstance(group_id[0], str):
-                #uuids = group_id
-                query = (gtable.uuid.belongs(group_id))
-            else:
-                group_ids = group_id
-        elif isinstance(group_id, str) and not group_id.isdigit():
-            #uuids = [group_id]
-            query = (gtable.uuid == group_id)
-        else:
-            group_ids = [group_id]
-        if query is not None:
-            query = (gtable.deleted == False) & query
-            groups = db(query).select(gtable.id, gtable.uuid)
-            group_ids = [g.id for g in groups]
-        if not group_ids:
-            return False
-
-        # Get all delegations
-        query = (dtable.deleted == False) & \
-                (dtable.group_id.belongs(group_ids)) & \
-                (dtable.role_id == rtable.id) & \
-                (rtable.pe_id == entity) & \
-                (atable.role_id == rtable.id)
-        if receiver:
-            if not isinstance(receiver, (list, tuple)):
-                receiver = [receiver]
-            query &= (atable.pe_id.belongs(receiver))
-        elif role:
-            query &= (rtable.role == role)
-        rows = db(query).select(dtable.id,
-                                dtable.group_id,
-                                rtable.id,
-                                rtable.role_type)
-
-        # Remove properly
-        rmv = Storage()
-        for row in rows:
-            if not receiver or row[rtable.role_type] == 0:
-                deleted_fk = {"role_id": row[rtable.id],
-                              "group_id": row[dtable.group_id]}
-                rmv[row[dtable.id]] = json.dumps(deleted_fk)
-        for record_id in rmv:
-            query = (dtable.id == record_id)
-            data = {"role_id": None,
-                    "group_id": None,
-                    "deleted_fk": rmv[record_id]}
-            db(query).update(**data)
-
-        # Maybe update the current user's delegations?
-        if len(rmv):
-            self.s3_set_roles()
-        return True
-
-    # -------------------------------------------------------------------------
-    def s3_get_delegations(self, entity, role_type=0, by_role=False):
-        """
-            Lookup delegations for an entity, ordered either by
-            receiver (by_role=False) or by affiliation role (by_role=True)
-
-            @param entity: the delegating entity (pe_id)
-            @param role_type: limit the lookup to this affiliation role type,
-                              (can use 0 to lookup 1:1 delegations)
-            @param by_role: group by affiliation roles
-
-            @return: a Storage {<receiver>: [group_ids]}, or
-                      a Storage {<rolename>: {entities:[pe_ids], groups:[group_ids]}}
-        """
-
-        if not entity or not self.permission.delegations:
-            return None
-        s3db = current.s3db
-        dtable = s3db.pr_delegation
-        rtable = s3db.pr_role
-        atable = s3db.pr_affiliation
-        if None in (dtable, rtable, atable):
-            return None
-
-        query = (rtable.deleted == False) & \
-                (dtable.deleted == False) & \
-                (atable.deleted == False) & \
-                (rtable.pe_id == entity) & \
-                (dtable.role_id == rtable.id) & \
-                (atable.role_id == rtable.id)
-        if role_type is not None:
-            query &= (rtable.role_type == role_type)
-        rows = current.db(query).select(atable.pe_id,
-                                        rtable.role,
-                                        dtable.group_id)
-        delegations = Storage()
-        for row in rows:
-            receiver = row[atable.pe_id]
-            role = row[rtable.role]
-            group_id = row[dtable.group_id]
-            if by_role:
-                if role not in delegations:
-                    delegations[role] = Storage(entities=[], groups=[])
-                delegation = delegations[role]
-                if receiver not in delegation.entities:
-                    delegation.entities.append(receiver)
-                if group_id not in delegation.groups:
-                    delegation.groups.append(group_id)
-            else:
-                if receiver not in delegations:
-                    delegations[receiver] = [group_id]
-                else:
-                    delegations[receiver].append(group_id)
-        return delegations
 
     # -------------------------------------------------------------------------
     # ACL management
@@ -5957,17 +5598,15 @@ class S3Permission(object):
         # Policy: which level of granularity do we want?
         self.policy = settings.get_security_policy()
         # ACLs to control access per controller:
-        self.use_cacls = self.policy in (3, 4, 5, 6, 7, 8)
+        self.use_cacls = self.policy in (3, 4, 5, 6, 7)
         # ACLs to control access per function within controllers:
-        self.use_facls = self.policy in (4, 5, 6, 7, 8)
+        self.use_facls = self.policy in (4, 5, 6, 7)
         # ACLs to control access per table:
-        self.use_tacls = self.policy in (5, 6, 7, 8)
+        self.use_tacls = self.policy in (5, 6, 7)
         # Authorization takes realm entity into account:
-        self.entity_realm = self.policy in (6, 7, 8)
+        self.entity_realm = self.policy in (6, 7)
         # Permissions shared along the hierarchy of entities:
-        self.entity_hierarchy = self.policy in (7, 8)
-        # Permission sets can be delegated:
-        self.delegations = self.policy == 8
+        self.entity_hierarchy = self.policy == 7
 
         # Permissions table
         self.tablename = tablename or self.TABLENAME
@@ -6552,16 +6191,13 @@ class S3Permission(object):
             if sr.ADMIN in realms:
                 # ADMIN can see all Realms
                 return None
-            delegations = user.delegations
         else:
             realms = Storage({sr.ANONYMOUS:None})
-            delegations = Storage()
 
         racl = self.required_acl([method])
         request = current.request
         acls = self.applicable_acls(racl,
                                     realms = realms,
-                                    delegations = delegations,
                                     c = c if c else request.controller,
                                     f = f if f else request.function,
                                     t = tablename,
@@ -6747,10 +6383,8 @@ class S3Permission(object):
         # Get realms and delegations
         if not logged_in:
             realms = Storage({sr.ANONYMOUS:None})
-            delegations = Storage()
         else:
             realms = auth.user.realms
-            delegations = auth.user.delegations
 
         # Administrators have all permissions
         if sr.ADMIN in realms:
@@ -6807,7 +6441,6 @@ class S3Permission(object):
         # Get the applicable ACLs
         acls = self.applicable_acls(racl,
                                     realms = realms,
-                                    delegations = delegations,
                                     c = c,
                                     f = f,
                                     t = t,
@@ -6959,10 +6592,8 @@ class S3Permission(object):
         user = auth.user
         if not logged_in:
             realms = Storage({sr.ANONYMOUS:None})
-            delegations = Storage()
         else:
             realms = user.realms
-            delegations = user.delegations
 
         # Don't filter out unapproved records owned by the user
         if requires_approval and not unapproved and \
@@ -7028,7 +6659,6 @@ class S3Permission(object):
         # Get the applicable ACLs
         acls = self.applicable_acls(racl,
                                     realms = realms,
-                                    delegations = delegations,
                                     c = c,
                                     f = f,
                                     t = table
@@ -7205,7 +6835,6 @@ class S3Permission(object):
     # -------------------------------------------------------------------------
     def applicable_acls(self, racl,
                         realms = None,
-                        delegations = None,
                         c = None,
                         f = None,
                         t = None,
@@ -7237,9 +6866,6 @@ class S3Permission(object):
         # Get all roles
         if realms:
             roles = set(realms.keys())
-            if delegations:
-                for role in delegations:
-                    roles.add(role)
         else:
             # No roles available (deny all)
             return acls
@@ -7314,16 +6940,11 @@ class S3Permission(object):
         most_restrictive = lambda x, y: (x[0] & y[0], x[1] & y[1])
 
         # Realms
-        delegation_rows = []
-        append_delegation = delegation_rows.append
-
         use_realms = self.entity_realm
         for row in rows:
 
             # Get the assigning entities
             group_id = row.group_id
-            if group_id in delegations:
-                append_delegation(row)
             if group_id not in realms:
                 continue
             rtype = rule_type(row)
@@ -7353,70 +6974,6 @@ class S3Permission(object):
                         eacls[rtype] = acl
                 else:
                     acls[e] = {rtype: acl}
-
-        if ANY in acls:
-            default = dict(acls[ANY])
-        else:
-            default = None
-
-        # Delegations
-        if self.delegations:
-            for row in delegation_rows:
-
-                # Get the rule type
-                rtype = rule_type(row)
-                if rtype is None:
-                    continue
-
-                # Get the delegation realms
-                group_id = row.group_id
-                if group_id not in delegations:
-                    continue
-                else:
-                    drealms = delegations[group_id]
-
-                acl = (row["uacl"], row["oacl"])
-
-                # Resolve the delegation realms
-                # @todo: optimize
-                for receiver in drealms:
-                    drealm = drealms[receiver]
-
-                    # Skip irrelevant delegations
-                    if entity:
-                        if entity not in drealm:
-                            continue
-                        else:
-                            drealm = [entity]
-
-                    # What ACLs do we have for the receiver?
-                    if receiver in acls:
-                        dacls = dict(acls[receiver])
-                    elif default is not None:
-                        dacls = default
-                    else:
-                        continue
-
-                    # Filter the delegated ACLs
-                    if rtype in dacls:
-                        dacls[rtype] = most_restrictive(dacls[rtype], acl)
-                    else:
-                        dacls[rtype] = acl
-
-                    # Add/extend the new realms (e=entity, t=rule type)
-                    # @todo: optimize
-                    for e in drealm:
-                        if e in acls:
-                            for acltype in ("c", "f", "t"):
-                                if acltype in acls[e]:
-                                    if acltype in dacls:
-                                        dacls[acltype] = most_restrictive(
-                                                            dacls[acltype],
-                                                            acls[e][acltype],
-                                                            )
-                                    else:
-                                        dacls[acltype] = acls[e][acltype]
-                        acls[e] = dacls
 
         acl = acls.get(ANY, {})
 
@@ -7637,10 +7194,8 @@ class S3Permission(object):
         user = auth.user
         if not logged_in:
             realms = Storage({sr.ANONYMOUS: None})
-            delegations = Storage()
         else:
             realms = user.realms
-            delegations = user.delegations
 
         # Admin always owns all records
         if sr.ADMIN in realms:
@@ -7653,7 +7208,6 @@ class S3Permission(object):
         # Get the applicable ACLs
         acls = self.applicable_acls(racl,
                                     realms = realms,
-                                    delegations = delegations,
                                     c = c,
                                     f = f,
                                     t = table)
