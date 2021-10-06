@@ -5696,17 +5696,19 @@ class InventoryTrackingModel(S3Model):
                                                         orderby = "inv_inv_item.id",
                                                         sort = True,
                                                         )),
-                                 script = '''
-$.filterOptionsS3({
- 'trigger':'send_inv_item_id',
- 'target':'item_pack_id',
- 'lookupResource':'item_pack',
- 'lookupPrefix':'supply',
- 'lookupURL':S3.Ap.concat('/inv/inv_item_packs.json/'),
- 'msgNoRecords':i18n.no_packs,
- 'fncPrep':S3.supply.fncPrepItem,
- 'fncRepresent':S3.supply.fncRepresentItem
-})'''),
+# We use s3.inv_send_item.js instead
+#                                 script = '''
+#$.filterOptionsS3({
+# 'trigger':'send_inv_item_id',
+# 'target':'item_pack_id',
+# 'lookupResource':'item_pack',
+# 'lookupPrefix':'supply',
+# 'lookupURL':S3.Ap.concat('/inv/inv_item_packs.json/'),
+# 'msgNoRecords':i18n.no_packs,
+# 'fncPrep':S3.supply.fncPrepItem,
+# 'fncRepresent':S3.supply.fncRepresentItem
+#})''',
+                                 ),
                      item_id(ondelete = "RESTRICT"),
                      item_pack_id(ondelete = "SET NULL"),
                      # Now done as a VirtualField instead (looks better & updates closer to real-time, so less of a race condition)
@@ -6451,7 +6453,7 @@ $.filterOptionsS3({
                 old_quantity = 0
 
             if not valid_quantity:
-                # Get the inventory item & pack
+                # Get the inventory item quantity & pack
                 inv_item = db(query & (iitable.item_pack_id == iptable.id)).select(iitable.quantity,
                                                                                    iptable.quantity,
                                                                                    iptable.name,
@@ -6462,14 +6464,9 @@ $.filterOptionsS3({
                 inv_quantity = (inv_item["inv_inv_item.quantity"] * inv_pack_quantity) + old_quantity
 
                 if new_quantity > inv_quantity:
-                    if inv_pack_quantity > 1:
-                        inv_pack_quantity = " (%s)" % inv_pack_quantity
-                    else:
-                        inv_pack_quantity = ""
-                    form.errors.quantity = current.T("Only %(quantity)s %(pack)s%(pack_quantity)s in the Warehouse Stock.") % \
+                    form.errors.quantity = current.T("Only %(quantity)s %(pack)s in the Warehouse Stock.") % \
                                                 {"quantity": inv_quantity,
                                                  "pack": inv_item_pack.name,
-                                                 "pack_quantity": inv_pack_quantity,
                                                  }
             if not form.errors:
                 # Copy the data from the sent inv_item
@@ -11148,8 +11145,7 @@ def inv_send_controller():
                                 Field.Method("quantity_needed",
                                              inv_track_item_quantity_needed
                                              )
-                            list_fields.insert(2, (T("Quantity Needed"),
-                                                   "quantity_needed"))
+                            list_fields.insert(2, (T("Quantity Needed"), "quantity_needed"))
 
                 s3db.configure("inv_track_item",
                                # Lock the record so it can't be fiddled with
@@ -11159,27 +11155,32 @@ def inv_send_controller():
                                list_fields = list_fields,
                                )
 
-                if r.component_id:
-                    track_record = db(tracktable.id == r.component_id).select(tracktable.req_item_id,
-                                                                              #tracktable.send_inv_item_id,
-                                                                              #tracktable.item_pack_id,
-                                                                              tracktable.status,
-                                                                              #tracktable.quantity,
-                                                                              limitby = (0, 1),
-                                                                              ).first()
+                track_item_id = r.component_id
+                if track_item_id:
+                    track_record = db(tracktable.id == track_item_id).select(tracktable.item_id,
+                                                                             tracktable.send_inv_item_id, # Ensure we include the current inv_item
+                                                                             tracktable.status,
+                                                                             limitby = (0, 1),
+                                                                             ).first()
                     set_track_attr(track_record.status)
-                    # If the track record is linked to a request item then
-                    # the stock item has already been selected so make it read only
-                    if track_record.req_item_id:
-                        tracktable.send_inv_item_id.writable = False
-                        tracktable.item_pack_id.writable = False
+                    if r.http == "GET" and \
+                       track_record.status == TRACK_STATUS_PREPARING:
+                        # Provide initial options for Pack in Update forms
+                        # Don't include in the POSTs as we want to be able to select alternate Items, and hance packs
+                        f = tracktable.item_pack_id
+                        f.requires = IS_ONE_OF(db, "supply_item_pack.id",
+                                               f.represent,
+                                               sort = True,
+                                               filterby = "item_id",
+                                               filter_opts = (track_record.item_id,),
+                                               )
                 else:
                     set_track_attr(TRACK_STATUS_PREPARING)
 
                 if status == SHIP_STATUS_IN_PROCESS:
                     # We replace filterOptionsS3
                     f = tracktable.send_inv_item_id
-                    f.comment = None
+                    #f.comment = None
                     if s3.debug:
                         s3.scripts.append("/%s/static/scripts/S3/s3.inv_send_item.js" % r.application)
                     else:
@@ -11189,6 +11190,9 @@ def inv_send_controller():
                     ii_query = (iitable.quantity > 0) & \
                                ((iitable.expiry_date >= r.now) | ((iitable.expiry_date == None))) & \
                                (iitable.status == 0)
+                    if track_item_id:
+                        # Ensure we include the current inv_item
+                        ii_query |= (iitable.id == track_record.send_inv_item_id)
                     # Restrict to items from this facility only
                     query = ii_query & (iitable.site_id == site_id)
                     f.requires = f.requires.other
@@ -11294,13 +11298,14 @@ def inv_send_controller():
                             s3.js_global.append('''S3.supply.inv_items=%s''' % json.dumps(inv_data, separators=SEPARATORS))
 
                 if r.interactive:
-                    crud_strings = s3.crud_strings.inv_send
                     if status == SHIP_STATUS_IN_PROCESS:
+                        crud_strings = s3.crud_strings.inv_send
                         crud_strings.title_update = \
                         crud_strings.title_display = T("Process Shipment to Send")
-                    elif "site_id" in r.vars and status == SHIP_STATUS_SENT:
-                        crud_strings.title_update = \
-                        crud_strings.title_display = T("Review Incoming Shipment to Receive")
+                    # Done via inv/recv
+                    #elif "site_id" in r.vars and status == SHIP_STATUS_SENT:
+                    #    crud_strings.title_update = \
+                    #    crud_strings.title_display = T("Review Incoming Shipment to Receive")
         else:
             # No Component
             # Set the inv_send attributes
@@ -12628,32 +12633,33 @@ def inv_track_item_deleting(record_id):
         # Not 'Preparing': Do not allow
         return False
 
-    if record.req_item_id:
-        # This is linked to a Request:
-        # - remove these items from the quantity in transit
-        req_id = record.req_item_id
-        ritable = s3db.inv_req_item
-        req_item = db(ritable.id == req_id).select(ritable.id,
-                                                   ritable.quantity_transit,
-                                                   ritable.item_pack_id,
-                                                   limitby = (0, 1),
-                                                   ).first()
-        req_quantity = req_item.quantity_transit
-        siptable = db.supply_item_pack
-        req_pack_quantity = db(siptable.id == req_item.item_pack_id).select(siptable.quantity,
-                                                                            limitby = (0, 1),
-                                                                            ).first().quantity
-        track_pack_quantity = db(siptable.id == record.item_pack_id).select(siptable.quantity,
-                                                                            limitby = (0, 1),
-                                                                            ).first().quantity
-        from .supply import supply_item_add
-        quantity_transit = supply_item_add(req_quantity,
-                                           req_pack_quantity,
-                                           - record.quantity,
-                                           track_pack_quantity
-                                           )
-        req_item.update_record(quantity_transit = quantity_transit)
-        inv_req_update_status(req_id)
+    # Transit Quantity not updated until Shipment is Sent
+    #if record.req_item_id:
+    #    # This is linked to a Request:
+    #    # - remove these items from the quantity in transit
+    #    req_id = record.req_item_id
+    #    ritable = s3db.inv_req_item
+    #    req_item = db(ritable.id == req_id).select(ritable.id,
+    #                                               ritable.quantity_transit,
+    #                                               ritable.item_pack_id,
+    #                                               limitby = (0, 1),
+    #                                               ).first()
+    #    req_quantity = req_item.quantity_transit
+    #    siptable = db.supply_item_pack
+    #    req_pack_quantity = db(siptable.id == req_item.item_pack_id).select(siptable.quantity,
+    #                                                                        limitby = (0, 1),
+    #                                                                        ).first().quantity
+    #    track_pack_quantity = db(siptable.id == record.item_pack_id).select(siptable.quantity,
+    #                                                                        limitby = (0, 1),
+    #                                                                        ).first().quantity
+    #    from .supply import supply_item_add
+    #    quantity_transit = supply_item_add(req_quantity,
+    #                                       req_pack_quantity,
+    #                                       - record.quantity,
+    #                                       track_pack_quantity
+    #                                       )
+    #    req_item.update_record(quantity_transit = quantity_transit)
+    #    inv_req_update_status(req_id)
 
     if record.send_inv_item_id:
         # This is linked to a Warehouse Inventory item:
@@ -12751,17 +12757,6 @@ def inv_track_item_onaccept(form):
         db(rtable.id == recv_id).update(send_ref = send_ref)
 
     if record:
-        settings = current.deployment_settings
-
-        # Check if this item is linked to a Request
-        req_item_id = record.req_item_id
-        if req_item_id:
-            rrtable = s3db.inv_req
-            ritable = s3db.inv_req_item
-            req_id = db(ritable.id == req_item_id).select(ritable.req_id,
-                                                          limitby = (0, 1),
-                                                          ).first().req_id
-
         # If the status is 'unloading':
         # Move all the items into the site, update any request & make any adjustments
         # Finally change the status to 'arrived'
@@ -12775,7 +12770,7 @@ def inv_track_item_onaccept(form):
                                                        limitby = (0, 1),
                                                        ).first()
             recv_site_id = recv_rec.site_id
-            if settings.get_inv_bin_site_layout():
+            if current.deployment_settings.get_inv_bin_site_layout():
                 bin_query = (inv_item_table.layout_id == record.recv_bin_id)
             else:
                 bin_query = (inv_item_table.bin == record.recv_bin)
@@ -12829,10 +12824,14 @@ def inv_track_item_onaccept(form):
                 db(inv_item_table.id == inv_item_id).update(realm_entity = realm_entity)
 
             # If this item is linked to a Request, then update the quantity fulfil
+            req_item_id = record.req_item_id
             if req_item_id:
+                rrtable = s3db.inv_req
+                ritable = s3db.inv_req_item
                 req_item = db(ritable.id == req_item_id).select(ritable.id,
-                                                                ritable.quantity_fulfil,
                                                                 ritable.item_pack_id,
+                                                                ritable.quantity_fulfil,
+                                                                ritable.req_id,
                                                                 limitby = (0, 1),
                                                                 ).first()
                 req_quantity = req_item.quantity_fulfil
@@ -12848,7 +12847,7 @@ def inv_track_item_onaccept(form):
                                                   track_pack_quantity
                                                   )
                 req_item.update_record(quantity_fulfil = quantity_fulfil)
-                inv_req_update_status(req_id)
+                inv_req_update_status(req_item.req_id)
 
             data = {"recv_inv_item_id": inv_item_id,
                     "status": TRACK_STATUS_ARRIVED,
