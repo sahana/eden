@@ -86,6 +86,7 @@ __all__ = ("WarehouseModel",
            "inv_tracking_status",
            "inv_warehouse_free_capacity",
            "inv_InvItemRepresent",
+           #"inv_PackageRepresent",
            #"inv_RecvRepresent",
            #"inv_ReqCheckMethod",
            "inv_ReqItemRepresent",
@@ -2531,9 +2532,7 @@ class InventoryPackageModel(S3Model):
                        )
 
         # Reusable Field
-        represent = S3Represent(lookup = tablename,
-                                fields = ("type", "name"),
-                                )
+        represent = inv_PackageRepresent()
         package_id = S3ReusableField("package_id", "reference %s" % tablename,
                                      label = T("Package Type"),
                                      ondelete = "RESTRICT",
@@ -13475,6 +13474,39 @@ class inv_InvItemRepresent(S3Represent):
                 append(string)
                 append(" - ")
         return TAG[""](items[:-1])
+
+# =============================================================================
+class inv_PackageRepresent(S3Represent):
+    """
+        Represent a Package
+    """
+
+    def __init__(self,
+                 show_link = False,
+                 ):
+
+        fields = ["type",
+                  "name",
+                  ]
+
+        super(inv_PackageRepresent, self).__init__(lookup = "inv_package",
+                                                   fields = fields,
+                                                   show_link = show_link,
+                                                   )
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        v = "%s %s" % (current.db.inv_package.type.represent(row.type),
+                       row.name,
+                       )
+
+        return v
 
 # =============================================================================
 class inv_RecvRepresent(S3Represent):
