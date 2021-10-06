@@ -11,24 +11,32 @@ $(document).ready(function() {
 
     if (invItemField.length) {
 
-        var ReqItemRow = $('#inv_track_item_req_item_id__row');
+        var ItemPackField = $('#inv_track_item_item_pack_id'),
+            QuantityField = $('#inv_track_item_quantity'),
+            ReqItemRow = $('#inv_track_item_req_item_id__row'),
+            startingInvItemID = invItemField.val(),
+            startingQuantity,
+            startingPackID;
 
         if (ReqItemRow.length) {
             // Hide it by Default
             ReqItemRow.hide();
         }
 
-        var InvItemChange = function() {
+        var InvItemChange = function(event, update) {
             // Update the available packs for this item
             // Display the number of these items available in this site's inventory
 
             var inv_item_id = invItemField.val(),
-                ItemPackField = $('#inv_track_item_item_pack_id'),
-                QuantityField = $('#inv_track_item_quantity');
+                startingPackQuantity;
 
             // Remove old Items
             ItemPackField.html('');
-            //QuantityField.val('');
+            if (update) {
+                 // Don't clear for update forms
+            } else {
+                QuantityField.val('');
+            }
             $('#TotalQuantity').remove();
 
             if (inv_item_id === '') {
@@ -75,6 +83,9 @@ $(document).ready(function() {
                     // Update available Packs
                     for (i = 0; i < packsLength; i++) {
                         pack = packs[i];
+                        if (startingPackID && (startingInvItemID == inv_item_id) && (startingPackID == pack.id)) {
+                            startingPackQuantity = pack.quantity;
+                        }
                         if (first) {
                             PackQuantity = pack.quantity;
                             PackName = pack.name;
@@ -95,6 +106,9 @@ $(document).ready(function() {
 
                     // Calculate Available Stock Quantity for this Pack
                     var Quantity = InvQuantity / PackQuantity;
+                    if (startingQuantity && (startingInvItemID == inv_item_id)) {
+                        Quantity += startingQuantity;
+                    }
 
                     // Display Available Stock Quantity
                     var TotalQuantity = '<span id="TotalQuantity"> / ' + Quantity.toFixed(2) + ' ' + PackName + ' (' + i18n.in_inv + ')</span>';
@@ -111,6 +125,13 @@ $(document).ready(function() {
                                     PackName = pack.name;
                                     // Calculate Available Stock Quantity for this Pack
                                     Quantity = InvQuantity / PackQuantity;
+                                    if (startingQuantity && (startingInvItemID == inv_item_id)) {
+                                        if (startingPackID == item_pack_id) {
+                                            Quantity += startingQuantity;
+                                        } else {
+                                            Quantity += (startingQuantity * startingPackQuantity / PackQuantity);
+                                        }
+                                    }
 
                                     // Display Available Stock Quantity
                                     $('#TotalQuantity').html(Quantity.toFixed(2) + ' ' + PackName + ' (' + i18n.in_inv + ')');
@@ -121,7 +142,7 @@ $(document).ready(function() {
                     }
                 });
             } else {
-                // Use data provided (currently just RMS template)
+                // Use data provided from inv_send_controller
                 // - Pack Options
                 // - Available Stock Quantity
                 // - REQ Quantity
@@ -265,11 +286,16 @@ $(document).ready(function() {
             }
         };
 
-        invItemField.change(InvItemChange);
+        invItemField.on('change.s3', InvItemChange);
 
-        if (invItemField.val()) {
+        if (startingInvItemID) {
             // Update form
-            InvItemChange();
+            startingQuantity = QuantityField.val();
+            if (startingQuantity) {
+                startingQuantity = parseFloat(startingQuantity);
+            }
+            startingPackID = parseInt(ItemPackField.val());
+            invItemField.trigger('change.s3', true);
         }
     }
 

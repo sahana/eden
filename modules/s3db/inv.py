@@ -5924,7 +5924,7 @@ $.filterOptionsS3({
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = inv_track_item_onaccept,
-                  onvalidation = self.inv_track_item_onvalidate,
+                  onvalidation = self.inv_track_item_onvalidation,
                   )
 
         #----------------------------------------------------------------------
@@ -6396,7 +6396,7 @@ $.filterOptionsS3({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def inv_track_item_onvalidate(form):
+    def inv_track_item_onvalidation(form):
         """
             When a track item record is being created with a tracking number
             then the tracking number needs to be unique within the organisation.
@@ -6412,40 +6412,96 @@ $.filterOptionsS3({
         send_inv_item_id = form_vars.send_inv_item_id
 
         if send_inv_item_id:
-            # Copy the data from the sent inv_item
             db = current.db
-            itable = db.inv_inv_item
-            query = (itable.id == send_inv_item_id)
-            record = db(query).select(itable.item_id,
-                                      itable.item_source_no,
-                                      itable.expiry_date,
-                                      itable.bin,
-                                      itable.layout_id,
-                                      itable.owner_org_id,
-                                      itable.supply_org_id,
-                                      itable.pack_value,
-                                      itable.currency,
-                                      itable.status,
-                                      limitby = (0, 1),
-                                      ).first()
-            form_vars.item_id = record.item_id
-            form_vars.item_source_no = record.item_source_no
-            form_vars.expiry_date = record.expiry_date
-            form_vars.bin = record.bin
-            form_vars.layout_id = record.layout_id
-            form_vars.owner_org_id = record.owner_org_id
-            form_vars.supply_org_id = record.supply_org_id
-            form_vars.pack_value = record.pack_value
-            form_vars.currency = record.currency
-            form_vars.inv_item_status = record.status
+            iitable = db.inv_inv_item
+            query = (iitable.id == send_inv_item_id)
 
-            # Save the organisation from where this tracking originates
-            stable = current.s3db.org_site
-            query = query & (itable.site_id == stable.id)
-            record = db(query).select(stable.organisation_id,
-                                      limitby = (0, 1),
-                                      ).first()
-            form_vars.track_org_id = record.organisation_id
+            # Validate that the Quantity to be added is available in Stock
+            valid_quantity = False
+
+            iptable = db.supply_item_pack
+            new_pack_id = form_vars.item_pack_id
+            new_pack_quantity = db(iptable.id == new_pack_id).select(iptable.quantity,
+                                                                     limitby = (0, 1),
+                                                                     ).first().quantity
+            new_quantity = float(form_vars.quantity) * new_pack_quantity
+
+            record_id = form.record_id
+            if record_id:
+                # Check if new quantity exceeds quantity already tracked
+                ttable = db.inv_track_item
+                record = db(ttable.id == record_id).select(ttable.quantity,
+                                                           ttable.item_pack_id,
+                                                           limitby = (0, 1),
+                                                           ).first()
+                old_quantity = record.quantity
+                old_pack_id = record.item_pack_id
+                if old_pack_id != new_pack_id:
+                    # Convert to units
+                    old_pack_quantity = db(iptable.id == old_pack_id).select(iptable.quantity,
+                                                                             limitby = (0, 1),
+                                                                             ).first().quantity
+                    old_quantity = old_quantity * old_pack_quantity
+                else:
+                    old_quantity = old_quantity * new_pack_quantity
+                if old_quantity >= new_quantity:
+                    # Quantity reduced or unchanged, no need to re-validate
+                    valid_quantity = True
+            else:
+                old_quantity = 0
+
+            if not valid_quantity:
+                # Get the inventory item & pack
+                inv_item = db(query & (iitable.item_pack_id == iptable.id)).select(iitable.quantity,
+                                                                                   iptable.quantity,
+                                                                                   iptable.name,
+                                                                                   limitby = (0, 1),
+                                                                                   ).first()
+                inv_item_pack = inv_item.supply_item_pack
+                inv_pack_quantity = inv_item_pack.quantity
+                inv_quantity = (inv_item["inv_inv_item.quantity"] * inv_pack_quantity) + old_quantity
+
+                if new_quantity > inv_quantity:
+                    if inv_pack_quantity > 1:
+                        inv_pack_quantity = " (%s)" % inv_pack_quantity
+                    else:
+                        inv_pack_quantity = ""
+                    form.errors.quantity = current.T("Only %(quantity)s %(pack)s%(pack_quantity)s in the Warehouse Stock.") % \
+                                                {"quantity": inv_quantity,
+                                                 "pack": inv_item_pack.name,
+                                                 "pack_quantity": inv_pack_quantity,
+                                                 }
+            if not form.errors:
+                # Copy the data from the sent inv_item
+                inv_item = db(query).select(iitable.item_id,
+                                            iitable.item_source_no,
+                                            iitable.expiry_date,
+                                            iitable.bin,
+                                            iitable.layout_id,
+                                            iitable.owner_org_id,
+                                            iitable.supply_org_id,
+                                            iitable.pack_value,
+                                            iitable.currency,
+                                            iitable.status,
+                                            limitby = (0, 1),
+                                            ).first()
+                form_vars.item_id = inv_item.item_id
+                form_vars.item_source_no = inv_item.item_source_no
+                form_vars.expiry_date = inv_item.expiry_date
+                form_vars.bin = inv_item.bin
+                form_vars.layout_id = inv_item.layout_id
+                form_vars.owner_org_id = inv_item.owner_org_id
+                form_vars.supply_org_id = inv_item.supply_org_id
+                form_vars.pack_value = inv_item.pack_value
+                form_vars.currency = inv_item.currency
+                form_vars.inv_item_status = inv_item.status
+
+                # Save the organisation from where this tracking originates
+                stable = current.s3db.org_site
+                site = db(query & (iitable.site_id == stable.id)).select(stable.organisation_id,
+                                                                         limitby = (0, 1),
+                                                                         ).first()
+                form_vars.track_org_id = site.organisation_id
 
         if not form_vars.recv_quantity and "quantity" in form_vars:
             # If we have no send_id and no recv_quantity then
@@ -6459,6 +6515,7 @@ $.filterOptionsS3({
         recv_bin = form_vars.recv_bin
         if recv_bin:
             # If there is a receiving bin then select the right one
+            # - what triggers this?
             if isinstance(recv_bin, list):
                 if recv_bin[1] != "":
                     recv_bin = recv_bin[1]
@@ -10745,6 +10802,109 @@ def inv_remove(inv_rec,
     return send_item_quantity
 
 # =============================================================================
+def inv_send_commit():
+    """
+        Controller function to create a Shipment containing all
+        Items in a Commitment (interactive)
+
+        @ToDo: Rewrite as Method
+        @ToDo: Avoid Writes in GETs
+    """
+
+    # Get the commit record
+    try:
+        commit_id = current.request.args[0]
+    except KeyError:
+        redirect(URL(c="inv", f="commit"))
+
+    db = current.db
+    s3db = current.s3db
+
+    req_table = db.inv_req
+    rim_table = db.inv_req_item
+    com_table = db.inv_commit
+    cim_table = db.inv_commit_item
+
+    send_table = s3db.inv_send
+    tracktable = s3db.inv_track_item
+
+    query = (com_table.id == commit_id) & \
+            (com_table.req_id == req_table.id) & \
+            (com_table.deleted == False)
+    record = db(query).select(com_table.committer_id,
+                              com_table.site_id,
+                              com_table.organisation_id,
+                              req_table.id,
+                              req_table.requester_id,
+                              req_table.site_id,
+                              #req_table.req_ref, # Only used for External Requests
+                              limitby = (0, 1),
+                              ).first()
+
+    # @ToDo: Identify if we have stock items which match the commit items
+    # If we have a single match per item then proceed automatically (as-now) & then decrement the stock quantity
+    # If we have no match then warn the user & ask if they should proceed anyway
+    # If we have mulitple matches then provide a UI to allow the user to select which stock items to use
+
+    # Create an inv_send and link to the commit
+    form_vars = Storage(sender_id = record.inv_commit.committer_id,
+                        site_id = record.inv_commit.site_id,
+                        recipient_id = record.inv_req.requester_id,
+                        to_site_id = record.inv_req.site_id,
+                        #req_ref = record.inv_req.req_ref,
+                        status = 0,
+                        )
+    send_id = send_table.insert(**form_vars)
+    form_vars.id = send_id
+    s3db.inv_send_req.insert(send_id = send_id,
+                             req_id = record.inv_req.id,
+                             )
+
+    # Get all of the committed items
+    query = (cim_table.commit_id == commit_id) & \
+            (cim_table.req_item_id == rim_table.id) & \
+            (cim_table.deleted == False)
+    records = db(query).select(rim_table.id,
+                               rim_table.item_id,
+                               rim_table.item_pack_id,
+                               rim_table.currency,
+                               rim_table.quantity,
+                               rim_table.quantity_transit,
+                               rim_table.quantity_fulfil,
+                               cim_table.quantity,
+                               )
+    # Create inv_track_items for each commit item
+    insert = tracktable.insert
+    for row in records:
+        rim = row.inv_req_item
+        # Now done as a VirtualField instead (looks better & updates closer to real-time, so less of a race condition)
+        #quantity_shipped = max(rim.quantity_transit, rim.quantity_fulfil)
+        #quantity_needed = rim.quantity - quantity_shipped
+        insert(req_item_id = rim.id,
+               track_org_id = record.inv_commit.organisation_id,
+               send_id = send_id,
+               status = 1,
+               item_id = rim.item_id,
+               item_pack_id = rim.item_pack_id,
+               currency = rim.currency,
+               #req_quantity = quantity_needed,
+               quantity = row.inv_commit_item.quantity,
+               recv_quantity = row.inv_commit_item.quantity,
+               )
+
+    # Create the Waybill
+    form = Storage()
+    form.vars = form_vars
+    inv_send_onaccept(form)
+
+    # Redirect to inv_send for the send id just created
+    redirect(URL(c = "inv",
+                 f = "send",
+                 #args = [send_id, "track_item"]
+                 args = [send_id]
+                 ))
+
+# =============================================================================
 def inv_send_controller():
     """
        RESTful CRUD controller for inv_send
@@ -10871,18 +11031,6 @@ def inv_send_controller():
                 tracktable = s3db.inv_track_item
                 iitable = s3db.inv_inv_item
 
-                # Set Validator for checking against the number of items in the warehouse
-                req_vars = r.vars
-                send_inv_item_id = req_vars.send_inv_item_id
-                if send_inv_item_id:
-                    if not req_vars.item_pack_id:
-                        req_vars.item_pack_id = db(iitable.id == send_inv_item_id).select(iitable.item_pack_id,
-                                                                                          limitby = (0, 1),
-                                                                                          ).first().item_pack_id
-                    tracktable.quantity.requires = IS_AVAILABLE_QUANTITY(send_inv_item_id,
-                                                                         req_vars.item_pack_id,
-                                                                         )
-
                 bin_site_layout = settings.get_inv_bin_site_layout()
                 track_pack_values = settings.get_inv_track_pack_values()
 
@@ -10896,6 +11044,7 @@ def inv_send_controller():
                     tracktable.bin.readable = False
                     tracktable.layout_id.readable = False
                     tracktable.item_id.readable = False
+                    tracktable.item_pack_id.comment = None # No filterOptionsS3
                     tracktable.recv_quantity.readable = False
                     tracktable.return_quantity.readable = False
                     tracktable.expiry_date.readable = False
@@ -11010,28 +11159,20 @@ def inv_send_controller():
                                list_fields = list_fields,
                                )
 
-                # Hide the values that will be copied from the inv_inv_item record
                 if r.component_id:
                     track_record = db(tracktable.id == r.component_id).select(tracktable.req_item_id,
-                                                                              tracktable.send_inv_item_id,
-                                                                              tracktable.item_pack_id,
+                                                                              #tracktable.send_inv_item_id,
+                                                                              #tracktable.item_pack_id,
                                                                               tracktable.status,
-                                                                              tracktable.quantity,
+                                                                              #tracktable.quantity,
                                                                               limitby = (0, 1),
                                                                               ).first()
                     set_track_attr(track_record.status)
                     # If the track record is linked to a request item then
                     # the stock item has already been selected so make it read only
-                    if track_record and track_record.get("req_item_id"):
+                    if track_record.req_item_id:
                         tracktable.send_inv_item_id.writable = False
                         tracktable.item_pack_id.writable = False
-                        stock_qnty = track_record.quantity
-                        tracktable.quantity.comment = T("%(quantity)s in stock") % {"quantity": stock_qnty}
-                        tracktable.quantity.requires = IS_AVAILABLE_QUANTITY(track_record.send_inv_item_id,
-                                                                             track_record.item_pack_id,
-                                                                             )
-                    # Hide the item id
-                    tracktable.item_id.readable = False
                 else:
                     set_track_attr(TRACK_STATUS_PREPARING)
 
@@ -11157,7 +11298,7 @@ def inv_send_controller():
                     if status == SHIP_STATUS_IN_PROCESS:
                         crud_strings.title_update = \
                         crud_strings.title_display = T("Process Shipment to Send")
-                    elif "site_id" in req_vars and status == SHIP_STATUS_SENT:
+                    elif "site_id" in r.vars and status == SHIP_STATUS_SENT:
                         crud_strings.title_update = \
                         crud_strings.title_display = T("Review Incoming Shipment to Receive")
         else:
@@ -12251,109 +12392,6 @@ def inv_track_item_quantity_needed(row):
         return current.messages["NONE"]
 
     return quantity_needed
-
-# =============================================================================
-def inv_send_commit():
-    """
-        Controller function to create a Shipment containing all
-        Items in a Commitment (interactive)
-
-        @ToDo: Rewrite as Method
-        @ToDo: Avoid Writes in GETs
-    """
-
-    # Get the commit record
-    try:
-        commit_id = current.request.args[0]
-    except KeyError:
-        redirect(URL(c="inv", f="commit"))
-
-    db = current.db
-    s3db = current.s3db
-
-    req_table = db.inv_req
-    rim_table = db.inv_req_item
-    com_table = db.inv_commit
-    cim_table = db.inv_commit_item
-
-    send_table = s3db.inv_send
-    tracktable = s3db.inv_track_item
-
-    query = (com_table.id == commit_id) & \
-            (com_table.req_id == req_table.id) & \
-            (com_table.deleted == False)
-    record = db(query).select(com_table.committer_id,
-                              com_table.site_id,
-                              com_table.organisation_id,
-                              req_table.id,
-                              req_table.requester_id,
-                              req_table.site_id,
-                              #req_table.req_ref, # Only used for External Requests
-                              limitby = (0, 1),
-                              ).first()
-
-    # @ToDo: Identify if we have stock items which match the commit items
-    # If we have a single match per item then proceed automatically (as-now) & then decrement the stock quantity
-    # If we have no match then warn the user & ask if they should proceed anyway
-    # If we have mulitple matches then provide a UI to allow the user to select which stock items to use
-
-    # Create an inv_send and link to the commit
-    form_vars = Storage(sender_id = record.inv_commit.committer_id,
-                        site_id = record.inv_commit.site_id,
-                        recipient_id = record.inv_req.requester_id,
-                        to_site_id = record.inv_req.site_id,
-                        #req_ref = record.inv_req.req_ref,
-                        status = 0,
-                        )
-    send_id = send_table.insert(**form_vars)
-    form_vars.id = send_id
-    s3db.inv_send_req.insert(send_id = send_id,
-                             req_id = record.inv_req.id,
-                             )
-
-    # Get all of the committed items
-    query = (cim_table.commit_id == commit_id) & \
-            (cim_table.req_item_id == rim_table.id) & \
-            (cim_table.deleted == False)
-    records = db(query).select(rim_table.id,
-                               rim_table.item_id,
-                               rim_table.item_pack_id,
-                               rim_table.currency,
-                               rim_table.quantity,
-                               rim_table.quantity_transit,
-                               rim_table.quantity_fulfil,
-                               cim_table.quantity,
-                               )
-    # Create inv_track_items for each commit item
-    insert = tracktable.insert
-    for row in records:
-        rim = row.inv_req_item
-        # Now done as a VirtualField instead (looks better & updates closer to real-time, so less of a race condition)
-        #quantity_shipped = max(rim.quantity_transit, rim.quantity_fulfil)
-        #quantity_needed = rim.quantity - quantity_shipped
-        insert(req_item_id = rim.id,
-               track_org_id = record.inv_commit.organisation_id,
-               send_id = send_id,
-               status = 1,
-               item_id = rim.item_id,
-               item_pack_id = rim.item_pack_id,
-               currency = rim.currency,
-               #req_quantity = quantity_needed,
-               quantity = row.inv_commit_item.quantity,
-               recv_quantity = row.inv_commit_item.quantity,
-               )
-
-    # Create the Waybill
-    form = Storage()
-    form.vars = form_vars
-    inv_send_onaccept(form)
-
-    # Redirect to inv_send for the send id just created
-    redirect(URL(c = "inv",
-                 f = "send",
-                 #args = [send_id, "track_item"]
-                 args = [send_id]
-                 ))
 
 # =============================================================================
 def inv_update_commit_quantities_and_status(req):

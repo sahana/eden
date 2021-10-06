@@ -55,7 +55,6 @@ __all__ = ("IS_ACL",
            "IS_UTC_DATETIME",
            "IS_UTC_DATE",
            "IS_UTC_OFFSET",
-           "IS_AVAILABLE_QUANTITY",
            "SINGLE_PHONE_NUMBER_PATTERN",
            "MULTI_PHONE_NUMBER_PATTERN",
            "JSONERRORS",
@@ -1903,95 +1902,6 @@ class IS_ACL(IS_IN_SET):
                 acl |= flag
 
         return acl
-
-# =============================================================================
-class IS_AVAILABLE_QUANTITY(Validator):
-    """
-        For Inventory module, check that quantity added to a shipment
-        is available in the warehouse stock
-    """
-
-    def __init__(self, inv_item_id, item_pack_id):
-        """
-            Constructor
-
-            @param inv_item_id: the inventory item ID to check against
-            @param item_pack_id: the shipment pack ID
-        """
-
-        self.inv_item_id = inv_item_id
-        self.item_pack_id = item_pack_id
-
-    # -------------------------------------------------------------------------
-    def validate(self, value, record_id=None):
-        """
-            Validator
-
-            @param value: the input value (new track item quantity)
-            @param record_id: the current record ID (track item)
-
-            @returns: the value
-        """
-
-        db = current.db
-        args = current.request.args
-
-        track_quantity = 0
-
-        track_item_id = record_id
-        if args[1] == "track_item" and len(args) > 2:
-            track_item_id = args[2]
-
-        if track_item_id:
-            # Check if new quantity exceeds quantity already tracked
-            ttable = current.s3db.inv_track_item
-            query = (ttable.id == track_item_id)
-            track_record = db(query).select(ttable.quantity,
-                                            limitby = (0, 1),
-                                            ).first()
-            track_quantity = track_record.quantity
-            if track_quantity >= float(value):
-                # Quantity reduced or unchanged, no need to re-validate
-                return value
-
-        error = None
-
-        # Get the inventory item
-        query = (db.inv_inv_item.id == self.inv_item_id) & \
-                (db.inv_inv_item.item_pack_id == db.supply_item_pack.id)
-        inv_item_record = db(query).select(db.inv_inv_item.quantity,
-                                           db.supply_item_pack.quantity,
-                                           db.supply_item_pack.name,
-                                           limitby = (0, 1),
-                                           ).first() # @todo: this should be a virtual field
-        if not inv_item_record:
-            error = "Inventory item not found"
-
-        elif value:
-            # Compute the quantity to be added
-            query = (db.supply_item_pack.id == self.item_pack_id)
-            pack = db(query).select(db.supply_item_pack.quantity,
-                                    limitby=(0, 1),
-                                    ).first()
-            send_quantity = (float(value) - track_quantity) * pack.quantity
-
-            # Compute the quantity in stock
-            inv_quantity = inv_item_record.inv_inv_item.quantity * \
-                           inv_item_record.supply_item_pack.quantity
-
-            if send_quantity > inv_quantity:
-                error = "Only %s %s (%s) in the Warehouse Stock." % \
-                            (inv_quantity,
-                             inv_item_record.supply_item_pack.name,
-                             inv_item_record.supply_item_pack.quantity,
-                             )
-        else:
-            error = "Invalid Quantity"
-
-        if error:
-            raise ValidationError(translate(error))
-
-        return value
 
 # =============================================================================
 class IS_IN_SET_LAZY(Validator):

@@ -735,12 +735,12 @@ $.filterOptionsS3({
  'fncRepresent':S3.supply.fncRepresentItem
 })''',
                                        sortby = "name",
-                                       #comment=S3PopupLink(c = "supply",
-                                       #                    f = "item_pack",
-                                       #                    label = ADD_ITEM_PACK,
-                                       #                    title = T("Item Packs"),
-                                       #                    tooltip = T("The way in which an item is normally distributed"),
-                                       #                    ),
+                                       #comment = S3PopupLink(c = "supply",
+                                       #                      f = "item_pack",
+                                       #                      label = ADD_ITEM_PACK,
+                                       #                      title = T("Item Packs"),
+                                       #                      tooltip = T("The way in which an item is normally distributed"),
+                                       #                      ),
                                        )
 
         configure(tablename,
