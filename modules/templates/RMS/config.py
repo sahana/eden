@@ -805,7 +805,7 @@ def config(settings):
     settings.inv.document_filing = True
     settings.inv.minimums = True
     settings.inv.send_gift_certificate = True
-    settings.inv.send_pallets = True
+    settings.inv.send_packaging = True
     # Uncomment if you need a simpler (but less accountable) process for managing stock levels
     #settings.inv.direct_stock_edits = True
     settings.inv.stock_count = False

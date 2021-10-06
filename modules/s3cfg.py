@@ -4799,11 +4799,11 @@ class S3Config(Storage):
         """
         return self.inv.get("send_gift_certificate", False)
 
-    def get_inv_send_pallets(self):
+    def get_inv_send_packaging(self):
         """
-            Whether to show a tab to manage Palletisation for Outbound Shipments
+            Whether to manage Packaging for Outbound Shipments
         """
-        return self.inv.get("send_pallets", False)
+        return self.inv.get("send_packaging", False)
 
     def get_inv_stock_cards(self):
         """

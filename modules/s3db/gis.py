@@ -5264,6 +5264,7 @@ class gis_LocationRepresent(S3Represent):
                  address_only = False,
                  sep = None,
                  show_name = False, # Show name in location for level==None when sep is used
+                 show_level = True, # Show (level_name) after locations
                  controller = None, # Override default controller for s3_viewMap() lookup of Popup
                  func = None,       # Override default function for s3_viewMap() lookup of Popup
                  ):
@@ -5286,6 +5287,7 @@ class gis_LocationRepresent(S3Represent):
         if sep:
             self.multi_country = len(settings.get_gis_countries()) != 1
         self.show_name = show_name
+        self.show_level = show_level
         self.controller = controller
         self.func = func
 
@@ -5293,7 +5295,8 @@ class gis_LocationRepresent(S3Represent):
               self).__init__(lookup = "gis_location",
                              show_link = show_link,
                              translate = translate,
-                             multiple = multiple)
+                             multiple = multiple,
+                             )
 
     # -------------------------------------------------------------------------
     def link(self, k, v, row=None):
@@ -5319,12 +5322,12 @@ class gis_LocationRepresent(S3Represent):
         else:
             opts = ''
         return A(v,
-                 _style="cursor:pointer;cursor:hand",
-                 _onclick="s3_viewMap(%i,%i,'%s'%s);return false" % (k,
-                                                                     iheight,
-                                                                     popup,
-                                                                     opts
-                                                                     ),
+                 _style = "cursor:pointer;cursor:hand",
+                 _onclick = "s3_viewMap(%i,%i,'%s'%s);return false" % (k,
+                                                                       iheight,
+                                                                       popup,
+                                                                       opts
+                                                                       ),
                  )
 
     # -------------------------------------------------------------------------
@@ -5367,7 +5370,8 @@ class gis_LocationRepresent(S3Represent):
             text = "%s %s, %s %s" % (self.lat_lon_format(lat),
                                      lat_suffix,
                                      self.lat_lon_format(lon),
-                                     lon_suffix)
+                                     lon_suffix,
+                                     )
             return text
 
     # -------------------------------------------------------------------------
@@ -5570,24 +5574,29 @@ class gis_LocationRepresent(S3Represent):
                 represent = name
         else:
             if level == "L0":
-                represent = "%s (%s)" % (name, current.messages.COUNTRY)
-            elif level in ("L1", "L2", "L3", "L4", "L5"):
-                # Lookup the hierarchy for labels
-                s3db = current.s3db
-                L0_name = row.L0
-                if L0_name:
-                    if row.path:
-                        path = row.path
-                    else:
-                        # Not yet been built, so do it now
-                        path = current.gis.update_location_tree(row)
-                    path = path.split("/")
-                    L0_id = path[0]
-                    level_name = current.gis.get_location_hierarchy(level,
-                                                                    L0_id)
+                if self.show_level:
+                    represent = "%s (%s)" % (name, current.messages.COUNTRY)
                 else:
-                    # Fallback to system default
-                    level_name = current.gis.get_location_hierarchy(level)
+                    represent = name
+            elif level in ("L1", "L2", "L3", "L4", "L5"):
+                if self.show_level:
+                    # Lookup the hierarchy for labels
+                    L0_name = row.L0
+                    if L0_name:
+                        if row.path:
+                            path = row.path
+                        else:
+                            # Not yet been built, so do it now
+                            path = current.gis.update_location_tree(row)
+                        path = path.split("/")
+                        L0_id = path[0]
+                        level_name = current.gis.get_location_hierarchy(level,
+                                                                        L0_id)
+                    else:
+                        # Fallback to system default
+                        level_name = current.gis.get_location_hierarchy(level)
+                else:
+                    level_name = None
 
                 represent = name
                 if level_name:

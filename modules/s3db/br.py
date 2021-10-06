@@ -172,7 +172,7 @@ class BRCaseModel(S3Model):
             msg_record_created = T("Case Status added"),
             msg_record_modified = T("Case Status updated"),
             msg_record_deleted = T("Case Status deleted"),
-            msg_list_empty = T("No Case Statuses currently defined")
+            msg_list_empty = T("No Case Statuses currently defined"),
             )
 
         # Table configuration
@@ -615,6 +615,7 @@ class BRCaseActivityModel(S3Model):
 
                      # Priority
                      Field("priority", "integer",
+                           default = 2, # normal
                            label = T("Priority"),
                            represent = S3PriorityRepresent(priority_opts,
                                                            {0: "red",
@@ -626,7 +627,6 @@ class BRCaseActivityModel(S3Model):
                                                 sort = False,
                                                 zero = None,
                                                 ),
-                           default = 2, # normal
                            ),
 
                      # Subject and Details

@@ -5,7 +5,7 @@
 
 $(document).ready(function() {
 
-    var trackItemField = $('#sub_defaultsend_pallet_item_defaultsend_pallet_item_i_track_item_id_edit_none');
+    var trackItemField = $('#sub_defaultsend_package_item_defaultsend_package_item_i_track_item_id_edit_none');
     if (trackItemField.length) {
 
         var track_items = S3.supply.track_items;
@@ -13,7 +13,7 @@ $(document).ready(function() {
 
             var trackItemID,
                 quantity,
-                QuantityField = $('#sub_defaultsend_pallet_item_defaultsend_pallet_item_i_quantity_edit_none');
+                QuantityField = $('#sub_defaultsend_package_item_defaultsend_package_item_i_quantity_edit_none');
 
             var TrackItemChange = function(event) {
                 trackItemID = trackItemField.val();

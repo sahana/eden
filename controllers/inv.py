@@ -2078,9 +2078,9 @@ def order_item():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def pallet():
+def package():
     """
-        RESTful CRUD Controller for Pallets
+        RESTful CRUD Controller for Packages (Boxes & Pallets)
     """
 
     return s3_rest_controller()
