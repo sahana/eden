@@ -15,7 +15,7 @@ $(document).ready(function() {
                 quantity,
                 QuantityField = $('#sub_defaultsend_package_item_defaultsend_package_item_i_quantity_edit_none');
 
-            var TrackItemChange = function(event) {
+            var TrackItemChange = function(/*event*/) {
                 trackItemID = trackItemField.val();
                 if (trackItemID) {
                     quantity = track_items[trackItemID];

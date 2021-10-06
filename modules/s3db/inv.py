@@ -50,7 +50,7 @@ __all__ = ("WarehouseModel",
            #"inv_gift_certificate",
            "inv_item_total_weight",
            "inv_item_total_volume",
-           #"inv_package_label",
+           #"inv_package_labels",
            #"inv_packing_list",
            #"inv_pick_list",
            "inv_prep",
@@ -76,7 +76,7 @@ __all__ = ("WarehouseModel",
            "inv_send_onaccept",
            #"inv_send_process",
            #"inv_send_received",
-           "inv_send_rheader",
+           #"inv_send_rheader",
            "inv_ship_status",
            #"inv_stock_card_update",
            "inv_stock_movements",
@@ -2500,7 +2500,7 @@ class InventoryPackageModel(S3Model):
                                 default = 0.0,
                                 label = T("Maximum Height (m)"),
                                 represent = float_represent,
-                                comment = T("Not including the Palette"),
+                                comment = T("Including the Package"),
                                 ),
                           Field("max_volume", "double",
                                 default = 0.0,
@@ -2558,15 +2558,36 @@ class InventoryPackageModel(S3Model):
     @staticmethod
     def inv_package_onaccept(form):
         """
+            Set the Max Height for Boxes
             Calculate the Max Volume
         """
 
         form_vars = form.vars
         form_vars_get = form_vars.get
 
-        max_volume = form_vars_get("width") * form_vars_get("length") * form_vars_get("max_height")
+        package_type = form_vars_get("type")
+        if package_type == "BOX":
+            # max_height == depth
+            max_height = form_vars_get("depth")
+            updates = {"max_height": max_height}
+        else:
+            # max_height needs to be specified manually
+            max_height = form_vars_get("max_height")
+            if max_height:
+                # Includes pallet height, so remove this for max volume of load
+                depth = form_vars_get("depth")
+                if depth:
+                    max_height -= depth
+            updates = {}
 
-        current.db(current.s3db.inv_package.id == form_vars.id).update(max_volume = max_volume)
+        if max_height:
+            width = form_vars_get("width")
+            length = form_vars_get("length")
+            max_volume = width * length * max_height
+            updates["max_volume"] = max_volume
+
+        if updates:
+            current.db(current.s3db.inv_package.id == form_vars.id).update(**updates)
 
 # =============================================================================
 class InventoryPackageShipmentModel(S3Model):
@@ -7980,19 +8001,27 @@ def inv_package_labels(r, **attr):
     s3db = current.s3db
 
     # Packages
+    ptable = s3db.inv_package
     sptable = s3db.inv_send_package
-    packages = db(sptable.send_id == r.id).select(sptable.id,
-                                                  sptable.number,
-                                                  sptable.weight,
-                                                  #sptable.volume,
-                                                  )
+    query = (sptable.send_id == r.id) & \
+            (sptable.package_id == ptable.id)
+    packages = db(query).select(sptable.id,
+                                sptable.number,
+                                sptable.weight,
+                                sptable.volume,
+                                ptable.type,
+                                ptable.weight,
+                                ptable.width,
+                                ptable.length,
+                                ptable.depth,
+                                )
 
     # Package Items
     spitable = s3db.inv_send_package_item
     ttable = s3db.inv_track_item
     itable = s3db.supply_item
     ptable = s3db.supply_item_pack
-    query = (spitable.send_package_id.belongs([p.id for p in packages])) & \
+    query = (spitable.send_package_id.belongs([p["inv_send_package.id"] for p in packages])) & \
             (spitable.track_item_id == ttable.id) & \
             (ttable.item_id == itable.id) & \
             (ttable.item_pack_id == ptable.id)
@@ -8100,15 +8129,30 @@ def inv_package_labels(r, **attr):
             bmpfile.seek(0)
             bmpdata = bmpfile.read()
 
-    for package in packages:
+    for row in packages:
+        package = row.inv_package
+        send_package = row.inv_send_package
+
         # Add sheet
-        sheet = book.add_sheet(str(package.number))
+        sheet = book.add_sheet(str(send_package.number))
         sheet.set_print_scaling(90)
 
-        package_weight = str(int(package.weight))
-        # Our Package Volume is too approximate: better to hae this calcuated from User-entered Width/Length/Height
-        #package_volume = "{:.2f}".format(round(package.volume, 2))
-        send_package_id = package.id
+        # Weight is Load + Package Weight
+        package_weight = str(int(send_package.weight + package.weight))
+        # Length & Width are those of the Package
+        length = package.length
+        width = package.width
+        if package.type == "BOX":
+            height = package.depth
+        elif length and width:
+            # Pallet
+            # Height is Load Height + Package Depth
+            height = (send_package.volume / (length * width)) + package.depth
+        else:
+            # We cannot calculate it
+            height = ""
+
+        send_package_id = send_package.id
         package_items = items.find(lambda row: row["inv_send_package_item.send_package_id"] == send_package_id)
 
         # @ToDo: Handle Multiple Items on a Pallet
@@ -8238,15 +8282,15 @@ def inv_package_labels(r, **attr):
         # 38th row: Sizes
         current_row = sheet.row(37)
         current_row.height = ROW_HEIGHT
-        current_row.write(0, "", center_style) # We don't have the width
+        current_row.write(0, width, center_style)
         current_row.write(1, "x", style)
-        current_row.write(2, "", center_style) # We don't have the length
+        current_row.write(2, length, center_style)
         current_row.write(3, "x", style)
-        current_row.write(4, "", center_style) # We don't have the height
+        current_row.write(4, height, center_style)
         current_row.write(8, package_weight, center_style)
         current_row.write(9, "Kgs", style)
         formula = xlwt.Formula("A38*C38*E38")
-        current_row.write(11, formula, center_style) # Our Package Volume is too approximate: better to hae this calcuated from User-entered Width/Length/Height
+        current_row.write(11, formula, center_style)
         current_row.write(12, "m3", style)
 
     # Export to File
@@ -10755,6 +10799,15 @@ def inv_send_controller():
                 #if r.method == "read":
                 #    return True
 
+                if status != SHIP_STATUS_IN_PROCESS:
+                    # Locked
+                    s3db.configure("inv_send_package",
+                                   deletable = False,
+                                   insertable = False,
+                                   updateable = False,
+                                   )
+                    return True
+
                 send_id = r.id
 
                 # Number the Package automatically
@@ -11680,29 +11733,26 @@ def inv_send_rheader(r):
                                         )
                                      )
 
-            # Find out how many inv_track_items we have for this send record
-            tracktable = s3db.inv_track_item
-            query = (tracktable.send_id == send_id) & \
-                    (tracktable.deleted == False)
-            #cnt = db(query).count()
-            cnt = db(query).select(tracktable.id,
-                                   limitby = (0, 1),
-                                   ).first()
-            if cnt:
-                cnt = 1
-            else:
-                cnt = 0
 
-            actions = DIV()
-            #rSubdata = TABLE()
+            
             rfooter = TAG[""]()
 
-            if not r.method == "form":
-                if status == SHIP_STATUS_IN_PROCESS:
-                    if current.auth.s3_has_permission("update", "inv_send",
-                                                      record_id = record.id):
+            if status != SHIP_STATUS_CANCEL and \
+               r.method != "form":
+                if current.auth.s3_has_permission("update", "inv_send",
+                                                  record_id = record.id):
 
-                        if cnt > 0:
+                    packaging = None
+                    # Don't show buttons unless Items have been added
+                    tracktable = s3db.inv_track_item
+                    query = (tracktable.send_id == send_id)
+                    item = db(query).select(tracktable.id,
+                                            limitby = (0, 1),
+                                            ).first()
+                    if item:
+                        actions = DIV()
+                        jappend = s3.jquery_ready.append
+                        if status == SHIP_STATUS_IN_PROCESS:
                             actions.append(A(ICON("print"),
                                              " ",
                                              T("Picking List"),
@@ -11721,14 +11771,6 @@ def inv_send_rheader(r):
                                                  _class = "action-btn",
                                                  )
                                                )
-                                actions.append(A(ICON("print"),
-                                                 " ",
-                                                 T("Packing List"),
-                                                 _href = URL(args = [record.id, "packing_list.xls"]
-                                                             ),
-                                                 _class = "action-btn",
-                                                 )
-                                               )
 
                             actions.append(A(T("Send Shipment"),
                                              _href = URL(args = [record.id, "process"]
@@ -11738,45 +11780,23 @@ def inv_send_rheader(r):
                                              )
                                            )
 
-                            s3.jquery_ready.append('''S3.confirmClick("#send_process","%s")''' \
-                                                    % T("Do you want to send this shipment?"))
-                        #if not r.component:
-                        #    ritable = s3db.inv_req_item
-                        #    rcitable = s3db.inv_commit_item
-                        #    query = (tracktable.send_id == record.id) & \
-                        #            (rcitable.req_item_id == tracktable.req_item_id) & \
-                        #            (tracktable.req_item_id == ritable.id) & \
-                        #            (tracktable.deleted == False)
-                        #    records = db(query).select()
-                        #    for record in records:
-                        #        rSubdata.append(TR(TH("%s: " % ritable.item_id.label),
-                        #                           ritable.item_id.represent(record.inv_req_item.item_id),
-                        #                           TH("%s: " % rcitable.quantity.label),
-                        #                           record.inv_commit_item.quantity,
-                        #                           ))
+                            jappend('''S3.confirmClick("#send_process","%s")''' % \
+                                T("Do you want to send this shipment?"))
 
-                elif status == SHIP_STATUS_RETURNING:
-                    if cnt > 0:
-                        actions.append(A(T("Complete Returns"),
-                                         _href = URL(c = "inv",
-                                                     f = "return_process",
-                                                     args = [record.id]
-                                                     ),
-                                         _id = "return_process",
-                                         _class = "action-btn"
-                                         )
-                                       )
-                        s3.jquery_ready.append('''S3.confirmClick("#return_process","%s")''' \
-                                        % T("Do you want to complete the return process?"))
-                    else:
-                        msg = T("You need to check all item quantities before you can complete the return process.")
-                        rfooter.append(SPAN(msg))
-                elif status != SHIP_STATUS_CANCEL:
-                    if status == SHIP_STATUS_SENT:
-                        jappend = s3.jquery_ready.append
-                        s3_has_permission = current.auth.s3_has_permission
-                        if s3_has_permission("update", "inv_send",
-                                             record_id = record.id):
+                        elif status == SHIP_STATUS_RETURNING:
+                            actions.append(A(T("Complete Returns"),
+                                             _href = URL(c = "inv",
+                                                         f = "return_process",
+                                                         args = [record.id]
+                                                         ),
+                                             _id = "return_process",
+                                             _class = "action-btn"
+                                             )
+                                           )
+                            jappend('''S3.confirmClick("#return_process","%s")''' % \
+                                T("Do you want to complete the return process?"))
+
+                        elif status == SHIP_STATUS_SENT:
                             actions.append(A(T("Manage Returns"),
                                              _href = URL(c = "inv",
                                                          f = "send_returns",
@@ -11805,44 +11825,61 @@ def inv_send_rheader(r):
                             jappend('''S3.confirmClick("#send-receive","%s")''' % \
                                 T("Confirm that the shipment has been received by a destination which will not record the shipment directly into the system."))
 
-                        if s3_has_permission("update", "inv_send",
-                                             record_id = record.id):
-                            actions.append(A(T("Cancel Shipment"),
-                                             _href = URL(c = "inv",
-                                                         f = "send_cancel",
-                                                         args = [record.id]
-                                                         ),
-                                             _id = "send-cancel",
-                                             _class = "action-btn"
-                                             )
-                                           )
+                        if status != SHIP_STATUS_RECEIVED:
 
-                            jappend('''S3.confirmClick("#send-cancel","%s")''' \
-                                % T("Do you want to cancel this sent shipment? The items will be returned to the Warehouse. This action CANNOT be undone!"))
+                            if settings.get_inv_send_packaging():
+                                if status == SHIP_STATUS_IN_PROCESS:
+                                    # Insert in front of 'Send Shipment'
+                                    index = -1
+                                else:
+                                    # Append at end
+                                    index = len(actions)
+                                actions.insert(index, A(ICON("print"),
+                                                        " ",
+                                                        T("Packing List"),
+                                                        _href = URL(args = [record.id, "packing_list.xls"]
+                                                                    ),
+                                                        _class = "action-btn",
+                                                        )
+                                               )
+                            
+                            if settings.get_inv_send_gift_certificate():
+                                if status == SHIP_STATUS_IN_PROCESS:
+                                    # Insert in front of 'Send Shipment'
+                                    index = -1
+                                else:
+                                    # Append at end
+                                    index = len(actions)
+                                actions.insert(index, A(ICON("print"),
+                                                        " ",
+                                                        T("Gift Certificate"),
+                                                        _href = URL(c = "inv",
+                                                                    f = "send",
+                                                                    args = [record.id,
+                                                                            "gift_certificate.xls",
+                                                                            ]
+                                                                    ),
+                                                        _class = "action-btn"
+                                                        )
+                                               )
 
-                if settings.get_inv_send_gift_certificate():
-                    actions.append(A(ICON("print"),
-                                     " ",
-                                     T("Gift Certificate"),
-                                     _href = URL(c = "inv",
-                                                 f = "send",
-                                                 args = [record.id,
-                                                         "gift_certificate.xls",
-                                                         ]
-                                                 ),
-                                     _class = "action-btn"
-                                     )
-                                   )
+                            if status != SHIP_STATUS_IN_PROCESS:
+                                actions.append(A(T("Cancel Shipment"),
+                                                 _href = URL(c = "inv",
+                                                             f = "send_cancel",
+                                                             args = [record.id]
+                                                             ),
+                                                 _id = "send-cancel",
+                                                 _class = "delete-btn"
+                                                 )
+                                               )
 
-            #    msg = ""
-            #    if cnt == 1:
-            #       msg = T("One item is attached to this shipment")
-            #    elif cnt > 1:
-            #        msg = T("%s items are attached to this shipment") % cnt
-            #    shipment_details.append(TR(TH(actions, _colspan=2), TD(msg)))
-                shipment_details.append(TR(TH(actions,
-                                              _colspan = 2,
-                                              )))
+                                jappend('''S3.confirmClick("#send-cancel","%s")''' % \
+                                    T("Do you want to cancel this sent shipment? The items will be returned to the Warehouse. This action CANNOT be undone!"))
+
+                        shipment_details.append(TR(TH(actions,
+                                                      _colspan = 2,
+                                                      )))
 
             s3.rfooter = rfooter
             rheader = DIV(shipment_details,

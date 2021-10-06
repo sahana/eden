@@ -2083,6 +2083,11 @@ def package():
         RESTful CRUD Controller for Packages (Boxes & Pallets)
     """
 
+    if s3.debug:
+        s3.scripts.append("/%s/static/scripts/S3/s3.inv_package.js" % appname)
+    else:
+        s3.scripts.append("/%s/static/scripts/S3/s3.inv_package.min.js" % appname)
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
