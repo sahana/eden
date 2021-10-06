@@ -62,7 +62,6 @@ __all__ = (# Person Entities
            # Other Models
            "ImageLibraryModel",
            "ReligionModel",
-           "RoleDelegationModel",
            "SavedFilterModel",
            "SubscriptionModel",
 
@@ -178,7 +177,6 @@ class PersonEntityModel(S3Model):
         messages = current.messages
         #YES = T("yes") #messages.YES
         #NO = T("no") #messages.NO
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         pe_id = "pe_id"
 
@@ -3613,7 +3611,7 @@ class PersonEntityAddressModel(S3Model):
     def model(self):
 
         T = current.T
-        messages = current.messages
+
         s3 = current.response.s3
         settings = current.deployment_settings
 
@@ -4347,7 +4345,7 @@ class PersonEntityImageModel(S3Model):
         if not image:
             return current.messages["NONE"]
 
-        url_full = URL(c="default", f="download", 
+        url_full = URL(c="default", f="download",
                        args = image,
                        )
         if size is None:
@@ -4956,9 +4954,10 @@ class PersonEntityPresenceModel(S3Model):
                                                           limitby = (0, 1),
                                                           ).first()
         if pentity and pentity.instance_type == "pr_person":
-            person = db(db.pr_person.pe_id == pe_id).select(ptable.id,
-                                                            limitby = (0, 1),
-                                                            ).first()
+            ptable = s3db.pr_person
+            person = db(ptable.pe_id == pe_id).select(ptable.id,
+                                                      limitby = (0, 1),
+                                                      ).first()
             query = this_entity & is_missing & (table.closed == False)
             if db(query).select(table.id,
                                 limitby = (0, 1),
@@ -6778,30 +6777,6 @@ class ReligionModel(S3Model):
         return {}
 
 # =============================================================================
-class RoleDelegationModel(S3Model):
-    """ Organisation-based Authorization Model """
-
-    names = ("pr_delegation",)
-
-    def model(self):
-
-        # ---------------------------------------------------------------------
-        # Delegation: Role <-> Auth Group Link
-        # This "delegates" the permissions of a user group for the records
-        # owned by a person entity to a group of affiliated entities.
-        #
-        gtable = current.auth.settings.table_group
-        tablename = "pr_delegation"
-        self.define_table(tablename,
-                          self.pr_role_id(),
-                          Field("group_id", gtable,
-                                ondelete="CASCADE"),
-                          *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        return {}
-
-# =============================================================================
 class SavedFilterModel(S3Model):
     """ Saved Filters """
 
@@ -6895,8 +6870,6 @@ class SubscriptionModel(S3Model):
         T = current.T
 
         define_table = self.define_table
-
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         trigger_opts = {
             "new": T("New Records"),
@@ -7286,7 +7259,7 @@ class pr_PersonEntityRepresent(S3Represent):
             @param none: representation for empty fields (None or empty list)
             @param instance_types: dict of instance types to replace/add to default list
                                    {tablename = T("Label")}
-                                   
+
         """
 
         self.show_label = show_label
@@ -9249,8 +9222,6 @@ def pr_human_resource_update_affiliations(person_id):
     h = htable._tablename
     s = stable._tablename
     o = otable._tablename
-    r = rtable._tablename
-    #e = etable._tablename
 
     # Get the PE ID for this person
     pe_id = pr_get_pe_id("pr_person", person_id)

@@ -67,7 +67,7 @@ def config(settings):
     # System Settings
     # -------------------------------------------------------------------------
     # Security Policy
-    settings.security.policy = 8 # Delegations
+    settings.security.policy = 7
     settings.security.map = True
 
     # Authorization Settings
@@ -269,7 +269,7 @@ def config(settings):
         elif tablename in ("org_facility", "pr_forum", "pr_group"):
             # Facilities, Forums and Groups should be in the realm of the user's organisation
             use_user_organisation = True
-        
+
         elif tablename == "hrm_training":
             # Inherit realm entity from the related HR record
             htable = s3db.hrm_human_resource
@@ -3599,7 +3599,7 @@ Thank you"""
 
     # -------------------------------------------------------------------------
     def customise_inv_send_resource(r, tablename):
-    
+
         #from gluon import IS_IN_SET
 
         s3db = current.s3db
@@ -3886,7 +3886,7 @@ Thank you"""
                                     ),
                                 )
                 send_email = current.msg.send_by_pe_id
-                
+
                 T = current.T
                 session_s3 = current.session.s3
                 ui_language = session_s3.language
@@ -3894,7 +3894,7 @@ Thank you"""
                 subject_T = T("Stockpile Capacity in %(site)s Warehouse is less than %(threshold)s m3")
                 message_T = T("Stockpile Capacity in %(site)s Warehouse is less than %(threshold)s m3. Please review at: %(url)s")
                 alert_T = T("Stockpile Capacity in %(site)s Warehouse is less than %(threshold)s m3")
-                            
+
                 from .controllers import inv_operators_for_sites
                 operators = inv_operators_for_sites([site_id])[site_id]["operators"]
                 insert = ntable.insert
@@ -5610,7 +5610,7 @@ Thank you"""
             otable = s3db.org_organisation
             btable = s3db.org_organisation_branch
             ltable = db.org_organisation_organisation_type
-            
+
             rows = db(ltable.organisation_type_id == type_id).select(ltable.organisation_id)
             all_rc_organisation_ids = [row.organisation_id for row in rows]
             query = (btable.deleted != True) & \
@@ -5626,7 +5626,7 @@ Thank you"""
             child_pe_ids = pr_get_descendants(pe_ids, entity_types=entity_types)
 
             entities = pe_ids + child_pe_ids
-            
+
         else:
             # Filter to entities the user has the ORG_ADMIN or logs_manager role for
 

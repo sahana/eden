@@ -368,125 +368,6 @@ class SetRolesTests(unittest.TestCase):
             auth.s3_delete_role("TESTROLE")
             current.db.rollback()
 
-    # -------------------------------------------------------------------------
-    def testSetRolesPolicy8(self):
-        """ Test set_roles with policy 8 """
-
-        s3db = current.s3db
-        auth = current.auth
-        settings = current.deployment_settings
-
-        settings.security.policy = 8
-        auth.permission = S3Permission(auth)
-
-        assertEqual = self.assertEqual
-        assertTrue = self.assertTrue
-        assertFalse = self.assertFalse
-
-        try:
-            # Create a test role
-            role = auth.s3_create_role("Test Group", uid="TESTGROUP")
-
-            # Have two orgs, set org2 as OU descendant of org1
-            org1 = self.org1
-            org2 = self.org2
-            s3db.pr_add_affiliation(org1, org2, role="TestOrgUnit")
-
-            # Have a third org
-            org3 = self.org3
-
-            # Add the user as OU descendant of org3
-            user_id = auth.s3_get_user_id("normaluser@example.com")
-            user_pe = auth.s3_user_pe_id(user_id)
-            s3db.pr_add_affiliation(org3, user_pe, role="TestStaff")
-
-            # Assign normaluser the test role for org3
-            auth.s3_assign_role(user_id, role, for_pe=org3)
-
-            # Delegate the test role for org1 to org3
-            auth.s3_delegate_role("TESTGROUP", org1, receiver=org3)
-
-            # Impersonate as normal user
-            auth.s3_impersonate("normaluser@example.com")
-
-            # Check the realms
-            realms = list(auth.user.realms.keys())
-            assertTrue(2 in realms)
-            assertTrue(3 in realms)
-            assertTrue(role in realms)
-            assertEqual(len(realms), 3)
-
-            for r in auth.user.realms:
-                if r == role:
-                    assertTrue(org3 in auth.user.realms[r])
-                else:
-                    assertEqual(auth.user.realms[r], None)
-
-            # Check the delegations
-            delegations = list(auth.user.delegations.keys())
-            assertTrue(role in delegations)
-            assertEqual(len(delegations), 1)
-
-            realms = auth.user.delegations[role]
-            assertTrue(org3 in realms)
-            assertEqual(len(realms), 1)
-            assertTrue(org1 in realms[org3])
-            assertTrue(org2 in realms[org3])
-
-            # Remove the delegations
-            auth.s3_remove_delegation("TESTGROUP", org1, receiver=org3)
-
-            # Check the delegations again
-            delegations = list(auth.user.delegations.keys())
-            assertFalse(role in delegations)
-            assertEqual(len(delegations), 0)
-
-        finally:
-            s3db.pr_remove_affiliation(org1, org2, role="TestOrgUnit")
-            s3db.pr_remove_affiliation(org1, org2, role="TestStaff")
-            auth.s3_delete_role("TESTGROUP")
-            current.db.rollback()
-            auth.s3_impersonate(None)
-
-    # -------------------------------------------------------------------------
-    #def testPerformance(self):
-
-        #MAX_RUNTIME = 18 # Maximum acceptable runtime per request in milliseconds
-        ##MAX_RUNTIME = 3 # Maximum acceptable runtime per request in milliseconds (up to policy 7)
-
-        #deployment_settings.security.policy = 8
-        #from s3.s3aaa import S3Permission
-        #auth.permission = S3Permission(auth)
-
-        #try:
-            #org1 = s3db.pr_get_pe_id("org_organisation", 1)
-            #org2 = s3db.pr_get_pe_id("org_organisation", 2)
-            #s3db.pr_add_affiliation(org1, org2, role="TestOrgUnit")
-            #org3 = s3db.pr_get_pe_id("org_organisation", 3)
-            #partners = s3db.pr_add_affiliation(org1, org3, role="TestPartners", role_type=9)
-            #user = auth.s3_user_pe_id(auth.s3_get_user_id("normaluser@example.com"))
-            #s3db.pr_add_affiliation(org3, user, role="TestStaff")
-            #role = auth.s3_create_role("Test Group", uid="TESTGROUP")
-            #dtable = s3db.pr_delegation
-            #record = dtable.insert(role_id=partners, group_id=role)
-
-            #def setRoles():
-                #auth.s3_impersonate("normaluser@example.com")
-
-            #import timeit
-            #runtime = timeit.Timer(setRoles).timeit(number=100)
-            #if runtime > (MAX_RUNTIME / 10.0):
-                #raise AssertionError("s3_impersonate: maximum acceptable run time exceeded (%sms > %sms)" % (int(runtime * 10), MAX_RUNTIME))
-            ## Logout
-            #auth.s3_impersonate(None)
-
-        #finally:
-            #s3db.pr_remove_affiliation(org1, org2, role="TestOrgUnit")
-            #s3db.pr_remove_affiliation(org1, org2, role="TestStaff")
-            #s3db.pr_remove_affiliation(org1, org3, role="TestPartners")
-            #auth.s3_delete_role("TESTGROUP")
-            #current.db.rollback()
-
 # =============================================================================
 class RoleAssignmentTests(unittest.TestCase):
     """ Test role assignments """
@@ -1281,123 +1162,6 @@ class ACLManagementTests(unittest.TestCase):
                 del table[acl_id]
             auth.s3_delete_role(group_id)
 
-    # -------------------------------------------------------------------------
-    def testApplicableACLsPolicy8(self):
-
-        db = current.db
-        auth = current.auth
-        s3db = current.s3db
-
-        # Create 3 test organisations
-        xmlstr = """
-<s3xml>
-    <resource name="org_organisation" uuid="TAAO1">
-        <data field="name">TestApplicableACLsOrg1</data>
-    </resource>
-    <resource name="org_organisation" uuid="TAAO2">
-        <data field="name">TestApplicableACLsOrg2</data>
-    </resource>
-    <resource name="org_organisation" uuid="TAAO3">
-        <data field="name">TestApplicableACLsOrg3</data>
-    </resource>
-</s3xml>"""
-
-        try:
-            auth.override = True
-            from lxml import etree
-            xmltree = etree.ElementTree(etree.fromstring(xmlstr))
-            resource = s3db.resource("org_organisation")
-            resource.import_xml(xmltree)
-
-            resource = s3db.resource("org_organisation",
-                                     uid=["TAAO1", "TAAO2", "TAAO3"])
-            rows = resource.select(["pe_id", "uuid"], as_rows=True)
-            orgs = dict((row.uuid, row.pe_id) for row in rows)
-            org1 = orgs["TAAO1"]
-            org2 = orgs["TAAO2"]
-            org3 = orgs["TAAO3"]
-            auth.override = False
-        except:
-            db.rollback()
-            auth.override = False
-            raise
-
-        assertEqual = self.assertEqual
-        assertNotEqual = self.assertNotEqual
-        assertTrue = self.assertTrue
-
-        try:
-            # Have two orgs, set org2 as OU descendant of org1
-            s3db.pr_add_affiliation(org1, org2, role="TestOrgUnit")
-
-            # Set org3 as non-OU (role_type=9) partner of org1
-            partners = s3db.pr_add_affiliation(org1, org3, role="TestPartners", role_type=9)
-            assertNotEqual(partners, None)
-
-            # Add the user as OU descendant of org3
-            user_id = auth.s3_get_user_id("normaluser@example.com")
-            user_pe = auth.s3_user_pe_id(user_id)
-            assertNotEqual(user_pe, None)
-            s3db.pr_add_affiliation(org3, user_pe, role="TestStaff")
-
-            # Create a TESTGROUP and assign a table ACL
-            acl = auth.permission
-            role = auth.s3_create_role("Test Group", None,
-                                       dict(c="org", f="office", uacl=acl.ALL, oacl=acl.ALL),
-                                       dict(t="org_office", uacl=acl.READ, oacl=acl.ALL),
-                                       uid="TESTGROUP")
-
-            auth.s3_assign_role(user_id, role)
-
-            # We use delegations (policy 8)
-            current.deployment_settings.security.policy = 8
-            from s3.s3aaa import S3Permission
-            auth.permission = S3Permission(auth)
-
-            # Impersonate as normal user
-            auth.s3_impersonate("normaluser@example.com")
-            realms = auth.user.realms
-            delegations = auth.user.delegations
-
-            # Check permissions
-            acls = auth.permission.applicable_acls(acl.DELETE,
-                                                   realms,
-                                                   delegations,
-                                                   c="org",
-                                                   f="office",
-                                                   t="org_office",
-                                                   entity=org2)
-            assertTrue(isinstance(acls, dict))
-            assertEqual(acls, {})
-
-            # Delegate TESTGROUP to the TestPartners
-            auth.s3_delegate_role(role, org1, role="TestPartners")
-
-            # Update realms and delegations
-            auth.s3_impersonate("normaluser@example.com")
-            realms = auth.user.realms
-            delegations = auth.user.delegations
-
-            # Check permissions again
-            acls = auth.permission.applicable_acls(acl.DELETE,
-                                                   realms,
-                                                   delegations,
-                                                   c="org",
-                                                   f="office",
-                                                   t="org_office",
-                                                   entity=org2)
-
-            assertTrue(isinstance(acls, dict))
-            assertTrue(org2 in acls)
-            assertEqual(acls[org2], (acl.READ, acl.ALL))
-
-        finally:
-            s3db.pr_remove_affiliation(org1, org2, role="TestOrgUnit")
-            s3db.pr_remove_affiliation(org1, org2, role="TestStaff")
-            s3db.pr_remove_affiliation(org1, org3, role="TestPartners")
-            auth.s3_delete_role("TESTGROUP")
-            db.rollback()
-
 # =============================================================================
 class HasPermissionTests(unittest.TestCase):
     """ Test permission check method """
@@ -1950,102 +1714,6 @@ class HasPermissionTests(unittest.TestCase):
         assertFalse(permitted)
 
     # -------------------------------------------------------------------------
-    def testPolicy8(self):
-        """ Test permission check with policy 8 """
-
-        auth = current.auth
-        s3db = current.s3db
-
-        current.deployment_settings.security.policy = 8
-        auth.permission = S3Permission(auth)
-
-        user = auth.s3_user_pe_id(auth.s3_get_user_id("normaluser@example.com"))
-
-        has_permission = auth.s3_has_permission
-        c = "org"
-        f = "permission_test"
-        tablename = "org_permission_test"
-
-        assertTrue = self.assertTrue
-        assertFalse = self.assertFalse
-
-        # Check anonymous
-        auth.s3_impersonate(None)
-        permitted = has_permission("read", c=c, f=f, table=tablename)
-        assertFalse(permitted)
-
-        # Check authenticated
-        auth.s3_impersonate("normaluser@example.com")
-        permitted = has_permission("read", c=c, f=f, table=tablename)
-        assertFalse(permitted)
-
-        # Add the user as staff member (=OU) of org[2]
-        s3db.pr_add_affiliation(self.org[2], user, role="TestStaff")
-        auth.s3_assign_role(auth.user.id, self.editor, for_pe=self.org[2])
-
-        # User should not be able to read record1 or record2 (no access),
-        # but record3 (as editor for org[2])
-        permitted = has_permission("read", c=c, f=f, table=tablename,
-                                   record_id=self.record1)
-        assertFalse(permitted)
-        permitted = has_permission("read", c=c, f=f, table=tablename,
-                                   record_id=self.record2)
-        assertFalse(permitted)
-        permitted = has_permission("read", c=c, f=f, table=tablename,
-                                   record_id=self.record3)
-        assertTrue(permitted)
-
-        # User should not be able to update record1 or record2 (no access),
-        # but record3 (as editor for org[2])
-        permitted = has_permission("update", c=c, f=f, table=tablename,
-                                   record_id=self.record1)
-        assertFalse(permitted)
-        permitted = has_permission("update", c=c, f=f, table=tablename,
-                                   record_id=self.record2)
-        assertFalse(permitted)
-        permitted = has_permission("update", c=c, f=f, table=tablename,
-                                   record_id=self.record3)
-        assertTrue(permitted)
-
-        # Make org[2] and OU of org[1]
-        s3db.pr_add_affiliation(self.org[1], self.org[2], role="TestOrgUnit")
-
-        # Delegate TESTREADER from org[0] to org[1]
-        auth.s3_delegate_role(self.reader, self.org[0], receiver=self.org[1])
-
-        # Update realms
-        auth.s3_impersonate("normaluser@example.com")
-
-        # User should be able to read record1 (reader delegated)
-        # and record3 (as editor for org[2]), but not record2 (no access)
-        permitted = has_permission("read", c=c, f=f, table=tablename,
-                                   record_id=self.record1)
-        assertTrue(permitted)
-        permitted = has_permission("read", c=c, f=f, table=tablename,
-                                   record_id=self.record2)
-        assertFalse(permitted)
-        permitted = has_permission("read", c=c, f=f, table=tablename,
-                                   record_id=self.record3)
-        assertTrue(permitted)
-
-        # User should be able to update record3 (as editor for org[2]),
-        # but not record1 (only reader delegated) or record2 (no access)
-        permitted = has_permission("update", c=c, f=f, table=tablename,
-                                   record_id=self.record1)
-        assertFalse(permitted)
-        permitted = has_permission("update", c=c, f=f, table=tablename,
-                                   record_id=self.record2)
-        assertFalse(permitted)
-        permitted = has_permission("update", c=c, f=f, table=tablename,
-                                   record_id=self.record3)
-        assertTrue(permitted)
-
-        auth.s3_remove_delegation(self.reader, self.org[0], receiver=self.org[1])
-        s3db.pr_remove_affiliation(self.org[1], self.org[2], role="TestOrgUnit")
-        s3db.pr_remove_affiliation(self.org[2], user, role="TestStaff")
-        auth.s3_withdraw_role(auth.user.id, self.editor, for_pe=[])
-
-    # -------------------------------------------------------------------------
     def testWithUnavailableTable(self):
 
         auth = current.auth
@@ -2061,39 +1729,6 @@ class HasPermissionTests(unittest.TestCase):
 
         # Should return None if the table doesn't exist
         self.assertEqual(permitted, None)
-
-    ## -------------------------------------------------------------------------
-    #def testPerformance(self):
-        #""" Test has_permission performance """
-
-        #MAX_RUNTIME = 1 # Maximum acceptable runtime per request in milliseconds
-
-        #auth = current.auth
-        #current.deployment_settings.security.policy = 8
-        #from s3.s3aaa import S3Permission
-        #auth.permission = S3Permission(auth)
-
-        #has_permission = auth.s3_has_permission
-        #c = "org"
-        #f = "permission_test"
-        #tablename = "org_permission_test"
-        #assertTrue = self.assertTrue
-        #assertFalse = self.assertFalse
-
-        #auth.s3_impersonate("normaluser@example.com")
-        #auth.s3_assign_role(auth.user.id, self.editor, for_pe=self.org[0])
-
-        #def hasPermission():
-            #permitted = has_permission("update", c=c, f=f, table=tablename,
-                                       #record_id=self.record1)
-        #import timeit
-        #runtime = timeit.Timer(hasPermission).timeit(number=1000)
-        #if runtime > MAX_RUNTIME:
-            #raise AssertionError("has_permission: maximum acceptable run time "
-                                 #"exceeded (%.2fms > %.2fms)" %
-                                 #(runtime, MAX_RUNTIME))
-
-        #auth.s3_withdraw_role(auth.user.id, self.editor, for_pe=[])
 
 # =============================================================================
 class AccessibleQueryTests(unittest.TestCase):
@@ -2574,7 +2209,7 @@ class AccessibleQueryTests(unittest.TestCase):
 
         # Make org[1] a sub-entity of org[0]
         s3db.pr_add_affiliation(self.org[0], self.org[1], role="TestOrgUnit")
-        # Reload realms and delegations
+        # Reload realms
         auth.s3_impersonate("normaluser@example.com")
 
         # Re-check queries
@@ -2625,7 +2260,7 @@ class AccessibleQueryTests(unittest.TestCase):
 
         # Make org[1] a sub-entity of org[0]
         s3db.pr_add_affiliation(self.org[0], self.org[1], role="TestOrgUnit")
-        # Reload realms and delegations
+        # Reload realms
         auth.s3_impersonate("normaluser@example.com")
 
         # Re-check queries
@@ -2649,146 +2284,6 @@ class AccessibleQueryTests(unittest.TestCase):
         # Remove affiliation and role
         s3db.pr_remove_affiliation(self.org[0], self.org[1], role="TestOrgUnit")
         auth.s3_withdraw_role(auth.user.id, self.editor)
-
-    # -------------------------------------------------------------------------
-    def testPolicy8(self):
-        """ Test accessible query with policy 8 """
-
-        s3db = current.s3db
-        auth = current.auth
-
-        current.deployment_settings.security.policy = 8
-        auth.permission = S3Permission(auth)
-
-        accessible_query = auth.s3_accessible_query
-        c = "org"
-        f = "permission_test"
-        table = current.s3db.org_permission_test
-
-        assertEqual = self.assertEqual
-
-        ALL = (table.id > 0)
-        NONE = (table.id == 0)
-
-        # Check anonymous
-        auth.s3_impersonate(None)
-        query = accessible_query("read", table, c=c, f=f)
-        assertEqual(query, NONE)
-
-        # Check authenticated
-        auth.s3_impersonate("normaluser@example.com")
-        query = accessible_query("read", table, c=c, f=f)
-        assertEqual(query, NONE)
-
-        record = None
-
-        # Add the user as staff member (=OU) of org[2] and assign TESTEDITOR
-        user = auth.s3_user_pe_id(auth.s3_get_user_id("normaluser@example.com"))
-        s3db.pr_add_affiliation(self.org[2], user, role="TestStaff")
-        auth.s3_assign_role(auth.user.id, self.editor, for_pe=self.org[2])
-        roles = {3, 2}
-
-        # User should only be able to access records of org[2]
-        expected = (((table.realm_entity == self.org[2]) | \
-                   (table.realm_entity == None)) | \
-                   ((((table.owned_by_user == None) & \
-                   (table.owned_by_group == None)) & \
-                   (table.realm_entity == None)) | \
-                   (table.owned_by_group.belongs(roles))))
-        query = accessible_query("read", table, c=c, f=f)
-        assertEqual(query, expected)
-        query = accessible_query("update", table, c=c, f=f)
-        assertEqual(query, expected)
-
-        # Make org[2] and OU of org[1]
-        s3db.pr_add_affiliation(self.org[1], self.org[2], role="TestOrgUnit")
-
-        # Delegate TESTREADER from org[0] to org[1]
-        auth.s3_delegate_role(self.reader, self.org[0], receiver=self.org[1])
-
-        # Update realms
-        auth.s3_impersonate("normaluser@example.com")
-
-        # User should now be able to read records of org[0] (delegated
-        # reader role) and org[2] (editor role), but update only org[2]
-        query = accessible_query("read", table, c=c, f=f)
-        expected = (((table.realm_entity.belongs([self.org[0], self.org[2]])) | \
-                   (table.realm_entity == None)) | \
-                   ((((table.owned_by_user == None) & \
-                   (table.owned_by_group == None)) & \
-                   (table.realm_entity == None)) | \
-                   (table.owned_by_group.belongs(roles))))
-        assertEqual(query, expected)
-        query = accessible_query("update", table, c=c, f=f)
-        expected = (((table.realm_entity == self.org[2]) | \
-                   (table.realm_entity == None)) | \
-                   ((((table.owned_by_user == auth.user.id) & \
-                   ((table.realm_entity == self.org[0]) | \
-                   (table.realm_entity == None))) | \
-                   (((table.owned_by_user == None) & \
-                   (table.owned_by_group == None)) & \
-                   (table.realm_entity == None)) | \
-                   (table.owned_by_group.belongs(roles)))))
-        assertEqual(query, expected)
-
-        # Remove the affiliation org org[2] with org[1]
-        s3db.pr_remove_affiliation(self.org[1],
-                                   self.org[2],
-                                   role="TestOrgUnit")
-
-        # Update realms
-        auth.s3_impersonate("normaluser@example.com")
-
-        # Check queries again, user should now only have access to
-        # records of org[2] (editor role)
-        query = accessible_query("read", table, c=c, f=f)
-        expected = (((table.realm_entity == self.org[2]) | \
-                   (table.realm_entity == None)) | \
-                   ((((table.owned_by_user == None) & \
-                   (table.owned_by_group == None)) & \
-                   (table.realm_entity == None)) | \
-                   (table.owned_by_group.belongs(roles))))
-        assertEqual(query, expected)
-        query = accessible_query("update", table, c=c, f=f)
-        assertEqual(query, expected)
-
-        # Remove delegation, affiliation and role
-        s3db.pr_remove_affiliation(self.org[2], user, role="TestStaff")
-        s3db.pr_remove_affiliation(self.org[1], self.org[2],
-                                   role="TestOrgUnit")
-        auth.s3_withdraw_role(user, self.reader, for_pe=self.org[2])
-
-    ## -------------------------------------------------------------------------
-    #def testPerformance(self):
-        #""" Test accessible query performance """
-
-        #auth = current.auth
-
-        ## Maximum acceptable runtime per request in milliseconds
-        #MAX_RUNTIME = 1.5
-
-        #current.deployment_settings.security.policy = 8
-        #from s3.s3aaa import S3Permission
-        #auth.permission = S3Permission(auth)
-
-        #accessible_query = auth.s3_accessible_query
-        #c = "org"
-        #f = "permission_test"
-        #table = current.s3db.org_permission_test
-        #assertEqual = self.assertEqual
-
-        #auth.s3_impersonate("normaluser@example.com")
-        #auth.s3_assign_role(auth.user.id, self.editor, for_pe=self.org[0])
-
-        #def accessibleQuery():
-            #query = accessible_query("update", table, c=c, f=f)
-        #import timeit
-        #runtime = timeit.Timer(accessibleQuery).timeit(number=1000)
-        #if runtime > MAX_RUNTIME:
-            #raise AssertionError("accessible_query: maximum acceptable "
-                                 #"run time exceeded (%.2fms > %.2fms)" %
-                                 #(runtime, MAX_RUNTIME))
-        #auth.s3_withdraw_role(auth.user.id, self.editor, for_pe=[])
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -2832,194 +2327,6 @@ class AccessibleQueryTests(unittest.TestCase):
                    cls.compare_queries(ml.group(4), mr.group(4))
 
         return False
-
-# =============================================================================
-class DelegationTests(unittest.TestCase):
-    """ Test delegation of roles """
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def setUpClass(cls):
-
-        # Create test roles
-        s3_create_role = current.auth.s3_create_role
-        TESTREADER = "TESTREADER"
-        s3_create_role(TESTREADER, None, uid=TESTREADER)
-        TESTEDITOR = "TESTEDITOR"
-        s3_create_role(TESTEDITOR, None, uid=TESTEDITOR)
-        TESTADMIN = "TESTADMIN"
-        s3_create_role(TESTADMIN, None, uid=TESTADMIN)
-        current.db.commit()
-
-    @classmethod
-    def tearDownClass(cls):
-
-        # Remove test roles
-        s3_delete_role = current.auth.s3_delete_role
-        s3_delete_role("TESTREADER")
-        s3_delete_role("TESTEDITOR")
-        s3_delete_role("TESTADMIN")
-        current.db.commit()
-
-    # -------------------------------------------------------------------------
-    def setUp(self):
-
-        db = current.db
-        auth = current.auth
-        s3db = current.s3db
-
-        # Store current security policy
-        settings = current.deployment_settings
-        self.policy = settings.get_security_policy()
-
-        # Get the role IDs
-        gtable = auth.settings.table_group
-        row = db(gtable.uuid=="TESTREADER").select(limitby=(0, 1)).first()
-        self.reader = row.id
-        row = db(gtable.uuid=="TESTEDITOR").select(limitby=(0, 1)).first()
-        self.editor = row.id
-        row = db(gtable.uuid=="TESTADMIN").select(limitby=(0, 1)).first()
-        self.admin = row.id
-
-        # Impersonate Admin
-        auth.s3_impersonate("admin@example.com")
-
-        # Create test entities
-        table = s3db.org_organisation
-        self.org = []
-        for i in range(3):
-            record_id = table.insert(name="PermissionTestOrganisation%s" % i)
-            record =  Storage(id=record_id)
-            s3db.update_super(table, record)
-            self.org.append(record.pe_id)
-
-        # Remove session ownership
-        auth.s3_clear_session_ownership()
-
-        # Logout + turn override off
-        auth.s3_impersonate(None)
-        auth.override = False
-
-    # -------------------------------------------------------------------------
-    def tearDown(self):
-
-        # Rollback
-        current.db.rollback()
-
-        # Logout + turn override off
-        auth = current.auth
-        auth.s3_impersonate(None)
-        auth.override = False
-
-        # Restore security policy
-        current.deployment_settings.security.policy = self.policy
-        auth.permission = S3Permission(auth)
-
-    # -------------------------------------------------------------------------
-    def testRoleDelegation(self):
-        """ Test delegation of a role """
-
-        s3db = current.s3db
-        auth = current.auth
-
-        current.deployment_settings.security.policy = 8
-        auth.permission = S3Permission(auth)
-
-        auth.s3_impersonate("normaluser@example.com")
-        user = auth.user.pe_id
-
-        org1 = self.org[0]
-        org2 = self.org[1]
-        org3 = self.org[2]
-
-        pr_add_affiliation = s3db.pr_add_affiliation
-        pr_remove_affiliation = s3db.pr_remove_affiliation
-        s3_delegate_role = auth.s3_delegate_role
-        s3_remove_delegation = auth.s3_remove_delegation
-
-        assertTrue = self.assertTrue
-        assertFalse = self.assertFalse
-        assertEqual = self.assertEqual
-        assertNotEqual = self.assertNotEqual
-
-        READER = self.reader
-        EDITOR = self.editor
-
-        # Add the user as staff member (=OU) of org3 and assign TESTEDITOR
-        pr_add_affiliation(org3, user, role="TestStaff")
-        auth.s3_assign_role(auth.user.id, EDITOR, for_pe=org3)
-
-        # Make org3 an OU descendant of org2
-        pr_add_affiliation(org2, org3, role="TestOrgUnit")
-
-        # Delegate the TESTREADER role for org1 to org2
-        s3_delegate_role(READER, org1, receiver=org2)
-
-        # Check the delegations
-        delegations = auth.user.delegations
-        assertTrue(READER in delegations)
-        assertTrue(org3 in delegations[READER])
-        assertTrue(org1 in delegations[READER][org3])
-
-        s3_remove_delegation(READER, org1, receiver=org2)
-
-        # Check the delegations
-        delegations = auth.user.delegations
-        assertEqual(list(delegations.keys()), [])
-
-        # Delegate the TESTREADER and TESTEDITOR roles for org1 to org2
-        s3_delegate_role([READER, EDITOR], org1, receiver=org2)
-
-        delegations = auth.s3_get_delegations(org1)
-        assertNotEqual(delegations, None)
-        assertTrue(isinstance(delegations, Storage))
-        assertTrue(org2 in delegations)
-        assertTrue(isinstance(delegations[org2], list))
-        assertEqual(len(delegations[org2]), 2)
-        assertTrue(READER in delegations[org2])
-        assertTrue(EDITOR in delegations[org2])
-
-        # Check the delegations
-        delegations = auth.user.delegations
-        assertTrue(READER in delegations)
-        assertTrue(EDITOR in delegations)
-        assertTrue(org3 in delegations[READER])
-        assertTrue(org1 in delegations[READER][org3])
-        assertTrue(org3 in delegations[EDITOR])
-        assertTrue(org1 in delegations[EDITOR][org3])
-
-        s3_remove_delegation(EDITOR, org1, receiver=org2)
-
-        delegations = auth.s3_get_delegations(org1)
-        assertNotEqual(delegations, None)
-        assertTrue(isinstance(delegations, Storage))
-        assertTrue(org2 in delegations)
-        assertTrue(isinstance(delegations[org2], list))
-        assertEqual(len(delegations[org2]), 1)
-        assertTrue(READER in delegations[org2])
-
-        # Check the delegations
-        delegations = auth.user.delegations
-        assertTrue(READER in delegations)
-        assertFalse(EDITOR in delegations)
-        assertTrue(org3 in delegations[READER])
-        assertTrue(org1 in delegations[READER][org3])
-
-        s3_remove_delegation(READER, org1, receiver=org2)
-
-        delegations = auth.s3_get_delegations(org1)
-        assertNotEqual(delegations, None)
-        assertTrue(isinstance(delegations, Storage))
-        assertEqual(list(delegations.keys()), [])
-
-        # Check the delegations
-        delegations = auth.user.delegations
-        assertEqual(list(delegations.keys()), [])
-
-        # Remove delegation, affiliation and role
-        pr_remove_affiliation(org3, user, role="TestStaff")
-        pr_remove_affiliation(org2, org3, role="TestOrgUnit")
-        auth.s3_withdraw_role(user, READER, for_pe=org3)
 
 # =============================================================================
 class RecordApprovalTests(unittest.TestCase):
@@ -3591,6 +2898,7 @@ class RecordApprovalTests(unittest.TestCase):
             assertTrue(org_id > 0)
             org.update(id=org_id)
             s3db.update_super(otable, org)
+            auth.s3_set_record_owner(otable, org)
 
             # Give AUTHENTICATED permissions to read all records and
             # update own records in this table (override any default rules):
@@ -3612,7 +2920,7 @@ class RecordApprovalTests(unittest.TestCase):
             permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
             assertTrue(permitted)
             permitted = has_permission("update", otable, record_id=org_id, c="org", f="organisation")
-            assertTrue(permitted)
+            assertFalse(permitted)
             permitted = has_permission("delete", otable, record_id=org_id, c="org", f="organisation")
             assertFalse(permitted)
 
@@ -3686,7 +2994,7 @@ class RecordApprovalTests(unittest.TestCase):
             permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
             assertTrue(permitted)
             permitted = has_permission("update", otable, record_id=org_id, c="org", f="organisation")
-            assertTrue(permitted)
+            assertFalse(permitted)
             permitted = has_permission("delete", otable, record_id=org_id, c="org", f="organisation")
             assertFalse(permitted) # not permitted per default permission rules
 
@@ -3737,7 +3045,7 @@ class RecordApprovalTests(unittest.TestCase):
             permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
             assertTrue(permitted)
             permitted = has_permission("update", otable, record_id=org_id, c="org", f="organisation")
-            assertTrue(permitted)
+            assertFalse(permitted)
             permitted = has_permission("delete", otable, record_id=org_id, c="org", f="organisation")
             assertFalse(permitted) # not allowed as per ACL!
 
@@ -4567,7 +3875,6 @@ if __name__ == "__main__":
         ACLManagementTests,
         HasPermissionTests,
         AccessibleQueryTests,
-        DelegationTests,
         RecordApprovalTests,
         RealmEntityTests,
         LinkToPersonTests,

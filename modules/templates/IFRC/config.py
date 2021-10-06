@@ -55,7 +55,7 @@ def config(settings):
     settings.base.session_db = True
 
     # Security Policy
-    settings.security.policy = 8 # Delegations
+    settings.security.policy = 7
     settings.security.map = True
 
     # Authorization Settings
