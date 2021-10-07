@@ -12,7 +12,8 @@ $(document).ready(function() {
         var track_items = S3.supply.track_items;
         if (undefined !== track_items) {
 
-            var quantity,
+            var inlineComponent = $('#sub-defaultsend_package_item'),
+                quantity,
                 QuantityField = $('#sub_defaultsend_package_item_defaultsend_package_item_i_quantity_edit_none'),
                 trackItemID;
 
@@ -39,6 +40,22 @@ $(document).ready(function() {
             };
 
             trackItemAddField.change(TrackItemChange);
+
+            inlineComponent.on('rowAdded', function(event, row) {
+                trackItemID = row.track_item_id.value;
+                // Remove Item from selection options
+                $(trackItemAddFieldSelector + ' option[value="' + trackItemID + '"]').remove();
+                // Remove Quantity available (in case we then delete again)
+                track_items[trackItemID] = track_items[trackItemID] - parseFloat(row.quantity.value);
+            });
+
+            inlineComponent.on('rowRemoved', function(event, row) {
+                trackItemID = row.track_item_id.value;
+                // Add Item to selection options
+                trackItemAddField.append('<option value="' + trackItemID + '">' + row.track_item_id.text + '</option>');
+                // Make Quantity available
+                track_items[trackItemID] = track_items[trackItemID] + parseFloat(row.quantity.value);
+            });
         }
     }
 

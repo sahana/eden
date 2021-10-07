@@ -969,7 +969,7 @@
                 value,
                 i;
 
-            for (i=0; i < fields.length; i++) {
+            for (i = 0; i < fields.length; i++) {
 
                 fieldname = fields[i].name;
                 value = row[fieldname].value;
@@ -1327,6 +1327,9 @@
                             // (initially hidden with explicitAdd=true and no rows yet existing)
                             self._showHeaders();
                         }
+
+                        // Fire Event for external scripts to listen to
+                        $(self.element).trigger('rowAdded', newRow);
                     }
 
                     if (multiple) {
@@ -1422,7 +1425,7 @@
                                     self._catchSubmit();
                                 };
 
-                                for (i=0; i < fields.length; i++) {
+                                for (i = 0; i < fields.length; i++) {
                                     var field = fields[i].name;
                                     items.push(new_row[field].text);
 
@@ -1505,8 +1508,9 @@
             }
 
             // Update the real_input JSON with deletion of this row
-            var data = this._deserialize();
-            data.data[rowindex]._delete = true;
+            var data = this._deserialize(),
+                oldRow = data.data[rowindex];
+            oldRow._delete = true;
             this._serialize();
 
             // Remove the read-row for this item
@@ -1526,6 +1530,9 @@
                     this._catchSubmit();
                 }
             }
+
+            // Fire Event for external scripts to listen to
+            $(this.element).trigger('rowRemoved', oldRow);
 
             return true;
         },
