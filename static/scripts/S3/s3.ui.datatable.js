@@ -1804,7 +1804,8 @@
                 if (link.search) {
                     var items = link.search.slice(1).split('&'),
                         queries = items.map(function(item) {
-                            return item.split('=');
+                            var q = item.split('=');
+                            return [decodeURIComponent(q[0]), decodeURIComponent(q[1])];
                         }).filter(function(item) {
                             return item[0].indexOf('.') != -1;
                         });
