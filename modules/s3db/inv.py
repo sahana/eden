@@ -11034,27 +11034,39 @@ def inv_send_controller():
                     next_number = 1
                 field.default = next_number
 
-                # Filter out Items which are already fully packageised
+                send_package_id = r.component_id
+                if send_package_id:
+                    send_package_id = int(send_package_id)
+
+                # Read all Items in the Shipment
                 ttable = s3db.inv_track_item
                 rows = db(ttable.send_id == send_id).select(ttable.id,
                                                             ttable.quantity,
                                                             )
                 track_items = {row.id: row.quantity for row in rows}
+
+                # Filter out Items which are already fully packaged
+                # - other than those in this Package (update forms)
+                send_package = []
                 spitable = s3db.inv_send_package_item
                 query &= (sptable.id == spitable.send_package_id)
-                rows = db(query).select(spitable.track_item_id,
+                rows = db(query).select(spitable.send_package_id,
+                                        spitable.track_item_id,
                                         spitable.quantity,
                                         )
                 for row in rows:
-                    track_items[row.track_item_id] -= row.quantity
-                track_item_ids = [track_item_id for track_item_id in track_items if track_items[track_item_id] <= 0]
+                    track_item_id = row.track_item_id
+                    if row.send_package_id == send_package_id:
+                        send_package.append(track_item_id)
+                    track_items[track_item_id] -= row.quantity
+                track_item_ids = [track_item_id for track_item_id in track_items if (track_item_id not in send_package) and (track_items[track_item_id] <= 0)]
                 spitable.track_item_id.requires.set_filter(not_filterby = "id", # Using not_filter_by as filter_opts = [] means 'no filtering' rather than 'no results'
                                                            not_filter_opts = track_item_ids,
                                                            )
                 # Default Quantity
-                if r.component_id:
+                if send_package_id:
                     # Update form
-                    pass
+                    track_items = {k: v for k, v in track_items.items() if (k in send_package) or (v > 0)}
                 else:
                     # Create form
                     track_items = {k: v for k, v in track_items.items() if v > 0}
