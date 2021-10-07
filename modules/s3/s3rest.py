@@ -38,6 +38,7 @@ import re
 import sys
 
 from io import StringIO
+from urllib.parse import unquote
 from urllib.request import urlopen
 
 from gluon import current, redirect, HTTP, URL
@@ -110,8 +111,8 @@ class S3Request(object):
                 extension = ext
         if c or f:
             if not auth.permission.has_permission("read",
-                                                  c=self.controller,
-                                                  f=self.function):
+                                                  c = self.controller,
+                                                  f = self.function):
                 auth.permission.fail()
 
         # Allow override of request args/vars
@@ -533,6 +534,7 @@ class S3Request(object):
             # Read POST vars (e.g. from S3.gis.refreshLayer)
             filters = self.post_vars
             decode = None
+            encoded = None
         elif mode == "ajax" or content_type[:10] != "multipart/":
             # Read body JSON (e.g. from $.searchS3)
             body = self.body
@@ -549,10 +551,12 @@ class S3Request(object):
             if not isinstance(filters, dict):
                 filters = {}
             decode = None
+            encoded = None
         else:
             # Read POST vars JSON (e.g. from $.searchDownloadS3)
             filters = self.post_vars
             decode = json.loads
+            encoded = True
 
         # Move filters into GET vars
         get_vars = Storage(get_vars)
@@ -575,7 +579,10 @@ class S3Request(object):
                              ]
                 elif type(value) is not str:
                     value = s3_str(value)
-                get_vars[s3_str(k)] = value
+                if encoded:
+                    get_vars[s3_str(k)] = unquote(value)
+                else:
+                    get_vars[s3_str(k)] = value
                 # Remove filter expression from POST vars
                 if k in post_vars:
                     del post_vars[k]
