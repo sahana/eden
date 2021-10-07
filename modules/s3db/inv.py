@@ -2739,6 +2739,7 @@ class InventoryPackageShipmentModel(S3Model):
         configure(tablename,
                   onaccept = self.send_package_item_onaccept,
                   ondelete = self.send_package_item_ondelete,
+                  onvalidation = self.send_package_item_onvalidation,
                   )
 
         # ---------------------------------------------------------------------
@@ -2786,6 +2787,56 @@ class InventoryPackageShipmentModel(S3Model):
         """
 
         inv_send_package_update(row.send_package_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def send_package_item_onvalidation(form):
+        """
+            Validate the Quantity Packaged doesn't exceed the Quantity Shipped
+        """
+
+        db = current.db
+
+        form_vars = form.vars
+        new_quantity = float(form_vars.quantity)
+
+        spitable = db.inv_send_package_item
+
+        record_id = form.record_id
+        if record_id:
+            # Check if new quantity exceeds quantity already packed in this package
+            record = db(spitable.id == record_id).select(spitable.quantity,
+                                                         limitby = (0, 1),
+                                                         ).first()
+            old_quantity = record.quantity
+            if old_quantity >= new_quantity:
+                # Quantity reduced or unchanged, no need to re-validate
+                return
+        else:
+            old_quantity = 0
+
+        # Get the track_item quantity
+        track_item_id = form_vars.track_item_id
+        ttable = db.inv_track_item
+        ptable = db.supply_item_pack
+        query = (ttable.id == track_item_id) & \
+                (ttable.item_pack_id == ptable.id)
+        track_item = db(query).select(ttable.quantity,
+                                      ptable.name,
+                                      limitby = (0, 1),
+                                      ).first()
+        send_quantity = track_item["inv_track_item.quantity"]
+
+        packed_items = db(spitable.track_item_id == track_item_id).select(spitable.quantity)
+        packed_quantity = sum([row.quantity for row in packed_items])
+
+        left_quantity = send_quantity - packed_quantity + old_quantity
+
+        if new_quantity > left_quantity:
+            form.errors.quantity = current.T("Only %(quantity)s %(pack)s left to package.") % \
+                                        {"quantity": left_quantity,
+                                         "pack": track_item["supply_item_pack.name"],
+                                         }
 
     # -------------------------------------------------------------------------
     @staticmethod
