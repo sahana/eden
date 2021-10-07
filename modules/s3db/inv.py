@@ -6468,37 +6468,39 @@ class InventoryTrackingModel(S3Model):
                                                 {"quantity": inv_quantity,
                                                  "pack": inv_item_pack.name,
                                                  }
-            if not form.errors:
-                # Copy the data from the sent inv_item
-                inv_item = db(query).select(iitable.item_id,
-                                            iitable.item_source_no,
-                                            iitable.expiry_date,
-                                            iitable.bin,
-                                            iitable.layout_id,
-                                            iitable.owner_org_id,
-                                            iitable.supply_org_id,
-                                            iitable.pack_value,
-                                            iitable.currency,
-                                            iitable.status,
-                                            limitby = (0, 1),
-                                            ).first()
-                form_vars.item_id = inv_item.item_id
-                form_vars.item_source_no = inv_item.item_source_no
-                form_vars.expiry_date = inv_item.expiry_date
-                form_vars.bin = inv_item.bin
-                form_vars.layout_id = inv_item.layout_id
-                form_vars.owner_org_id = inv_item.owner_org_id
-                form_vars.supply_org_id = inv_item.supply_org_id
-                form_vars.pack_value = inv_item.pack_value
-                form_vars.currency = inv_item.currency
-                form_vars.inv_item_status = inv_item.status
+                    # Nothing else to validate
+                    return
 
-                # Save the organisation from where this tracking originates
-                stable = current.s3db.org_site
-                site = db(query & (iitable.site_id == stable.id)).select(stable.organisation_id,
-                                                                         limitby = (0, 1),
-                                                                         ).first()
-                form_vars.track_org_id = site.organisation_id
+            # Copy the data from the sent inv_item
+            inv_item = db(query).select(iitable.item_id,
+                                        iitable.item_source_no,
+                                        iitable.expiry_date,
+                                        iitable.bin,
+                                        iitable.layout_id,
+                                        iitable.owner_org_id,
+                                        iitable.supply_org_id,
+                                        iitable.pack_value,
+                                        iitable.currency,
+                                        iitable.status,
+                                        limitby = (0, 1),
+                                        ).first()
+            form_vars.item_id = inv_item.item_id
+            form_vars.item_source_no = inv_item.item_source_no
+            form_vars.expiry_date = inv_item.expiry_date
+            form_vars.bin = inv_item.bin
+            form_vars.layout_id = inv_item.layout_id
+            form_vars.owner_org_id = inv_item.owner_org_id
+            form_vars.supply_org_id = inv_item.supply_org_id
+            form_vars.pack_value = inv_item.pack_value
+            form_vars.currency = inv_item.currency
+            form_vars.inv_item_status = inv_item.status
+
+            # Save the organisation from where this tracking originates
+            stable = current.s3db.org_site
+            site = db(query & (iitable.site_id == stable.id)).select(stable.organisation_id,
+                                                                     limitby = (0, 1),
+                                                                     ).first()
+            form_vars.track_org_id = site.organisation_id
 
         if not form_vars.recv_quantity and "quantity" in form_vars:
             # If we have no send_id and no recv_quantity then

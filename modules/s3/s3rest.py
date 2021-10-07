@@ -38,7 +38,6 @@ import re
 import sys
 
 from io import StringIO
-from urllib.parse import unquote
 from urllib.request import urlopen
 
 from gluon import current, redirect, HTTP, URL
@@ -401,8 +400,9 @@ class S3Request(object):
 
         custom_action = current.s3db.get_method(prefix,
                                                 name,
-                                                component_name=component_name,
-                                                method=method)
+                                                component_name = component_name,
+                                                method = method,
+                                                )
 
         http = self.http
         handler = None
@@ -484,7 +484,8 @@ class S3Request(object):
         if l > 1:
             m = f[1][0].lower()
             i = f[1][1]
-            components = current.s3db.get_components(tablename, names=[m])
+            components = current.s3db.get_components(tablename,
+                                                     names = [m])
             if components and m in components:
                 self.component_name = m
                 self.component_id = i
@@ -534,7 +535,6 @@ class S3Request(object):
             # Read POST vars (e.g. from S3.gis.refreshLayer)
             filters = self.post_vars
             decode = None
-            encoded = None
         elif mode == "ajax" or content_type[:10] != "multipart/":
             # Read body JSON (e.g. from $.searchS3)
             body = self.body
@@ -551,12 +551,10 @@ class S3Request(object):
             if not isinstance(filters, dict):
                 filters = {}
             decode = None
-            encoded = None
         else:
             # Read POST vars JSON (e.g. from $.searchDownloadS3)
             filters = self.post_vars
             decode = json.loads
-            encoded = True
 
         # Move filters into GET vars
         get_vars = Storage(get_vars)
@@ -579,10 +577,7 @@ class S3Request(object):
                              ]
                 elif type(value) is not str:
                     value = s3_str(value)
-                if encoded:
-                    get_vars[s3_str(k)] = unquote(value)
-                else:
-                    get_vars[s3_str(k)] = value
+                get_vars[s3_str(k)] = value
                 # Remove filter expression from POST vars
                 if k in post_vars:
                     del post_vars[k]

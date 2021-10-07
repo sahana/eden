@@ -85,7 +85,7 @@ S3.search = {};
         if (query) {
             var items = S3.queryString.parse(query);
             for (k in items) {
-                v = items[k];
+                v = decodeURIComponent(items[k]);
                 if (isFilterKey(k)) {
                     addQueryItem(postData, k, v);
                 } else {
