@@ -61,7 +61,7 @@ def info_prep(r):
             # cap/info controller
             try:
                 template_id = db(table.id == r.id).select(table.template_info_id,
-                                                          limitby=(0, 1)
+                                                          limitby = (0, 1),
                                                           ).first().template_info_id
             except (AttributeError, KeyError):
                 pass
@@ -75,7 +75,8 @@ def info_prep(r):
 
     if template_id:
         # Read template and copy locked fields to post_vars
-        template = db(table.id == template_id).select(limitby=(0, 1)).first()
+        template = db(table.id == template_id).select(limitby = (0, 1),
+                                                      ).first()
         settings = json.loads(template.template_settings)
         if isinstance(settings.get("locked", False), dict):
             locked_fields = [lf for lf in settings["locked"] if settings["locked"]]
@@ -108,20 +109,24 @@ def alert():
         itable = s3db.cap_info
 
         rows = db(itable.expires < request.utcnow).select(itable.id,
-                                                          orderby=itable.id)
+                                                          orderby = itable.id,
+                                                          )
         expired_ids = ",".join([str(row.id) for row in rows]) or None
 
         rows = db(itable.expires >= request.utcnow).select(itable.id,
-                                                           orderby=itable.id)
+                                                           orderby = itable.id,
+                                                           )
         unexpired_ids = default_filter = ",".join([str(row.id) for row in rows]) or None
 
 
         rows = db(table.external == True).select(table.id,
-                                                 orderby=table.id)
+                                                 orderby = table.id,
+                                                 )
         external_alerts = ",".join([str(row.id) for row in rows]) or None
 
         rows = db(table.external != True).select(table.id,
-                                                 orderby=table.id)
+                                                 orderby = table.id,
+                                                 )
         internal_alerts = default_alert = ",".join([str(row.id) for row in rows]) or None
 
         filter_widgets = s3db.get_config(tablename, "filter_widgets")
@@ -219,7 +224,8 @@ def alert():
             if record.is_template:
                 redirect(URL(c="cap", f="template",
                              args = request.args,
-                             vars = request.vars))
+                             vars = request.vars,
+                             ))
 
             if record.external != True:
                 from s3 import S3Represent
@@ -280,11 +286,12 @@ def alert():
 
                     # TODO Action buttons should be postp, not prep
                     s3_action_buttons(r, deletable=False, editable=False,
-                                      read_url=URL(args="[id]"))
-                    profile_button = {"url": URL(args=["[id]", "profile"]),
+                                      read_url = URL(args = "[id]"),
+                                      )
+                    profile_button = {"url": URL(args = ["[id]", "profile"]),
                                       "_class": "action-btn",
                                       "_target": "_blank",
-                                      "label": str(T("View Profile"))
+                                      "label": s3_str(T("View Profile"))
                                       }
                     s3.actions.insert(1, profile_button)
                     list_fields = ["info.event_type_id",
@@ -307,14 +314,16 @@ def alert():
                             (table.is_template != True) & \
                             (table.deleted != True)
                     rows = db(query).select(itable.sender_name,
-                                            groupby=itable.sender_name)
+                                            groupby = itable.sender_name,
+                                            )
                     sender_options = {}
                     for row in rows:
                         sender_name = row.sender_name
                         sender_options[sender_name] = s3_str(T(sender_name))
 
                     rows = db(query).select(itable.event_type_id,
-                                            groupby=itable.event_type_id)
+                                            groupby = itable.event_type_id,
+                                            )
                     event_type_options = {}
                     for row in rows:
                         event_type_id = row.event_type_id
@@ -335,10 +344,10 @@ def alert():
                         ]
                     s3.crud_strings["cap_alert"].title_list = T("Alerts Hub")
                     s3base.S3CRUD.action_buttons(r, deletable=False)
-                    profile_button = {"url": URL(args=["[id]", "profile"]),
+                    profile_button = {"url": URL(args = ["[id]", "profile"]),
                                       "_class": "action-btn",
                                       "_target": "_blank",
-                                      "label": str(T("View Profile"))
+                                      "label": s3_str(T("View Profile"))
                                       }
                     s3.actions.insert(1, profile_button)
 
@@ -357,26 +366,34 @@ def alert():
                                                                       itable.urgency,
                                                                       itable.severity,
                                                                       itable.certainty,
-                                                                      limitby=(0, 1)).first()
+                                                                      limitby = (0, 1),
+                                                                      ).first()
                         arow = db(artable.alert_id == alert_id).select(artable.id,
-                                                                       limitby=(0, 1)).first()
+                                                                       limitby = (0, 1),
+                                                                       ).first()
                         if not irow or not arow:
                             # This is incomplete alert
                             session.warning = T("This Alert is incomplete! You can complete it now.")
-                            redirect(URL(c="cap", f="alert", args=[alert_id]))
+                            redirect(URL(c="cap", f="alert",
+                                         args = [alert_id],
+                                         ))
                         elif not irow.urgency or not irow.severity or not irow.certainty:
                             # Some required element is missing
                             # This could arise because info segments are copied from templates
                             # and there is no any urgency or severity or certainty in the info template
                             session.warning = T("Urgency or Severity or Certainty is missing in info segment!.")
-                            redirect(URL(c="cap", f="alert", args=[alert_id, "info"]))
+                            redirect(URL(c="cap", f="alert",
+                                         args = [alert_id, "info"],
+                                         ))
                     else:
                         if r.get_vars["status"] == "incomplete":
                             # Show incomplete alerts, ie. without info and area segment
                             s3.filter = ((FS("info.id") == None) | (FS("area.id") == None)) & \
                                         (FS("external") != True)
                             s3.crud_strings["cap_alert"].title_list = T("Incomplete Alerts")
-                            url = URL(c="cap", f="alert", args=["[id]"])
+                            url = URL(c="cap", f="alert",
+                                      args = ["[id]"],
+                                      )
                             s3base.S3CRUD.action_buttons(r, update_url=url, read_url=url)
                         elif not r.get_vars:
                             # Filter those alerts having at least info and area segment
@@ -402,22 +419,22 @@ def alert():
 
                     # Header
                     profile_header = DIV(SPAN(SPAN("%s :: " % T("Message ID"),
-                                                   _class="cap-label upper"
+                                                   _class = "cap-label upper"
                                                    ),
                                               SPAN(record.identifier,
-                                                   _class="cap-strong"
+                                                   _class = "cap-strong"
                                                    ),
-                                              _class="medium-6 columns",
+                                              _class = "medium-6 columns",
                                               ),
                                          SPAN(SPAN("%s :: " % T("Source"),
-                                                   _class="cap-label upper"
+                                                   _class = "cap-label upper"
                                                    ),
                                               SPAN(record.source,
-                                                   _class="cap-strong"
+                                                   _class = "cap-strong"
                                                    ),
-                                              _class="medium-6 columns",
+                                              _class = "medium-6 columns",
                                               ),
-                                         _class="row"
+                                         _class = "row"
                                          )
 
                     # Read the Components
@@ -462,7 +479,8 @@ def alert():
                         else:
                             query = (ptable.info_id == info["cap_info.id"])
                         parameters = db(query).select(ptable.name,
-                                                      ptable.value)
+                                                      ptable.value,
+                                                      )
 
                     # Map
                     ftable = s3db.gis_layer_feature
@@ -473,15 +491,15 @@ def alert():
                     query = (ftable.controller == "cap") & \
                             (ftable.function == fn)
                     layer = db(query).select(ftable.layer_id,
-                                             limitby=(0, 1)
+                                             limitby = (0, 1),
                                              ).first()
                     try:
-                        layer = dict(active = True,
-                                     layer_id = layer.layer_id,
-                                     filter = "~.id=%s" % alert_id,
-                                     name = record.identifier,
-                                     id = "profile-header-%s-%s" % (tablename, alert_id),
-                                     )
+                        layer = {"active": True,
+                                 "layer_id": layer.layer_id,
+                                 "filter": "~.id=%s" % alert_id,
+                                 "name": record.identifier,
+                                 "id": "profile-header-%s-%s" % (tablename, alert_id),
+                                 }
                     except:
                         # No suitable prepop found
                         layer = None
@@ -496,7 +514,8 @@ def alert():
                                                 gtable.lon_max,
                                                 gtable.lat_min,
                                                 gtable.lon_min,
-                                                limitby=(0, 1)).first()
+                                                limitby = (0, 1),
+                                                ).first()
                     if location:
                         bbox = {"lat_max" : location.lat_max,
                                 "lon_max" : location.lon_max,
@@ -510,24 +529,24 @@ def alert():
                     area_name = info["cap_area.name"]
                     if area_name:
                         label = TAG[""](SPAN("%s :: " % T("Area"),
-                                             _class="cap-label upper"
+                                             _class = "cap-label upper"
                                              ),
                                         SPAN(", ".join(area_name)
                                              if isinstance(area_name, list)
                                              else area_name,
-                                             _class="cap-value"
+                                             _class = "cap-value"
                                              ),
                                         )
                     else:
                         label = ""
-                    map_widget = dict(label = label,
-                                      type = "map",
-                                      #context = "alert",
-                                      icon = "icon-map",
-                                      #height = 383,
-                                      #width = 568,
-                                      bbox = bbox,
-                                      )
+                    map_widget = {"label": label,
+                                  "type": "map",
+                                  #"context": "alert",
+                                  "icon": "icon-map",
+                                  #"height": 383,
+                                  #"width": 568,
+                                  "bbox": bbox,
+                                  }
 
                     widget = s3db.cap_AlertProfileWidget
                     component = widget.component
@@ -724,8 +743,9 @@ def alert():
                             from s3 import S3Represent
                             atable = s3db.cap_area
                             cap_area_options = cap_AreaRowOptionsBuilder(r.id,
-                                                                         caller=r.method)
-                            atable.name.represent = S3Represent(options=cap_area_options)
+                                                                         caller = r.method,
+                                                                         )
+                            atable.name.represent = S3Represent(options = cap_area_options)
 
                 elif r.method != "import" and not get_vars.get("_next"):
                     s3.crud.submit_style = "hide"
@@ -736,13 +756,15 @@ def alert():
 
             elif r.component_name == "info":
                 # Filter the language options
-                itable.language.requires = IS_ISO639_2_LANGUAGE_CODE(\
-                                            zero=None,
-                                            translate=True,
-                                            select=settings.get_cap_languages())
-                itable.language.comment = DIV(_class="tooltip",
-                                              _title="%s|%s" % (T("Denotes the language of the information"),
-                                                                T("Code Values: Natural language identifier per [RFC 3066]. If not present, an implicit default value of 'en-US' will be assumed. Edit settings.cap.languages in 000_config.py to add more languages. See <a href=\"%s\">here</a> for a full list.") % "http://www.i18nguy.com/unicode/language-identifiers.html"))
+                itable.language.requires = IS_ISO639_2_LANGUAGE_CODE(zero = None,
+                                                                     translate = True,
+                                                                     select = settings.get_cap_languages(),
+                                                                     )
+                itable.language.comment = DIV(_class = "tooltip",
+                                              _title = "%s|%s" % (T("Denotes the language of the information"),
+                                                                  T("Code Values: Natural language identifier per [RFC 3066]. If not present, an implicit default value of 'en-US' will be assumed. Edit settings.cap.languages in 000_config.py to add more languages. See <a href=\"%s\">here</a> for a full list.") % "http://www.i18nguy.com/unicode/language-identifiers.html",
+                                                                  ),
+                                              )
                 # Do not show this as overwritten in onaccept
                 itable.web.readable = False
                 itable.web.writable = False
@@ -756,13 +778,17 @@ def alert():
                     if len(irows) < 2:
                         row = db(table.id == alert_id).select(table.scope,
                                                               table.event_type_id,
-                                                              limitby=(0, 1)).first()
+                                                              limitby = (0, 1),
+                                                              ).first()
                         if row.scope == "Public":
                             fn = "public"
                         else:
                             fn = "alert"
-                        itable.web.default = settings.get_base_public_url()+\
-                                             URL(c="cap", f=fn, args=alert_id)
+                        itable.web.default = "%s%s" % (settings.get_base_public_url(),
+                                                       URL(c="cap", f=fn,
+                                                           args = alert_id,
+                                                           ),
+                                                       )
                         itable.event_type_id.default = row.event_type_id
                     else:
                         s3db.configure("cap_info",
@@ -814,7 +840,7 @@ def alert():
                         # Represent each row with local name if available
                         from s3 import S3Represent
                         cap_area_options = cap_AreaRowOptionsBuilder(r.id)
-                        atable.name.represent = S3Represent(options=cap_area_options)
+                        atable.name.represent = S3Represent(options = cap_area_options)
 
                 if record.approved_by is not None:
                     # Once approved, don't allow area segment to edit
@@ -842,7 +868,8 @@ def alert():
                 if tid:
                     # Read template and copy locked fields to post_vars
                     template = db(table.id == tid).select(table.template_settings,
-                                                          limitby=(0, 1)).first()
+                                                          limitby = (0, 1),
+                                                          ).first()
                     try:
                         tsettings = json.loads(template.template_settings)
                     except ValueError:
@@ -863,7 +890,8 @@ def alert():
             table = db.cap_alert
             itable = s3db.cap_info
             alert = db(table.id == lastid).select(table.template_id,
-                                                  limitby=(0, 1)).first()
+                                                  limitby = (0, 1),
+                                                  ).first()
             iquery = (itable.alert_id == alert.template_id) & \
                      (itable.deleted != True)
             irows = db(iquery).select(itable.id)
@@ -900,7 +928,8 @@ def alert():
                 parameter_fields = [parameter_table[f] for f in parameter_table.fields
                                     if f not in unwanted_fields]
                 scope_row = db(table.id == lastid).select(table.scope,
-                                                          limitby=(0, 1)).first()
+                                                          limitby = (0, 1),
+                                                          ).first()
                 if scope_row and scope_row.scope == "Public":
                     fn = "public"
                 else:
@@ -918,15 +947,18 @@ def alert():
                     row_clone["effective"] = request.utcnow
                     row_clone["expires"] = s3db.cap_expirydate()
                     row_clone["sender_name"] = s3db.cap_sendername()
-                    row_clone["web"] = settings.get_base_public_url() + \
-                                        URL(c="cap", f=fn, args=lastid)
+                    row_clone["web"] = "%s%s" % (settings.get_base_public_url(),
+                                                 URL(c="cap", f=fn,
+                                                     args = lastid,
+                                                     ),
+                                                 )
                     row_clone["audience"] = audience
                     new_info_id = itable.insert(**row_clone)
 
                     # Copy info_parameter as well
                     parameter_query = parameter_query_ & \
                                       (parameter_table.info_id == row.id)
-                    parameter_rows =db(parameter_query).select(*parameter_fields)
+                    parameter_rows = db(parameter_query).select(*parameter_fields)
                     for parameter_row in parameter_rows:
                         parameter_row_clone = parameter_row.as_dict()
                         del parameter_row_clone["id"]
@@ -952,24 +984,30 @@ def alert():
 
             rows = db(itable.alert_id == lastid).select(itable.id)
             if len(rows) == 1:
-                r.next = URL(c="cap", f="alert", args=[lastid, "info", rows.first().id, "update"])
+                r.next = URL(c="cap", f="alert",
+                             args = [lastid, "info", rows.first().id, "update"],
+                             )
             elif len(rows) > 1:
-                r.next = URL(c="cap", f="alert", args=[lastid, "info"])
+                r.next = URL(c="cap", f="alert",
+                             args = [lastid, "info"],
+                             )
             else:
-                r.next = URL(c="cap", f="alert", args=[lastid, "info", "create"])
+                r.next = URL(c="cap", f="alert",
+                             args = [lastid, "info", "create"],
+                             )
 
         if r.interactive:
             if not r.component and not r.method:
-                s3_action_buttons(r, read_url=URL(args="[id]"))
-                profile_button = {"url": URL(args=["[id]", "profile"]),
+                s3_action_buttons(r, read_url = URL(args = "[id]"))
+                profile_button = {"url": URL(args = ["[id]", "profile"]),
                                   "_class": "action-btn",
                                   "_target": "_blank",
-                                  "label": str(T("View Profile"))
+                                  "label": s3_str(T("View Profile"))
                                   }
-                cap_button = {"url": URL(args=["[id].cap"]),
+                cap_button = {"url": URL(args = ["[id].cap"]),
                               "_class": "action-btn",
                               "_target": "_blank",
-                              "label": str(T("View CAP File"))
+                              "label": s3_str(T("View CAP File"))
                               }
                 s3.actions.insert(1, profile_button)
                 s3.actions.insert(2, cap_button)
@@ -1001,9 +1039,9 @@ def alert():
                            ]
 
             record = r.resource.select(list_fields,
-                                       as_rows=True,
-                                       #represent=True,
-                                       #show_links=False,
+                                       as_rows = True,
+                                       #represent = True,
+                                       #show_links = False,
                                        ).first()
 
             output = s3db.cap_alert_list_layout("map_popup", # list_id
@@ -1226,11 +1264,16 @@ def template():
                                                               ).first()
                         ctable.event_type_id.default = row.event_type_id
                         f = "public" if row.scope == "Public" else "alert"
-                        ctable.web.default = settings.get_base_public_url() + \
-                                             URL(c="cap", f=f, args=alert_id)
+                        ctable.web.default = "%s%s" % (settings.get_base_public_url(),
+                                                       URL(c="cap", f=f,
+                                                           args = alert_id,
+                                                           ),
+                                                       )
                     else:
                         # All possible info segments already present
-                        s3db.configure("cap_info", insertable=False)
+                        s3db.configure("cap_info",
+                                       insertable = False,
+                                       )
 
             elif alias == "resource":
 
@@ -1287,9 +1330,13 @@ def template():
                                                                 limitby = (0, 1),
                                                                 ).first()
                     if info:
-                        r.next = URL(c="cap", f="template", args=[lastid, "info"])
+                        r.next = URL(c="cap", f="template",
+                                     args = [lastid, "info"],
+                                     )
                     else:
-                        r.next = URL(c="cap", f="template", args=[lastid, "info", "create"])
+                        r.next = URL(c="cap", f="template",
+                                     args = [lastid, "info", "create"],
+                                     )
 
         return output
     s3.postp = postp
@@ -1324,7 +1371,8 @@ def area():
             msg_record_created = T("Predefined Area created"),
             msg_record_modified = T("Predefined Area modified"),
             msg_record_deleted = T("Predefined Area deleted"),
-            msg_list_empty = T("No Predefined Areas to show"))
+            msg_list_empty = T("No Predefined Areas to show"),
+            )
 
         list_fields = ["name",
                        "event_type_id",
@@ -1366,7 +1414,7 @@ def area():
         return True
     s3.prep = prep
 
-    return s3_rest_controller("cap", "area", rheader=s3db.cap_rheader)
+    return s3_rest_controller(rheader = s3db.cap_rheader)
 
 # -----------------------------------------------------------------------------
 def warning_priority():
@@ -1407,17 +1455,18 @@ def notify_approver():
         alert_id = get_vars.get("cap_alert.id")
         atable = s3db.cap_alert
         if not alert_id and not auth.s3_has_permission("update", atable,
-                                                       record_id=alert_id):
+                                                       record_id = alert_id):
             auth.permission.fail()
         row = db(atable.id == alert_id).select(atable.created_by,
                                                atable.approved_by,
-                                               limitby=(0, 1)).first()
+                                               limitby = (0, 1),
+                                               ).first()
         if not row.approved_by:
             # Get the user ids for the role alert_approver
             agtable = db.auth_group
-            group_row = db(agtable.role == "Alert Approver").select(\
-                                                        agtable.id,
-                                                        limitby=(0, 1)).first()
+            group_row = db(agtable.role == "Alert Approver").select(agtable.id,
+                                                                    limitby = (0, 1),
+                                                                    ).first()
             if group_row:
                 user_pe_id = auth.s3_user_pe_id
                 full_name = s3_fullname(pe_id=user_pe_id(row.created_by), truncate=False)
@@ -1428,7 +1477,10 @@ def notify_approver():
                     pe_append(user_pe_id(int(user_id)))
                 subject = "%s: Alert Approval Required" % settings.get_system_name_short()
                 url = "%s%s" % (settings.get_base_public_url(),
-                                URL(c="cap", f="alert", args=[alert_id, "review"]))
+                                URL(c="cap", f="alert",
+                                    args = [alert_id, "review"],
+                                    ),
+                                )
                 try:
                     from pyshorteners import Shortener
                 except ImportError:
@@ -1449,14 +1501,14 @@ Remember to verify the content before approving by using Edit button.""" % \
                 msg.send_by_pe_id(pe_ids,
                                   subject,
                                   message,
-                                  alert_id=alert_id,
+                                  alert_id = alert_id,
                                   )
                 try:
                     msg.send_by_pe_id(pe_ids,
                                       subject,
                                       message,
-                                      contact_method="SMS",
-                                      alert_id=alert_id,
+                                      contact_method = "SMS",
+                                      alert_id = alert_id,
                                       )
                 except ValueError:
                     current.log.error("No SMS Handler defined!")
@@ -1519,7 +1571,8 @@ def cap_AreaRowOptionsBuilder(alert_id, caller=None):
     rows = db(query).select(atable.id,
                             atable.template_area_id,
                             atable.name,
-                            orderby=atable.id)
+                            orderby = atable.id,
+                            )
     values = [row.id for row in rows]
     count = len(values)
     if count:
@@ -1541,8 +1594,8 @@ def cap_AreaRowOptionsBuilder(alert_id, caller=None):
         fields = [atable.name,
                   ltable.name_l10n,
                   ]
-        rows_ = db(query_).select(left=left,
-                                  limitby=(0, count),
+        rows_ = db(query_).select(left = left,
+                                  limitby = (0, count),
                                   *fields)
 
         cap_area_options = {}

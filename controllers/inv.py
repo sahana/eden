@@ -2078,10 +2078,15 @@ def order_item():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def pallet():
+def package():
     """
-        RESTful CRUD Controller for Pallets
+        RESTful CRUD Controller for Packages (Boxes & Pallets)
     """
+
+    if s3.debug:
+        s3.scripts.append("/%s/static/scripts/S3/s3.inv_package.js" % appname)
+    else:
+        s3.scripts.append("/%s/static/scripts/S3/s3.inv_package.min.js" % appname)
 
     return s3_rest_controller()
 
@@ -2973,8 +2978,10 @@ def req_item_packs():
 # -----------------------------------------------------------------------------
 def inv_item_quantity():
     """
-        Called from s3.supply.js to provide the pack options for a particular item
-        @ToDo: Extend to also lookup all Packs & Pack Quantities (to replace the filterOptionsS3 AJAX call to inv_item_packs)
+        Called from s3.inv_send_item.js to
+        - provide the pack options for a particular item
+        - lookup all Packs & Pack Quantities (to replace the filterOptionsS3 AJAX call to inv_item_packs)
+
         Access via the .json representation to avoid work rendering menus, etc
     """
 

@@ -7461,6 +7461,7 @@ class pr_PersonRepresent(S3Represent):
                  multiple = False,
                  default = None,
                  none = None,
+                 truncate = True, # Truncate to max 24 chars
                  ):
 
         if show_link and not linkto:
@@ -7481,7 +7482,8 @@ class pr_PersonRepresent(S3Represent):
             if link_contacts:
                 args.append("contacts")
 
-            linkto = URL(c=controller, f="person",
+            linkto = URL(c = controller,
+                         f = "person",
                          args = args,
                          extension = "",
                          )
@@ -7490,19 +7492,24 @@ class pr_PersonRepresent(S3Represent):
             fields = ["first_name", "middle_name", "last_name"]
 
         if not labels:
-            labels = s3_fullname
+            if truncate:
+                labels = s3_fullname
+            else:
+                labels = lambda person: s3_fullname(person, truncate=False)
 
-        super(pr_PersonRepresent, self).__init__(lookup,
-                                                 key,
-                                                 fields,
-                                                 labels,
-                                                 options,
-                                                 translate,
-                                                 linkto,
-                                                 show_link,
-                                                 multiple,
-                                                 default,
-                                                 none)
+        super(pr_PersonRepresent,
+              self).__init__(lookup = lookup,
+                             key = key,
+                             fields = fields,
+                             labels = labels,
+                             options = options,
+                             translate = translate,
+                             linkto = linkto,
+                             show_link = show_link,
+                             multiple = multiple,
+                             default = default,
+                             none = none,
+                             )
 
 # =============================================================================
 class pr_PersonRepresentContact(pr_PersonRepresent):
@@ -7542,13 +7549,13 @@ class pr_PersonRepresentContact(pr_PersonRepresent):
             @param show_link: render as HTML hyperlink
         """
 
-        super(pr_PersonRepresentContact, self).__init__(
-                                                 lookup = "pr_person",
-                                                 labels = labels,
-                                                 linkto = linkto,
-                                                 link_contacts = link_contacts,
-                                                 show_link = show_link,
-                                                 )
+        super(pr_PersonRepresentContact,
+              self).__init__(lookup = "pr_person",
+                             labels = labels,
+                             linkto = linkto,
+                             link_contacts = link_contacts,
+                             show_link = show_link,
+                             )
 
         self.show_email = show_email
         self.show_phone = show_phone

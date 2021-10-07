@@ -35,8 +35,8 @@ __all__ = ("WarehouseModel",
            "InventoryKittingModel",
            "InventoryMinimumModel",
            "InventoryOrderItemModel",
-           "InventoryPalletModel",
-           "InventoryPalletShipmentModel",
+           "InventoryPackageModel",
+           "InventoryPackageShipmentModel",
            "InventoryRequisitionModel",
            "InventoryRequisitionApproverModel",
            "InventoryRequisitionItemModel",
@@ -50,8 +50,8 @@ __all__ = ("WarehouseModel",
            #"inv_gift_certificate",
            "inv_item_total_weight",
            "inv_item_total_volume",
+           #"inv_package_labels",
            #"inv_packing_list",
-           #"inv_pallet_label",
            #"inv_pick_list",
            "inv_prep",
            "inv_recv_attr",
@@ -76,7 +76,7 @@ __all__ = ("WarehouseModel",
            "inv_send_onaccept",
            #"inv_send_process",
            #"inv_send_received",
-           "inv_send_rheader",
+           #"inv_send_rheader",
            "inv_ship_status",
            #"inv_stock_card_update",
            "inv_stock_movements",
@@ -86,6 +86,7 @@ __all__ = ("WarehouseModel",
            "inv_tracking_status",
            "inv_warehouse_free_capacity",
            "inv_InvItemRepresent",
+           #"inv_PackageRepresent",
            #"inv_RecvRepresent",
            #"inv_ReqCheckMethod",
            "inv_ReqItemRepresent",
@@ -2425,14 +2426,14 @@ class InventoryOrderItemModel(S3Model):
         return {}
 
 # =============================================================================
-class InventoryPalletModel(S3Model):
+class InventoryPackageModel(S3Model):
     """
-        Pallets model
+        Packages (Boxes & Pallets)
         https://en.wikipedia.org/wiki/Pallet
     """
 
-    names = ("inv_pallet",
-             "inv_pallet_id",
+    names = ("inv_package",
+             "inv_package_id",
              )
 
     def model(self):
@@ -2443,11 +2444,23 @@ class InventoryPalletModel(S3Model):
         is_float_represent = IS_FLOAT_AMOUNT.represent
         float_represent = lambda v: is_float_represent(v, precision=3)
 
+        package_type_opts = {"BOX": T("Box"), 
+                             "PALLET": T("Pallet"), 
+                             }
+
         # -----------------------------------------------------------------
-        # Pallets
+        # Packages
         #
-        tablename = "inv_pallet"
+        tablename = "inv_package"
         self.define_table(tablename,
+                          Field("type", length=8,
+                                default = "PALLET",
+                                label = T("Type"),
+                                represent = S3Represent(options = package_type_opts),
+                                requires = IS_IN_SET(package_type_opts,
+                                                     zero = None,
+                                                     ),
+                                ),
                           Field("name", length=64, notnull=True,
                                 label = T("Name"),
                                 requires = [IS_NOT_EMPTY(),
@@ -2488,7 +2501,7 @@ class InventoryPalletModel(S3Model):
                                 default = 0.0,
                                 label = T("Maximum Height (m)"),
                                 represent = float_represent,
-                                comment = T("Not including the Palette"),
+                                comment = T("Including the Package"),
                                 ),
                           Field("max_volume", "double",
                                 default = 0.0,
@@ -2502,65 +2515,86 @@ class InventoryPalletModel(S3Model):
 
         # CRUD strings
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Create Pallet"),
-            title_display = T("Pallet Details"),
-            title_list = T("Pallets"),
-            title_update = T("Edit Pallet"),
-            label_list_button = T("List Pallets"),
-            label_delete_button = T("Delete Pallet"),
-            msg_record_created = T("Pallet Added"),
-            msg_record_modified = T("Pallet Updated"),
-            msg_record_deleted = T("Pallet Deleted"),
-            msg_list_empty = T("No Pallets defined"),
+            label_create = T("Create Package"),
+            title_display = T("Package Details"),
+            title_list = T("Packages"),
+            title_update = T("Edit Package"),
+            label_list_button = T("List Packages"),
+            label_delete_button = T("Delete Package"),
+            msg_record_created = T("Package Added"),
+            msg_record_modified = T("Package Updated"),
+            msg_record_deleted = T("Package Deleted"),
+            msg_list_empty = T("No Packages defined"),
             )
 
         self.configure(tablename,
-                       onaccept = self.inv_pallet_onaccept,
+                       onaccept = self.inv_package_onaccept,
                        )
 
         # Reusable Field
-        represent = S3Represent(lookup = tablename)
-        pallet_id = S3ReusableField("pallet_id", "reference %s" % tablename,
-                                    label = T("Pallet Type"),
-                                    ondelete = "RESTRICT",
-                                    represent = represent,
-                                    requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(db, "inv_pallet.id",
-                                                          represent,
-                                                          orderby = "inv_pallet.name",
-                                                          sort = True,
-                                                          )
-                                                ),
-                                    sortby = "name",
-                                    )
+        represent = inv_PackageRepresent()
+        package_id = S3ReusableField("package_id", "reference %s" % tablename,
+                                     label = T("Package Type"),
+                                     ondelete = "RESTRICT",
+                                     represent = represent,
+                                     requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "inv_package.id",
+                                                              represent,
+                                                              orderby = "inv_package.name",
+                                                              sort = True,
+                                                              )
+                                                    ),
+                                     sortby = "name",
+                                     )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {"inv_pallet_id": pallet_id,
+        return {"inv_package_id": package_id,
                 }
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def inv_pallet_onaccept(form):
+    def inv_package_onaccept(form):
         """
+            Set the Max Height for Boxes
             Calculate the Max Volume
         """
 
         form_vars = form.vars
         form_vars_get = form_vars.get
 
-        max_volume = form_vars_get("width") * form_vars_get("length") * form_vars_get("max_height")
+        package_type = form_vars_get("type")
+        if package_type == "BOX":
+            # max_height == depth
+            max_height = form_vars_get("depth")
+            updates = {"max_height": max_height}
+        else:
+            # max_height needs to be specified manually
+            max_height = form_vars_get("max_height")
+            if max_height:
+                # Includes pallet height, so remove this for max volume of load
+                depth = form_vars_get("depth")
+                if depth:
+                    max_height -= depth
+            updates = {}
 
-        current.db(current.s3db.inv_pallet.id == form_vars.id).update(max_volume = max_volume)
+        if max_height:
+            width = form_vars_get("width")
+            length = form_vars_get("length")
+            max_volume = width * length * max_height
+            updates["max_volume"] = max_volume
+
+        if updates:
+            current.db(current.s3db.inv_package.id == form_vars.id).update(**updates)
 
 # =============================================================================
-class InventoryPalletShipmentModel(S3Model):
+class InventoryPackageShipmentModel(S3Model):
     """
-        Pallets <> Shipments model
+        Packages <> Shipments model
     """
 
-    names = ("inv_send_pallet",
+    names = ("inv_send_package",
              )
 
     def model(self):
@@ -2575,10 +2609,10 @@ class InventoryPalletShipmentModel(S3Model):
         float_represent = lambda v: is_float_represent(v, precision=3)
 
         # -----------------------------------------------------------------
-        # Shipment Pallets
-        # i.e. Pallets <> Outbound Shipments
+        # Shipment Packages
+        # i.e. Packages <> Outbound Shipments
         #
-        tablename = "inv_send_pallet"
+        tablename = "inv_send_package"
         define_table(tablename,
                      Field("number", "integer",
                            label = T("Number"),
@@ -2586,9 +2620,9 @@ class InventoryPalletShipmentModel(S3Model):
                      self.inv_send_id(empty = False,
                                       ondelete = "CASCADE",
                                       ),
-                     self.inv_pallet_id(empty = False,
-                                        ondelete = "SET NULL",
-                                        ),
+                     self.inv_package_id(empty = False,
+                                         ondelete = "SET NULL",
+                                         ),
                      Field("weight", "double",
                            default = 0.0,
                            #label = T("Weight"),
@@ -2607,20 +2641,20 @@ class InventoryPalletShipmentModel(S3Model):
                            ),
                      s3_comments(),
                      Field.Method("items",
-                                  self.send_pallet_items,
+                                  self.send_package_items,
                                   ),
                      Field.Method("weight_max",
-                                  self.send_pallet_weight,
+                                  self.send_package_weight,
                                   ),
                      Field.Method("volume_max",
-                                  self.send_pallet_volume,
+                                  self.send_package_volume,
                                   ),
                      *s3_meta_fields())
 
         crud_form = S3SQLCustomForm("send_id",
                                     "number",
-                                    "pallet_id",
-                                    S3SQLInlineComponent("send_pallet_item",
+                                    "package_id",
+                                    S3SQLInlineComponent("send_package_item",
                                                          label = "",
                                                          fields = [(T("Item"), "track_item_id"),
                                                                    (T("Quantity"), "quantity"),
@@ -2630,8 +2664,8 @@ class InventoryPalletShipmentModel(S3Model):
                                     )
 
         list_fields = ["number",
-                       "pallet_id",
-                       #(T("Items"), "send_pallet_item.track_item_id$item_id$code"),
+                       "package_id",
+                       #(T("Items"), "send_package_item.track_item_id$item_id$code"),
                        (T("Items"), "items"),
                        #"weight",
                        (T("Weight (kg)"), "weight_max"),
@@ -2644,45 +2678,45 @@ class InventoryPalletShipmentModel(S3Model):
                   crud_form = crud_form,
                   extra_fields = ["weight",
                                   "volume",
-                                  "pallet_id$load_capacity",
-                                  "pallet_id$max_volume",
+                                  "package_id$load_capacity",
+                                  "package_id$max_volume",
                                   # Crashes:
-                                  #"send_pallet_item.track_item_id$item_id$name",
+                                  #"send_package_item.track_item_id$item_id$name",
                                   ],
                   list_fields = list_fields,
-                  onvalidation = self.send_pallet_onvalidation,
+                  onvalidation = self.send_package_onvalidation,
                   )
 
         # CRUD strings
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Create Pallet"),
-            title_display = T("Pallet Details"),
-            title_list = T("Pallets"),
-            title_update = T("Edit Pallet"),
-            label_list_button = T("List Pallets"),
-            label_delete_button = T("Delete Pallet"),
-            msg_record_created = T("Pallet Added"),
-            msg_record_modified = T("Pallet Updated"),
-            msg_record_deleted = T("Pallet Deleted"),
-            msg_list_empty = T("No Pallets defined"),
+            label_create = T("Create Package"),
+            title_display = T("Package Details"),
+            title_list = T("Packages"),
+            title_update = T("Edit Package"),
+            label_list_button = T("List Packages"),
+            label_delete_button = T("Delete Package"),
+            msg_record_created = T("Package Added"),
+            msg_record_modified = T("Package Updated"),
+            msg_record_deleted = T("Package Deleted"),
+            msg_list_empty = T("No Packages defined"),
             )
 
         self.add_components(tablename,
-                            inv_send_pallet_item = "send_pallet_id",
+                            inv_send_package_item = "send_package_id",
                             )
 
         # -----------------------------------------------------------------
-        # Shipment Pallets <> Shipment Items
+        # Shipment Packages <> Shipment Items
         #
         track_item_represent = inv_TrackItemRepresent()
 
-        tablename = "inv_send_pallet_item"
+        tablename = "inv_send_package_item"
         define_table(tablename,
-                     Field("send_pallet_id", "reference inv_send_pallet",
+                     Field("send_package_id", "reference inv_send_package",
                            ondelete = "CASCADE",
-                           requires = IS_ONE_OF(db, "inv_send_pallet.id",
+                           requires = IS_ONE_OF(db, "inv_send_package.id",
                                                 "%(number)s",
-                                                orderby = "inv_send_pallet.number",
+                                                orderby = "inv_send_package.number",
                                                 sort = True,
                                                 ),
                            ),
@@ -2703,8 +2737,9 @@ class InventoryPalletShipmentModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
-                  onaccept = self.send_pallet_item_onaccept,
-                  ondelete = self.send_pallet_item_ondelete,
+                  onaccept = self.send_package_item_onaccept,
+                  ondelete = self.send_package_item_ondelete,
+                  onvalidation = self.send_package_item_onvalidation,
                   )
 
         # ---------------------------------------------------------------------
@@ -2714,7 +2749,7 @@ class InventoryPalletShipmentModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def send_pallet_onvalidation(form):
+    def send_package_onvalidation(form):
         """
             Number must be Unique per Shipment
         """
@@ -2725,51 +2760,101 @@ class InventoryPalletShipmentModel(S3Model):
             return
 
         db = current.db
-        table = db.inv_send_pallet
+        table = db.inv_send_package
         query = (table.send_id == send_id) 
-        send_pallet_id = form.record_id
-        if send_pallet_id:
-            query &= (table.id != send_pallet_id)
+        send_package_id = form.record_id
+        if send_package_id:
+            query &= (table.id != send_package_id)
         rows = db(query).select(table.number)
         numbers = [row.number for row in rows]
         if form.vars.get("number") in numbers:
-            form.errors.number = current.T("There is already a Pallet with this Number in this Shipment.")
+            form.errors.number = current.T("There is already a Package with this Number in this Shipment.")
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def send_pallet_item_onaccept(form):
+    def send_package_item_onaccept(form):
         """
-            Update the Weight & Volume of the Shipment's Pallet
-        """
-
-        inv_send_pallet_update(form.vars.get("send_pallet_id"))
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def send_pallet_item_ondelete(row):
-        """
-            Update the Weight & Volume of the Shipment's Pallet
+            Update the Weight & Volume of the Shipment's Package
         """
 
-        inv_send_pallet_update(row.send_pallet_id)
+        inv_send_package_update(form.vars.get("send_package_id"))
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def send_pallet_items(row):
+    def send_package_item_ondelete(row):
         """
-            Display the Items on the Shipment's Pallet
+            Update the Weight & Volume of the Shipment's Package
+        """
+
+        inv_send_package_update(row.send_package_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def send_package_item_onvalidation(form):
+        """
+            Validate the Quantity Packaged doesn't exceed the Quantity Shipped
+        """
+
+        db = current.db
+
+        form_vars = form.vars
+        new_quantity = float(form_vars.quantity)
+
+        spitable = db.inv_send_package_item
+
+        record_id = form.record_id
+        if record_id:
+            # Check if new quantity exceeds quantity already packed in this package
+            record = db(spitable.id == record_id).select(spitable.quantity,
+                                                         limitby = (0, 1),
+                                                         ).first()
+            old_quantity = record.quantity
+            if old_quantity >= new_quantity:
+                # Quantity reduced or unchanged, no need to re-validate
+                return
+        else:
+            old_quantity = 0
+
+        # Get the track_item quantity
+        track_item_id = form_vars.track_item_id
+        ttable = db.inv_track_item
+        ptable = db.supply_item_pack
+        query = (ttable.id == track_item_id) & \
+                (ttable.item_pack_id == ptable.id)
+        track_item = db(query).select(ttable.quantity,
+                                      ptable.name,
+                                      limitby = (0, 1),
+                                      ).first()
+        send_quantity = track_item["inv_track_item.quantity"]
+
+        packed_items = db(spitable.track_item_id == track_item_id).select(spitable.quantity)
+        packed_quantity = sum([row.quantity for row in packed_items])
+
+        left_quantity = send_quantity - packed_quantity + old_quantity
+
+        if new_quantity > left_quantity:
+            form.errors.quantity = current.T("Only %(quantity)s %(pack)s left to package.") % \
+                                        {"quantity": left_quantity,
+                                         "pack": track_item["supply_item_pack.name"],
+                                         }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def send_package_items(row):
+        """
+            Display the Items on the Shipment's Package
         """
 
         try:
-            inv_send_pallet = getattr(row, "inv_send_pallet")
+            inv_send_package = getattr(row, "inv_send_package")
         except AttributeError:
-            inv_send_pallet = row
+            inv_send_package = row
 
         s3db = current.s3db
-        table = s3db.inv_send_pallet_item
+        table = s3db.inv_send_package_item
         ttable = s3db.inv_track_item
         itable = s3db.supply_item
-        query = (table.send_pallet_id == inv_send_pallet.id) & \
+        query = (table.send_package_id == inv_send_package.id) & \
                 (table.track_item_id == ttable.id) & \
                 (ttable.item_id == itable.id)
         rows = current.db(query).select(itable.name)
@@ -2786,30 +2871,30 @@ class InventoryPalletShipmentModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def send_pallet_volume(row):
+    def send_package_volume(row):
         """
-            Display the Volume of the Shipment's Pallet
+            Display the Volume of the Shipment's Package
             - with capacity
             - in red if over capacity
         """
 
         try:
-            inv_send_pallet = getattr(row, "inv_send_pallet")
+            inv_send_package = getattr(row, "inv_send_package")
         except AttributeError:
-            inv_send_pallet = row
+            inv_send_package = row
 
         try:
-            volume = inv_send_pallet.volume
+            volume = inv_send_package.volume
         except AttributeError:
-            # Need to reload the inv_send_pallet
+            # Need to reload the inv_send_package
             # Avoid this by adding to extra_fields
-            table = current.s3db.inv_send_pallet
-            query = (table.id == inv_send_pallet.id)
-            inv_send_pallet = current.db(query).select(table.id,
-                                                       table.volume,
-                                                       limitby = (0, 1),
-                                                       ).first()
-            volume = inv_send_pallet.volume if inv_send_pallet else None
+            table = current.s3db.inv_send_package
+            query = (table.id == inv_send_package.id)
+            inv_send_package = current.db(query).select(table.id,
+                                                        table.volume,
+                                                        limitby = (0, 1),
+                                                        ).first()
+            volume = inv_send_package.volume if inv_send_package else None
 
         if volume is None:
             return current.messages["NONE"]
@@ -2817,20 +2902,20 @@ class InventoryPalletShipmentModel(S3Model):
         volume = round(volume, 3)
 
         try:
-            inv_pallet = getattr(row, "inv_pallet")
-            max_volume = inv_pallet.max_volume
+            inv_package = getattr(row, "inv_package")
+            max_volume = inv_package.max_volume
         except KeyError:
-            # Need to load the inv_pallet
+            # Need to load the inv_package
             # Avoid this by adding to extra_fields
             s3db = current.s3db
-            table = s3db.inv_send_pallet
-            ptable = s3db.inv_pallet
-            query = (table.id == inv_send_pallet.id) & \
-                    (table.pallet_id == ptable.id)
-            inv_pallet = current.db(query).select(ptable.max_volume,
-                                                  limitby = (0, 1),
-                                                  ).first()
-            max_volume = inv_pallet.max_volume
+            table = s3db.inv_send_package
+            ptable = s3db.inv_package
+            query = (table.id == inv_send_package.id) & \
+                    (table.package_id == ptable.id)
+            inv_package = current.db(query).select(ptable.max_volume,
+                                                   limitby = (0, 1),
+                                                   ).first()
+            max_volume = inv_package.max_volume
 
         if not max_volume:
             return volume
@@ -2856,30 +2941,30 @@ class InventoryPalletShipmentModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def send_pallet_weight(row):
+    def send_package_weight(row):
         """
-            Display the Weight of the Shipment's Pallet
+            Display the Weight of the Shipment's Package
             - with capacity
             - in red if over capacity
         """
 
         try:
-            inv_send_pallet = getattr(row, "inv_send_pallet")
+            inv_send_package = getattr(row, "inv_send_package")
         except AttributeError:
-            inv_send_pallet = row
+            inv_send_package = row
 
         try:
-            weight = inv_send_pallet.weight
+            weight = inv_send_package.weight
         except AttributeError:
-            # Need to reload the inv_send_pallet
+            # Need to reload the inv_send_package
             # Avoid this by adding to extra_fields
-            table = current.s3db.inv_send_pallet
-            query = (table.id == inv_send_pallet.id)
-            inv_send_pallet = current.db(query).select(table.id,
-                                                       table.weight,
-                                                       limitby = (0, 1),
-                                                       ).first()
-            weight = inv_send_pallet.weight if inv_send_pallet else None
+            table = current.s3db.inv_send_package
+            query = (table.id == inv_send_package.id)
+            inv_send_package = current.db(query).select(table.id,
+                                                        table.weight,
+                                                        limitby = (0, 1),
+                                                        ).first()
+            weight = inv_send_package.weight if inv_send_package else None
 
         if weight is None:
             return current.messages["NONE"]
@@ -2887,20 +2972,20 @@ class InventoryPalletShipmentModel(S3Model):
         weight = round(weight, 3)
 
         try:
-            inv_pallet = getattr(row, "inv_pallet")
-            load_capacity = inv_pallet.load_capacity
+            inv_package = getattr(row, "inv_package")
+            load_capacity = inv_package.load_capacity
         except KeyError:
-            # Need to load the inv_pallet
+            # Need to load the inv_package
             # Avoid this by adding to extra_fields
             s3db = current.s3db
-            ttable = s3db.inv_send_pallet
-            ptable = s3db.inv_pallet
-            query = (table.id == inv_send_pallet.id) & \
-                    (table.pallet_id == ptable.id)
-            inv_pallet = current.db(query).select(ptable.load_capacity,
-                                                  limitby = (0, 1),
-                                                  ).first()
-            load_capacity = inv_pallet.load_capacity
+            ttable = s3db.inv_send_package
+            ptable = s3db.inv_package
+            query = (table.id == inv_send_package.id) & \
+                    (table.package_id == ptable.id)
+            inv_package = current.db(query).select(ptable.load_capacity,
+                                                   limitby = (0, 1),
+                                                   ).first()
+            load_capacity = inv_package.load_capacity
 
         if not load_capacity:
             return weight
@@ -5236,7 +5321,7 @@ class InventoryTrackingModel(S3Model):
 
                        inv_track_item = "send_id",
 
-                       inv_send_pallet = "send_id",
+                       inv_send_package = "send_id",
 
                        # Requisitions
                        inv_send_req = "send_id",
@@ -5260,11 +5345,10 @@ class InventoryTrackingModel(S3Model):
                    action = inv_gift_certificate,
                    )
 
-        # Generate Pallet Label
+        # Generate Package Labels
         set_method("inv", "send",
-                   component_name = "send_pallet",
-                   method = "label",
-                   action = inv_pallet_label,
+                   method = "labels",
+                   action = inv_package_labels,
                    )
 
         # Generate Picking List
@@ -5663,17 +5747,19 @@ class InventoryTrackingModel(S3Model):
                                                         orderby = "inv_inv_item.id",
                                                         sort = True,
                                                         )),
-                                 script = '''
-$.filterOptionsS3({
- 'trigger':'send_inv_item_id',
- 'target':'item_pack_id',
- 'lookupResource':'item_pack',
- 'lookupPrefix':'supply',
- 'lookupURL':S3.Ap.concat('/inv/inv_item_packs.json/'),
- 'msgNoRecords':i18n.no_packs,
- 'fncPrep':S3.supply.fncPrepItem,
- 'fncRepresent':S3.supply.fncRepresentItem
-})'''),
+# We use s3.inv_send_item.js instead
+#                                 script = '''
+#$.filterOptionsS3({
+# 'trigger':'send_inv_item_id',
+# 'target':'item_pack_id',
+# 'lookupResource':'item_pack',
+# 'lookupPrefix':'supply',
+# 'lookupURL':S3.Ap.concat('/inv/inv_item_packs.json/'),
+# 'msgNoRecords':i18n.no_packs,
+# 'fncPrep':S3.supply.fncPrepItem,
+# 'fncRepresent':S3.supply.fncRepresentItem
+#})''',
+                                 ),
                      item_id(ondelete = "RESTRICT"),
                      item_pack_id(ondelete = "SET NULL"),
                      # Now done as a VirtualField instead (looks better & updates closer to real-time, so less of a race condition)
@@ -5891,7 +5977,7 @@ $.filterOptionsS3({
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = inv_track_item_onaccept,
-                  onvalidation = self.inv_track_item_onvalidate,
+                  onvalidation = self.inv_track_item_onvalidation,
                   )
 
         #----------------------------------------------------------------------
@@ -6363,7 +6449,7 @@ $.filterOptionsS3({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def inv_track_item_onvalidate(form):
+    def inv_track_item_onvalidation(form):
         """
             When a track item record is being created with a tracking number
             then the tracking number needs to be unique within the organisation.
@@ -6379,40 +6465,93 @@ $.filterOptionsS3({
         send_inv_item_id = form_vars.send_inv_item_id
 
         if send_inv_item_id:
-            # Copy the data from the sent inv_item
             db = current.db
-            itable = db.inv_inv_item
-            query = (itable.id == send_inv_item_id)
-            record = db(query).select(itable.item_id,
-                                      itable.item_source_no,
-                                      itable.expiry_date,
-                                      itable.bin,
-                                      itable.layout_id,
-                                      itable.owner_org_id,
-                                      itable.supply_org_id,
-                                      itable.pack_value,
-                                      itable.currency,
-                                      itable.status,
-                                      limitby = (0, 1),
-                                      ).first()
-            form_vars.item_id = record.item_id
-            form_vars.item_source_no = record.item_source_no
-            form_vars.expiry_date = record.expiry_date
-            form_vars.bin = record.bin
-            form_vars.layout_id = record.layout_id
-            form_vars.owner_org_id = record.owner_org_id
-            form_vars.supply_org_id = record.supply_org_id
-            form_vars.pack_value = record.pack_value
-            form_vars.currency = record.currency
-            form_vars.inv_item_status = record.status
+            iitable = db.inv_inv_item
+            query = (iitable.id == send_inv_item_id)
+
+            # Validate that the Quantity to be added is available in Stock
+            valid_quantity = False
+
+            iptable = db.supply_item_pack
+            new_pack_id = form_vars.item_pack_id
+            new_pack_quantity = db(iptable.id == new_pack_id).select(iptable.quantity,
+                                                                     limitby = (0, 1),
+                                                                     ).first().quantity
+            new_quantity = float(form_vars.quantity) * new_pack_quantity
+
+            record_id = form.record_id
+            if record_id:
+                # Check if new quantity exceeds quantity already tracked
+                ttable = db.inv_track_item
+                record = db(ttable.id == record_id).select(ttable.quantity,
+                                                           ttable.item_pack_id,
+                                                           limitby = (0, 1),
+                                                           ).first()
+                old_quantity = record.quantity
+                old_pack_id = record.item_pack_id
+                if old_pack_id != new_pack_id:
+                    # Convert to units
+                    old_pack_quantity = db(iptable.id == old_pack_id).select(iptable.quantity,
+                                                                             limitby = (0, 1),
+                                                                             ).first().quantity
+                    old_quantity = old_quantity * old_pack_quantity
+                else:
+                    old_quantity = old_quantity * new_pack_quantity
+                if old_quantity >= new_quantity:
+                    # Quantity reduced or unchanged, no need to re-validate
+                    valid_quantity = True
+            else:
+                old_quantity = 0
+
+            if not valid_quantity:
+                # Get the inventory item quantity & pack
+                inv_item = db(query & (iitable.item_pack_id == iptable.id)).select(iitable.quantity,
+                                                                                   iptable.quantity,
+                                                                                   iptable.name,
+                                                                                   limitby = (0, 1),
+                                                                                   ).first()
+                inv_item_pack = inv_item.supply_item_pack
+                inv_pack_quantity = inv_item_pack.quantity
+                inv_quantity = (inv_item["inv_inv_item.quantity"] * inv_pack_quantity) + old_quantity
+
+                if new_quantity > inv_quantity:
+                    form.errors.quantity = current.T("Only %(quantity)s %(pack)s in the Warehouse Stock.") % \
+                                                {"quantity": inv_quantity,
+                                                 "pack": inv_item_pack.name,
+                                                 }
+                    # Nothing else to validate
+                    return
+
+            # Copy the data from the sent inv_item
+            inv_item = db(query).select(iitable.item_id,
+                                        iitable.item_source_no,
+                                        iitable.expiry_date,
+                                        iitable.bin,
+                                        iitable.layout_id,
+                                        iitable.owner_org_id,
+                                        iitable.supply_org_id,
+                                        iitable.pack_value,
+                                        iitable.currency,
+                                        iitable.status,
+                                        limitby = (0, 1),
+                                        ).first()
+            form_vars.item_id = inv_item.item_id
+            form_vars.item_source_no = inv_item.item_source_no
+            form_vars.expiry_date = inv_item.expiry_date
+            form_vars.bin = inv_item.bin
+            form_vars.layout_id = inv_item.layout_id
+            form_vars.owner_org_id = inv_item.owner_org_id
+            form_vars.supply_org_id = inv_item.supply_org_id
+            form_vars.pack_value = inv_item.pack_value
+            form_vars.currency = inv_item.currency
+            form_vars.inv_item_status = inv_item.status
 
             # Save the organisation from where this tracking originates
             stable = current.s3db.org_site
-            query = query & (itable.site_id == stable.id)
-            record = db(query).select(stable.organisation_id,
-                                      limitby = (0, 1),
-                                      ).first()
-            form_vars.track_org_id = record.organisation_id
+            site = db(query & (iitable.site_id == stable.id)).select(stable.organisation_id,
+                                                                     limitby = (0, 1),
+                                                                     ).first()
+            form_vars.track_org_id = site.organisation_id
 
         if not form_vars.recv_quantity and "quantity" in form_vars:
             # If we have no send_id and no recv_quantity then
@@ -6426,6 +6565,7 @@ $.filterOptionsS3({
         recv_bin = form_vars.recv_bin
         if recv_bin:
             # If there is a receiving bin then select the right one
+            # - what triggers this?
             if isinstance(recv_bin, list):
                 if recv_bin[1] != "":
                     recv_bin = recv_bin[1]
@@ -6776,6 +6916,7 @@ def inv_gift_certificate(r, **attr):
     send_id = r.id
     record = r.record
     send_ref = record.send_ref
+    site_id = record.site_id
     to_site_id = record.to_site_id
 
     db = current.db
@@ -6802,24 +6943,23 @@ def inv_gift_certificate(r, **attr):
     gtable = s3db.gis_location
     query = (stable.site_id == to_site_id) & \
             (stable.location_id == gtable.id)
-    location = db(query).select(gtable.L0,
+    location = db(query).select(gtable.id,
+                                gtable.L0,
                                 limitby = (0, 1),
                                 ).first()
     country = location.L0
     fr = "fr" in current.deployment_settings.get_L10n_languages_by_country(country)
 
-    # Organisation
+    # Organisations
     otable = s3db.org_organisation
-
-    query = (stable.site_id == record.site_id) & \
+    query = (stable.site_id.belongs((to_site_id, site_id))) & \
             (stable.organisation_id == otable.id)
-
-    fields = [otable.id,
+    fields = [stable.site_id,
+              otable.id,
               otable.root_organisation,
               otable.name,
               otable.logo,
               ]
-
     if fr:
         ontable = s3db.org_organisation_name
         fields.append(ontable.name_l10n)
@@ -6827,44 +6967,83 @@ def inv_gift_certificate(r, **attr):
                           (ontable.language == "fr"))
     else:
         left = None
-
-    org = db(query).select(*fields,
-                           left = left,
-                           limitby = (0, 1)
-                           ).first()
-    if fr:
-        org_name = org["org_organisation_name.name_l10n"]
-        org = org["org_organisation"]
-        if not org_name:
-            org_name = org.name
-    else:
-        org_name = org.name
-
-    if org.id == org.root_organisation:
-        branch = None
-    else:
-        branch = org.name
-        # Lookup Root Org
-        fields = [otable.name,
-                  otable.logo,
-                  ]
-        if fr:
-            fields.append(ontable.name_l10n)
-        org = db(otable.id == org.root_organisation).select(*fields,
-                                                            left = left,
-                                                            limitby = (0, 1)
-                                                            ).first()
-        if fr:
-            org_name = org["org_organisation_name.name_l10n"]
-            org = org["org_organisation"]
-            if not org_name:
+    orgs = db(query).select(*fields,
+                            left = left,
+                            limitby = (0, 2)
+                            )
+    for row in orgs:
+        if row["org_site.site_id"] == site_id:
+            # Sender Org
+            if fr:
+                org_name = row["org_organisation_name.name_l10n"]
+                org = row["org_organisation"]
+                if not org_name:
+                    org_name = org.name
+            else:
+                org = row["org_organisation"]
                 org_name = org.name
+            if org.id == org.root_organisation:
+                branch = None
+            else:
+                branch = org.name
+                # Lookup Root Org
+                fields = [otable.name,
+                          otable.logo,
+                          ]
+                if fr:
+                    fields.append(ontable.name_l10n)
+                org = db(otable.id == org.root_organisation).select(*fields,
+                                                                    left = left,
+                                                                    limitby = (0, 1)
+                                                                    ).first()
+                if fr:
+                    org_name = org["org_organisation_name.name_l10n"]
+                    org = org["org_organisation"]
+                    if not org_name:
+                        org_name = org.name
+                else:
+                    org_name = org.name
         else:
-            org_name = org.name
+            # Recipient Org
+            if fr:
+                dest_org_name = row["org_organisation_name.name_l10n"]
+                dest_org = row["org_organisation"]
+                if not dest_org_name:
+                    dest_org_name = dest_org.name
+            else:
+                dest_org = row["org_organisation"]
+                dest_org_name = dest_org.name
+            if dest_org.id != dest_org.root_organisation:
+                # Lookup Root Org
+                fields = [otable.name,
+                          ]
+                if fr:
+                    fields.append(ontable.name_l10n)
+                dest_org = db(otable.id == dest_org.root_organisation).select(*fields,
+                                                                              left = left,
+                                                                              limitby = (0, 1)
+                                                                              ).first()
+                if fr:
+                    dest_org_name = dest_org["org_organisation_name.name_l10n"]
+                    dest_org = dest_org["org_organisation"]
+                    if not dest_org_name:
+                        dest_org_name = dest_org.name
+                else:
+                    dest_org_name = dest_org.name
 
     # Represent the Data
     from .org import org_SiteRepresent
     destination = org_SiteRepresent(show_type = False)(to_site_id)
+
+    from .gis import gis_LocationRepresent
+    address = gis_LocationRepresent(show_level = False)(location.id)
+
+    recipient_id = record.recipient_id
+    if recipient_id:
+        from .pr import pr_PersonRepresent
+        recipient = pr_PersonRepresent(truncate = False)(recipient_id)
+    else:
+        recipient = None
 
     T = current.T
 
@@ -7084,7 +7263,12 @@ def inv_gift_certificate(r, **attr):
         sheet.write_rich_text(row_index, 0, rich_text, bold_style)
     else:
         current_row.write(0, "Beneficiary:", bold_style)
-    label = "%s,\n%s" % (destination, country)
+    if destination in address:
+        label = "%s\n%s" % (dest_org_name.upper(), address)
+    else:
+        label = "%s\n%s\n%s" % (dest_org_name.upper(), destination, address)
+    if recipient:
+        label = "%s\n%s" % (label, recipient)
     sheet.write_merge(row_index, 18, 2, 5, label, dest_style)
 
     # 20th row => Goods
@@ -7391,17 +7575,6 @@ def inv_packing_list(r, **attr):
         This is exported in XLS format
     """
 
-    send_id = r.id
-    record = r.record
-
-    if record.status != SHIP_STATUS_IN_PROCESS:
-        r.error(405, T("Packing List can only be generated for Shipments being prepared"),
-                next = URL(c = "inv",
-                           f = "send",
-                           args = [send_id],
-                           ),
-                )
-
     from s3.codecs.xls import S3XLS
 
     try:
@@ -7421,15 +7594,18 @@ def inv_packing_list(r, **attr):
     s3db = current.s3db
 
     # Items
-    sptable = s3db.inv_send_pallet
-    spitable = s3db.inv_send_pallet_item
+    ptable = s3db.inv_package
+    sptable = s3db.inv_send_package
+    spitable = s3db.inv_send_package_item
     ttable = s3db.inv_track_item
     itable = s3db.supply_item
     query = (sptable.send_id == send_id) & \
-            (spitable.send_pallet_id == sptable.id) & \
+            (sptable.package_id == ptable.id) & \
+            (spitable.send_package_id == sptable.id) & \
             (spitable.track_item_id == ttable.id) & \
             (ttable.item_id == itable.id)
-    items = db(query).select(sptable.number,
+    items = db(query).select(ptable.type,
+                             sptable.number,
                              itable.name,
                              spitable.quantity,
                              sptable.weight,
@@ -7442,28 +7618,27 @@ def inv_packing_list(r, **attr):
     gtable = s3db.gis_location
     query = (stable.site_id.belongs(sites)) & \
             (stable.location_id == gtable.id)
-    location = db(query).select(gtable.L0,
-                                limitby = (0, 2),
-                                )
+    locations = db(query).select(gtable.L0,
+                                 limitby = (0, 2),
+                                 )
     fr = False
     settings = current.deployment_settings
-    for row in location:
+    for row in locations:
         if "fr" in settings.get_L10n_languages_by_country(row.L0):
             fr = True
             break
 
-    # Organisation
+    # Organisations
     otable = s3db.org_organisation
-
-    query = (stable.site_id == site_id) & \
+    query = (stable.site_id.belongs(sites)) & \
             (stable.organisation_id == otable.id)
-
-    fields = [otable.id,
+    fields = [stable.location_id,
+              stable.site_id,
+              otable.id,
               otable.root_organisation,
               otable.name,
               otable.logo,
               ]
-
     if fr:
         ontable = s3db.org_organisation_name
         fields.append(ontable.name_l10n)
@@ -7472,39 +7647,71 @@ def inv_packing_list(r, **attr):
     else:
         left = None
 
-    org = db(query).select(*fields,
+    orgs = db(query).select(*fields,
                            left = left,
-                           limitby = (0, 1)
-                           ).first()
-    if fr:
-        org_name = org["org_organisation_name.name_l10n"]
-        org = org["org_organisation"]
-        if not org_name:
-            org_name = org.name
-    else:
-        org_name = org.name
-
-    if org.id == org.root_organisation:
-        branch = None
-    else:
-        branch = org.name
-        # Lookup Root Org
-        fields = [otable.name,
-                  otable.logo,
-                  ]
-        if fr:
-            fields.append(ontable.name_l10n)
-        org = db(otable.id == org.root_organisation).select(*fields,
-                                                            left = left,
-                                                            limitby = (0, 1)
-                                                            ).first()
-        if fr:
-            org_name = org["org_organisation_name.name_l10n"]
-            org = org["org_organisation"]
-            if not org_name:
+                           limitby = (0, 2)
+                           )
+    for row in orgs:
+        site = row.org_site
+        if site.site_id == site_id:
+            # Sender Org
+            if fr:
+                org_name = row["org_organisation_name.name_l10n"]
+                org = row["org_organisation"]
+                if not org_name:
+                    org_name = org.name
+            else:
+                org = row["org_organisation"]
                 org_name = org.name
+            if org.id == org.root_organisation:
+                branch = None
+            else:
+                branch = org.name
+                # Lookup Root Org
+                fields = [otable.name,
+                          otable.logo,
+                          ]
+                if fr:
+                    fields.append(ontable.name_l10n)
+                org = db(otable.id == org.root_organisation).select(*fields,
+                                                                    left = left,
+                                                                    limitby = (0, 1)
+                                                                    ).first()
+                if fr:
+                    org_name = org["org_organisation_name.name_l10n"]
+                    org = org["org_organisation"]
+                    if not org_name:
+                        org_name = org.name
+                else:
+                    org_name = org.name
         else:
-            org_name = org.name
+            # Recipient Org
+            location_id = site.location_id
+            if fr:
+                dest_org_name = row["org_organisation_name.name_l10n"]
+                dest_org = row["org_organisation"]
+                if not dest_org_name:
+                    dest_org_name = dest_org.name
+            else:
+                dest_org = row["org_organisation"]
+                dest_org_name = dest_org.name
+            if dest_org.id != dest_org.root_organisation:
+                # Lookup Root Org
+                fields = [otable.name,
+                          ]
+                if fr:
+                    fields.append(ontable.name_l10n)
+                dest_org = db(otable.id == dest_org.root_organisation).select(*fields,
+                                                                              left = left,
+                                                                              limitby = (0, 1)
+                                                                              ).first()
+                if fr:
+                    dest_org_name = dest_org["org_organisation_name.name_l10n"]
+                    dest_org = dest_org["org_organisation"]
+                    if not dest_org_name:
+                        dest_org_name = dest_org.name
+                else:
+                    dest_org_name = dest_org.name
 
     # Represent the Data
     from .org import org_SiteRepresent
@@ -7513,19 +7720,24 @@ def inv_packing_list(r, **attr):
     source = site_represent(site_id)
     destination = site_represent(to_site_id)
 
+    from .gis import gis_LocationRepresent
+    address = gis_LocationRepresent(show_level = False)(location_id)
+
+    recipient_id = record.recipient_id
+    if recipient_id:
+        from .pr import pr_PersonRepresent
+        recipient = pr_PersonRepresent(truncate = False)(recipient_id)
+    else:
+        recipient = None
+
+    package_type_represent = ptable.type.represent
+
     T = current.T
 
-    if fr:
-        BOX = "N° Box /\nColis "
-        WEIGHT = "Weight / Poids\nKg"
-    else:
-        BOX = "N° Box"
-        WEIGHT = "Weight\nKg"
-
-    labels = [BOX,
+    labels = ["N° Box",
               "Description",
               "Quantity",
-              WEIGHT,
+              "Weight\nKg",
               "Volume\nm3",
               ]
 
@@ -7549,15 +7761,21 @@ def inv_packing_list(r, **attr):
     POINT_10 = 200 # Twips = Points * 20
     POINT_9 = 180 # Twips = Points * 20
     ROW_HEIGHT = 320 # Realised through trial & error
+    ROWS_2_HEIGHT = int(2.2 * 320)
 
     style = xlwt.XFStyle()
     style.font.height = POINT_12
 
-    THICK = style.borders.THICK
-    THIN = style.borders.THIN
     HORZ_CENTER = style.alignment.HORZ_CENTER
     HORZ_RIGHT = style.alignment.HORZ_RIGHT
     VERT_CENTER = style.alignment.VERT_CENTER
+    THICK = style.borders.THICK
+    THIN = style.borders.THIN
+
+    style.borders.top = THIN
+    style.borders.left = THIN
+    style.borders.right = THIN
+    style.borders.bottom = THIN
 
     if fr:
         italic_style = xlwt.XFStyle()
@@ -7578,15 +7796,19 @@ def inv_packing_list(r, **attr):
     bold_italic_style.font.bold = True
     bold_italic_style.font.height = POINT_12
 
-    bold_italic_right_style = xlwt.XFStyle()
-    bold_italic_right_style.font.italic = True
-    bold_italic_right_style.font.bold = True
-    bold_italic_right_style.font.height = POINT_12
-    bold_italic_right_style.alignment.horz = HORZ_RIGHT
+    bold_italic_center_style = xlwt.XFStyle()
+    bold_italic_center_style.font.italic = True
+    bold_italic_center_style.font.bold = True
+    bold_italic_center_style.font.height = POINT_12
+    bold_italic_center_style.alignment.horz = HORZ_CENTER
 
     center_style = xlwt.XFStyle()
     center_style.font.height = POINT_12
     center_style.alignment.horz = HORZ_CENTER
+    center_style.borders.top = THIN
+    center_style.borders.left = THIN
+    center_style.borders.right = THIN
+    center_style.borders.bottom = THIN
 
     right_style = xlwt.XFStyle()
     right_style.font.height = POINT_12
@@ -7675,7 +7897,7 @@ def inv_packing_list(r, **attr):
     # 5th row => Packing List
     row_index = 4
     current_row = sheet.row(row_index)
-    current_row.height = int(2.8 * 240 * 1.2) # 2 rows * twips * bold
+    current_row.height = int(2.8 * 240 * 1.2) # 2 rows
     label = "PACKING LIST"
     if fr:
         sheet.merge(row_index, row_index, 0, 4, box_style)
@@ -7691,30 +7913,69 @@ def inv_packing_list(r, **attr):
     current_row = sheet.row(row_index)
     current_row.height = ROW_HEIGHT
     label = "Ref: %s" % send_ref
-    sheet.write_merge(row_index, row_index, 0, 4, label, bold_italic_right_style)
+    sheet.write_merge(row_index, row_index, 0, 4, label, bold_italic_center_style)
 
     # 9th row => Source
-    current_row = sheet.row(8)
+    row_index = 8
+    current_row = sheet.row(row_index)
     if fr:
-        label = "Location / Lieu:"
+        current_row.height = ROWS_2_HEIGHT
+        rich_text = (("Location /", header_style.font),
+                     ("\nLieu:", bold_italic_style.font),
+                     )
+        sheet.write_rich_text(row_index, 0, rich_text, header_style)
     else:
+        current_row.height = ROW_HEIGHT
         label = "Location:"
-    current_row.height = ROW_HEIGHT
-    current_row.write(0, label, header_style)
+        current_row.write(0, label, header_style)
     current_row.write(1, source, header_style)
     current_row.write(3, "Date:", header_style)
     current_row.write(4, str(r.now.date()), header_style)
 
     # 12th row => Destination
-    # @ToDo:
+    row_index = 11
+    current_row = sheet.row(row_index)
+    current_row.height = ROW_HEIGHT
+    if fr:
+        rich_text = (("CONSIGNEE / ", bold_style.font),
+                     ("DESTINATAIRE:", bold_italic_style.font),
+                     )
+        sheet.write_rich_text(row_index, 1, rich_text, bold_style)
+        rich_text = (("Address / ", right_style.font),
+                     ("Adresse:", italic_style.font),
+                     )
+        sheet.write_rich_text(row_index + 2, 1, rich_text, right_style)
+    else:
+        current_row.write(1, "CONSIGNEE:", bold_style)
+        sheet.row(row_index + 2).write(1, "Address:", right_style)
+    sheet.row(row_index + 4).write(1, "Contact:", right_style)
+    if destination in address:
+        label = "%s\n\n%s" % (dest_org_name.upper(), address)
+    else:
+        label = "%s\n\n%s\n%s" % (dest_org_name.upper(), destination, address)
+    if recipient:
+        label = "%s\n\n%s" % (label, recipient)
+    sheet.write_merge(row_index, 16, 2, 4, label, dest_style)
 
     # 22nd row => Column Headers
     row_index = 21
     current_row = sheet.row(row_index)
-    current_row.height = int(2.8 * 320 * 1.2) # 2 rows * twips * bold
+    current_row.height = ROWS_2_HEIGHT
     col_index = 0
     for label in labels:
-        current_row.write(col_index, label, header_style)
+        if fr and col_index in (0, 3):
+            if col_index == 0:
+                rich_text = (("N° Box /", header_style.font),
+                             ("\nColis", bold_italic_style.font),
+                             )
+            else:
+                rich_text = (("Weight / ", header_style.font),
+                             ("Poids", bold_italic_style.font),
+                             ("\nKg", header_style.font),
+                             )
+            sheet.write_rich_text(row_index, col_index, rich_text, header_style)
+        else:
+            current_row.write(col_index, label, header_style)
         col_index += 1
 
     # Data rows
@@ -7724,9 +7985,10 @@ def inv_packing_list(r, **attr):
     for row in items:
         current_row = sheet.row(row_index)
         current_row.height = ROW_HEIGHT
+        package_type = row["inv_package.type"]
         item_name = row["supply_item.name"]
-        quantity = row["inv_send_pallet_item.quantity"]
-        row = row["inv_send_pallet"]
+        quantity = row["inv_send_package_item.quantity"]
+        row = row["inv_send_package"]
         weight = row.weight
         if weight:
             total_weight += weight
@@ -7740,7 +8002,9 @@ def inv_packing_list(r, **attr):
         else:
             volume = ""
         col_index = 0
-        values = ["Pallet %s" % row.number,
+        values = ["%s %s" % (package_type_represent(package_type),
+                             row.number,
+                             ),
                   item_name,
                   quantity,
                   weight,
@@ -7768,8 +8032,8 @@ def inv_packing_list(r, **attr):
     # Footer
     row_index += 2
     current_row = sheet.row(row_index)
-    current_row.height = ROW_HEIGHT
     if fr:
+        current_row.height = ROWS_2_HEIGHT
         rich_text = (("Function /", style.font),
                      ("\nFonction", italic_style.font),
                      )
@@ -7779,15 +8043,24 @@ def inv_packing_list(r, **attr):
                      )
         sheet.write_rich_text(row_index, 1, rich_text, style)
         sheet.write_merge(row_index, row_index, 2, 3, "Signature", style)
-        rich_text = (("Stamp/", style.font),
-                     ("tampon", italic_style.font),
+        rich_text = (("Stamp /", style.font),
+                     ("\ntampon", italic_style.font),
                      )
         sheet.write_rich_text(row_index, 4, rich_text, style)
     else:
+        current_row.height = ROW_HEIGHT
         current_row.write(0, "Function:", style)
         current_row.write(1, "Name:", style)
         sheet.write_merge(row_index, row_index, 2, 3, "Signature", style)
         current_row.write(4, "Stamp", style)
+    # Empty space for Signature, etc
+    row_index += 1
+    current_row = sheet.row(row_index)
+    current_row.height = ROWS_2_HEIGHT
+    current_row.write(0, "", style)
+    current_row.write(1, "", style)
+    sheet.write_merge(row_index, row_index, 2, 3, "", style)
+    current_row.write(4, "", style)
 
     # Export to File
     output = BytesIO()
@@ -7811,23 +8084,14 @@ def inv_packing_list(r, **attr):
     return output.read()
 
 # =============================================================================
-def inv_pallet_label(r, **attr):
+def inv_package_labels(r, **attr):
     """
-        Generate a Label for an Outbound Shipment's Pallet
+        Generate Labels for an Outbound Shipment's Packages
+        - separate sheet per Package
 
         This is exported in XLS format to be user-editable
         - we don't have the width x length x height
     """
-
-    send_pallet_id = r.component_id
-
-    if not send_pallet_id:
-        r.error(405, T("Labels can only be generated for individual Pallets"),
-                next = URL(c = "inv",
-                           f = "send",
-                           args = [r.id, "pallet"],
-                           ),
-                )
 
     from s3.codecs.xls import S3XLS
 
@@ -7842,27 +8106,33 @@ def inv_pallet_label(r, **attr):
     db = current.db
     s3db = current.s3db
 
-    # Pallet
-    sptable = s3db.inv_send_pallet
-    pallet = db(sptable.id == send_pallet_id).select(sptable.number,
-                                                     sptable.weight,
-                                                     sptable.volume,
-                                                     limitby = (0, 1),
-                                                     ).first()
+    # Packages
+    ptable = s3db.inv_package
+    sptable = s3db.inv_send_package
+    query = (sptable.send_id == r.id) & \
+            (sptable.package_id == ptable.id)
+    packages = db(query).select(sptable.id,
+                                sptable.number,
+                                sptable.weight,
+                                sptable.volume,
+                                ptable.type,
+                                ptable.weight,
+                                ptable.width,
+                                ptable.length,
+                                ptable.depth,
+                                )
 
-    pallet_weight = str(int(pallet.weight))
-    pallet_volume = "{:.2f}".format(round(pallet.volume, 2))
-
-    # Pallet Items
-    spitable = s3db.inv_send_pallet_item
+    # Package Items
+    spitable = s3db.inv_send_package_item
     ttable = s3db.inv_track_item
     itable = s3db.supply_item
     ptable = s3db.supply_item_pack
-    query = (spitable.send_pallet_id == send_pallet_id) & \
+    query = (spitable.send_package_id.belongs([p["inv_send_package.id"] for p in packages])) & \
             (spitable.track_item_id == ttable.id) & \
             (ttable.item_id == itable.id) & \
             (ttable.item_pack_id == ptable.id)
-    items = db(query).select(spitable.quantity,
+    items = db(query).select(spitable.send_package_id,
+                             spitable.quantity,
                              ttable.expiry_date,
                              ttable.supply_org_id,
                              itable.id,
@@ -7917,6 +8187,10 @@ def inv_pallet_label(r, **attr):
     bold_style.font.height = POINT_36
     bold_style.borders.top = style.borders.THICK
 
+    center_style = xlwt.XFStyle()
+    center_style.alignment.horz = style.alignment.HORZ_CENTER
+    center_style.font.height = POINT_36
+
     right_style = xlwt.XFStyle()
     right_style.alignment.horz = style.alignment.HORZ_RIGHT
     right_style.font.height = POINT_36
@@ -7932,11 +8206,63 @@ def inv_pallet_label(r, **attr):
     box_style.alignment.horz = HORZ_CENTER
     box_style.alignment.vert = VERT_CENTER
 
-    for item in items:
+    logo = org.logo
+    if logo:
+        # We need to convert to 24-bit BMP
+        try:
+            from PIL import Image
+        except:
+            current.log.error("PIL not installed: Cannot insert logo")
+        else:
+            IMG_WIDTH = 230
+            filename, extension = os.path.splitext(logo)
+            logo_path = os.path.join(r.folder, "uploads", logo)
+            if extension == ".png":
+                # Remove Transparency
+                png = Image.open(logo_path).convert("RGBA")
+                size = png.size
+                background = Image.new("RGBA", size, (255,255,255))
+                img = Image.alpha_composite(background, png)
+            else:
+                img = Image.open(logo_path)
+                size = img.size
+            width = size[0]
+            height = int(IMG_WIDTH/width * size[1])
+            img = img.convert("RGB").resize((IMG_WIDTH, height))
+            from io import BytesIO
+            bmpfile = BytesIO()
+            img.save(bmpfile, "BMP")
+            bmpfile.seek(0)
+            bmpdata = bmpfile.read()
+
+    for row in packages:
+        package = row.inv_package
+        send_package = row.inv_send_package
+
         # Add sheet
-        title = s3_str(T("Label"))
-        sheet = book.add_sheet(title)
+        sheet = book.add_sheet(str(send_package.number))
         sheet.set_print_scaling(90)
+
+        # Weight is Load + Package Weight
+        package_weight = str(int(send_package.weight + package.weight))
+        # Length & Width are those of the Package
+        length = package.length
+        width = package.width
+        if package.type == "BOX":
+            height = package.depth
+        elif length and width:
+            # Pallet
+            # Height is Load Height + Package Depth
+            height = (send_package.volume / (length * width)) + package.depth
+        else:
+            # We cannot calculate it
+            height = ""
+
+        send_package_id = send_package.id
+        package_items = items.find(lambda row: row["inv_send_package_item.send_package_id"] == send_package_id)
+
+        # @ToDo: Handle Multiple Items on a Pallet
+        item = package_items.first()
 
         # Set column Widths
         sheet.col(0).width = 4172   # 3.19 cm
@@ -7954,39 +8280,9 @@ def inv_pallet_label(r, **attr):
         sheet.col(12).width = 2341  # 1.79 cm
         sheet.col(13).width = 2341  # 1.79 cm
 
-        # 1st row: Logo
-        current_row = sheet.row(0)
-        # current_row.set_style() not giving the correct height
-        #current_row.height = ROW_HEIGHT
-        logo = org.logo
         if logo:
-            # We need to convert to 24-bit BMP
-            try:
-                from PIL import Image
-            except:
-                current.log.error("PIL not installed: Cannot insert logo")
-            else:
-                IMG_WIDTH = 230
-                filename, extension = os.path.splitext(logo)
-                logo_path = os.path.join(r.folder, "uploads", logo)
-                if extension == ".png":
-                    # Remove Transparency
-                    png = Image.open(logo_path).convert("RGBA")
-                    size = png.size
-                    background = Image.new("RGBA", size, (255,255,255))
-                    img = Image.alpha_composite(background, png)
-                else:
-                    img = Image.open(logo_path)
-                    size = img.size
-                width = size[0]
-                height = int(IMG_WIDTH/width * size[1])
-                img = img.convert("RGB").resize((IMG_WIDTH, height))
-                from io import BytesIO
-                bmpfile = BytesIO()
-                img.save(bmpfile, "BMP")
-                bmpfile.seek(0)
-                bmpdata = bmpfile.read()
-                sheet.insert_bitmap_data(bmpdata, 0, 11)
+            # 1st row: Logo
+            sheet.insert_bitmap_data(bmpdata, 0, 11)
 
         # 7th row: Height
         current_row = sheet.row(6)
@@ -8092,14 +8388,15 @@ def inv_pallet_label(r, **attr):
         # 38th row: Sizes
         current_row = sheet.row(37)
         current_row.height = ROW_HEIGHT
-        #current_row.write(0, width, style) # We don't have this data
+        current_row.write(0, width, center_style)
         current_row.write(1, "x", style)
-        #current_row.write(2, length, style) # We don't have this data
+        current_row.write(2, length, center_style)
         current_row.write(3, "x", style)
-        #current_row.write(3, height, style) # We don't have this data
-        current_row.write(8, pallet_weight, style)
+        current_row.write(4, height, center_style)
+        current_row.write(8, package_weight, center_style)
         current_row.write(9, "Kgs", style)
-        current_row.write(11, pallet_volume, style)
+        formula = xlwt.Formula("A38*C38*E38")
+        current_row.write(11, formula, center_style)
         current_row.write(12, "m3", style)
 
     # Export to File
@@ -8113,9 +8410,7 @@ def inv_pallet_label(r, **attr):
     output.seek(0)
 
     # Response headers
-    title = s3_str(T("Label for Pallet %(pallet)s of %(waybill)s")) % {"pallet": pallet.number,
-                                                                       "waybill": record.send_ref,
-                                                                       }
+    title = s3_str(T("Labels for %(waybill)s")) % {"waybill": record.send_ref}
     filename = "%s.xls" % title
     response = current.response
     from gluon.contenttype import contenttype
@@ -8365,6 +8660,17 @@ def inv_pick_list(r, **attr):
                     sheet.col(col_index).width = width
             col_index += 1
         row_index += 1
+
+    # Footer
+    current_row = sheet.row(row_index)
+    current_row.height = 400
+    sheet.write_merge(row_index, row_index, 0, 4, "%s:" % s3_str(T("Picked By")), right_style)
+    sheet.write_merge(row_index, row_index, 5, 9, "", style) # Styling
+    row_index += 1
+    current_row = sheet.row(row_index)
+    current_row.height = 400
+    sheet.write_merge(row_index, row_index, 0, 4, "%s:" % s3_str(T("Signature")), right_style)
+    sheet.write_merge(row_index, row_index, 5, 9, "", style) # Styling
 
     # Export to File
     output = BytesIO()
@@ -10546,6 +10852,109 @@ def inv_remove(inv_rec,
     return send_item_quantity
 
 # =============================================================================
+def inv_send_commit():
+    """
+        Controller function to create a Shipment containing all
+        Items in a Commitment (interactive)
+
+        @ToDo: Rewrite as Method
+        @ToDo: Avoid Writes in GETs
+    """
+
+    # Get the commit record
+    try:
+        commit_id = current.request.args[0]
+    except KeyError:
+        redirect(URL(c="inv", f="commit"))
+
+    db = current.db
+    s3db = current.s3db
+
+    req_table = db.inv_req
+    rim_table = db.inv_req_item
+    com_table = db.inv_commit
+    cim_table = db.inv_commit_item
+
+    send_table = s3db.inv_send
+    tracktable = s3db.inv_track_item
+
+    query = (com_table.id == commit_id) & \
+            (com_table.req_id == req_table.id) & \
+            (com_table.deleted == False)
+    record = db(query).select(com_table.committer_id,
+                              com_table.site_id,
+                              com_table.organisation_id,
+                              req_table.id,
+                              req_table.requester_id,
+                              req_table.site_id,
+                              #req_table.req_ref, # Only used for External Requests
+                              limitby = (0, 1),
+                              ).first()
+
+    # @ToDo: Identify if we have stock items which match the commit items
+    # If we have a single match per item then proceed automatically (as-now) & then decrement the stock quantity
+    # If we have no match then warn the user & ask if they should proceed anyway
+    # If we have mulitple matches then provide a UI to allow the user to select which stock items to use
+
+    # Create an inv_send and link to the commit
+    form_vars = Storage(sender_id = record.inv_commit.committer_id,
+                        site_id = record.inv_commit.site_id,
+                        recipient_id = record.inv_req.requester_id,
+                        to_site_id = record.inv_req.site_id,
+                        #req_ref = record.inv_req.req_ref,
+                        status = 0,
+                        )
+    send_id = send_table.insert(**form_vars)
+    form_vars.id = send_id
+    s3db.inv_send_req.insert(send_id = send_id,
+                             req_id = record.inv_req.id,
+                             )
+
+    # Get all of the committed items
+    query = (cim_table.commit_id == commit_id) & \
+            (cim_table.req_item_id == rim_table.id) & \
+            (cim_table.deleted == False)
+    records = db(query).select(rim_table.id,
+                               rim_table.item_id,
+                               rim_table.item_pack_id,
+                               rim_table.currency,
+                               rim_table.quantity,
+                               rim_table.quantity_transit,
+                               rim_table.quantity_fulfil,
+                               cim_table.quantity,
+                               )
+    # Create inv_track_items for each commit item
+    insert = tracktable.insert
+    for row in records:
+        rim = row.inv_req_item
+        # Now done as a VirtualField instead (looks better & updates closer to real-time, so less of a race condition)
+        #quantity_shipped = max(rim.quantity_transit, rim.quantity_fulfil)
+        #quantity_needed = rim.quantity - quantity_shipped
+        insert(req_item_id = rim.id,
+               track_org_id = record.inv_commit.organisation_id,
+               send_id = send_id,
+               status = 1,
+               item_id = rim.item_id,
+               item_pack_id = rim.item_pack_id,
+               currency = rim.currency,
+               #req_quantity = quantity_needed,
+               quantity = row.inv_commit_item.quantity,
+               recv_quantity = row.inv_commit_item.quantity,
+               )
+
+    # Create the Waybill
+    form = Storage()
+    form.vars = form_vars
+    inv_send_onaccept(form)
+
+    # Redirect to inv_send for the send id just created
+    redirect(URL(c = "inv",
+                 f = "send",
+                 #args = [send_id, "track_item"]
+                 args = [send_id]
+                 ))
+
+# =============================================================================
 def inv_send_controller():
     """
        RESTful CRUD controller for inv_send
@@ -10593,16 +11002,25 @@ def inv_send_controller():
                 table.url.readable = table.url.writable = False
                 table.date.readable = table.date.writable = False
 
-            elif cname == "send_pallet":
+            elif cname == "send_package":
 
                 # Uncommon workflow, so no need to optimise for this:
                 #if r.method == "read":
                 #    return True
 
+                if status != SHIP_STATUS_IN_PROCESS:
+                    # Locked
+                    s3db.configure("inv_send_package",
+                                   deletable = False,
+                                   insertable = False,
+                                   updateable = False,
+                                   )
+                    return True
+
                 send_id = r.id
 
-                # Number the Pallet automatically
-                sptable = s3db.inv_send_pallet
+                # Number the Package automatically
+                sptable = s3db.inv_send_package
                 query = (sptable.send_id == send_id)
                 field = sptable.number
                 max_field = field.max()
@@ -10616,36 +11034,48 @@ def inv_send_controller():
                     next_number = 1
                 field.default = next_number
 
-                # Filter out Items which are already fully palletised
+                send_package_id = r.component_id
+                if send_package_id:
+                    send_package_id = int(send_package_id)
+
+                # Read all Items in the Shipment
                 ttable = s3db.inv_track_item
                 rows = db(ttable.send_id == send_id).select(ttable.id,
                                                             ttable.quantity,
                                                             )
                 track_items = {row.id: row.quantity for row in rows}
-                spitable = s3db.inv_send_pallet_item
-                query &= (sptable.id == spitable.send_pallet_id)
-                rows = db(query).select(spitable.track_item_id,
+
+                # Filter out Items which are already fully packaged
+                # - other than those in this Package (update forms)
+                send_package = []
+                spitable = s3db.inv_send_package_item
+                query &= (sptable.id == spitable.send_package_id)
+                rows = db(query).select(spitable.send_package_id,
+                                        spitable.track_item_id,
                                         spitable.quantity,
                                         )
                 for row in rows:
-                    track_items[row.track_item_id] -= row.quantity
-                track_item_ids = [track_item_id for track_item_id in track_items if track_items[track_item_id] <= 0]
+                    track_item_id = row.track_item_id
+                    if row.send_package_id == send_package_id:
+                        send_package.append(track_item_id)
+                    track_items[track_item_id] -= row.quantity
+                track_item_ids = [track_item_id for track_item_id in track_items if (track_item_id not in send_package) and (track_items[track_item_id] <= 0)]
                 spitable.track_item_id.requires.set_filter(not_filterby = "id", # Using not_filter_by as filter_opts = [] means 'no filtering' rather than 'no results'
                                                            not_filter_opts = track_item_ids,
                                                            )
                 # Default Quantity
-                if r.component_id:
+                if send_package_id:
                     # Update form
-                    pass
+                    track_items = {k: v for k, v in track_items.items() if (k in send_package) or (v > 0)}
                 else:
                     # Create form
                     track_items = {k: v for k, v in track_items.items() if v > 0}
                 if track_items:
                     s3.js_global.append('''S3.supply.track_items=%s''' % json.dumps(track_items, separators=SEPARATORS))
                     if s3.debug:
-                        s3.scripts.append("/%s/static/scripts/S3/s3.inv_pallet_item.js" % r.application)
+                        s3.scripts.append("/%s/static/scripts/S3/s3.inv_send_package_item.js" % r.application)
                     else:
-                        s3.scripts.append("/%s/static/scripts/S3/s3.inv_pallet_item.min.js" % r.application)
+                        s3.scripts.append("/%s/static/scripts/S3/s3.inv_send_package_item.min.js" % r.application)
                     
             elif cname == "track_item":
 
@@ -10663,18 +11093,6 @@ def inv_send_controller():
                 tracktable = s3db.inv_track_item
                 iitable = s3db.inv_inv_item
 
-                # Set Validator for checking against the number of items in the warehouse
-                req_vars = r.vars
-                send_inv_item_id = req_vars.send_inv_item_id
-                if send_inv_item_id:
-                    if not req_vars.item_pack_id:
-                        req_vars.item_pack_id = db(iitable.id == send_inv_item_id).select(iitable.item_pack_id,
-                                                                                          limitby = (0, 1),
-                                                                                          ).first().item_pack_id
-                    tracktable.quantity.requires = IS_AVAILABLE_QUANTITY(send_inv_item_id,
-                                                                         req_vars.item_pack_id,
-                                                                         )
-
                 bin_site_layout = settings.get_inv_bin_site_layout()
                 track_pack_values = settings.get_inv_track_pack_values()
 
@@ -10688,6 +11106,7 @@ def inv_send_controller():
                     tracktable.bin.readable = False
                     tracktable.layout_id.readable = False
                     tracktable.item_id.readable = False
+                    tracktable.item_pack_id.comment = None # No filterOptionsS3
                     tracktable.recv_quantity.readable = False
                     tracktable.return_quantity.readable = False
                     tracktable.expiry_date.readable = False
@@ -10791,8 +11210,7 @@ def inv_send_controller():
                                 Field.Method("quantity_needed",
                                              inv_track_item_quantity_needed
                                              )
-                            list_fields.insert(2, (T("Quantity Needed"),
-                                                   "quantity_needed"))
+                            list_fields.insert(2, (T("Quantity Needed"), "quantity_needed"))
 
                 s3db.configure("inv_track_item",
                                # Lock the record so it can't be fiddled with
@@ -10802,35 +11220,32 @@ def inv_send_controller():
                                list_fields = list_fields,
                                )
 
-                # Hide the values that will be copied from the inv_inv_item record
-                if r.component_id:
-                    track_record = db(tracktable.id == r.component_id).select(tracktable.req_item_id,
-                                                                              tracktable.send_inv_item_id,
-                                                                              tracktable.item_pack_id,
-                                                                              tracktable.status,
-                                                                              tracktable.quantity,
-                                                                              limitby = (0, 1),
-                                                                              ).first()
+                track_item_id = r.component_id
+                if track_item_id:
+                    track_record = db(tracktable.id == track_item_id).select(tracktable.item_id,
+                                                                             tracktable.send_inv_item_id, # Ensure we include the current inv_item
+                                                                             tracktable.status,
+                                                                             limitby = (0, 1),
+                                                                             ).first()
                     set_track_attr(track_record.status)
-                    # If the track record is linked to a request item then
-                    # the stock item has already been selected so make it read only
-                    if track_record and track_record.get("req_item_id"):
-                        tracktable.send_inv_item_id.writable = False
-                        tracktable.item_pack_id.writable = False
-                        stock_qnty = track_record.quantity
-                        tracktable.quantity.comment = T("%(quantity)s in stock") % {"quantity": stock_qnty}
-                        tracktable.quantity.requires = IS_AVAILABLE_QUANTITY(track_record.send_inv_item_id,
-                                                                             track_record.item_pack_id,
-                                                                             )
-                    # Hide the item id
-                    tracktable.item_id.readable = False
+                    if r.http == "GET" and \
+                       track_record.status == TRACK_STATUS_PREPARING:
+                        # Provide initial options for Pack in Update forms
+                        # Don't include in the POSTs as we want to be able to select alternate Items, and hance packs
+                        f = tracktable.item_pack_id
+                        f.requires = IS_ONE_OF(db, "supply_item_pack.id",
+                                               f.represent,
+                                               sort = True,
+                                               filterby = "item_id",
+                                               filter_opts = (track_record.item_id,),
+                                               )
                 else:
                     set_track_attr(TRACK_STATUS_PREPARING)
 
                 if status == SHIP_STATUS_IN_PROCESS:
                     # We replace filterOptionsS3
                     f = tracktable.send_inv_item_id
-                    f.comment = None
+                    #f.comment = None
                     if s3.debug:
                         s3.scripts.append("/%s/static/scripts/S3/s3.inv_send_item.js" % r.application)
                     else:
@@ -10840,6 +11255,9 @@ def inv_send_controller():
                     ii_query = (iitable.quantity > 0) & \
                                ((iitable.expiry_date >= r.now) | ((iitable.expiry_date == None))) & \
                                (iitable.status == 0)
+                    if track_item_id:
+                        # Ensure we include the current inv_item
+                        ii_query |= (iitable.id == track_record.send_inv_item_id)
                     # Restrict to items from this facility only
                     query = ii_query & (iitable.site_id == site_id)
                     f.requires = f.requires.other
@@ -10945,13 +11363,14 @@ def inv_send_controller():
                             s3.js_global.append('''S3.supply.inv_items=%s''' % json.dumps(inv_data, separators=SEPARATORS))
 
                 if r.interactive:
-                    crud_strings = s3.crud_strings.inv_send
                     if status == SHIP_STATUS_IN_PROCESS:
+                        crud_strings = s3.crud_strings.inv_send
                         crud_strings.title_update = \
                         crud_strings.title_display = T("Process Shipment to Send")
-                    elif "site_id" in req_vars and status == SHIP_STATUS_SENT:
-                        crud_strings.title_update = \
-                        crud_strings.title_display = T("Review Incoming Shipment to Receive")
+                    # Done via inv/recv
+                    #elif "site_id" in r.vars and status == SHIP_STATUS_SENT:
+                    #    crud_strings.title_update = \
+                    #    crud_strings.title_display = T("Review Incoming Shipment to Receive")
         else:
             # No Component
             # Set the inv_send attributes
@@ -11039,27 +11458,6 @@ def inv_send_controller():
         return True
     s3.prep = prep
 
-    def postp(r, output):
-        if r.interactive and \
-           r.component_name == "send_pallet":
-            # Normal Action Buttons
-            S3CRUD.action_buttons(r)
-            # Custom Action Buttons
-            s3.actions += [{"label": s3_str(T("Label")),
-                            "icon": ICON.css_class("print"),
-                            "url": URL(args = [r.id,
-                                               "send_pallet",
-                                               "[id]",
-                                               "label",
-                                               ],
-                                       ),
-                            "_class": "action-btn",
-                            },
-                           ]
-
-        return output
-    s3.postp = postp
-
     return current.rest_controller("inv", "send",
                                    rheader = inv_send_rheader,
                                    )
@@ -11131,19 +11529,19 @@ def inv_send_onaccept(form):
         record.update_record(send_ref = code)
 
 # =============================================================================
-def inv_send_pallet_update(send_pallet_id):
+def inv_send_package_update(send_package_id):
     """
-        Updfate a Shipment Pallet's Total Weight & Volume
+        Updfate a Shipment Package's Total Weight & Volume
     """
 
     db = current.db
     s3db = current.s3db
 
-    table = s3db.inv_send_pallet_item
+    table = s3db.inv_send_package_item
     itable = s3db.supply_item
     ptable = s3db.supply_item_pack
     ttable = s3db.inv_track_item
-    query = (table.send_pallet_id == send_pallet_id) & \
+    query = (table.send_package_id == send_package_id) & \
             (table.track_item_id == ttable.id) & \
             (ttable.item_id == itable.id) & \
             (ttable.item_pack_id == ptable.id)
@@ -11155,7 +11553,7 @@ def inv_send_pallet_update(send_pallet_id):
     total_volume = 0
     total_weight = 0
     for row in items:
-        quantity = row["inv_send_pallet_item.quantity"] * row["supply_item_pack.quantity"]
+        quantity = row["inv_send_package_item.quantity"] * row["supply_item_pack.quantity"]
         row = row.supply_item
         volume = row.volume
         if volume:
@@ -11164,9 +11562,9 @@ def inv_send_pallet_update(send_pallet_id):
         if weight:
             total_weight += (weight * quantity)
 
-    db(s3db.inv_send_pallet.id == send_pallet_id).update(volume = total_volume,
-                                                         weight = total_weight,
-                                                         )
+    db(s3db.inv_send_package.id == send_package_id).update(volume = total_volume,
+                                                           weight = total_weight,
+                                                           )
 
 # =============================================================================
 def inv_send_process(r, **attr):
@@ -11425,8 +11823,8 @@ def inv_send_rheader(r):
             tabs = [(T("Edit Details"), None),
                     (T("Items"), "track_item"),
                     ]
-            if settings.get_inv_send_pallets():
-                tabs.append((T("Pallets"), "send_pallet"))
+            if settings.get_inv_send_packaging():
+                tabs.append((T("Packaging"), "send_package"))
             if settings.get_inv_document_filing():
                 tabs.append((T("Documents"), "document"))
 
@@ -11545,29 +11943,26 @@ def inv_send_rheader(r):
                                         )
                                      )
 
-            # Find out how many inv_track_items we have for this send record
-            tracktable = s3db.inv_track_item
-            query = (tracktable.send_id == send_id) & \
-                    (tracktable.deleted == False)
-            #cnt = db(query).count()
-            cnt = db(query).select(tracktable.id,
-                                   limitby = (0, 1),
-                                   ).first()
-            if cnt:
-                cnt = 1
-            else:
-                cnt = 0
 
-            actions = DIV()
-            #rSubdata = TABLE()
+            
             rfooter = TAG[""]()
 
-            if not r.method == "form":
-                if status == SHIP_STATUS_IN_PROCESS:
-                    if current.auth.s3_has_permission("update", "inv_send",
-                                                      record_id = record.id):
+            if status != SHIP_STATUS_CANCEL and \
+               r.method != "form":
+                if current.auth.s3_has_permission("update", "inv_send",
+                                                  record_id = record.id):
 
-                        if cnt > 0:
+                    packaging = None
+                    # Don't show buttons unless Items have been added
+                    tracktable = s3db.inv_track_item
+                    query = (tracktable.send_id == send_id)
+                    item = db(query).select(tracktable.id,
+                                            limitby = (0, 1),
+                                            ).first()
+                    if item:
+                        actions = DIV()
+                        jappend = s3.jquery_ready.append
+                        if status == SHIP_STATUS_IN_PROCESS:
                             actions.append(A(ICON("print"),
                                              " ",
                                              T("Picking List"),
@@ -11577,11 +11972,11 @@ def inv_send_rheader(r):
                                              )
                                            )
 
-                            if settings.get_inv_send_pallets():
+                            if settings.get_inv_send_packaging():
                                 actions.append(A(ICON("print"),
                                                  " ",
-                                                 T("Packing List"),
-                                                 _href = URL(args = [record.id, "packing_list.xls"]
+                                                 T("Labels"),
+                                                 _href = URL(args = [record.id, "labels.xls"]
                                                              ),
                                                  _class = "action-btn",
                                                  )
@@ -11595,45 +11990,23 @@ def inv_send_rheader(r):
                                              )
                                            )
 
-                            s3.jquery_ready.append('''S3.confirmClick("#send_process","%s")''' \
-                                                    % T("Do you want to send this shipment?"))
-                        #if not r.component:
-                        #    ritable = s3db.inv_req_item
-                        #    rcitable = s3db.inv_commit_item
-                        #    query = (tracktable.send_id == record.id) & \
-                        #            (rcitable.req_item_id == tracktable.req_item_id) & \
-                        #            (tracktable.req_item_id == ritable.id) & \
-                        #            (tracktable.deleted == False)
-                        #    records = db(query).select()
-                        #    for record in records:
-                        #        rSubdata.append(TR(TH("%s: " % ritable.item_id.label),
-                        #                           ritable.item_id.represent(record.inv_req_item.item_id),
-                        #                           TH("%s: " % rcitable.quantity.label),
-                        #                           record.inv_commit_item.quantity,
-                        #                           ))
+                            jappend('''S3.confirmClick("#send_process","%s")''' % \
+                                T("Do you want to send this shipment?"))
 
-                elif status == SHIP_STATUS_RETURNING:
-                    if cnt > 0:
-                        actions.append(A(T("Complete Returns"),
-                                         _href = URL(c = "inv",
-                                                     f = "return_process",
-                                                     args = [record.id]
-                                                     ),
-                                         _id = "return_process",
-                                         _class = "action-btn"
-                                         )
-                                       )
-                        s3.jquery_ready.append('''S3.confirmClick("#return_process","%s")''' \
-                                        % T("Do you want to complete the return process?"))
-                    else:
-                        msg = T("You need to check all item quantities before you can complete the return process.")
-                        rfooter.append(SPAN(msg))
-                elif status != SHIP_STATUS_CANCEL:
-                    if status == SHIP_STATUS_SENT:
-                        jappend = s3.jquery_ready.append
-                        s3_has_permission = current.auth.s3_has_permission
-                        if s3_has_permission("update", "inv_send",
-                                             record_id = record.id):
+                        elif status == SHIP_STATUS_RETURNING:
+                            actions.append(A(T("Complete Returns"),
+                                             _href = URL(c = "inv",
+                                                         f = "return_process",
+                                                         args = [record.id]
+                                                         ),
+                                             _id = "return_process",
+                                             _class = "action-btn"
+                                             )
+                                           )
+                            jappend('''S3.confirmClick("#return_process","%s")''' % \
+                                T("Do you want to complete the return process?"))
+
+                        elif status == SHIP_STATUS_SENT:
                             actions.append(A(T("Manage Returns"),
                                              _href = URL(c = "inv",
                                                          f = "send_returns",
@@ -11662,44 +12035,61 @@ def inv_send_rheader(r):
                             jappend('''S3.confirmClick("#send-receive","%s")''' % \
                                 T("Confirm that the shipment has been received by a destination which will not record the shipment directly into the system."))
 
-                        if s3_has_permission("update", "inv_send",
-                                             record_id = record.id):
-                            actions.append(A(T("Cancel Shipment"),
-                                             _href = URL(c = "inv",
-                                                         f = "send_cancel",
-                                                         args = [record.id]
-                                                         ),
-                                             _id = "send-cancel",
-                                             _class = "action-btn"
-                                             )
-                                           )
+                        if status != SHIP_STATUS_RECEIVED:
 
-                            jappend('''S3.confirmClick("#send-cancel","%s")''' \
-                                % T("Do you want to cancel this sent shipment? The items will be returned to the Warehouse. This action CANNOT be undone!"))
+                            if settings.get_inv_send_packaging():
+                                if status == SHIP_STATUS_IN_PROCESS:
+                                    # Insert in front of 'Send Shipment'
+                                    index = -1
+                                else:
+                                    # Append at end
+                                    index = len(actions)
+                                actions.insert(index, A(ICON("print"),
+                                                        " ",
+                                                        T("Packing List"),
+                                                        _href = URL(args = [record.id, "packing_list.xls"]
+                                                                    ),
+                                                        _class = "action-btn",
+                                                        )
+                                               )
+                            
+                            if settings.get_inv_send_gift_certificate():
+                                if status == SHIP_STATUS_IN_PROCESS:
+                                    # Insert in front of 'Send Shipment'
+                                    index = -1
+                                else:
+                                    # Append at end
+                                    index = len(actions)
+                                actions.insert(index, A(ICON("print"),
+                                                        " ",
+                                                        T("Gift Certificate"),
+                                                        _href = URL(c = "inv",
+                                                                    f = "send",
+                                                                    args = [record.id,
+                                                                            "gift_certificate.xls",
+                                                                            ]
+                                                                    ),
+                                                        _class = "action-btn"
+                                                        )
+                                               )
 
-                if settings.get_inv_send_gift_certificate():
-                    actions.append(A(ICON("print"),
-                                     " ",
-                                     T("Gift Certificate"),
-                                     _href = URL(c = "inv",
-                                                 f = "send",
-                                                 args = [record.id,
-                                                         "gift_certificate",
-                                                         ]
-                                                 ),
-                                     _class = "action-btn"
-                                     )
-                                   )
+                            if status != SHIP_STATUS_IN_PROCESS:
+                                actions.append(A(T("Cancel Shipment"),
+                                                 _href = URL(c = "inv",
+                                                             f = "send_cancel",
+                                                             args = [record.id]
+                                                             ),
+                                                 _id = "send-cancel",
+                                                 _class = "delete-btn"
+                                                 )
+                                               )
 
-            #    msg = ""
-            #    if cnt == 1:
-            #       msg = T("One item is attached to this shipment")
-            #    elif cnt > 1:
-            #        msg = T("%s items are attached to this shipment") % cnt
-            #    shipment_details.append(TR(TH(actions, _colspan=2), TD(msg)))
-                shipment_details.append(TR(TH(actions,
-                                              _colspan = 2,
-                                              )))
+                                jappend('''S3.confirmClick("#send-cancel","%s")''' % \
+                                    T("Do you want to cancel this sent shipment? The items will be returned to the Warehouse. This action CANNOT be undone!"))
+
+                        shipment_details.append(TR(TH(actions,
+                                                      _colspan = 2,
+                                                      )))
 
             s3.rfooter = rfooter
             rheader = DIV(shipment_details,
@@ -12074,109 +12464,6 @@ def inv_track_item_quantity_needed(row):
     return quantity_needed
 
 # =============================================================================
-def inv_send_commit():
-    """
-        Controller function to create a Shipment containing all
-        Items in a Commitment (interactive)
-
-        @ToDo: Rewrite as Method
-        @ToDo: Avoid Writes in GETs
-    """
-
-    # Get the commit record
-    try:
-        commit_id = current.request.args[0]
-    except KeyError:
-        redirect(URL(c="inv", f="commit"))
-
-    db = current.db
-    s3db = current.s3db
-
-    req_table = db.inv_req
-    rim_table = db.inv_req_item
-    com_table = db.inv_commit
-    cim_table = db.inv_commit_item
-
-    send_table = s3db.inv_send
-    tracktable = s3db.inv_track_item
-
-    query = (com_table.id == commit_id) & \
-            (com_table.req_id == req_table.id) & \
-            (com_table.deleted == False)
-    record = db(query).select(com_table.committer_id,
-                              com_table.site_id,
-                              com_table.organisation_id,
-                              req_table.id,
-                              req_table.requester_id,
-                              req_table.site_id,
-                              #req_table.req_ref, # Only used for External Requests
-                              limitby = (0, 1),
-                              ).first()
-
-    # @ToDo: Identify if we have stock items which match the commit items
-    # If we have a single match per item then proceed automatically (as-now) & then decrement the stock quantity
-    # If we have no match then warn the user & ask if they should proceed anyway
-    # If we have mulitple matches then provide a UI to allow the user to select which stock items to use
-
-    # Create an inv_send and link to the commit
-    form_vars = Storage(sender_id = record.inv_commit.committer_id,
-                        site_id = record.inv_commit.site_id,
-                        recipient_id = record.inv_req.requester_id,
-                        to_site_id = record.inv_req.site_id,
-                        #req_ref = record.inv_req.req_ref,
-                        status = 0,
-                        )
-    send_id = send_table.insert(**form_vars)
-    form_vars.id = send_id
-    s3db.inv_send_req.insert(send_id = send_id,
-                             req_id = record.inv_req.id,
-                             )
-
-    # Get all of the committed items
-    query = (cim_table.commit_id == commit_id) & \
-            (cim_table.req_item_id == rim_table.id) & \
-            (cim_table.deleted == False)
-    records = db(query).select(rim_table.id,
-                               rim_table.item_id,
-                               rim_table.item_pack_id,
-                               rim_table.currency,
-                               rim_table.quantity,
-                               rim_table.quantity_transit,
-                               rim_table.quantity_fulfil,
-                               cim_table.quantity,
-                               )
-    # Create inv_track_items for each commit item
-    insert = tracktable.insert
-    for row in records:
-        rim = row.inv_req_item
-        # Now done as a VirtualField instead (looks better & updates closer to real-time, so less of a race condition)
-        #quantity_shipped = max(rim.quantity_transit, rim.quantity_fulfil)
-        #quantity_needed = rim.quantity - quantity_shipped
-        insert(req_item_id = rim.id,
-               track_org_id = record.inv_commit.organisation_id,
-               send_id = send_id,
-               status = 1,
-               item_id = rim.item_id,
-               item_pack_id = rim.item_pack_id,
-               currency = rim.currency,
-               #req_quantity = quantity_needed,
-               quantity = row.inv_commit_item.quantity,
-               recv_quantity = row.inv_commit_item.quantity,
-               )
-
-    # Create the Waybill
-    form = Storage()
-    form.vars = form_vars
-    inv_send_onaccept(form)
-
-    # Redirect to inv_send for the send id just created
-    redirect(URL(c = "inv",
-                 f = "send",
-                 #args = [send_id, "track_item"]
-                 args = [send_id]
-                 ))
-
-# =============================================================================
 def inv_update_commit_quantities_and_status(req):
     """
         Update commit quantities and status of an Inventory Requisition
@@ -12411,32 +12698,33 @@ def inv_track_item_deleting(record_id):
         # Not 'Preparing': Do not allow
         return False
 
-    if record.req_item_id:
-        # This is linked to a Request:
-        # - remove these items from the quantity in transit
-        req_id = record.req_item_id
-        ritable = s3db.inv_req_item
-        req_item = db(ritable.id == req_id).select(ritable.id,
-                                                   ritable.quantity_transit,
-                                                   ritable.item_pack_id,
-                                                   limitby = (0, 1),
-                                                   ).first()
-        req_quantity = req_item.quantity_transit
-        siptable = db.supply_item_pack
-        req_pack_quantity = db(siptable.id == req_item.item_pack_id).select(siptable.quantity,
-                                                                            limitby = (0, 1),
-                                                                            ).first().quantity
-        track_pack_quantity = db(siptable.id == record.item_pack_id).select(siptable.quantity,
-                                                                            limitby = (0, 1),
-                                                                            ).first().quantity
-        from .supply import supply_item_add
-        quantity_transit = supply_item_add(req_quantity,
-                                           req_pack_quantity,
-                                           - record.quantity,
-                                           track_pack_quantity
-                                           )
-        req_item.update_record(quantity_transit = quantity_transit)
-        inv_req_update_status(req_id)
+    # Transit Quantity not updated until Shipment is Sent
+    #if record.req_item_id:
+    #    # This is linked to a Request:
+    #    # - remove these items from the quantity in transit
+    #    req_id = record.req_item_id
+    #    ritable = s3db.inv_req_item
+    #    req_item = db(ritable.id == req_id).select(ritable.id,
+    #                                               ritable.quantity_transit,
+    #                                               ritable.item_pack_id,
+    #                                               limitby = (0, 1),
+    #                                               ).first()
+    #    req_quantity = req_item.quantity_transit
+    #    siptable = db.supply_item_pack
+    #    req_pack_quantity = db(siptable.id == req_item.item_pack_id).select(siptable.quantity,
+    #                                                                        limitby = (0, 1),
+    #                                                                        ).first().quantity
+    #    track_pack_quantity = db(siptable.id == record.item_pack_id).select(siptable.quantity,
+    #                                                                        limitby = (0, 1),
+    #                                                                        ).first().quantity
+    #    from .supply import supply_item_add
+    #    quantity_transit = supply_item_add(req_quantity,
+    #                                       req_pack_quantity,
+    #                                       - record.quantity,
+    #                                       track_pack_quantity
+    #                                       )
+    #    req_item.update_record(quantity_transit = quantity_transit)
+    #    inv_req_update_status(req_id)
 
     if record.send_inv_item_id:
         # This is linked to a Warehouse Inventory item:
@@ -12534,17 +12822,6 @@ def inv_track_item_onaccept(form):
         db(rtable.id == recv_id).update(send_ref = send_ref)
 
     if record:
-        settings = current.deployment_settings
-
-        # Check if this item is linked to a Request
-        req_item_id = record.req_item_id
-        if req_item_id:
-            rrtable = s3db.inv_req
-            ritable = s3db.inv_req_item
-            req_id = db(ritable.id == req_item_id).select(ritable.req_id,
-                                                          limitby = (0, 1),
-                                                          ).first().req_id
-
         # If the status is 'unloading':
         # Move all the items into the site, update any request & make any adjustments
         # Finally change the status to 'arrived'
@@ -12558,7 +12835,7 @@ def inv_track_item_onaccept(form):
                                                        limitby = (0, 1),
                                                        ).first()
             recv_site_id = recv_rec.site_id
-            if settings.get_inv_bin_site_layout():
+            if current.deployment_settings.get_inv_bin_site_layout():
                 bin_query = (inv_item_table.layout_id == record.recv_bin_id)
             else:
                 bin_query = (inv_item_table.bin == record.recv_bin)
@@ -12612,10 +12889,14 @@ def inv_track_item_onaccept(form):
                 db(inv_item_table.id == inv_item_id).update(realm_entity = realm_entity)
 
             # If this item is linked to a Request, then update the quantity fulfil
+            req_item_id = record.req_item_id
             if req_item_id:
+                rrtable = s3db.inv_req
+                ritable = s3db.inv_req_item
                 req_item = db(ritable.id == req_item_id).select(ritable.id,
-                                                                ritable.quantity_fulfil,
                                                                 ritable.item_pack_id,
+                                                                ritable.quantity_fulfil,
+                                                                ritable.req_id,
                                                                 limitby = (0, 1),
                                                                 ).first()
                 req_quantity = req_item.quantity_fulfil
@@ -12631,7 +12912,7 @@ def inv_track_item_onaccept(form):
                                                   track_pack_quantity
                                                   )
                 req_item.update_record(quantity_fulfil = quantity_fulfil)
-                inv_req_update_status(req_id)
+                inv_req_update_status(req_item.req_id)
 
             data = {"recv_inv_item_id": inv_item_id,
                     "status": TRACK_STATUS_ARRIVED,
@@ -13295,6 +13576,39 @@ class inv_InvItemRepresent(S3Represent):
                 append(string)
                 append(" - ")
         return TAG[""](items[:-1])
+
+# =============================================================================
+class inv_PackageRepresent(S3Represent):
+    """
+        Represent a Package
+    """
+
+    def __init__(self,
+                 show_link = False,
+                 ):
+
+        fields = ["type",
+                  "name",
+                  ]
+
+        super(inv_PackageRepresent, self).__init__(lookup = "inv_package",
+                                                   fields = fields,
+                                                   show_link = show_link,
+                                                   )
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        v = "%s %s" % (current.db.inv_package.type.represent(row.type),
+                       row.name,
+                       )
+
+        return v
 
 # =============================================================================
 class inv_RecvRepresent(S3Represent):

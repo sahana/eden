@@ -11,24 +11,32 @@ $(document).ready(function() {
 
     if (invItemField.length) {
 
-        var ReqItemRow = $('#inv_track_item_req_item_id__row');
+        var ItemPackField = $('#inv_track_item_item_pack_id'),
+            QuantityField = $('#inv_track_item_quantity'),
+            ReqItemRow = $('#inv_track_item_req_item_id__row'),
+            startingInvItemID = invItemField.val(),
+            startingQuantity,
+            startingPackID;
 
         if (ReqItemRow.length) {
             // Hide it by Default
             ReqItemRow.hide();
         }
 
-        var InvItemChange = function() {
+        var InvItemChange = function(event, update) {
             // Update the available packs for this item
             // Display the number of these items available in this site's inventory
 
             var inv_item_id = invItemField.val(),
-                ItemPackField = $('#inv_track_item_item_pack_id'),
-                QuantityField = $('#inv_track_item_quantity');
+                startingPackQuantity;
 
             // Remove old Items
             ItemPackField.html('');
-            //QuantityField.val('');
+            if (update) {
+                 // Don't clear for update forms
+            } else {
+                QuantityField.val('');
+            }
             $('#TotalQuantity').remove();
 
             if (inv_item_id === '') {
@@ -52,7 +60,9 @@ $(document).ready(function() {
                 // Save JSON Request by element id
                 S3.JSONRequest[elementID] = $.getJSON(url, function(data) {
 
-                    var i,
+                    var errorField = $('#quantity__error'),
+                        first = true,
+                        i,
                         InvQuantity = data.quantity,
                         opt,
                         PackQuantity,
@@ -61,8 +71,8 @@ $(document).ready(function() {
                         packs = data.packs,
                         packsLength = packs.length,
                         piece,
-                        selected,
-                        first = true;
+                        Quantity,
+                        selected;
 
                     for (i = 0; i < packsLength; i++) {
                         pack = packs[i];
@@ -75,7 +85,12 @@ $(document).ready(function() {
                     // Update available Packs
                     for (i = 0; i < packsLength; i++) {
                         pack = packs[i];
-                        if (first) {
+                        if (startingPackID && (startingInvItemID == inv_item_id) && (startingPackID == pack.id)) {
+                            startingPackQuantity = pack.quantity;
+                            PackQuantity = pack.quantity;
+                            PackName = pack.name;
+                            selected = ' selected';
+                        } else if (first) {
                             PackQuantity = pack.quantity;
                             PackName = pack.name;
                             selected = ' selected';
@@ -93,8 +108,22 @@ $(document).ready(function() {
 
                     $('#item_pack-throbber').remove();
 
-                    // Calculate Available Stock Quantity for this Pack
-                    var Quantity = InvQuantity / PackQuantity;
+                    if (errorField.length) {
+                        // Read the value from the error
+                        var words = errorField.html().split(' ');
+                        for (i = 0; i < words.length; i++) {
+                            Quantity = parseFloat(words[i]);
+                            if (Quantity) {
+                                break;
+                            }
+                        }
+                    } else {
+                        // Calculate Available Stock Quantity for this Pack
+                        Quantity = InvQuantity / PackQuantity; // inv_quantity includes inv_pack_quantity
+                        if (startingQuantity && (startingInvItemID == inv_item_id)) {
+                            Quantity += (startingQuantity * startingPackQuantity / PackQuantity);
+                        }
+                    }
 
                     // Display Available Stock Quantity
                     var TotalQuantity = '<span id="TotalQuantity"> / ' + Quantity.toFixed(2) + ' ' + PackName + ' (' + i18n.in_inv + ')</span>';
@@ -111,6 +140,9 @@ $(document).ready(function() {
                                     PackName = pack.name;
                                     // Calculate Available Stock Quantity for this Pack
                                     Quantity = InvQuantity / PackQuantity;
+                                    if (startingQuantity && (startingInvItemID == inv_item_id)) {
+                                        Quantity += (startingQuantity * startingPackQuantity / PackQuantity);
+                                    }
 
                                     // Display Available Stock Quantity
                                     $('#TotalQuantity').html(Quantity.toFixed(2) + ' ' + PackName + ' (' + i18n.in_inv + ')');
@@ -121,15 +153,16 @@ $(document).ready(function() {
                     }
                 });
             } else {
-                // Use data provided (currently just RMS template)
+                // Use data provided from inv_send_controller
                 // - Pack Options
                 // - Available Stock Quantity
                 // - REQ Quantity
                 // - req_item_id
 
-                var i,
+                var data = inv_items[inv_item_id],
+                    errorField = $('#quantity__error'),
                     first = true,
-                    data = inv_items[inv_item_id],
+                    i,
                     opt,
                     pack,
                     packs = data.packs,
@@ -153,7 +186,12 @@ $(document).ready(function() {
                 // Update available Packs
                 for (i = 0; i < packsLength; i++) {
                     pack = packs[i];
-                    if (first) {
+                    if (startingPackID && (startingInvItemID == inv_item_id) && (startingPackID == pack.id)) {
+                        startingPackQuantity = pack.quantity;
+                        PackQuantity = pack.quantity;
+                        PackName = pack.name;
+                        selected = ' selected';
+                    } else if (first) {
                         PackQuantity = pack.quantity;
                         PackName = pack.name;
                         selected = ' selected';
@@ -169,9 +207,23 @@ $(document).ready(function() {
                     first = false;
                 }
 
-                // Calculate Available Stock Quantity for this Pack
-                // - inv_quantity will be the same in every row
-                var Quantity = InvQuantity / PackQuantity; // inv_quantity includes inv_pack_quantity
+                if (errorField.length) {
+                    // Read the value from the error
+                    var words = errorField.html().split(' ');
+                    for (i = 0; i < words.length; i++) {
+                        Quantity = parseFloat(words[i]);
+                        if (Quantity) {
+                            break;
+                        }
+                    }
+                } else {
+                    // Calculate Available Stock Quantity for this Pack
+                    // - inv_quantity will be the same in every row
+                    var Quantity = InvQuantity / PackQuantity; // inv_quantity includes inv_pack_quantity
+                    if (startingQuantity && (startingInvItemID == inv_item_id)) {
+                        Quantity += (startingQuantity * startingPackQuantity / PackQuantity);
+                    }
+                }
 
                 // Display Available Stock Quantity
                 var TotalQuantity = '<span id="TotalQuantity"> / ' + Quantity.toFixed(2) + ' ' + PackName + ' (' + i18n.in_inv + ')</span>';
@@ -180,14 +232,18 @@ $(document).ready(function() {
                 // Update Send Quantity
                 var updateSendQuantity = function() {
                     if (req_items.length == 1) {
-                        // Default to REQ Quantity
-                        var ReqQuantity = req_item.req_quantity / PackQuantity;
-                        if (ReqQuantity <= Quantity) {
-                            // We can send the full quantity requested
-                            QuantityField.val(ReqQuantity);
+                        if (startingQuantity && (startingInvItemID == inv_item_id)) {
+                            // Keep what we have
                         } else {
-                            // We can only send what we have in stock!
-                            QuantityField.val(Quantity);
+                            // Default to REQ Quantity
+                            var ReqQuantity = req_item.req_quantity / PackQuantity;
+                            if (ReqQuantity <= Quantity) {
+                                // We can send the full quantity requested
+                                QuantityField.val(ReqQuantity);
+                            } else {
+                                // We can only send what we have in stock!
+                                QuantityField.val(Quantity);
+                            }
                         }
 
                         // Set req_item_id, so that we can track request fulfilment
@@ -198,14 +254,33 @@ $(document).ready(function() {
                         // Display ReqItemRow
                         ReqItemRow.show();
                         // Populate with Options
-                        var req_item_id,
-                            ReqItemField = $('#inv_track_item_req_item_id'),
+                        var ReqItemField = $('#inv_track_item_req_item_id'),
+                            req_item_id = ReqItemField.val(),
                             ReqQuantity;
+                        if (req_item_id) {
+                            req_item_id = parseInt(req_item_id);
+                        }
                         ReqItemField.html('');
                         for (i = 0; i < req_items.length; i++) {
                             req_item = req_items[i];
                             ReqItemField.append(new Option(req_item.req_ref, req_item.req_item_id));
-                            if (first) {
+                            if (req_item_id) {
+                                if (req_item.req_item_id == req_item_id) {
+                                    if (startingQuantity && (startingInvItemID == inv_item_id)) {
+                                        // Keep what we have
+                                    } else {
+                                        // Default to REQ Quantity
+                                        ReqQuantity = req_item.req_quantity / PackQuantity;
+                                        if (ReqQuantity <= Quantity) {
+                                            // We can send the full quantity requested
+                                            QuantityField.val(ReqQuantity);
+                                        } else {
+                                            // We can only send what we have in stock!
+                                            QuantityField.val(Quantity);
+                                        }
+                                    }
+                                }
+                            } else if (first) {
                                 ReqQuantity = req_item.req_quantity / PackQuantity;
                                 if (ReqQuantity <= Quantity) {
                                     // We can send the full quantity requested
@@ -251,6 +326,9 @@ $(document).ready(function() {
                                 PackName = pack.name;
                                 // Calculate Available Stock Quantity for this Pack
                                 Quantity = InvQuantity / PackQuantity;
+                                    if (startingQuantity && (startingInvItemID == inv_item_id)) {
+                                        Quantity += (startingQuantity * startingPackQuantity / PackQuantity);
+                                    }
 
                                 // Display Available Stock Quantity
                                 $('#TotalQuantity').html(Quantity.toFixed(2) + ' ' + PackName + ' (' + i18n.in_inv + ')');
@@ -265,11 +343,16 @@ $(document).ready(function() {
             }
         };
 
-        invItemField.change(InvItemChange);
+        invItemField.on('change.s3', InvItemChange);
 
-        if (invItemField.val()) {
+        if (startingInvItemID) {
             // Update form
-            InvItemChange();
+            startingQuantity = QuantityField.val();
+            if (startingQuantity) {
+                startingQuantity = parseFloat(startingQuantity);
+            }
+            startingPackID = parseInt(ItemPackField.val());
+            invItemField.trigger('change.s3', true);
         }
     }
 

@@ -54,7 +54,7 @@ from .s3datetime import S3DateTime, s3_decode_iso_datetime
 from .s3export import S3Exporter
 from .s3forms import S3SQLDefaultForm
 from .s3rest import S3Method
-from .s3utils import s3_str, s3_unicode, s3_validate, s3_represent_value, s3_set_extension
+from .s3utils import s3_str, s3_validate, s3_represent_value, s3_set_extension
 from .s3widgets import S3EmbeddedComponentWidget, S3Selector, ICON
 
 # Compact JSON encoding
@@ -2144,13 +2144,13 @@ class S3CRUD(S3Method):
         if r.representation != "json":
             r.error(415, current.ERROR.BAD_FORMAT)
 
-        resource = self.resource
-
         get_vars = r.get_vars
+
         if "component" in get_vars:
             alias = get_vars["component"]
         else:
             alias = None
+
         if "resource" in get_vars:
             tablename = get_vars["resource"]
 
@@ -2167,6 +2167,8 @@ class S3CRUD(S3Method):
                                                  )
             except (AttributeError, SyntaxError):
                 r.error(404, current.ERROR.BAD_RESOURCE)
+        else:
+            resource = self.resource
 
         if alias:
             try:
@@ -2292,7 +2294,7 @@ class S3CRUD(S3Method):
                     # Use widget-validator instead of field-validator
                     if not skip_validation:
                         value, error = widget.validate(value,
-                                                       requires=field.requires,
+                                                       requires = field.requires,
                                                        )
                     validated["value"] = widget.serialize(value) \
                                          if not error else value
@@ -2315,35 +2317,36 @@ class S3CRUD(S3Method):
                 # Handle errors, update the validated item
                 if error:
                     has_errors = True
-                    validated["_error"] = s3_unicode(error)
+                    validated["_error"] = s3_str(error)
                 elif skip_formatting:
-                    validated["text"] = s3_unicode(value)
+                    validated["text"] = s3_str(value)
                 elif widget_represent:
                     try:
                         text = widget_represent(value)
                     except:
-                        text = s3_unicode(value)
+                        text = s3_str(value)
                     validated["text"] = text
                 else:
                     try:
                         text = s3_represent_value(field, value = value)
                     except:
-                        text = s3_unicode(value)
+                        text = s3_str(value)
                     validated["text"] = text
 
             # Form validation (=onvalidation)
             if not has_errors:
-                if original is not None:
-                    onvalidation = update_onvalidation
-                else:
-                    onvalidation = create_onvalidation
                 form = Storage(vars = Storage(record),
                                errors = Storage(),
                                )
+                if original is not None:
+                    onvalidation = update_onvalidation
+                    form.record_id = original.get("id")
+                else:
+                    onvalidation = create_onvalidation
                 if onvalidation is not None:
                     callback(onvalidation, form, tablename=tablename)
                 for fn in form.errors:
-                    msg = s3_unicode(form.errors[fn])
+                    msg = s3_str(form.errors[fn])
                     if fn in fields:
                         validated = fields[fn]
                         has_errors = True
@@ -2921,7 +2924,7 @@ class S3CRUD(S3Method):
                 continue
             elif var in table.fields:
                 field = table[var]
-                value = s3_unicode(r.vars[var])
+                value = s3_str(r.vars[var])
                 if var in xml.FIELDS_TO_ATTRIBUTES:
                     element.set(var, value)
                 else:

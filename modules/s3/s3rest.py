@@ -110,8 +110,8 @@ class S3Request(object):
                 extension = ext
         if c or f:
             if not auth.permission.has_permission("read",
-                                                  c=self.controller,
-                                                  f=self.function):
+                                                  c = self.controller,
+                                                  f = self.function):
                 auth.permission.fail()
 
         # Allow override of request args/vars
@@ -400,8 +400,9 @@ class S3Request(object):
 
         custom_action = current.s3db.get_method(prefix,
                                                 name,
-                                                component_name=component_name,
-                                                method=method)
+                                                component_name = component_name,
+                                                method = method,
+                                                )
 
         http = self.http
         handler = None
@@ -483,7 +484,8 @@ class S3Request(object):
         if l > 1:
             m = f[1][0].lower()
             i = f[1][1]
-            components = current.s3db.get_components(tablename, names=[m])
+            components = current.s3db.get_components(tablename,
+                                                     names = [m])
             if components and m in components:
                 self.component_name = m
                 self.component_id = i

@@ -3,11 +3,12 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Pallets - CSV Import Stylesheet
+         Packages - CSV Import Stylesheet
 
          CSV column...........Format..........Content
 
-         Name.................string..........Pallet Name
+         Type.................string..........Package Type: PALLET or BOX
+         Name.................string..........Package Name
          Width................float...........Width (m)
          Length...............float...........Length (m)
          Depth................float...........Depth (m)
@@ -18,6 +19,7 @@
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
+    <xsl:include href="../../xml/commons.xsl"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -28,8 +30,16 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
+        <xsl:variable name="Type">
+            <xsl:call-template name="uppercase">
+                <xsl:with-param name="string">
+                   <xsl:value-of select="col[@field='Type']"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:variable>
 
-        <resource name="inv_pallet">
+        <resource name="inv_package">
+            <data field="type"><xsl:value-of select="$Type"/></data>
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="width"><xsl:value-of select="col[@field='Width']"/></data>
             <data field="length"><xsl:value-of select="col[@field='Length']"/></data>

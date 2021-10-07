@@ -5337,8 +5337,8 @@ class S3ResourceData(object):
             #    than counting separately for small filter results
             field = table._id
             rows = db(query).select(field,
-                                    join=join,
-                                    left=left,
+                                    join = join,
+                                    left = left,
                                     orderby = orderby,
                                     groupby = field,
                                     cacheable = True,
@@ -5349,7 +5349,7 @@ class S3ResourceData(object):
 
         else:
             # Only count, do not extract any IDs (constant effort)
-            field = table._id.count(distinct=True)
+            field = table._id.count(distinct = True)
             rows = db(query).select(field,
                                     join = join,
                                     left = left,

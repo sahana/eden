@@ -368,8 +368,10 @@ class S3Represent(object):
 
         if self.linkto:
             k = s3_str(k)
-            return A(v, _href=self.linkto.replace("[id]", k) \
-                                         .replace("%5Bid%5D", k))
+            return A(v,
+                     _href = self.linkto.replace("[id]", k) \
+                                        .replace("%5Bid%5D", k),
+                     )
         else:
             return v
 

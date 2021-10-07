@@ -693,12 +693,13 @@ def config(settings):
                 (htable.date != None)
         programmes = current.db(query).select(htable.hours,
                                               htable.date,
-                                              orderby=htable.date)
+                                              orderby = htable.date,
+                                              )
         if programmes:
             # Ignore up to 3 months of records
-            three_months_prior = (now - datetime.timedelta(days=92))
+            three_months_prior = (now - datetime.timedelta(days = 92))
             end = max(programmes.last().date, three_months_prior.date())
-            last_year = end - datetime.timedelta(days=365)
+            last_year = end - datetime.timedelta(days = 365)
             # Is this the Volunteer's first year?
             if programmes.first().date > last_year:
                 # Only start counting from their first month
@@ -805,7 +806,7 @@ def config(settings):
     settings.inv.document_filing = True
     settings.inv.minimums = True
     settings.inv.send_gift_certificate = True
-    settings.inv.send_pallets = True
+    settings.inv.send_packaging = True
     # Uncomment if you need a simpler (but less accountable) process for managing stock levels
     #settings.inv.direct_stock_edits = True
     settings.inv.stock_count = False
@@ -1376,25 +1377,25 @@ def config(settings):
         #                                "event_type_id$name",
         #                                "location_id",
         #                                ],
-        #                               label=T("Search")
+        #                               label = T("Search"),
         #                               ),
         #                  S3LocationFilter("location_id",
-        #                                   label=COUNTRY,
-        #                                   widget="multiselect",
-        #                                   levels=["L0"],
-        #                                   hidden=True
+        #                                   label = COUNTRY,
+        #                                   widget = "multiselect",
+        #                                   levels = ["L0"],
+        #                                   hidden = True,
         #                                   ),
         #                  S3OptionsFilter("event_type_id",
-        #                                  widget="multiselect",
-        #                                  hidden=True
+        #                                  widget = "multiselect",
+        #                                  hidden = True,
         #                                  ),
         #                  #S3OptionsFilter("status",
-        #                  #                options=s3db.deploy_mission_status_opts,
-        #                  #                hidden=True
+        #                  #                options = s3db.deploy_mission_status_opts,
+        #                  #                hidden = True,
         #                  #                ),
         #                  S3DateFilter("date",
-        #                               hide_time=True,
-        #                               hidden=True
+        #                               hide_time = True,
+        #                               hidden = True,
         #                               ),
         #                  ]
 
@@ -1427,7 +1428,8 @@ def config(settings):
             msg_record_created = T("Disaster Type added"),
             msg_record_modified = T("Disaster Type Details updated"),
             msg_record_deleted = T("Disaster Type deleted"),
-            msg_list_empty = T("No Disaster Types currently defined"))
+            msg_list_empty = T("No Disaster Types currently defined"),
+            )
 
     settings.customise_event_event_type_resource = customise_event_event_type_resource
 
@@ -1502,7 +1504,7 @@ def config(settings):
             f.label = T("Training Center")
             f.comment = False # Don't create here
             from s3db.org import org_OrganisationRepresent
-            org_represent = org_OrganisationRepresent(parent=False)
+            org_represent = org_OrganisationRepresent(parent = False)
             f.represent = org_represent
 
         list_fields = ["code",
@@ -1597,7 +1599,9 @@ def config(settings):
             s3_redirect_default(URL(f="person"))
         else:
             # Bypass home page & go direct to searchable list of Staff
-            s3_redirect_default(URL(f="human_resource", args="summary"))
+            s3_redirect_default(URL(f = "human_resource",
+                                    args = "summary",
+                                    ))
 
     settings.customise_hrm_home = customise_hrm_home
 
@@ -1614,7 +1618,8 @@ def config(settings):
             msg_record_created = T("Work History added"),
             msg_record_modified = T("Work History updated"),
             msg_record_deleted = T("Work History deleted"),
-            msg_list_empty = T("No entries currently registered"))
+            msg_list_empty = T("No entries currently registered"),
+            )
 
     settings.customise_hrm_experience_resource = customise_hrm_experience_resource
 
@@ -1766,20 +1771,20 @@ def config(settings):
 
         # Set the HR record to be owned by this user
         if hr:
-            hr.update_record(owned_by_user=user_id)
+            hr.update_record(owned_by_user = user_id)
         else:
             hr_id = form_vars.get("id")
             db(s3db.hrm_human_resource.id == hr_id).update(owned_by_user = user_id)
 
         # Set the Person record to be owned by this user
-        person.update_record(owned_by_user=user_id)
+        person.update_record(owned_by_user = user_id)
 
         # Cascade down to components
         # pr_address
         atable = s3db.pr_address
-        db(atable.pe_id == pe_id).update(owned_by_user=user_id)
+        db(atable.pe_id == pe_id).update(owned_by_user = user_id)
         # pr_contact
-        db(ctable.pe_id == pe_id).update(owned_by_user=user_id)
+        db(ctable.pe_id == pe_id).update(owned_by_user = user_id)
 
         # Link to Person so that we find this in the 'Link'
         ltable = s3db.pr_person_user
@@ -1890,9 +1895,16 @@ Thank you"""
             from gluon import LABEL, OPTION, SELECT
             from s3 import s3_addrow
             formstyle = settings.get_ui_formstyle()
-            language_opts = [OPTION(T("Spanish"), _value="es", _selected="selected"),
-                             OPTION(T("French"), _value="fr"),
-                             OPTION(T("English"), _value="en"),
+            language_opts = [OPTION(T("Spanish"),
+                                    _value = "es",
+                                    _selected = "selected",
+                                    ),
+                             OPTION(T("French"),
+                                    _value = "fr",
+                                    ),
+                             OPTION(T("English"),
+                                    _value = "en",
+                                    ),
                              ]
             s3_addrow(form,
                       LABEL("%s:" % T("Language"),
@@ -1934,8 +1946,8 @@ Thank you"""
                 # Lookup organisation_type_id for Red Cross
                 ttable = s3db.org_organisation_type
                 type_ids = db(ttable.name.belongs((RED_CROSS, "Training Center"))).select(ttable.id,
-                                                                                          limitby = (0, 2),
                                                                                           cache = s3db.cache,
+                                                                                          limitby = (0, 2),
                                                                                           )
                 if type_ids:
                     from s3 import IS_ONE_OF
@@ -2027,7 +2039,7 @@ Thank you"""
                                     action = HRSignatureList,
                                     )
                     export_formats.append(("siglist.pdf", "fa fa-list", T("Export Signature List")))
-                    s3.formats["siglist.pdf"] = r.url(method="siglist")
+                    s3.formats["siglist.pdf"] = r.url(method = "siglist")
 
                 if auth.s3_has_roles(ID_CARD_EXPORT_ROLES):
                     if r.representation == "card":
@@ -2038,7 +2050,7 @@ Thank you"""
                     if not r.id and not r.component:
                         # Add export-icon for ID cards
                         export_formats.append(("card", "fa fa-id-card", T("Export ID Cards")))
-                        s3.formats["card"] = r.url(method="")
+                        s3.formats["card"] = r.url(method = "")
 
                 settings.ui.export_formats = export_formats
 
@@ -2122,7 +2134,8 @@ Thank you"""
             msg_record_created = T("Position added"),
             msg_record_modified = T("Position updated"),
             msg_record_deleted = T("Position deleted"),
-            msg_list_empty = T("Currently no entries in the catalog"))
+            msg_list_empty = T("Currently no entries in the catalog"),
+            )
 
         from s3layouts import S3PopupLink
         f = s3db.hrm_job_title_id.attr
@@ -2238,7 +2251,8 @@ Thank you"""
             msg_record_created = T("Hours added"),
             msg_record_modified = T("Hours updated"),
             msg_record_deleted = T("Hours deleted"),
-            msg_list_empty = T("Currently no hours recorded"))
+            msg_list_empty = T("Currently no hours recorded"),
+            )
 
         # Show new custom fields
         phtable.event.readable = phtable.event.writable = True
@@ -2299,7 +2313,8 @@ Thank you"""
             msg_record_created = T("Language added"),
             msg_record_modified = T("Language updated"),
             msg_record_deleted = T("Language deleted"),
-            msg_list_empty = T("Currently no entries in the catalog"))
+            msg_list_empty = T("Currently no entries in the catalog"),
+            )
 
         # No use since cannot be sure this runs before hrm_competency table is loaded
         #from s3layouts import S3PopupLink
@@ -2326,7 +2341,8 @@ Thank you"""
             msg_record_created = T("Language added"),
             msg_record_modified = T("Language updated"),
             msg_record_deleted = T("Language deleted"),
-            msg_list_empty = T("No entries currently registered"))
+            msg_list_empty = T("No entries currently registered"),
+            )
 
         label = T("Language")
         from s3layouts import S3PopupLink
@@ -2472,7 +2488,7 @@ Thank you"""
                                                                  dtable.language,
                                                                  htable.type,
                                                                  htable.organisation_id,
-                                                                 left=left,
+                                                                 left = left,
                                                                  )
         auth = current.auth
         utable = db.auth_user
@@ -2607,7 +2623,7 @@ Thank you"""
                           ],
                          label = T("Search"),
                          comment = T("You can search by trainee name, course name or comments. You may use % as wildcard. Press 'Search' without input to list all trainees."),
-                         _class="filter-search",
+                         _class = "filter-search",
                          ),
             S3OptionsFilter("training_event_id$site_id",
                             label = T("Country"),
@@ -2719,8 +2735,8 @@ Thank you"""
         #filter_opts = [row.site_id for row in rows]
         #f.requires = IS_ONE_OF(db, "org_site.site_id",
         #                       site_represent,
-        #                       filterby="site_id",
-        #                       filter_opts=filter_opts,
+        #                       filterby = "site_id",
+        #                       filter_opts = filter_opts,
         #                       )
 
         # Multiple Instructors
@@ -2784,7 +2800,8 @@ Thank you"""
 
             date_represent = rtable.date.represent
             org_represent = org_OrganisationRepresent(parent = False,
-                                                      acronym = False)
+                                                      acronym = False,
+                                                      )
 
             # Logo
             otable = db.org_organisation
@@ -2918,7 +2935,7 @@ Thank you"""
                 s3.rfooter = DIV(A(ICON("print"),
                                  " ",
                                  T("PDF Report"),
-                                   _href = URL(args=[r.id, "report_pdf_export"]),#, extension="pdf"),
+                                   _href = URL(args = [r.id, "report_pdf_export"]),#, extension="pdf"),
                                    _class = "action-btn",
                                    ),
                                  )
@@ -3022,7 +3039,8 @@ Thank you"""
             msg_record_created = T("Partner added"),
             msg_record_modified = T("Partner updated"),
             msg_record_deleted = T("Partner deleted"),
-            msg_list_empty = T("No Partners currently defined"))
+            msg_list_empty = T("No Partners currently defined"),
+            )
 
     settings.customise_member_membership_resource = customise_member_membership_resource
 
@@ -3053,7 +3071,8 @@ Thank you"""
             msg_record_created = T("Partner Type added"),
             msg_record_modified = T("Partner Type updated"),
             msg_record_deleted = T("Partner Type deleted"),
-            msg_list_empty = T("No Partner Types currently defined"))
+            msg_list_empty = T("No Partner Types currently defined"),
+            )
 
     settings.customise_member_membership_type_resource = customise_member_membership_type_resource
 
@@ -3125,8 +3144,14 @@ Thank you"""
             if earliest or latest:
                 subtitle = P(" - ".join((earliest, latest)))
 
-        output = TABLE(TR(TD(DIV(logo, H4(name))),
-                          TD(DIV(title, subtitle)),
+        output = TABLE(TR(TD(DIV(logo,
+                                 H4(name),
+                                 ),
+                             ),
+                          TD(DIV(title,
+                                 subtitle,
+                                 ),
+                             ),
                           ),
                        )
 
@@ -3763,7 +3788,9 @@ Thank you"""
                     alerts.append((item_id, stock, minimum_id))
             else:
                 # Remove any Minimum Alerts for this Item/Warehouse
-                resource = s3db.resource("auth_user_notification", filter = query)
+                resource = s3db.resource("auth_user_notification",
+                                         filter = query,
+                                         )
                 resource.delete()
 
         if alerts:
@@ -3937,7 +3964,9 @@ Thank you"""
                 T.force(ui_language)
         else:
             # Remove any Capacity Alerts
-            resource = s3db.resource("auth_user_notification", filter = query)
+            resource = s3db.resource("auth_user_notification",
+                                     filter = query,
+                                     )
             resource.delete()
 
         # Trigger Stock Limit Alert creation/cancellation
@@ -4210,7 +4239,7 @@ Thank you"""
                                     msg_record_created = T("National Society added"),
                                     msg_record_modified = T("National Society updated"),
                                     msg_record_deleted = T("National Society deleted"),
-                                    msg_list_empty = T("No Red Cross & Red Crescent National Societies currently registered")
+                                    msg_list_empty = T("No Red Cross & Red Crescent National Societies currently registered"),
                                     )
                                 # Add Region to list_fields
                                 list_fields.insert(-1, "organisation_region.region_id")
@@ -4303,7 +4332,8 @@ Thank you"""
            msg_record_created = T("Warehouse Location added"),
            msg_record_modified = T("Warehouse Location updated"),
            msg_record_deleted = T("Warehouse Location deleted"),
-           msg_list_empty = T("No Warehouse Locations currently registered"))
+           msg_list_empty = T("No Warehouse Locations currently registered"),
+           )
 
     settings.customise_org_site_layout_resource = customise_org_site_layout_resource
 
@@ -4512,8 +4542,8 @@ Thank you"""
                     # Lookup organisation_type_id for Red Cross
                     ttable = s3db.org_organisation_type
                     type_ids = db(ttable.name.belongs((RED_CROSS, "Training Center"))).select(ttable.id,
-                                                                                              limitby = (0, 2),
                                                                                               cache = s3db.cache,
+                                                                                              limitby = (0, 2),
                                                                                               )
                     if type_ids:
                         from s3 import IS_ONE_OF
@@ -4526,7 +4556,8 @@ Thank you"""
                                                not_filter_opts = not_filter_opts,
                                                updateable = True,
                                                orderby = "org_organisation.name",
-                                               sort = True)
+                                               sort = True,
+                                               )
                 else:
                     # Organisation needs to be an NS/Branch
                     if auth.s3_has_roles(("surge_capacity_manager",
@@ -4628,9 +4659,9 @@ Thank you"""
                 etable.job_title.readable = etable.job_title.writable = True
                 from s3 import S3LocationSelector
                 etable.location_id.label = T("Country")
-                etable.location_id.widget = S3LocationSelector(levels=("L0",),
-                                                               show_map=False,
-                                                               show_postcode=False,
+                etable.location_id.widget = S3LocationSelector(levels = ("L0",),
+                                                               show_map = False,
+                                                               show_postcode = False,
                                                                )
 
             elif component_name == "identity":
@@ -4652,9 +4683,11 @@ Thank you"""
             #elif component_name == "physical_description":
             #    from gluon import DIV
             #    dtable = r.component.table
-            #    dtable.medical_conditions.comment = DIV(_class="tooltip",
-            #                                            _title="%s|%s" % (T("Medical Conditions"),
-            #                                                              T("Chronic Illness, Disabilities, Mental/Psychological Condition etc.")))
+            #    dtable.medical_conditions.comment = DIV(_class = "tooltip",
+            #                                            _title = "%s|%s" % (T("Medical Conditions"),
+            #                                                                T("Chronic Illness, Disabilities, Mental/Psychological Condition etc."),
+            #                                                                ),
+            #                                            )
             #    dtable.allergic.writable = dtable.allergic.readable = True
             #    dtable.allergies.writable = dtable.allergies.readable = True
             #    dtable.ethnicity.writable = dtable.ethnicity.readable = False
@@ -4690,13 +4723,17 @@ Thank you"""
 
         s3db = current.s3db
 
-        #s3db.pr_physical_description.medical_conditions.comment = DIV(_class="tooltip",
-        #                                                              _title="%s|%s" % (T("Medical Conditions"),
-        #                                                                                T("Chronic Illness, Disabilities, Mental/Psychological Condition etc.")))
+        #s3db.pr_physical_description.medical_conditions.comment = DIV(_class = "tooltip",
+        #                                                              _title = "%s|%s" % (T("Medical Conditions"),
+        #                                                                                  T("Chronic Illness, Disabilities, Mental/Psychological Condition etc."),
+        #                                                                                  ),
+        #                                                              )
 
-        s3db.pr_physical_description.medical_conditions.comment = DIV(_class="tooltip",
-                                                                      _title="%s|%s" % (T("Medical Conditions"),
-                                                                                        T("It is important to include, if they exist: surgical history, medical restrictions, vaccines, etc.")))
+        s3db.pr_physical_description.medical_conditions.comment = DIV(_class = "tooltip",
+                                                                      _title = "%s|%s" % (T("Medical Conditions"),
+                                                                                          T("It is important to include, if they exist: surgical history, medical restrictions, vaccines, etc."),
+                                                                                          ),
+                                                                      )
 
         s3db.configure(tablename,
                        crud_form = S3SQLCustomForm("blood_type",
@@ -5445,7 +5482,9 @@ Thank you"""
                 s3db = current.s3db
                 table = s3db.project_project
                 project_id = r.record.project_id
-                resource = s3db.resource("project_project", id=project_id)
+                resource = s3db.resource("project_project",
+                                         id = project_id,
+                                         )
                 list_fields = ("name",
                                "status_id",
                                "start_date",
@@ -5495,7 +5534,9 @@ Thank you"""
                                        )
                 title = s3.crud_strings["project_project"].title_display
                 # Assume authorised to see details
-                popup_url = URL(f="project", args=[project_id])
+                popup_url = URL(f = "project",
+                                args = [project_id],
+                                )
                 details_btn = A(T("Open"),
                                 _href = popup_url,
                                 _class = "btn",
@@ -6744,8 +6785,14 @@ class PrintableShipmentForm(S3Method):
         title = H2(T("Goods Received Note"))
 
         # GRN details
-        dtable = TABLE(TR(TD(DIV(logo, H4(name)), _colspan = 2),
-                          TD(DIV(title), _colspan = 2),
+        dtable = TABLE(TR(TD(DIV(logo,
+                                 H4(name),
+                                 ),
+                             _colspan = 2,
+                             ),
+                          TD(DIV(title),
+                             _colspan = 2,
+                             ),
                           ),
                        row_("inv_recv.eta", "inv_recv.date"),
                        row_("inv_recv.from_site_id", "inv_recv.site_id"),
@@ -6814,7 +6861,9 @@ class PrintableShipmentForm(S3Method):
                             )
         else:
             header_row = TR(TH(labels[left]),
-                            TD(row[left], _colspan = 3),
+                            TD(row[left],
+                               _colspan = 3,
+                               ),
                             )
         return header_row
 
