@@ -26,7 +26,7 @@ $(document).ready(function() {
 
         if (typeField.val()) {
             // Update form
-            typeChange
+            typeChange();
         }
     }
 
