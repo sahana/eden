@@ -996,7 +996,7 @@ class S3Hierarchy(object):
         DELETED = current.xml.DELETED
         if DELETED in table.fields:
             query &= table[DELETED] != True
-        parent = current.db(query).select(table._id
+        parent = current.db(query).select(table._id,
                                           limitby = (0, 1),
                                           ).first()
         if not parent:
