@@ -1174,12 +1174,12 @@ def stats_demographic_data_controller():
     """
         Function to be called from controller functions
         - display all demographic data for a location as a tab.
-        - options.s3json lookups for AddResourceLink
+        - options.s3json lookups for S3PopupLink
     """
 
     request = current.request
     if "options.s3json" in request.args:
-        # options.s3json lookups for AddResourceLink
+        # options.s3json lookups for S3PopupLink
         output = current.rest_controller("stats", "demographic_data")
         return output
 

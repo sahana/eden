@@ -4766,12 +4766,6 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Inventory Management Settings
     #
-    def get_inv_bin_site_layout(self):
-        """
-            Use structured Org Site Layout rather than just freetext Bin field
-        """
-        return self.inv.get("bin_site_layout", False)
-
     def get_inv_collapse_tabs(self):
         return self.inv.get("collapse_tabs", True)
 

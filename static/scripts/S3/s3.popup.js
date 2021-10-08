@@ -344,7 +344,7 @@ function s3_popup_refresh_caller(popupData) {
                 count++;
             } else if (isHierarchyWidget) {
                 // Add new node
-                parent = this['@parent'];
+                parent = option['@parent'];
                 callerWidget.parent().hierarchicalopts('addNode', parent, value, represent, true);
             }
             // Type conversion: http://www.jibbering.com/faq/faq_notes/type_convert.html#tcNumber

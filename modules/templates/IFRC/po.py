@@ -871,7 +871,7 @@ class OutreachReferralModel(S3Model):
         org_represent = self.org_OrganisationRepresent(show_link=True,
                                                        linkto=org_link,
                                                        )
-        # Organisation AddResourceLink should go to po/organisation
+        # Organisation S3PopupLink should go to po/organisation
         ADD_ORGANISATION = T("Create Agency")
         tooltip = T("If you don't see the Agency in the list, you can add a new one by clicking link 'Create Agency'.")
         org_comment = S3PopupLink(c = "po",
@@ -901,7 +901,7 @@ class OutreachReferralModel(S3Model):
         #
         tablename = "po_organisation_area"
         define_table(tablename,
-                     # @todo: AddResourceLink should go to po/organisation
+                     # @todo: S3PopupLink should go to po/organisation
                      organisation_id(label = T("Agency"),
                                      represent = org_represent,
                                      comment = org_comment,
@@ -923,7 +923,7 @@ class OutreachReferralModel(S3Model):
         #
         tablename = "po_organisation_household"
         define_table(tablename,
-                     # @todo: AddResourceLink should go to po/organisation
+                     # @todo: S3PopupLink should go to po/organisation
                      organisation_id(label = T("Referral Agency"),
                                      represent = org_represent,
                                      comment = org_comment,

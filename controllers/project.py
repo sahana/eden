@@ -620,17 +620,13 @@ def theme_project():
 
 # -----------------------------------------------------------------------------
 def theme_sector():
-    """ RESTful CRUD controller for options.s3json lookups """
+    """
+        RESTful CRUD controller
+        - just used for options.s3json lookups
+    """
 
-    if auth.permission.format != "s3json":
-        return ""
-
-    # Pre-process
-    def prep(r):
-        if r.method != "options":
-            return False
-        return True
-    s3.prep = prep
+    s3.prep = lambda r: \
+        r.representation == "s3json" and r.method == "options"
 
     return s3_rest_controller()
 
@@ -744,17 +740,13 @@ def activity_type_sector():
 
 # -----------------------------------------------------------------------------
 def activity_organisation():
-    """ RESTful CRUD controller for options.s3json lookups """
+    """
+        RESTful CRUD controller
+        - just used for options.s3json lookups
+    """
 
-    if auth.permission.format != "s3json":
-        return ""
-
-    # Pre-process
-    def prep(r):
-        if r.method != "options":
-            return False
-        return True
-    s3.prep = prep
+    s3.prep = lambda r: \
+        r.representation == "s3json" and r.method == "options"
 
     return s3_rest_controller()
 
@@ -822,7 +814,7 @@ def distribution():
         msg_record_created = T("Distribution Added"),
         msg_record_modified = T("Distribution Updated"),
         msg_record_deleted = T("Distribution Deleted"),
-        msg_list_empty = T("No Distributions Found")
+        msg_list_empty = T("No Distributions Found"),
     )
 
     return activity()
@@ -924,10 +916,11 @@ def location():
         return output
     s3.postp = postp
 
+    from s3db.project import project_rheader
     return s3_rest_controller(interactive_report = True,
                               csv_template = "location",
                               hide_filter = False,
-                              rheader = s3db.project_rheader,
+                              rheader = project_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -984,7 +977,7 @@ def partners():
         msg_record_created = T("Partner Organization added"),
         msg_record_modified = T("Partner Organization updated"),
         msg_record_deleted = T("Partner Organization deleted"),
-        msg_list_empty = T("No Partner Organizations currently registered")
+        msg_list_empty = T("No Partner Organizations currently registered"),
         )
 
     # NB Type gets defaulted in the Custom CRUD form
@@ -995,66 +988,54 @@ def partners():
 def task():
     """ RESTful CRUD controller """
 
-    return s3db.project_task_controller()
+    from s3db.project import project_task_controller
+    return project_task_controller()
 
 # =============================================================================
 def task_project():
-    """ RESTful CRUD controller for options.s3json lookups """
+    """
+        RESTful CRUD controller
+        - just used for options.s3json lookups
+    """
 
-    if auth.permission.format != "s3json":
-        return ""
-
-    # Pre-process
-    def prep(r):
-        if r.method != "options":
-            return False
-        return True
-    s3.prep = prep
+    s3.prep = lambda r: \
+        r.representation == "s3json" and r.method == "options"
 
     return s3_rest_controller()
 
 # =============================================================================
 def task_activity():
-    """ RESTful CRUD controller for options.s3json lookups """
+    """
+        RESTful CRUD controller
+        - just used for options.s3json lookups
+    """
 
-    if auth.permission.format != "s3json":
-        return ""
-
-    # Pre-process
-    def prep(r):
-        if r.method != "options":
-            return False
-        return True
-    s3.prep = prep
+    s3.prep = lambda r: \
+        r.representation == "s3json" and r.method == "options"
 
     return s3_rest_controller()
 
 # =============================================================================
 def task_milestone():
-    """ RESTful CRUD controller for options.s3json lookups """
+    """
+        RESTful CRUD controller
+        - just used for options.s3json lookups
+    """
 
-    if auth.permission.format != "s3json":
-        return ""
-
-    # Pre-process
-    def prep(r):
-        if r.method != "options":
-            return False
-        return True
-    s3.prep = prep
+    s3.prep = lambda r: \
+        r.representation == "s3json" and r.method == "options"
 
     return s3_rest_controller()
 
 # =============================================================================
 def task_tag():
-    """ RESTful CRUD controller for options.s3json lookups """
+    """
+        RESTful CRUD controller
+        - just used for options.s3json lookups
+    """
 
-    # Pre-process
-    def prep(r):
-        if r.method != "options" or r.representation != "s3json":
-            return False
-        return True
-    s3.prep = prep
+    s3.prep = lambda r: \
+        r.representation == "s3json" and r.method == "options"
 
     return s3_rest_controller()
 
@@ -1162,9 +1143,13 @@ def programme():
     return s3_rest_controller()
 
 def programme_project():
-    """ RESTful controller for Programmes <> Projects """
+    """
+        RESTful CRUD controller
+        - just used for options.s3json lookups
+    """
 
-    s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
+    s3.prep = lambda r: \
+        r.representation == "s3json" and r.method == "options"
 
     return s3_rest_controller()
 
@@ -1321,7 +1306,7 @@ def comment_parse(comment, comments, task_id=None):
                                ptable.middle_name,
                                ptable.last_name,
                                left = left,
-                               limitby = (0, 1)
+                               limitby = (0, 1),
                                ).first()
         if row:
             person = row.pr_person
@@ -1489,18 +1474,12 @@ def campaign_response_summary():
 # -----------------------------------------------------------------------------
 def human_resource_project():
     """
-        REST controller for options.s3json lookups
+        RESTful CRUD controller
+        - just used for options.s3json lookups
     """
 
-    if auth.permission.format != "s3json":
-        return ""
-
-    # Pre-process
-    def prep(r):
-        if r.method != "options":
-            return False
-        return True
-    s3.prep = prep
+    s3.prep = lambda r: \
+        r.representation == "s3json" and r.method == "options"
 
     return s3_rest_controller()
 

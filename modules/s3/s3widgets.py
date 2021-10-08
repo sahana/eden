@@ -51,7 +51,6 @@ __all__ = ("S3ACLWidget",
            "S3HierarchyWidget",
            "S3HumanResourceAutocompleteWidget",
            "S3ImageCropWidget",
-           #"S3InvBinWidget",
            "S3KeyValueWidget",
            # Only used inside this module
            #"S3LatLonWidget",
@@ -4406,73 +4405,6 @@ i18n.upload_image='%s' ''' % (T("Please select a valid image!"),
         return DIV(elements)
 
 # =============================================================================
-class S3InvBinWidget(FormWidget):
-    """
-        Widget used by S3CRUD to offer the user matching bins where
-        stock items can be placed
-        - not currently used
-    """
-
-    def __init__(self,
-                 tablename,):
-        self.tablename = tablename
-
-    def __call__(self, field, value, **attributes):
-
-        T = current.T
-        request = current.request
-        s3db = current.s3db
-        tracktable = s3db.inv_track_item
-        stocktable = s3db.inv_inv_item
-
-        new_div = INPUT(value = value or "",
-                        requires = field.requires,
-                        _id = "i_%s_%s" % (self.tablename, field.name),
-                        _name = field.name,
-                        )
-        id = None
-        function = self.tablename[4:]
-        if len(request.args) > 2:
-            if request.args[1] == function:
-                id = request.args[2]
-
-        if id == None or tracktable[id] == None:
-            return TAG[""](new_div,
-                           )
-
-        record = tracktable[id]
-        site_id = s3db.inv_recv[record.recv_id].site_id
-        query = (stocktable.site_id == site_id) & \
-                (stocktable.item_id == record.item_id) & \
-                (stocktable.item_source_no == record.item_source_no) & \
-                (stocktable.item_pack_id == record.item_pack_id) & \
-                (stocktable.currency == record.currency) & \
-                (stocktable.pack_value == record.pack_value) & \
-                (stocktable.expiry_date == record.expiry_date) & \
-                (stocktable.supply_org_id == record.supply_org_id)
-        rows = current.db(query).select(stocktable.bin,
-                                        stocktable.id,
-                                        )
-        if len(rows) == 0:
-            return TAG[""](new_div,
-                           )
-        bins = []
-        for row in rows:
-            bins.append(OPTION(row.bin))
-
-        match_lbl = LABEL(T("Select an existing bin"))
-        match_div = SELECT(bins,
-                           _id = "%s_%s" % (self.tablename, field.name),
-                           _name = field.name,
-                           )
-        new_lbl = LABEL(T("...or add a new bin"))
-        return TAG[""](match_lbl,
-                       match_div,
-                       new_lbl,
-                       new_div
-                       )
-
-# =============================================================================
 class S3KeyValueWidget(ListWidget):
     """
         Allows for input of key-value pairs and stores them as list:string
@@ -7751,6 +7683,7 @@ class S3HierarchyWidget(FormWidget):
                  filter = None,
                  columns = None,
                  none = None,
+                 sep = None,
                  ):
         """
             Constructor
@@ -7774,6 +7707,7 @@ class S3HierarchyWidget(FormWidget):
             @param columns: set the columns width class for Foundation forms
             @param none: label for an option that delivers "None" as value
                          (useful for HierarchyFilters with explicit none-selection)
+            @param sep: separator to use to concatenate the hierarchy to represent the selected node
         """
 
         self.lookup = lookup
@@ -7788,6 +7722,7 @@ class S3HierarchyWidget(FormWidget):
         self.bulk_select = bulk_select
 
         self.none = none
+        self.sep = sep
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attr):
@@ -7950,6 +7885,8 @@ class S3HierarchyWidget(FormWidget):
             widget_opts["leafonly"] = False
         if self.cascade:
             widget_opts["cascade"] = True
+        if self.sep:
+            widget_opts["sep"] = self.sep
         if self.bulk_select:
             widget_opts["bulkSelect"] = True
         if not cascade_option_in_tree:

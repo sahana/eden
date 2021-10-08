@@ -581,7 +581,18 @@ $.filterOptionsS3({
                                 updateable = True,
                                 #widget = S3SiteAutocompleteWidget(),
                                 ),
-                     self.org_site_layout_id(),
+                     self.org_site_layout_id(# This has the URL adjusted for the right site_id by s3.asset_log.js
+                                             comment = S3PopupLink(c = "org",
+                                                                   f = "site",
+                                                                   args = ["[id]", "layout", "create"],
+                                                                   vars = {"prefix": "asset",
+                                                                           "parent": "log",
+                                                                           "child": "layout_id",
+                                                                           },
+                                                                   label = T("Create Location"),
+                                                                   _id = "asset_log_layout_id-create-btn",
+                                                                   ),
+                                             ),
                      Field("cancel", "boolean",
                            default = False,
                            label = T("Cancel Log Entry"),
@@ -617,7 +628,8 @@ $.filterOptionsS3({
             msg_record_created = T("Entry added to Asset Log"),
             msg_record_modified = T("Asset Log Entry updated"),
             msg_record_deleted = T("Asset Log Entry deleted"),
-            msg_list_empty = T("Asset Log Empty"))
+            msg_list_empty = T("Asset Log Empty"),
+            )
 
         # Resource configuration
         configure(tablename,
@@ -677,7 +689,7 @@ $.filterOptionsS3({
             # Component Tab: load record to read
             asset = db(atable.id == asset_id).select(atable.organisation_id,
                                                      atable.site_id,
-                                                     limitby = (0, 1)
+                                                     limitby = (0, 1),
                                                      ).first()
             organisation_id = asset.organisation_id
             site_id = asset.site_id
@@ -693,7 +705,7 @@ $.filterOptionsS3({
             # Set the Base Location
             stable = db.org_site
             site = db(stable.site_id == site_id).select(stable.location_id,
-                                                        limitby = (0, 1)
+                                                        limitby = (0, 1),
                                                         ).first()
             location_id = site.location_id
             tracker = S3Tracker()
@@ -725,7 +737,9 @@ $.filterOptionsS3({
             aitable = db.asset_item
             ids = db(aitable.asset_id == asset_id).select(aitable.id).as_list()
             if ids:
-                resource = current.s3db.resource("asset_item", id=ids)
+                resource = current.s3db.resource("asset_item",
+                                                 id = ids,
+                                                 )
                 resource.delete()
 
     # -------------------------------------------------------------------------
@@ -763,7 +777,7 @@ $.filterOptionsS3({
             db = current.db
             ltable = db.asset_log
             row = db(ltable.id == form_vars.id).select(ltable.asset_id,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
             try:
                 asset_id = row.asset_id
@@ -788,7 +802,7 @@ $.filterOptionsS3({
                 site_id = form_vars.get("site_id")
                 stable = db.org_site
                 site = db(stable.site_id == site_id).select(stable.location_id,
-                                                            limitby = (0, 1)
+                                                            limitby = (0, 1),
                                                             ).first()
                 location_id = site.location_id
                 asset_tracker.set_base_location(location_id)
@@ -992,8 +1006,8 @@ def asset_get_current_log(asset_id):
                                          table.organisation_id,
                                          table.site_id,
                                          #table.location_id,
+                                         limitby = (0, 1),
                                          orderby = ~table.date,
-                                         limitby = (0, 1)
                                          ).first()
     if asset_log:
         return Storage(date = asset_log.date,

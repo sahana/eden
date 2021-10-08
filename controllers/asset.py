@@ -13,7 +13,8 @@ if not settings.has_module(c):
 def index():
     """ Module's Home Page """
 
-    return s3db.cms_index(c, alt_function="index_alt")
+    from s3db.cms import cms_index
+    return cms_index(c, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -45,7 +46,20 @@ def asset():
                     )
 
     # Defined in Model for use from Multiple Controllers for unified menus
-    return s3db.asset_controller()
+    from s3db.asset import asset_controller
+    return asset_controller()
+
+# -----------------------------------------------------------------------------
+def log():
+    """
+        RESTful CRUD controller for Asset Logs
+        - just used for options.s3json lookups
+    """
+
+    s3.prep = lambda r: \
+        r.representation == "s3json" and r.method == "options"
+
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def brand():
@@ -90,7 +104,8 @@ def item():
                                     )
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    return s3db.supply_item_controller()
+    from s3db.supply import supply_item_controller
+    return supply_item_controller()
 
 # -----------------------------------------------------------------------------
 def catalog_item():
@@ -141,10 +156,11 @@ def supplier():
         msg_record_created = T("Supplier added"),
         msg_record_modified = T("Supplier updated"),
         msg_record_deleted = T("Supplier deleted"),
-        msg_list_empty = T("No Suppliers currently registered")
+        msg_list_empty = T("No Suppliers currently registered"),
         )
 
-    return s3db.org_organisation_controller()
+    from s3db.org import org_organisation_controller
+    return org_organisation_controller()
 
 # -----------------------------------------------------------------------------
 def telephone():
@@ -207,11 +223,13 @@ def telephone():
         msg_record_created = T("Telephone added"),
         msg_record_modified = T("Telephone updated"),
         msg_record_deleted = T("Telephone deleted"),
-        msg_list_empty = T("No Telephones currently registered"))
+        msg_list_empty = T("No Telephones currently registered"),
+        )
 
     # @ToDo: Tweak the search comment
 
     # Defined in Model
-    return s3db.asset_controller()
+    from s3db.asset import asset_controller
+    return asset_controller()
 
 # END =========================================================================

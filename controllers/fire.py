@@ -133,6 +133,11 @@ def station():
                     from s3db.org import org_site_staff_config
                     org_site_staff_config(r)
 
+                elif component_name == "layout" and \
+                     r.method != "hierarchy":
+                    from s3db.org import org_site_layout_config
+                    org_site_layout_config(r.record.site_id)
+
                 elif component_name == "req":
                     if r.method != "update" and r.method != "read":
                         # Hide fields which don't make sense in a Create form

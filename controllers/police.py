@@ -38,18 +38,24 @@ def station():
 
         if r.interactive:
             if r.component:
-                if r.component_name == "inv_item" or \
-                   r.component_name == "recv" or \
-                   r.component_name == "send":
+                component_name = r.component_name
+                if component_name == "inv_item" or \
+                   component_name == "recv" or \
+                   component_name == "send":
                     # Filter out items which are already in this inventory
                     from s3db.inv import inv_prep
                     inv_prep(r)
 
-                elif r.component_name == "human_resource":
+                elif component_name == "human_resource":
                     from s3db.org import org_site_staff_config
                     org_site_staff_config(r)
 
-                elif r.component_name == "req":
+                elif component_name == "layout" and \
+                     r.method != "hierarchy":
+                    from s3db.org import org_site_layout_config
+                    org_site_layout_config(r.record.site_id)
+
+                elif component_name == "req":
                     if r.method != "update" and r.method != "read":
                         # Hide fields which don't make sense in a Create form
                         # inc list_create (list_fields over-rides)

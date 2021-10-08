@@ -64,7 +64,8 @@ def index2():
                                    limit = limit,
                                    orderby = orderby,
                                    count = True,
-                                   represent = True)
+                                   represent = True,
+                                   )
             filteredrows = data["numrows"]
             if totalrows is None:
                 totalrows = filteredrows
@@ -143,7 +144,8 @@ def index2():
                                        orderby = orderby,
                                        start = start,
                                        limit = limit,
-                                       represent = True)
+                                       represent = True,
+                                       )
                 rfields = data["rfields"]
                 rows = data["rows"]
                 dt = S3DataTable(rfields,
@@ -343,6 +345,11 @@ def warehouse():
                 from s3db.org import org_site_staff_config
                 org_site_staff_config(r)
 
+            elif component_name == "layout" and \
+                 r.method != "hierarchy":
+                from s3db.org import org_site_layout_config
+                org_site_layout_config(r.record.site_id)
+
             elif component_name == "req":
                 if r.method != "update" and r.method != "read":
                     # Hide fields which don't make sense in a Create form
@@ -506,8 +513,7 @@ def inv_item():
                                insertable = False,
                                )
         else:
-            if settings.get_inv_direct_stock_edits() and \
-               settings.get_inv_bin_site_layout():
+            if settings.get_inv_direct_stock_edits():
                 # Limit to Bins from this site
                 if s3.debug:
                     s3.scripts.append("/%s/static/scripts/S3/s3.inv_item.js" % r.application)
@@ -521,6 +527,7 @@ def inv_item():
                     #                            filter_opts = [site_id],
                     #                            )
                     f.widget.filter = (s3db.org_site_layout.site_id == site_id)
+                    f.comment.args = [site_id, "layout", "create"]
 
             tablename = "inv_inv_item"
             s3.crud_strings[tablename].msg_list_empty = T("No Stock currently registered")
@@ -1888,7 +1895,8 @@ def adj():
 
     # Limit site_id to sites the user has permissions for
     error_msg = T("You do not have permission to adjust the stock level in this warehouse.")
-    auth.permitted_facilities(table=table, error_msg=error_msg)
+    auth.permitted_facilities(table = table,
+                              error_msg = error_msg)
 
     def prep(r):
         if r.interactive:
@@ -1913,14 +1921,9 @@ def adj():
                             aitable.item_id.comment = None
                             aitable.item_pack_id.writable = False
 
-                    if settings.get_inv_bin_site_layout():
-                        # Limit to Bins from this site
-                        site_id = r.record.site_id
-                        f = aitable.layout_id
-                        f.requires.other.set_filter(filterby = "site_id",
-                                                    filter_opts = [site_id],
-                                                    )
-                        f.widget.filter = (current.s3db.org_site_layout.site_id == site_id)
+                    # Limit to Bins from this site
+                    from s3db.org import org_site_layout_config
+                    org_site_layout_config(r.record.site_id, aitable.layout_id)
 
                 elif r.component_name == "image":
                     doc_table = s3db.doc_image
@@ -1955,7 +1958,6 @@ def adj():
                                                                                  inv_item_table.status,
                                                                                  inv_item_table.pack_value,
                                                                                  inv_item_table.expiry_date,
-                                                                                 inv_item_table.bin,
                                                                                  inv_item_table.layout_id,
                                                                                  inv_item_table.owner_org_id,
                                                                                  limitby = (0, 1),
@@ -1981,7 +1983,6 @@ def adj():
                                                           old_pack_value = inv_item.pack_value,
                                                           new_pack_value = inv_item.pack_value,
                                                           expiry_date = inv_item.expiry_date,
-                                                          bin = inv_item.bin,
                                                           layout_id = inv_item.layout_id,
                                                           old_owner_org_id = inv_item.owner_org_id,
                                                           new_owner_org_id = inv_item.owner_org_id,
@@ -2010,6 +2011,18 @@ def adj():
 
     from s3db.inv import inv_adj_rheader
     return s3_rest_controller(rheader = inv_adj_rheader)
+
+# -----------------------------------------------------------------------------
+def adj_item():
+    """
+        RESTful CRUD controller for Adjustment Items
+        - just used for options.s3json lookups
+    """
+
+    s3.prep = lambda r: \
+        r.representation == "s3json" and r.method == "options"
+
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def kitting():
@@ -2110,7 +2123,8 @@ def facility():
                                      args = ["[id]", "read"]),
                    )
 
-    return s3db.org_facility_controller()
+    from s3db.org import org_facility_controller
+    return org_facility_controller()
 
 # -----------------------------------------------------------------------------
 def facility_type():
@@ -2147,17 +2161,13 @@ def project():
 
 # -----------------------------------------------------------------------------
 def project_req():
-    """ RESTful CRUD controller for options.s3json lookups """
+    """
+        RESTful CRUD controller
+        - just used for options.s3json lookups
+    """
 
-    if auth.permission.format != "s3json":
-        return ""
-
-    # Pre-process
-    def prep(r):
-        if r.method != "options":
-            return False
-        return True
-    s3.prep = prep
+    s3.prep = lambda r: \
+        r.representation == "s3json" and r.method == "options"
 
     return s3_rest_controller()
 
@@ -2284,7 +2294,8 @@ def commit_req():
                                  ritable.item_pack_id,
                                  iitable.item_id,
                                  iitable.quantity,
-                                 iitable.item_pack_id)
+                                 iitable.item_pack_id,
+                                 )
 
     citable = s3db.inv_commit_item
     for req_item in req_items:
@@ -2366,7 +2377,7 @@ def send_req():
                                                  "%s_%s" % (prefix,
                                                             resourcename,
                                                             ),
-                                                 record_id = id
+                                                 record_id = id,
                                                  ):
         session.error = T("You do not have permission to send this shipment.")
         redirect(URL(c="inv", f="req",
@@ -2391,7 +2402,7 @@ def send_req():
                                  ritable.quantity_transit,
                                  ritable.quantity_fulfil,
                                  ritable.item_id,
-                                 sip_quantity_field
+                                 sip_quantity_field,
                                  )
 
     if not req_items:
@@ -2442,7 +2453,6 @@ def send_req():
                 iitable.currency,
                 ii_expiry_field,
                 ii_purchase_field,
-                iitable.bin,
                 iitable.layout_id,
                 iitable.owner_org_id,
                 iitable.supply_org_id,
@@ -2526,7 +2536,6 @@ def send_req():
                    status = IN_PROCESS,
                    pack_value = iitem.pack_value,
                    currency = iitem.currency,
-                   bin = iitem.bin,
                    layout_id = iitem.layout_id,
                    expiry_date = iitem.expiry_date,
                    owner_org_id = iitem.owner_org_id,
@@ -2552,7 +2561,6 @@ def send_req():
                    status = IN_PROCESS,
                    pack_value = iitem.pack_value,
                    currency = iitem.currency,
-                   bin = iitem.bin,
                    layout_id = iitem.layout_id,
                    expiry_date = iitem.expiry_date,
                    owner_org_id = iitem.owner_org_id,
@@ -2806,7 +2814,9 @@ def recv_cancel():
     rtable = s3db.inv_recv
     if not auth.s3_has_permission("delete", rtable, record_id=recv_id):
         session.error = T("You do not have permission to cancel this received shipment.")
-        redirect(URL(c="inv", f="recv", args=[recv_id]))
+        redirect(URL(c="inv", f="recv",
+                     args = [recv_id],
+                     ))
 
     recv_record = db(rtable.id == recv_id).select(rtable.status,
                                                   rtable.site_id,

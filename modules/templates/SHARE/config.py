@@ -1588,7 +1588,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
 
             if r.interactive:
                 # Inject the javascript to handle dropdown filtering
-                # - normally injected through AddResourceLink, but this isn't there in Inline widget
+                # - normally injected through S3PopupLink, but this isn't there in Inline widget
                 # - we also need to turn the trigger & target into dicts
                 s3.scripts.append("/%s/static/themes/SHARE/js/need.js" % r.application)
 
@@ -2180,7 +2180,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
 
             if r.interactive:
                 # Inject the javascript to handle dropdown filtering
-                # - normally injected through AddResourceLink, but this isn't there in Inline widget
+                # - normally injected through S3PopupLink, but this isn't there in Inline widget
                 # - we also need to turn the trigger & target into dicts
                 s3.scripts.append("/%s/static/themes/SHARE/js/need_response.js" % r.application)
 

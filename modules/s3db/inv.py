@@ -284,7 +284,8 @@ class WarehouseModel(S3Model):
            msg_record_created = T("Warehouse Type added"),
            msg_record_modified = T("Warehouse Type updated"),
            msg_record_deleted = T("Warehouse Type deleted"),
-           msg_list_empty = T("No Warehouse Types currently registered"))
+           msg_list_empty = T("No Warehouse Types currently registered"),
+           )
 
         represent = S3Represent(lookup = tablename,
                                 translate = True,
@@ -417,7 +418,8 @@ class WarehouseModel(S3Model):
             msg_record_created = T("Warehouse added"),
             msg_record_modified = T("Warehouse updated"),
             msg_record_deleted = T("Warehouse deleted"),
-            msg_list_empty = T("No Warehouses currently registered"))
+            msg_list_empty = T("No Warehouses currently registered"),
+            )
 
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
@@ -534,7 +536,6 @@ class InventoryModel(S3Model):
         NONE = current.messages["NONE"]
 
         settings = current.deployment_settings
-        bin_site_layout = settings.get_inv_bin_site_layout()
         direct_stock_edits = settings.get_inv_direct_stock_edits()
         track_pack_values = settings.get_inv_track_pack_values()
         WAREHOUSE = T(settings.get_inv_facility_label())
@@ -583,19 +584,23 @@ class InventoryModel(S3Model):
                                 label = T("Quantity"),
                                 represent = lambda v: \
                                     IS_FLOAT_AMOUNT.represent(v, precision=2),
-                                requires = IS_FLOAT_AMOUNT(minimum=0.0),
+                                requires = IS_FLOAT_AMOUNT(minimum = 0.0),
                                 writable = direct_stock_edits,
                                 ),
-                          Field("bin", length=16,
-                                label = T("Bin"),
-                                represent = lambda v: v or NONE,
-                                requires = IS_LENGTH(16),
-                                readable = not bin_site_layout,
-                                writable = not bin_site_layout,
-                                ),
                           self.org_site_layout_id(label = T("Bin"),
-                                                  readable = bin_site_layout,
-                                                  writable = bin_site_layout,
+                                                  # This has the URL adjusted for the right site_id in the controller & s3.inv_item.js
+                                                  comment = S3PopupLink(c = "org",
+                                                                        f = "site",
+                                                                        args = ["[id]", "layout", "create"],
+                                                                        vars = {"prefix": "inv",
+                                                                                "parent": "inv_item",
+                                                                                "child": "layout_id",
+                                                                                },
+                                                                        label = T("Create Bin"),
+                                                                        title = T("Bin"),
+                                                                        tooltip = T("If you don't see the Bin listed, you can add a new one by clicking link 'Create Bin'."),
+                                                                        _id = "inv_inv_item_layout_id-create-btn",
+                                                                        ),
                                                   ),
                           # e.g.: Allow items to be marked as 'still on the shelf but allocated to an outgoing shipment'
                           Field("status", "integer",
@@ -673,7 +678,8 @@ class InventoryModel(S3Model):
             msg_record_created = T("Stock added to Warehouse"),
             msg_record_modified = T("Warehouse Stock updated"),
             msg_record_deleted = T("Stock removed from Warehouse"),
-            msg_list_empty = T("No Stock currently registered in this Warehouse"))
+            msg_list_empty = T("No Stock currently registered in this Warehouse"),
+            )
 
         # Reusable Field
         inv_item_represent = inv_InvItemRepresent()
@@ -780,11 +786,6 @@ $.filterOptionsS3({
                                  )
 
         # List fields
-        if bin_site_layout:
-            bin_field = "layout_id"
-        else:
-            bin_field = "bin"
-
         if track_pack_values:
             list_fields = ["site_id",
                            "item_id",
@@ -796,7 +797,7 @@ $.filterOptionsS3({
                            "pack_value",
                            (T("Total Value"), "total_value"),
                            "currency",
-                           bin_field,
+                           "layout_id",
                            "supply_org_id",
                            "status",
                            ]
@@ -806,7 +807,7 @@ $.filterOptionsS3({
                            "item_id$code",
                            "item_id$item_category_id",
                            "quantity",
-                           bin_field,
+                           "layout_id",
                            "owner_org_id",
                            "supply_org_id",
                            "status",
@@ -836,7 +837,7 @@ $.filterOptionsS3({
                             "title": T("Warehouse Stock Report"),
                             "fields": [(T("Warehouse"), "site_id$name"),
                                        "item_id$item_category_id",
-                                       bin_field,
+                                       "layout_id",
                                        "item_id$name",
                                        "quantity",
                                        "pack_value",
@@ -933,7 +934,6 @@ $.filterOptionsS3({
         supply_org_id = data_get("supply_org_id")
         pack_value = data_get("pack_value")
         currency = data_get("currency")
-        item_bin = data_get("bin")
         item_layout_id = data_get("layout_id")
 
         # Must match all of these exactly
@@ -944,7 +944,6 @@ $.filterOptionsS3({
                 (table.supply_org_id == supply_org_id) & \
                 (table.pack_value == pack_value) & \
                 (table.currency == currency) & \
-                (table.bin == item_bin) & \
                 (table.layout_id == item_layout_id)
 
         duplicate = current.db(query).select(table.id,
@@ -981,7 +980,6 @@ class InventoryAdjustModel(S3Model):
         auth = current.auth
 
         settings = current.deployment_settings
-        bin_site_layout = settings.get_inv_bin_site_layout()
         track_pack_values = settings.get_inv_track_pack_values()
 
         organisation_id = self.org_organisation_id
@@ -1100,7 +1098,8 @@ class InventoryAdjustModel(S3Model):
                 msg_record_created = T("Stock Count created"),
                 msg_record_modified = T("Stock Count modified"),
                 msg_record_deleted = T("Stock Count deleted"),
-                msg_list_empty = T("No stock counts have been done"))
+                msg_list_empty = T("No stock counts have been done"),
+                )
         else:
             crud_strings["inv_adj"] = Storage(
                 label_create = T("New Stock Adjustment"),
@@ -1112,7 +1111,8 @@ class InventoryAdjustModel(S3Model):
                 msg_record_created = T("Adjustment created"),
                 msg_record_modified = T("Adjustment modified"),
                 msg_record_deleted = T("Adjustment deleted"),
-                msg_list_empty = T("No stock adjustments have been done"))
+                msg_list_empty = T("No stock adjustments have been done"),
+                )
 
         # ---------------------------------------------------------------------
         # Adjustment Items
@@ -1126,12 +1126,8 @@ class InventoryAdjustModel(S3Model):
                                       readable = False,
                                       writable = False,
                                       ),
-                     self.supply_item_id(
-                        ondelete = "RESTRICT"
-                     ),
-                     self.supply_item_pack_id(
-                        ondelete = "SET NULL"
-                     ),
+                     self.supply_item_id(ondelete = "RESTRICT"),
+                     self.supply_item_pack_id(ondelete = "SET NULL"),
                      Field("old_quantity", "double", notnull=True,
                            default = 0,
                            label = T("Original Quantity"),
@@ -1142,7 +1138,7 @@ class InventoryAdjustModel(S3Model):
                      Field("new_quantity", "double",
                            label = T("Revised Quantity"),
                            represent = self.qnty_adj_repr,
-                           requires = IS_FLOAT_AMOUNT(minimum=0.0),
+                           requires = IS_FLOAT_AMOUNT(minimum = 0.0),
                            ),
                      Field("reason", "integer",
                            default = 1,
@@ -1179,17 +1175,20 @@ class InventoryAdjustModel(S3Model):
                      s3_date("expiry_date",
                              label = T("Expiry Date"),
                              ),
-                     Field("bin", length=16,
-                           label = T("Bin"),
-                           requires = IS_LENGTH(16),
-                           # @ToDo:
-                           #widget = S3InvBinWidget("inv_adj_item")
-                           readable = not bin_site_layout,
-                           writable = not bin_site_layout,
-                           ),
                      self.org_site_layout_id(label = T("Bin"),
-                                             readable = bin_site_layout,
-                                             writable = bin_site_layout,
+                                             # This has the URL adjusted for the right site_id using org_site_layout_config()
+                                             comment = S3PopupLink(c = "org",
+                                                                   f = "site",
+                                                                   args = ["[id]", "layout", "create"],
+                                                                   vars = {"prefix": "inv",
+                                                                           "parent": "adj_item",
+                                                                           "child": "layout_id",
+                                                                           },
+                                                                   label = T("Create Bin"),
+                                                                   title = T("Bin"),
+                                                                   tooltip = T("If you don't see the Bin listed, you can add a new one by clicking link 'Create Bin'."),
+                                                                   _id = "inv_adj_item_layout_id-create-btn",
+                                                                   ),
                                              ),
                      # Organisation that owned this item before
                      organisation_id("old_owner_org_id",
@@ -1234,7 +1233,8 @@ class InventoryAdjustModel(S3Model):
             msg_record_created = T("Item added to stock adjustment"),
             msg_record_modified = T("Item quantity adjusted"),
             #msg_record_deleted = T("Item removed from Stock"), # This should be forbidden - set qty to zero instead
-            msg_list_empty = T("No items currently in stock"))
+            msg_list_empty = T("No items currently in stock"),
+            )
 
         return {"inv_adj_id": adj_id,
                 "inv_adj_item_id": adj_item_id,
@@ -1314,7 +1314,6 @@ class InventoryAdjustModel(S3Model):
                                      aitable.item_id,
                                      aitable.item_pack_id,
                                      aitable.currency,
-                                     aitable.bin,
                                      aitable.layout_id,
                                      aitable.old_pack_value,
                                      aitable.expiry_date,
@@ -1330,7 +1329,6 @@ class InventoryAdjustModel(S3Model):
                             "item_id": adj_item.item_id,
                             "item_pack_id": adj_item.item_pack_id,
                             "currency": adj_item.currency,
-                            "bin": adj_item.bin,
                             "layout_id": adj_item.layout_id,
                             "pack_value": adj_item.old_pack_value,
                             "expiry_date": adj_item.expiry_date,
@@ -1351,7 +1349,6 @@ class InventoryAdjustModel(S3Model):
                 # Update the existing stock item
                 inv_item_id = adj_item.inv_item_id
                 db(inv_item_table.id == inv_item_id).update(item_pack_id = adj_item.item_pack_id,
-                                                            bin = adj_item.bin,
                                                             layout_id = adj_item.layout_id,
                                                             pack_value = adj_item.old_pack_value,
                                                             expiry_date = adj_item.expiry_date,
@@ -1419,7 +1416,6 @@ class InventoryAdjustModel(S3Model):
                                     inv_item_table.status,
                                     inv_item_table.pack_value,
                                     inv_item_table.expiry_date,
-                                    inv_item_table.bin,
                                     inv_item_table.layout_id,
                                     inv_item_table.owner_org_id,
                                     )
@@ -1437,7 +1433,6 @@ class InventoryAdjustModel(S3Model):
                                     old_pack_value = inv_item.pack_value,
                                     new_pack_value = inv_item.pack_value,
                                     expiry_date = inv_item.expiry_date,
-                                    bin = inv_item.bin,
                                     layout_id = inv_item.layout_id,
                                     old_owner_org_id = inv_item.owner_org_id,
                                     new_owner_org_id = inv_item.owner_org_id,
@@ -1586,7 +1581,8 @@ class InventoryCommitModel(S3Model):
             msg_record_created = T("Commitment Added"),
             msg_record_modified = T("Commitment Updated"),
             msg_record_deleted = T("Commitment Canceled"),
-            msg_list_empty = T("No Commitments"))
+            msg_list_empty = T("No Commitments"),
+            )
 
         # Reusable Field
         commit_represent = inv_CommitRepresent()
@@ -1766,7 +1762,8 @@ class InventoryCommitItemModel(S3Model):
             msg_record_created = T("Commitment Item added"),
             msg_record_modified = T("Commitment Item updated"),
             msg_record_deleted = T("Commitment Item deleted"),
-            msg_list_empty = T("No Commitment Items currently registered"))
+            msg_list_empty = T("No Commitment Items currently registered"),
+            )
 
         self.configure(tablename,
                        extra_fields = ["item_pack_id"],
@@ -1875,7 +1872,6 @@ class InventoryKittingModel(S3Model):
         string_represent = lambda v: v if v else NONE
 
         settings = current.deployment_settings
-        bin_site_layout = settings.get_inv_bin_site_layout()
         SITE_LABEL = settings.get_org_site_label()
 
         # ---------------------------------------------------------------------
@@ -1955,7 +1951,8 @@ class InventoryKittingModel(S3Model):
             msg_record_created = T("Kitting completed"),
             msg_record_modified = T("Kitting updated"),
             msg_record_deleted = T("Kitting canceled"),
-            msg_list_empty = T("No Kittings"))
+            msg_list_empty = T("No Kittings"),
+            )
 
         # Components
         self.add_components(tablename,
@@ -2000,17 +1997,7 @@ class InventoryKittingModel(S3Model):
                            represent = float_represent,
                            writable = False,
                            ),
-                     Field("bin", length=16,
-                           label = T("Bin"),
-                           represent = string_represent,
-                           requires = IS_LENGTH(16),
-                           readable = not bin_site_layout,
-                           #writable = not bin_site_layout,
-                           writable = False,
-                           ),
                      self.org_site_layout_id(label = T("Bin"),
-                                             readable = bin_site_layout,
-                                             #writable = bin_site_layout,
                                              writable = False,
                                              ),
                      Field("item_source_no", length=16,
@@ -2152,8 +2139,6 @@ class InventoryKittingModel(S3Model):
         iitable = s3db.inv_inv_item
         insert = s3db.inv_kitting_item.insert
 
-        bin_site_layout = current.deployment_settings.get_inv_bin_site_layout()
-
         # Get contents of this kit
         query = (ktable.parent_item_id == item_id)
         rows = db(query).select(ktable.item_id,
@@ -2170,10 +2155,7 @@ class InventoryKittingModel(S3Model):
         quantity = quantity * pack_qty
 
         ii_id_field = iitable.id
-        if bin_site_layout:
-            ii_bin_field = iitable.layout_id
-        else:
-            ii_bin_field = iitable.bin
+        ii_bin_field = iitable.layout_id
         ii_pack_field = iitable.item_pack_id
         ii_qty_field = iitable.quantity
         ii_expiry_field = iitable.expiry_date
@@ -2254,11 +2236,8 @@ class InventoryKittingModel(S3Model):
                               "item_source_no": wh_item.item_source_no,
                               "quantity": amount,
                               "inv_item_id": wh_item.id,
+                              "layout_id": wh_item.layout_id,
                               }
-                if bin_site_layout:
-                    new_record["layout_id"] = wh_item.layout_id
-                else:
-                    new_record["bin"] = wh_item.bin
                 insert(**new_record)
 
                 # Update how much is still required
@@ -4216,7 +4195,8 @@ class InventoryRequisitionApproverModel(S3Model):
             msg_record_created = T("Approver added"),
             msg_record_modified = T("Approver updated"),
             msg_record_deleted = T("Approver deleted"),
-            msg_list_empty = T("No Approvers currently registered"))
+            msg_list_empty = T("No Approvers currently registered"),
+            )
 
         # -----------------------------------------------------------------
         # Link Approvers <> Requests
@@ -4338,7 +4318,8 @@ class InventoryRequisitionItemModel(S3Model):
             msg_record_created = T("Item(s) added to Request"),
             msg_record_modified = T("Item(s) updated on Request"),
             msg_record_deleted = T("Item(s) deleted from Request"),
-            msg_list_empty = T("No Items currently requested"))
+            msg_list_empty = T("No Items currently requested"),
+            )
 
         # Reusable Field
         req_item_represent = inv_ReqItemRepresent()
@@ -4704,7 +4685,8 @@ class InventoryRequisitionRecurringModel(S3Model):
             msg_record_modified = T("Job updated"),
             msg_record_deleted = T("Job deleted"),
             msg_list_empty = T("No jobs configured yet"),
-            msg_no_match = T("No jobs configured"))
+            msg_no_match = T("No jobs configured"),
+            )
 
         # Custom Methods
         self.set_method("inv", "req",
@@ -4839,8 +4821,6 @@ class InventoryStockCardModel(S3Model):
         define_table = self.define_table
         settings = current.deployment_settings
 
-        bin_site_layout = settings.get_inv_bin_site_layout()
-
         NONE = current.messages["NONE"]
         WAREHOUSE = T(settings.get_inv_facility_label())
 
@@ -4921,16 +4901,7 @@ class InventoryStockCardModel(S3Model):
                                       represent = inv_RecvRepresent(show_link = True),
                                       ),
                      self.inv_adj_id(label = T("Adjustment")),
-                     Field("bin", length=16,
-                           label = T("Bin"),
-                           represent = lambda v: v or NONE,
-                           requires = IS_LENGTH(16),
-                           readable = not bin_site_layout,
-                           writable = not bin_site_layout,
-                           ),
                      self.org_site_layout_id(label = T("Bin"),
-                                             readable = bin_site_layout,
-                                             writable = bin_site_layout
                                              ),
                      Field("quantity_in", "double", notnull=True,
                            default = 0.0,
@@ -4954,11 +4925,6 @@ class InventoryStockCardModel(S3Model):
                      *s3_meta_fields()
                      )
 
-        if bin_site_layout:
-            bin_field = "layout_id"
-        else:
-            bin_field = "bin"
-
         configure(tablename,
                   # Never created/edited manually
                   deletable = False,
@@ -4970,7 +4936,7 @@ class InventoryStockCardModel(S3Model):
                                  "recv_id",
                                  "recv_id$from_site_id",
                                  "adj_id",
-                                 bin_field,
+                                 "layout_id",
                                  "quantity_in",
                                  "quantity_out",
                                  "balance",
@@ -5051,7 +5017,6 @@ class InventoryTrackingModel(S3Model):
         NONE = current.messages["NONE"]
         SITE_LABEL = settings.get_org_site_label()
 
-        bin_site_layout = settings.get_inv_bin_site_layout()
         document_filing = settings.get_inv_document_filing()
         recv_shortname = settings.get_inv_recv_shortname()
         show_org = settings.get_inv_send_show_org()
@@ -5793,16 +5758,7 @@ class InventoryTrackingModel(S3Model):
                              represent = inv_expiry_date_represent,
                              ),
                      # The bin at origin
-                     Field("bin", length=16,
-                           label = T("Bin"),
-                           represent = string_represent,
-                           requires = IS_LENGTH(16),
-                           readable = not bin_site_layout,
-                           writable = not bin_site_layout,
-                           ),
                      self.org_site_layout_id(label = T("Bin"),
-                                             readable = bin_site_layout,
-                                             writable = bin_site_layout,
                                              ),
                      inv_item_id("recv_inv_item_id",
                                  label = T("Receiving Inventory"),
@@ -5813,20 +5769,6 @@ class InventoryTrackingModel(S3Model):
                                  writable = False,
                                  ),
                      # The bin at destination
-                     Field("recv_bin", length=16,
-                           label = T("Add to Bin"),
-                           represent = string_represent,
-                           requires = IS_LENGTH(16),
-                           readable = False,
-                           writable = False,
-                           # Nice idea but not working properly
-                           #widget = S3InvBinWidget("inv_track_item"),
-                           comment = DIV(_class = "tooltip",
-                                         _title = "%s|%s" % (T("Bin"),
-                                                             T("The Bin in which the Item is being stored (optional)."),
-                                                             ),
-                                         ),
-                           ),
                      self.org_site_layout_id("recv_bin_id",
                                              label = T("Add to Bin"),
                                              readable = False,
@@ -5939,13 +5881,6 @@ class InventoryTrackingModel(S3Model):
                          ),
             ]
 
-        if bin_site_layout:
-            bin_field = "layout_id"
-            recv_bin_field = "recv_bin_id"
-        else:
-            bin_field = "bin"
-            recv_bin_field = "recv_bin"
-
         list_fields = ["status",
                        "item_source_no",
                        "item_id",
@@ -5957,10 +5892,10 @@ class InventoryTrackingModel(S3Model):
                        (T("Total Volume (m3)"), "total_volume"),
                        "currency",
                        "pack_value",
-                       bin_field,
+                       "layout_id",
                        "return_quantity",
                        "recv_quantity",
-                       recv_bin_field,
+                       "recv_bin_id",
                        "owner_org_id",
                        "supply_org_id",
                        ]
@@ -6178,16 +6113,11 @@ class InventoryTrackingModel(S3Model):
                                              ).first()
         send_ref = record.send_ref
 
-        if settings.get_inv_bin_site_layout():
-            bin_field = "bin"
-        else:
-            bin_field = "layout_id"
-
         list_fields = [(T("Item Code"), "item_id$code"),
                        "item_id",
                        (T("Weight (kg)"), "item_id$weight"),
                        (T("Volume (m3)"), "item_id$volume"),
-                       bin_field,
+                       "layout_id",
                        "item_source_no",
                        "item_pack_id",
                        "quantity",
@@ -6308,11 +6238,6 @@ class InventoryTrackingModel(S3Model):
                                              ).first()
         recv_ref = record.recv_ref
 
-        if settings.get_inv_bin_site_layout():
-            bin_field = "bin"
-        else:
-            bin_field = "layout_id"
-
         list_fields = ["item_id",
                        (T("Weight (kg)"), "item_id$weight"),
                        (T("Volume (m3)"), "item_id$volume"),
@@ -6322,7 +6247,7 @@ class InventoryTrackingModel(S3Model):
                        "recv_quantity",
                        "currency",
                        "pack_value",
-                       bin_field,
+                       "layout_id",
                        ]
 
         from s3.s3export import S3Exporter
@@ -6456,9 +6381,6 @@ class InventoryTrackingModel(S3Model):
 
             If the inv. item is coming out of a warehouse then the inv. item details
             need to be copied across (org, expiry etc)
-
-            If the inv. item is being received then there might be a selected bin
-            ensure that the correct bin is selected and save those details.
         """
 
         form_vars = form.vars
@@ -6526,7 +6448,6 @@ class InventoryTrackingModel(S3Model):
             inv_item = db(query).select(iitable.item_id,
                                         iitable.item_source_no,
                                         iitable.expiry_date,
-                                        iitable.bin,
                                         iitable.layout_id,
                                         iitable.owner_org_id,
                                         iitable.supply_org_id,
@@ -6538,7 +6459,6 @@ class InventoryTrackingModel(S3Model):
             form_vars.item_id = inv_item.item_id
             form_vars.item_source_no = inv_item.item_source_no
             form_vars.expiry_date = inv_item.expiry_date
-            form_vars.bin = inv_item.bin
             form_vars.layout_id = inv_item.layout_id
             form_vars.owner_org_id = inv_item.owner_org_id
             form_vars.supply_org_id = inv_item.supply_org_id
@@ -6561,16 +6481,6 @@ class InventoryTrackingModel(S3Model):
             # (Please do not change this unless there is a specific user requirement)
             #db.inv_track_item.recv_quantity.default = form_vars.quantity
             form_vars.recv_quantity = form_vars.quantity
-
-        recv_bin = form_vars.recv_bin
-        if recv_bin:
-            # If there is a receiving bin then select the right one
-            # - what triggers this?
-            if isinstance(recv_bin, list):
-                if recv_bin[1] != "":
-                    recv_bin = recv_bin[1]
-                else:
-                    recv_bin = recv_bin[0]
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -8458,20 +8368,12 @@ def inv_pick_list(r, **attr):
     send_ref = record.send_ref
 
     s3db = current.s3db
-    settings = current.deployment_settings
 
     table = s3db.inv_track_item
     itable = s3db.supply_item
     ptable = s3db.supply_item_pack
 
-    bin_site_layout = settings.get_inv_bin_site_layout()
-    if bin_site_layout:
-        bin_field = "layout_id"
-        bin_represent = table.layout_id.represent
-    else:
-        bin_field = "bin"
-
-    fields = [table[bin_field],
+    fields = [table.layout_id,
               table.quantity,
               itable.code,
               itable.name,
@@ -8486,14 +8388,14 @@ def inv_pick_list(r, **attr):
             (table.item_pack_id == ptable.id)
     items = current.db(query).select(*fields)
 
-    if bin_site_layout:
-        # Bulk Represent the Bins
-        # - values stored in class instance
-        bins = bin_represent.bulk([row["inv_track_item.layout_id"] for row in items])
-        # Sort the Data
-        def sort_function(row):
-            return bin_represent(row["inv_track_item.layout_id"])
-        items = items.sort(sort_function)
+    # Bulk Represent the Bins
+    # - values stored in class instance
+    bin_represent = table.layout_id.represent
+    bins = bin_represent.bulk([row["inv_track_item.layout_id"] for row in items])
+    # Sort the Data
+    def sort_function(row):
+        return bin_represent(row["inv_track_item.layout_id"])
+    items = items.sort(sort_function)
 
     # Represent the Data
     from .org import org_SiteRepresent
@@ -8597,18 +8499,14 @@ def inv_pick_list(r, **attr):
         col_index += 1
 
     # Data rows
-    translate = settings.get_L10n_translate_supply_item()
+    translate = current.deployment_settings.get_L10n_translate_supply_item()
     row_index = 3
     for row in items:
         current_row = sheet.row(row_index)
         track_row = row["inv_track_item"]
         item_row = row["supply_item"]
         pack_row = row["supply_item_pack"]
-        bin = track_row[bin_field]
-        if bin_site_layout:
-            bin = bin_represent(bin)
-        elif not bin:
-            bin = ""
+        bin = bin_represent(track_row.layout_id)
         item_name = item_row.name or ""
         if translate and item_name:
             item_name = s3_str(T(item_name))
@@ -8727,13 +8625,9 @@ def inv_prep(r):
                                               not_filter_opts = item_ids,
                                               )
 
-            if settings.get_inv_bin_site_layout():
-                # Limit to Bins from this site
-                f = table.layout_id
-                f.requires.other.set_filter(filterby = "site_id",
-                                            filter_opts = [site_id],
-                                            )
-                f.widget.filter = (current.s3db.org_site_layout.site_id == site_id)
+            # Limit to Bins from this site
+            from .org import org_site_layout_config
+            org_site_layout_config(site_id, table.layout_id)
 
         #elif r.component_name == "send":
         #    # Default to the Search tab in the location selector widget1
@@ -8829,7 +8723,6 @@ def inv_recv_controller():
 
                 tracktable = s3db.inv_track_item
 
-                bin_site_layout = settings.get_inv_bin_site_layout()
                 track_pack_values = settings.get_inv_track_pack_values()
 
                 def set_track_attr(track_status):
@@ -8839,10 +8732,7 @@ def inv_recv_controller():
                     # Hide some fields
                     tracktable.send_id.readable = False
                     tracktable.recv_id.readable = False
-                    if bin_site_layout:
-                        tracktable.layout_id.readable = False
-                    else:
-                        tracktable.bin.readable = False
+                    tracktable.layout_id.readable = False
                     tracktable.adj_item_id.readable = False
                     tracktable.recv_quantity.readable = True
 
@@ -8867,21 +8757,12 @@ def inv_recv_controller():
                         tracktable.send_inv_item_id.readable = False
                         # Change some labels - NO - use consistent labels
                         #tracktable.quantity.label = T("Quantity Delivered")
-                        if bin_site_layout:
-                            tracktable.recv_bin_id.readable = True
-                            tracktable.recv_bin_id.writable = True
-                            tracktable.recv_bin_id.label = T("Bin")
-                            # Limit to Bins from this site
-                            site_id = record.site_id
-                            f = tracktable.recv_bin_id
-                            f.requires.other.set_filter(filterby = "site_id",
-                                                        filter_opts = [site_id],
-                                                        )
-                            f.widget.filter = (s3db.org_site_layout.site_id == site_id)
-                        else:
-                            tracktable.recv_bin.readable = True
-                            tracktable.recv_bin.writable = True
-                            tracktable.recv_bin.label = T("Bin")
+                        tracktable.recv_bin_id.readable = True
+                        tracktable.recv_bin_id.writable = True
+                        tracktable.recv_bin_id.label = T("Bin")
+                        # Limit to Bins from this site
+                        from .org import org_site_layout_config
+                        org_site_layout_config(record.site_id, tracktable.recv_bin_id)
 
                     elif track_status == TRACK_STATUS_TRANSIT:
                         # Internal Shipment auto-generated from inv_send_process
@@ -8892,19 +8773,11 @@ def inv_recv_controller():
                         tracktable.item_source_no.writable = False
                         # Display the values that can only be entered on create
                         tracktable.recv_quantity.writable = True
-                        if bin_site_layout:
-                            tracktable.recv_bin_id.readable = True
-                            tracktable.recv_bin_id.writable = True
-                            # Limit to Bins from this site
-                            site_id = record.site_id
-                            f = tracktable.recv_bin_id
-                            f.requires.other.set_filter(filterby = "site_id",
-                                                        filter_opts = [site_id],
-                                                        )
-                            f.widget.filter = (s3db.org_site_layout.site_id == site_id)
-                        else:
-                            tracktable.recv_bin.readable = True
-                            tracktable.recv_bin.writable = True
+                        tracktable.recv_bin_id.readable = True
+                        tracktable.recv_bin_id.writable = True
+                        # Limit to Bins from this site
+                        from .org import org_site_layout_config
+                        org_site_layout_config(record.site_id, tracktable.recv_bin_id)
                         tracktable.comments.writable = True
                         # This is a received purchase so change the label to reflect this - NO - use consistent labels
                         #tracktable.quantity.label =  T("Quantity Delivered")
@@ -8922,19 +8795,11 @@ def inv_recv_controller():
                         tracktable.expiry_date.writable = False
                         tracktable.owner_org_id.writable = False
                         tracktable.supply_org_id.writable = False
-                        if bin_site_layout:
-                            tracktable.recv_bin_id.readable = True
-                            #tracktable.recv_bin_id.writable = True
-                            # Limit to Bins from this site
-                            #site_id = record.site_id
-                            #f = tracktable.recv_bin_id
-                            #f.requires.other.set_filter(filterby = "site_id",
-                            #                            filter_opts = [site_id],
-                            #                            )
-                            #f.widget.filter = (s3db.org_site_layout.site_id == site_id)
-                        else:
-                            tracktable.recv_bin.readable = True
-                            #tracktable.recv_bin.writable = True
+                        tracktable.recv_bin_id.readable = True
+                        #tracktable.recv_bin_id.writable = True
+                        # Limit to Bins from this site
+                        #from .org import org_site_layout_config
+                        #org_site_layout_config(record.site_id, tracktable.recv_bin_id)
 
                 # Configure which fields in track_item are readable/writable
                 # depending on track_item.status:
@@ -8947,16 +8812,12 @@ def inv_recv_controller():
                     set_track_attr(TRACK_STATUS_PREPARING)
                     tracktable.status.readable = False
 
-                if bin_site_layout:
-                    recv_bin_field = "recv_bin_id"
-                else:
-                    recv_bin_field = "recv_bin"
                 list_fields = [#"status",
                                "item_id",
                                "item_pack_id",
                                "quantity",
                                "recv_quantity",
-                               recv_bin_field,
+                               "recv_bin_id",
                                "owner_org_id",
                                "supply_org_id",
                                ]
@@ -11093,7 +10954,6 @@ def inv_send_controller():
                 tracktable = s3db.inv_track_item
                 iitable = s3db.inv_inv_item
 
-                bin_site_layout = settings.get_inv_bin_site_layout()
                 track_pack_values = settings.get_inv_track_pack_values()
 
                 def set_track_attr(status):
@@ -11103,7 +10963,6 @@ def inv_send_controller():
                     # Hide some fields
                     tracktable.send_id.readable = False
                     tracktable.recv_id.readable = False
-                    tracktable.bin.readable = False
                     tracktable.layout_id.readable = False
                     tracktable.item_id.readable = False
                     tracktable.item_pack_id.comment = None # No filterOptionsS3
@@ -11130,10 +10989,7 @@ def inv_send_controller():
                         tracktable.item_source_no.readable = True
                         tracktable.recv_quantity.readable = True
                         tracktable.return_quantity.readable = True
-                        if bin_site_layout:
-                            tracktable.recv_bin_id.readable = True
-                        else:
-                            tracktable.recv_bin.readable = True
+                        tracktable.recv_bin_id.readable = True
                         if track_pack_values:
                             tracktable.currency.readable = True
                             tracktable.pack_value.readable = True
@@ -11143,17 +10999,12 @@ def inv_send_controller():
                         tracktable.currency.readable = False
                         tracktable.pack_value.readable = False
 
-                if bin_site_layout:
-                    bin_field = "layout_id"
-                else:
-                    bin_field = "bin"
-
                 if status in (SHIP_STATUS_RECEIVED, SHIP_STATUS_CANCEL):
                     deletable = editable = insertable = False
                     list_fields = [#"status",
                                    "item_id",
                                    "item_pack_id",
-                                   bin_field,
+                                   "layout_id",
                                    "quantity",
                                    "recv_quantity",
                                    "return_quantity",
@@ -11174,7 +11025,7 @@ def inv_send_controller():
                                    "item_pack_id",
                                    "quantity",
                                    "return_quantity",
-                                   bin_field,
+                                   "layout_id",
                                    "owner_org_id",
                                    "supply_org_id",
                                    "inv_item_status",
@@ -11193,7 +11044,7 @@ def inv_send_controller():
                                    "item_id",
                                    "item_pack_id",
                                    "quantity",
-                                   bin_field,
+                                   "layout_id",
                                    "owner_org_id",
                                    "supply_org_id",
                                    "inv_item_status",
@@ -12169,15 +12020,11 @@ def inv_stock_movements(resource, selectors, orderby):
     """
 
     # Extract the stock item data
-    if current.deployment_settings.get_inv_bin_site_layout():
-        bin_field = "layout_id"
-    else:
-        bin_field = "bin"
     selectors = ["id",
                  "site_id",
                  "site_id$name",
                  "item_id$item_category_id",
-                 bin_field,
+                 "layout_id",
                  "item_id$name",
                  "quantity",
                  ]
@@ -12402,9 +12249,8 @@ def inv_tabs(r):
                     #(T("Incoming"), "incoming/"),
                     (T(recv_label), "recv"),
                     (T(send_label), "send"),
+                    (T("Bins"), "layout", {}, "hierarchy"),
                     ]
-            if settings.get_inv_bin_site_layout():
-                tabs.append((T("Bins"), "layout", {}, "hierarchy"))
             if settings.has_module("proc"):
                 tabs.append((T("Planned Procurements"), "plan"))
             if settings.get_inv_minimums():
@@ -12572,7 +12418,6 @@ def inv_stock_card_update(inv_item_ids,
                                iitable.expiry_date,
                                iitable.item_pack_id,
                                iitable.quantity,
-                               iitable.bin,
                                iitable.layout_id,
                                limitby = limitby,
                                )
@@ -12668,7 +12513,6 @@ def inv_stock_card_update(inv_item_ids,
                        date = current.request.utcnow,
                        send_id = send_id,
                        recv_id = recv_id,
-                       bin = record.bin,
                        layout_id = record.layout_id,
                        quantity_in = quantity_in,
                        quantity_out = quantity_out,
@@ -12835,10 +12679,6 @@ def inv_track_item_onaccept(form):
                                                        limitby = (0, 1),
                                                        ).first()
             recv_site_id = recv_rec.site_id
-            if current.deployment_settings.get_inv_bin_site_layout():
-                bin_query = (inv_item_table.layout_id == record.recv_bin_id)
-            else:
-                bin_query = (inv_item_table.bin == record.recv_bin)
             query = (inv_item_table.site_id == recv_site_id) & \
                     (inv_item_table.item_id == record.item_id) & \
                     (inv_item_table.item_pack_id == record.item_pack_id) & \
@@ -12846,7 +12686,7 @@ def inv_track_item_onaccept(form):
                     (inv_item_table.status == record.inv_item_status) & \
                     (inv_item_table.pack_value == record.pack_value) & \
                     (inv_item_table.expiry_date == record.expiry_date) & \
-                    bin_query & \
+                    (inv_item_table.layout_id == record.recv_bin_id) & \
                     (inv_item_table.owner_org_id == record.owner_org_id) & \
                     (inv_item_table.item_source_no == record.item_source_no) & \
                     (inv_item_table.status == record.inv_item_status) & \
@@ -12874,7 +12714,6 @@ def inv_track_item_onaccept(form):
                             "currency": record.currency,
                             "pack_value": record.pack_value,
                             "expiry_date": record.expiry_date,
-                            "bin": record.recv_bin,
                             "layout_id": record.recv_bin_id,
                             "owner_org_id": record.owner_org_id,
                             "supply_org_id": record.supply_org_id,
@@ -12961,7 +12800,6 @@ def inv_track_item_onaccept(form):
                                                   old_pack_value = record.pack_value,
                                                   new_pack_value = record.pack_value,
                                                   expiry_date = record.expiry_date,
-                                                  bin = record.recv_bin,
                                                   layout_id = record.recv_bin_id,
                                                   comments = record.comments,
                                                   )
@@ -13479,8 +13317,6 @@ class inv_InvItemRepresent(S3Represent):
 
     def __init__(self):
 
-        self.bin_site_layout = current.deployment_settings.get_inv_bin_site_layout()
-
         super(inv_InvItemRepresent, self).__init__(lookup = "inv_inv_item")
 
     # -------------------------------------------------------------------------
@@ -13498,12 +13334,6 @@ class inv_InvItemRepresent(S3Represent):
         itable = s3db.inv_inv_item
         stable = s3db.supply_item
 
-        bin_site_layout = self.bin_site_layout
-        if bin_site_layout:
-            bin_field = itable.layout_id
-        else:
-            bin_field = itable.bin
-
         left = stable.on(stable.id == itable.item_id)
         if len(values) == 1:
             query = (key == values[0])
@@ -13513,7 +13343,7 @@ class inv_InvItemRepresent(S3Represent):
                                         stable.name,
                                         stable.um,
                                         itable.item_source_no,
-                                        bin_field,
+                                        itable.layout_id,
                                         itable.expiry_date,
                                         itable.owner_org_id,
                                         left = left
@@ -13528,13 +13358,12 @@ class inv_InvItemRepresent(S3Represent):
             # Results cached in the represent class
             itable.owner_org_id.represent.bulk(organisation_ids)
 
-        if bin_site_layout:
-            # Bulk-represent layout_ids
-            layout_id = str(itable.layout_id)
-            layout_ids = [row[layout_id] for row in rows]
-            if layout_ids:
-                # Results cached in the represent class
-                itable.layout_id.represent.bulk(layout_ids)
+        # Bulk-represent Bins
+        layout_id = str(itable.layout_id)
+        layout_ids = [row[layout_id] for row in rows]
+        if layout_ids:
+            # Results cached in the represent class
+            itable.layout_id.represent.bulk(layout_ids)
 
         return rows
 
@@ -13555,10 +13384,7 @@ class inv_InvItemRepresent(S3Represent):
 
         ctn = stringify(iitem.item_source_no)
         org = itable.owner_org_id.represent(iitem.owner_org_id)
-        if self.bin_site_layout:
-            item_bin = itable.layout_id.represent(iitem.layout_id)
-        else:
-            item_bin = stringify(iitem.bin)
+        item_bin = itable.layout_id.represent(iitem.layout_id)
 
         expires = iitem.expiry_date
         if expires:

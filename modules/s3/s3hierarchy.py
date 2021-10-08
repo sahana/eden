@@ -426,7 +426,9 @@ class S3HierarchyCRUD(S3Method):
         if self.record_id:
             if r.component and h.pkey.name != resource._id.name:
                 query = resource.table._id == self.record_id
-                row = current.db(query).select(h.pkey, limitby=(0, 1)).first()
+                row = current.db(query).select(h.pkey,
+                                               limitby = (0, 1),
+                                               ).first()
                 if not row:
                     r.error(404, current.ERROR.BAD_RECORD)
                 roots = {row[h.pkey]}
@@ -441,7 +443,9 @@ class S3HierarchyCRUD(S3Method):
         # ...and extract their data from a clone of the resource
         from .s3query import FS
         query = FS(h.pkey.name).belongs(all_nodes)
-        clone = current.s3db.resource(resource, filter=query)
+        clone = current.s3db.resource(resource,
+                                      filter = query,
+                                      )
         data = clone.select(selectors, represent=True, raw_data=True)
 
         # Convert into dict {hierarchy key: row}
@@ -662,15 +666,15 @@ class S3Hierarchy(object):
                 self.__theset = hierarchy["nodes"]
                 self.__flags = hierarchy["flags"]
             else:
-                self.__theset = dict()
-                self.__flags = dict()
+                self.__theset = {}
+                self.__flags = {}
                 self.load()
                 hierarchy = {"nodes": self.__theset,
                              "flags": self.__flags}
                 hierarchies[tablename] = hierarchy
         else:
-            self.__theset = dict()
-            self.__flags = dict()
+            self.__theset = {}
+            self.__flags = {}
         return
 
     # -------------------------------------------------------------------------
@@ -706,14 +710,14 @@ class S3Hierarchy(object):
 
         if not self.__status("dbstatus", True):
             # Cancel attempt if DB is known to be dirty
-            self.__status(dirty=True)
+            self.__status(dirty = True)
             return
 
         htable = current.s3db.s3_hierarchy
         query = (htable.tablename == tablename)
         row = current.db(query).select(htable.dirty,
                                        htable.hierarchy,
-                                       limitby = (0, 1)
+                                       limitby = (0, 1),
                                        ).first()
         if row and not row.dirty:
             data = row.hierarchy
@@ -762,10 +766,9 @@ class S3Hierarchy(object):
 
         # Get current entry
         htable = current.s3db.s3_hierarchy
-        query = (htable.tablename == tablename)
-        row = current.db(query).select(htable.id,
-                                       limitby = (0, 1)
-                                       ).first()
+        row = current.db(htable.tablename == tablename).select(htable.id,
+                                                               limitby = (0, 1),
+                                                               ).first()
 
         if row:
             # Update record
@@ -775,7 +778,10 @@ class S3Hierarchy(object):
             htable.insert(**data)
 
         # Update status
-        self.__status(dirty=False, dbupdate=None, dbstatus=True)
+        self.__status(dirty = False,
+                      dbupdate = None,
+                      dbstatus = True,
+                      )
         return
 
     # -------------------------------------------------------------------------
@@ -803,7 +809,9 @@ class S3Hierarchy(object):
         else:
             flags = {}
             hierarchies[tablename] = {"nodes": dict(),
-                                      "flags": flags}
+                                      "flags": flags,
+                                      }
+
         flags["dirty"] = True
 
         dbstatus = flags.get("dbstatus", True)
@@ -812,11 +820,14 @@ class S3Hierarchy(object):
             query = (htable.tablename == tablename)
             row = current.db(query).select(htable.id,
                                            htable.dirty,
-                                           limitby=(0, 1)).first()
+                                           limitby = (0, 1),
+                                           ).first()
             if not row:
-                htable.insert(tablename=tablename, dirty=True)
+                htable.insert(tablename = tablename,
+                              dirty = True,
+                              )
             elif not row.dirty:
-                row.update_record(dirty=True)
+                row.update_record(dirty = True)
             flags["dbstatus"] = False
         return
 
@@ -843,7 +854,8 @@ class S3Hierarchy(object):
             query = (table.deleted == False)
         else:
             query = (table.id > 0)
-        rows = current.db(query).select(left = self.left, *fields)
+        rows = current.db(query).select(left = self.left,
+                                        *fields)
 
         self.__theset.clear()
 
@@ -859,7 +871,9 @@ class S3Hierarchy(object):
             add(n, parent_id=p, category=c)
 
         # Update status: memory is clean, db needs update
-        self.__status(dirty=False, dbupdate=True)
+        self.__status(dirty = False,
+                      dbupdate = True,
+                      )
 
         # Remove subset
         self.__roots = None
@@ -982,7 +996,9 @@ class S3Hierarchy(object):
         DELETED = current.xml.DELETED
         if DELETED in table.fields:
             query &= table[DELETED] != True
-        parent = current.db(query).select(table._id).first()
+        parent = current.db(query).select(table._id
+                                          limitby = (0, 1),
+                                          ).first()
         if not parent:
             raise KeyError("Parent record not found")
 
@@ -1036,7 +1052,7 @@ class S3Hierarchy(object):
         query = ((linktable[lkey] == data[lkey]) &
                  (linktable[rkey] == data[rkey]))
         row = current.db(query).select(linktable._id,
-                                       limitby = (0, 1)
+                                       limitby = (0, 1),
                                        ).first()
         if not row:
             onaccept = s3db.get_config(tablename, "create_onaccept")
@@ -1046,7 +1062,7 @@ class S3Hierarchy(object):
             data[linktable._id.name] = link_id
             s3db.update_super(linktable, data)
             if link_id and onaccept:
-                callback(onaccept, Storage(vars=Storage(data)))
+                callback(onaccept, Storage(vars = Storage(data)))
         return
 
     # -------------------------------------------------------------------------
@@ -1081,9 +1097,10 @@ class S3Hierarchy(object):
 
             # Delete node
             from .s3query import FS
-            query = (FS(self.pkey.name) == node_id)
-            resource = current.s3db.resource(tablename, filter=query)
-            success = resource.delete(cascade=True)
+            resource = current.s3db.resource(tablename,
+                                             filter = (FS(self.pkey.name) == node_id),
+                                             )
+            success = resource.delete(cascade = True)
             if success:
                 self.remove(node_id)
                 total += 1
@@ -1161,7 +1178,8 @@ class S3Hierarchy(object):
         subset = {}
 
         resource = current.s3db.resource(self.tablename,
-                                         filter = self.filter)
+                                         filter = self.filter,
+                                         )
 
         pkey = self.pkey
         rows = resource.select([pkey.name], as_rows = True)
@@ -1491,7 +1509,8 @@ class S3Hierarchy(object):
             if table and "name" in table.fields:
                 from .s3fields import S3Represent
                 self.represent = renderer = S3Represent(lookup = tablename,
-                                                        key = self.pkey.name)
+                                                        key = self.pkey.name,
+                                                        )
             else:
                 renderer = s3_str
         if hasattr(renderer, "bulk"):

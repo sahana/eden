@@ -5064,7 +5064,7 @@ Thank you"""
             postprocess = None
 
         if settings.get_project_programmes():
-            # Inject inline link for programmes including AddResourceLink
+            # Inject inline link for programmes including S3PopupLink
             #from s3layouts import S3PopupLink
             comment = s3db.project_programme_id.attr.comment
             comment.vars = {"caller": "link_defaultprogramme",

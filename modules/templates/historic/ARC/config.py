@@ -794,7 +794,7 @@ def config(settings):
                                         fields = ["item_id",
                                                   "quantity",
                                                   "sn",
-                                                  # These are too wide for the screen & hence hide the AddResourceLinks
+                                                  # These are too wide for the screen & hence hide the S3PopupLinks
                                                   #"supply_org_id",
                                                   #"purchase_date",
                                                   #"purchase_price",

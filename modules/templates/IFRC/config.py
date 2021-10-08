@@ -1667,7 +1667,7 @@ def config(settings):
                                         fields = ("item_id",
                                                   "quantity",
                                                   "sn",
-                                                  # These are too wide for the screen & hence hide the AddResourceLinks
+                                                  # These are too wide for the screen & hence hide the S3PopupLinks
                                                   #"supply_org_id",
                                                   #"purchase_date",
                                                   #"purchase_price",
@@ -8623,7 +8623,7 @@ def config(settings):
         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
         if settings.get_project_programmes():
-            # Inject inline link for programmes including AddResourceLink
+            # Inject inline link for programmes including S3PopupLink
             #from s3layouts import S3PopupLink
             comment = s3db.project_programme_id.attr.comment
             comment.vars = {"caller": "link_defaultprogramme",

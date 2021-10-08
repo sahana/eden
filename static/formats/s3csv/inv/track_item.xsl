@@ -4,9 +4,11 @@
     xmlns:inv="http://eden.sahanafoundation.inv/inv">
 
     <!-- **********************************************************************
-         Inventory Warehouse - CSV Import Stylesheet
+         Inventory Track Items - CSV Import Stylesheet
 
          1st May 2011 / Graeme Foster <graeme AT acm DOT org>
+
+         @ToDo: Update for Bins -> layout_id
 
         CSV fields:
         Organisation..................track_org_id
@@ -15,7 +17,7 @@
         Warehouse.....................inv_inv_item.site_id, inv_send.site_id, inv_recv.from_site_id
         Catalog.......................supply_catalog_item.catalog_id.name
         Supply Item...................inv_inv_item.item_id, supply_item.name
-        Bin...........................bin, inv_inv_item.bin
+        Bin...........................inv_inv_item.bin
         Unit of Measure...............supply_item_pack
         Item Model....................supply_item.model
         Supplier/Donor................inv_inv_item.supply_org_id

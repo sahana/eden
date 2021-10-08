@@ -40,7 +40,6 @@ __all__ = ("S3MainMenuDefaultLayout",
            "SEP",
            "S3BreadcrumbsLayout",
            "S3PopupLink",
-           "S3AddResourceLink",
            "homepage",
            )
 
@@ -136,9 +135,9 @@ class S3MainMenuDefaultLayout(S3NavigationItem):
                         else:
                             label = item.label
                         link = A(label,
-                                 _href=item.url(),
-                                 _id=item.attr._id,
-                                 _target=item.attr._target,
+                                 _href = item.url(),
+                                 _id = item.attr._id,
+                                 _target = item.attr._target,
                                  )
                         _class = " ".join(classes)
                         return LI(link,
@@ -400,7 +399,9 @@ class S3BreadcrumbsLayout(S3NavigationItem):
 
         if item.parent is None:
             items = item.render_components()
-            return DIV(UL(items), _class='breadcrumbs')
+            return DIV(UL(items),
+                       _class = "breadcrumbs",
+                       )
         else:
             if item.is_last():
                 _class = "highlight"
@@ -499,6 +500,7 @@ class S3PopupLink(S3NavigationItem):
                  info = None,
                  title = None,
                  tooltip = None,
+                 _id = None,
                  ):
         """
             Constructor
@@ -513,6 +515,7 @@ class S3PopupLink(S3NavigationItem):
             @param info: hover-title for the label
             @param title: the tooltip title
             @param tooltip: the tooltip text
+            @param _id: the HTML ID of the button
         """
 
         if label is None:
@@ -545,6 +548,7 @@ class S3PopupLink(S3NavigationItem):
                                           title = title,
                                           tooltip = tooltip,
                                           mandatory = True,
+                                          _id = _id,
                                           )
 
     # -------------------------------------------------------------------------
@@ -560,10 +564,12 @@ class S3PopupLink(S3NavigationItem):
         else:
             label = item.label
 
+        _id = item.attr._id or "%s_add" % item.function
+
         popup_link = A(label,
-                       _href = item.url(format="popup"),
+                       _href = item.url(format = "popup"),
                        _class = "s3_add_resource_link",
-                       _id = "%s_add" % item.function,
+                       _id = _id,
                        _target = "top",
                        _title = item.opts.info,
                        )
@@ -571,7 +577,9 @@ class S3PopupLink(S3NavigationItem):
         tooltip = item.opts.tooltip
         if tooltip is not None:
             ttip = DIV(_class = "tooltip",
-                       _title = "%s|%s" % (item.opts.title, tooltip),
+                       _title = "%s|%s" % (item.opts.title,
+                                           tooltip,
+                                           ),
                        )
         else:
             ttip = ""
@@ -586,20 +594,21 @@ class S3PopupLink(S3NavigationItem):
         if not item.authorized:
             return None
 
+        _id = item.attr._id or "%s_%s_add" % (item.vars["caller"],
+                                              item.function,
+                                              )
+
         popup_link = A(item.label,
-                       _href = item.url(format="popup"),
+                       _href = item.url(format = "popup"),
                        _class = "s3_add_resource_link action-lnk",
-                       _id = "%s_%s_add" % (item.vars["caller"], item.function),
+                       _id = _id,
                        _target = "top",
                        _title = item.opts.info,
                        )
 
-        return DIV(popup_link, _class="s3_inline_add_resource_link")
-
-# =============================================================================
-# Maintained for backward compatibility
-#
-S3AddResourceLink = S3PopupLink
+        return DIV(popup_link,
+                   _class = "s3_inline_add_resource_link",
+                   )
 
 # =============================================================================
 def homepage(module=None, *match, **attr):

@@ -11,6 +11,7 @@ if not settings.has_module(c):
 def index():
     "Module's Home Page"
 
+    from s3db.cms import cms_index
     return s3db.cms_index(c)
 
 # -----------------------------------------------------------------------------
@@ -25,13 +26,18 @@ def airport():
 
         if r.interactive:
             if r.component:
-                if r.component_name == "human_resource":
+                component_name = r.component_name
+                if component_name == "human_resource":
                     from s3db.org import org_site_staff_config
                     org_site_staff_config(r)
-                elif r.component_name == "inv_item":
+                elif component_name == "inv_item":
                     # Filter out items which are already in this inventory
                     from s3db.inv import inv_prep
                     inv_prep(r)
+                elif component_name == "layout" and \
+                     r.method != "hierarchy":
+                    from s3db.org import org_site_layout_config
+                    org_site_layout_config(r.record.site_id)
             elif r.method == "update":
                 field = r.table.obsolete
                 field.readable = field.writable = True
@@ -67,6 +73,10 @@ def border_control_point():
                     # Filter out items which are already in this inventory
                     from s3db.inv import inv_prep
                     inv_prep(r)
+                elif component_name == "layout" and \
+                     r.method != "hierarchy":
+                    from s3db.org import org_site_layout_config
+                    org_site_layout_config(r.record.site_id)
             #elif r.method == "update":
             #    field = r.table.obsolete
             #    field.readable = field.writable = True
@@ -102,6 +112,10 @@ def heliport():
                     # Filter out items which are already in this inventory
                     from s3db.inv import inv_prep
                     inv_prep(r)
+                elif component_name == "layout" and \
+                     r.method != "hierarchy":
+                    from s3db.org import org_site_layout_config
+                    org_site_layout_config(r.record.site_id)
             elif r.method == "update":
                 field = r.table.obsolete
                 field.readable = field.writable = True
@@ -130,6 +144,10 @@ def seaport():
                     # Filter out items which are already in this inventory
                     from s3db.inv import inv_prep
                     inv_prep(r)
+                elif component_name == "layout" and \
+                     r.method != "hierarchy":
+                    from s3db.org import org_site_layout_config
+                    org_site_layout_config(r.record.site_id)
             elif r.method == "update":
                 field = r.table.obsolete
                 field.readable = field.writable = True

@@ -4,10 +4,23 @@
 
 $(document).ready(function() {
     var ajaxURL,
+        createButton = $('#inv_inv_item_layout_id-create-btn'),
+        re = /%5Bid%5D/g,
         siteField = $('#inv_inv_item_site_id'),
+        oldSiteID,
+        siteID,
         tree = $('#inv_inv_item_layout_id-hierarchy');
+
     siteField.change(function() {
-        ajaxURL = S3.Ap.concat('/org/site/' + siteField.val() + '/layout/hierarchy.tree');
+        siteID = siteField.val(),
+        ajaxURL = S3.Ap.concat('/org/site/' + siteID + '/layout/hierarchy.tree');
         tree.hierarchicalopts('reload', ajaxURL);
+        if (oldSiteID) {
+            ajaxURL = createButton.attr('href').replace(oldSiteID, siteID);
+        } else {
+            ajaxURL = createButton.attr('href').replace(re, siteID);
+        }
+        createButton.attr('href', ajaxURL);
+        oldSiteID = siteID;
     });
 });

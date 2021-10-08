@@ -1655,7 +1655,7 @@ class S3SQLFormElement(object):
                              method will be rendered (unless popup is None)
             @param label: override option for the original field label
             @param popup: only if comments=False, additional vars for comment
-                          navigation items (e.g. AddResourceLink), None prevents
+                          navigation items (e.g. S3PopupLink), None prevents
                           rendering of navigation items
             @param skip_post_validation: skip field validation during POST,
                                          useful for client-side processed

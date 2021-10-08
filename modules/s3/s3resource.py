@@ -2126,7 +2126,7 @@ class S3Resource(object):
                 c = self.components[component]
             except KeyError:
                 raise AttributeError("Undefined component %s" % component)
-            return c.export_fields(as_json=as_json)
+            return c.export_fields(as_json = as_json)
         else:
             xml = current.xml
             tree = xml.get_fields(self.prefix, self.name)

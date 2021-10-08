@@ -317,7 +317,8 @@ class LocationModel(S3Model):
             msg_record_created = T("Location added"),
             msg_record_modified = T("Location updated"),
             msg_record_deleted = T("Location deleted"),
-            msg_list_empty = T("No Locations currently available"))
+            msg_list_empty = T("No Locations currently available"),
+            )
 
         # Reusable field to include in other table definitions
         location_id = S3ReusableField("location_id", "reference %s" % tablename,

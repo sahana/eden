@@ -11,7 +11,8 @@ if not settings.has_module(c):
 def index():
     """ Module's Home Page """
 
-    return s3db.cms_index(c)
+    from s3db.cms import cms_index
+    return cms_index(c)
 
 # -----------------------------------------------------------------------------
 def debris_basin():
@@ -43,10 +44,11 @@ def gauge():
             # @ToDo: The default photo not the 1st
             image_url = r.record.image_url
             if image_url:
-                output["item"].append(IMG(_src=image_url,
+                output["item"].append(IMG(_src = image_url,
                                           # @ToDo: capture the size on upload & have controller resize where-required on-download
-                                          _width=400,
-                                          _height=310))
+                                          _width = 400,
+                                          _height = 310,
+                                          ))
         return output
     s3.postp = postp
 

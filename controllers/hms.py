@@ -38,7 +38,8 @@ if not settings.has_module(c):
 def index():
     """ Module's Home Page """
 
-    return s3db.cms_index(c, alt_function="index_alt")
+    from s3db.cms import cms_index
+    return cms_index(c, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -47,16 +48,9 @@ def index_alt():
     """
 
     # Just redirect to the Hospitals Map
-    s3_redirect_default(URL(f="hospital", args=["map"]))
-
-# -----------------------------------------------------------------------------
-def ltc():
-    """
-        Filtered REST Controller for Sandy
-    """
-
-    s3.filter = (s3db.hms_hospital.facility_type == 31)
-    return hospital()
+    s3_redirect_default(URL(f = "hospital",
+                            args = ["map"],
+                            ))
 
 # -----------------------------------------------------------------------------
 def hospital():
@@ -87,6 +81,11 @@ def hospital():
                 elif cname == "human_resource":
                     from s3db.org import org_site_staff_config
                     org_site_staff_config(r)
+
+                elif cname == "layout" and \
+                     r.method != "hierarchy":
+                    from s3db.org import org_site_layout_config
+                    org_site_layout_config(r.record.site_id)
 
                 elif cname == "req":
                     if r.method != "update" and r.method != "read":

@@ -1389,7 +1389,7 @@ class IS_LOCATION(Validator):
         else:
             self.error_message = current.T("Invalid Location!")
 
-        # Make it like IS_ONE_OF to support AddResourceLink
+        # Make it like IS_ONE_OF to support S3PopupLink
         self.ktable = "gis_location"
         self.kfield = "id"
 

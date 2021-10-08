@@ -309,7 +309,9 @@ class S3MainMenuLayout(S3NavigationItem):
                 if record.logo:
                     size = (60, None)
                     image = s3db.pr_image_library_represent(record.logo, size=size)
-                    url_small = URL(c="default", f="download", args=image)
+                    url_small = URL(c="default", f="download",
+                                    args = image,
+                                    )
                     alt = "%s logo" % name
                     logo = IMG(_src = url_small,
                                _alt = alt,
@@ -394,7 +396,9 @@ class S3AboutMenuLayout(S3NavigationItem):
             # The menu
             items = item.render_components()
             if items:
-                return UL(items, _class="sub-nav about-menu left")
+                return UL(items,
+                          _class = "sub-nav about-menu left",
+                          )
             else:
                 return "" # menu is empty
         else:
@@ -439,15 +443,15 @@ class S3OrgMenuLayout(S3NavigationItem):
                         (ltable.language == language)
                 l10n = db(query).select(ltable.name_l10n,
                                         ltable.acronym_l10n,
-                                        limitby = (0, 1),
                                         cache = s3db.cache,
+                                        limitby = (0, 1),
                                         ).first()
             table = s3db.org_organisation
             record = db(table.id == root_org).select(table.name,
                                                      #table.acronym,
                                                      table.logo,
-                                                     limitby = (0, 1),
                                                      cache = s3db.cache,
+                                                     limitby = (0, 1),
                                                      ).first()
             if l10n:
                 #if l10n.acronym_l10n:
@@ -465,7 +469,9 @@ class S3OrgMenuLayout(S3NavigationItem):
                 if record.logo:
                     size = (60, None)
                     image = s3db.pr_image_library_represent(record.logo, size=size)
-                    url_small = URL(c="default", f="download", args=image)
+                    url_small = URL(c="default", f="download",
+                                    args = image,
+                                    )
                     alt = "%s logo" % name
                     logo = IMG(_src = url_small,
                                _alt = alt,

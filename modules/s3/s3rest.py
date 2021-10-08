@@ -1230,12 +1230,12 @@ class S3Request(object):
             r.error(415, current.ERROR.BAD_FORMAT)
 
         component = r.component_name
-        output = r.resource.export_options(component=component,
-                                           fields=fields,
-                                           show_uids=show_uids,
-                                           only_last=only_last,
-                                           hierarchy=hierarchy,
-                                           as_json=as_json,
+        output = r.resource.export_options(component = component,
+                                           fields = fields,
+                                           show_uids = show_uids,
+                                           only_last = only_last,
+                                           hierarchy = hierarchy,
+                                           as_json = as_json,
                                            )
 
         if flat:

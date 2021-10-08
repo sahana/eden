@@ -66,6 +66,7 @@ __all__ = ("OrganisationModel",
            "org_organisation_requires",
            "org_region_options",
            "org_rheader",
+           "org_site_layout_config",
            "org_site_staff_config",
            "org_organisation_controller",
            "org_organisation_organisation_onaccept",
@@ -4174,11 +4175,16 @@ class SiteLayoutModel(S3Model):
     def model(self):
 
         T = current.T
+        db = current.db
 
         # ---------------------------------------------------------------------
         # Sites <> Org Groups link table
         #
         tablename = "org_site_layout"
+        represent = S3Represent(lookup = tablename)
+        hierarchy_represent = S3Represent(lookup = tablename,
+                                          hierarchy = "%s / %s",
+                                          )
         self.define_table(tablename,
                           # Component not instance
                           self.super_link("site_id", "org_site",
@@ -4192,13 +4198,31 @@ class SiteLayoutModel(S3Model):
                                ),
                          Field("parent", "reference org_site_layout", # This form of hierarchy may not work on all Databases
                                ondelete = "RESTRICT",
-                               # Only accessed via S3HierarchyCRUD
-                               #label = T("Within"),
-                               readable = False,
-                               writable = False,
+                               label = T("Within"),
                                ),
                          #s3_comments(),
-                         *s3_meta_fields())
+                         *s3_meta_fields(),
+                         on_define = lambda table: \
+                            [# Doesn't set parent properly when field is defined inline as the table isn't yet in db
+                             table._create_references(),
+
+                             # Can't be defined in-line as otherwise get a circular reference
+                             table.parent.set_attributes(represent = hierarchy_represent,
+                                                         requires = IS_EMPTY_OR(
+                                                                        IS_ONE_OF(db, "org_site_layout.id",
+                                                                                  hierarchy_represent
+                                                                                  )),
+                                                          widget = S3HierarchyWidget(lookup = tablename,
+                                                                                     represent = represent,
+                                                                                     multiple = False,
+                                                                                     leafonly = False,
+                                                                                     # Needs to be set for specific contexts to filter to locations within the relevant site
+                                                                                     # - done via org_site_layout_config(site_id)
+                                                                                     #filter = filter,
+                                                                                     sep = " / ",
+                                                                                     ),
+                                                         ),
+                             ])
 
         # Table Configuration
         self.configure(tablename,
@@ -4220,16 +4244,12 @@ class SiteLayoutModel(S3Model):
                        )
 
         # Reusable field for other tables to reference
-        represent = S3Represent(lookup = tablename)
-        hierarchy_represent = S3Represent(lookup = tablename,
-                                          hierarchy = "%s / %s",
-                                          )
         layout_id = S3ReusableField("layout_id", "reference %s" % tablename,
                                     label = T("Location within Site"),
                                     ondelete = "SET NULL",
                                     represent = hierarchy_represent,
                                     requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(current.db, "org_site_layout.id",
+                                                IS_ONE_OF(db, "org_site_layout.id",
                                                           hierarchy_represent
                                                           )),
                                     sortby = "name",
@@ -4238,8 +4258,10 @@ class SiteLayoutModel(S3Model):
                                                                multiple = False,
                                                                # Default anyway
                                                                #leafonly = True,
-                                                               # Can be set for specific contexts to filter to locations within the relevant site
-                                                               #filter = filter, 
+                                                               # Needs to be set for specific contexts to filter to locations within the relevant site
+                                                               # - done via org_site_layout_config(site_id, field)
+                                                               #filter = filter,
+                                                               sep = " / ",
                                                                ),
                                     )
 
@@ -7607,6 +7629,27 @@ def org_organisation_organisation_type_ondelete(row):
                                       )
 
 # =============================================================================
+def org_site_layout_config(site_id, field=None):
+    """
+        Limit a field which is reference "org_site_layout" to be from a specific site
+    """
+
+    table = current.s3db.org_site_layout
+    if field:
+        # Adjust the S3PopupLink
+        try:
+            field.comment.args = [site_id, "layout", "create"]
+        except AttributeError:
+            # Not an S3PopupLink
+            pass
+    else:
+        field = table.parent
+    field.requires.other.set_filter(filterby = "site_id",
+                                    filter_opts = [site_id],
+                                    )
+    field.widget.filter = (table.site_id == site_id)
+
+# =============================================================================
 def org_site_staff_config(r):
     """
         Configure the Staff tab for Sites
@@ -7707,6 +7750,10 @@ def org_office_controller():
 
                 elif cname == "human_resource":
                     org_site_staff_config(r)
+
+                elif cname == "layout" and \
+                     r.method != "hierarchy":
+                    org_site_layout_config(r.record.site_id)
 
                 elif cname == "req" and r.method not in ("update", "read"):
                     # Hide fields which don't make sense in a Create form
@@ -7880,6 +7927,10 @@ def org_facility_controller():
 
                 elif cname == "human_resource":
                     org_site_staff_config(r)
+
+                elif cname == "layout" and \
+                     r.method != "hierarchy":
+                    org_site_layout_config(r.record.site_id)
 
                 elif cname == "req" and r.method not in ("update", "read"):
                     # Hide fields which don't make sense in a Create form

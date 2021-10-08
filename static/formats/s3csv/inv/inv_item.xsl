@@ -28,8 +28,7 @@
          Quantity...............inv_inv_item.quantity
          Unit Value.............inv_inv_item.pack_value
          Currency...............inv_inv_item.currency
-         Bin....................inv_inv_item.bin
-                                inv_inv_item.layout_id (Split via / if need hierarchy...supports up to 3 levels)
+         Bin....................inv_inv_item.layout_id (Split via / if need hierarchy...supports up to 3 levels)
          Expiry Date............inv_inv_item.expiry_date
          Supplier/Donor.........inv_inv_item.supply_org_id
          Tracking Number........inv_inv_item.tracking_no
@@ -247,9 +246,6 @@
             <data field="tracking_no"><xsl:value-of select="$tracking"/></data>
             <!-- Bin -->
             <xsl:if test="$BinName!=''">
-                <!-- Freetext field is max length 16 -->
-                <data field="bin"><xsl:value-of select="substring($BinName,1,16)"/></data>
-                <!-- Site Layout -->
                 <xsl:variable name="BinTUID" select="concat($FacilityTUID, '|', $BinName)"/>
                 <reference field="layout_id" resource="org_site_layout">
                     <xsl:attribute name="tuid">

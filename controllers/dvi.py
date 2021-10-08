@@ -113,6 +113,12 @@ def morgue():
         if r.interactive and r.id and not r.component:
             field = r.table.obsolete
             field.readable = field.writable = True
+
+        elif r.component_name == "layout" and \
+             r.method != "hierarchy":
+            from s3db.org import org_site_layout_config
+            org_site_layout_config(r.record.site_id)
+
         return True
     s3.prep = prep
 

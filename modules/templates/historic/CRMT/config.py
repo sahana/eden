@@ -1216,7 +1216,7 @@ def config(settings):
 
                     # Human resource (currently only in read because S3AddPersonWidget
                     # not working inside inline component => consider HRAutoComplete
-                    # with AddResourceLink instead?)
+                    # with S3PopupLink instead?)
                     if r.record and method not in ("update", "profile"):
 
                         hrtable = s3db.hrm_human_resource
