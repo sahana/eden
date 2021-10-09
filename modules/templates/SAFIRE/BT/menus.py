@@ -184,6 +184,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                    M("Stores", c="inv", f="warehouse", m="summary")(
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
+                       M("Inventory", f="inv_item", m="summary"),
                        ),
                    M("Suppliers", c="inv", f="supplier", m="summary")(
                        M("Create", m="create"),
